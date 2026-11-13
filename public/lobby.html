@@ -3290,18 +3290,17 @@ body.lobby-page
 
     </header>
 
-    <!-- SEARCH -->
-    <div class="player-search">
 
-      <input
-        id="playerSearch"
-        type="search"
-        placeholder="Tìm theo tên hoặc UID..."
-        autocomplete="off"
-        aria-label="Tìm thành viên"
-      >
-
-    </div>
+<!-- SEARCH ALL PLAYERS -->
+<div class="player-search">
+  <input
+    id="playerSearch"
+    type="search"
+    placeholder="Search players by name or UID..."
+    autocomplete="off"
+    aria-label="Search players"
+  >
+</div>
 
     <!-- LIST HEADING -->
 
@@ -4737,8 +4736,16 @@ function renderPlayerLobbyAll() {
   if (!box) return;
 
 
-  // Chỉ hiển thị những tài khoản đã là bạn bè
+
+  // ======================================
+  // MEMBER DIRECTORY + GLOBAL SEARCH
+  // ======================================
+
   const myUid = String(profile.uid || "");
+
+  const keyword = String(PLAYER_SEARCH || "")
+    .trim()
+    .toLowerCase();
 
   const friendSet = new Set(
     MY_FRIENDS.map(uid => String(uid))
@@ -4752,45 +4759,52 @@ function renderPlayerLobbyAll() {
 
     const uid = String(u.uid || "");
 
+   
+    if (
+      !uid ||
+      uid === myUid ||
+      blockedSet.has(uid)
+    ) {
+      return false;
+    }
+
+    if (!keyword) {
+      return friendSet.has(uid);
+    }
+
+
+    const name = String(u.name || "")
+      .toLowerCase();
+
     return (
-      uid !== "" &&
-      uid !== myUid &&
-      friendSet.has(uid) &&
-      !blockedSet.has(uid)
+      name.includes(keyword) ||
+      uid.toLowerCase().includes(keyword)
     );
 
   });
 
-  // Giữ nguyên thứ tự ưu tiên:
-  // Admin → Online → Level
+  
   list = sortUsersForLobby(list);
 
 
-  // Lọc theo tên hoặc UID
-  if (PLAYER_SEARCH) {
-    list = list.filter(u => {
-      const name = String(u.name || "").toLowerCase();
-      const uid = String(u.uid || "").toLowerCase();
-
-      return name.includes(PLAYER_SEARCH) ||
-             uid.includes(PLAYER_SEARCH);
-    });
-  }
 
 
 
 if (!list.length) {
+
   box.innerHTML = `
     <div class="player-lobby-empty">
       ${
-        PLAYER_SEARCH
-          ? "No matching friends found."
+        PLAYER_SEARCH.trim()
+          ? "No players found."
           : "You haven't added any friends yet."
       }
     </div>
   `;
+
   return;
 }
+
 
   box.innerHTML = list.map(u => {
 
