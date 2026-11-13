@@ -1,0 +1,31 @@
+{
+  "title": "Gà rán giòn",
+  "cover": "/assets/cooking/ga-ran.jpg",
+  "time": null,
+  "level": "Trung bình",
+  "ingredients": [
+    "Đùi gà",
+    "Bột chiên giòn",
+    "Trứng gà"
+  ],
+  "steps": [
+    {
+      "text": "Ướp gà (chờ)",
+      "detail": "Ướp gà cho thấm gia vị.",
+      "time": 1200,
+      "tip": "Ướp càng lâu càng ngon."
+    },
+    {
+      "text": "Làm nóng dầu",
+      "detail": "Đun dầu đến khi đủ nóng.",
+      "time": 300,
+      "tip": "Dầu nóng thì gà mới giòn."
+    },
+    {
+      "text": "Chiên gà",
+      "detail": "Chiên gà ngập dầu đến vàng giòn.",
+      "time": 900,
+      "tip": "Giữ lửa vừa."
+    }
+  ]
+}

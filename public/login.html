@@ -1,0 +1,1948 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+
+<meta charset="utf-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<meta name="theme-color" content="#090a0e">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style"
+      content="black">
+<meta name="apple-mobile-web-app-title" content="Livestream Pro">
+
+<meta name="mobile-web-app-capable" content="yes">
+
+<title>Sign In • Livestream Pro</title>
+
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+<style>
+
+/* ==========================================
+   LIVESTREAM PRO
+   MIDNIGHT LUXURY LOGIN
+   INDEPENDENT CSS
+========================================== */
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+html {
+  background: #050608;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body.auth-page {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+
+  background: #050608;
+  color: #f5eee1;
+
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+}
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  text-decoration: none;
+}
+
+.hidden {
+  display: none !important;
+}
+
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  outline: 2px solid #e9c58d;
+  outline-offset: 3px;
+}
+
+/* ==========================================
+   MAIN SCREEN - MAX 430 x 870
+========================================== */
+
+.auth-stage {
+  position: relative;
+  isolation: isolate;
+
+  width: 100%;
+  max-width: 430px;
+
+  height: 100vh;
+  height: 100dvh;
+
+  min-width: 0;
+  min-height: 0;
+
+  padding:
+    calc(18px + env(safe-area-inset-top, 0px))
+    23px;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+
+
+
+background:
+    radial-gradient(
+      ellipse 82% 30% at 50% -7%,
+      rgba(194,143,70,.22),
+      transparent 75%
+    ),
+    radial-gradient(
+      ellipse 75% 24% at 50% 100%,
+      rgba(94,66,35,.11),
+      transparent 85%
+    ),
+    linear-gradient(
+      165deg,
+      #1a1a1c 0%,
+      #0c0e13 64%,
+      #090a0e 100%
+    );
+}
+
+.auth-stage::-webkit-scrollbar {
+  display: none;
+}
+
+.auth-stage::before {
+  content: "";
+
+  position: absolute;
+  inset: 0px;
+  z-index: -1;
+
+  pointer-events: none;
+
+}
+
+/* ==========================================
+   TOP BAR
+========================================== */
+
+.auth-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  color: #c8a56e;
+
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 1.7px;
+  white-space: nowrap;
+}
+
+.auth-top span:last-child {
+  color: #91816b;
+  font-size: 8px;
+  letter-spacing: 1.1px;
+}
+
+/* ==========================================
+   BRAND AREA
+========================================== */
+
+.auth-main {
+  width: 100%;
+  min-width: 0;
+
+  margin: auto 0;
+  padding: 26px 0 22px;
+}
+
+.auth-hero {
+  text-align: center;
+}
+
+.auth-hero .microline {
+  width: 46px;
+  height: 1px;
+
+  margin: 0 auto 20px;
+
+  background: #c6a171;
+}
+
+.login-avatar {
+  width: 92px;
+  height: 92px;
+
+  margin: 0 auto 18px;
+
+  border: 3px solid #171718;
+  border-radius: 50%;
+
+  outline: 1px solid rgba(237,197,129,.7);
+  outline-offset: 4px;
+
+  background:
+    #16151b
+    url("https://i.ibb.co/GvJWn19q/icon-192.png" )
+    center / cover no-repeat;
+
+  box-shadow: 0 12px 38px rgba(0,0,0,.45);
+}
+
+.auth-eyebrow {
+  margin: 0 0 8px;
+
+  color: #b89a6c;
+
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 3px;
+}
+
+.login-title {
+  margin: 0;
+
+  color: #f2dfbb;
+
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(25px, 7vw, 32px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: .7px;
+
+  overflow-wrap: anywhere;
+}
+
+.login-sub {
+  max-width: 285px;
+
+  margin: 11px auto 0;
+
+  color: #aaa4a0;
+
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+/* ==========================================
+   LOGIN PANEL
+========================================== */
+
+.login-panel {
+  margin-top: 26px;
+  padding: 19px 17px 17px;
+
+  border: 1px solid rgba(221,182,115,.32);
+  border-radius: 17px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(52,46,39,.6),
+    rgba(19,20,24,.82) 60%
+  );
+
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.04),
+    0 16px 42px rgba(0,0,0,.18);
+}
+
+.panel-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+
+  margin-bottom: 17px;
+}
+
+.panel-top h2 {
+  margin: 0;
+
+  color: #f0dab5;
+
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.panel-top span {
+  color: #aa906b;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+/* ==========================================
+   FORM FIELDS
+========================================== */
+
+.login-field {
+  margin-top: 13px;
+  min-width: 0;
+
+  text-align: left;
+}
+
+.login-field label,
+.modal-field label {
+  display: block;
+  margin-bottom: 7px;
+
+  color: #c6a575;
+
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1px;
+}
+
+.login-field input,
+.modal-field input {
+  display: block;
+
+  width: 100%;
+  min-width: 0;
+  height: 47px;
+
+  margin: 0;
+  padding: 0 13px;
+
+  border: 1px solid rgba(211,177,121,.27);
+  border-radius: 9px;
+  outline: none;
+
+  background: #121419;
+  color: #f7eee2;
+
+  font-size: 16px;
+
+  transition:
+    border-color .15s ease,
+    box-shadow .15s ease;
+}
+
+.login-field input:focus,
+.modal-field input:focus {
+  border-color: #d5b078;
+
+  box-shadow: 0 0 0 3px rgba(213,176,120,.10);
+}
+
+input::placeholder {
+  color: #827d78;
+  opacity: 1;
+}
+
+/* ==========================================
+   PASSWORD VISIBILITY
+========================================== */
+
+.pass-wrap {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.pass-wrap input {
+  padding-right: 70px;
+}
+
+.pass-eye {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+
+  transform: translateY(-50%);
+
+  display: grid;
+  place-items: center;
+
+  width: 55px;
+  height: 33px;
+
+  margin: 0;
+  padding: 0;
+
+  border: 1px solid rgba(202,164,101,.25);
+  border-radius: 7px;
+
+  background: #292520;
+  color: #e0bc80;
+
+  font-size: 11px;
+  font-weight: 750;
+}
+
+/* ==========================================
+   BUTTONS
+========================================== */
+
+.login-forgot {
+  display: block;
+
+  width: max-content;
+  margin: 12px 0 0 auto;
+  padding: 2px 0;
+
+  border: none;
+  background: transparent;
+
+  color: #dbbc8b;
+
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.login-btn {
+  display: block;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+
+  padding: 10px 12px;
+
+  border: 1px solid #d2af73;
+  border-radius: 10px;
+
+  background: linear-gradient(
+    125deg,
+    #f3dfb5,
+    #c9a06a 80%
+  );
+
+  color: #272017;
+
+  font-size: 13px;
+  font-weight: 850;
+  letter-spacing: .8px;
+}
+
+.login-submit {
+  margin-top: 18px;
+}
+
+.login-guest {
+  display: block;
+
+  width: 100%;
+  min-height: 42px;
+
+  margin-top: 10px;
+
+  border: 1px solid rgba(214,177,117,.32);
+  border-radius: 10px;
+
+  background: rgba(22,22,25,.75);
+  color: #e2caa2;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.login-btn:active,
+.login-guest:active,
+.modal-btn:active {
+  transform: scale(.985);
+}
+
+/* ==========================================
+   REGISTER + FOOTER
+========================================== */
+
+.register-line {
+  margin-top: 17px;
+
+  text-align: center;
+  color: #9c9690;
+
+  font-size: 12px;
+}
+
+.register-line a {
+  color: #e7c694;
+  font-weight: 750;
+}
+
+.auth-foot {
+  margin-top: auto;
+  padding-top: 14px;
+  padding-bottom: 4px;
+
+  border-top: 1px solid rgba(222,186,119,.16);
+
+  text-align: center;
+  color: #87775f;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.35px;
+
+  flex-shrink: 0;
+}
+
+/* ==========================================
+   ALL MODALS
+========================================== */
+
+.modal {
+  position: fixed;
+
+  left: 50%;
+  top: 50%;
+  z-index: 1000;
+
+  transform: translate(-50%, -50%);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: min(100%, 430px);
+  height: min(100dvh, 870px);
+
+  padding: 16px;
+
+  overflow: hidden;
+}
+
+#secModal {
+  z-index: 1100;
+}
+
+#msgModal {
+  z-index: 1200;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+
+  background: rgba(1,2,4,.88);
+
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.modal-card {
+  position: relative;
+  z-index: 1;
+
+  width: 100%;
+  max-width: 380px;
+  max-height: 100%;
+
+  padding: 26px 21px 22px;
+
+  overflow-y: auto;
+
+  border: 1px solid rgba(231,192,129,.45);
+  border-radius: 17px;
+
+  background: linear-gradient(
+    155deg,
+    #2a241f,
+    #17181d 68%
+  );
+
+  box-shadow: 0 25px 70px rgba(0,0,0,.65);
+}
+
+.modal-kicker {
+  color: #bfa071;
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.7px;
+}
+
+.modal-card h3 {
+  margin: 8px 0 9px;
+
+  color: #f0d9b3;
+
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.modal-card p,
+#msgText {
+  margin: 0 0 17px;
+
+  color: #b6afa5;
+
+  font-size: 13px;
+  line-height: 1.65;
+
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.modal-field {
+  margin-top: 15px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 9px;
+
+  margin-top: 21px;
+}
+
+.modal-btn {
+  flex: 1 1 0;
+
+  min-width: 0;
+  min-height: 44px;
+
+  padding: 8px;
+
+  border: 1px solid #d7b580;
+  border-radius: 9px;
+
+  background: linear-gradient(
+    135deg,
+    #efd7a9,
+    #be955f
+  );
+
+  color: #282015;
+
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.modal-btn.quiet {
+  background: #282724;
+  color: #e5ceaa;
+
+  border-color: rgba(211,177,122,.28);
+}
+
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   FINAL RESPONSIVE LAYOUT
+   FULL WIDTH + FULL HEIGHT
+========================================== */
+
+/* NỀN TOÀN MÀN HÌNH */
+
+html {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #050608;
+}
+
+body.auth-page {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+
+  background: #050608;
+}
+
+/* KHUNG CHÍNH - KHÔNG GIỚI HẠN CHIỀU CAO */
+
+body.auth-page .auth-stage {
+  position: relative;
+  isolation: isolate;
+
+  flex: 0 1 430px;
+
+  width: 100%;
+  max-width: 430px;
+  min-width: 0;
+
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+
+  margin: 0;
+
+  padding:
+    calc(16px + env(safe-area-inset-top, 0px))
+    20px
+    calc(16px + env(safe-area-inset-bottom, 0px));
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+
+  box-sizing: border-box;
+}
+
+body.auth-page .auth-stage::-webkit-scrollbar {
+  display: none;
+}
+
+/* THANH TRÊN */
+
+body.auth-page .auth-top {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  width: 100%;
+  min-width: 0;
+
+  margin: 0;
+  padding: 0;
+  white-space: normal;
+}
+
+body.auth-page .auth-top span {
+  min-width: 0;
+  max-width: 50%;
+  line-height: 1.4;
+}
+
+body.auth-page .auth-top span:last-child {
+  text-align: right;
+}
+
+/* NỘI DUNG TRUNG TÂM */
+
+body.auth-page .auth-main {
+  flex: 1 0 auto;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  width: 100%;
+  min-width: 0;
+
+  margin: 0;
+  padding: 18px 0;
+}
+
+/* LOGO VÀ THƯƠNG HIỆU */
+
+body.auth-page .auth-hero {
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+}
+
+body.auth-page .login-avatar {
+  width: 86px;
+  height: 86px;
+  margin: 0 auto 15px;
+}
+
+body.auth-page .login-title {
+  max-width: 100%;
+  font-size: clamp(23px, 7vw, 31px);
+  line-height: 1.2;
+}
+
+body.auth-page .login-sub {
+  max-width: 300px;
+  margin: 10px auto 0;
+  line-height: 1.55;
+}
+
+/* KHUNG ĐĂNG NHẬP */
+
+body.auth-page .login-panel {
+  flex: 0 0 auto;
+
+  width: 100%;
+  min-width: 0;
+
+  margin-top: 20px;
+  padding: 17px 16px;
+}
+
+body.auth-page .panel-top {
+  margin-bottom: 14px;
+}
+
+body.auth-page .panel-top span {
+  font-size: 8px;
+  letter-spacing: .5px;
+  text-align: right;
+}
+
+body.auth-page .login-field {
+  width: 100%;
+  min-width: 0;
+  margin-top: 11px;
+}
+
+body.auth-page .login-field input {
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+}
+
+body.auth-page .login-submit {
+  margin-top: 15px;
+}
+
+body.auth-page .login-guest {
+  margin-top: 9px;
+}
+
+/* ĐĂNG KÝ */
+
+body.auth-page .register-line {
+  flex: 0 0 auto;
+  width: 100%;
+
+  margin: 15px 0 0;
+  text-align: center;
+}
+
+/* FOOTER Ở CUỐI KHUNG */
+
+body.auth-page .auth-foot {
+  flex: 0 0 auto;
+
+  width: 100%;
+  min-width: 0;
+
+  margin: 0;
+  padding: 12px 0 0;
+
+  text-align: center;
+  font-size: 9px;
+  letter-spacing: 1.3px;
+}
+
+/* POPUP FULL HEIGHT */
+
+body.auth-page .modal {
+  width: min(100%, 430px);
+
+  height: 100vh;
+  height: 100dvh;
+  max-height: none;
+
+  padding:
+    calc(14px + env(safe-area-inset-top, 0px))
+    14px
+    calc(14px + env(safe-area-inset-bottom, 0px));
+}
+
+body.auth-page .modal-card {
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+/* MÀN HÌNH THẤP */
+
+@media (max-height: 740px) {
+
+  body.auth-page .auth-stage {
+    padding-top:
+      calc(12px + env(safe-area-inset-top, 0px));
+
+    padding-right: 16px;
+
+    padding-bottom:
+      calc(12px + env(safe-area-inset-bottom, 0px));
+
+    padding-left: 16px;
+  }
+
+  body.auth-page .auth-main {
+    padding: 12px 0;
+  }
+
+  body.auth-page .login-avatar {
+    width: 66px;
+    height: 66px;
+    margin-bottom: 10px;
+  }
+
+  body.auth-page .auth-hero .microline {
+    margin-bottom: 12px;
+  }
+
+  body.auth-page .login-title {
+    font-size: 25px;
+  }
+
+  body.auth-page .login-sub {
+    margin-top: 7px;
+    font-size: 11px;
+  }
+
+  body.auth-page .login-panel {
+    margin-top: 14px;
+    padding: 13px;
+  }
+
+  body.auth-page .panel-top {
+    margin-bottom: 10px;
+  }
+
+  body.auth-page .login-field {
+    margin-top: 9px;
+  }
+
+  body.auth-page .login-field input {
+    height: 43px;
+  }
+
+  body.auth-page .login-submit {
+    margin-top: 11px;
+  }
+
+  body.auth-page .register-line {
+    margin-top: 10px;
+  }
+}
+
+/* MÀN HÌNH RẤT THẤP */
+
+@media (max-height: 590px) {
+
+  body.auth-page .auth-main {
+    justify-content: flex-start;
+    padding: 10px 0;
+  }
+
+  body.auth-page .login-avatar {
+    width: 54px;
+    height: 54px;
+  }
+
+  body.auth-page .login-sub {
+    display: none;
+  }
+
+  body.auth-page .login-panel {
+    margin-top: 12px;
+  }
+}
+
+/* ĐIỆN THOẠI HẸP */
+
+@media (max-width: 360px) {
+
+  body.auth-page .auth-stage {
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+
+  body.auth-page .login-title {
+    font-size: 23px;
+  }
+
+  body.auth-page .panel-top span {
+    font-size: 7px;
+  }
+}
+
+/* GIẢM CHUYỂN ĐỘNG */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   FOOTER ANCHORED LAYOUT
+   BOTTOM FIRST - CONTENT ABOVE
+========================================== */
+
+html {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #090a0e;
+}
+
+body.auth-page {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+
+  background: #090a0e;
+}
+
+/* KHUNG PHỦ TOÀN BỘ CHIỀU CAO */
+
+body.auth-page .auth-stage {
+  position: relative;
+
+  flex: 0 1 430px;
+
+  width: 100%;
+  max-width: 430px;
+  min-width: 0;
+
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+
+  margin: 0;
+
+  padding:
+    calc(14px + env(safe-area-inset-top, 0px))
+    20px
+    calc(10px + env(safe-area-inset-bottom, 0px));
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(194,143,70,.16),
+      transparent 44%
+    ),
+    linear-gradient(
+      180deg,
+      #1a1a1c 0%,
+      #0c0e13 64%,
+      #090a0e 100%
+    );
+}
+
+/* THANH TRÊN NẰM TRONG SAFE AREA */
+
+body.auth-page .auth-top {
+  flex: 0 0 auto;
+
+  width: 100%;
+  min-width: 0;
+
+  margin: 0;
+  padding: 0;
+}
+
+/* NỘI DUNG CHIẾM PHẦN CÒN LẠI */
+
+body.auth-page .auth-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+
+  margin: 0;
+  padding: 12px 0;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+body.auth-page .auth-main::-webkit-scrollbar {
+  display: none;
+}
+
+/* CĂN NHÓM LOGO - FORM THEO KHÔNG GIAN CÒN LẠI */
+
+body.auth-page .auth-hero {
+  flex: 0 0 auto;
+
+  width: 100%;
+  min-width: 0;
+
+  margin-top: auto;
+}
+
+body.auth-page .login-panel {
+  flex: 0 0 auto;
+
+  width: 100%;
+  min-width: 0;
+
+  margin-top: 20px;
+}
+
+body.auth-page .register-line {
+  flex: 0 0 auto;
+
+  width: 100%;
+  margin-top: 15px;
+  margin-bottom: auto;
+  padding-bottom: 4px;
+}
+
+/* FOOTER LÀ MỐC ĐÁY */
+
+body.auth-page .auth-foot {
+  position: relative;
+
+  flex: 0 0 auto;
+
+  width: 100%;
+  min-width: 0;
+
+  margin: 0;
+  padding: 11px 0 0;
+
+  border-top: 1px solid rgba(222,186,119,.16);
+
+  text-align: center;
+  line-height: 1.5;
+
+  background: transparent;
+}
+
+/* MÀN HÌNH THẤP */
+
+@media (max-height: 740px) {
+
+  body.auth-page .auth-stage {
+    padding-top:
+      calc(10px + env(safe-area-inset-top, 0px));
+
+    padding-right: 16px;
+
+    padding-bottom:
+      calc(8px + env(safe-area-inset-bottom, 0px));
+
+    padding-left: 16px;
+  }
+
+  body.auth-page .auth-main {
+    padding: 9px 0;
+  }
+
+  body.auth-page .login-avatar {
+    width: 66px;
+    height: 66px;
+    margin-bottom: 10px;
+  }
+
+  body.auth-page .login-panel {
+    margin-top: 13px;
+    padding: 13px;
+  }
+
+  body.auth-page .register-line {
+    margin-top: 10px;
+  }
+
+  body.auth-page .auth-foot {
+    padding-top: 8px;
+  }
+}
+
+/* MÀN HÌNH RẤT THẤP */
+
+@media (max-height: 590px) {
+
+  body.auth-page .login-avatar {
+    width: 54px;
+    height: 54px;
+  }
+
+  body.auth-page .login-sub {
+    display: none;
+  }
+
+  body.auth-page .auth-main {
+    padding: 8px 0;
+  }
+
+  body.auth-page .login-panel {
+    margin-top: 10px;
+  }
+}
+
+/* MOBILE HẸP */
+
+@media (max-width: 360px) {
+
+  body.auth-page .auth-stage {
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+
+  body.auth-page .login-title {
+    font-size: 23px;
+  }
+}
+
+
+</style>
+
+</head>
+
+<body class="auth-page">
+
+<!-- ==========================================
+     MAIN LOGIN SCREEN
+========================================== -->
+
+<main class="auth-stage">
+
+  <!-- TOP BRAND -->
+
+<div class="auth-top">
+  <span>PREMIUM CONNECTIONS</span>
+  <span>EXCLUSIVE EXPERIENCE</span>
+</div>
+
+
+  <div class="auth-main">
+
+    <!-- HERO -->
+
+<header class="auth-hero">
+
+  
+
+  <div
+    class="login-avatar"
+    role="img"
+    aria-label="Livestream Pro Logo">
+  </div>
+
+  <p class="auth-eyebrow">
+    WELCOME BACK
+  </p>
+
+  <h1 class="login-title">
+    LIVESTREAM PRO
+  </h1>
+
+  <p class="login-sub">
+    Connect, interact, and explore
+    with our community.
+  </p>
+
+</header>
+
+
+<!-- LOGIN FORM -->
+<section
+  class="login-panel"
+  aria-label="Account Sign In">
+
+  <div class="panel-top">
+    <h2>Sign In</h2>
+    <span>MEMBER ACCESS</span>
+  </div>
+
+  <!-- USERNAME -->
+  <div class="login-field">
+
+    <label for="username">
+      USERNAME
+    </label>
+
+    <input
+      id="username"
+      type="text"
+      placeholder="Enter your username"
+      autocomplete="username"
+      autocapitalize="none"
+      spellcheck="false"
+      onkeydown="if(event.key==='Enter')document.getElementById('password').focus()"
+    >
+
+  </div>
+
+  <!-- PASSWORD -->
+  <div class="login-field">
+
+    <label for="password">
+      PASSWORD
+    </label>
+
+    <div class="pass-wrap">
+
+      <input
+        id="password"
+        type="password"
+        placeholder="Enter your password"
+        autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')login()"
+      >
+
+      <button
+        type="button"
+        class="pass-eye"
+        aria-label="Show password"
+        onclick="togglePass('password',this)">
+        Show
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- FORGOT PASSWORD -->
+  <button
+    type="button"
+    class="login-forgot"
+    onclick="openForgot()">
+    Forgot Password?
+  </button>
+
+  <!-- SIGN IN -->
+  <button
+    type="button"
+    class="login-btn login-submit"
+    onclick="login()">
+    SIGN IN
+  </button>
+
+  <!-- GUEST -->
+  <button
+    type="button"
+    class="login-guest"
+    onclick="guestLogin()">
+    Continue as Guest
+  </button>
+
+</section>
+
+    <!-- REGISTER -->
+<div class="register-line">
+  Don't have an account?
+  <a href="/register.html">Sign Up</a>
+</div>
+  </div>
+
+  <!-- FOOTER -->
+<footer class="auth-foot">
+  © 2026 LIVESTREAM PRO
+</footer>
+
+</main>
+
+
+<!-- ==========================================
+     PASSWORD RECOVERY MODAL
+========================================== -->
+
+<div id="forgotModal" class="modal hidden">
+
+  <div
+    class="modal-backdrop"
+    onclick="closeForgot()">
+  </div>
+
+  <section
+    class="modal-card"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="forgotTitle">
+
+    <div class="modal-kicker">
+      ACCOUNT RECOVERY
+    </div>
+
+    <h3 id="forgotTitle">
+      Reset Password
+    </h3>
+
+    <p>
+      Verify your account information
+      to reset your password.
+    </p>
+
+    <!-- USERNAME -->
+    <div class="modal-field">
+
+      <label for="forgotUser">
+        USERNAME
+      </label>
+
+      <input
+        id="forgotUser"
+        placeholder="Enter your username"
+        autocomplete="username">
+
+    </div>
+
+    <!-- NEW PASSWORD -->
+    <div class="modal-field">
+
+      <label for="forgotPass">
+        NEW PASSWORD
+      </label>
+
+      <input
+        id="forgotPass"
+        type="password"
+        placeholder="Enter a new password"
+        autocomplete="new-password">
+
+    </div>
+
+    <!-- SECURITY CODE -->
+    <div class="modal-field">
+
+      <label for="forgotSec">
+        SECURITY CODE
+      </label>
+
+      <input
+        id="forgotSec"
+        type="password"
+        placeholder="Enter your security code"
+        autocomplete="off">
+
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="modal-actions">
+
+      <button
+        type="button"
+        class="modal-btn quiet"
+        onclick="closeForgot()">
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        class="modal-btn"
+        onclick="submitForgot()">
+        Reset Password
+      </button>
+
+    </div>
+
+  </section>
+
+</div>
+
+<!-- ==========================================
+     GLOBAL MESSAGE
+========================================== -->
+
+<!-- ==========================================
+     GLOBAL MESSAGE MODAL
+========================================== -->
+
+<div id="msgModal" class="modal hidden">
+
+  <div class="modal-backdrop"></div>
+
+  <section
+    class="modal-card"
+    role="alertdialog"
+    aria-modal="true"
+    aria-labelledby="msgTitle"
+    aria-describedby="msgText">
+
+    <div class="modal-kicker">
+      SYSTEM NOTIFICATION
+    </div>
+
+    <h3 id="msgTitle">
+      Notification
+    </h3>
+
+    <p id="msgText"></p>
+
+    <div class="modal-actions">
+
+      <button
+        id="btnSupport"
+        type="button"
+        class="modal-btn quiet hidden">
+        Contact Support
+      </button>
+
+      <button
+        type="button"
+        class="modal-btn"
+        onclick="closeMsg()">
+        Got It
+      </button>
+
+    </div>
+
+  </section>
+
+</div>
+
+
+<!-- ==========================================
+     SECURITY VERIFICATION
+========================================== -->
+
+<!-- ==========================================
+     SECURITY VERIFICATION MODAL
+========================================== -->
+
+<div id="secModal" class="modal hidden">
+
+  <div class="modal-backdrop"></div>
+
+  <section
+    class="modal-card"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="secTitle">
+
+    <div class="modal-kicker">
+      SECURE ACCESS
+    </div>
+
+    <h3 id="secTitle">
+      Security Verification
+    </h3>
+
+    <p>
+      Enter your security code
+      to complete the sign-in process.
+    </p>
+
+    <!-- SECURITY CODE -->
+    <div class="modal-field">
+
+      <label for="secInput">
+        SECURITY CODE
+      </label>
+
+      <div class="pass-wrap">
+
+        <input
+          id="secInput"
+          type="password"
+          placeholder="Enter your security code"
+          autocomplete="off"
+          onkeydown="if(event.key==='Enter')submitSecurity()">
+
+        <button
+          type="button"
+          class="pass-eye"
+          aria-label="Show security code"
+          onclick="togglePass('secInput',this)">
+          Show
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="modal-actions">
+
+      <button
+        type="button"
+        class="modal-btn quiet"
+        onclick="closeSec()">
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        class="modal-btn"
+        onclick="submitSecurity()">
+        Verify & Continue
+      </button>
+
+    </div>
+
+  </section>
+
+</div>
+
+<!-- GIỮ NGUYÊN PHẦN SCRIPT CŨ BÊN DƯỚI -->
+
+
+
+
+<script>
+
+
+
+async function submitForgot() {
+
+  const u = document.getElementById("forgotUser").value.trim();
+  const p = document.getElementById("forgotPass").value;
+  const sec = document.getElementById("forgotSec").value;
+
+  if (!u || !p || !sec) {
+
+    showMsg(
+      "Please enter your username, new password, and security code."
+    );
+
+    return;
+  }
+
+  const res = await fetch("/api/change-password", {
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/json"
+    },
+
+    body: JSON.stringify({
+      username: u,
+      newPassword: p,
+      securityCode: sec
+    })
+  });
+
+  const d = await res.json();
+
+  if (!d.ok) {
+
+    showMsg(
+      "Account not found or verification failed."
+    );
+
+    return;
+  }
+
+  showMsg(
+    "Password changed successfully."
+  );
+
+  closeForgot();
+}
+
+
+  function guestLogin(){
+  const guest = {
+    uid: "guest_" + Math.random().toString(36).slice(2,10),
+    name: "Guest",
+    level: 1,
+    avatar: "https://api.dicebear.com/7.x/thumbs/svg?seed=guest"
+  };
+
+  localStorage.setItem("user_profile", JSON.stringify(guest));
+  localStorage.setItem("login_uid", guest.uid);
+  localStorage.setItem("isGuest", "1");
+
+  location.href = "/lobby.html";
+}
+
+let __loginUser = null;
+let __loginPass = null;
+
+async function login(){
+  const u = document.getElementById("username").value.trim();
+  const p = document.getElementById("password").value;
+
+  if(!u || !p){
+    showMsg("Please enter your username and password.");
+    return;
+  }
+
+  const t = localStorage.getItem("trustedToken");
+const tu = localStorage.getItem("trustedUser");
+
+if(t && tu === u){
+  const res = await fetch("/api/check-trusted",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ username:u, trustedToken:t })
+  });
+
+  const d = await res.json();
+  
+if(d.ok){
+  const res2 = await fetch("/api/login",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      username:u,
+      password:p,
+      securityCode:"__TRUSTED__"
+    })
+  });
+
+
+  const data = await res2.json();
+
+if(!data || !data.profile){
+  showMsg(	"Sign in failed. Please try again.");
+  return;
+}
+
+  // 🔥 LƯU PROFILE + XOÁ GUEST
+  localStorage.setItem("user_profile", JSON.stringify(data.profile));
+  localStorage.setItem("login_uid", data?.profile?.uid);
+  localStorage.removeItem("isGuest");      // ⭐ QUAN TRỌNG
+  localStorage.removeItem("guest_uid");   // nếu có
+
+  location.href="/social.html";
+  return;
+}
+
+}
+
+
+  const res = await fetch("/api/prelogin",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ username:u, password:p })
+  });
+
+const data = await res.json();
+
+if (data.error === "blocked") {
+
+  showMsg(
+    "Your account has been suspended.\nPlease contact support for assistance.",
+    "Account Suspended",
+    true
+  );
+
+  return;
+}
+
+if(!data.ok){
+  showMsg("Incorrect username or password.");
+  return;
+}
+
+
+  // Đúng → mới mở modal bảo mật
+  __loginUser = u;
+  __loginPass = p;
+
+  document.getElementById("secModal").classList.remove("hidden");
+  document.getElementById("secInput").focus();
+}
+
+
+
+
+async function submitSecurity(){
+  const sec = document.getElementById("secInput").value;
+  if(!sec){
+    showMsg("Please enter your security code.");
+    return;
+  }
+
+  const res = await fetch("/api/login",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      username: __loginUser,
+      password: __loginPass,
+      securityCode: sec
+    })
+  });
+
+  const data = await res.json();
+
+ if (data.error === "blocked") {
+showMsg(
+  "Your account has been suspended.\nPlease contact support for assistance.",
+  "Account Suspended",
+  true
+);
+  closeSec();
+  return;
+}
+
+if(data.error){
+  showMsg("Incorrect security code. Please try again.");
+  return;
+}
+
+  // login thành công
+  localStorage.setItem("user_profile", JSON.stringify(data.profile));
+  localStorage.setItem("login_uid", data?.profile?.uid);
+  localStorage.removeItem("isGuest");
+
+if(data.trustedToken){
+  localStorage.setItem("trustedToken", data.trustedToken);
+  localStorage.setItem("trustedUser", __loginUser);
+}
+
+
+  location.href = "/social.html";
+}
+
+
+function closeSec(){
+  document.getElementById("secModal").classList.add("hidden");
+  document.getElementById("secInput").value = "";
+}
+
+
+function openForgot(){
+  document.getElementById("forgotModal").classList.remove("hidden");
+}
+
+function closeForgot(){
+  document.getElementById("forgotModal").classList.add("hidden");
+}
+
+
+
+function togglePass(id, el) {
+
+  const input = document.getElementById(id);
+
+  if (!input) return;
+
+  const show = input.type === "password";
+
+  input.type = show ? "text" : "password";
+
+  // ENGLISH LABEL
+  el.textContent = show ? "Hide" : "Show";
+
+  const isSecurity = id === "secInput";
+
+  el.setAttribute(
+    "aria-label",
+    show
+      ? (isSecurity ? "Hide security code" : "Hide password")
+      : (isSecurity ? "Show security code" : "Show password")
+  );
+
+  el.setAttribute(
+    "aria-pressed",
+    String(show)
+  );
+}
+
+
+
+
+// ✅ Link hỗ trợ: bạn đổi sang Zalo / Hotline / Messenger tuỳ ý
+const SUPPORT_URL = "https://zalo.me"; // ví dụ: "https://zalo.me/0xxxxxxxxx" hoặc "tel:09xxxxxxxx" hoặc "mailto:support@..."
+
+function cleanLoginText(value) {
+  return String(value ?? "")
+    .replace(
+      /[\p{Extended_Pictographic}\uFE0F\u200D]/gu,
+      ""
+    )
+    .trim();
+}
+
+
+function showMsg(text, title="Notification", showSupport=false){
+document.getElementById("msgTitle").textContent =
+  cleanLoginText(title);
+
+document.getElementById("msgText").textContent =
+  cleanLoginText(text);
+
+  const btn = document.getElementById("btnSupport");
+  if (btn){
+    if (showSupport) {
+      btn.classList.remove("hidden");
+      btn.onclick = () => window.open(SUPPORT_URL, "_blank");
+    } else {
+      btn.classList.add("hidden");
+      btn.onclick = null;
+    }
+  }
+
+  document.getElementById("msgModal").classList.remove("hidden");
+}
+
+
+function closeMsg(){
+  document.getElementById("msgModal").classList.add("hidden");
+}
+
+
+
+
+</script>
+
+
+
+</body>
+</html>

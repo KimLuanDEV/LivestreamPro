@@ -1,0 +1,1069 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Diamond Top-Up | Livestream Pro</title>
+
+<script src="/lsp-page-transition.js"></script>
+
+<style>
+/* =========================================
+   LIVESTREAM PRO - LUXURY TOPUP
+   ĐỘC LẬP HOÀN TOÀN STYLE.CSS
+========================================= */
+
+:root {
+  color-scheme: dark;
+  --bg: #08090c;
+  --card: #17191f;
+  --gold: #dbbc83;
+  --gold-light: #f6e3b9;
+  --text: #f8f3e9;
+  --muted: #999da8;
+  --line: rgba(219,188,131,.22);
+  --green: #7ed1a3;
+  --red: #ef8c8c;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+body { overflow-x: hidden; }
+body.sheet-open { overflow: hidden; }
+
+button, input { font: inherit; }
+button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+
+.hidden, [hidden] { display: none !important; }
+
+.icon {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+/* ===== KHUNG TRANG ===== */
+
+.topup-shell {
+  width: 100%;
+  max-width: 520px;
+  min-height: 100dvh;
+  margin: auto;
+  padding: 0 16px 36px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(171,121,56,.13), transparent 50%),
+    linear-gradient(180deg, #101116, #08090c 55%);
+}
+
+/* ===== HEADER ===== */
+
+.topup-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  margin: 0 -16px;
+  padding: calc(env(safe-area-inset-top, 0px) + 8px) 16px 12px;
+  background: rgba(12,13,17,.95);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.header-row {
+  height: 62px;
+  display: grid;
+  grid-template-columns: 44px minmax(0,1fr) 44px;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-back {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(219,188,131,.36);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #28241d, #121419);
+  color: var(--gold-light);
+}
+
+.btn-back:active { transform: scale(.96); }
+
+.header-center { text-align: center; min-width: 0; }
+
+.header-brand {
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 2px;
+  color: var(--gold);
+}
+
+.header-center h1 {
+  margin: 5px 0 0;
+  font: 700 24px Georgia, "Times New Roman", serif;
+  color: var(--gold-light);
+}
+
+.header-symbol {
+  display: grid;
+  place-items: center;
+  color: var(--gold);
+}
+
+.header-symbol .icon { width: 26px; height: 26px; }
+
+/* ===== TIÊU ĐỀ PHỤ ===== */
+
+.page-intro {
+  text-align: center;
+  padding: 23px 4px 20px;
+}
+
+.page-intro small {
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  color: #c2a16a;
+  font-weight: 700;
+}
+
+.page-intro p {
+  margin: 9px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* ===== SỐ DƯ ===== */
+
+.wallet-card {
+  position: relative;
+  overflow: hidden;
+  padding: 24px 22px;
+  border-radius: 20px;
+  border: 1px solid rgba(230,192,122,.43);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(215,165,75,.2), transparent 55%),
+    linear-gradient(140deg, #29251f, #141821 65%, #10131a);
+  box-shadow: 0 14px 36px rgba(0,0,0,.35);
+}
+
+.wallet-card::after {
+  content: "";
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  right: -85px;
+  top: -70px;
+  border: 1px solid rgba(255,226,159,.10);
+  box-shadow: 0 0 0 33px rgba(230,184,100,.03);
+  pointer-events: none;
+}
+
+.wallet-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 2px;
+}
+
+.wallet-label {
+  margin-top: 24px;
+  font-size: 12px;
+  color: #b7b7bd;
+}
+
+.wallet-value {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  color: var(--gold-light);
+}
+
+.wallet-value .icon {
+  width: 30px;
+  height: 30px;
+}
+
+#myCoin {
+  font-size: clamp(27px,7vw,38px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.wallet-footer {
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(225,190,121,.16);
+  color: #9699a3;
+  font-size: 11px;
+}
+
+/* ===== PHƯƠNG THỨC NẠP ===== */
+
+.method-heading {
+  margin: 27px 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.method-heading h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+  color: var(--gold-light);
+}
+
+.method-heading::after {
+  content: "";
+  width: 40px;
+  height: 1px;
+  background: var(--gold);
+  opacity: .55;
+}
+
+.topup-option {
+  margin-bottom: 13px;
+  overflow: hidden;
+  border-radius: 17px;
+  border: 1px solid var(--line);
+  background: linear-gradient(125deg, #1c1c20, #111318);
+  box-shadow: 0 8px 24px rgba(0,0,0,.22);
+}
+
+.topup-option.open {
+  border-color: rgba(218,181,112,.5);
+}
+
+.option-header {
+  width: 100%;
+  min-height: 78px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+}
+
+.option-icon {
+  width: 47px;
+  height: 47px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  border: 1px solid rgba(217,181,107,.25);
+  background: rgba(215,176,96,.08);
+  color: var(--gold);
+}
+
+.option-icon .icon {
+  width: 23px;
+  height: 23px;
+}
+
+.option-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.option-title {
+  font-size: 14px;
+  font-weight: 750;
+  color: var(--gold-light);
+}
+
+.option-desc {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+
+.option-arrow {
+  width: 18px;
+  height: 18px;
+  color: var(--gold);
+  transition: transform .2s;
+}
+
+.topup-option.open .option-arrow {
+  transform: rotate(180deg);
+}
+
+.option-content {
+  border-top: 1px solid var(--line);
+  padding: 13px;
+}
+
+/* ===== DANH SÁCH ĐẠI LÝ ===== */
+
+.agent-list {
+  display: grid;
+  gap: 10px;
+}
+
+.agent-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid rgba(216,187,129,.24);
+  border-radius: 13px;
+  background: linear-gradient(120deg, #252320, #15171c);
+  text-align: left;
+  color: var(--text);
+}
+
+.agent-card:active { transform: scale(.99); }
+
+.agent-avatar {
+  width: 49px;
+  height: 49px;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--gold);
+  background: #101116;
+}
+
+.agent-avatar-placeholder {
+  width: 49px;
+  height: 49px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  color: var(--gold);
+}
+
+.agent-info { flex: 1; min-width: 0; }
+
+.agent-name {
+  font-size: 13px;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.agent-bank {
+  font-size: 11px;
+  margin-top: 5px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.agent-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--green);
+  margin-top: 7px;
+}
+
+.agent-status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.agent-status.offline { color: #8d919d; }
+
+.agent-chevron {
+  width: 17px;
+  color: var(--gold);
+}
+
+.empty-agent {
+  text-align: center;
+  padding: 23px 12px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+/* ===== THẺ NẠP ===== */
+
+.card-logos {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.card-logos img {
+  max-width: 32px;
+  max-height: 19px;
+  object-fit: contain;
+}
+
+.card-coming {
+  padding: 19px 12px;
+  text-align: center;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  color: var(--gold);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.card-coming small {
+  display: block;
+  color: var(--muted);
+  margin-top: 5px;
+}
+
+/* ===== LƯU Ý ===== */
+
+.topup-note {
+  margin-top: 22px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: rgba(204,169,108,.045);
+  font-size: 11px;
+  line-height: 1.7;
+  color: #aaabb0;
+}
+
+.topup-note .icon { color: var(--gold); }
+
+/* ===== OVERLAY ===== */
+
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0,0,0,.79);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* ===== BOTTOM SHEET ===== */
+
+.bottom-sheet {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  z-index: 110;
+  width: 100%;
+  max-width: 520px;
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 12px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px 18px calc(22px + env(safe-area-inset-bottom, 0px));
+  border: 1px solid rgba(221,187,122,.36);
+  border-bottom: none;
+  border-radius: 23px 23px 0 0;
+  background:
+    radial-gradient(ellipse at top, rgba(193,145,69,.15), transparent 55%),
+    #15171d;
+  box-shadow: 0 -20px 60px rgba(0,0,0,.6);
+  transform: translate(-50%,110%);
+  transition: transform .28s ease;
+  pointer-events: none;
+}
+
+.bottom-sheet.show {
+  transform: translate(-50%,0);
+  pointer-events: auto;
+}
+
+.sheet-handle {
+  width: 42px;
+  height: 5px;
+  margin: 0 auto 15px;
+  border-radius: 99px;
+  background: #64583f;
+}
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sheet-head h3 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--gold-light);
+}
+
+.sheet-close {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #25262c;
+  color: var(--gold);
+}
+
+.sheet-sub {
+  margin: 8px 0 16px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ===== QR ===== */
+
+.qr-frame {
+  width: min(100%,250px);
+  min-height: 200px;
+  margin: auto;
+  padding: 12px;
+  border-radius: 16px;
+  border: 2px solid #cba768;
+  background: #fff;
+  display: grid;
+  place-items: center;
+}
+
+#sheetQr {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 250px;
+  object-fit: contain;
+}
+
+.qr-fallback {
+  text-align: center;
+  color: #454545;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* ===== THÔNG TIN CHUYỂN KHOẢN ===== */
+
+.bank-info {
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #101217;
+}
+
+.bank-row {
+  display: grid;
+  grid-template-columns: 94px minmax(0,1fr);
+  gap: 10px;
+  padding: 12px 13px;
+  border-bottom: 1px solid rgba(255,255,255,.065);
+  font-size: 12px;
+}
+
+.bank-row:last-child { border-bottom: none; }
+
+.bank-label { color: var(--muted); }
+
+.bank-value {
+  text-align: right;
+  font-weight: 650;
+  color: #f6ead2;
+  overflow-wrap: anywhere;
+}
+
+#transferText {
+  font: 700 12px ui-monospace, monospace;
+  color: var(--gold-light);
+  overflow-wrap: anywhere;
+}
+
+/* ===== BUTTONS ===== */
+
+.btn-copy,
+.btn-confirm {
+  width: 100%;
+  min-height: 49px;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.btn-copy {
+  border: 1px solid var(--line);
+  background: #262321;
+  color: var(--gold-light);
+}
+
+.btn-confirm {
+  border: 1px solid #e9ca8c;
+  background: linear-gradient(135deg, #f5e0b2, #c79c56);
+  color: #211a10;
+}
+
+.btn-confirm:disabled { opacity: .55; }
+
+.transfer-status {
+  margin-top: 13px;
+  padding: 12px;
+  text-align: center;
+  border: 1px solid rgba(211,176,103,.24);
+  border-radius: 10px;
+  color: #e7c887;
+  background: rgba(208,157,70,.06);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* ===== TOAST ===== */
+
+.toast {
+  position: fixed;
+  z-index: 1000;
+  left: 50%;
+  bottom: calc(25px + env(safe-area-inset-bottom, 0px));
+  width: max-content;
+  max-width: calc(100vw - 30px);
+  padding: 12px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #24242a;
+  color: #f8e9ca;
+  box-shadow: 0 12px 30px rgba(0,0,0,.5);
+  font-size: 12px;
+  text-align: center;
+  opacity: 0;
+  transform: translate(-50%,12px);
+  transition: opacity .2s, transform .2s;
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%,0);
+}
+
+.toast-success { border-color: rgba(126,209,163,.5); }
+.toast-error { border-color: rgba(239,140,140,.5); }
+
+/* ===== FORCE LOGOUT ===== */
+
+#forceLogoutModal {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+#forceLogoutModal.show { display: flex; }
+
+.fl-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.88);
+  backdrop-filter: blur(7px);
+}
+
+.fl-box {
+  position: relative;
+  max-width: 350px;
+  width: 100%;
+  padding: 28px 23px;
+  text-align: center;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #191b23;
+}
+
+.fl-icon { color: var(--red); }
+
+.fl-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--gold-light);
+  margin: 14px 0;
+}
+
+.fl-msg,
+.fl-sub {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.fl-sub { margin-top: 12px; }
+
+/* ===== MOBILE ===== */
+
+@media (max-width: 380px) {
+  .topup-shell { padding-left: 12px; padding-right: 12px; }
+  .topup-header { margin: 0 -12px; padding-left: 12px; padding-right: 12px; }
+  .header-center h1 { font-size: 22px; }
+  .wallet-card { padding: 21px 17px; }
+  .card-logos img { max-width: 25px; }
+  .option-header { gap: 9px; padding: 12px; }
+  .option-title { font-size: 13px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: .01ms !important;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<script src="/guard.js"></script>
+
+<!-- SVG ICON SYSTEM -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     style="position:absolute;width:0;height:0;overflow:hidden"
+     aria-hidden="true">
+
+  <symbol id="tp-back" viewBox="0 0 24 24">
+    <path d="m15 18-6-6 6-6"/>
+  </symbol>
+
+  <symbol id="tp-gem" viewBox="0 0 24 24">
+    <path d="M6 3h12l4 6-10 12L2 9l4-6ZM2 9h20M12 21 8 9l2-6m2 18 4-12-2-6"/>
+  </symbol>
+
+  <symbol id="tp-wallet" viewBox="0 0 24 24">
+    <rect x="3" y="5" width="18" height="15" rx="2"/>
+    <path d="M3 9h18M16 14h2"/>
+  </symbol>
+
+  <symbol id="tp-bank" viewBox="0 0 24 24">
+    <path d="m3 10 9-7 9 7M4 10h16M5 10v9m5-9v9m4-9v9m5-9v9M3 21h18"/>
+  </symbol>
+
+  <symbol id="tp-card" viewBox="0 0 24 24">
+    <rect x="2" y="5" width="20" height="14" rx="2"/>
+    <path d="M2 10h20M6 15h4"/>
+  </symbol>
+
+  <symbol id="tp-user" viewBox="0 0 24 24">
+    <circle cx="12" cy="8" r="4"/>
+    <path d="M4 21a8 8 0 0 1 16 0"/>
+  </symbol>
+
+  <symbol id="tp-down" viewBox="0 0 24 24">
+    <path d="m6 9 6 6 6-6"/>
+  </symbol>
+
+  <symbol id="tp-right" viewBox="0 0 24 24">
+    <path d="m9 18 6-6-6-6"/>
+  </symbol>
+
+  <symbol id="tp-copy" viewBox="0 0 24 24">
+    <rect x="8" y="8" width="13" height="13" rx="2"/>
+    <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>
+  </symbol>
+
+  <symbol id="tp-check" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9"/>
+    <path d="m8 12 3 3 5-6"/>
+  </symbol>
+
+  <symbol id="tp-clock" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9"/>
+    <path d="M12 7v5l3 2"/>
+  </symbol>
+
+  <symbol id="tp-info" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9"/>
+    <path d="M12 11v5M12 7h.01"/>
+  </symbol>
+
+  <symbol id="tp-close" viewBox="0 0 24 24">
+    <path d="M18 6 6 18M6 6l12 12"/>
+  </symbol>
+
+  <symbol id="tp-ban" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9"/>
+    <path d="m5.6 5.6 12.8 12.8"/>
+  </symbol>
+
+</svg>
+
+<div class="topup-shell">
+
+  <!-- HEADER -->
+  <header class="topup-header">
+    <div class="header-row">
+
+      <button type="button"
+              class="btn-back"
+              onclick="goTopupBack()"
+              	aria-label="Back">
+        <svg class="icon"><use href="#tp-back"/></svg>
+      </button>
+
+      <div class="header-center">
+        <div class="header-brand">LIVESTREAM PRO</div>
+        <h1>Diamond Top-Up</h1>
+      </div>
+
+      <div class="header-symbol">
+        <svg class="icon"><use href="#tp-gem"/></svg>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="topup-page">
+
+    <div class="page-intro">
+      <small>PREMIUM WALLET</small>
+      <p>Choose your preferred top-up method.</p>
+    </div>
+
+    <!-- SỐ DƯ -->
+    <section class="wallet-card">
+
+      <div class="wallet-top">
+        <span>DIGITAL ASSETS</span>
+        <svg class="icon"><use href="#tp-wallet"/></svg>
+      </div>
+
+      <div class="wallet-label">
+        Current Diamond Balance
+      </div>
+
+      <div class="wallet-value">
+        <svg class="icon"><use href="#tp-gem"/></svg>
+        <strong id="myCoin">0</strong>
+      </div>
+
+      <div class="wallet-footer">
+        Your balance is synchronized with your account.
+      </div>
+
+    </section>
+
+    <!-- PHƯƠNG THỨC -->
+    <div class="method-heading">
+      <h2>Top-Up Methods</h2>
+    </div>
+
+    <!-- NẠP QUA ĐẠI LÝ -->
+   <section class="topup-option" id="agentOption">
+
+<button class="option-header"
+        type="button"
+        aria-expanded="false">
+
+        <span class="option-icon">
+          <svg class="icon"><use href="#tp-bank"/></svg>
+        </span>
+
+<span class="option-left">
+
+  <span class="option-title">
+    Top Up via Agent
+  </span>
+
+  <span class="option-desc" style="display:block">
+    Bank Transfer · QR Code
+  </span>
+
+</span>
+
+        <svg class="icon option-arrow"><use href="#tp-down"/></svg>
+
+      </button>
+
+
+<div class="option-content hidden">
+  <div id="agentList" class="agent-list">
+<div class="empty-agent">
+  Loading top-up agents...
+</div>
+  </div>
+</div>
+
+
+    </section>
+
+    <!-- NẠP QUA THẺ -->
+    <section class="topup-option" id="cardOption">
+
+      <button class="option-header"
+              type="button"
+              aria-expanded="false">
+
+        <span class="option-icon">
+          <svg class="icon"><use href="#tp-card"/></svg>
+        </span>
+
+        <span class="option-left">
+          <span class="option-title">Card Top-Up</span>
+          <span class="option-desc" style="display:block">
+            ATM · Visa · Mastercard
+          </span>
+        </span>
+
+        <span class="card-logos">
+          <img src="/images/payments/atm.png" alt="ATM">
+          <img src="/images/payments/visa.png" alt="Visa">
+          <img src="/images/payments/mastercard.png" alt="Mastercard">
+        </span>
+
+        <svg class="icon option-arrow"><use href="#tp-down"/></svg>
+
+      </button>
+
+      <div class="option-content hidden">
+<div class="card-coming">
+
+  Card top-up is coming soon.
+
+  <small>
+    Please use an authorized top-up agent for now.
+  </small>
+
+</div>
+      </div>
+
+    </section>
+
+<div class="topup-note">
+
+  <svg class="icon">
+    <use href="#tp-info"/>
+  </svg>
+
+  <span>
+    Always verify the agent's bank name,
+    account number, and account holder before
+    making a transfer. Only confirm after
+    you have completed the payment.
+  </span>
+
+</div>
+
+  </main>
+</div>
+
+<!-- OVERLAY -->
+<div id="sheetOverlay" class="sheet-overlay hidden"></div>
+
+<!-- QR BOTTOM SHEET -->
+<section id="qrSheet"
+         class="bottom-sheet"
+         role="dialog"
+         aria-modal="true"
+         aria-label="Bank Transfer Details">
+
+  <div class="sheet-handle"></div>
+
+  <div class="sheet-head">
+   <h3>Diamond Top-Up Details</h3>
+    <button class="sheet-close"
+            type="button"
+            onclick="closeTopupSheet()"
+           aria-label="Close">
+      <svg class="icon"><use href="#tp-close"/></svg>
+    </button>
+  </div>
+
+<p class="sheet-sub">
+  Scan the QR code or use the bank details
+  below to complete your transfer.
+</p>
+
+<div class="qr-frame">
+
+  <img
+    id="sheetQr"
+    alt="Bank Transfer QR Code"
+    hidden
+  >
+
+  <div
+    id="qrUnavailable"
+    class="qr-fallback"
+    hidden
+  >
+
+    QR code is currently unavailable.
+
+    Please use the bank details below
+    to complete your transfer manually.
+
+  </div>
+
+</div>
+
+  <div id="sheetBankInfo" class="bank-info"></div>
+
+  <button class="btn-copy"
+          type="button"
+          onclick="copyTransfer()">
+    <svg class="icon"><use href="#tp-copy"/></svg>
+    Copy Transfer Reference
+  </button>
+
+  <button id="btnTransferred"
+          class="btn-confirm"
+          type="button">
+    <svg class="icon"><use href="#tp-check"/></svg>
+   <span>I HAVE COMPLETED THE TRANSFER</span>
+  </button>
+
+<div
+  id="transferStatus"
+  class="transfer-status hidden"
+>
+  Notification sent successfully.
+  Waiting for agent confirmation.
+</div>
+
+</section>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/topup.js"></script>
+<script src="/push-init.js"></script>
+<script src="/app-entry-guard.js"></script>
+
+</body>
+</html>

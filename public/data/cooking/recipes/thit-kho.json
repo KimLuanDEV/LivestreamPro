@@ -1,0 +1,31 @@
+{
+  "title": "Thịt kho trứng",
+  "cover": "/assets/cooking/thit-kho.jpg",
+  "time": null,
+  "level": "Trung bình",
+  "ingredients": [
+    "Thịt ba chỉ",
+    "Trứng",
+    "Nước dừa"
+  ],
+  "steps": [
+    {
+      "text": "Luộc trứng",
+      "detail": "Luộc trứng chín, bóc vỏ.",
+      "time": 600,
+      "tip": "Chiên sơ trứng để thấm màu."
+    },
+    {
+      "text": "Ướp thịt",
+      "detail": "Ướp thịt cho thấm gia vị.",
+      "time": 1200,
+      "tip": "Ướp tối thiểu 20 phút."
+    },
+    {
+      "text": "Kho thịt",
+      "detail": "Kho thịt với nước dừa đến mềm.",
+      "time": 2400,
+      "tip": "Kho lửa nhỏ."
+    }
+  ]
+}

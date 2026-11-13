@@ -1,0 +1,9626 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>MILITARY</title>
+<meta name="viewport"
+content="width=device-width,
+initial-scale=1,
+maximum-scale=1,
+user-scalable=no">
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+
+
+#app{
+  position:fixed;
+
+  width:430px;
+  height:870px;
+
+  left:50%;
+  top:50%;
+
+  transform:translate(-50%,-50%) scale(1);
+  transform-origin:center center;
+
+  overflow:hidden;
+
+  background:
+    url("/assets/police/bg-police-casino.jpg")
+    center / cover no-repeat;
+}
+
+html, body{
+  margin:0;
+  padding:0;
+  height:100%;
+  overflow:hidden;
+  overscroll-behavior:none;
+  touch-action:none;
+}
+
+
+
+*{
+-webkit-user-select:none;
+-moz-user-select:none;
+-ms-user-select:none;
+user-select:none;
+}
+
+body{
+margin:0;
+font-family:system-ui;
+color:#fff;
+overflow:hidden;
+  /* FIX NỀN TRẮNG */
+background:#000;
+position:fixed;
+width:100%;
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+
+}
+
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:#000000;
+  z-index:-1;
+}
+/* TOP BAR */
+
+.topbar{
+display:flex;
+justify-content:space-between;
+padding:12px 16px;
+font-weight:700;
+background:#050505;
+border-bottom:1px solid rgba(255,255,255,.1);
+}
+
+
+
+/* WHEEL AREA */
+
+.wheel{
+
+position:relative;
+
+width:380px;
+height:380px;
+
+max-width:380px;
+max-height:380px;
+
+margin:160px auto 0;
+
+}
+
+
+
+
+
+.wheel-center{
+
+position:absolute;
+left:50%;
+top:50%;
+
+transform:translate(-50%,-50%);
+
+width:120px;
+height:120px;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+font-weight:900;
+font-size:26px;
+
+color:#ffffff;
+
+background:
+url("/assets/police/wheel-center-police.png")
+center / contain no-repeat;
+
+text-shadow:
+0 0 10px #00aaff,
+0 0 20px #00aaff;
+
+z-index:2;
+
+}
+
+
+#timer{
+top:50px;
+font-size:20px;
+font-weight:900;
+
+color:#ffffff;
+
+text-shadow:
+0 0 10px #00aaff,
+0 0 20px #00aaff,
+0 0 40px #00aaff;
+
+position:absolute;
+}
+
+
+
+
+
+/* SLOT */
+
+.slot{
+
+position:absolute;
+
+width:95px;
+height:95px;
+
+left:189px;
+top:188px;
+
+margin-left:-47px;
+margin-top:-47px;
+
+border-radius:50%;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+cursor:pointer;
+
+background:
+url("/assets/police/slot-bg-police.png")
+center / contain no-repeat;
+
+transition:.2s;
+
+}
+
+
+
+
+.slot-img{
+
+width:60%;
+height:60%;
+
+object-fit:contain;
+
+transition:.2s;
+
+}
+
+.slot.win{
+
+box-shadow:
+0 0 20px #f5e12a,
+0 0 40px #f5e12a,
+inset 0 0 10px #f5e12a;
+
+border-radius:50%;
+
+}
+
+
+
+
+
+.slot.win .slot-img{
+
+filter:
+drop-shadow(0 0 15px #f5e12a)
+drop-shadow(0 0 30px #f5e12a)
+drop-shadow(0 0 60px #f5e12a);
+
+transform:scale(1.15);
+
+animation:policeWin 0.6s infinite alternate;
+
+}
+
+@keyframes policeWin{
+
+0%{
+filter:drop-shadow(0 0 15px #f5e12a);
+transform:scale(1.1);
+}
+
+100%{
+filter:drop-shadow(0 0 40px #f5e12a);
+transform:scale(1.2);
+}
+
+}
+
+.multi{
+  position:absolute;
+
+  top:-23px;
+  right:6px;
+
+  width:80px;
+  height:70px;
+
+  pointer-events:none;
+
+  z-index:3;
+}
+
+.multi img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  transition:.2s;
+}
+
+
+.slot:hover .multi img{
+  transform:scale(1.1);
+  filter:
+    drop-shadow(0 0 10px #ffd700)
+    drop-shadow(0 0 20px #ffd700);
+}
+
+.slot.win .multi img{
+  filter:
+    drop-shadow(0 0 10px #ffd700)
+    drop-shadow(0 0 25px #ffcc00);
+
+  transform:scale(1.15);
+}
+
+
+
+.pool{
+
+display:none;
+position:absolute;
+bottom:6px;
+left:50%;
+transform:translateX(-50%);
+
+font-size:13px;
+font-weight:700;
+
+color:#ffd700;
+
+text-shadow:
+0 0 5px #000,
+0 0 10px #000;
+
+}
+
+
+/* GRID POSITION */
+
+.s1{ transform:rotate(225deg) translate(140px) rotate(-225deg); }
+
+.s2{ transform:rotate(270deg) translate(140px) rotate(-270deg); }
+
+.s3{ transform:rotate(315deg) translate(140px) rotate(-315deg); }
+
+.s4{ transform:rotate(0deg) translate(140px) rotate(0deg); }
+
+.s5{ transform:rotate(45deg) translate(140px) rotate(-45deg); }
+
+.s6{ transform:rotate(90deg) translate(140px) rotate(-90deg); }
+
+.s7{ transform:rotate(135deg) translate(140px) rotate(-135deg); }
+
+.s8{ transform:rotate(180deg) translate(140px) rotate(-180deg); }
+
+/* BET PANEL */
+
+.bet-panel{
+
+position:absolute;
+bottom:-20px;
+width:100%;
+height:280px;
+padding:0;
+
+background:
+url("/assets/police/police-panel.png")
+center / cover no-repeat;
+
+
+z-index: 1;
+}
+
+
+
+
+.bet-chip{
+
+width:100px;
+height:70px;
+
+border-radius:50%;
+
+background:
+
+url("/assets/police/police-chip.png")
+center / contain no-repeat;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+font-weight:900;
+font-size:14px;
+
+color:#fff;
+
+text-shadow:0 0 6px #000;
+
+transition:.2s;
+
+}
+
+
+.bet-chip:hover{
+transform:scale(1.15);
+
+}
+
+
+.bet-chip.active{
+color:#fff;
+}
+
+/* RESULT MODAL */
+
+.result{
+position:fixed;
+inset:0;
+
+display:none;
+
+background:rgba(0,0,0,.45);
+
+align-items:flex-end;
+justify-content:center;
+
+z-index:10;
+}
+
+.result-box{
+position: absolute;
+bottom: -52px;
+width:100%;
+height:320px;
+
+background:
+url("/assets/police/result-frame-police.png")
+center / contain no-repeat;
+
+padding:70px 30px 40px;
+
+text-align:center;
+
+animation:sheetUp .35s ease;
+
+}
+
+@keyframes sheetUp{
+
+from{
+transform:translateY(100%);
+}
+
+to{
+transform:translateY(0);
+}
+
+}
+
+
+
+
+
+/* ==========================================
+   MILITARY BET BADGE
+   HIỂN THỊ KIM CƯƠNG ĐÃ CƯỢC
+========================================== */
+
+.mybet {
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+
+    min-width: 55px;
+    height: 25px;
+    padding: 0 9px;
+    box-sizing: border-box;
+
+    background:
+        linear-gradient(
+            135deg,
+            #50613d 0%,
+            #2c412a 25%,
+            #172719 65%,
+            #09130c 100%
+        );
+
+    border: 1px solid #c3a45d;
+    border-bottom: 2px solid #e1bb65;
+    border-radius: 5px;
+
+    box-shadow:
+        0 4px 8px rgba(0,0,0,.8),
+        inset 0 1px 0 rgba(255,255,255,.2),
+        inset 0 0 8px rgba(0,0,0,.4);
+
+    color: #aaff73;
+    font-size: 13px;
+    font-weight: 900;
+    white-space: nowrap;
+
+    z-index: 4;
+    pointer-events: none;
+}
+
+/* ĐƯỜNG KIM LOẠI TRÊN BẢNG */
+
+.mybet::before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 7px;
+    right: 7px;
+    height: 1px;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,220,130,.65),
+        transparent
+    );
+}
+
+/* ICON KIM CƯƠNG */
+
+.mybet img {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+    object-fit: contain;
+
+    filter:
+        drop-shadow(0 0 3px #9aff57)
+        drop-shadow(0 0 5px rgba(100,255,60,.45));
+}
+
+/* SỐ KIM CƯƠNG */
+
+.mybet span {
+    color: #b1ff76;
+    font-size: 13px;
+    font-weight: 1000;
+    letter-spacing: .4px;
+    font-variant-numeric: tabular-nums;
+
+    text-shadow:
+        0 1px 2px #000,
+        0 0 6px rgba(110,255,60,.55);
+}
+
+/* HIỆU ỨNG KHI CẬP NHẬT CƯỢC */
+
+.mybet.active {
+    animation: betPulse .35s ease-out;
+}
+
+@keyframes betPulse {
+    0% {
+        transform: translateX(-50%) scale(.8);
+        opacity: .5;
+    }
+
+    65% {
+        transform: translateX(-50%) scale(1.12);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateX(-50%) scale(1);
+        opacity: 1;
+    }
+}
+
+
+
+
+/* ==========================================
+   MILITARY COIN BAR
+   ARMY WALLET DISPLAY
+========================================== */
+
+.coin-bar {
+    position: absolute;
+    bottom: 108px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+    width: 260px;
+    pointer-events: none;
+}
+
+/* KHUNG THÉP QUÂN ĐỘI */
+
+.coin-box {
+    position: relative;
+    width: 100%;
+    min-height: 64px;
+    box-sizing: border-box;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    padding: 7px 17px;
+
+}
+
+/* ĐƯỜNG KIM LOẠI PHÍA TRÊN */
+
+.coin-box::before {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: 14px;
+    right: 14px;
+    height: 1px;
+
+
+}
+
+/* THANH LED PHÍA DƯỚI */
+
+.coin-box::after {
+    content: "";
+    position: absolute;
+    bottom: 3px;
+    left: 25px;
+    right: 25px;
+    height: 2px;
+
+
+}
+
+/* ĐINH TÁN KIM LOẠI */
+
+.coin-rivet {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+
+    background: radial-gradient(
+        circle at 30% 30%,
+        #ffe6a0,
+        #a1803f 65%,
+        #49371b
+    );
+
+    border: 1px solid #5c4725;
+
+    box-shadow:
+        0 1px 2px #000,
+        inset 0 1px 1px #fff5;
+}
+
+.coin-rivet-left {
+    left: 6px;
+}
+
+.coin-rivet-right {
+    right: 6px;
+}
+
+/* KHUNG ICON KIM CƯƠNG */
+
+.coin-icon-wrap {
+    width: 47px;
+    height: 47px;
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid #718b54;
+    border-radius: 6px;
+
+    background: radial-gradient(
+        circle,
+        #375a31,
+        #172d1a 65%,
+        #09140c
+    );
+
+    box-shadow:
+        inset 0 0 9px #0009,
+        0 0 8px #6aff4022;
+}
+
+/* ICON KIM CƯƠNG */
+
+.coin-icon {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+
+    filter:
+        drop-shadow(0 0 4px #91ff68)
+        drop-shadow(0 0 7px #65ff4055);
+}
+
+/* THÔNG TIN SỐ DƯ */
+
+.coin-info {
+    min-width: 0;
+    flex: 1;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+
+/* NHÃN QUÂN ĐỘI */
+
+.coin-label {
+    color: #e6c579;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 1.1px;
+    white-space: nowrap;
+
+    text-shadow: 0 1px 2px #000;
+}
+
+/* SỐ DƯ LED XANH */
+
+.coin-value {
+    display: block;
+    max-width: 100%;
+
+    color: #aaff78;
+    font-size: 22px;
+    font-weight: 1000;
+    line-height: 1.2;
+    letter-spacing: .5px;
+
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+
+    text-shadow:
+        0 2px 2px #000,
+        0 0 7px rgba(113,255,58,.55);
+}
+
+
+
+
+.bet-hitbox{
+
+position:absolute;
+width:100%;
+height:100%;
+left:0;
+top:0;
+}
+
+.chip{
+
+position:absolute;
+
+width:95px;
+height:95px;
+
+cursor:pointer;
+
+}
+
+
+
+
+.chip::after{
+
+content:"";
+
+position:absolute;
+left:50%;
+top:50%;
+
+width:63px;
+height:64px;
+
+transform:translate(-50%,-50%) scale(0.8);
+
+border-radius:50%;
+
+border:3px solid #b6b900;
+
+box-shadow:
+0 0 10px #b6b900,
+0 0 20px #b6b900,
+0 0 40px #b6b900;
+
+opacity:0;
+
+transition:.2s;
+
+}
+
+/* khi chọn chip */
+
+.chip.active::after{
+
+opacity:1;
+transform:translate(-50%,-48%) scale(1.12);
+
+}
+
+
+
+/* vị trí theo ảnh */
+
+.c1{
+left:41px;
+bottom:64px;
+width: 58px;
+height: 50px;
+}
+
+.c2{
+left:114px;
+bottom:64px;
+width: 58px;
+height: 50px;
+}
+
+.c3{
+left:186px;
+bottom:64px;
+width: 58px;
+height: 50px;
+}
+
+.c4{
+left:259px;
+bottom:64px;
+width: 58px;
+height: 50px;
+}
+
+
+.c5{
+    left:332px;
+    bottom:64px;
+    width:58px;
+    height:50px;
+}
+
+.result-img{
+position: absolute;
+top:125px;
+left: 162px;
+width:170px;
+height:85px;
+margin:10px auto;
+display:block;
+
+}
+
+
+
+
+.sheet-handle{
+
+width:46px;
+height:5px;
+
+border-radius:10px;
+
+background:#777;
+
+margin:0 auto 16px;
+
+opacity:.6;
+
+}
+
+
+.result-grid{
+position: absolute;
+bottom: 100px;
+left: 113px;
+display:flex;
+justify-content:space-between;
+gap:160px;
+margin-top:40px;
+
+}
+
+.result-card{
+flex:1;
+padding:10px;
+font-size:14px;
+
+}
+
+.result-card.win{
+color:#00ff9d;
+}
+
+.result-value{
+position: absolute;
+bottom: 36px;
+font-size:22px;
+font-weight:800;
+}
+
+
+#betClosedModal{
+position:fixed;
+inset:0;
+display:none;
+align-items:center;
+justify-content:center;
+background:rgba(0,0,0,.45);
+z-index:999;
+}
+
+
+.bet-closed-bg{
+
+width:420px;
+height:200px;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+background:
+url("/assets/police/police-alert.png")
+center / contain no-repeat;
+
+}
+
+#betClosedText{
+position:absolute;
+font-size:16px;
+font-weight:900;
+color:#fff;
+text-shadow:
+0 0 10px #00aaff,
+0 0 20px #00aaff;
+}
+
+
+
+
+
+.wheel-stand{
+
+position:absolute;
+
+left:50%;
+bottom:-161px;
+
+transform:translateX(-50%);
+
+width:650px;
+height:425px;
+
+background:
+url("/assets/police/wheel-stand.png")
+center / contain no-repeat;
+
+pointer-events:none;
+
+z-index:0;
+
+}
+
+
+
+
+.wheel-spokes{
+
+position:absolute;
+
+left:50%;
+top:195px;
+
+transform:translate(-50%,-50%);
+
+width:300px;
+height:330px;
+
+background:
+url("/assets/police/wheel-spokes-police.png")
+center / contain no-repeat;
+
+pointer-events:none;
+
+z-index:0;
+
+}
+
+
+
+
+/* HISTORY */
+
+.wheel-history{
+
+position:absolute;
+bottom: 160px;
+left:50%;
+transform:translateX(-50%);
+
+width:340px;
+height:60px;
+
+display:flex;
+flex-direction:column;
+align-items:center;
+
+z-index:3;
+
+}
+
+
+
+.history-list{
+
+display:flex;
+gap:3px;
+
+}
+
+.history-item{
+
+position:relative;
+width:48px;
+height:48px;
+
+border-radius:30px;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+background:
+linear-gradient(
+180deg,
+#0d1b2a,
+#020617
+);
+
+border:1px solid rgba(0,170,255,.4);
+
+box-shadow:
+0 0 12px rgba(0,170,255,.5),
+inset 0 0 6px rgba(0,170,255,.3);
+
+overflow:hidden;
+
+}
+
+/* slot 1,6,7,8 = xanh */
+.history-item.history-blue{
+    background: linear-gradient(
+        145deg,
+        #426447,
+        #1d3925 55%,
+        #0a1b10
+    );
+
+    border-color: #91ad70;
+
+    box-shadow:
+        0 4px 8px #0009,
+        inset 0 0 12px #75e65b22;
+}
+
+/* slot 2,3,4,5 = đỏ */
+.history-item.history-red{
+    background: linear-gradient(
+        145deg,
+        #71483d,
+        #422921 55%,
+        #1c1411
+    );
+
+    border-color: #b98466;
+
+    box-shadow:
+        0 4px 8px #0009,
+        inset 0 0 12px #e56c4b22;
+}
+
+
+.history-item img{
+width:100%;
+height:100%;
+object-fit:contain;
+border-radius: 50%;
+}
+
+
+.history-new{
+
+position:absolute;
+
+top:35px;
+left:11px;
+
+font-size:6px;
+font-weight:900;
+
+padding:2px 5px;
+
+color:#fff;
+
+background:linear-gradient(
+90deg,
+#ff0033,
+#ff6600
+);
+
+border-radius:6px;
+
+box-shadow:
+0 0 6px #ff3300,
+0 0 10px #ff3300;
+
+animation:newPulse .8s infinite alternate;
+
+}
+
+@keyframes newPulse{
+
+0%{
+transform:scale(1);
+}
+
+100%{
+transform:scale(1.1);
+}
+
+}
+
+
+
+
+.wheel-round{
+
+position:absolute;
+top:8px;
+right:135px;
+
+font-size:12px;
+font-weight:700;
+
+color:#fff;
+
+background:rgba(0,0,0,0.5);
+
+padding:4px 8px;
+
+border-radius:6px;
+
+letter-spacing:1px;
+
+}
+
+
+
+
+
+
+
+
+
+.bet-history-btn{
+
+position:absolute;
+bottom:252px;
+right:-20px;
+
+width:130px;
+height:130px;
+
+pointer-events:none;
+
+}
+
+.history-img{
+
+width:100%;
+height:100%;
+object-fit:contain;
+
+}
+
+
+.history-hitbox{
+
+position:absolute;
+
+width:77px;
+height:115px;
+
+left:30px;
+top:3px;
+
+cursor:pointer;
+
+pointer-events:auto;
+
+}
+
+.bet-history-btn img{
+
+width:100%;
+height:134%;
+object-fit:contain;
+
+
+
+transition:.15s;
+
+}
+
+.bet-history-btn:hover img{
+
+transform:scale(1.08);
+
+
+}
+
+
+/* FULLSCREEN HISTORY */
+
+.history-modal{
+
+position:fixed;
+inset:0;
+
+display:none;
+flex-direction:column;
+
+background:
+linear-gradient(
+180deg,
+#020617,
+#000000
+);
+
+z-index:50;
+
+}
+
+/* HEADER */
+
+.history-header{
+
+display:flex;
+align-items:center;
+justify-content:space-between;
+
+padding:16px 20px;
+
+border-bottom:1px solid rgba(0,170,255,.4);
+
+background:#001a33;
+
+}
+
+
+.history-box{
+
+width:320px;
+max-height:420px;
+
+background:#020617;
+
+border:2px solid #00aaff;
+
+border-radius:12px;
+
+padding:20px;
+
+box-shadow:
+0 0 20px #00aaff;
+
+overflow:auto;
+
+}
+
+.history-title{
+
+font-size:18px;
+font-weight:900;
+
+color:#00aaff;
+
+text-shadow:0 0 10px #00aaff;
+
+}
+
+.history-sub{
+font-size:12px;
+opacity:.7;
+}
+
+/* TABLE AREA */
+
+.history-table{
+
+flex:1;
+
+overflow:auto;
+
+padding:10px 12px;
+
+}
+
+/* HEADER ROW */
+
+.history-head{
+
+display:grid;
+
+grid-template-columns:1fr 1fr 1fr 1fr;
+
+font-weight:900;
+
+padding:10px 0;
+
+text-align:center;
+
+background:#001a33;
+
+border-bottom:1px solid #00aaff;
+
+}
+
+/* BODY */
+
+.history-body{
+
+display:flex;
+flex-direction:column;
+
+}
+
+
+
+
+
+
+.history-bets{
+
+display:flex;
+flex-direction:column;
+gap:8px;
+
+}
+
+/* ROW */
+
+.history-row{
+
+display:grid;
+
+grid-template-columns:1fr 1fr 1fr 1fr;
+
+padding:12px 0;
+
+font-size:14px;
+
+text-align:center;
+
+border-bottom:1px solid rgba(255,255,255,.06);
+
+transition:.15s;
+
+}
+
+.history-row:hover{
+
+background:#0d1b2a;
+
+}
+
+/* WIN / LOSE */
+
+.history-row.win{
+color:#00ff9d;
+font-weight:800;
+}
+
+.history-row.lose{
+color:#ff5b5b;
+}
+
+.history-close{
+
+position:absolute;
+top:14px;
+right:16px;
+
+background:#003a66;
+
+border:none;
+
+color:#fff;
+
+font-weight:900;
+
+padding:8px 14px;
+
+border-radius:6px;
+
+cursor:pointer;
+
+}
+
+
+
+.history-slot-icon{
+width:26px;
+height:26px;
+object-fit:contain;
+margin-right:8px;
+}
+
+
+.result-row{
+background:#001a33;
+border:1px solid #00aaff;
+box-shadow:0 0 10px #00aaff;
+font-weight:900;
+}
+
+
+
+
+
+/* ROUND DETAIL FULLSCREEN */
+
+.round-result{
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+gap:14px;
+
+padding:16px;
+
+border-bottom:1px solid rgba(0,170,255,.3);
+margin:-20px;
+}
+
+.round-result-icon{
+
+width:100px;
+height:100px;
+
+background-size:contain;
+background-position:center;
+background-repeat:no-repeat;
+
+filter:
+drop-shadow(0 0 10px #00aaff);
+
+}
+
+.round-result-text{
+
+font-size:18px;
+font-weight:900;
+
+color:#ffd700;
+
+text-shadow:
+0 0 10px #ffd700;
+
+}
+
+/* LIST */
+
+.round-detail-list{
+
+flex:1;
+
+overflow:auto;
+
+padding:10px 14px;
+
+display:flex;
+flex-direction:column;
+gap:8px;
+
+}
+
+/* SLOT ROW */
+
+.round-slot-row{
+
+display:grid;
+
+grid-template-columns:142px 2fr 1fr;
+
+align-items:center;
+
+padding:0;
+
+border-bottom:1px solid rgba(255,255,255,.08);
+
+}
+
+.round-slot-row:hover{
+background:#0d1b2a;
+}
+
+.round-slot-left{
+
+display:flex;
+position: relative;
+align-items:center;
+justify-content:center;
+gap:10px;
+left: -14px;
+}
+
+.round-slot-icon{
+
+width:60px;
+height:60px;
+
+object-fit:contain;
+
+}
+
+.round-slot-bet{
+font-weight:900;
+color:#fff;
+}
+
+.round-slot-win{
+color:#00ff9d;
+font-weight:900;
+}
+
+
+.round-table-head{
+
+display:grid;
+grid-template-columns:120px 1fr 1fr;
+
+padding:12px 14px;
+
+font-weight:900;
+
+background:#001a33;
+
+border-bottom:1px solid #00aaff;
+
+text-align:center;
+
+letter-spacing:1px;
+
+}
+
+
+
+.exit-btn{
+
+position:absolute;
+bottom:226px;
+left:-14px;
+
+width:180px;
+height:192px;
+
+pointer-events:none;
+
+}
+
+.exit-img{
+
+width:100%;
+height:100%;
+object-fit:contain;
+
+}
+
+
+
+.exit-hitbox{
+
+position:absolute;
+
+width:80px;
+height:40px;
+
+left:90px;
+top:80px;
+
+cursor:pointer;
+
+pointer-events:auto;
+
+}
+
+
+
+.exit-btn:hover img{
+
+transform:scale(1.1);
+
+
+}
+
+
+
+
+
+/* ================= LOADING FULLSCREEN PRO ================= */
+
+#gameLoading{
+position:fixed;
+inset:0;
+z-index:99999;
+overflow:hidden;
+background:#000;
+opacity:1;
+}
+
+.loading-full-bg{
+position:absolute;
+inset:0;
+width:100%;
+height:100%;
+/*object-fit:cover;*/
+object-position:center;
+transform:scale(1.03);
+filter:
+brightness(.72)
+contrast(1.08)
+saturate(1.08);
+}
+
+.loading-overlay{
+position:absolute;
+inset:0;
+}
+
+
+/* ==================================
+   LOADING BAR - FIT BACKGROUND
+   SCREEN 430 x 870
+================================== */
+
+#gameLoading .loading-ui {
+    position: absolute;
+
+    /* Căn vào thanh trống trên ảnh */
+    left: 50%;
+    top: 70%;
+
+    transform: translateX(-50%);
+
+    width: 355px;
+    height: 28px;
+
+    padding: 0;
+    margin: 0;
+
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+
+    display: block;
+    z-index: 5;
+    box-sizing: border-box;
+}
+
+/* XÓA TRANG TRÍ CỦA KHUNG CŨ */
+
+#gameLoading .loading-ui::before,
+#gameLoading .loading-ui::after {
+    content: none;
+}
+
+/* CHỈ CÒN THANH TIẾN TRÌNH */
+
+#gameLoading .loading-progress-bar {
+    position: relative;
+
+    width: 100%;
+    height: 100%;
+
+    margin: 0;
+    padding: 0;
+
+    background: transparent;
+    border: none;
+    border-radius: 999px;
+    box-shadow: none;
+
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* MÀU XANH CHẠY THEO TIẾN TRÌNH */
+
+#loadingProgress {
+    position: relative;
+
+    width: 0%;
+    height: 100%;
+
+    border-radius: 999px;
+
+    background:
+        repeating-linear-gradient(
+            110deg,
+            transparent 0 12px,
+            rgba(0, 40, 0, .22) 12px 16px
+        ),
+        linear-gradient(
+            180deg,
+            #d5ff87 0%,
+            #83ff40 45%,
+            #279b20 100%
+        );
+
+    box-shadow:
+        inset 0 2px 3px #ffffff65,
+        0 0 12px #65ff38;
+
+    transition: width .18s linear;
+}
+
+/* HIỆU ỨNG ÁNH SÁNG */
+
+#loadingProgress::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,.35),
+        transparent
+    );
+
+    animation: loadingShine 1.5s linear infinite;
+}
+
+@keyframes loadingShine {
+    from { transform: translateX(-100%); }
+    to   { transform: translateX(100%); }
+}
+
+
+@keyframes armyProgressShine {
+    from { transform: translateX(-100%); }
+    to   { transform: translateX(100%); }
+}
+
+/* DÒNG DƯỚI THANH */
+
+.loading-progress-footer {
+    width: 100%;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.loading-progress-ready {
+    color: #91c77d;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+/* PHẦN TRĂM */
+
+.loading-percent {
+    color: #baff83;
+
+    font-size: 17px;
+    font-weight: 1000;
+    letter-spacing: 1px;
+
+    font-variant-numeric: tabular-nums;
+
+    text-shadow:
+        0 1px 2px #000,
+        0 0 9px rgba(116,255,57,.5);
+}
+
+/* KHẨU HIỆU */
+
+.loading-bottom-text {
+    margin-top: 18px;
+
+    color: #c5a963;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-align: center;
+
+    opacity: .85;
+}
+
+/* GIẢM CHUYỂN ĐỘNG KHI CẦN */
+
+@media (prefers-reduced-motion: reduce) {
+    .loading-army-badge,
+    .loading-status-led,
+    #loadingProgress::after {
+        animation: none;
+    }
+}
+
+
+/* fade out */
+#gameLoading.hide{
+opacity:0;
+transition:opacity .65s ease;
+pointer-events:none;
+}
+
+
+
+/* ==========================================
+   MILITARY TOP WINNERS BACKGROUND
+========================================== */
+
+
+/* ======================================
+   TOP WINNERS - CĂN 3 THẺ VÀO KHUNG
+====================================== */
+
+.top-winners {
+    position: absolute;
+    top: -500px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    width: 430px;
+    height: 240px;
+    box-sizing: border-box;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+
+    padding: 0;
+
+    background:
+        url("/assets/police/top-winners-bg.png")
+        center / 100% 100% no-repeat;
+
+    filter: drop-shadow(0 8px 12px rgba(0,0,0,.65));
+
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* 3 thẻ căn độc lập theo khung ảnh */
+
+.top-winners .top-card {
+    position: absolute;
+    z-index: 2;
+
+    width: 100px;
+    height: 125px;
+    padding: 0;
+    margin: 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    background: none;
+    border: none;
+    box-shadow: none;
+
+    box-sizing: border-box;
+}
+
+/* TOP 2 - KHUNG BẠC BÊN TRÁI */
+
+.top-winners .top2 {
+    left: 52px;
+    top: 72px;
+}
+
+/* TOP 1 - KHUNG VÀNG CHÍNH GIỮA */
+
+.top-winners .top1 {
+    left: 165px;
+    top: 68px;
+}
+
+/* TOP 3 - KHUNG ĐỒNG BÊN PHẢI */
+
+.top-winners .top3 {
+    left: 278px;
+    top: 72px;
+}
+
+/* TÊN NGƯỜI CHƠI */
+
+.top-winners .top-name {
+    position: static;
+    margin: 0 0 5px;
+
+    max-width: 95px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    font-size: 12px;
+    font-weight: 900;
+    opacity: 1;
+    text-align: center;
+    color: #fff;
+    text-shadow: 0 2px 4px #000;
+}
+
+/* SỐ KIM CƯƠNG THẮNG */
+
+.top-winners .top-win {
+    position: static;
+    margin: 0;
+
+    max-width: 100px;
+    font-size: 13px;
+    font-weight: 900;
+    text-align: center;
+
+    text-shadow: 0 2px 4px #000;
+}
+
+
+/* CARD CHUNG */
+.top-card{
+  width:135px;
+  height:180px;
+
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+
+  background:
+    url("/assets/police/top-card.png")
+    center / contain no-repeat;
+
+  padding:0;
+
+  border:none;
+  box-shadow:none;
+}
+
+
+/* TEXT */
+.top-name{
+  position: relative;
+  font-size:13px;
+  opacity:.7;
+  margin-top:6px;
+  left:0px;
+  top: 6px;
+  font-weight: bold;
+}
+
+.top-win{
+  position: relative;
+  font-size:13px;
+  font-weight:900;
+  margin-top:2px;
+  left: 5px;
+  top:5px;
+}
+
+/* BADGE */
+.top-rank{
+  font-size:12px;
+  margin-bottom:2px;
+}
+
+
+
+.top1 .top-win{
+  color:#ffd700;
+}
+
+.top2 .top-win{
+  color:#c0c0c0;
+}
+
+.top3 .top-win{
+  color:#cd7f32;
+}
+
+
+.top-card{
+  animation:topFade .4s ease;
+}
+
+@keyframes topFade{
+  from{
+    opacity:0;
+    transform:translateY(20px) scale(.8);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
+}
+
+
+
+.slot-miss-btn{
+
+position:absolute;
+top:38px;
+left:13px;
+
+width:60px;
+height:130px;
+
+pointer-events:none;
+
+}
+
+.slot-miss-btn img{
+width:100%;
+height:134%;
+object-fit:contain;
+}
+
+.slot-miss-hitbox{
+
+position:absolute;
+
+width:50px;
+height:50px;
+
+left:5px;
+top:60px;
+
+cursor:pointer;
+
+pointer-events:auto;
+
+}
+
+
+
+.miss-box{
+
+background:#001a33;
+border:1px solid #00aaff;
+border-radius:10px;
+
+padding:12px;
+margin-bottom:10px;
+
+text-align:center;
+
+box-shadow:0 0 10px #00aaff;
+
+}
+
+.miss-box img{
+width:40px;
+height:40px;
+}
+
+.miss-count{
+
+font-size:18px;
+font-weight:900;
+
+color:#ffd700;
+
+}
+
+.miss-sub{
+
+font-size:11px;
+opacity:.6;
+
+}
+
+.miss-box.event{
+
+border-color:#ff0033;
+box-shadow:0 0 10px #ff0033;
+
+}
+
+
+.event-last{
+
+margin-top:6px;
+
+font-size:10px;
+line-height:1.3;
+
+opacity:.8;
+
+color:#ffd700;
+
+text-shadow:0 0 4px #000;
+
+}
+
+
+
+.toggle-name-btn{
+
+position:absolute;
+
+top:78px;
+right: 0px;
+
+width:113px;
+height:80px;
+
+pointer-events:none;
+
+}
+
+.toggle-name-img{
+width:100%;
+height:100%;
+object-fit:contain;
+
+transition:.2s;
+}
+
+.toggle-name-hitbox{
+
+position:absolute;
+
+width:85px;
+height:45px;
+
+left:17px;
+top:15px;
+
+cursor:pointer;
+
+pointer-events:auto;
+
+}
+
+
+
+.predict-box{
+
+position:absolute;
+top:-20px;
+left:50%;
+transform:translateX(-50%);
+
+width:240px;
+
+text-align:center;
+z-index:6;
+
+}
+
+.predict-title{
+
+font-size:12px;
+font-weight:900;
+
+color:#00cfff;
+
+text-shadow:
+0 0 10px #00aaff;
+
+margin-bottom:6px;
+
+}
+
+.predict-list{
+
+display:flex;
+justify-content:center;
+gap:6px;
+
+}
+
+.predict-slot{
+
+width:46px;
+height:46px;
+
+border-radius:50%;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+background:
+linear-gradient(
+180deg,
+#0d1b2a,
+#020617
+);
+
+border:1px solid rgba(0,170,255,.5);
+
+box-shadow:
+0 0 10px rgba(0,170,255,.6),
+inset 0 0 6px rgba(0,170,255,.4);
+
+}
+
+.predict-slot img{
+
+width:80%;
+height:80%;
+object-fit:contain;
+
+}
+
+
+.predict-title-img{
+
+width:200px;
+margin-bottom:-50px;
+
+
+}
+
+
+
+*{
+-webkit-tap-highlight-color: rgba(0,0,0,0);
+-webkit-touch-callout:none;
+outline:none;
+}
+
+div,img,button{
+-webkit-tap-highlight-color: transparent;
+}
+
+
+
+/* ==========================================
+   MILITARY HISTORY UI
+   MY BET HISTORY + ROUND DETAILS
+   Layout: 430 x 870
+========================================== */
+
+#myBetHistoryModal,
+#roundDetailModal {
+    --army-bg: #07110b;
+    --army-panel: #152719;
+    --army-green: #74ff39;
+    --army-gold: #eac46b;
+    --army-line: #49634a;
+
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+
+    background:
+        radial-gradient(
+            ellipse at 50% 0%,
+            rgba(60, 105, 46, .35),
+            transparent 55%
+        ),
+        repeating-linear-gradient(
+            135deg,
+            transparent 0 45px,
+            rgba(105, 135, 65, .025) 45px 90px
+        ),
+        linear-gradient(
+            180deg,
+            #172a1b 0%,
+            #0b190f 42%,
+            #030804 100%
+        );
+
+    color: #e8f2e4;
+    font-family: system-ui, sans-serif;
+    z-index: 500;
+    overflow: hidden;
+}
+
+/* Viền khung màn hình */
+
+#myBetHistoryModal::before,
+#roundDetailModal::before {
+    content: "";
+    position: absolute;
+    inset: 5px;
+    border: 1px solid rgba(143, 181, 105, .25);
+    box-shadow:
+        inset 0 0 25px rgba(0, 0, 0, .6),
+        0 0 12px rgba(88, 255, 40, .08);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ==========================================
+   MILITARY HEADER
+========================================== */
+
+#myBetHistoryModal .history-header,
+#roundDetailModal .history-header {
+    position: relative;
+    flex-shrink: 0;
+    min-height: 92px;
+    box-sizing: border-box;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 18px 65px 18px 22px;
+
+    background:
+        linear-gradient(
+            120deg,
+            rgba(65, 90, 54, .25),
+            transparent 60%
+        ),
+        linear-gradient(
+            180deg,
+            #304431,
+            #152419 65%,
+            #0b150d
+        );
+
+    border-bottom: 3px solid #8c783d;
+
+    box-shadow:
+        0 5px 18px rgba(0, 0, 0, .65),
+        inset 0 1px 0 rgba(255, 255, 255, .12);
+
+    z-index: 2;
+}
+
+/* Thanh LED dưới header */
+
+#myBetHistoryModal .history-header::after,
+#roundDetailModal .history-header::after {
+    content: "";
+    position: absolute;
+    bottom: -3px;
+    left: 22px;
+    right: 22px;
+    height: 2px;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        #9bff51,
+        #d9b75e,
+        #9bff51,
+        transparent
+    );
+
+    box-shadow: 0 0 10px rgba(100, 255, 50, .6);
+}
+
+/* Tiêu đề */
+
+#myBetHistoryModal .history-title,
+#roundDetailModal .history-title {
+    font-size: 20px;
+    font-weight: 1000;
+    letter-spacing: 1.2px;
+
+    color: #f5d887;
+
+    text-shadow:
+        0 2px 2px #000,
+        0 0 12px rgba(255, 195, 60, .35);
+}
+
+/* Dòng phụ */
+
+#myBetHistoryModal .history-sub,
+#roundDetailModal .history-sub {
+    margin-top: 5px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+
+    color: #a5c99b;
+    opacity: 1;
+}
+
+/* Nút đóng quân đội */
+
+#myBetHistoryModal .history-close,
+#roundDetailModal .history-close {
+    position: absolute;
+    top: 22px;
+    right: 18px;
+
+    width: 42px;
+    height: 42px;
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 2px solid #b99a50;
+    border-radius: 5px;
+
+    background: linear-gradient(
+        145deg,
+        #4a5744,
+        #18251b 55%,
+        #080e09
+    );
+
+    color: #ffe3a0;
+    font-size: 19px;
+    font-weight: 900;
+
+    box-shadow:
+        0 4px 10px #0008,
+        inset 0 1px 0 #ffffff30;
+
+    cursor: pointer;
+    z-index: 5;
+}
+
+#myBetHistoryModal .history-close:active,
+#roundDetailModal .history-close:active {
+    transform: scale(.94);
+    background: #50633b;
+}
+
+/* ==========================================
+   MY BET HISTORY TABLE
+========================================== */
+
+#myBetHistoryModal .history-table {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 15px 12px 20px;
+    overflow: hidden;
+}
+
+/* Tiêu đề cột */
+
+#myBetHistoryModal .history-head {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    align-items: center;
+
+    min-height: 45px;
+    padding: 0 4px;
+    box-sizing: border-box;
+
+    background: linear-gradient(
+        180deg,
+        #46583b,
+        #202e22
+    );
+
+    border: 1px solid #b79a50;
+    border-bottom: 2px solid #c9a75b;
+    border-radius: 5px 5px 0 0;
+
+    color: #f3d68c;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: .6px;
+
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* Danh sách cuộn */
+
+#myBetHistoryModal .history-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    padding: 9px 2px 20px;
+
+    scrollbar-width: thin;
+    scrollbar-color: #617a49 transparent;
+}
+
+/* Hàng lịch sử */
+
+#myBetHistoryModal .history-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    align-items: center;
+
+    min-height: 55px;
+    box-sizing: border-box;
+    padding: 8px 4px;
+
+    background: linear-gradient(
+        115deg,
+        #253b28,
+        #122117 70%,
+        #0b170e
+    );
+
+    border: 1px solid #425a3d;
+    border-left: 3px solid #829d57;
+    border-radius: 5px;
+
+    box-shadow:
+        0 3px 8px rgba(0, 0, 0, .35),
+        inset 0 1px 0 rgba(255, 255, 255, .05);
+
+    color: #e9f0e5;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: center;
+
+    transition: background .15s;
+}
+
+#myBetHistoryModal .history-row:active {
+    background: #354d31;
+}
+
+/* Phiên thắng */
+
+#myBetHistoryModal .history-row.win {
+    border-left-color: #79ff4e;
+    background: linear-gradient(
+        110deg,
+        #274c2a,
+        #132b19
+    );
+}
+
+/* Phiên thua */
+
+#myBetHistoryModal .history-row.lose {
+    border-left-color: #e16b54;
+    background: linear-gradient(
+        110deg,
+        #3b2923,
+        #1b2018
+    );
+}
+
+/* Màu số liệu */
+
+#myBetHistoryModal .history-row.win > :last-child {
+    color: #8bff65;
+    text-shadow: 0 0 6px #47ff3440;
+}
+
+#myBetHistoryModal .history-row.lose > :last-child {
+    color: #ff9281;
+}
+
+/* ==========================================
+   ROUND RESULT
+========================================== */
+
+#roundDetailModal .round-result {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+
+    min-height: 150px;
+    margin: 0;
+    padding: 14px 20px;
+
+    box-sizing: border-box;
+
+    background:
+        radial-gradient(
+            ellipse at center,
+            rgba(77, 124, 49, .3),
+            transparent 70%
+        ),
+        linear-gradient(
+            180deg,
+            #1b2f1c,
+            #0c180f
+        );
+
+    border-bottom: 2px solid #806e3c;
+    box-shadow: inset 0 -8px 18px #0005;
+
+    flex-shrink: 0;
+}
+
+/* Hình kết quả */
+
+#roundDetailModal .round-result-icon {
+    width: 108px;
+    height: 108px;
+    flex-shrink: 0;
+
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+
+    filter:
+        drop-shadow(0 0 8px rgba(113, 255, 60, .25))
+        drop-shadow(0 5px 5px #0008);
+}
+
+/* Hệ số kết quả */
+
+#roundDetailModal .round-result-text {
+    font-size: 25px;
+    font-weight: 1000;
+    letter-spacing: 1px;
+
+    color: #ffdc78;
+
+    text-shadow:
+        0 2px 3px #000,
+        0 0 12px rgba(255, 190, 45, .3);
+}
+
+/* ==========================================
+   ROUND DETAIL TABLE
+========================================== */
+
+#roundDetailModal .round-table-head {
+    display: grid;
+    grid-template-columns: 142px 2fr 1fr;
+    align-items: center;
+
+    min-height: 48px;
+    box-sizing: border-box;
+    padding: 0 12px;
+
+    background: linear-gradient(
+        180deg,
+        #435639,
+        #1b2b1e
+    );
+
+    border-bottom: 2px solid #b99a4e;
+
+    color: #f4d48b;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    text-align: center;
+
+    flex-shrink: 0;
+}
+
+/* Danh sách cược theo slot */
+
+#roundDetailModal .round-detail-list {
+    flex: 1;
+    min-height: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    padding: 12px 10px 24px;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    scrollbar-width: thin;
+    scrollbar-color: #6e8753 transparent;
+}
+
+/* Từng slot */
+
+#roundDetailModal .round-slot-row {
+    display: grid;
+    grid-template-columns: 142px 2fr 1fr;
+    align-items: center;
+
+    min-height: 74px;
+    padding: 4px 12px;
+    box-sizing: border-box;
+
+    background: linear-gradient(
+        110deg,
+        #273d2a,
+        #152419 75%,
+        #0b160e
+    );
+
+    border: 1px solid #4b6244;
+    border-left: 3px solid #b99a50;
+    border-radius: 6px;
+
+    box-shadow:
+        0 4px 10px #0005,
+        inset 0 1px 0 #ffffff0b;
+
+    transition: background .15s;
+}
+
+#roundDetailModal .round-slot-row:active {
+    background: #344a30;
+}
+
+/* Khu vực icon slot */
+
+#roundDetailModal .round-slot-left {
+    position: relative;
+    left: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 5px;
+
+    min-width: 0;
+}
+
+/* Hình slot */
+
+#roundDetailModal .round-slot-icon {
+    width: 55px;
+    height: 55px;
+    flex-shrink: 0;
+
+    object-fit: contain;
+
+    filter: drop-shadow(0 3px 5px #0009);
+}
+
+/* Tiền cược */
+
+#roundDetailModal .round-slot-bet {
+    font-size: 14px;
+    font-weight: 900;
+    color: #f4e6bd;
+    text-align: center;
+}
+
+/* Tiền thắng */
+
+#roundDetailModal .round-slot-win {
+    font-size: 14px;
+    font-weight: 900;
+    color: #83ff62;
+    text-align: center;
+
+    text-shadow: 0 0 7px #43ff302e;
+}
+
+/* ==========================================
+   SHARED DETAILS
+========================================== */
+
+#myBetHistoryModal .result-row,
+#roundDetailModal .result-row {
+    background: linear-gradient(
+        120deg,
+        #46512a,
+        #243c22
+    );
+
+    border: 1px solid #c5a252;
+    border-left: 3px solid #e8c16b;
+
+    box-shadow:
+        inset 0 0 12px #e6b94c12,
+        0 0 8px #0006;
+
+    font-weight: 900;
+}
+
+/* Scrollbar */
+
+#myBetHistoryModal ::-webkit-scrollbar,
+#roundDetailModal ::-webkit-scrollbar {
+    width: 4px;
+}
+
+#myBetHistoryModal ::-webkit-scrollbar-thumb,
+#roundDetailModal ::-webkit-scrollbar-thumb {
+    background: #6b8552;
+    border-radius: 5px;
+}
+
+/* Màn hình nhỏ vẫn giữ bố cục */
+
+#myBetHistoryModal,
+#roundDetailModal {
+    box-sizing: border-box;
+}
+
+#myBetHistoryModal *,
+#roundDetailModal * {
+    box-sizing: border-box;
+}
+
+
+
+
+/* ==========================================
+   MILITARY SLOT MISS COUNT
+   FULLSCREEN 430 x 870
+========================================== */
+
+/* MAIN MODAL */
+
+#slotMissModal {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+
+    background:
+        radial-gradient(
+            ellipse at 50% 0%,
+            rgba(76,110,50,.28),
+            transparent 60%
+        ),
+        repeating-linear-gradient(
+            135deg,
+            transparent 0 45px,
+            rgba(120,145,70,.025) 45px 90px
+        ),
+        linear-gradient(
+            180deg,
+            #1a2c1b 0%,
+            #0b180f 50%,
+            #030804 100%
+        );
+
+    color: #e9f1e5;
+    z-index: 500;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+#slotMissModal * {
+    box-sizing: border-box;
+}
+
+/* INNER FRAME */
+
+#slotMissModal::before {
+    content: "";
+    position: absolute;
+    inset: 5px;
+
+    border: 1px solid rgba(155,184,105,.24);
+
+    box-shadow:
+        inset 0 0 28px #0008,
+        0 0 10px #70ff3012;
+
+    pointer-events: none;
+}
+
+/* ==========================================
+   HEADER
+========================================== */
+
+#slotMissModal .history-header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    min-height: 112px;
+    padding: 16px 70px 16px 22px;
+
+    background:
+        linear-gradient(
+            125deg,
+            #40543b,
+            #203222 55%,
+            #101c13
+        );
+
+    border-bottom: 3px solid #b69b57;
+
+    box-shadow:
+        0 5px 18px #0009,
+        inset 0 1px 0 #ffffff25;
+
+    flex-shrink: 0;
+    z-index: 2;
+}
+
+#slotMissModal .history-header::after {
+    content: "";
+    position: absolute;
+
+    bottom: -3px;
+    left: 20px;
+    right: 20px;
+    height: 2px;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        #a5ff60,
+        #e6c36d,
+        #a5ff60,
+        transparent
+    );
+
+    box-shadow: 0 0 10px #7fff5066;
+}
+
+/* MILITARY LABEL */
+
+#slotMissModal {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 2px;
+
+    color: #a4d58a;
+    margin-bottom: 6px;
+}
+
+/* TITLE */
+
+#slotMissModal .history-title {
+    font-size: 21px;
+    font-weight: 1000;
+    letter-spacing: 1px;
+
+    color: #f6d98d;
+
+    text-shadow:
+        0 2px 3px #000,
+        0 0 12px #ffc94b40;
+}
+
+/* SUBTITLE */
+
+#slotMissModal .miss-header-sub {
+    margin-top: 6px;
+
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 2px;
+
+    color: #9cbb8d;
+}
+
+/* CLOSE BUTTON */
+
+#slotMissModal .history-close {
+    position: absolute;
+    top: 32px;
+    right: 18px;
+
+    width: 43px;
+    height: 43px;
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: linear-gradient(
+        145deg,
+        #56664b,
+        #1a2a1d 60%,
+        #080f0a
+    );
+
+    border: 2px solid #c5a45a;
+    border-radius: 5px;
+
+    color: #ffe2a0;
+    font-size: 20px;
+    font-weight: 900;
+
+    box-shadow:
+        0 4px 12px #0009,
+        inset 0 1px 0 #ffffff30;
+
+    cursor: pointer;
+}
+
+#slotMissModal .history-close:active {
+    transform: scale(.94);
+}
+
+/* ==========================================
+   CONTENT
+========================================== */
+
+#slotMissModal .miss-army-content {
+    flex: 1;
+    min-height: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 14px 12px 12px;
+
+    overflow: hidden;
+}
+
+/* ==========================================
+   GROUP HEADER
+========================================== */
+
+#slotMissModal .miss-group-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+
+    margin-bottom: 12px;
+    flex-shrink: 0;
+}
+
+#slotMissModal .miss-group-title {
+    min-height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+
+    background: linear-gradient(
+        180deg,
+        #42573a,
+        #1d2e20
+    );
+
+    border: 1px solid #b89c55;
+    border-bottom: 2px solid #d6b66b;
+    border-radius: 5px;
+
+    color: #f1d48a;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .3px;
+
+    box-shadow:
+        inset 0 1px 0 #ffffff15,
+        0 3px 8px #0005;
+}
+
+#slotMissModal .miss-group-title small {
+    color: #9aff69;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+/* STATUS LED */
+
+#slotMissModal .miss-status-dot {
+    width: 6px;
+    height: 6px;
+
+    background: #84ff58;
+    border-radius: 50%;
+
+    box-shadow:
+        0 0 5px #84ff58,
+        0 0 10px #84ff5866;
+}
+
+/* ==========================================
+   TWO COLUMN GRID
+========================================== */
+
+#slotMissModal #slotMissGrid {
+    display: grid !important;
+
+    grid-template-columns:
+        minmax(0,1fr)
+        minmax(0,1fr) !important;
+
+    gap: 10px !important;
+    padding: 0 2px 12px !important;
+
+    flex: 1;
+    min-height: 0;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    align-content: start;
+
+    scrollbar-width: thin;
+    scrollbar-color: #6b8751 transparent;
+}
+
+#slotMissModal #slotColX5,
+#slotMissModal #slotColX45 {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+
+    min-width: 0;
+}
+
+/* ==========================================
+   MILITARY SLOT CARD
+========================================== */
+
+#slotMissModal .miss-box {
+    position: relative;
+
+    width: 100%;
+    min-height: 104px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0;
+    padding: 10px 6px;
+
+    background:
+        linear-gradient(
+            125deg,
+            rgba(105,130,70,.12),
+            transparent 65%
+        ),
+        linear-gradient(
+            180deg,
+            #2b412d,
+            #152619 65%,
+            #0c190f
+        );
+
+    border: 1px solid #526a47;
+    border-left: 3px solid #8b9d59;
+    border-radius: 6px;
+
+    box-shadow:
+        0 4px 10px #0007,
+        inset 0 1px 0 #ffffff12,
+        inset 0 -4px 12px #0004;
+
+    text-align: center;
+    overflow: hidden;
+}
+
+/* TOP METAL DETAIL */
+
+#slotMissModal .miss-box::before {
+    content: "";
+    position: absolute;
+
+    top: 0;
+    left: 12px;
+    right: 12px;
+    height: 1px;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        #c7b16d88,
+        transparent
+    );
+}
+
+/* SLOT IMAGE */
+
+#slotMissModal .miss-box img {
+    width: 46px;
+    height: 46px;
+
+    object-fit: contain;
+    flex-shrink: 0;
+
+    margin-bottom: 3px;
+
+    filter:
+        drop-shadow(0 3px 4px #000a)
+        drop-shadow(0 0 5px #8bff4025);
+}
+
+/* MISS NUMBER */
+
+#slotMissModal .miss-count {
+    font-size: 23px;
+    line-height: 1.1;
+    font-weight: 1000;
+    letter-spacing: 1px;
+
+    color: #9dff6b;
+
+    text-shadow:
+        0 2px 2px #000,
+        0 0 10px #69ff3a55;
+
+    font-variant-numeric: tabular-nums;
+}
+
+/* SUB LABEL */
+
+#slotMissModal .miss-sub {
+    margin-top: 5px;
+
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 1.2px;
+
+    color: #a6bc98;
+    opacity: 1;
+
+    text-transform: uppercase;
+}
+
+/* ==========================================
+   SPECIAL EVENT CARDS
+========================================== */
+
+#slotMissModal .miss-box.event {
+    min-height: 142px;
+
+    background:
+        radial-gradient(
+            ellipse at top,
+            rgba(174,132,42,.16),
+            transparent 70%
+        ),
+        linear-gradient(
+            180deg,
+            #3a4027,
+            #242a1b 65%,
+            #151b12
+        );
+
+    border: 1px solid #b89a4f;
+    border-left: 3px solid #f1c66c;
+
+    box-shadow:
+        0 4px 12px #0008,
+        inset 0 0 14px #e6b84b14;
+}
+
+#slotMissModal .miss-box.event img {
+    width: 60px;
+    height: 55px;
+
+    margin-bottom: 5px;
+
+    filter:
+        drop-shadow(0 4px 5px #000b)
+        drop-shadow(0 0 8px #f4c95744);
+}
+
+#slotMissModal .miss-box.event .miss-count {
+    color: #ffd579;
+
+    text-shadow:
+        0 2px 2px #000,
+        0 0 10px #ffc64a66;
+}
+
+#slotMissModal .miss-box.event .miss-sub {
+    color: #f1d394;
+}
+
+/* LAST EVENT TIME */
+
+#slotMissModal .event-last {
+    width: 100%;
+
+    margin-top: 9px;
+    padding: 7px 3px;
+
+    background: #080f09aa;
+
+    border: 1px solid #6c6941;
+    border-radius: 4px;
+
+    font-size: 10px;
+    line-height: 1.5;
+    font-weight: 800;
+
+    color: #e9d9aa;
+    opacity: 1;
+
+    overflow-wrap: anywhere;
+}
+
+/* ==========================================
+   FOOTER
+========================================== */
+
+#slotMissModal .miss-army-footer {
+    min-height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+
+    flex-shrink: 0;
+
+    border-top: 1px solid #576b43;
+
+    background: linear-gradient(
+        180deg,
+        #1d3020,
+        #101d13
+    );
+
+    color: #9ebf89;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+}
+
+/* FOOTER LED */
+
+#slotMissModal .miss-footer-led {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+    background: #81ff54;
+
+    box-shadow: 0 0 8px #81ff54;
+}
+
+#slotMissModal .miss-footer-decoration {
+    color: #dfbd69;
+    font-size: 13px;
+}
+
+/* SCROLLBAR */
+
+#slotMissModal ::-webkit-scrollbar {
+    width: 4px;
+}
+
+#slotMissModal ::-webkit-scrollbar-thumb {
+    background: #728b55;
+    border-radius: 5px;
+}
+
+
+
+
+/* ==========================================
+   MILITARY ROUND BADGE
+========================================== */
+
+.wheel-round {
+    position: absolute;
+
+    top: 8px;
+    right: 135px;
+
+    min-width: 160px;
+    height: 25px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    padding: 0 11px;
+
+    box-sizing: border-box;
+
+    background:
+        linear-gradient(
+            135deg,
+            #465c3b 0%,
+            #263b29 35%,
+            #101f14 75%,
+            #08120b 100%
+        );
+
+    border: 1px solid #b99a50;
+    border-bottom: 2px solid #d5b76b;
+    border-radius: 5px;
+
+    box-shadow:
+        0 4px 12px rgba(0,0,0,.75),
+        inset 0 1px 0 rgba(255,255,255,.18),
+        inset 0 0 10px rgba(0,0,0,.4);
+
+    color: #f0d58e;
+
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: .5px;
+
+    z-index: 8;
+    white-space: nowrap;
+}
+
+/* VẠCH KIM LOẠI PHÍA TRÊN */
+
+.wheel-round::before {
+    content: "";
+
+    position: absolute;
+    top: 2px;
+    left: 10px;
+    right: 10px;
+
+    height: 1px;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,220,130,.55),
+        transparent
+    );
+
+    pointer-events: none;
+}
+
+/* NGÔI SAO QUÂN ĐỘI */
+
+.round-army-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 19px;
+    height: 19px;
+
+    flex-shrink: 0;
+
+    color: #f4d37c;
+    font-size: 17px;
+
+    text-shadow:
+        0 1px 2px #000,
+        0 0 7px rgba(255,210,90,.5);
+}
+
+/* CHỮ ROUND */
+
+.round-army-label {
+    color: #e7d49b;
+
+    font-size: 11px;
+    font-weight: 900;
+
+    letter-spacing: 1px;
+
+    text-shadow: 0 2px 2px #000;
+}
+
+/* ĐÈN LED XANH */
+
+.round-army-led {
+    width: 6px;
+    height: 6px;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    background: #9aff68;
+
+    box-shadow:
+        0 0 5px #8aff58,
+        0 0 10px rgba(138,255,88,.55);
+}
+
+/* MÃ PHIÊN */
+
+.wheel-round #roundId {
+    color: #a6ff70;
+
+    font-size: 14px;
+    font-weight: 1000;
+
+    letter-spacing: .5px;
+
+    font-variant-numeric: tabular-nums;
+
+    text-shadow:
+        0 1px 2px #000,
+        0 0 8px rgba(105,255,60,.4);
+}
+
+
+
+
+/* =========================================
+   TOP WINNERS - CHỮ & ICON KHÔNG KHUNG
+========================================= */
+
+.top-winners .top-card {
+    gap: 3px;
+}
+
+/* TÊN NGƯỜI CHƠI */
+.top-winners .top-name {
+    position: static;
+    display: block;
+
+    width: 98px;
+    max-width: 98px;
+    height: auto;
+
+    margin: 0;
+    padding: 0;
+
+    background: none;
+    border: none;
+    box-shadow: none;
+
+    color: #fff;
+    opacity: 1;
+    text-align: center;
+}
+
+.top-winners .top-name-text {
+    display: block;
+    width: 100%;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    font-size: 13px;
+    font-weight: 900;
+    font-style: italic;
+    line-height: 1.4;
+
+    text-shadow:
+        0 2px 3px #000,
+        0 0 6px #ffffff55;
+}
+
+/* TIỀN THƯỞNG */
+.top-winners .top-win {
+    position: static;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+
+    width: 100px;
+    max-width: 100px;
+    height: auto;
+
+    margin: 0;
+    padding: 0;
+
+    background: none;
+    border: none;
+    box-shadow: none;
+}
+
+/* SỐ KIM CƯƠNG */
+.top-winners .top-win-value {
+    min-width: 0;
+
+    font-size: 14px;
+    font-weight: 1000;
+    font-style: italic;
+    line-height: 1.3;
+    white-space: nowrap;
+
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 2px 3px #000;
+}
+
+/* ICON KIM CƯƠNG */
+.top-winners .top-diamond {
+    width: 20px;
+    height: 30px;
+    flex-shrink: 0;
+
+    object-fit: contain;
+
+    filter:
+        drop-shadow(0 0 4px #6dff42)
+        drop-shadow(0 0 7px #6dff4266);
+}
+
+/* TOP 1 - VÀNG */
+.top-winners .top1 .top-name-text,
+.top-winners .top1 .top-win-value {
+    color: #ffe17b;
+    text-shadow:
+        0 2px 3px #000,
+        0 0 8px #ffd54f99;
+}
+
+/* TOP 2 - BẠC */
+.top-winners .top2 .top-name-text,
+.top-winners .top2 .top-win-value {
+    color: #e2edf5;
+    text-shadow:
+        0 2px 3px #000,
+        0 0 7px #b5d8e599;
+}
+
+/* TOP 3 - ĐỒNG */
+.top-winners .top3 .top-name-text,
+.top-winners .top3 .top-win-value {
+    color: #ffc18a;
+    text-shadow:
+        0 2px 3px #000,
+        0 0 7px #e99a5999;
+}
+
+
+
+
+/* ===== MILITARY SCREEN SHARE ===== */
+
+.w8-share-button {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  z-index: 10;
+
+  min-width: 112px;
+  height: 26px;
+  padding: 0 10px;
+
+  color: #e9ffd8;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .5px;
+
+  background: linear-gradient(
+    145deg, #4e6443, #213b28 55%, #101d13
+  );
+
+  border: 1px solid #c7ad67;
+  border-bottom: 2px solid #e0be73;
+  border-radius: 6px;
+
+  box-shadow:
+    0 4px 12px #000b,
+    inset 0 1px 0 #ffffff29;
+
+  cursor: pointer;
+}
+
+.w8-share-button:active {
+  transform: scale(.96);
+}
+
+.w8-share-panel {
+  position: absolute;
+  top: 40px;
+  right: 12px;
+  z-index: 10;
+
+  width: 283px;
+  padding: 16px;
+  box-sizing: border-box;
+
+  background: linear-gradient(
+    155deg, #334a31, #14251a 60%, #080f0a
+  );
+
+  border: 2px solid #b89c60;
+  border-radius: 10px;
+
+  box-shadow: 0 12px 30px #000d;
+
+  text-align: center;
+}
+
+.w8-share-panel[hidden] {
+  display: none !important;
+}
+
+.w8-share-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  color: #f4d58f;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.w8-live-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ff4343;
+  box-shadow: 0 0 9px #ff4343;
+  animation: w8LiveBlink 1s infinite alternate;
+}
+
+@keyframes w8LiveBlink {
+  from { opacity: .35; }
+  to { opacity: 1; }
+}
+
+.w8-share-count {
+  margin: 9px 0 15px;
+  color: #aaff80;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.w8-share-label {
+  margin-bottom: 7px;
+  color: #cfdbbe;
+  font-size: 11px;
+  text-align: left;
+}
+
+#w8ShareLink {
+  width: 100%;
+  height: 36px;
+  padding: 8px;
+  box-sizing: border-box;
+
+  background: #08150b;
+  color: #d3f8c1;
+  border: 1px solid #698057;
+  border-radius: 5px;
+  font-size: 11px;
+
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.w8-copy-button {
+  width: 100%;
+  height: 38px;
+  margin-top: 10px;
+
+  background: linear-gradient(135deg, #9a7d43, #d6b36f);
+  border: 1px solid #ffe4a0;
+  border-radius: 5px;
+
+  color: #151b0f;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.w8-share-tip {
+  min-height: 17px;
+  margin-top: 10px;
+  color: #a9bc9d;
+  font-size: 10px;
+}
+
+.w8-share-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.w8-share-actions button {
+  flex: 1;
+  min-height: 34px;
+  background: #293f2a;
+  border: 1px solid #768a66;
+  border-radius: 5px;
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.w8-share-actions .w8-stop-button {
+  background: #6d2323;
+  border-color: #bd6969;
+}
+
+
+
+/* ======================================
+   MILITARY LIVE FLOATING COMMENTS
+====================================== */
+
+.w8-live-comments {
+  position: absolute;
+
+  top: 9px;
+  left: 12px;
+
+  width: 240px;
+  max-height: 174px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+
+  overflow: hidden;
+
+  z-index: 11;
+  pointer-events: none;
+}
+
+.w8-live-comment {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+
+  width: 100%;
+
+  animation:
+    w8CommentIn .3s ease-out,
+    w8CommentOut .5s ease-in 8.5s forwards;
+}
+
+.w8-live-comment-avatar {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(
+    145deg, #506746, #192b1e
+  );
+
+  border: 1px solid #bba05e;
+  border-radius: 50%;
+
+  font-size: 12px;
+  color: #f2d28c;
+
+  box-shadow: 0 2px 7px #000a;
+}
+
+.w8-live-comment-body {
+  min-width: 0;
+  max-width: 205px;
+
+  padding: 6px 9px;
+
+  background: rgba(12, 25, 16, .87);
+
+  border: 1px solid rgba(173, 197, 125, .36);
+  border-left: 2px solid #cbb06b;
+  border-radius: 7px;
+
+  box-shadow: 0 3px 10px #0008;
+}
+
+.w8-live-comment-name {
+  color: #f1d38c;
+
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.3;
+
+  overflow-wrap: anywhere;
+}
+
+.w8-live-comment-text {
+  margin-top: 3px;
+
+  color: #f1f7e9;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+@keyframes w8CommentIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes w8CommentOut {
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+
+
+
+
+/* ==========================================
+   IMAGE THEME SWITCHER
+========================================== */
+
+#w8ThemeSwitcher {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  z-index: 10;
+
+  font-family: system-ui, sans-serif;
+}
+
+#w8ThemeButton {
+  width: 112px;
+  height: 26px;
+
+  border: 1px solid #c3a36c;
+  border-radius: 6px;
+
+  background: linear-gradient(
+    145deg, #4a6041, #172b1e
+  );
+
+  color: #f4e6c6;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .4px;
+
+  box-shadow: 0 4px 12px #0009;
+
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+#w8ThemeMenu[hidden] {
+  display: none !important;
+}
+
+#w8ThemeMenu {
+  position: absolute;
+  top: 34px;
+  left: 0;
+
+  width: 224px;
+  padding: 12px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #bc9b66;
+  border-radius: 11px;
+
+  background: linear-gradient(
+    145deg, #27313d, #0d121b
+  );
+
+  box-shadow: 0 12px 30px #000d;
+}
+
+.w8-theme-heading {
+  color: #dfc08a;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-align: center;
+
+  margin-bottom: 11px;
+}
+
+.w8-theme-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  width: 100%;
+  height: 53px;
+
+  margin-top: 7px;
+  padding: 7px 9px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #444b53;
+  border-radius: 8px;
+
+  background: #151b24;
+  color: #efe7d7;
+
+  font-size: 11px;
+  font-weight: 900;
+
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.w8-theme-option.is-selected {
+  border-color: #e2bd7c;
+  background: #30291f;
+}
+
+.w8-theme-preview {
+  width: 32px;
+  height: 32px;
+
+  flex-shrink: 0;
+  border-radius: 5px;
+}
+
+.w8-theme-preview.military {
+  background: linear-gradient(
+    135deg, #728358, #172a1b
+  );
+}
+
+.w8-theme-preview.titanium {
+  background: linear-gradient(
+    135deg, #d9b374, #354b63, #0a1523
+  );
+}
+
+.w8-theme-state {
+  margin-left: auto;
+
+  width: 8px;
+  height: 8px;
+
+  border-radius: 50%;
+  background: #62676d;
+}
+
+.w8-theme-option.is-selected .w8-theme-state {
+  background: #f4d18e;
+  box-shadow: 0 0 9px #e1b56e;
+}
+
+
+/* ==========================================
+   TITANIUM - PNG IMAGE SKIN
+   PRESERVE ORIGINAL SIZES AND POSITIONS
+========================================== */
+
+/* 1. MAIN GAME BACKGROUND */
+
+body.w8-theme-titanium #app {
+  background:
+    var(
+      --w8-art-game,
+      url("/assets/police/bg-police-casino.jpg")
+    )
+    center / cover no-repeat;
+}
+
+/* 2. WHEEL CENTER */
+
+body.w8-theme-titanium .wheel-center {
+  background:
+    var(
+      --w8-art-center,
+      url("/assets/police/wheel-center-police.png")
+    )
+    center / contain no-repeat;
+}
+
+/* 3. SLOT BACKGROUND - ALL 8 SLOTS */
+
+body.w8-theme-titanium .slot {
+  background:
+    var(
+      --w8-art-slot,
+      url("/assets/police/slot-bg-police.png")
+    )
+    center / contain no-repeat;
+}
+
+/* 4. WHEEL STAND */
+
+body.w8-theme-titanium .wheel-stand {
+  background:
+    var(
+      --w8-art-stand,
+      url("/assets/police/wheel-stand.png")
+    )
+    center / contain no-repeat;
+}
+
+/* 5. WHEEL SPOKES */
+
+body.w8-theme-titanium .wheel-spokes {
+  background:
+    var(
+      --w8-art-spokes,
+      url("/assets/police/wheel-spokes-police.png")
+    )
+    center / contain no-repeat;
+}
+
+/* 6. BOTTOM BETTING PANEL */
+
+body.w8-theme-titanium .bet-panel {
+  background:
+    var(
+      --w8-art-panel,
+      url("/assets/police/police-panel.png")
+    )
+    center / cover no-repeat;
+}
+
+/* 7. FIVE INDIVIDUAL PNG CHIPS */
+
+body.w8-theme-titanium .chip::before {
+  content: "";
+
+  position: absolute;
+  left: 50%;
+  top: 50%;
+
+  width: 74px;
+  height: 74px;
+
+  transform: translate(-50%, -50%);
+
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+
+  pointer-events: none;
+}
+
+body.w8-theme-titanium .chip.c1::before {
+  background-image: var(--w8-art-chip10, none);
+}
+
+body.w8-theme-titanium .chip.c2::before {
+  background-image: var(--w8-art-chip50, none);
+}
+
+body.w8-theme-titanium .chip.c3::before {
+  background-image: var(--w8-art-chip100, none);
+}
+
+body.w8-theme-titanium .chip.c4::before {
+  background-image: var(--w8-art-chip1000, none);
+}
+
+body.w8-theme-titanium .chip.c5::before {
+  background-image: var(--w8-art-chip10000, none);
+}
+
+/* KEEP ORIGINAL ACTIVE CHIP EFFECT */
+
+body.w8-theme-titanium .chip.active::after {
+  border-color: #f8d18b;
+
+  box-shadow:
+    0 0 10px #e4b772,
+    0 0 20px #d7a663;
+}
+
+/* 8. RESULT FRAME */
+
+body.w8-theme-titanium .result-box {
+  background:
+    var(
+      --w8-art-result,
+      url("/assets/police/result-frame-police.png")
+    )
+    center / contain no-repeat;
+}
+
+/* 9. BETTING CLOSED ALERT */
+
+body.w8-theme-titanium .bet-closed-bg {
+  background:
+    var(
+      --w8-art-alert,
+      url("/assets/police/police-alert.png")
+    )
+    center / contain no-repeat;
+}
+
+/* 10. TOP WINNERS BACKGROUND */
+
+body.w8-theme-titanium .top-winners {
+  background:
+    var(
+      --w8-art-top,
+      url("/assets/police/top-winners-bg.png")
+    )
+    center / 100% 100% no-repeat;
+}
+
+/* OPTIONAL INDIVIDUAL TOP CARD ARTWORK */
+
+body.w8-theme-titanium .top-winners .top-card {
+  background:
+    var(--w8-art-topcard, none)
+    center / contain no-repeat;
+}
+
+/* 11. TITANIUM UI ACCENTS */
+
+body.w8-theme-titanium .wheel-round {
+  background: linear-gradient(
+    135deg, #40556d, #16283a, #0b1420
+  );
+
+  border-color: #ceb17c;
+}
+
+
+
+body.w8-theme-titanium .coin-value {
+  color: #ffffff;
+  
+}
+
+body.w8-theme-titanium #w8ThemeButton {
+  background: linear-gradient(
+    145deg, #42586e, #122338
+  );
+}
+
+
+
+
+
+
+/* ==========================================
+   FRUIT ROYAL - HISTORY THEME
+   MY BET HISTORY + ROUND DETAILS
+   AUTO SWITCH WITH CHANGE THEME
+========================================== */
+
+/* TWO FRUIT SCREENS */
+
+body.w8-theme-titanium
+:is(#myBetHistoryModal, #roundDetailModal) {
+
+  --fruit-gold: #ffd27a;
+  --fruit-green: #a6ff68;
+  --fruit-pink: #ff7d9e;
+  --fruit-text: #fff6df;
+
+  color: var(--fruit-text);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(5, 30, 13, .30),
+      rgba(4, 22, 11, .86)
+    ),
+    url("/assets/police/theme-titanium/my-bet-history-bg.png")
+      center / cover no-repeat,
+    radial-gradient(
+      ellipse at 50% 0%,
+      #438b3b 0%,
+      transparent 55%
+    ),
+    linear-gradient(
+      180deg,
+      #204f27 0%,
+      #0c321b 55%,
+      #05190d 100%
+    );
+}
+
+/* ROUND DETAILS OPTIONAL BACKGROUND */
+
+body.w8-theme-titanium #roundDetailModal {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(5, 30, 13, .30),
+      rgba(4, 22, 11, .86)
+    ),
+    url("/assets/police/theme-titanium/round-details-bg.png")
+      center / cover no-repeat,
+    radial-gradient(
+      ellipse at 50% 0%,
+      #548c30 0%,
+      transparent 55%
+    ),
+    linear-gradient(
+      180deg,
+      #295f28,
+      #102b19 55%,
+      #06160c
+    );
+}
+
+/* SCREEN BORDER */
+
+body.w8-theme-titanium
+:is(#myBetHistoryModal, #roundDetailModal)::before {
+
+  border: 1px solid rgba(255, 203, 103, .48);
+  border-radius: 9px;
+
+  box-shadow:
+    inset 0 0 25px rgba(51, 145, 36, .16),
+    0 0 15px rgba(255, 191, 92, .13);
+}
+
+/* ==========================================
+   FRUIT HEADER
+========================================== */
+
+body.w8-theme-titanium
+:is(#myBetHistoryModal, #roundDetailModal)
+.history-header {
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(255, 210, 87, .26),
+      transparent 75%
+    ),
+    linear-gradient(
+      135deg,
+      #a62c49 0%,
+      #692235 35%,
+      #284e25 78%,
+      #16351d 100%
+    );
+
+  border-bottom: 3px solid #f0c367;
+
+  box-shadow:
+    0 5px 16px rgba(0, 0, 0, .45),
+    inset 0 1px 0 rgba(255, 235, 173, .25);
+}
+
+/* GOLD AND LIME LIGHT STRIP */
+
+body.w8-theme-titanium
+:is(#myBetHistoryModal, #roundDetailModal)
+.history-header::after {
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #ff8ea8,
+    #ffe68c,
+    #a3ff65,
+    transparent
+  );
+
+  box-shadow: 0 0 10px #f2c26b77;
+}
+
+/* TITLE */
+
+body.w8-theme-titanium
+:is(#myBetHistoryModal, #roundDetailModal)
+.history-title {
+
+  color: #ffe5a5;
+
+  text-shadow:
+    0 2px 3px #3e140f,
+    0 0 14px rgba(255, 199, 100, .45);
+
+  letter-spacing: 1px;
+}
+
+/* SUBTITLE */
+
+body.w8-theme-titanium
+:is(#myBetHistoryModal, #roundDetailModal)
+.history-sub {
+
+  color: #d4f8b4;
+  opacity: 1;
+  letter-spacing: 1.2px;
+}
+
+/* CLOSE BUTTON */
+
+body.w8-theme-titanium
+:is(#myBetHistoryModal, #roundDetailModal)
+.history-close {
+
+  border: 2px solid #ffd486;
+  border-radius: 10px;
+
+  background: linear-gradient(
+    145deg,
+    #db6374,
+    #922b49 55%,
+    #4b1b30
+  );
+
+  color: #fff4d5;
+
+  box-shadow:
+    0 4px 12px #0007,
+    inset 0 1px 0 #ffffff4a;
+}
+
+body.w8-theme-titanium
+:is(#myBetHistoryModal, #roundDetailModal)
+.history-close:active {
+
+  background: #b63a58;
+  transform: scale(.95);
+}
+
+/* ==========================================
+   MY BET HISTORY - TABLE HEADER
+========================================== */
+
+body.w8-theme-titanium
+#myBetHistoryModal .history-head {
+
+  background: linear-gradient(
+    180deg,
+    #5b9e42,
+    #2b662f 48%,
+    #17431f
+  );
+
+  border: 1px solid #f1c66e;
+  border-bottom: 2px solid #ffd987;
+  border-radius: 9px 9px 0 0;
+
+  color: #fff4c7;
+
+  box-shadow: inset 0 1px 0 #ffffff2b;
+}
+
+/* HISTORY ROWS */
+
+body.w8-theme-titanium
+#myBetHistoryModal .history-row {
+
+  background: linear-gradient(
+    115deg,
+    rgba(64, 119, 47, .94),
+    rgba(23, 67, 32, .97)
+  );
+
+  border: 1px solid #79a758;
+  border-left: 3px solid #e6c16a;
+  border-radius: 9px;
+
+  color: #fff9e8;
+
+  box-shadow:
+    0 4px 10px #0005,
+    inset 0 1px 0 #ffffff14;
+}
+
+body.w8-theme-titanium
+#myBetHistoryModal .history-row:active {
+
+  background: #437f3b;
+}
+
+/* WINNING ROUNDS */
+
+body.w8-theme-titanium
+#myBetHistoryModal .history-row.win {
+
+  background: linear-gradient(
+    110deg,
+    #367e35,
+    #194f2d
+  );
+
+  border-left-color: #baff77;
+}
+
+/* LOSING ROUNDS */
+
+body.w8-theme-titanium
+#myBetHistoryModal .history-row.lose {
+
+  background: linear-gradient(
+    110deg,
+    #763a45,
+    #3c2732
+  );
+
+  border-left-color: #ff8796;
+}
+
+/* HISTORY VALUES */
+
+body.w8-theme-titanium
+#myBetHistoryModal .history-row.win > :last-child {
+
+  color: #bbff8b;
+  text-shadow: 0 0 7px #9cff6b55;
+}
+
+body.w8-theme-titanium
+#myBetHistoryModal .history-row.lose > :last-child {
+
+  color: #ffafba;
+}
+
+/* ==========================================
+   ROUND DETAILS - RESULT PANEL
+========================================== */
+
+body.w8-theme-titanium
+#roundDetailModal .round-result {
+
+  background:
+    radial-gradient(
+      ellipse at 50% 20%,
+      rgba(255, 199, 91, .26),
+      transparent 70%
+    ),
+    linear-gradient(
+      125deg,
+      #8d394a,
+      #4f5025 45%,
+      #1a502d 100%
+    );
+
+  border-bottom: 2px solid #ffcf78;
+
+  box-shadow:
+    inset 0 -8px 20px #0004,
+    0 5px 12px #0004;
+}
+
+/* RESULT ART - PRESERVE PNG SWITCHING */
+
+body.w8-theme-titanium
+#roundDetailModal .round-result-icon {
+
+  filter:
+    drop-shadow(0 0 10px #ffd56a88)
+    drop-shadow(0 4px 6px #0008);
+}
+
+/* MULTIPLIER */
+
+body.w8-theme-titanium
+#roundDetailModal .round-result-text {
+
+  color: #ffe58e;
+
+  text-shadow:
+    0 2px 3px #331506,
+    0 0 14px #ffb64a77;
+}
+
+/* ==========================================
+   ROUND DETAILS - TABLE HEADER
+========================================== */
+
+body.w8-theme-titanium
+#roundDetailModal .round-table-head {
+
+  background: linear-gradient(
+    180deg,
+    #599c42,
+    #2a662c 55%,
+    #16451f
+  );
+
+  border-bottom: 2px solid #ffd17b;
+
+  color: #fff4c5;
+}
+
+/* SLOT ROWS */
+
+body.w8-theme-titanium
+#roundDetailModal .round-slot-row {
+
+  background: linear-gradient(
+    115deg,
+    rgba(62, 116, 44, .96),
+    rgba(19, 66, 32, .98)
+  );
+
+  border: 1px solid #76a45b;
+  border-left: 3px solid #f1c76f;
+  border-radius: 9px;
+
+  box-shadow:
+    0 4px 10px #0005,
+    inset 0 1px 0 #ffffff14;
+}
+
+body.w8-theme-titanium
+#roundDetailModal .round-slot-row:active {
+
+  background: #397d3b;
+}
+
+/* WINNING SLOT */
+
+body.w8-theme-titanium
+#roundDetailModal .round-slot-row.win {
+
+  border-left-color: #b6ff75;
+  background: linear-gradient(
+    110deg,
+    #347b3a,
+    #18532f
+  );
+}
+
+/* SLOT IMAGE */
+
+body.w8-theme-titanium
+#roundDetailModal .round-slot-icon {
+
+  filter:
+    drop-shadow(0 3px 5px #0007)
+    drop-shadow(0 0 5px #ffdd8c44);
+}
+
+/* BET VALUE */
+
+body.w8-theme-titanium
+#roundDetailModal .round-slot-bet {
+
+  color: #ffe9b1;
+}
+
+/* WIN VALUE */
+
+body.w8-theme-titanium
+#roundDetailModal .round-slot-win {
+
+  color: #b8ff83;
+  text-shadow: 0 0 7px #aaff6b55;
+}
+
+/* SPECIAL RESULT ROWS */
+
+body.w8-theme-titanium
+:is(#myBetHistoryModal, #roundDetailModal)
+.result-row {
+
+  background: linear-gradient(
+    120deg,
+    #688c31,
+    #35602c
+  );
+
+  border: 1px solid #ffd383;
+  border-left: 3px solid #ffe8a8;
+
+  box-shadow:
+    inset 0 0 13px #ffda6b25,
+    0 3px 9px #0005;
+}
+
+/* FRUIT SCROLLBAR */
+
+body.w8-theme-titanium
+:is(#myBetHistoryModal, #roundDetailModal)
+::-webkit-scrollbar-thumb {
+
+  background: #c0a65d;
+  border-radius: 6px;
+}
+
+body.w8-theme-titanium
+:is(#myBetHistoryModal, #roundDetailModal)
+.history-body,
+
+body.w8-theme-titanium
+#roundDetailModal .round-detail-list {
+
+  scrollbar-color: #d1ad69 transparent;
+}
+
+/* SMALL SCREEN */
+
+@media (max-width: 430px) {
+
+  body.w8-theme-titanium
+  :is(#myBetHistoryModal, #roundDetailModal)
+  .history-title {
+    font-size: 19px;
+  }
+
+  body.w8-theme-titanium
+  :is(#myBetHistoryModal, #roundDetailModal)
+  .history-sub {
+    font-size: 10px;
+  }
+
+}
+
+
+/* ==========================================
+   ROUND BADGE - DUAL THEME
+   MILITARY + FRUIT
+   KEEP ORIGINAL POSITION
+========================================== */
+
+/* GIAO DIỆN QUÂN ĐỘI */
+
+body:not(.w8-theme-titanium) .wheel-round {
+    background: linear-gradient(
+        135deg,
+        #405538 0%,
+        #223526 50%,
+        #0c1c11 100%
+    );
+
+    border: 1px solid #bca15c;
+    border-bottom: 2px solid #d7b76c;
+    border-radius: 6px;
+
+    box-shadow:
+        0 4px 10px #0009,
+        inset 0 1px 0 #ffffff20;
+}
+
+/* ==========================================
+   FRUIT ROUND BADGE
+========================================== */
+
+body.w8-theme-titanium .wheel-round {
+
+    /* Giữ nguyên tọa độ */
+    top: 8px;
+    right: 135px;
+
+    min-width: 160px;
+    height: 25px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    padding: 0 11px;
+    box-sizing: border-box;
+
+    background: linear-gradient(
+        135deg,
+        #fff9e6 0%,
+        #ffe5b4 55%,
+        #e7b77f 100%
+    );
+
+    border: 1px solid #d69554;
+    border-bottom: 2px solid #bc753f;
+    border-radius: 9px;
+
+    box-shadow:
+        0 4px 10px #0005,
+        inset 0 1px 0 #ffffffb0;
+
+    color: #915027;
+    font-weight: 900;
+
+    transition:
+        background .25s ease,
+        border-color .25s ease,
+        color .25s ease;
+}
+
+/* ĐƯỜNG SÁNG TRÊN KHUNG */
+
+body.w8-theme-titanium .wheel-round::before {
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255,255,255,.9),
+        transparent
+    );
+}
+
+/* ICON TRÁI CÂY */
+
+body.w8-theme-titanium .round-army-icon {
+    width: 19px;
+    height: 19px;
+
+    font-size: 15px;
+    color: #d74c42;
+
+    text-shadow: none;
+}
+
+/* CHỮ ROUND */
+
+body.w8-theme-titanium .round-army-label {
+    color: #99512f;
+
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .8px;
+
+    text-shadow: none;
+}
+
+/* CHẤM XANH */
+
+body.w8-theme-titanium .round-army-led {
+    width: 6px;
+    height: 6px;
+
+    background: #7dbb4c;
+
+    box-shadow:
+        0 0 4px #83c94e80;
+}
+
+/* SỐ VÒNG */
+
+body.w8-theme-titanium .wheel-round #roundId {
+    color: #b53d2a;
+
+    font-size: 14px;
+    font-weight: 1000;
+    letter-spacing: .5px;
+
+    font-variant-numeric: tabular-nums;
+
+    text-shadow: none;
+}
+
+
+
+
+
+/* ==========================================
+   FRUIT THEME - LIVE SCREEN SHARE
+   KEEP ORIGINAL POSITION AND FUNCTIONS
+========================================== */
+
+/* NÚT SHARE */
+
+body.w8-theme-titanium #w8ShareButton {
+    background: linear-gradient(
+        135deg,
+        #fff5dc 0%,
+        #ffd6a3 55%,
+        #ecaa73 100%
+    );
+
+    border: 1px solid #d78b50;
+    border-bottom: 2px solid #bc653d;
+    border-radius: 7px;
+
+    color: #994626;
+
+    text-shadow: none;
+
+    box-shadow:
+        0 4px 10px rgba(49, 22, 8, .35),
+        inset 0 1px 0 #ffffffaa;
+}
+
+/* NÚT SHARE KHI ĐANG PHÁT LIVE */
+
+body.w8-theme-titanium #w8ShareButton.w8-sharing {
+    background: linear-gradient(
+        135deg,
+        #ffdbbd,
+        #f2a38a
+    );
+
+    color: #ac2929;
+    border-color: #db7164;
+}
+
+/* BẢNG CHIA SẺ */
+
+body.w8-theme-titanium #w8SharePanel {
+    background: linear-gradient(
+        160deg,
+        #fff8e7 0%,
+        #ffe4c1 60%,
+        #efbf91 100%
+    );
+
+    border: 1px solid #d58e59;
+    border-bottom: 3px solid #b66c42;
+    border-radius: 12px;
+
+    box-shadow:
+        0 12px 30px rgba(48, 23, 10, .45),
+        inset 0 1px 0 #ffffffc0;
+}
+
+/* TIÊU ĐỀ LIVE */
+
+body.w8-theme-titanium #w8SharePanel .w8-share-title {
+    color: #a3472f;
+
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: .6px;
+
+    text-shadow: none;
+}
+
+/* CHẤM LIVE */
+
+body.w8-theme-titanium #w8SharePanel .w8-live-dot {
+    background: #e84b46;
+    box-shadow: 0 0 8px #ef7772;
+}
+
+/* SỐ NGƯỜI XEM */
+
+body.w8-theme-titanium #w8ShareCount {
+    color: #648c3f;
+    font-weight: 900;
+}
+
+/* NHÃN LINK URL */
+
+body.w8-theme-titanium #w8SharePanel .w8-share-label {
+    color: #895c3d;
+    font-weight: 800;
+}
+
+/* Ô LINK CHIA SẺ */
+
+body.w8-theme-titanium #w8ShareLink {
+    background: #fffaf0;
+
+    border: 1px solid #d9ac7a;
+    border-radius: 6px;
+
+    color: #804726;
+
+    box-shadow: inset 0 1px 3px #b6855430;
+}
+
+body.w8-theme-titanium #w8ShareLink::placeholder {
+    color: #aa917e;
+}
+
+/* COPY LINK */
+
+body.w8-theme-titanium #w8SharePanel .w8-copy-button {
+    background: linear-gradient(
+        135deg,
+        #e9a66b,
+        #f6cb85
+    );
+
+    border: 1px solid #c6844b;
+    border-radius: 7px;
+
+    color: #713d20;
+
+    box-shadow: 0 3px 7px #9b5e3035;
+}
+
+body.w8-theme-titanium #w8SharePanel .w8-copy-button:active {
+    transform: scale(.97);
+}
+
+/* DÒNG HƯỚNG DẪN */
+
+body.w8-theme-titanium #w8ShareTip {
+    color: #99775c;
+    line-height: 1.5;
+}
+
+/* NÚT HIDE */
+
+body.w8-theme-titanium #w8SharePanel .w8-share-actions button {
+    background: #fff2dc;
+
+    border: 1px solid #d4a77b;
+    border-radius: 7px;
+
+    color: #865133;
+
+    font-size: 12px;
+    font-weight: 900;
+}
+
+/* NÚT STOP */
+
+body.w8-theme-titanium #w8SharePanel .w8-share-actions .w8-stop-button {
+    background: linear-gradient(
+        135deg,
+        #d65d50,
+        #ae3934
+    );
+
+    border: 1px solid #a8312d;
+    border-radius: 7px;
+
+    color: #fff;
+}
+
+
+
+
+/* ==========================================
+   THEME SWITCHER - MILITARY + FRUIT
+   KEEP ORIGINAL POSITION AND SIZE
+========================================== */
+
+/* MILITARY - MAIN BUTTON */
+
+body:not(.w8-theme-titanium) #w8ThemeButton {
+    background: linear-gradient(
+        135deg,
+        #526747,
+        #263b29 55%,
+        #142318
+    );
+
+    color: #f6dfaa;
+    border: 1px solid #c3a66b;
+    border-radius: 7px;
+
+    box-shadow:
+        0 4px 10px #0008,
+        inset 0 1px 0 #ffffff25;
+}
+
+/* MILITARY - MENU */
+
+body:not(.w8-theme-titanium) #w8ThemeMenu {
+    background: linear-gradient(
+        160deg,
+        #344934,
+        #1a2b1e 55%,
+        #101b14
+    );
+
+    border: 1px solid #b59a61;
+    border-radius: 12px;
+}
+
+/* MILITARY - MENU TITLE */
+
+body:not(.w8-theme-titanium) .w8-theme-heading {
+    color: #ead096;
+}
+
+/* MILITARY - OPTIONS */
+
+body:not(.w8-theme-titanium) .w8-theme-option {
+    background: linear-gradient(
+        135deg,
+        #293c2c,
+        #14231a
+    );
+
+    border: 1px solid #516747;
+    border-radius: 8px;
+
+    color: #f2e8d2;
+}
+
+/* MILITARY - SELECTED */
+
+body:not(.w8-theme-titanium)
+.w8-theme-option.is-selected {
+    background: linear-gradient(
+        135deg,
+        #506545,
+        #2d422e
+    );
+
+    border-color: #dfbe78;
+    color: #ffebbb;
+
+    box-shadow:
+        inset 0 1px 0 #ffffff20,
+        0 0 8px #c2a46a35;
+}
+
+/* ==========================================
+   FRUIT THEME - MAIN BUTTON
+========================================== */
+
+body.w8-theme-titanium #w8ThemeButton {
+    background: linear-gradient(
+        135deg,
+        #fff2d4,
+        #ffd3a2 55%,
+        #edae7b
+    );
+
+    color: #914629;
+
+    border: 1px solid #d18b54;
+    border-bottom: 2px solid #ba6e42;
+    border-radius: 7px;
+
+    text-shadow: none;
+
+    box-shadow:
+        0 4px 10px #0005,
+        inset 0 1px 0 #ffffffbb;
+}
+
+/* FRUIT - MENU */
+
+body.w8-theme-titanium #w8ThemeMenu {
+    background: linear-gradient(
+        160deg,
+        #fff7e6,
+        #ffe5c6 60%,
+        #f0c496
+    );
+
+    border: 1px solid #d7965c;
+    border-bottom: 3px solid #ba7648;
+    border-radius: 12px;
+
+    box-shadow:
+        0 12px 30px #38201075,
+        inset 0 1px 0 #ffffffc0;
+}
+
+/* FRUIT - MENU TITLE */
+
+body.w8-theme-titanium .w8-theme-heading {
+    color: #a65032;
+
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 1px;
+
+    text-shadow: none;
+}
+
+/* FRUIT - OPTIONS */
+
+body.w8-theme-titanium .w8-theme-option {
+    background: linear-gradient(
+        135deg,
+        #fffaf0,
+        #ffefd9
+    );
+
+    color: #885337;
+
+    border: 1px solid #dfba94;
+    border-radius: 8px;
+
+    box-shadow:
+        inset 0 1px 0 #ffffffaa;
+}
+
+/* FRUIT - SELECTED OPTION */
+
+body.w8-theme-titanium
+.w8-theme-option.is-selected {
+
+    background: linear-gradient(
+        135deg,
+        #ffe0c4,
+        #f8bfa5
+    );
+
+    border: 1px solid #d57559;
+
+    color: #a13c30;
+
+    box-shadow:
+        0 0 8px #d8795335,
+        inset 0 1px 0 #ffffff99;
+}
+
+/* ==========================================
+   THEME PREVIEW ICONS
+========================================== */
+
+/* CHUNG */
+
+#w8ThemeMenu .w8-theme-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 32px;
+    height: 32px;
+
+    border-radius: 6px;
+
+    flex-shrink: 0;
+}
+
+/* MILITARY PREVIEW */
+
+#w8ThemeMenu .w8-theme-preview.military {
+    background: linear-gradient(
+        135deg,
+        #647a51,
+        #213a26
+    );
+
+    border: 1px solid #a6a878;
+}
+
+#w8ThemeMenu .w8-theme-preview.military::after {
+    content: "★";
+    color: #ffdf90;
+    font-size: 18px;
+}
+
+/* FRUIT PREVIEW */
+
+#w8ThemeMenu .w8-theme-preview.titanium {
+    background: linear-gradient(
+        135deg,
+        #ffe9c4,
+        #f6bc9a
+    );
+
+    border: 1px solid #d98b65;
+}
+
+#w8ThemeMenu .w8-theme-preview.titanium::after {
+    content: "🍓";
+    font-size: 19px;
+}
+
+/* ==========================================
+   SELECTED INDICATOR
+========================================== */
+
+#w8ThemeMenu .w8-theme-state {
+    width: 9px;
+    height: 9px;
+
+    background: #8f9990;
+
+    border-radius: 50%;
+
+    box-shadow: none;
+}
+
+/* MILITARY SELECTED DOT */
+
+body:not(.w8-theme-titanium)
+#w8ThemeMenu .w8-theme-option.is-selected
+.w8-theme-state {
+    background: #b8ed80;
+    box-shadow: 0 0 7px #9ad96c;
+}
+
+/* FRUIT SELECTED DOT */
+
+body.w8-theme-titanium
+#w8ThemeMenu .w8-theme-option.is-selected
+.w8-theme-state {
+    background: #db5a45;
+    box-shadow: 0 0 7px #e8896d;
+}
+
+/* ==========================================
+   INTERACTION
+========================================== */
+
+#w8ThemeButton,
+#w8ThemeMenu,
+#w8ThemeMenu .w8-theme-option {
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        color .2s ease,
+        box-shadow .2s ease;
+}
+
+#w8ThemeButton:active,
+#w8ThemeMenu .w8-theme-option:active {
+    filter: brightness(.94);
+}
+
+#w8ThemeButton:focus-visible,
+#w8ThemeMenu .w8-theme-option:focus-visible {
+    outline: 2px solid #e5b46c;
+    outline-offset: 2px;
+}
+
+
+
+
+/* ==========================================
+   FRUIT THEME - SLOT MISS COUNT
+   KEEP ORIGINAL LAYOUT AND FUNCTIONS
+========================================== */
+
+/* BACKGROUND */
+
+body.w8-theme-titanium #slotMissModal {
+    background:
+        radial-gradient(
+            ellipse at 50% 0%,
+            #fff9eb,
+            transparent 70%
+        ),
+        linear-gradient(
+            180deg,
+            #fff1da 0%,
+            #ffe0bd 55%,
+            #f0c39e 100%
+        );
+
+    color: #854b32;
+}
+
+/* INNER BORDER */
+
+body.w8-theme-titanium #slotMissModal::before {
+    border: 1px solid #ffffff85;
+    border-radius: 9px;
+
+    box-shadow:
+        inset 0 0 22px #bc7a3815;
+}
+
+/* HEADER */
+
+body.w8-theme-titanium
+#slotMissModal .history-header {
+    background: linear-gradient(
+        135deg,
+        #fff6e2,
+        #ffd3a7 65%,
+        #f0b487
+    );
+
+    border-bottom: 3px solid #d69360;
+
+    box-shadow:
+        0 5px 15px #8b4d2925,
+        inset 0 1px 0 #ffffffbb;
+}
+
+/* HEADER DECORATION */
+
+body.w8-theme-titanium
+#slotMissModal .history-header::after {
+    background: linear-gradient(
+        90deg,
+        transparent,
+        #e89a77,
+        #fff0b7,
+        #e89a77,
+        transparent
+    );
+
+    box-shadow: none;
+}
+
+/* TITLE */
+
+body.w8-theme-titanium
+#slotMissModal .history-title {
+    color: #a74934;
+
+    font-size: 21px;
+    font-weight: 1000;
+
+    text-shadow: none;
+}
+
+/* SUBTITLE */
+
+body.w8-theme-titanium
+#slotMissModal .miss-header-sub {
+    color: #a77a56;
+    text-shadow: none;
+}
+
+/* CLOSE BUTTON */
+
+body.w8-theme-titanium
+#slotMissModal .history-close {
+    background: linear-gradient(
+        135deg,
+        #fffaf0,
+        #f5d3ae
+    );
+
+    border: 1px solid #d99b71;
+    border-radius: 8px;
+
+    color: #a64e39;
+
+    box-shadow:
+        0 3px 8px #96552c25,
+        inset 0 1px 0 #fff;
+}
+
+/* CONTENT */
+
+body.w8-theme-titanium
+#slotMissModal .miss-army-content {
+    background: transparent;
+}
+
+/* GROUP HEADER */
+
+body.w8-theme-titanium
+#slotMissModal .miss-group-title {
+    background: linear-gradient(
+        135deg,
+        #ffe8c8,
+        #f7c59e
+    );
+
+    border: 1px solid #d69a6a;
+    border-bottom: 2px solid #bf8157;
+    border-radius: 8px;
+
+    color: #9c4d30;
+
+    box-shadow:
+        0 3px 8px #a66b4225,
+        inset 0 1px 0 #ffffffaa;
+}
+
+/* MULTIPLIER */
+
+body.w8-theme-titanium
+#slotMissModal .miss-group-title small {
+    color: #bf513b;
+}
+
+/* GROUP STATUS DOT */
+
+body.w8-theme-titanium
+#slotMissModal .miss-status-dot {
+    background: #85b94b;
+
+    box-shadow:
+        0 0 5px #94c26790;
+}
+
+/* SLOT GRID SCROLLBAR */
+
+body.w8-theme-titanium
+#slotMissModal #slotMissGrid {
+    scrollbar-color: #d0a178 transparent;
+}
+
+/* SLOT CARD */
+
+body.w8-theme-titanium
+#slotMissModal .miss-box {
+    background: linear-gradient(
+        155deg,
+        #fffdf5 0%,
+        #fff0d9 100%
+    );
+
+    border: 1px solid #dfbb92;
+    border-left: 3px solid #d9895b;
+    border-radius: 9px;
+
+    box-shadow:
+        0 4px 10px #9f653527,
+        inset 0 1px 0 #ffffffdd;
+}
+
+/* SLOT CARD TOP LINE */
+
+body.w8-theme-titanium
+#slotMissModal .miss-box::before {
+    background: linear-gradient(
+        90deg,
+        transparent,
+        #e6af80,
+        transparent
+    );
+}
+
+/* SLOT IMAGE */
+
+body.w8-theme-titanium
+#slotMissModal .miss-box img {
+    filter:
+        drop-shadow(0 3px 3px #9e623b40);
+}
+
+/* MISS NUMBER */
+
+body.w8-theme-titanium
+#slotMissModal .miss-count {
+    color: #b94b32;
+
+    text-shadow: none;
+}
+
+/* ROUND MISS LABEL */
+
+body.w8-theme-titanium
+#slotMissModal .miss-sub {
+    color: #aa8063;
+    opacity: 1;
+}
+
+/* ==========================================
+   SPECIAL EVENT CARDS
+========================================== */
+
+body.w8-theme-titanium
+#slotMissModal .miss-box.event {
+    background: linear-gradient(
+        145deg,
+        #ffe7c5,
+        #f9d2ac 70%,
+        #f4c294
+    );
+
+    border: 1px solid #d59b61;
+    border-left: 3px solid #d65e45;
+
+    box-shadow:
+        0 4px 10px #a16a3c30,
+        inset 0 1px 0 #ffffffaa;
+}
+
+body.w8-theme-titanium
+#slotMissModal .miss-box.event .miss-count {
+    color: #ad432e;
+    text-shadow: none;
+}
+
+body.w8-theme-titanium
+#slotMissModal .miss-box.event .miss-sub {
+    color: #a46c46;
+}
+
+/* LAST EVENT */
+
+body.w8-theme-titanium
+#slotMissModal .event-last {
+    background: #fff9ef;
+
+    border: 1px solid #dfb78b;
+    border-radius: 6px;
+
+    color: #895739;
+}
+
+/* ==========================================
+   FOOTER
+========================================== */
+
+body.w8-theme-titanium
+#slotMissModal .miss-army-footer {
+    background: linear-gradient(
+        180deg,
+        #ffe6c5,
+        #f3c39d
+    );
+
+    border-top: 1px solid #dcaa77;
+
+    color: #a25438;
+
+    text-shadow: none;
+}
+
+/* FOOTER DOT */
+
+body.w8-theme-titanium
+#slotMissModal .miss-footer-led {
+    background: #8bbf54;
+
+    box-shadow:
+        0 0 6px #93c95e90;
+}
+
+/* FOOTER DECORATION */
+
+body.w8-theme-titanium
+#slotMissModal .miss-footer-decoration {
+    color: #c65242;
+    font-size: 13px;
+}
+
+/* SCROLLBAR */
+
+body.w8-theme-titanium
+#slotMissModal ::-webkit-scrollbar-thumb {
+    background: #d3a579;
+    border-radius: 5px;
+}
+
+
+
+
+
+/* ==========================================
+   FRUIT HISTORY - CREAM & PEACH DESIGN
+   MY BET HISTORY + ROUND DETAILS
+   KEEP ALL ORIGINAL FUNCTIONS
+========================================== */
+
+/* HAI MÀN HÌNH - GIỮ ẢNH NỀN RIÊNG */
+
+body.w8-theme-titanium #myBetHistoryModal {
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255,249,232,.72),
+            rgba(255,230,202,.88)
+        ),
+        url("/assets/police/theme-titanium/my-bet-history-bg.png")
+        center / cover no-repeat,
+        #fff0dc;
+
+    color: #824b32;
+}
+
+body.w8-theme-titanium #roundDetailModal {
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255,249,232,.72),
+            rgba(255,230,202,.88)
+        ),
+        url("/assets/police/theme-titanium/round-details-bg.png")
+        center / cover no-repeat,
+        #fff0dc;
+
+    color: #824b32;
+}
+
+/* VIỀN MÀN HÌNH */
+
+body.w8-theme-titanium
+:is(#myBetHistoryModal, #roundDetailModal)::before {
+    border: 1px solid rgba(211,149,91,.42);
+    border-radius: 9px;
+    box-shadow: inset 0 0 20px #a65e3015;
+}
+
+/* HEADER */
+
+body.w8-theme-titanium
+:is(#myBetHistoryModal, #roundDetailModal)
+.history-header {
+    background: linear-gradient(
+        135deg,
+        #fff8e9,
+        #ffdfb9 65%,
+        #efb78d
+    );
+
+    border-bottom: 2px solid #d49463;
+    box-shadow:
+        0 5px 14px #8e59312a,
+        inset 0 1px 0 #ffffffbb;
+}
+
+/* ĐƯỜNG TRANG TRÍ HEADER */
+
+body.w8-theme-titanium
+:is(#myBetHistoryModal, #roundDetailModal)
+.history-header::after {
+    background: linear-gradient(
+        90deg,
+        transparent,
+        #d78865,
+        #ffe1a5,
+        #d78865,
+        transparent
+    );
+
+    box-shadow: none;
+}
+
+/* TIÊU ĐỀ */
+
+body.w8-theme-titanium
+:is(#myBetHistoryModal, #roundDetailModal)
+.history-title {
+    color: #a64733;
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: .7px;
+    text-shadow: none;
+}
+
+/* DÒNG PHỤ */
+
+body.w8-theme-titanium
+:is(#myBetHistoryModal, #roundDetailModal)
+.history-sub {
+    color: #a27350;
+    opacity: 1;
+    letter-spacing: 1px;
+    text-shadow: none;
+}
+
+/* NÚT ĐÓNG */
+
+body.w8-theme-titanium
+:is(#myBetHistoryModal, #roundDetailModal)
+.history-close {
+    background: linear-gradient(
+        135deg,
+        #fff9ec,
+        #f3d1ac
+    );
+
+    border: 1px solid #d89a6d;
+    border-radius: 8px;
+
+    color: #a64c38;
+
+    box-shadow:
+        0 3px 8px #8d57302b,
+        inset 0 1px 0 #fff;
+}
+
+/* ==========================================
+   MY BET HISTORY - TABLE HEADER
+========================================== */
+
+body.w8-theme-titanium
+#myBetHistoryModal .history-head {
+    background: linear-gradient(
+        180deg,
+        #f8d5ad,
+        #edb98f
+    );
+
+    border: 1px solid #d99d6b;
+    border-bottom: 2px solid #bd7952;
+    border-radius: 8px 8px 0 0;
+
+    color: #82452b;
+    box-shadow: inset 0 1px 0 #ffffff88;
+}
+
+/* CÁC DÒNG LỊCH SỬ */
+
+body.w8-theme-titanium
+#myBetHistoryModal .history-row {
+    background: linear-gradient(
+        115deg,
+        #fffdf5,
+        #fff0db
+    );
+
+    border: 1px solid #e1ba94;
+    border-left: 3px solid #d69665;
+    border-radius: 8px;
+
+    color: #824b32;
+
+    box-shadow: 0 3px 8px #9c673121;
+}
+
+/* THẮNG */
+
+body.w8-theme-titanium
+#myBetHistoryModal .history-row.win {
+    background: linear-gradient(
+        115deg,
+        #f6ffe8,
+        #e5f2cb
+    );
+
+    border-left-color: #84b454;
+}
+
+/* THUA */
+
+body.w8-theme-titanium
+#myBetHistoryModal .history-row.lose {
+    background: linear-gradient(
+        115deg,
+        #fff6ee,
+        #fbe1d7
+    );
+
+    border-left-color: #d57966;
+}
+
+/* SỐ TIỀN THẮNG */
+
+body.w8-theme-titanium
+#myBetHistoryModal .history-row.win > :last-child {
+    color: #5f963d;
+    text-shadow: none;
+}
+
+body.w8-theme-titanium
+#myBetHistoryModal .history-row.lose > :last-child {
+    color: #b85d4b;
+}
+
+/* ==========================================
+   ROUND DETAILS - RESULT
+========================================== */
+
+body.w8-theme-titanium
+#roundDetailModal .round-result {
+    background: linear-gradient(
+        135deg,
+        #fff0d7,
+        #f4c8a2
+    );
+
+    border-bottom: 2px solid #d69a69;
+    box-shadow: inset 0 -5px 15px #a3683820;
+}
+
+body.w8-theme-titanium
+#roundDetailModal .round-result-icon {
+    filter: drop-shadow(0 4px 6px #91633a55);
+}
+
+body.w8-theme-titanium
+#roundDetailModal .round-result-text {
+    color: #b54b34;
+    text-shadow: 0 1px 2px #ffffffaa;
+}
+
+/* ROUND DETAILS - COLUMN HEAD */
+
+body.w8-theme-titanium
+#roundDetailModal .round-table-head {
+    background: linear-gradient(
+        180deg,
+        #f8d5ad,
+        #edb98f
+    );
+
+    border-bottom: 2px solid #c68a5b;
+    color: #87492f;
+}
+
+/* ROUND DETAILS - SLOT CARDS */
+
+body.w8-theme-titanium
+#roundDetailModal .round-slot-row {
+    background: linear-gradient(
+        115deg,
+        #fffdf5,
+        #fff0db
+    );
+
+    border: 1px solid #e0b892;
+    border-left: 3px solid #d49663;
+    border-radius: 8px;
+
+    color: #854a30;
+    box-shadow: 0 3px 8px #98612e22;
+}
+
+body.w8-theme-titanium
+#roundDetailModal .round-slot-row.win {
+    background: linear-gradient(
+        115deg,
+        #f4ffe7,
+        #e8f4d4
+    );
+
+    border-left-color: #87b955;
+}
+
+/* GIÁ TRỊ CƯỢC */
+
+body.w8-theme-titanium
+#roundDetailModal .round-slot-bet {
+    color: #935232;
+}
+
+/* GIÁ TRỊ THẮNG */
+
+body.w8-theme-titanium
+#roundDetailModal .round-slot-win {
+    color: #5f963d;
+    text-shadow: none;
+}
+
+/* SCROLLBAR */
+
+body.w8-theme-titanium
+:is(#myBetHistoryModal, #roundDetailModal)
+::-webkit-scrollbar-thumb {
+    background: #d6a47b;
+    border-radius: 5px;
+}
+
+body.w8-theme-titanium
+:is(#myBetHistoryModal, #roundDetailModal)
+.history-body,
+
+body.w8-theme-titanium
+#roundDetailModal .round-detail-list {
+    scrollbar-color: #d6a47b transparent;
+}
+
+
+
+
+
+/* ==========================================
+   GAME SETTINGS - MILITARY / FRUIT
+========================================== */
+
+#w8Settings {
+    position: absolute;
+
+    bottom: 118px;
+    left: 50px;
+
+    width: 112px;
+    z-index: 7;
+
+    font-family: system-ui, sans-serif;
+
+    /* MILITARY COLORS */
+    --st-bg: linear-gradient(
+        145deg, #273c2b, #101d15
+    );
+
+    --st-border: #bca16d;
+    --st-text: #f1dfb7;
+    --st-sub: #a9bba5;
+
+    --st-item: linear-gradient(
+        145deg, #344b37, #1c2d21
+    );
+
+    --st-item-border: #53694e;
+    --st-accent: #d9bc80;
+}
+
+/* ==========================================
+   MAIN BUTTON
+========================================== */
+
+#w8SettingsButton {
+    width: 112px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    padding: 0 10px;
+
+    background: var(--st-bg);
+
+    border: 1px solid var(--st-border);
+    border-bottom-width: 2px;
+    border-radius: 7px;
+
+    color: var(--st-text);
+
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .6px;
+
+    box-shadow:
+        0 5px 12px #0008,
+        inset 0 1px 0 #ffffff22;
+
+    cursor: pointer;
+    touch-action: manipulation;
+
+    transition:
+        background .2s,
+        color .2s,
+        border-color .2s;
+}
+
+#w8SettingsButton:active {
+    filter: brightness(.9);
+}
+
+.w8-settings-icon {
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1;
+}
+
+/* ==========================================
+   MENU
+========================================== */
+
+#w8SettingsMenu[hidden] {
+    display: none !important;
+}
+
+#w8SettingsMenu {
+    position: absolute;
+
+    top: 42px;
+    left: 90px;
+
+    width: 248px;
+
+    padding: 12px;
+
+    box-sizing: border-box;
+
+    background: var(--st-bg);
+
+    border: 1px solid var(--st-border);
+    border-radius: 11px;
+
+    box-shadow:
+        0 12px 30px #000a,
+        inset 0 1px 0 #ffffff20;
+
+    color: var(--st-text);
+}
+
+/* MENU TITLE */
+
+.w8-settings-heading {
+    padding: 3px 0 11px;
+
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 1.2px;
+    text-align: center;
+
+    color: var(--st-accent);
+
+    border-bottom: 1px solid
+        color-mix(
+            in srgb,
+            var(--st-border) 35%,
+            transparent
+        );
+
+    margin-bottom: 9px;
+}
+
+/* ==========================================
+   MENU OPTIONS
+========================================== */
+
+#w8SettingsMenu .w8-settings-option {
+    width: 100%;
+    min-height: 59px;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    margin-top: 7px;
+    padding: 9px;
+
+    box-sizing: border-box;
+
+    background: var(--st-item);
+
+    border: 1px solid var(--st-item-border);
+    border-radius: 8px;
+
+    color: var(--st-text);
+
+    text-align: left;
+
+    cursor: pointer;
+    touch-action: manipulation;
+
+    transition:
+        background .2s,
+        border-color .2s;
+}
+
+#w8SettingsMenu .w8-settings-option:active {
+    filter: brightness(.9);
+}
+
+/* OPTION NUMBER */
+
+.w8-settings-number {
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    background: rgba(0,0,0,.17);
+
+    border: 1px solid var(--st-item-border);
+    border-radius: 6px;
+
+    color: var(--st-accent);
+
+    font-size: 11px;
+    font-weight: 900;
+}
+
+/* TEXT */
+
+.w8-settings-info {
+    flex: 1;
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.w8-settings-info strong {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .2px;
+
+    color: var(--st-text);
+    white-space: nowrap;
+}
+
+.w8-settings-info small {
+    font-size: 9px;
+    font-weight: 500;
+
+    color: var(--st-sub);
+    white-space: nowrap;
+}
+
+/* ARROW */
+
+.w8-settings-arrow {
+    font-size: 21px;
+    font-weight: 400;
+    color: var(--st-accent);
+}
+
+/* SHOW NAME STATUS */
+
+.w8-settings-state {
+    min-width: 33px;
+
+    padding: 5px 6px;
+
+    box-sizing: border-box;
+
+    border: 1px solid var(--st-item-border);
+    border-radius: 5px;
+
+    background: rgba(0,0,0,.12);
+
+    color: var(--st-sub);
+
+    text-align: center;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.w8-settings-state.is-on {
+    color: #a6eb7b;
+    border-color: #679750;
+    background: rgba(66,118,43,.17);
+}
+
+/* ==========================================
+   FRUIT THEME
+========================================== */
+
+body.w8-theme-titanium #w8Settings {
+
+    --st-bg: linear-gradient(
+        145deg,
+        #fff6e3,
+        #f9d9b4
+    );
+
+    --st-border: #d39563;
+    --st-text: #8d4c32;
+    --st-sub: #a37758;
+
+    --st-item: linear-gradient(
+        145deg,
+        #fffdf6,
+        #ffe9d2
+    );
+
+    --st-item-border: #e2b58c;
+    --st-accent: #ae583c;
+}
+
+/* FRUIT ACTIVE STATUS */
+
+body.w8-theme-titanium
+#w8Settings .w8-settings-state.is-on {
+    color: #60943d;
+    border-color: #a5c484;
+    background: #e8f4d9;
+}
+
+/* ==========================================
+   ACCESSIBILITY
+========================================== */
+
+#w8Settings button:focus-visible {
+    outline: 2px solid var(--st-accent);
+    outline-offset: 2px;
+}
+
+
+
+/* ==========================================
+   IMAGE SETTINGS BUTTON
+========================================== */
+
+#w8SettingsButton {
+    position: relative;
+
+    width: 112px;
+    height: 40px;
+
+    padding: 0;
+    overflow: visible;
+
+    background: transparent;
+    border: none;
+    border-radius: 0;
+
+    box-shadow: none;
+    cursor: pointer;
+
+    touch-action: manipulation;
+}
+
+/* IMAGE LAYER */
+
+#w8SettingsButton .w8-settings-art {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: fill;
+
+    pointer-events: none;
+    user-select: none;
+}
+
+/* MILITARY DEFAULT */
+
+#w8SettingsButton .w8-settings-art.military {
+    display: block;
+}
+
+#w8SettingsButton .w8-settings-art.fruit {
+    display: none;
+}
+
+/* FRUIT THEME */
+
+body.w8-theme-titanium
+#w8SettingsButton .w8-settings-art.military {
+    display: none;
+}
+
+body.w8-theme-titanium
+#w8SettingsButton .w8-settings-art.fruit {
+    display: block;
+}
+
+/* FALLBACK TEXT */
+
+#w8SettingsButton{
+    position: relative;
+    z-index: -1;
+
+    color: #f1d9a3;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+body.w8-theme-titanium
+#w8SettingsButton {
+    color: #a65033;
+}
+
+/* CLICK EFFECT */
+
+#w8SettingsButton:active {
+    transform: scale(.95);
+    filter: brightness(.92);
+}
+
+/* MENU BELOW BUTTON */
+
+#w8SettingsMenu {
+    top: -98px;
+}
+
+
+
+
+</style>
+</head>
+
+<body>
+
+
+<div id="app">
+
+<!-- WHEEL -->
+
+<div class="wheel">
+
+<div class="wheel-stand"></div>
+
+
+<div class="wheel-center">
+<span id="timer"></span>
+</div>
+
+
+
+<div class="wheel-spokes"></div>
+
+
+
+<div class="slot s1" onclick="bet(1)">
+<div class="multi"><img src="/assets/police/multi-x5.png"></div>
+<img src="/assets/police/slot1.png" class="slot-img">
+
+<div class="mybet" id="mybet1">
+  <img src="/assets/police/diamond-icon.png">
+  <span>0</span>
+</div>
+
+</div>
+
+<div class="slot s2" onclick="bet(2)">
+<div class="multi"><img src="/assets/police/multi-x10.png"></div>
+<img src="/assets/police/slot2.png" class="slot-img">
+<div class="mybet" id="mybet2">
+  <img src="/assets/police/diamond-icon.png">
+  <span>0</span>
+</div>
+</div>
+
+<div class="slot s3" onclick="bet(3)">
+<div class="multi"><img src="/assets/police/multi-x15.png"></div>
+<img src="/assets/police/slot3.png" class="slot-img">
+<div class="mybet" id="mybet3">
+  <img src="/assets/police/diamond-icon.png">
+  <span>0</span>
+</div>
+</div>
+
+<div class="slot s4" onclick="bet(4)">
+<div class="multi"><img src="/assets/police/multi-x25.png"></div>
+<img src="/assets/police/slot4.png" class="slot-img">
+<div class="mybet" id="mybet4">
+  <img src="/assets/police/diamond-icon.png">
+  <span>0</span>
+</div>
+</div>
+
+<div class="slot s5" onclick="bet(5)">
+<div class="multi"><img src="/assets/police/multi-x45.png"></div>
+<img src="/assets/police/slot5.png" class="slot-img">
+<div class="mybet" id="mybet5">
+  <img src="/assets/police/diamond-icon.png">
+  <span>0</span>
+</div>
+</div>
+
+<div class="slot s6" onclick="bet(6)">
+<div class="multi"><img src="/assets/police/multi-x5.png"></div>
+<img src="/assets/police/slot6.png" class="slot-img">
+<div class="mybet" id="mybet6">
+  <img src="/assets/police/diamond-icon.png">
+  <span>0</span>
+</div>
+</div>
+
+<div class="slot s7" onclick="bet(7)">
+<div class="multi"><img src="/assets/police/multi-x5.png"></div>
+<img src="/assets/police/slot7.png" class="slot-img">
+<div class="mybet" id="mybet7">
+  <img src="/assets/police/diamond-icon.png">
+  <span>0</span>
+</div>
+</div>
+
+<div class="slot s8" onclick="bet(8)">
+<div class="multi"><img src="/assets/police/multi-x5.png"></div>
+<img src="/assets/police/slot8.png" class="slot-img">
+<div class="mybet" id="mybet8">
+  <img src="/assets/police/diamond-icon.png">
+  <span>0</span>
+</div>
+</div>
+
+</div>
+
+
+
+
+
+<!-- ================= MILITARY ROUND ================= -->
+
+<div class="wheel-round">
+
+    <div class="round-army-icon">
+        ★
+    </div>
+
+    <div class="round-army-label">
+        ROUND
+    </div>
+
+    <div class="round-army-led"></div>
+
+    <span id="roundId">-</span>
+
+</div>
+
+
+
+<!-- ======================================
+     MILITARY LIVE FLOATING COMMENTS
+====================================== -->
+
+<div
+  id="w8LiveComments"
+  class="w8-live-comments"
+  aria-live="polite">
+</div>
+
+
+
+
+<!-- ====================================
+     GAME IMAGE THEME SWITCHER
+==================================== -->
+
+<div id="w8ThemeSwitcher">
+
+  <button
+    id="w8ThemeButton"
+    type="button"
+    onclick="w8ToggleThemeMenu()"
+    aria-controls="w8ThemeMenu"
+    aria-expanded="false"
+  >
+    CHANGE THEME
+  </button>
+
+  <div id="w8ThemeMenu" hidden>
+
+    <div class="w8-theme-heading">
+      SELECT GAME THEME
+    </div>
+
+    <button
+      type="button"
+      class="w8-theme-option"
+      data-theme="military"
+      onclick="w8SetTheme('military')"
+    >
+      <span class="w8-theme-preview military"></span>
+      <span>MILITARY</span>
+      <span class="w8-theme-state"></span>
+    </button>
+
+    <button
+      type="button"
+      class="w8-theme-option"
+      data-theme="titanium"
+      onclick="w8SetTheme('titanium')"
+    >
+      <span class="w8-theme-preview titanium"></span>
+      <span>FRUIT</span>
+      <span class="w8-theme-state"></span>
+    </button>
+
+  </div>
+
+</div>
+
+
+
+
+<!-- ===== WHEEL8 SCREEN SHARE ===== -->
+
+<button
+  id="w8ShareButton"
+  class="w8-share-button"
+  type="button"
+  onclick="w8ToggleShare()">
+  SHARE
+</button>
+
+<div id="w8SharePanel"
+     class="w8-share-panel"
+     hidden>
+
+<div class="w8-share-title">
+
+  <span class="w8-live-dot"></span>
+
+  <span id="w8ShareThemeTitle">
+    MILITARY LIVE SHARE
+  </span>
+
+</div>
+
+  <div id="w8ShareCount" class="w8-share-count">
+    0 người xem
+  </div>
+
+  <div class="w8-share-label">
+    Link URL
+  </div>
+
+  <input
+    id="w8ShareLink"
+    type="text"
+    readonly
+    placeholder="Link chia sẻ..."
+  >
+
+  <button
+    type="button"
+    class="w8-copy-button"
+    onclick="w8CopyLink()">
+    🔗 COPY LINK
+  </button>
+
+  <div id="w8ShareTip" class="w8-share-tip">
+    Gửi link để người khác xem màn hình.
+  </div>
+
+  <div class="w8-share-actions">
+
+    <button
+      type="button"
+      onclick="document.getElementById('w8SharePanel').hidden=true">
+      HIDE
+    </button>
+
+    <button
+      type="button"
+      class="w8-stop-button"
+      onclick="w8StopShare()">
+      ■ STOP
+    </button>
+
+  </div>
+</div>
+
+
+<!-- EXIT BUTTON -->
+<div class="exit-btn">
+
+<img src="/assets/police/exit-btn.png" class="exit-img">
+
+<div class="exit-hitbox"
+onclick="leaveGame()"></div>
+
+</div>
+
+
+<!-- ================= HISTORY ================= -->
+
+<div class="wheel-history">
+
+<div id="wheelHistoryList" class="history-list">
+</div>
+
+</div>
+
+
+<!-- ================= SUGGESTION ================= 
+<div id="predictBox" class="predict-box" style="display:none">
+
+<img
+src="/assets/police/predict-title.png"
+class="predict-title-img">
+
+<div id="predictList" class="predict-list"></div>
+
+</div>
+-->
+
+<!-- BET PANEL -->
+
+
+<!-- ===================================
+     MILITARY COIN BAR
+=================================== -->
+
+<div class="coin-bar">
+
+    <div class="coin-box">
+
+        <div class="coin-rivet coin-rivet-left"></div>
+        <div class="coin-rivet coin-rivet-right"></div>
+
+        <div class="coin-icon-wrap" style="display: none;">
+            <img
+                src="/assets/police/diamond-icon.png"
+                class="coin-icon"
+                alt="Diamond">
+        </div>
+
+        <div class="coin-info">
+<div class="coin-label" id="walletThemeLabel">
+    ★ MILITARY WALLET ★
+</div>
+
+            <span id="coins" class="coin-value">0</span>
+        </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+<div class="bet-panel">
+
+<div class="bet-hitbox">
+
+<div class="chip c1" onclick="setBet(10)"></div>
+<div class="chip c2" onclick="setBet(50)"></div>
+<div class="chip c3" onclick="setBet(100)"></div>
+<div class="chip c4" onclick="setBet(1000)"></div>
+<div class="chip c5" onclick="setBet(10000)"></div>
+
+</div>
+
+</div>
+
+<!-- RESULT -->
+
+<div id="resultModal" class="result" onclick="closeResult()">
+
+<div class="result-box" onclick="event.stopPropagation()">
+
+<div class="sheet-handle"></div>
+
+
+<img id="resultImg" class="result-img">
+
+<div class="result-grid">
+
+<div class="result-card">
+<div class="result-value">
+<span id="resultTotalBet">0</span> 
+</div>
+</div>
+
+<div class="result-card win">
+<div class="result-value">
+<span id="resultTotalWin">0</span> 
+</div>
+</div>
+</div>
+
+
+<div id="topWinners" class="top-winners"></div>
+
+</div>
+
+
+</div>
+
+
+
+
+
+<div id="betClosedModal" class="bet-closed-modal">
+
+<div class="bet-closed-bg">
+
+<div id="betClosedText" class="bet-closed-text">
+BETTING CLOSED
+</div>
+
+</div>
+
+</div>
+
+
+
+
+<!-- BET HISTORY BUTTON -->
+<div class="bet-history-btn">
+
+<img src="/assets/police/history-btn.png" class="history-img">
+
+<div class="history-hitbox"
+onclick="openMyBetHistory()"></div>
+
+</div>
+
+
+
+<!-- =====================================
+     GAME SETTINGS
+     SLOT STATISTICS + SHOW NAME
+===================================== -->
+
+<div id="w8Settings">
+
+  <!-- MAIN SETTINGS BUTTON -->
+  
+<button
+  id="w8SettingsButton"
+  type="button"
+  onclick="w8ToggleSettingsMenu()"
+  aria-controls="w8SettingsMenu"
+  aria-expanded="false"
+  aria-label="Game settings">
+
+  <!-- MILITARY IMAGE -->
+  <img
+    class="w8-settings-art military"
+    src="/assets/police/settings-military.png"
+    alt=""
+    draggable="false"
+    onerror="this.style.visibility='hidden'">
+
+  <!-- FRUIT IMAGE -->
+  <img
+    class="w8-settings-art fruit"
+    src="/assets/police/theme-titanium/settings-fruit.png"
+    alt=""
+    draggable="false"
+    onerror="this.style.visibility='hidden'">
+
+</button>
+
+
+  <!-- SETTINGS MENU -->
+  <div id="w8SettingsMenu" hidden>
+
+    <div class="w8-settings-heading">
+      GAME SETTINGS
+    </div>
+
+    <!-- OPTION 1: STATISTICS -->
+    <button
+      type="button"
+      class="w8-settings-option"
+      onclick="w8OpenStatsFromSettings()">
+
+      <span class="w8-settings-number">01</span>
+
+      <span class="w8-settings-info">
+        <strong>VIEW STATISTICS</strong>
+        <small>Slot miss & round tracking</small>
+      </span>
+
+      <span class="w8-settings-arrow">›</span>
+
+    </button>
+
+    <!-- OPTION 2: SHOW NAME -->
+    <button
+      id="toggleTopNameBtn"
+      type="button"
+      class="w8-settings-option">
+
+      <span class="w8-settings-number">02</span>
+
+      <span class="w8-settings-info">
+        <strong>SHOW NAME</strong>
+        <small>Top winners visibility</small>
+      </span>
+
+      <span
+        id="w8SettingsNameState"
+        class="w8-settings-state">
+        --
+      </span>
+
+    </button>
+
+    <!-- GIỮ ID ẢNH CŨ CHO TƯƠNG THÍCH -->
+    <img
+      id="toggleTopNameImg"
+      src="/assets/police/show-name-on.png"
+      alt=""
+      style="display:none;">
+
+  </div>
+
+</div>
+
+
+
+
+
+<!-- ================= MY BET HISTORY ================= -->
+
+<div id="myBetHistoryModal" class="history-modal">
+
+<div class="history-header">
+
+<div>
+<div class="history-title">MY BET HISTORY</div>
+<div class="history-sub">Today · Last 50 rounds</div>
+</div>
+
+<button class="history-close"
+onclick="closeMyBetHistory()">✕</button>
+
+</div>
+
+
+<div class="history-table">
+
+<div class="history-head">
+<div>ROUND</div>
+<div>TIME</div>
+<div>BET</div>
+<div>WIN</div>
+</div>
+
+<div id="myBetHistoryList"
+class="history-body"></div>
+
+</div>
+
+</div>
+
+
+
+
+<div id="roundDetailModal" class="history-modal">
+
+<div class="history-header">
+
+<div>
+<div class="history-title">ROUND DETAILS</div>
+<div class="history-sub">Bet breakdown</div>
+</div>
+
+<button class="history-close"
+onclick="closeRoundDetail()">✕</button>
+
+</div>
+
+
+<div class="round-result">
+
+<div id="roundResultIcon" class="round-result-icon"></div>
+
+<div class="round-result-text">
+
+<span id="roundResultMulti"></span>
+</div>
+
+</div>
+
+
+<div class="round-table-head">
+
+<div>SLOT</div>
+<div>BET</div>
+<div>WIN</div>
+
+</div>
+
+<div id="roundDetailList" class="round-detail-list"></div>
+
+</div>
+
+
+
+
+<!-- FULLSCREEN GAME LOADING -->
+<div id="gameLoading">
+
+    <img
+        src="/assets/police/loading-screen.png"
+        class="loading-full-bg"
+    >
+
+    <div class="loading-overlay"></div>
+
+    <div class="loading-ui">
+        <div class="loading-progress-bar">
+            <div id="loadingProgress"></div>
+        </div>
+    </div>
+
+</div>
+
+
+</div>
+
+
+
+
+<!-- =====================================
+     MILITARY SLOT MISS COUNT
+===================================== -->
+
+<div id="slotMissModal" class="history-modal">
+
+    <!-- HEADER -->
+    <div class="history-header">
+
+        <div class="miss-header-info">
+            <div class="history-title">
+                SLOT MISS COUNT
+            </div>
+
+            <div class="miss-header-sub">
+                ROUND TRACKING SYSTEM
+            </div>
+        </div>
+
+        <button
+            class="history-close"
+            onclick="closeSlotMiss()">
+            ✕
+        </button>
+
+    </div>
+
+    <!-- CONTENT -->
+    <div class="history-table miss-army-content">
+
+        <!-- GROUP HEADER -->
+        <div class="miss-group-header">
+
+            <div class="miss-group-title">
+                <span class="miss-status-dot"></span>
+                SLOT GROUP A
+                <small>×5</small>
+            </div>
+
+            <div class="miss-group-title">
+                <span class="miss-status-dot"></span>
+                SLOT GROUP B
+                <small>×10–45</small>
+            </div>
+
+        </div>
+
+        <!-- SLOT GRID -->
+        <div id="slotMissGrid">
+
+            <div id="slotColX5"></div>
+
+            <div id="slotColX45"></div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="miss-army-footer">
+            <span class="miss-footer-led"></span>
+            LIVE ROUND STATISTICS
+            <span class="miss-footer-decoration">★</span>
+        </div>
+
+    </div>
+
+</div>
+
+
+
+
+<script>
+
+
+/* =====================================
+   AUTO RESPONSIVE IOS + ANDROID
+   GIỮ NGUYÊN BỐ CỤC 430 x 870
+===================================== */
+
+(function(){
+
+  const BASE_WIDTH = 430;
+  const BASE_HEIGHT = 870;
+
+  function resizeGame(){
+
+    const app = document.getElementById("app");
+
+    if(!app) return;
+
+    // Kích thước màn hình thực tế
+    const screenWidth = window.innerWidth;
+
+    const screenHeight =
+      window.visualViewport
+      ? window.visualViewport.height
+      : window.innerHeight;
+
+    // Tỷ lệ chiều ngang
+    const scaleX = screenWidth / BASE_WIDTH;
+
+    // Tỷ lệ chiều dọc
+    const scaleY = screenHeight / BASE_HEIGHT;
+
+    // Giữ nguyên tỷ lệ hình ảnh, không méo
+   const scale = Math.min(1, scaleX, scaleY);
+
+    // Tự động căn giữa
+    app.style.width = BASE_WIDTH + "px";
+    app.style.height = BASE_HEIGHT + "px";
+
+    app.style.transform =
+      `translate(-50%, -50%) scale(${scale})`;
+
+  }
+
+  // Khi mở game
+  if(document.readyState === "loading"){
+    document.addEventListener(
+      "DOMContentLoaded",
+      resizeGame
+    );
+  }else{
+    resizeGame();
+  }
+
+  // Khi thay đổi kích thước màn hình
+  window.addEventListener("resize", resizeGame);
+
+  // iOS Safari thay đổi vùng hiển thị
+  if(window.visualViewport){
+    window.visualViewport.addEventListener(
+      "resize",
+      resizeGame
+    );
+  }
+
+  // Khi xoay điện thoại
+  window.addEventListener(
+    "orientationchange",
+    resizeGame
+  );
+
+})();
+
+
+const me = JSON.parse(localStorage.getItem("user_profile")||"{}");
+
+const socket = io({
+auth:{
+uid:me.uid
+}
+});
+
+
+
+
+let currentBet = 0
+let highlightIndex = 1
+let highlightLoop = null
+let highlightSpeed = 1000
+let isBetLocked = false
+let resultShowing = false
+let coins = 0
+let wheelHistory = []
+
+let myBetHistory = []
+
+
+
+/* ======================================
+   WHEEL8 DAILY HISTORY RESET
+====================================== */
+
+// Server thông báo đã sang ngày mới
+socket.on("wheel8-my-history-reset", () => {
+
+  // Xóa lịch sử đang hiển thị
+  myBetHistory = [];
+
+  // Làm mới danh sách
+  renderMyBetHistory();
+
+  // Đóng chi tiết vòng cũ nếu đang mở
+  const detailModal =
+    document.getElementById("roundDetailModal");
+
+  if (detailModal) {
+    detailModal.style.display = "none";
+  }
+
+});
+
+// Khi kết nối hoặc kết nối lại
+// luôn lấy lịch sử mới nhất từ server
+socket.on("connect", () => {
+
+  socket.emit("wheel8-get-my-history");
+
+});
+
+
+
+let currentRoundId = 0
+
+let lastWinSlot = 0
+let lastWinMulti = 0
+
+let roundResults = {}
+
+
+let lastBetSlot = 0
+let lastBetValue = 0
+
+
+const myBets = [0,0,0,0,0,0,0,0]
+const slots = document.querySelectorAll(".slot")
+
+let wheel8History = []
+
+socket.on("wheel8-history",(list)=>{
+
+wheel8History = list || []
+
+})
+
+function runHighlight(){
+
+slots.forEach(s=>s.classList.remove("win"))
+
+const slot = slots[highlightIndex-1]
+
+if(slot){
+slot.classList.add("win")
+}
+
+highlightIndex++
+
+if(highlightIndex > 8){
+highlightIndex = 1
+}
+
+}
+
+
+function changeHighlightSpeed(speed){
+
+highlightSpeed = speed
+
+if(highlightLoop){
+
+clearInterval(highlightLoop)
+
+highlightLoop =
+setInterval(runHighlight, highlightSpeed)
+
+}
+
+}
+
+
+
+function startHighlightLoop(){
+
+if(highlightLoop) return
+
+highlightLoop = setInterval(runHighlight, highlightSpeed)
+
+}
+
+
+function stopHighlightLoop(){
+
+clearInterval(highlightLoop)
+highlightLoop = null
+
+}
+
+/* SET BET */
+
+function setBet(v){
+
+currentBet = v
+
+// reset
+document.querySelectorAll(".chip")
+.forEach(c=>c.classList.remove("active"))
+
+// chip vừa bấm
+event.target.classList.add("active")
+
+}
+
+/* BET */
+
+function bet(slot){
+
+if(!currentBet) return
+
+const modal = document.getElementById("betClosedModal")
+const text  = document.getElementById("betClosedText")
+
+// 🔒 không đủ coin
+if(coins < currentBet){
+
+text.textContent = "NOT ENOUGH COINS"
+modal.style.display = "flex"
+
+setTimeout(()=> modal.style.display = "none",2000)
+
+return
+}
+
+// 🔒 đã khóa cược
+if(isBetLocked){
+
+text.textContent = "BETTING CLOSED"
+modal.style.display = "flex"
+
+setTimeout(()=> modal.style.display = "none",2000)
+
+return
+}
+
+// ✅ gửi cược (KHÔNG update UI ở đây)
+socket.emit("wheel8-bet",{
+  slot,
+  bet:currentBet
+})
+
+
+// =========================
+// 📜 LƯU HISTORY (OK giữ)
+// =========================
+
+let row = myBetHistory.find(r =>
+r.round === currentRoundId &&
+r.slot === slot
+)
+
+if(row){
+  row.bet += currentBet
+}else{
+  myBetHistory.push({
+    round: currentRoundId,
+    slot: slot,
+    bet: currentBet,
+    win:0,
+    multi:0
+  })
+}
+
+// giữ tối đa
+if(myBetHistory.length > 200){
+  myBetHistory.pop()
+}
+
+
+// =========================
+// 🧠 CHỈ LƯU PENDING
+// =========================
+
+lastBetSlot = slot
+lastBetValue = currentBet
+
+// ❌ KHÔNG update UI ở đây nữa
+
+}
+/* RESULT */
+
+socket.on("wheel8-result",(data)=>{
+
+const winSlots = data.slots || [data.slot]
+const m = data.multiplier
+
+// slot đại diện để hiển thị hình
+const resultSlot = winSlots[0] || 1
+
+lastWinSlot = resultSlot
+lastWinMulti = m
+
+roundResults[currentRoundId] = {
+slot: resultSlot,
+multi: m,
+slots: winSlots
+}
+
+// cập nhật history
+wheelHistory.unshift({
+slot: resultSlot,
+multi: m,
+slots: winSlots,
+event: data.event || null
+})
+
+wheelHistory = wheelHistory.slice(0,8)
+
+renderHistory()
+
+resultShowing = true
+
+stopHighlightLoop()
+
+// reset highlight
+document.querySelectorAll(".slot")
+.forEach(s=>s.classList.remove("win"))
+
+// highlight tất cả slot thắng
+winSlots.forEach(s=>{
+
+const el = document.querySelector(".slot.s"+s)
+
+if(el){
+
+el.classList.add("win")
+
+setTimeout(()=>{
+el.classList.remove("win")
+resultShowing = false
+},5000)
+
+}
+
+})
+
+// hình slot thắng
+// hình kết quả
+
+let resultImg = "/assets/police/slot"+resultSlot+".png"
+
+// event 4 slot x5
+if(winSlots.length === 4){
+
+// event slot 1,6,7,8
+if(winSlots.includes(1)){
+resultImg = "/assets/police/event-x5-all.png"
+}
+
+// event slot 2,3,4,5
+else{
+resultImg = "/assets/police/event-x45-all.png"
+}
+
+}
+
+document.getElementById("resultImg").src = resultImg
+
+// tổng cược
+const totalBet =
+myBets.reduce((a,b)=>a+b,0)
+
+// tổng tiền thắng (có thể nhiều slot)
+let totalWin = 0
+
+winSlots.forEach(s=>{
+
+// multiplier theo slot
+const slotMulti = [5,10,15,25,45,5,5,5][s-1]
+
+totalWin += (myBets[s-1] || 0) * slotMulti
+
+})
+
+document.getElementById("resultTotalBet").textContent =
+totalBet
+
+document.getElementById("resultTotalWin").textContent =
+totalWin
+
+document.getElementById("resultModal").style.display = "flex"
+
+setTimeout(()=>{
+closeResult()
+},5000)
+
+// reload history
+socket.emit("wheel8-get-my-history")
+
+
+// =======================
+// 🏆 TOP WINNERS UI
+// =======================
+
+const box = document.getElementById("topWinners")
+box.innerHTML = ""
+
+if(data.top && data.top.length){
+
+  // đảm bảo luôn đúng thứ tự
+  const top = data.top
+    .sort((a,b)=>b.win - a.win)
+    .slice(0,3)
+
+  top.forEach((p,i)=>{
+
+    const card = document.createElement("div")
+
+    let cls = ""
+    let rank = ""
+
+    if(i===0){ cls="top1"; rank="🥇" }
+    else if(i===1){ cls="top2"; rank="🥈" }
+    else if(i===2){ cls="top3"; rank="🥉" }
+
+    card.className = "top-card " + cls
+
+
+card.innerHTML = `
+  <div class="top-name" title="${p.name}">
+    <span class="top-name-text">${p.name}</span>
+  </div>
+
+  <div class="top-win">
+    <span class="top-win-value">${p.win}</span>
+    <img
+      src="/assets/police/diamond-icon.png"
+      class="top-diamond"
+      alt="Diamond">
+  </div>
+`;
+
+
+// TOP 1 ở giữa: TOP 2 - TOP 1 - TOP 3
+if (i === 0) {
+    box.appendChild(card);
+} else if (i === 1) {
+    box.insertBefore(card, box.firstChild);
+} else {
+    box.appendChild(card);
+}
+
+  })
+
+}
+
+})
+/* TIMER */
+
+socket.on("wheel8-timer",(t)=>{
+
+document.getElementById("timer").textContent = t
+
+// khóa cược khi còn 5 giây
+isBetLocked = (t <= 5)
+
+if(isBetLocked){
+slots.forEach(s=>s.classList.add("locked"))
+}else{
+slots.forEach(s=>s.classList.remove("locked"))
+}
+
+
+// reset tốc độ mỗi round
+if(t >= 5){
+highlightSpeed = 1000
+}
+
+// sau 5 giây mới bắt đầu highlight
+if(!resultShowing && t <= 30 && t > 5){
+startHighlightLoop()
+}
+
+// còn 5 giây thì tăng tốc
+if(t <= 5){
+changeHighlightSpeed(100)
+}
+
+})
+/* COIN UPDATE */
+
+socket.on("coin-update",(data)=>{
+
+coins = data.coins
+
+document.getElementById("coins").textContent = coins
+
+})
+
+
+socket.on("wheel8-history",(list)=>{
+
+wheelHistory = list
+
+renderHistory()
+
+})
+
+
+
+// 📜 USER BET HISTORY
+socket.on("wheel8-my-history",(list)=>{
+
+myBetHistory = []
+
+list.forEach(r=>{
+
+myBetHistory.push({
+round: Number(r.roundId) || 0,
+slot: Number(r.slot) || 0,
+bet: Number(r.bet) || 0,
+win: Number(r.win) || 0,
+multi: Number(r.multiplier) || 0,
+winSlot: Number(r.winSlot) || 0,
+event: r.event || null,
+time: Number(r.ts) || 0
+})
+
+})
+
+// giữ 50 round
+const rounds = {}
+
+myBetHistory.forEach(b=>{
+
+if(!rounds[b.round]){
+rounds[b.round] = []
+}
+
+rounds[b.round].push(b)
+
+})
+
+const roundIds =
+Object.keys(rounds)
+.sort((a,b)=>{
+
+const ta = rounds[a][0]?.time || 0
+const tb = rounds[b][0]?.time || 0
+
+return tb - ta
+
+})
+.slice(0,50)
+
+const newList = []
+
+roundIds.forEach(r=>{
+newList.push(...rounds[r])
+})
+
+myBetHistory = newList
+
+renderMyBetHistory()
+
+})
+
+
+function closeResult(){
+
+document.getElementById("resultModal").style.display="none"
+
+// reset bet sau khi xem kết quả
+for(let i=1;i<=8;i++){
+
+const el = document.getElementById("mybet"+i)
+
+if(el){
+el.textContent = 0
+el.style.display = "none"
+}
+
+myBets[i-1] = 0
+
+}
+
+}
+
+
+socket.on("wheel8-pool-update",(pool)=>{
+
+for(let i=0;i<8;i++){
+
+const el = document.getElementById("pool"+(i+1))
+
+if(el){
+el.textContent = pool[i]
+}
+
+}
+
+})
+
+
+socket.on("wheel8-round-new",(data)=>{
+
+// Đã tắt chức năng dự đoán
+// hidePrediction()
+
+currentRoundId = data.roundId
+
+isBetLocked = false
+highlightSpeed = 1000
+
+if(!resultShowing){
+stopHighlightLoop()
+}
+
+for(let i=1;i<=8;i++){
+
+const pool = document.getElementById("pool"+i)
+
+if(pool){
+pool.textContent = 0
+pool.style.display = "none"
+}
+
+}
+
+document.getElementById("roundId").textContent =
+data.roundId
+
+document.getElementById("betClosedModal").style.display="none"
+
+})
+
+
+// =====================================
+// PREDICTION - ĐÃ VÔ HIỆU HÓA
+// =====================================
+
+socket.on("wheel8-prediction", (data) => {
+
+    // Không xử lý vì đã tắt giao diện dự đoán
+    return;
+
+});
+
+
+
+socket.on("wheel8-my-bets",(bets)=>{
+
+for(let i=0;i<8;i++){
+
+myBets[i] = bets[i]
+
+const el = document.getElementById("mybet"+(i+1))
+
+if(el){
+
+const value = bets[i]
+
+el.textContent = value
+
+if(value > 0){
+  el.style.display = "flex"
+  el.classList.add("active")
+}else{
+  el.style.display = "none"
+  el.classList.remove("active")
+}
+
+
+}
+
+}
+
+})
+
+
+
+document.addEventListener("touchmove", function(e){
+
+  const allowScroll = e.target.closest(
+    ".history-table, .round-detail-list"
+  )
+
+  if(!allowScroll){
+    e.preventDefault()
+  }
+
+}, { passive:false })
+
+
+window.addEventListener("scroll", function(){
+  window.scrollTo(0,0);
+});
+
+
+document.addEventListener("wheel", function(e){
+
+if(e.ctrlKey){
+e.preventDefault()
+}
+
+},{ passive:false })
+
+
+// chặn bôi đen
+document.addEventListener("selectstart", e => e.preventDefault())
+
+// chặn chuột phải
+document.addEventListener("contextmenu", e => e.preventDefault())
+
+// chặn drag ảnh
+document.addEventListener("dragstart", e => e.preventDefault())
+
+
+
+
+
+function renderHistory(){
+
+const box =
+document.getElementById("wheelHistoryList")
+
+box.innerHTML = ""
+
+const list = wheelHistory.slice(0,8)
+
+list.forEach((h,i)=>{
+
+const div = document.createElement("div")
+div.className = "history-item"
+
+// slot 2,3,4,5 = đỏ
+// slot 1,6,7,8 = xanh
+let historyColor = ""
+
+if(h.event === "x45-all"){
+  historyColor = "history-red"
+}
+else if(h.event === "x5-all"){
+  historyColor = "history-blue"
+}
+else if(Array.isArray(h.slots) && h.slots.length === 4){
+
+  if(h.slots.includes(1)){
+    historyColor = "history-blue"
+  }else{
+    historyColor = "history-red"
+  }
+
+}
+else{
+
+  const slot = Number(h.slot)
+
+  if([2,3,4,5].includes(slot)){
+    historyColor = "history-red"
+  }
+  else if([1,6,7,8].includes(slot)){
+    historyColor = "history-blue"
+  }
+
+}
+
+if(historyColor){
+  div.classList.add(historyColor)
+}
+
+const img = document.createElement("img")
+
+let imgSrc = "/assets/police/slot"+h.slot+".png"
+
+// EVENT X5 ALL
+if(h.event === "x5-all"){
+  imgSrc = "/assets/police/event-x5-all.png"
+}
+
+// EVENT X45 ALL
+else if(h.event === "x45-all"){
+  imgSrc = "/assets/police/event-x45-all.png"
+}
+
+// fallback nếu server chưa gửi event
+else if(Array.isArray(h.slots) && h.slots.length === 4){
+
+  if(h.slots.includes(1)){
+    imgSrc = "/assets/police/event-x5-all.png"
+  }else{
+    imgSrc = "/assets/police/event-x45-all.png"
+  }
+
+}
+
+img.src = imgSrc
+
+div.appendChild(img)
+
+// badge NEW cho kết quả mới nhất
+if(i === 0){
+
+const badge = document.createElement("div")
+badge.className = "history-new"
+badge.textContent = "NEW"
+
+div.appendChild(badge)
+
+}
+
+box.appendChild(div)
+
+})
+
+}
+
+
+
+fetch("/api/wheel8-round")
+.then(r=>r.json())
+.then(d=>{
+document.getElementById("roundId").textContent =
+d.roundId
+})
+
+
+
+// 📜 LOAD USER BET HISTORY
+socket.emit("wheel8-get-my-history")
+
+
+
+socket.on("wheel8-bet-ok",()=>{
+
+if(!lastBetSlot) return
+
+myBets[lastBetSlot-1] += lastBetValue
+
+const el = document.getElementById("mybet"+lastBetSlot)
+
+if(el){
+
+const value = myBets[lastBetSlot-1]
+
+el.textContent = value
+el.style.display = value > 0 ? "block" : "none"
+
+}
+
+// reset
+lastBetSlot = 0
+lastBetValue = 0
+
+})
+
+
+socket.on("wheel8-bet-fail",(data)=>{
+
+const modal = document.getElementById("betClosedModal")
+const text  = document.getElementById("betClosedText")
+
+text.textContent = data.message || "BET FAILED"
+
+modal.style.display = "flex"
+
+setTimeout(()=> modal.style.display = "none",2000)
+
+// reset
+lastBetSlot = 0
+lastBetValue = 0
+
+})
+
+function openMyBetHistory(){
+
+document.getElementById("myBetHistoryModal")
+.style.display="flex"
+
+renderMyBetHistory()
+
+}
+
+function closeMyBetHistory(){
+
+document.getElementById("myBetHistoryModal")
+.style.display="none"
+
+}
+
+
+function renderMyBetHistory(){
+
+const box =
+document.getElementById("myBetHistoryList")
+
+box.innerHTML=""
+
+
+// Chưa có lịch sử trong ngày
+if (!myBetHistory.length) {
+
+  box.innerHTML = `
+    <div style="
+      padding:40px 15px;
+      text-align:center;
+      color:#aaa;
+      font-size:13px;
+      letter-spacing:1px;
+    ">
+      NO BET HISTORY TODAY
+    </div>
+  `;
+
+  return;
+}
+
+
+// gom theo round
+const rounds = {}
+
+myBetHistory.forEach(b=>{
+
+if(!rounds[b.round]){
+rounds[b.round] = []
+}
+
+rounds[b.round].push(b)
+
+})
+
+Object.entries(rounds)
+.sort((a,b)=>{
+
+const ta = a[1][0].time || 0
+const tb = b[1][0].time || 0
+
+return tb - ta
+
+})
+.forEach(([round,list])=>{
+
+
+
+// tổng cược
+const totalBet =
+list.reduce((a,b)=>a + (b.bet || 0),0)
+
+// tổng thắng
+const totalWin =
+list.reduce((a,b)=>a + (b.win || 0),0)
+
+
+const ts = list[0].time || 0
+
+const time = ts
+? new Date(ts).toLocaleTimeString("vi-VN",{
+hour:"2-digit",
+minute:"2-digit",
+second:"2-digit"
+})
+: "--"
+
+const row = document.createElement("div")
+
+row.className =
+"history-row " + (totalWin > 0 ? "win":"lose")
+
+row.innerHTML =
+"<div>"+round+"</div>" +
+"<div>"+time+"</div>" +
+"<div>💎"+totalBet+"</div>" +
+"<div>💎"+totalWin+"</div>"
+
+row.onclick =
+()=>openRoundDetailFromHistory(round)
+
+box.appendChild(row)
+
+})
+
+}
+
+
+
+function openRoundDetailFromHistory(round){
+
+const modal = document.getElementById("roundDetailModal")
+const box   = document.getElementById("roundDetailList")
+
+modal.style.display = "flex"
+box.innerHTML = ""
+
+const bets = myBetHistory
+.filter(b => Number(b.round) === Number(round))
+
+if(!bets.length){
+box.innerHTML = "<div class='round-slot-row'>No data</div>"
+return
+}
+
+const resultSlot  = Number(bets[0].winSlot || bets[0].slot) || 0
+const resultMulti = Number(bets[0].multi) || 0
+
+const icon  = document.getElementById("roundResultIcon")
+const multi = document.getElementById("roundResultMulti")
+
+if(resultSlot){
+
+let resultImg = "/assets/police/slot"+resultSlot+".png"
+
+// EVENT X5 ALL
+const first = bets[0]
+
+if(first){
+
+  if(first.event === "x5-all"){
+    resultImg = "/assets/police/event-x5-all.png"
+  }
+
+  else if(first.event === "x45-all"){
+    resultImg = "/assets/police/event-x45-all.png"
+  }
+
+}
+
+icon.dataset.w8OriginalBg = resultImg;
+w8SyncRoundResultArt();
+
+multi.textContent = "x"+resultMulti
+
+}else{
+
+icon.dataset.w8OriginalBg = "";
+icon.style.backgroundImage = "";
+multi.textContent = "?"
+
+}
+
+const slotMap = {}
+
+bets.forEach(b=>{
+
+const slot = Number(b.slot)
+if(!slot) return
+
+if(!slotMap[slot]){
+slotMap[slot] = {bet:0,win:0}
+}
+
+slotMap[slot].bet += Number(b.bet) || 0
+slotMap[slot].win += Number(b.win) || 0
+
+})
+
+// THỨ TỰ HIỂN THỊ SLOT TRONG ROUND DETAILS
+const ROUND_SLOT_ORDER = [1, 8, 7, 6, 2, 3, 4, 5];
+
+Object.keys(slotMap)
+.map(Number)
+.sort((a, b) => {
+    return ROUND_SLOT_ORDER.indexOf(a)
+         - ROUND_SLOT_ORDER.indexOf(b);
+})
+.forEach(slot=>{
+
+const item = slotMap[slot]
+
+const row = document.createElement("div")
+row.className = "round-slot-row"
+
+if(item.win > 0){
+row.classList.add("win")
+}
+
+row.innerHTML = `
+<div class="round-slot-left">
+<img src="/assets/police/slot${slot}.png" class="round-slot-icon">
+</div>
+
+<div class="round-slot-bet">
+💎 ${item.bet}
+</div>
+
+<div class="round-slot-win">
+${item.win > 0 ? "💎 "+item.win : "-"}
+</div>
+`
+
+box.appendChild(row)
+
+})
+
+}
+
+
+
+function closeRoundDetail(){
+
+document.getElementById("roundDetailModal")
+.style.display="none"
+
+}
+
+
+function leaveGame(){
+
+window.location.href = "/invest.html"
+
+}
+
+
+window.addEventListener("load",()=>{
+
+  let progress = 0
+
+  const loadingEl = document.getElementById("gameLoading")
+  const bar = document.getElementById("loadingProgress")
+ 
+
+  const timer = setInterval(()=>{
+
+    progress += Math.floor(Math.random()*8) + 6
+
+    if(progress > 100) progress = 100
+
+    bar.style.width = progress + "%"
+  
+
+    if(progress >= 100){
+
+      clearInterval(timer)
+
+      setTimeout(()=>{
+        loadingEl.classList.add("hide")
+
+        setTimeout(()=>{
+          loadingEl.style.display = "none"
+        },650)
+
+      },350)
+
+    }
+
+  },110)
+
+})
+
+
+
+function scaleGame(){
+
+  const baseWidth = 430
+  const baseHeight = 870
+
+  const screenW = window.visualViewport?.width || window.innerWidth
+  const screenH = window.visualViewport?.height || window.innerHeight
+
+  const scale = Math.min(
+    screenW / baseWidth,
+    screenH / baseHeight
+  )
+
+  const app = document.getElementById("app")
+
+  app.style.transform =
+    `translate(-50%, -50%) scale(${scale})`
+
+}
+
+window.addEventListener("resize", scaleGame)
+window.addEventListener("load", scaleGame)
+
+
+function openSlotMiss(){
+
+renderSlotMiss()
+
+document.getElementById("slotMissModal").style.display="flex"
+
+}
+
+function closeSlotMiss(){
+document.getElementById("slotMissModal").style.display="none"
+}
+
+function renderSlotMiss(){
+
+const colX5 = document.getElementById("slotColX5")
+const colX45 = document.getElementById("slotColX45")
+
+if(!wheel8History.length){
+colX5.innerHTML="Loading..."
+colX45.innerHTML=""
+return
+}
+
+const miss=[0,0,0,0,0,0,0,0]
+
+let missX5=0
+let missX45=0
+
+let lastX5Time="-"
+let lastX45Time="-"
+
+
+// SLOT MISS
+for(let slot=1;slot<=8;slot++){
+
+let count=0
+
+for(let i=0;i<wheel8History.length;i++){
+
+const r=wheel8History[i]
+
+if(r.slot===slot) break
+
+count++
+
+}
+
+miss[slot-1]=count
+
+}
+
+
+// EVENT MISS + LAST TIME
+for(let i=0;i<wheel8History.length;i++){
+
+const r = wheel8History[i]
+
+if(r.event==="x5-all"){
+
+lastX5Time = r.ts
+? new Date(r.ts).toLocaleString("vi-VN",{
+  day:"2-digit",
+  month:"2-digit",
+  year:"numeric",
+  hour:"2-digit",
+  minute:"2-digit"
+})
+: "-"
+
+break
+}
+
+missX5++
+
+}
+
+for(let i=0;i<wheel8History.length;i++){
+
+const r = wheel8History[i]
+
+if(r.event==="x45-all"){
+
+lastX45Time = r.ts
+? new Date(r.ts).toLocaleString("vi-VN",{
+  day:"2-digit",
+  month:"2-digit",
+  year:"numeric",
+  hour:"2-digit",
+  minute:"2-digit"
+})
+: "-"
+
+break
+}
+
+missX45++
+
+}
+
+
+// SLOT GROUP
+const x5Slots=[1,8,7,6]
+const x45Slots=[2,3,4,5]
+
+
+colX5.innerHTML=`
+
+${x5Slots.map(slot=>slotBox(slot,miss[slot-1])).join("")}
+
+${eventBox(
+"event-x5-all.png",
+missX5,
+lastX5Time
+)}
+
+`
+
+
+colX45.innerHTML=`
+
+${x45Slots.map(slot=>slotBox(slot,miss[slot-1])).join("")}
+
+${eventBox(
+"event-x45-all.png",
+missX45,
+lastX45Time
+)}
+
+`
+
+}
+
+
+function slotBox(slot,miss){
+
+return `
+<div class="miss-box">
+
+<img src="/assets/police/slot${slot}.png">
+
+<div class="miss-count">${miss >= 500 ? "500+" : miss}</div>
+
+<div class="miss-sub">round miss</div>
+
+</div>
+`
+
+}
+
+
+function eventBox(img,miss,time){
+
+return `
+<div class="miss-box event">
+
+<img src="/assets/police/${img}">
+
+<div class="miss-count">${miss >= 500 ? "500+" : miss}</div>
+
+<div class="miss-sub">event miss</div>
+
+<div class="event-last">
+
+<div>LAST:</div>
+<div>${time}</div>
+
+</div>
+
+</div>
+`
+}
+
+
+
+
+/* ==========================================
+   GAME SETTINGS MENU
+========================================== */
+
+// MỞ / ĐÓNG MENU
+function w8ToggleSettingsMenu() {
+
+    const menu =
+        document.getElementById("w8SettingsMenu");
+
+    const button =
+        document.getElementById("w8SettingsButton");
+
+    if (!menu || !button) return;
+
+    menu.hidden = !menu.hidden;
+
+    button.setAttribute(
+        "aria-expanded",
+        String(!menu.hidden)
+    );
+}
+
+// ĐÓNG MENU
+function w8CloseSettingsMenu() {
+
+    const menu =
+        document.getElementById("w8SettingsMenu");
+
+    const button =
+        document.getElementById("w8SettingsButton");
+
+    if (menu) {
+        menu.hidden = true;
+    }
+
+    if (button) {
+        button.setAttribute(
+            "aria-expanded",
+            "false"
+        );
+    }
+}
+
+// MỞ BẢNG THỐNG KÊ
+function w8OpenStatsFromSettings() {
+
+    w8CloseSettingsMenu();
+
+    // GỌI CHỨC NĂNG CŨ
+    openSlotMiss();
+}
+
+// CLICK RA NGOÀI ĐỂ ĐÓNG
+document.addEventListener(
+    "pointerdown",
+    function(event) {
+
+        if (!event.target.closest("#w8Settings")) {
+            w8CloseSettingsMenu();
+        }
+
+    }
+);
+
+// BẤM ESC ĐỂ ĐÓNG
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (event.key === "Escape") {
+            w8CloseSettingsMenu();
+        }
+
+    }
+);
+
+/* ==========================================
+   SHOW NAME - KEEP SOCKET FUNCTION
+========================================== */
+
+const btn =
+    document.getElementById("toggleTopNameBtn");
+
+const img =
+    document.getElementById("toggleTopNameImg");
+
+const nameState =
+    document.getElementById("w8SettingsNameState");
+
+// BẬT / TẮT TÊN TOP WINNERS
+if (btn) {
+
+    btn.onclick = function() {
+
+        // GIỮ NGUYÊN SOCKET EVENT CŨ
+        socket.emit("toggle-top-name");
+
+        w8CloseSettingsMenu();
+    };
+
+}
+
+// NHẬN TRẠNG THÁI TỪ SERVER
+socket.on("top-name-status", function(state) {
+
+    const isOn = !!state;
+
+    // VẪN CẬP NHẬT ẢNH CŨ
+    if (img) {
+        img.src = isOn
+            ? "/assets/police/show-name-on.png"
+            : "/assets/police/show-name-off.png";
+    }
+
+    // CẬP NHẬT CHỮ ON / OFF
+    if (nameState) {
+
+        nameState.textContent =
+            isOn ? "ON" : "OFF";
+
+        nameState.classList.toggle(
+            "is-on",
+            isOn
+        );
+
+    }
+
+    // CẬP NHẬT ACCESSIBILITY
+    if (btn) {
+        btn.setAttribute(
+            "aria-pressed",
+            String(isOn)
+        );
+    }
+
+});
+
+
+
+
+
+/*
+function hidePrediction(){
+
+const box =
+document.getElementById("predictBox")
+
+box.style.display="none"
+
+}
+*/
+
+
+
+/* ==========================================
+   WHEEL8 - SCREEN SHARE CLIENT
+   ========================================== */
+
+let w8Capture = null;
+let w8ShareToken = "";
+let w8Starting = false;
+
+let w8IceServers = [
+  { urls: "stun:stun.l.google.com:19302" }
+];
+
+const w8Peers = new Map();
+
+// Lấy cấu hình STUN/TURN
+async function w8LoadIce() {
+  try {
+    const response = await fetch("/ice");
+
+    if (!response.ok) {
+      throw new Error("TURN chưa cấu hình");
+    }
+
+    const json = await response.json();
+
+    if (
+      Array.isArray(json.iceServers) &&
+      json.iceServers.length
+    ) {
+      return json.iceServers;
+    }
+
+  } catch (err) {
+    console.warn("Dùng STUN dự phòng:", err.message);
+  }
+
+  return [
+    { urls: "stun:stun.l.google.com:19302" }
+  ];
+}
+
+// Đóng kết nối với một người xem
+function w8ClosePeer(viewerId) {
+  const peer = w8Peers.get(viewerId);
+
+  if (peer) peer.pc.close();
+
+  w8Peers.delete(viewerId);
+}
+
+
+
+/* =========================================
+   MOBILE GAME SCREEN BROADCAST
+   Android + iPhone
+========================================= */
+
+let w8MobileActive = false;
+let w8MobileWatchers = 0;
+let w8MobileTimer = null;
+let w8MobileLoopSeq = 0;
+
+// Chụp riêng giao diện game 430 x 870
+async function w8CaptureMobileFrame() {
+
+  if (typeof window.html2canvas !== "function") {
+    throw new Error("Không tải được html2canvas.");
+  }
+
+  const app = document.getElementById("app");
+
+  if (!app) {
+    throw new Error("Không tìm thấy giao diện game.");
+  }
+
+  const canvas = await html2canvas(app, {
+
+    backgroundColor: "#000",
+    width: 430,
+    height: 870,
+    scale: 0.7,
+
+    useCORS: true,
+    allowTaint: false,
+    logging: false,
+
+    scrollX: 0,
+    scrollY: 0,
+
+    windowWidth: 430,
+    windowHeight: 870,
+
+    // Không hiển thị nút chia sẻ trong ảnh phát
+ ignoreElements: el =>
+  el.id === "w8ShareButton" ||
+  el.id === "w8SharePanel" ||
+  el.id === "w8LiveComments",
+
+    // Bỏ tỷ lệ co giãn chỉ trong bản sao
+    // Không ảnh hưởng giao diện thật
+    onclone: clonedDoc => {
+
+      const game = clonedDoc.getElementById("app");
+      const body = clonedDoc.body;
+
+      game.style.position = "absolute";
+      game.style.left = "0px";
+      game.style.top = "0px";
+      game.style.transform = "none";
+
+      game.style.width = "430px";
+      game.style.height = "870px";
+
+      body.style.position = "static";
+      body.style.display = "block";
+      body.style.width = "430px";
+      body.style.height = "870px";
+
+    }
+
+  });
+
+  const image = canvas.toDataURL("image/jpeg", 0.48);
+
+  // Giải phóng bitmap sau khi mã hóa
+  canvas.width = 1;
+  canvas.height = 1;
+
+  return image;
+}
+
+// Phát hình ảnh liên tục
+function w8StartMobileBroadcast() {
+
+  const seq = ++w8MobileLoopSeq;
+
+  async function loop() {
+
+    if (
+      !w8MobileActive ||
+      !w8ShareToken ||
+      seq !== w8MobileLoopSeq
+    ) return;
+
+    // Chỉ chụp khi có người đang xem
+    if (w8MobileWatchers > 0 && socket.connected) {
+
+      const token = w8ShareToken;
+
+      try {
+
+        const image = await w8CaptureMobileFrame();
+
+        if (
+          seq === w8MobileLoopSeq &&
+          w8MobileActive &&
+          token === w8ShareToken &&
+          socket.connected
+        ) {
+
+          // Volatile: không giữ ảnh cũ khi mạng chậm
+          socket.volatile.emit("w8share:frame", {
+            token,
+            image
+          });
+
+        }
+
+      } catch (error) {
+
+        console.warn("Mobile screen:", error);
+
+        document.getElementById("w8ShareTip").textContent =
+          "Không chụp được giao diện game.";
+
+      }
+
+    }
+
+    if (
+      w8MobileActive &&
+      w8ShareToken &&
+      seq === w8MobileLoopSeq
+    ) {
+
+      w8MobileTimer = setTimeout(loop, 1000);
+
+    }
+
+  }
+
+  loop();
+}
+
+
+
+// Dừng chia sẻ
+function w8StopShare() {
+
+    const comments = document.getElementById("w8LiveComments");
+
+if (comments) {
+  comments.replaceChildren();
+}
+
+
+w8MobileActive = false;
+w8MobileWatchers = 0;
+
+w8MobileLoopSeq++;
+
+clearTimeout(w8MobileTimer);
+w8MobileTimer = null;
+
+  const token = w8ShareToken;
+  w8ShareToken = "";
+
+  if (token && socket.connected) {
+    socket.emit("w8share:stop", { token });
+  }
+
+  for (const id of w8Peers.keys()) {
+    w8ClosePeer(id);
+  }
+
+  if (w8Capture) {
+    w8Capture.getTracks().forEach(track => track.stop());
+  }
+
+  w8Capture = null;
+
+  document.getElementById("w8ShareButton").textContent =
+    "SHARE";
+
+  document.getElementById("w8SharePanel").hidden = true;
+  document.getElementById("w8ShareLink").value = "";
+}
+
+// Bắt đầu chia sẻ
+async function w8ToggleShare() {
+
+  if (w8ShareToken) {
+    const panel = document.getElementById("w8SharePanel");
+    panel.hidden = !panel.hidden;
+    return;
+  }
+
+  if (w8Starting) return;
+
+
+const w8IsMobile =
+  /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+  (
+    /Macintosh/i.test(navigator.userAgent) &&
+    navigator.maxTouchPoints > 1
+  );
+
+if (
+  !w8IsMobile &&
+  !navigator.mediaDevices?.getDisplayMedia
+) {
+  alert("Trình duyệt không hỗ trợ chia sẻ màn hình.");
+  return;
+}
+
+
+  if (!socket.connected) {
+    alert("Chưa kết nối máy chủ.");
+    return;
+  }
+
+  w8Starting = true;
+
+  try {
+
+
+if (w8IsMobile) {
+
+  // Android / iPhone: kiểm tra khả năng chụp game
+  await w8CaptureMobileFrame();
+
+  w8MobileActive = true;
+
+} else {
+
+  // Máy tính: giữ chức năng WebRTC cũ
+  w8Capture = await navigator.mediaDevices.getDisplayMedia({
+    video: { frameRate: 12 },
+    audio: false
+  });
+
+  const track = w8Capture.getVideoTracks()[0];
+
+  if (!track) {
+    throw new Error("Không nhận được video.");
+  }
+
+  track.addEventListener(
+    "ended",
+    w8StopShare,
+    { once: true }
+  );
+
+  w8IceServers = await w8LoadIce();
+
+  if (track.readyState !== "live") {
+    throw new Error("Bạn đã dừng chia sẻ.");
+  }
+
+}
+
+    // Đăng ký phiên chia sẻ lên server
+    const reply = await new Promise(resolve => {
+
+      socket.timeout(8000).emit(
+        "w8share:start",
+        {},
+        (error, data) => {
+
+          resolve(error
+            ? {
+                ok: false,
+                error: "Kết nối server quá thời gian."
+              }
+            : data
+          );
+
+        }
+      );
+
+    });
+
+    if (!reply?.ok) {
+      throw new Error(
+        reply?.error || "Không thể tạo link."
+      );
+    }
+
+    w8ShareToken = reply.token;
+
+    const link =
+      location.origin +
+      "/military-live.html?room=" +
+      encodeURIComponent(w8ShareToken);
+
+    document.getElementById("w8ShareLink").value = link;
+
+    document.getElementById("w8ShareButton").textContent =
+      "🔴LIVE";
+
+    document.getElementById("w8ShareCount").textContent =
+      "0 viewer";
+
+    document.getElementById("w8ShareTip").textContent =
+      "Gửi link để người khác xem màn hình.";
+
+    document.getElementById("w8SharePanel").hidden = false;
+
+
+if (w8IsMobile) {
+
+  document.getElementById("w8ShareTip").textContent =
+    "Live now";
+
+  w8StartMobileBroadcast();
+
+}
+
+  } catch (error) {
+
+    console.error("W8 share error:", error);
+
+    w8StopShare();
+
+    if (error.name !== "NotAllowedError") {
+      alert(
+        error.message || "Không chia sẻ được màn hình."
+      );
+    }
+
+  } finally {
+    w8Starting = false;
+  }
+
+}
+
+// Sao chép link
+async function w8CopyLink() {
+
+  const input = document.getElementById("w8ShareLink");
+
+  if (!input.value) return;
+
+  try {
+    await navigator.clipboard.writeText(input.value);
+  } catch {
+    input.select();
+    document.execCommand("copy");
+  }
+
+  document.getElementById("w8ShareTip").textContent =
+    "✅ Link copied";
+}
+
+// Có người vào xem
+socket.on("w8share:viewer", async ({ viewerId, count }) => {
+
+ 
+if (!w8ShareToken) return;
+
+w8MobileWatchers = count;
+
+document.getElementById("w8ShareCount").textContent =
+  count + " người xem";
+
+// Điện thoại dùng truyền ảnh, không tạo WebRTC peer
+if (w8MobileActive || !w8Capture) return;
+
+
+
+
+  w8ClosePeer(viewerId);
+
+  const pc = new RTCPeerConnection({
+    iceServers: w8IceServers
+  });
+
+  const peer = {
+    pc,
+    pending: []
+  };
+
+  w8Peers.set(viewerId, peer);
+
+  // Gửi ICE candidate
+  pc.onicecandidate = event => {
+
+    if (event.candidate && w8ShareToken) {
+
+      socket.emit("w8share:signal", {
+        token: w8ShareToken,
+        to: viewerId,
+        packet: {
+          type: "candidate",
+          candidate: event.candidate
+        }
+      });
+
+    }
+
+  };
+
+  try {
+
+    // Đưa video màn hình vào kết nối WebRTC
+    w8Capture.getTracks().forEach(track => {
+      pc.addTrack(track, w8Capture);
+    });
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    socket.emit("w8share:signal", {
+      token: w8ShareToken,
+      to: viewerId,
+      packet: {
+        type: "offer",
+        description: pc.localDescription
+      }
+    });
+
+  } catch (error) {
+
+    console.error("Lỗi tạo kết nối xem:", error);
+    w8ClosePeer(viewerId);
+
+  }
+
+});
+
+// Nhận tín hiệu trả lời từ người xem
+socket.on("w8share:signal", async ({ from, packet }) => {
+
+  const peer = w8Peers.get(from);
+
+  if (!peer || !w8ShareToken) return;
+
+  try {
+
+    if (packet.type === "answer") {
+
+      await peer.pc.setRemoteDescription(
+        packet.description
+      );
+
+      for (const ice of peer.pending) {
+        await peer.pc.addIceCandidate(ice);
+      }
+
+      peer.pending.length = 0;
+
+    } else if (
+      packet.type === "candidate" &&
+      packet.candidate
+    ) {
+
+      if (peer.pc.remoteDescription) {
+
+        await peer.pc.addIceCandidate(
+          packet.candidate
+        );
+
+      } else {
+
+        peer.pending.push(packet.candidate);
+
+      }
+
+    }
+
+  } catch (err) {
+    console.warn("Lỗi tín hiệu WebRTC:", err);
+  }
+
+});
+
+// Người xem rời phòng
+socket.on("w8share:left", ({ viewerId, count }) => {
+
+  w8ClosePeer(viewerId);
+
+  document.getElementById("w8ShareCount").textContent =
+    count + " người xem";
+
+    w8MobileWatchers = count;
+
+});
+
+// Mất kết nối hoặc thoát trang
+socket.on("disconnect", w8StopShare);
+
+window.addEventListener("pagehide", w8StopShare);
+
+
+
+
+/* ======================================
+   RECEIVE LIVE COMMENTS - HOST
+====================================== */
+
+socket.on("w8share:comment", (data) => {
+
+  // Chỉ hiển thị bình luận của phiên LIVE hiện tại
+  if (
+    !w8ShareToken ||
+    data?.token !== w8ShareToken
+  ) return;
+
+  const container =
+    document.getElementById("w8LiveComments");
+
+  if (!container) return;
+
+  // Giữ tối đa 3 bình luận trên màn hình
+  while (container.children.length >= 3) {
+    container.firstElementChild.remove();
+  }
+
+  const item = document.createElement("div");
+  item.className = "w8-live-comment";
+
+  const avatar = document.createElement("div");
+  avatar.className = "w8-live-comment-avatar";
+  avatar.textContent = "★";
+
+  const body = document.createElement("div");
+  body.className = "w8-live-comment-body";
+
+  const name = document.createElement("div");
+  name.className = "w8-live-comment-name";
+  name.textContent = String(data.name || "Người xem");
+
+  const content = document.createElement("div");
+  content.className = "w8-live-comment-text";
+  content.textContent = String(data.text || "");
+
+  body.appendChild(name);
+  body.appendChild(content);
+
+  item.appendChild(avatar);
+  item.appendChild(body);
+
+  container.appendChild(item);
+
+  // Tự xóa sau 9 giây
+  setTimeout(() => {
+    item.remove();
+  }, 9000);
+
+});
+
+
+
+
+
+</script>
+
+
+
+
+<script>
+/* ===========================================
+   WHEEL8 IMAGE THEME SYSTEM
+   CLIENT-SIDE VISUAL CHANGES ONLY
+=========================================== */
+
+const W8_BASE_DIR = "/assets/police/";
+const W8_ALT_DIR = "/assets/police/theme-titanium/";
+const W8_THEME_STORE = "w8_image_theme";
+
+let w8ActiveTheme = "military";
+let w8ArtLoadingStarted = false;
+
+/* CSS BACKGROUND IMAGE MAPPING */
+
+const W8_ART_BACKGROUND = {
+
+  "--w8-art-game": "bg-police-casino.jpg",
+
+  "--w8-art-center": "wheel-center-police.png",
+
+  "--w8-art-slot": "slot-bg-police.png",
+
+  "--w8-art-panel": "police-panel.png",
+
+  "--w8-art-result": "result-frame-police.png",
+
+  "--w8-art-alert": "police-alert.png",
+
+  "--w8-art-stand": "wheel-stand.png",
+
+  "--w8-art-spokes": "wheel-spokes-police.png",
+
+  "--w8-art-top": "top-winners-bg.png",
+};
+
+/* PRELOAD THEME BACKGROUNDS */
+
+function w8LoadThemeArtwork() {
+
+  if (w8ArtLoadingStarted) return;
+
+  w8ArtLoadingStarted = true;
+
+  for (
+    const [variable, file]
+    of Object.entries(W8_ART_BACKGROUND)
+  ) {
+
+    const path = W8_ALT_DIR + file;
+    const preview = new Image();
+
+    preview.onload = () => {
+
+      document.documentElement.style.setProperty(
+        variable,
+        `url("${path}")`
+      );
+
+    };
+
+    preview.onerror = () => {
+
+      document.documentElement.style.removeProperty(
+        variable
+      );
+
+    };
+
+    preview.src = path;
+
+  }
+
+}
+
+/* SWITCH A SINGLE IMAGE */
+
+function w8SyncThemeImage(img) {
+
+  if (!(img instanceof HTMLImageElement)) return;
+
+  const current = img.getAttribute("src") || "";
+
+  const fromAlt = current.startsWith(W8_ALT_DIR);
+
+  const fromBase =
+    current.startsWith(W8_BASE_DIR) && !fromAlt;
+
+  if (!fromAlt && !fromBase) return;
+
+  const original = fromAlt
+    ? W8_BASE_DIR + current.slice(W8_ALT_DIR.length)
+    : current;
+
+  if (img.dataset.w8OriginalSrc !== original) {
+
+    img.dataset.w8OriginalSrc = original;
+
+    delete img.dataset.w8MissingSrc;
+
+  }
+
+  const candidate =
+    W8_ALT_DIR +
+    original
+      .slice(W8_BASE_DIR.length)
+      .replace(/\.jpe?g$/i, ".png");
+
+  const target =
+    w8ActiveTheme === "titanium" &&
+    img.dataset.w8MissingSrc !== candidate
+      ? candidate
+      : original;
+
+  if (current !== target) {
+    img.setAttribute("src", target);
+  }
+
+}
+
+/* UPDATE ALL EXISTING IMAGES */
+
+function w8SyncAllThemeImages() {
+
+  document.querySelectorAll(
+    'img[src^="/assets/police/"]'
+  ).forEach(w8SyncThemeImage);
+
+}
+
+/* FALL BACK IF NEW PNG IS MISSING */
+
+document.addEventListener(
+  "error",
+  event => {
+
+    const img = event.target;
+
+    if (!(img instanceof HTMLImageElement)) return;
+
+    const current =
+      img.getAttribute("src") || "";
+
+    if (!current.startsWith(W8_ALT_DIR)) return;
+
+    img.dataset.w8MissingSrc = current;
+
+    img.setAttribute(
+      "src",
+      W8_BASE_DIR + current.slice(W8_ALT_DIR.length)
+    );
+
+  },
+  true
+);
+
+/* HANDLE IMAGES GENERATED BY GAME EVENTS */
+
+const w8ThemeObserver = new MutationObserver(
+  records => {
+
+    const changed = new Set();
+
+    for (const record of records) {
+
+      if (record.type === "attributes") {
+
+        changed.add(record.target);
+
+      } else {
+
+        for (const node of record.addedNodes) {
+
+          if (node.nodeType !== 1) continue;
+
+          if (node.tagName === "IMG") {
+            changed.add(node);
+          }
+
+          node.querySelectorAll?.(
+            'img[src^="/assets/police/"]'
+          ).forEach(el => changed.add(el));
+
+        }
+
+      }
+
+    }
+
+    changed.forEach(w8SyncThemeImage);
+
+  }
+);
+
+w8ThemeObserver.observe(document.body, {
+
+  childList: true,
+
+  subtree: true,
+
+  attributes: true,
+
+  attributeFilter: ["src"]
+
+});
+
+/* ROUND DETAILS BACKGROUND IMAGE */
+
+function w8SyncRoundResultArt() {
+
+  const icon =
+    document.getElementById("roundResultIcon");
+
+  if (!icon) return;
+
+  const original = icon.dataset.w8OriginalBg;
+
+  if (!original) return;
+
+  if (w8ActiveTheme !== "titanium") {
+
+    icon.style.backgroundImage =
+      `url("${original}")`;
+
+    return;
+
+  }
+
+  const alternative =
+    W8_ALT_DIR +
+    original.slice(W8_BASE_DIR.length);
+
+  const check = new Image();
+
+  check.onload = () => {
+
+    if (
+      w8ActiveTheme === "titanium" &&
+      icon.dataset.w8OriginalBg === original
+    ) {
+
+      icon.style.backgroundImage =
+        `url("${alternative}")`;
+
+    }
+
+  };
+
+  check.onerror = () => {
+
+    if (icon.dataset.w8OriginalBg === original) {
+
+      icon.style.backgroundImage =
+        `url("${original}")`;
+
+    }
+
+  };
+
+  check.src = alternative;
+
+}
+
+/* CLOSE THEME MENU */
+
+function w8CloseThemeMenu() {
+
+  const menu =
+    document.getElementById("w8ThemeMenu");
+
+  const button =
+    document.getElementById("w8ThemeButton");
+
+  if (menu) menu.hidden = true;
+
+  if (button) {
+    button.setAttribute("aria-expanded", "false");
+  }
+
+}
+
+/* OPEN / CLOSE THEME MENU */
+
+function w8ToggleThemeMenu() {
+
+  const menu =
+    document.getElementById("w8ThemeMenu");
+
+  const button =
+    document.getElementById("w8ThemeButton");
+
+  if (!menu || !button) return;
+
+  menu.hidden = !menu.hidden;
+
+  button.setAttribute(
+    "aria-expanded",
+    String(!menu.hidden)
+  );
+
+}
+
+/* APPLY SELECTED THEME */
+
+
+function w8SetTheme(theme) {
+
+  w8ActiveTheme =
+    theme === "titanium"
+      ? "titanium"
+      : "military";
+
+  // Kích hoạt CSS tương ứng
+  document.body.classList.toggle(
+    "w8-theme-titanium",
+    w8ActiveTheme === "titanium"
+  );
+
+
+
+/* ==========================================
+   HISTORY MODALS - UPDATE THEME TEXT
+========================================== */
+
+const fruitHistoryMode =
+    w8ActiveTheme === "titanium";
+
+// MY BET HISTORY
+const myHistoryTitle =
+    document.querySelector(
+        "#myBetHistoryModal .history-title"
+    );
+
+if (myHistoryTitle) {
+    myHistoryTitle.textContent =
+        fruitHistoryMode
+            ? "FRUIT BET HISTORY"
+            : "MY BET HISTORY";
+}
+
+// ROUND DETAILS
+const roundDetailsTitle =
+    document.querySelector(
+        "#roundDetailModal .history-title"
+    );
+
+if (roundDetailsTitle) {
+    roundDetailsTitle.textContent =
+        fruitHistoryMode
+            ? "FRUIT ROUND DETAILS"
+            : "ROUND DETAILS";
+}
+
+// ROUND DETAILS SUBTITLE
+const roundDetailsSub =
+    document.querySelector(
+        "#roundDetailModal .history-sub"
+    );
+
+if (roundDetailsSub) {
+    roundDetailsSub.textContent =
+        fruitHistoryMode
+            ? "FRUIT BET BREAKDOWN"
+            : "Bet breakdown";
+}
+
+
+
+/* ==========================================
+   SLOT MISS - UPDATE THEME TEXT
+========================================== */
+
+const isFruitTheme =
+    w8ActiveTheme === "titanium";
+
+const missModal =
+    document.getElementById("slotMissModal");
+
+if (missModal) {
+
+    const missTitle =
+        missModal.querySelector(".history-title");
+
+    const missSubtitle =
+        missModal.querySelector(".miss-header-sub");
+
+    const missDecoration =
+        missModal.querySelector(
+            ".miss-footer-decoration"
+        );
+
+    // MAIN TITLE
+    if (missTitle) {
+        missTitle.textContent = isFruitTheme
+            ? "FRUIT MISS COUNT"
+            : "SLOT MISS COUNT";
+    }
+
+    // SUBTITLE
+    if (missSubtitle) {
+        missSubtitle.textContent = isFruitTheme
+            ? "FRUIT ROUND TRACKING"
+            : "ROUND TRACKING SYSTEM";
+    }
+
+    // FOOTER DECORATION
+    if (missDecoration) {
+        missDecoration.textContent = isFruitTheme
+            ? "🍓"
+            : "★";
+    }
+
+}
+
+
+  // Đổi biểu tượng ROUND theo theme
+  const roundIcon =
+    document.querySelector(".wheel-round .round-army-icon");
+
+  if (roundIcon) {
+    roundIcon.textContent =
+      w8ActiveTheme === "titanium"
+        ? "🍓"
+        : "★";
+  }
+
+
+  /* =====================================
+   UPDATE SHARE UI BY THEME
+===================================== */
+
+const shareThemeTitle =
+    document.getElementById("w8ShareThemeTitle");
+
+if (shareThemeTitle) {
+
+    shareThemeTitle.textContent =
+        w8ActiveTheme === "titanium"
+            ? "FRUIT LIVE SHARE"
+            : "MILITARY LIVE SHARE";
+
+}
+
+
+// ĐỔI TÊN VÍ THEO GIAO DIỆN
+const walletLabel =
+  document.getElementById("walletThemeLabel");
+
+if (walletLabel) {
+  walletLabel.textContent =
+    w8ActiveTheme === "titanium"
+      ? "★ FRUIT WALLET ★"
+      : "★ MILITARY WALLET ★";
+}
+
+  if (w8ActiveTheme === "titanium") {
+    w8LoadThemeArtwork();
+  }
+
+  w8SyncAllThemeImages();
+
+  w8SyncRoundResultArt();
+
+  document.querySelectorAll(
+    "#w8ThemeMenu [data-theme]"
+  ).forEach(button => {
+
+    const chosen =
+      button.dataset.theme === w8ActiveTheme;
+
+    button.classList.toggle(
+      "is-selected",
+      chosen
+    );
+
+    button.setAttribute(
+      "aria-pressed",
+      String(chosen)
+    );
+
+  });
+
+  w8CloseThemeMenu();
+
+  try {
+    localStorage.setItem(
+      W8_THEME_STORE,
+      w8ActiveTheme
+    );
+  } catch (_) {}
+
+}
+
+/* CLOSE THEME MENU WHEN TAPPING OUTSIDE */
+
+document.addEventListener(
+  "pointerdown",
+  event => {
+
+    if (!event.target.closest("#w8ThemeSwitcher")) {
+      w8CloseThemeMenu();
+    }
+
+  }
+);
+
+/* RESTORE LAST SELECTED THEME */
+
+let w8SavedTheme = "military";
+
+try {
+
+  w8SavedTheme =
+    localStorage.getItem(W8_THEME_STORE) ||
+    "military";
+
+} catch (_) {}
+
+w8SetTheme(w8SavedTheme);
+
+</script>
+
+
+
+</body>
+</html>

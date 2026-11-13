@@ -1,0 +1,2649 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Time Race</title>
+<meta name="viewport" 
+      content="width=device-width, initial-scale=1, 
+               maximum-scale=1, minimum-scale=1, 
+               user-scalable=no">   
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="screen-orientation" content="portrait">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<script src="/socket.io/socket.io.js"></script>
+
+<style>
+
+#app{
+  position:fixed;
+  left:50%;
+  top:50%;
+
+  width:430px;
+  height:870px;
+
+  transform:translate(-50%,-50%);
+  transform-origin:center center;
+
+  overflow:hidden;
+}
+
+body{
+  margin:0;
+  overflow:hidden;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+
+html,body{
+  margin:0;
+  padding:0;
+
+background:
+radial-gradient(circle at 50% 35%,
+rgba(0,255,255,.18),
+rgba(0,0,0,.95) 65%
+),
+url("/assets/bg/time-race-bg-pro.jpg")
+center / cover no-repeat fixed;
+
+background-blend-mode:screen;
+
+
+  font-family:system-ui;
+  color:#fff;
+  overflow:hidden;
+
+ touch-action: manipulation;
+  overscroll-behavior: none;
+
+}
+
+body::after{
+content:"";
+position:fixed;
+inset:0;
+
+background:
+radial-gradient(circle at 50% 45%,
+rgba(0,255,255,.12),
+transparent 60%);
+
+animation:reactorPulse 6s ease-in-out infinite;
+pointer-events:none;
+}
+
+@keyframes reactorPulse{
+0%,100%{opacity:.4;}
+50%{opacity:.9;}
+}
+
+
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+
+  background:
+    radial-gradient(circle at 50% 40%,
+      rgba(0,0,0,.2),
+      rgba(0,0,0,.7) 70%
+    );
+
+  pointer-events:none;
+  z-index:-1;
+}
+
+
+body{
+  animation:bgMove 20s linear infinite;
+}
+
+@keyframes bgMove{
+  0%{ background-position:0% 0%; }
+  50%{ background-position:50% 50%; }
+  100%{ background-position:0% 0%; }
+}
+
+/* HEADER PRO */
+
+/* ================= GLASS NEON HEADER LEVEL 2 ================= */
+
+.tr-header{
+  position:absolute;
+  top:-95px;
+  left:-35px;
+  right:0;
+  height:184px;
+  width:500px;
+  background:
+    url("/assets/time-race/header-panel.png")
+    center top / cover no-repeat;
+
+  z-index:300;
+}
+
+
+
+.tr-back{
+  position:absolute;
+  left:47px;
+  top:117px;
+
+  width:27px;
+  height:35px;
+
+  background:transparent;
+  border:none;
+  cursor:pointer;
+}
+
+.tr-head-center{
+  position:absolute;
+  left:50%;
+  top:42px;
+  transform:translateX(-50%);
+  text-align:center;
+}
+
+.tr-title{
+  font-size:20px;
+  font-weight:900;
+}
+
+.tr-sub{
+  font-size:13px;
+  opacity:.9;
+
+  display:flex;
+  gap:6px;
+  align-items:center;
+  justify-content:center;
+}
+
+
+.round-label{
+  position: absolute;
+  opacity:.7;
+  top: 112px;
+  left:-47px;
+}
+
+
+.tr-right{
+  position:absolute;
+  right:18px;
+  top:38px;
+}
+
+/* COIN BALANCE */
+.tr-coins{
+  position:absolute;
+
+  top:88px;
+  right:30px;
+
+  display:flex;
+  align-items:center;
+  gap:0px;
+
+  font-size:14px;
+  font-weight:900;
+
+  color:#00f0ff;
+}
+
+.coin-icon{
+  position: absolute;
+  width:44px;
+  height:36px;
+  right:36px;
+  filter:
+    drop-shadow(0 0 6px #00f0ff);
+}
+
+.tr-timer-badge{
+  background:#007bff;
+  padding:6px 10px;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:700;
+}
+
+
+/* CENTER */
+.tr-center{
+  position:absolute;
+  top:45%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  text-align:center;
+}
+
+.multiplier{
+  font-size:64px;
+  font-weight:800;
+  text-shadow:0 0 25px #00f0ff;
+  transition:.1s;
+}
+
+.multiplier.big{
+  font-size:80px;
+}
+
+.multiplier.crash{
+  color:#ff2d2d;
+  text-shadow:0 0 30px red;
+}
+
+/* BET PANEL */
+.tr-bottom{
+  position:absolute;
+  bottom:-85px;
+  left:0;
+  right:0;
+
+  padding:140px 20px calc(29px + env(safe-area-inset-bottom));
+
+  background:
+    url("/assets/time-race/bet-panel.png")
+    center bottom / cover no-repeat;
+  z-index:200;
+}
+
+
+.tr-bottom::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+
+
+.bet-input{
+  width:100%;
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  background:#111;
+  color:#fff;
+  margin-bottom:12px;
+  font-size:16px;
+}
+
+.btn{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.btn-bet{
+  background:linear-gradient(
+    135deg,
+    #007bff,
+    #00f0ff
+  );
+
+  box-shadow:
+    0 0 30px rgba(0,123,255,.7);
+
+  transition:.2s;
+}
+
+.btn-bet:hover{
+  transform:translateY(-2px);
+  box-shadow:
+    0 0 45px rgba(0,123,255,.9);
+}
+
+.btn-stop{
+  display: none;
+  background:linear-gradient(
+    135deg,
+    #ff2d2d,
+    #ff6600
+  );
+
+  box-shadow:
+    0 0 30px rgba(255,0,0,.7);
+}
+
+.btn:disabled{
+  opacity:.5;
+}
+
+/* CRASH FLASH */
+.crash-flash{
+  position:fixed;
+  inset:0;
+  background:rgba(255,0,0,.15);
+  animation:flash .4s ease 4;
+  pointer-events:none;
+}
+
+@keyframes flash{
+  from{opacity:0}
+  to{opacity:1}
+}
+
+/* ================= ULTRA CYBER BOMB ================= */
+
+.bomb-wrap{
+  position:relative;
+  width:260px;
+  height:260px;
+  margin:0 auto;
+}
+
+
+.bomb-img{
+  width:260px;
+  height:auto;
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+}
+
+
+
+
+/* TIMER TRONG BOMB */
+
+.bomb-timer{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-60%);
+
+  font-size:16px;
+  font-weight:900;
+
+  font-family:"Orbitron", monospace; /* digital style */
+
+  letter-spacing:2px;
+
+  color:#ff0000;
+
+  text-shadow:
+    0 0 10px #00f0ff,
+    0 0 25px #00f0ff,
+    0 0 50px rgba(0,255,255,.7);
+}
+
+
+
+
+
+
+/* 🔵 outer glow */
+.bomb-core-glow{
+  position:absolute;
+  inset:-40px;
+  border-radius:50%;
+  background:radial-gradient(circle,
+    rgba(0,255,255,.4),
+    transparent 70%);
+  filter:blur(40px);
+  animation:corePulse 3s ease-in-out infinite;
+  z-index:-2;
+}
+
+@keyframes corePulse{
+  0%,100%{ opacity:.6; transform:scale(1); }
+  50%{ opacity:1; transform:scale(1.1); }
+}
+
+
+
+/* 💎 multiplier */
+.bomb-multi{
+  display:none;   /* thêm dòng này */
+  position:absolute;
+  top:49%;
+  left:50%;
+  transform:translate(-50%, -50%);
+  z-index:5;
+  font-size:15px;
+  font-weight:900;
+  letter-spacing:2px;
+
+  background:linear-gradient(
+    90deg,
+    #00f0ff,
+    #ffffff,
+    #00f0ff
+  );
+
+  background-size:200%;
+  background-clip:text;
+  -webkit-background-clip:text;
+  color:transparent;
+  -webkit-text-fill-color:transparent;
+
+  animation:multiShine 3s linear infinite;
+}
+
+@keyframes multiShine{
+  from{ background-position:0%; }
+  to{ background-position:200%; }
+}
+
+
+
+
+.bet-grid{
+  display:grid;
+  grid-template-columns: repeat(3,1fr);
+  gap:10px;
+  margin-bottom:14px;
+}
+
+.bet-chip{
+  padding:12px;
+  border-radius:14px;
+  color: white;
+
+  font-weight:700;
+  transition:.2s;
+
+  backdrop-filter:blur(10px);
+
+  background:rgba(0,0,0,.5);
+
+  border:1px solid rgba(0,255,255,.3);
+
+  box-shadow:
+    0 0 15px rgba(0,255,255,.25);
+}
+
+.bet-chip:hover{
+  background:rgba(0,255,255,.15);
+  box-shadow:0 0 15px rgba(0,255,255,.3);
+}
+
+.bet-chip.active{
+  background:linear-gradient(135deg,#007bff,#00f0ff);
+  border:none;
+  box-shadow:
+    0 0 25px rgba(0,123,255,.6);
+}
+
+
+.bet-quick{
+  display:flex;
+  gap:10px;
+  margin-bottom:12px;
+}
+
+.quick-btn{
+  flex:1;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.08);
+
+  background:rgba(255,255,255,.04);
+
+  color:#fff;
+  font-weight:700;
+
+  backdrop-filter:blur(8px);
+
+  transition:.2s;
+}
+
+.quick-btn:hover{
+  background:rgba(0,255,255,.15);
+  box-shadow:0 0 20px rgba(0,255,255,.4);
+}
+
+.quick-btn.allin{
+  background:linear-gradient(135deg,#ff2d2d,#ff6600);
+  border:none;
+  box-shadow:0 0 25px rgba(255,0,0,.6);
+}
+
+.selected-bet-bar{
+  position:absolute;
+  top: 73px;      /* chỉnh lên xuống */
+  left:50%;       /* căn giữa */
+  transform:translateX(-50%);
+  padding:8px 16px;
+  font-weight:800;
+  font-size:16px;
+  z-index:5;
+}
+
+
+#selectedBetValue{
+  font-weight:800;
+}
+
+/* ROUND TODAY */
+#roundToday{
+  position:absolute;
+
+  top:110px;     /* chỉnh lên xuống */
+  left:28px;   /* chỉnh trái phải */
+
+  transform:translateX(-50%);
+
+  font-size:17px;
+  font-weight:800;
+
+  color:#00f0ff;
+  text-shadow:0 0 10px #00f0ff;
+  
+}
+
+
+
+
+/* ================= CYBER ROUND HISTORY ================= */
+
+.tr-history-wrap{
+  position:absolute;
+
+  top:75px;
+  left:-54px;
+  right:0;
+  height:112px;
+  width: 542px;
+
+  padding:13px 16px 10px;
+
+  background:
+    url("/assets/time-race/history-panel.png")
+    center / cover no-repeat;
+
+  z-index:290;
+}
+
+/* title */
+.history-title{
+  position:absolute;
+
+  top:14px;
+  left:50%;
+  transform:translateX(-50%);
+
+  font-size:12px;
+  font-weight:800;
+
+  letter-spacing:2px;
+
+  color:#00f0ff;
+
+  text-shadow:
+    0 0 10px #00f0ff,
+    0 0 20px rgba(0,255,255,.6);
+}
+
+/* bar */
+.tr-history-bar{
+  position:absolute;
+
+  bottom:31px;
+  left:92px;
+  right:16px;
+  width: 358px;
+  display:flex;
+  gap:2px;
+
+  overflow-x:auto;
+}
+
+.tr-history-bar::-webkit-scrollbar{
+  display:none;
+}
+
+/* item */
+.tr-history-item{
+  min-width:58px;
+  padding:8px 0;
+  border-radius:22px;
+
+  font-size:13px;
+  font-weight:800;
+  text-align:center;
+
+  backdrop-filter:blur(10px);
+
+  border:1px solid rgba(255,255,255,.08);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.05),
+      rgba(0,0,0,.4)
+    );
+
+  box-shadow:
+    inset 0 0 12px rgba(0,255,255,.05);
+
+  transition:.2s;
+}
+
+/* LOW (<2x) */
+.tr-history-item.low{
+  color:#ff2d2d;
+
+}
+
+/* MID (2-5x) */
+.tr-history-item.mid{
+  color:#ff9900;
+
+}
+
+/* HIGH (>5x) */
+.tr-history-item.high{
+  color:#00f0ff;
+}
+
+
+
+/* hover effect */
+.tr-history-item:hover{
+  transform:translateY(-2px);
+  box-shadow:
+    0 0 25px rgba(0,255,255,.8);
+}
+
+
+/* STOP dưới bomb */
+
+.stop-wrap{
+  position:absolute;
+  top:calc(176% - 50px); /* nằm dưới bomb */
+  left:96%;
+  transform:translateX(-75%);
+  width:100%;
+  text-align:center;
+  pointer-events:auto; /* tránh ảnh hưởng layout */
+  bottom:-110px; /* neo cố định theo bomb */
+}
+
+
+
+
+
+/* ================= CYBER STOP BUTTON V2 ================= */
+
+.btn-stop-floating{
+  display: none;
+  width:88px;
+  height:88px;
+  border-radius:50%;
+
+  position:relative;
+  cursor:pointer;
+  border:none;
+
+  font-size:14px;
+  font-weight:900;
+  letter-spacing:2px;
+
+  color:#fff;
+
+  background:
+    radial-gradient(circle at 30% 30%, #ff3b3b, #7a0000 70%);
+
+  box-shadow:
+    inset -15px -20px 40px rgba(0,0,0,.7),
+    0 0 40px rgba(255,0,0,.6);
+
+  transition:.2s;
+}
+
+
+
+/* glow pulse */
+.btn-stop-floating::after{
+  content:"";
+  position:absolute;
+  inset:-30px;
+  border-radius:50%;
+  background:radial-gradient(circle,
+    rgba(255,0,0,.5),
+    transparent 70%);
+  animation:stopPulse 1.5s infinite;
+  z-index:-1;
+}
+
+@keyframes stopPulse{
+  0%,100%{ opacity:.4; transform:scale(1); }
+  50%{ opacity:1; transform:scale(1.15); }
+}
+
+/* hover */
+.btn-stop-floating:hover{
+  transform:scale(1.08);
+  box-shadow:
+    0 0 70px rgba(255,0,0,.9);
+}
+
+/* press */
+.btn-stop-floating:active{
+  transform:scale(.9);
+  box-shadow:
+    inset 0 0 60px rgba(0,0,0,.9),
+    0 0 40px rgba(255,0,0,.7);
+}
+
+/* disabled state */
+.btn-stop-floating:disabled{
+  filter:grayscale(.6);
+  opacity:.6;
+  box-shadow:
+    0 0 20px rgba(255,0,0,.3);
+}
+
+
+/* ===== EXPLOSION EFFECT ===== */
+
+.explosion-ring{
+  position:absolute;
+  width:240px;
+  height:240px;
+  border-radius:50%;
+  border:4px solid rgba(255,0,0,.8);
+  animation:explodeRing .6s ease-out forwards;
+  pointer-events:none;
+}
+
+@keyframes explodeRing{
+  from{
+    transform:scale(1);
+    opacity:1;
+  }
+  to{
+    transform:scale(2.2);
+    opacity:0;
+  }
+}
+
+.explosion-core{
+  position:absolute;
+  width:240px;
+  height:240px;
+  border-radius:50%;
+  background:radial-gradient(circle,#fff,#ff0000 60%,transparent 70%);
+  animation:explodeCore .4s ease-out forwards;
+  pointer-events:none;
+}
+
+@keyframes explodeCore{
+  from{
+    opacity:1;
+    transform:scale(1);
+  }
+  to{
+    opacity:0;
+    transform:scale(1.6);
+  }
+}
+
+
+.tr-bottom.locked{
+  opacity: 0;
+  pointer-events:none;
+  transition:.25s;
+}
+
+
+
+.btn-stop-floating:disabled{
+  filter:grayscale(.5);
+  box-shadow:0 0 20px rgba(255,0,0,.3);
+}
+
+
+.bomb-wrap.exploded{
+  animation: bombVanish .4s forwards;
+}
+
+@keyframes bombVanish{
+  to{
+    opacity:0;
+    transform:scale(1.4);
+  }
+}
+
+
+/* ===== BOMB FRAGMENTS ===== */
+
+.bomb-fragment{
+  position:absolute;
+  width:22px;
+  height:22px;
+  border-radius:4px;
+
+  background:radial-gradient(circle,
+    #444,
+    #111 70%
+  );
+
+  box-shadow:
+    0 0 20px rgba(255,0,0,.7);
+
+  pointer-events:none;
+}
+
+@keyframes fragmentFly{
+  to{
+    transform:
+      translate(var(--x), var(--y))
+      rotate(720deg);
+    opacity:0;
+  }
+}
+
+
+/* ===== SLOW MOTION EFFECT ===== */
+
+body.slowmo *,
+body.slowmo *::before,
+body.slowmo *::after{
+  animation-duration: calc(var(--origDur, 1s) * 2) !important;
+  transition-duration: .2s !important;
+}
+
+body.slowmo{
+  transform: scale(1.02);
+  transition: transform .2s ease;
+}
+
+
+
+/* ===== MULTIPLIER CRASH GLOW ===== */
+
+.bomb-multi.crash-red{
+  background:none !important;
+  -webkit-text-fill-color:#ff2d2d !important;
+  color:#ff2d2d !important;
+
+  text-shadow:
+    0 0 10px #ff0000,
+    0 0 25px #ff0000,
+    0 0 50px #ff0000,
+    0 0 90px rgba(255,0,0,.9);
+
+  animation:crashPulse .6s ease-in-out infinite;
+}
+
+@keyframes crashPulse{
+  0%,100%{
+    transform:translate(-50%,-50%) scale(1);
+  }
+  50%{
+    transform:translate(-50%,-50%) scale(1.12);
+  }
+}
+
+
+/* ===== CRASH BACKGROUND GLOW ===== */
+
+.crash-bg-glow{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:150;
+
+  background:
+    radial-gradient(circle at 50% 50%,
+      rgba(255,0,0,.6),
+      rgba(255,0,0,.35) 30%,
+      rgba(255,0,0,.15) 55%,
+      transparent 75%
+    );
+
+  animation:crashBgPulse .6s ease-out forwards;
+}
+
+@keyframes crashBgPulse{
+  0%{
+    opacity:0;
+    transform:scale(.6);
+  }
+  40%{
+    opacity:1;
+    transform:scale(1.1);
+  }
+  100%{
+    opacity:0;
+    transform:scale(1.6);
+  }
+}
+
+
+/* ===== DARK RED BACKGROUND MODE ===== */
+
+body.crash-dark{
+  background:
+    radial-gradient(circle at 50% 30%,
+      rgba(255,0,0,.35),
+      rgba(30,0,0,.95) 60%
+    ),
+    url('/assets/bg/time-race-bg-pro.jpg') center/cover no-repeat fixed;
+
+  background-blend-mode: overlay;
+
+  transition: background 1s ease;
+}
+
+
+/* ================= CYBER HISTORY BUTTON ================= */
+
+
+
+
+
+.tr-sheet{
+  position:fixed;
+  inset:0;
+  z-index:500;
+}
+
+.tr-sheet.hidden{
+  display:none;
+}
+
+.tr-sheet-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.6);
+}
+
+.tr-sheet-panel{
+  position:absolute;
+  bottom:0;
+  left:0;
+  right:0;
+
+  max-height:75%;
+  overflow-y:auto;
+
+  padding:20px 16px calc(20px + env(safe-area-inset-bottom));
+
+  background:linear-gradient(
+    180deg,
+    rgba(10,10,25,.98),
+    rgba(0,0,0,1)
+  );
+
+  border-top-left-radius:20px;
+  border-top-right-radius:20px;
+
+  box-shadow:
+    0 -10px 40px rgba(0,255,255,.2);
+
+  animation:slideUp .25s ease;
+}
+
+@keyframes slideUp{
+  from{ transform:translateY(100%); }
+  to{ transform:translateY(0); }
+}
+
+.tr-sheet-handle{
+  width:50px;
+  height:5px;
+  background:rgba(255,255,255,.3);
+  border-radius:5px;
+  margin:0 auto 16px;
+}
+
+.tr-sheet-title{
+  font-size:16px;
+  font-weight:800;
+  text-align:center;
+  margin-bottom:16px;
+}
+
+.tr-history-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+
+
+.tr-history-item-card{
+  padding:12px;
+  border-radius:14px;
+
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(0,255,255,.2);
+
+  font-size:13px;
+
+  display:flex;
+  justify-content:space-between;
+}
+
+
+.bet-history-floating{
+  position:absolute;
+  right:-8px;
+
+  /* nằm ngay trên bet bar */
+  bottom:calc(600px + env(safe-area-inset-bottom));
+
+  z-index:210;
+}
+
+
+
+
+
+/* ================= WIN MODAL ================= */
+
+.tr-win-modal{
+  position:fixed;
+  inset:0;
+  z-index:999;
+}
+
+.tr-win-modal.hidden{
+  display:none;
+}
+
+.tr-win-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  backdrop-filter:blur(8px);
+}
+
+.tr-win-box{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%) scale(.8);
+
+  width:320px;
+  text-align:center;
+}
+
+
+
+
+/* frame image */
+
+.tr-win-frame{
+  width:100%;
+  height:auto;
+  display:block;
+}
+
+/* content overlay */
+
+.tr-win-content{
+  position:absolute;
+  inset:0;
+
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+
+  gap:10px;
+  pointer-events:none;
+}
+
+/* title */
+
+.tr-win-title{
+  font-size:20px;
+  font-weight:900;
+
+  color:#00f0ff;
+
+  text-shadow:
+    0 0 15px #00f0ff,
+    0 0 35px rgba(0,255,255,.7);
+}
+
+/* multiplier */
+
+.tr-win-multiplier{
+  font-size:38px;
+  font-weight:900;
+}
+
+/* amount */
+
+.tr-win-amount{
+  font-size:24px;
+  font-weight:900;
+  color:#00f0ff;
+}
+
+/* OK button */
+
+.tr-win-btn{
+  margin-top:6px;
+  padding:6px 22px;
+
+
+  pointer-events:auto;
+  cursor:pointer;
+
+  position: absolute;
+  bottom:49px;
+  color:#fff;
+  font-weight: bold;
+}
+
+
+
+@media screen and (orientation: landscape) {
+  body > * {
+    display: none !important;
+  }
+
+  body::after {
+    content: "Please rotate your screen vertically";
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    height:100vh;
+    color:#00f0ff;
+    font-size:22px;
+    font-weight:800;
+  }
+}
+
+
+
+/* ================= TIME RACE LOADING ================= */
+
+.tr-loading{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  background:#000;
+}
+
+.tr-loading-bg{
+  position:absolute;
+  inset:0;
+
+  background:
+    radial-gradient(circle at 50% 40%,
+      rgba(0,255,255,.2),
+      rgba(0,0,0,.95) 70%
+    );
+
+  animation:loadingBgMove 10s linear infinite;
+}
+
+@keyframes loadingBgMove{
+  0%{ transform:scale(1); }
+  50%{ transform:scale(1.1); }
+  100%{ transform:scale(1); }
+}
+
+.tr-loading-center{
+  position:relative;
+  text-align:center;
+  z-index:2;
+}
+
+.tr-loading-logo{
+  font-size:26px;
+  font-weight:900;
+  letter-spacing:2px;
+
+  background:linear-gradient(
+    90deg,
+    #00f0ff,
+    #ffffff,
+    #00f0ff
+  );
+
+  background-size:200%;
+  background-clip:text;
+  -webkit-background-clip:text;
+
+  color:transparent;
+
+  animation:logoShine 3s linear infinite;
+}
+
+@keyframes logoShine{
+  from{ background-position:0%; }
+  to{ background-position:200%; }
+}
+
+.tr-loading-bomb{
+  font-size:70px;
+  margin:20px 0;
+
+  animation:bombPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes bombPulse{
+  0%,100%{
+    transform:scale(1);
+    filter:drop-shadow(0 0 10px #00f0ff);
+  }
+  50%{
+    transform:scale(1.15);
+    filter:drop-shadow(0 0 25px #00f0ff);
+  }
+}
+
+.tr-loading-bar{
+  width:220px;
+  height:6px;
+  background:#111;
+  border-radius:6px;
+  overflow:hidden;
+  margin:0 auto;
+}
+
+.tr-loading-progress{
+  height:100%;
+  width:0%;
+
+  background:linear-gradient(
+    90deg,
+    #007bff,
+    #00f0ff
+  );
+
+  box-shadow:0 0 15px #00f0ff;
+
+  transition:width .3s;
+}
+
+.tr-loading-text{
+  margin-top:14px;
+  font-size:13px;
+  opacity:.8;
+}
+
+
+.tr-loading-bomb img{
+  width:90px;
+  height:auto;
+
+  filter:
+    drop-shadow(0 0 10px #00f0ff)
+    drop-shadow(0 0 30px #00f0ff);
+
+  animation:bombPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes bombPulse{
+
+  0%,100%{
+    transform:scale(1);
+  }
+
+  50%{
+    transform:scale(1.12);
+  }
+
+}
+
+
+
+
+
+.bet-panel-hitbox{
+  position:relative;
+  width:100%;
+  height:220px;
+}
+
+/* base */
+.hit{
+  position:absolute;
+  background:transparent;
+  border:none;
+  cursor:pointer;
+}
+
+/* QUICK */
+.quick25{
+  top:-17px;
+  left:42px;
+  width:96px;
+  height:27px;
+}
+
+.quick50{
+  top:-17px;
+  left:154px;
+  width:96px;
+  height:26px;
+}
+
+.quickAll{
+  top:-5px;
+  right:65px;
+  width:96px;
+  height:27px;
+}
+
+/* BET ROW 1 */
+
+.bet10{
+  top:28px;
+  left:13px;
+  width:103px;
+  height:28px;
+}
+
+.bet50{
+  top:28px;
+  left:143px;
+  width:110px;
+  height:28px;
+}
+
+.bet100{
+  top:28px;
+  right:44px;
+  width:110px;
+  height:28px;
+}
+
+/* BET ROW 2 */
+
+.bet500{
+  top:69px;
+  left:13px;
+  width:110px;
+  height:30px;
+}
+
+.bet1000{
+  top:69px;
+  left:143px;
+  width:110px;
+  height:30px;
+}
+
+.bet5000{
+  top:69px;
+  right:44px;
+  width:110px;
+  height:30px;
+}
+
+/* CONFIRM */
+
+.confirm{
+  bottom:73px;
+  left:50%;
+  transform:translateX(-50%);
+  width:197px;
+  height:35px;
+}
+
+
+
+.stop-btn-img{
+
+  width:150px;
+  height:auto;
+
+  cursor:pointer;
+
+  transition:.15s;
+}
+
+/* hover */
+.stop-btn-img:hover{
+  transform:scale(1.08);
+}
+
+/* click */
+.stop-btn-img:active{
+  transform:scale(.9);
+}
+
+/* disable */
+.stop-btn-img.disabled{
+  opacity:.5;
+  filter:grayscale(.6);
+}
+
+
+
+.history-btn-img{
+
+  width:100px;
+  height:auto;
+
+  cursor:pointer;
+
+  transition:.15s;
+
+}
+
+/* hover */
+.history-btn-img:hover{
+  transform:scale(1.08);
+}
+
+/* click */
+.history-btn-img:active{
+  transform:scale(.9);
+}
+
+
+
+
+.bet-list-box{
+  position:absolute;
+  right:240px;
+  top:-70px;
+
+  width:100px;
+  max-height:300px;
+  overflow:hidden;
+
+  padding:10px;
+
+
+  font-size:9px;
+  z-index:250;
+}
+
+.bet-user{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  padding:4px 6px;
+  margin-bottom:4px;
+
+  border-radius:6px;
+
+  background:rgba(255,255,255,.05);
+
+  font-weight:700;
+}
+
+
+
+
+
+
+</style>
+</head>
+<body>
+
+<div id="app">
+
+
+<!-- ===== GAME SOUNDS ===== -->
+
+
+<audio id="betSound" src="/assets/time-race/sounds/bet.mp3"></audio>
+
+<audio id="tickSound" src="/assets/time-race/sounds/tick.mp3"></audio>
+
+<audio id="raceSound" src="/assets/time-race/sounds/race-start.mp3" loop></audio>
+
+<audio id="crashSound" src="/assets/time-race/sounds/explosion.mp3"></audio>
+
+<audio id="winSound" src="/assets/time-race/sounds/win.mp3"></audio>
+
+<audio id="confirmSound" src="/assets/time-race/sounds/confirm.mp3"></audio>
+
+<audio id="logSound" src="/assets/time-race/sounds/log.mp3"></audio>
+
+
+
+<!-- ================= TIME RACE LOADING ================= -->
+<div id="loadingOverlay" class="tr-loading">
+
+  <div class="tr-loading-bg"></div>
+
+  <div class="tr-loading-center">
+
+    <div class="tr-loading-logo">
+      CRASH
+    </div>
+
+<div class="tr-loading-bomb">
+  <img src="/assets/time-race/bomb-icon.png">
+</div>
+
+    <div class="tr-loading-bar">
+      <div id="loadingProgress" class="tr-loading-progress"></div>
+    </div>
+
+    <div id="loadingText" class="tr-loading-text">
+      Connecting to server...
+    </div>
+
+  </div>
+
+</div>
+
+
+
+<div class="tr-header">
+
+  <button class="tr-back" onclick="location.href='/invest.html'"></button>
+
+  <div class="tr-head-center">
+    <div class="tr-title"></div>
+
+<div class="tr-sub">
+  <span class="round-label">Round</span>
+  <span id="roundToday"></span>
+</div>
+
+  </div>
+
+  <div class="tr-right">
+
+<div class="tr-coins">
+  <img src="/assets/time-race/diamond-icon.png" class="coin-icon">
+  <span id="coinBalance"></span>
+</div>
+
+  </div>
+
+</div>
+
+<div class="tr-history-wrap">
+  <div class="history-title">
+  </div>
+
+  <div class="tr-history-bar"
+       id="timeRaceHistoryBar">
+  </div>
+  
+</div>
+
+
+
+
+
+<div class="tr-center">
+
+
+<div id="betListBox" class="bet-list-box"></div>
+
+
+<div class="bomb-wrap">
+
+  <div class="bomb-core-glow"></div>
+
+  <img class="bomb-img" src="/assets/time-race/bomb-body.png">
+
+
+  <div class="bomb-timer" id="betTimer">15</div>
+
+  <div id="multiplier" class="bomb-multi">
+    x1.00
+  </div>
+
+
+
+</div>
+
+
+
+<div class="stop-wrap">
+
+  <img id="stopBtn"
+       class="stop-btn-img"
+       src="/assets/time-race/stop-btn.png">
+
+</div>
+
+</div>
+
+
+
+
+<div class="bet-history-floating">
+
+  <img 
+    src="/assets/time-race/history-btn.png"
+    class="history-btn-img"
+    onclick="openTimeRaceHistory()"
+  >
+
+</div>
+
+
+<div class="tr-bottom">
+
+  <div class="selected-bet-bar">
+    BET: 
+  <span id="selectedBetValue">0</span> 💎
+</div>
+
+<div class="bet-panel-hitbox">
+
+  <!-- QUICK -->
+  <button class="hit quick25" data-type="25"></button>
+  <button class="hit quick50" data-type="50"></button>
+  <button class="hit quickAll" data-type="all"></button>
+
+  <!-- BET -->
+  <button class="hit bet10" data-bet="10"></button>
+  <button class="hit bet50" data-bet="50"></button>
+  <button class="hit bet100" data-bet="100"></button>
+
+  <button class="hit bet500" data-bet="500"></button>
+  <button class="hit bet1000" data-bet="1000"></button>
+  <button class="hit bet5000" data-bet="5000"></button>
+
+  <!-- CONFIRM -->
+  <button id="betBtn" class="hit confirm"></button>
+
+</div>
+
+
+</div>
+
+
+
+
+
+<!-- ================= TIME RACE HISTORY SHEET ================= -->
+<div id="timeRaceHistorySheet" class="tr-sheet hidden">
+
+  <div class="tr-sheet-backdrop"
+       onclick="closeTimeRaceHistory()"></div>
+
+  <div class="tr-sheet-panel">
+
+    <div class="tr-sheet-handle"></div>
+
+    <div class="tr-sheet-title">
+      Bet History
+    </div>
+
+    <div id="timeRaceHistoryList"
+         class="tr-history-list">
+    </div>
+
+  </div>
+
+</div>
+
+
+
+
+<!-- ================= WIN MODAL ================= -->
+<div id="timeRaceWinModal" class="tr-win-modal hidden">
+
+  <div class="tr-win-backdrop"
+       onclick="closeTimeRaceWinModal()"></div>
+
+<div class="tr-win-box">
+
+  <img 
+    src="/assets/time-race/win-frame.png"
+    class="tr-win-frame">
+
+  <div class="tr-win-content">
+
+    <div class="tr-win-title">
+      YOU WON!
+    </div>
+
+    <div class="tr-win-multiplier">
+      x<span id="winMultiplier">1.00</span>
+    </div>
+
+    <div class="tr-win-amount">
+      +<span id="winAmount">0</span> 💎
+    </div>
+
+    <div class="tr-win-btn"
+         onclick="closeTimeRaceWinModal()">
+      OK
+    </div>
+
+  </div>
+
+</div>
+
+
+</div>
+
+
+
+</div>
+
+
+<script>
+
+
+  
+const me = JSON.parse(localStorage.getItem("user_profile")||"{}");
+
+const betSound = document.getElementById("betSound");
+const tickSound = document.getElementById("tickSound");
+const raceSound = document.getElementById("raceSound");
+const crashSound = document.getElementById("crashSound");
+const winSound = document.getElementById("winSound");
+const confirmSound = document.getElementById("confirmSound");
+const logSound = document.getElementById("logSound");
+
+let lastTickSecond = -1;
+
+let audioUnlocked = false;
+
+document.addEventListener("click", () => {
+  if(audioUnlocked) return;
+
+  audioUnlocked = true;
+
+  const audios = document.querySelectorAll("audio");
+
+  audios.forEach(a => {
+    a.muted = true;
+
+    a.play().then(()=>{
+      a.pause();
+      a.currentTime = 0;
+      a.muted = false;
+    }).catch(()=>{});
+  });
+
+});
+
+
+let deviceId = localStorage.getItem("device_id");
+if(!deviceId){
+  deviceId="dev_"+Math.random().toString(36).slice(2);
+  localStorage.setItem("device_id",deviceId);
+}
+
+const socket = io({
+  auth:{
+    uid:me.uid,
+    deviceId
+  }
+});
+
+let betEndAt = 0;
+let crashed = false;
+let hasBet = false;
+let currentCoins = 0;
+let selectedBet = 0;
+let serverOffset = 0;
+let raceStarted = false;
+
+const multiplierEl = document.getElementById("multiplier");
+const betBtn = document.getElementById("betBtn");
+const stopBtn = document.getElementById("stopBtn");
+const betTimer = document.getElementById("betTimer");
+const selectedBetEl = document.getElementById("selectedBetValue");
+const selectedBetBar = document.querySelector(".selected-bet-bar");
+
+const maxFuseHeight = 60; // phải khớp CSS
+
+
+
+
+function showTimeRaceWinModal(multiplier, amount){
+
+  winSound.currentTime = 0;
+  winSound.play().catch(()=>{});
+
+
+  document.getElementById("winMultiplier")
+    .textContent = Number(multiplier).toFixed(2);
+
+  document.getElementById("winAmount")
+    .textContent = Number(amount).toLocaleString();
+
+  document
+    .getElementById("timeRaceWinModal")
+    .classList.remove("hidden");
+
+  // hiệu ứng glow toàn màn
+  document.body.animate([
+    { boxShadow:"0 0 0 rgba(0,255,255,0)" },
+    { boxShadow:"0 0 100px rgba(0,255,255,.8)" },
+    { boxShadow:"0 0 0 rgba(0,255,255,0)" }
+  ],{ duration:600 });
+
+}
+
+function closeTimeRaceWinModal(){
+  document
+    .getElementById("timeRaceWinModal")
+    .classList.add("hidden");
+}
+
+
+
+function serverTime(){
+  return Date.now() + serverOffset;
+}
+
+
+
+function updateSelectedBetDisplay(){
+  selectedBetEl.textContent = selectedBet.toLocaleString();
+
+  if(selectedBet > 0){
+    selectedBetBar.classList.add("active");
+  }else{
+    selectedBetBar.classList.remove("active");
+  }
+}
+
+
+document.querySelectorAll("[data-type]").forEach(btn=>{
+  btn.onclick = ()=>{
+
+    betSound.currentTime = 0;
+    betSound.play().catch(()=>{})
+
+    if(!currentCoins) return;
+
+    const type = btn.dataset.type;
+    let bet = 0;
+
+    if(type === "25"){
+      bet = Math.floor(currentCoins * 0.25);
+    }
+    else if(type === "50"){
+      bet = Math.floor(currentCoins * 0.5);
+    }
+    else if(type === "all"){
+      bet = currentCoins;
+    }
+
+    // highlight chip tương ứng nếu trùng
+   document.querySelectorAll("[data-bet]")
+      .forEach(b=>b.classList.remove("active"));
+
+    selectedBet = bet;
+    updateSelectedBetDisplay();
+
+    // hiệu ứng nháy nhẹ
+    btn.animate([
+      { transform:"scale(1)" },
+      { transform:"scale(1.08)" },
+      { transform:"scale(1)" }
+    ],{ duration:200 });
+
+  };
+});
+
+
+
+document.querySelectorAll("[data-bet]").forEach(btn=>{
+  btn.onclick = ()=>{
+
+    const value = Number(btn.dataset.bet);
+
+    // 🔥 cộng dồn chip
+    selectedBet += value;
+
+    // 🔒 không cho cược quá số coin
+    if(selectedBet > currentCoins){
+      selectedBet = currentCoins;
+    }
+
+    updateSelectedBetDisplay();
+
+    // hiệu ứng chip
+    btn.animate([
+      {transform:"scale(1)"},
+      {transform:"scale(1.15)"},
+      {transform:"scale(1)"}
+    ],{duration:150});
+
+    betSound.currentTime = 0;
+    betSound.play().catch(()=>{})
+  };
+});
+
+
+document.addEventListener("click",(e)=>{
+
+  // nếu click vào bet panel thì bỏ qua
+  if(e.target.closest(".bet-panel-hitbox")) return;
+
+  // nếu click vào nút confirm cũng bỏ qua
+  if(e.target.closest("#betBtn")) return;
+
+  // nếu không có cược thì không làm gì
+  if(selectedBet === 0) return;
+
+  // 🔥 reset cược
+  selectedBet = 0;
+  updateSelectedBetDisplay();
+
+});
+
+
+
+function updateTimer(){
+
+  if(!betEndAt || raceStarted || crashed) return;
+
+  const betPanel = document.querySelector(".tr-bottom");
+
+const msLeft = betEndAt - serverTime();
+
+
+const secondsLeft = Math.floor(msLeft/1000);
+
+if(msLeft <= 3000 && msLeft > 0 && secondsLeft !== lastTickSecond){
+
+    lastTickSecond = secondsLeft;
+
+    tickSound.currentTime = 0;
+    tickSound.play().catch(()=>{})
+
+}
+
+
+if(msLeft > 0){
+
+  const seconds = Math.floor(msLeft / 1000);
+  const ms = Math.floor((msLeft % 1000) / 10); // 2 digit ms
+
+  betTimer.textContent =
+    seconds.toString().padStart(2,"0") +
+    ":" +
+    ms.toString().padStart(2,"0");
+
+}else{
+  betTimer.textContent = "";
+}
+
+
+
+
+  // ✅ Nếu đã đặt cược rồi -> khóa bet bar luôn, KHÔNG mở lại
+  if(hasBet){
+    betPanel?.classList.add("locked");
+    betBtn.disabled = true;
+    return;
+  }
+
+  // 🔒 Chưa bet thì mới khóa theo <= 3s
+  if(msLeft <= 3000){
+    betPanel?.classList.add("locked");
+    betBtn.disabled = true;
+
+    betTimer.style.color = "#ff2d2d";
+    betTimer.style.textShadow = "0 0 15px red";
+  }else{
+    betPanel?.classList.remove("locked");
+    betBtn.disabled = false;
+
+    betTimer.style.color = "";
+    betTimer.style.textShadow = "";
+  }
+
+  if(msLeft <= 0){
+    betPanel?.classList.add("locked");
+    betBtn.disabled = true;
+  }
+}
+
+setInterval(updateTimer,16);
+
+
+
+
+
+function renderTimeRaceHistory(list){
+  const bar =
+    document.getElementById(
+      "timeRaceHistoryBar"
+    );
+
+  if(!bar) return;
+
+  bar.innerHTML = "";
+
+  list.forEach(h=>{
+
+    const div = document.createElement("div");
+    div.className = "tr-history-item";
+
+    const crash = Number(h.crashPoint);
+
+    if(crash < 2){
+      div.classList.add("low");
+    }
+    else if(crash < 5){
+      div.classList.add("mid");
+    }
+    else{
+      div.classList.add("high");
+    }
+
+    div.textContent =
+      "x" + crash.toFixed(2);
+
+    bar.appendChild(div);
+
+  });
+}
+
+
+
+function openTimeRaceHistory(){
+
+  logSound.currentTime = 0;
+  logSound.play().catch(()=>{});
+
+  document
+    .getElementById("timeRaceHistorySheet")
+    .classList.remove("hidden");
+
+  socket.emit("time-race-get-my-history");
+}
+
+
+function closeTimeRaceHistory(){
+  document
+    .getElementById("timeRaceHistorySheet")
+    .classList.add("hidden");
+}
+
+
+
+
+
+/* SOCKET EVENTS */
+
+socket.on("time-race-my-history", list=>{
+  renderMyHistory(list);
+});
+
+function renderMyHistory(list){
+
+  const wrap =
+    document.getElementById("timeRaceHistoryList");
+
+  if(!wrap) return;
+
+  wrap.innerHTML = "";
+
+  if(!list.length){
+    wrap.innerHTML =
+      "<div style='opacity:.6;text-align:center'>No history yet</div>";
+    return;
+  }
+
+  list.forEach(h=>{
+
+    const item = document.createElement("div");
+    item.className = "tr-history-item-card";
+
+item.innerHTML = `
+  <div>#${h.roundId}</div>
+  <div>${h.bet} 💎</div>
+  <div>x${Number(h.stopMultiplier).toFixed(2)}</div>
+<div style="color:${h.result === 'win' ? '#00f0ff' : '#ff2d2d'};font-weight:700">
+  ${h.result === 'win' ? '✔ +' + h.win : '✖ LOSE'}
+</div>
+`;
+
+    wrap.appendChild(item);
+  });
+}
+
+
+let lastBetList = ""
+
+socket.on("time-race-bet-list",(list)=>{
+
+  const json = JSON.stringify(list)
+  if(json === lastBetList) return
+  lastBetList = json
+
+  const box = document.getElementById("betListBox")
+  if(!box) return
+
+  box.innerHTML = ""
+
+  list.slice(0,10).forEach((p,i)=>{
+
+    const div = document.createElement("div")
+    div.className = "bet-user"
+
+    if(i === 0){
+      div.classList.add("top")
+    }
+
+ const name =
+  p.uid?.startsWith("bot_")
+    ? "???"
+    : (p.name || "???")
+
+div.innerHTML = `
+  <span>${name}</span>
+  <span>💎 ${Number(p.total || p.bet).toLocaleString()}</span>
+`
+
+    box.appendChild(div)
+
+  })
+
+})
+
+
+
+socket.on("time-race-state",data=>{
+
+  // 🔥 tính lệch giờ
+  serverOffset = data.serverNow - Date.now();
+
+  betEndAt = data.betEndAt;
+  multiplierEl.textContent =
+    "x"+Number(data.multiplier).toFixed(2);
+
+  crashed=data.crashed;
+});
+
+
+socket.on("time-race-new", data => {
+
+  // 🔥 Hiện lại bomb nếu vừa crash
+  const bombWrap = document.querySelector(".bomb-wrap");
+  const bomb = document.querySelector(".bomb-img");
+  const glow = document.querySelector(".bomb-core-glow");
+
+
+  bombWrap.classList.remove("exploded");
+
+  if(bomb) bomb.style.display = "";
+  if(glow) glow.style.display = "";
+ 
+
+  // ================= RESET LOGIC STATE =================
+  raceStarted = false;
+  crashed = false;
+  hasBet = false;
+
+  serverOffset = data.serverNow - Date.now();
+  betEndAt = data.betEndAt;
+
+  const betPanel = document.querySelector(".tr-bottom");
+  betPanel.classList.remove("locked");
+
+  /* ================= HARD RESET VISUAL ================= */
+
+  bomb.classList.remove("crash", "hot");
+
+  bomb.style.cssText = "";
+ 
+
+  bomb.style.transition = "none";
+  void bomb.offsetWidth;
+  bomb.style.transition = "";
+
+
+
+  /* ================= RESET UI ================= */
+
+
+
+  multiplierEl.classList.remove("crash");
+  multiplierEl.classList.remove("crash-red");
+  multiplierEl.textContent = "x1.00";
+  multiplierEl.style.display = "none";
+
+  selectedBet = 0;
+  updateSelectedBetDisplay();
+
+  betBtn.disabled = false;
+  stopBtn.style.display = "none";
+});
+
+socket.on("time-race-tick",data=>{
+
+  if(crashed || (raceStarted && data.multiplier <= 1)) return;
+
+  const m = Number(data.multiplier);
+
+
+if(m > 1 && !raceStarted){
+
+    raceStarted = true;
+
+    betTimer.textContent = "";
+
+    raceSound.currentTime = 0;
+    raceSound.play().catch(()=>{});
+}
+
+  if(m <= 1){
+    multiplierEl.style.display = "none";
+    return;
+  }
+
+  multiplierEl.style.display = "block";
+
+  // 🔥 RACE START
+  if(hasBet && !crashed){
+
+    raceStarted = true;
+
+    stopBtn.classList.remove("disabled");
+    stopBtn.style.opacity = "1";
+  }
+
+  multiplierEl.textContent = "x" + m.toFixed(2);
+
+});
+
+socket.on("time-race-crash",data=>{
+
+  raceStarted = false;
+  crashed = true;
+ 
+
+
+  const bombWrap = document.querySelector(".bomb-wrap");
+  const bomb = document.querySelector(".bomb-img")
+  const glow = document.querySelector(".bomb-core-glow");
+
+  bomb.classList.add("crash");
+
+  // 🔊 dừng sound race ngay lập tức
+  raceSound.pause();
+  raceSound.currentTime = 0;
+
+  crashSound.currentTime = 0;
+  crashSound.play().catch(()=>{})
+
+
+
+  multiplierEl.textContent =
+    "x" + Number(data.crashPoint).toFixed(2);
+
+  multiplierEl.classList.add("crash-red");
+
+/* ================= BACKGROUND RED SHOCK ================= */
+
+const bgGlow = document.createElement("div");
+bgGlow.className = "crash-bg-glow";
+document.body.appendChild(bgGlow);
+
+setTimeout(()=>{
+  bgGlow.remove();
+},600);
+
+
+/* ================= DARK RED MODE 1s ================= */
+
+document.body.classList.add("crash-dark");
+
+setTimeout(()=>{
+  document.body.classList.remove("crash-dark");
+},1000);
+
+
+
+
+  /* ================= EXPLOSION CORE ================= */
+
+  const ring = document.createElement("div");
+  ring.className = "explosion-ring";
+  bombWrap.appendChild(ring);
+
+  const core = document.createElement("div");
+  core.className = "explosion-core";
+  bombWrap.appendChild(core);
+
+  /* ================= FRAGMENTS ================= */
+
+  const fragmentCount = 14;
+
+  for(let i=0;i<fragmentCount;i++){
+
+    const frag = document.createElement("div");
+    frag.className = "bomb-fragment";
+
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 150 + Math.random()*120;
+
+    const x = Math.cos(angle) * distance + "px";
+    const y = Math.sin(angle) * distance + "px";
+
+    frag.style.setProperty("--x", x);
+    frag.style.setProperty("--y", y);
+
+    frag.style.left = "50%";
+    frag.style.top = "50%";
+    frag.style.transform = "translate(-50%, -50%)";
+    frag.style.animation = "fragmentFly 700ms ease-out forwards";
+
+    bombWrap.appendChild(frag);
+
+    setTimeout(()=>frag.remove(),700);
+  }
+
+  setTimeout(()=>{
+    ring.remove();
+    core.remove();
+  },600);
+
+  /* ================= SLOW MOTION 0.2s ================= */
+
+  // Freeze nhẹ + zoom cinematic
+  document.body.style.transition = "transform 0.2s ease";
+  document.body.style.transform = "scale(1.03)";
+
+  bomb.style.transition = "transform 0.2s ease";
+  bomb.style.transform = "scale(1.1)";
+
+  /* ================= SCREEN SHAKE ================= */
+
+  document.body.animate([
+    { transform:"translateX(0px)" },
+    { transform:"translateX(6px)" },
+    { transform:"translateX(-6px)" },
+    { transform:"translateX(0px)" }
+  ],{ duration:200 });
+
+  /* ================= HIDE AFTER 0.2s ================= */
+
+  setTimeout(()=>{
+
+    document.body.style.transform = "";
+    bomb.style.transform = "";
+
+    bomb.style.display = "none";
+    if(glow) glow.style.display = "none";
+
+  },200);
+
+  /* ================= MULTI POP ================= */
+
+  multiplierEl.animate([
+    { transform:"scale(1)" },
+    { transform:"scale(1.6)" },
+    { transform:"scale(1)" }
+  ],{ duration:500 });
+
+  stopBtn.style.display="none";
+});
+
+
+/* BET */
+
+betBtn.onclick=()=>{
+
+  const bet = selectedBet;
+  if(!bet || bet<=0) return;
+
+  confirmSound.currentTime = 0;
+  confirmSound.play().catch(()=>{});
+
+  socket.emit("time-race-bet",{bet});
+};
+
+
+
+socket.on("time-race-bet-ok",()=>{
+  hasBet = true;
+
+  const betPanel = document.querySelector(".tr-bottom");
+  betPanel.classList.add("locked");
+
+  betBtn.disabled = true;
+
+  // 🔥 Hiện STOP ngay nhưng chưa cho click
+stopBtn.style.display = "block";
+
+stopBtn.classList.add("disabled");
+stopBtn.style.opacity = ".6";
+
+});
+/* STOP */
+
+stopBtn.addEventListener("click", ()=>{
+
+  // nếu đang disabled thì không cho bấm
+  if(stopBtn.classList.contains("disabled")) return;
+
+  // khóa ngay để tránh spam
+  stopBtn.classList.add("disabled");
+  stopBtn.style.opacity = ".6";
+
+  socket.emit("time-race-stop");
+
+});
+
+socket.on("time-race-stopped",data=>{
+
+  stopBtn.style.display="none";
+
+  multiplierEl.textContent =
+    "x" + Number(data.multiplier).toFixed(2);
+
+  const winAmount = data.win || 0;
+
+  showTimeRaceWinModal(
+    data.multiplier,
+    winAmount
+  );
+
+});
+
+
+socket.on("time-race-lost",data=>{
+  stopBtn.style.display="none";
+  multiplierEl.textContent="THUA x"+data.crashPoint;
+});
+
+
+
+socket.on("coin-update",data=>{
+  currentCoins = Number(data.coins || 0);
+  document.getElementById("coinBalance").textContent = currentCoins;
+});
+
+
+socket.on("time-race-round-count", data=>{
+  const el = document.getElementById("roundToday");
+  if(el){
+    el.textContent = data.roundCountToday;
+  }
+});
+
+
+
+socket.on("time-race-history",
+  renderTimeRaceHistory
+);
+
+socket.on("time-race-history-update",
+  renderTimeRaceHistory
+);
+
+
+socket.on("time-race-restore", data=>{
+
+  serverOffset = data.serverNow - Date.now();
+  betEndAt = data.betEndAt;
+  crashed = data.crashed;
+  hasBet = data.hasBet;
+
+  const currentMultiplier = Number(data.multiplier);
+  multiplierEl.textContent =
+    "x" + currentMultiplier.toFixed(2);
+
+  /* ================= RESTORE BET VALUE ================= */
+
+  if(data.myBet){
+    selectedBet = Number(data.myBet);
+  }else{
+    selectedBet = 0;
+  }
+
+  updateSelectedBetDisplay();
+
+  /* ================= RESTORE UI STATE ================= */
+
+  if(hasBet){
+
+    document
+      .querySelector(".tr-bottom")
+      .classList.add("locked");
+
+    betBtn.disabled = true;
+
+    if(!crashed && !data.stopped){
+
+      stopBtn.style.display = "block";
+
+if(currentMultiplier <= 1){
+  stopBtn.classList.add("disabled");
+  stopBtn.style.opacity = ".6";
+}
+else{
+  stopBtn.classList.remove("disabled");
+  stopBtn.style.opacity = "1";
+  raceStarted = true;
+}
+
+    }else{
+      stopBtn.style.display = "none";
+    }
+
+  }else{
+
+    document
+      .querySelector(".tr-bottom")
+      .classList.remove("locked");
+
+    betBtn.disabled = false;
+    stopBtn.style.display = "none";
+  }
+
+});
+
+
+
+// 🔒 Prevent double tap zoom
+let lastTouchEnd = 0;
+
+document.addEventListener("touchend", function (event) {
+
+  const now = Date.now();
+
+  if (now - lastTouchEnd <= 300) {
+
+    if (event.cancelable) {
+      event.preventDefault();
+    }
+
+  }
+
+  lastTouchEnd = now;
+
+}, false);
+
+
+// 🔒 Lock portrait orientation
+if (screen.orientation && screen.orientation.lock) {
+  screen.orientation.lock("portrait").catch(()=>{});
+}
+
+
+
+/* ================= LOADER ================= */
+
+const progress = document.getElementById("loadingProgress");
+const text = document.getElementById("loadingText");
+
+let load = 0;
+
+const loadingSteps = [
+  "Initializing engine...",
+  "Loading assets...",
+  "Connecting server...",
+  "Syncing game state...",
+  "Preparing bomb..."
+];
+
+const interval = setInterval(()=>{
+
+  load += Math.random()*15;
+
+  if(load >= 100){
+    load = 100;
+    clearInterval(interval);
+
+    text.innerText = "Ready";
+
+    setTimeout(()=>{
+      const overlay = document.getElementById("loadingOverlay");
+      overlay.style.opacity = "0";
+
+      setTimeout(()=>{
+        overlay.remove();
+      },600);
+
+    },500);
+  }
+
+  progress.style.width = load + "%";
+
+  const stepIndex = Math.floor(load / 25);
+  text.innerText = loadingSteps[Math.min(stepIndex, loadingSteps.length-1)];
+
+},400);
+
+
+
+function scaleGame(){
+
+  const baseWidth = 430
+  const baseHeight = 870
+
+  const screenW = window.visualViewport?.width || window.innerWidth
+  const screenH = window.visualViewport?.height || window.innerHeight
+
+  const scale = Math.min(
+    screenW / baseWidth,
+    screenH / baseHeight
+  )
+
+  const app = document.getElementById("app")
+
+  app.style.transform =
+    `translate(-50%, -50%) scale(${scale})`
+
+}
+
+window.addEventListener("resize", scaleGame)
+window.addEventListener("load", scaleGame)
+
+
+</script>
+</body>
+</html>

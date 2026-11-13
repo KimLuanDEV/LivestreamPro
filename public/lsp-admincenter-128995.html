@@ -1,0 +1,171 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ADMIN CONTROL CENTER</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0;
+  background:#050505;
+  color:#fff;
+  font-family:system-ui;
+}
+
+.header{
+  padding:20px;
+  background:#0b0b0b;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.header h1{
+  margin:0;
+  font-size:20px;
+  letter-spacing:2px;
+}
+
+.tabs{
+  display:flex;
+  gap:10px;
+  padding:15px;
+  background:#070707;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+
+.tab{
+  padding:10px 18px;
+  border-radius:12px;
+  background:#111;
+  cursor:pointer;
+  font-weight:700;
+  border:1px solid rgba(255,255,255,.1);
+}
+
+.tab.active{
+  background:#00e5ff;
+  color:#000;
+}
+
+.content{
+  padding:20px;
+}
+
+iframe{
+  width:100%;
+  height:calc(100vh - 140px);
+  border:none;
+  border-radius:16px;
+  background:#000;
+}
+
+
+.back-btn{
+  background:#111;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.15);
+  padding:8px 14px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.back-btn:hover{
+  background:#00e5ff;
+  color:#000;
+}
+
+</style>
+</head>
+
+<body>
+
+
+<div class="header">
+  <button class="back-btn" onclick="goBackProfile()">
+    ←
+  </button>
+
+  <h1>ADMIN CENTER</h1>
+
+  <div id="adminUid"></div>
+</div>
+
+
+
+
+<div class="tabs">
+  <div class="tab active" onclick="loadTab('egg')">🥚 Egg</div>
+  <div class="tab" onclick="loadTab('wheel')">🎡 Wheel</div>
+  <div class="tab" onclick="loadTab('rps')">✊ RPS</div>
+  <div class="tab" onclick="loadTab('boom')">💣 Boom</div>
+  <div class="tab" onclick="loadTab('dtp')">🦁 DTP</div>
+   <div class="tab" onclick="loadTab('wheel8')">🎡 Wheel8</div>
+</div>
+
+<div class="content">
+  <iframe id="frame" src="/lsp-adminegg-128995.html"></iframe>
+</div>
+
+<script>
+
+
+
+
+
+
+const tabs = document.querySelectorAll(".tab");
+const frame = document.getElementById("frame");
+
+const profile = JSON.parse(
+  localStorage.getItem("user_profile") || "{}"
+);
+
+document.getElementById("adminUid").innerText =
+  "UID: " + (profile.uid || "UNKNOWN");
+
+
+  
+function loadTab(type){
+
+  tabs.forEach(t=>t.classList.remove("active"));
+  event.target.classList.add("active");
+
+  if(type === "egg"){
+    frame.src = "/lsp-adminegg-128995.html";
+  }
+
+  if(type === "wheel"){
+    frame.src = "/lsp-adminwheel-128995.html";
+  }
+
+  if(type === "rps"){
+    frame.src = "/lsp-adminrps-128995.html";
+  }
+
+  if(type === "boom"){
+    frame.src = "/lsp-adminboom-128995.html"; // 🔥 sẽ tạo tiếp
+  }
+
+  if(type === "dtp"){
+    frame.src = "/lsp-admindtp-128995.html"; // 🔥 sẽ tạo tiếp
+  }
+
+   if(type === "wheel8"){
+    frame.src = "/lsp-adminwheel8-128995.html"; // 🔥 sẽ tạo tiếp
+  }
+}
+
+
+function goBackProfile(){
+  location.href = "/profile.html";
+}
+
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,7407 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="preload" as="image" href="/assets/dtp/dtp-loading-royal.png">
+<title>Dragon Tiger Phoenix</title>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<style>
+
+/* ================= BACKGROUND ================= */
+
+html, body{
+touch-action: manipulation;
+background: #000;
+
+height:100vh;
+width:100vw;
+overflow:hidden;
+
+}
+
+body.loading > *:not(#loadingOverlay){
+visibility:hidden;
+}
+
+
+body{
+
+margin:0;
+font-family:system-ui;
+
+background:
+linear-gradient(
+rgba(0,0,0,.55),
+rgba(0,0,0,.55)
+),
+url("/assets/dtp/beast-arena.jpg");
+
+background-size:cover;
+background-position:center;
+background-repeat:no-repeat;
+
+color:#fff;
+overflow:hidden;
+
+
+ -webkit-user-select:none;
+  -moz-user-select:none;
+  -ms-user-select:none;
+  user-select:none;
+
+  -webkit-touch-callout:none;
+  -webkit-tap-highlight-color:transparent;
+}
+
+
+body::before{
+
+content:"";
+position:fixed;
+inset:0;
+
+background:
+radial-gradient(
+circle at center,
+rgba(255,215,0,.15),
+transparent 60%
+);
+
+pointer-events:none;
+}
+
+
+/* ================= TOPBAR PRO ================= */
+.topbar{
+
+position:relative;
+
+display:flex;
+align-items:center;
+
+height:46px;
+
+padding:0 14px;
+
+background:
+linear-gradient(180deg,#0a0a0a,#000);
+
+border-bottom:1px solid rgba(255,255,255,.08);
+
+box-shadow:
+0 10px 40px rgba(0,0,0,.9);
+margin-bottom:-6px;
+}
+
+
+.top-item{
+
+display:flex;
+flex-direction:column;
+align-items:center;
+
+padding:0;
+min-width:68px;
+
+}
+
+.top-label{
+
+font-size:11px;
+opacity:.6;
+letter-spacing:1px;
+
+}
+
+.top-value{
+
+font-size:15px;
+font-weight:700;
+
+}
+
+/* ROUND */
+
+.round-box{
+color:#fff;
+}
+
+/* TIMER */
+
+.timer-box{
+color:#ffcc00;
+}
+
+.timer{
+font-size:20px;
+}
+
+/* COINS */
+
+.coin-box{
+color:#00ffd5;
+}
+
+.coin{
+font-size:18px;
+}
+
+/* ================= ARENA ================= */
+
+.arena{
+position:relative;
+flex:1;
+display:flex;
+justify-content:center;
+align-items:center;
+gap:30px;
+padding:20px;
+height:80vh;
+}
+
+
+.arena::before{
+
+content:"";
+
+position:absolute;
+
+width:700px;
+height:700px;
+
+background:
+radial-gradient(
+circle,
+rgba(255,215,0,.12),
+rgba(255,215,0,.04),
+transparent 70%
+);
+
+border-radius:50%;
+
+top:55%;
+left:50%;
+
+transform:translate(-50%,-50%);
+
+pointer-events:none;
+
+}
+
+/* HUD */
+
+.arena-hud{
+
+position:absolute;
+
+top:70px;
+left:50%;
+transform:translateX(-50%);
+display:flex;
+flex-direction:column;
+align-items:center;
+padding:14px 32px;
+
+
+}
+
+/* ROUND */
+
+.round-title{
+
+font-size:28px;
+letter-spacing:3px;
+opacity:.6;
+
+}
+
+.round-number{
+
+font-size:31px;
+font-weight:900;
+
+margin-top:5px;
+
+}
+
+/* TIMER */
+
+.timer-number{
+
+font-size:30px;
+font-weight:900;
+
+color:#ffd700;
+
+text-shadow:
+0 0 10px gold,
+0 0 30px gold;
+
+margin-top:26px;
+
+}
+/* ================= BET BAR (BOTTOM CASINO) ================= */
+
+.bet-panel{
+
+position:fixed;
+
+bottom:0;
+left:0;
+right:0;
+
+height:110px;
+
+display:flex;
+justify-content:center;
+align-items:center;
+
+gap:22px;
+
+padding:10px 20px;
+
+background:
+linear-gradient(
+180deg,
+rgba(0,0,0,.3),
+rgba(0,0,0,.85)
+);
+
+backdrop-filter: blur(8px);
+
+border-top:1px solid rgba(255,255,255,.08);
+
+box-shadow:
+0 -10px 40px rgba(0,0,0,.9);
+
+z-index:20;
+
+}
+
+/* CHIP BASE */
+
+.chip{
+
+position:relative;
+
+width:80px;
+height:80px;
+
+border-radius:50%;
+
+cursor:pointer;
+
+transition:.25s;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+}
+
+.chip img{
+
+width:100%;
+height:150%;
+object-fit:contain;
+
+pointer-events:none;
+
+}
+
+/* number */
+
+.chip span{
+
+position:absolute;
+bottom:-3px;
+font-size:14px;
+font-weight:700;
+background:#000;
+padding:0px 6px;
+border-radius:20px;
+border:1px solid rgba(255,255,255,.2);
+color:#ffd700;
+}
+
+/* hover */
+
+.chip:hover{
+transform:scale(1.12);
+}
+
+/* active */
+
+.chip.active{
+
+transform:scale(1.25);
+
+filter:drop-shadow(0 0 10px gold);
+
+}
+
+
+/* ================= RESULT CINEMATIC ================= */
+
+.result{
+
+position:fixed;
+inset:0;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+background:rgba(0,0,0,.85);
+
+backdrop-filter: blur(6px);
+
+z-index:100;
+
+}
+
+/* box */
+
+.result-box{
+
+position:relative;
+
+padding:40px 60px;
+
+
+text-align:center;
+
+animation:resultPop .4s ease;
+
+}
+
+@keyframes resultPop{
+
+0%{
+transform:scale(.6);
+opacity:0;
+}
+
+100%{
+transform:scale(1);
+opacity:1;
+}
+
+}
+
+/* title */
+
+.result-title{
+
+font-size:14px;
+letter-spacing:4px;
+
+opacity:.6;
+
+margin-bottom:8px;
+
+}
+
+/* winner text */
+
+.result-name{
+
+font-size:36px;
+font-weight:900;
+
+letter-spacing:3px;
+
+color:#ffd700;
+
+text-shadow:
+0 0 10px gold,
+0 0 30px gold;
+
+}
+
+/* image */
+
+.result-image img{
+
+width:220px;
+
+margin-top:16px;
+
+animation:resultFloat 2s infinite ease-in-out;
+
+}
+
+@keyframes resultFloat{
+
+0%{transform:translateY(0)}
+50%{transform:translateY(-8px)}
+100%{transform:translateY(0)}
+
+}
+
+/* glow */
+
+.result-glow{
+
+position:absolute;
+
+inset:-20px;
+
+background:
+radial-gradient(
+circle,
+rgba(255,215,0,.4),
+transparent 70%
+);
+
+pointer-events:none;
+
+animation:glowPulse 2s infinite;
+
+}
+
+@keyframes glowPulse{
+
+0%{opacity:.5}
+50%{opacity:1}
+100%{opacity:.5}
+
+}
+
+/* profit */
+
+.result-profit{
+
+margin-top:14px;
+
+font-size:26px;
+font-weight:900;
+
+letter-spacing:2px;
+
+}
+
+/* win */
+
+.result-profit.win{
+
+color:#00ff9c;
+
+text-shadow:
+0 0 10px #00ff9c,
+0 0 25px rgba(0,255,150,.6);
+
+}
+
+/* lose */
+
+.result-profit.lose{
+
+color:#ff5a5a;
+
+text-shadow:
+0 0 10px #ff4040,
+0 0 25px rgba(255,80,80,.6);
+
+}
+
+
+.hidden{
+display:none;
+}
+
+
+
+
+
+.bet-card{
+
+width:100%;
+max-width:260px;
+
+aspect-ratio:3/4;
+
+border-radius:22px;
+overflow:hidden;
+
+position:relative;
+cursor:pointer;
+
+border:2px solid rgba(255,255,255,.08);
+
+box-shadow:
+0 25px 80px rgba(0,0,0,.9),
+0 0 30px rgba(255,255,255,.05);
+
+transition:.25s;
+
+background:#000;
+}
+
+.bet-card.dragon{
+border-color:#ff4040;
+}
+
+.bet-card.tiger{
+border-color:#4090ff;
+}
+
+.bet-card.phoenix{
+border-color:#ff9b00;
+}
+
+.bet-card img{
+width:100%;
+height:100%;
+object-fit:cover;
+}
+
+/* overlay */
+
+.bet-overlay{
+
+position:absolute;
+bottom:-9px;
+left:0;
+right:0;
+
+padding:0px;
+
+background:linear-gradient(
+transparent,
+rgba(0,0,0,.8)
+);
+
+display:flex;
+justify-content:center;
+align-items:center;
+
+}
+
+
+.bet-amount{
+
+font-size:18px;
+font-weight:800;
+color:#ffd700;
+text-shadow:
+0 0 10px gold,
+0 0 20px gold;
+padding:6px 14px;
+
+}
+
+
+
+.history-bar{
+display:flex;
+gap:1px;
+padding:6px 0px;
+justify-content:center;
+}
+
+.history-item{
+width:40px;
+height:40px;
+border-radius:0px;
+display:flex;
+align-items:center;
+justify-content:center;
+background:#0a0a0a;
+border:1px solid rgba(255,255,255,.1);
+}
+
+.history-icon{
+width:38px;
+height:38px;
+object-fit:contain;
+filter:drop-shadow(0 0 6px rgba(255,215,0,.4));
+}
+
+
+.history-head .history-icon{
+width:25px;
+height:25px;
+opacity:1.9;
+}
+
+.history-dragon{
+background:#8b0000;
+}
+
+.history-tiger{
+background:#0b3d91;
+}
+
+.history-phoenix{
+background:#ff8c00;
+}
+
+
+.history-row.dragon{border-left:3px solid #ff4040;}
+.history-row.tiger{border-left:3px solid #4090ff;}
+.history-row.phoenix{border-left:3px solid #ff9b00;}
+
+
+/* BACK BUTTON */
+
+.back-btn{
+
+position:relative;
+z-index:2;
+
+width:44px;
+height:44px;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+cursor:pointer;
+transition:.25s;
+
+}
+
+.back-btn img{
+
+width:100%;
+height:100%;
+
+object-fit:contain;
+
+filter:
+drop-shadow(0 0 6px rgba(255,215,0,.5));
+
+}
+
+.back-btn:hover{
+
+transform:scale(1.2);
+
+filter:drop-shadow(0 0 12px gold);
+
+}
+
+
+/* GAME TITLE */
+
+.game-title{
+
+position:absolute;
+
+left:50%;
+transform:translateX(-50%);
+
+font-size:15px;
+font-weight:800;
+
+letter-spacing:1px;
+
+opacity:.9;
+
+white-space:nowrap;
+
+}
+
+
+
+.my-history{
+
+position:fixed;
+inset:0;
+
+background:rgba(0,0,0,.9);
+
+display:none;   /* 🔥 mặc định ẩn */
+
+align-items:center;
+justify-content:center;
+
+z-index:50;
+
+}
+
+.my-history-box{
+
+width:90%;
+max-width:420px;
+
+background:#0a0a0a;
+
+border-radius:16px;
+
+padding:20px;
+
+border:1px solid rgba(255,255,255,.1);
+
+}
+
+.my-history-title{
+
+font-weight:800;
+margin-bottom:10px;
+
+}
+
+.history-row{
+
+display:flex;
+justify-content:space-between;
+
+padding:6px 0;
+
+border-bottom:1px solid rgba(255,255,255,.05);
+
+}
+
+.close-history{
+
+margin-top:10px;
+
+text-align:center;
+
+padding:8px;
+
+background:#222;
+
+border-radius:8px;
+
+cursor:pointer;
+
+}
+
+
+
+/* ================= FLOAT HISTORY BUTTON ================= */
+
+
+.history-table{
+font-size:13px;
+}
+
+.history-head,
+.history-row{
+
+display:grid;
+
+/* 6 cột */
+grid-template-columns:
+60px   /* round */
+1fr    /* dragon */
+1fr    /* tiger */
+1fr    /* phoenix */
+70px   /* result */
+70px;  /* P/L */
+
+align-items:center;
+text-align:center;
+
+}
+
+/* header style */
+
+.history-head{
+
+padding:6px 0;
+font-weight:700;
+opacity:.6;
+
+border-bottom:1px solid rgba(255,255,255,.1);
+margin-bottom:6px;
+
+}
+
+/* row style */
+
+.history-row{
+
+padding:8px 0;
+border-bottom:1px solid rgba(255,255,255,.05);
+font-weight:600;
+
+}
+
+/* căn giữa nội dung */
+
+.history-head div,
+.history-row div{
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+}
+
+/* win */
+
+.history-win{
+color:#00ff9c;
+}
+
+/* lose */
+
+.history-lose{
+color:#ff5a5a;
+}
+
+
+
+.history-stats{
+
+display:flex;
+justify-content:space-between;
+
+margin-bottom:12px;
+font-size:12px;
+opacity:.8;
+
+}
+
+.stat span{
+
+display:block;
+
+font-size:16px;
+font-weight:800;
+
+margin-top:3px;
+
+}
+
+#historyProfit{
+color:#00ff9c;
+}
+
+#historyWinrate{
+color:#ffd700;
+}
+
+/* scroll */
+
+#myHistoryList{
+
+max-height:260px;
+overflow-y:auto;
+padding-right:4px;
+
+}
+
+/* scroll đẹp */
+
+#myHistoryList::-webkit-scrollbar{
+width:4px;
+}
+
+#myHistoryList::-webkit-scrollbar-thumb{
+background:#333;
+border-radius:10px;
+}
+
+/* big win */
+
+.history-bigwin{
+color:#ffd700;
+font-weight:900;
+text-shadow:0 0 10px gold;
+}
+
+
+
+.flying-chip{
+position:fixed;
+width:60px;
+height:60px;
+pointer-events:none;
+z-index:999;
+transition:all .6s cubic-bezier(.2,.8,.2,1);
+}
+
+
+
+
+
+.win-explosion{
+
+position:absolute;
+inset:0;
+
+background:
+radial-gradient(circle,
+rgba(255,215,0,.9),
+rgba(255,215,0,.2),
+transparent 70%);
+
+animation:explode .7s ease-out;
+pointer-events:none;
+
+}
+
+@keyframes explode{
+
+0%{
+transform:scale(.3);
+opacity:1;
+}
+
+100%{
+transform:scale(2.5);
+opacity:0;
+}
+
+}
+
+
+
+.bet-progress{
+
+width:240px;
+height:6px;
+
+background:#111;
+border-radius:20px;
+
+margin-top:12px;
+
+overflow:hidden;
+
+}
+
+#betBar{
+
+height:100%;
+width:100%;
+
+background:linear-gradient(
+90deg,
+#00ff9c,
+#ffd700,
+#ff4040
+);
+
+transition:width 1s linear;
+
+}
+
+
+
+.pool-display{
+
+margin-top:6px;
+
+font-size:12px;
+font-weight:700;
+
+padding:4px 12px;
+
+border-radius:20px;
+
+background:rgba(0,0,0,.8);
+border:1px solid rgba(255,255,255,.15);
+
+color:#ffd700;
+
+box-shadow:
+0 0 10px rgba(255,215,0,.3);
+
+}
+
+
+.pool-display.bump{
+animation:bump .25s;
+}
+
+@keyframes bump{
+0%{transform:translateX(-50%) scale(1)}
+50%{transform:translateX(-50%) scale(1.2)}
+100%{transform:translateX(-50%) scale(1)}
+}
+
+
+
+
+/* ================= BALANCE BAR PREMIUM ================= */
+
+.balance-bar{
+
+position:fixed;
+
+bottom:115px;
+left:50%;
+transform:translateX(-50%);
+
+display:flex;
+align-items:center;
+
+gap:14px;
+
+width:340px;
+height:52px;
+
+padding:0 16px;
+
+border-radius:14px;
+
+background:
+linear-gradient(180deg,#111,#000);
+
+border:1px solid rgba(255,255,255,.15);
+
+box-shadow:
+0 15px 40px rgba(0,0,0,.9),
+0 0 20px rgba(0,255,200,.2);
+
+z-index:25;
+
+overflow:hidden;
+
+}
+
+
+/* shine effect */
+
+.balance-bar::before{
+
+content:"";
+
+position:absolute;
+
+top:0;
+left:-120%;
+
+width:120%;
+height:100%;
+
+background:
+linear-gradient(
+120deg,
+transparent,
+rgba(255,255,255,.15),
+transparent
+);
+
+animation:balanceShine 4s infinite;
+
+}
+
+@keyframes balanceShine{
+
+0%{ left:-120%; }
+100%{ left:120%; }
+
+}
+
+
+/* icon */
+
+.balance-left{
+
+width:32px;
+height:32px;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+}
+
+.balance-left img{
+
+width:100%;
+height:100%;
+object-fit:contain;
+
+filter:
+drop-shadow(0 0 6px rgba(255,120,120,.8));
+
+}
+
+
+/* center */
+
+.balance-center{
+
+display:flex;
+flex-direction:column;
+
+}
+
+
+/* label */
+
+.balance-title{
+
+font-size:10px;
+
+letter-spacing:2px;
+
+opacity:.6;
+
+}
+
+
+/* value */
+
+.balance-value{
+
+font-size:22px;
+font-weight:900;
+
+color:#00ffd5;
+
+text-shadow:
+0 0 8px rgba(0,255,200,.7),
+0 0 18px rgba(0,255,200,.4);
+
+}
+
+
+.coin-pop{
+animation:coinPop .3s;
+}
+
+@keyframes coinPop{
+
+0%{transform:scale(1)}
+50%{transform:scale(1.3)}
+100%{transform:scale(1)}
+
+}
+
+
+
+/* history button inside balance */
+
+.balance-history{
+
+margin-left:auto;
+
+width:40px;
+height:40px;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+cursor:pointer;
+
+transition:.25s;
+
+}
+
+.balance-history img{
+
+width:100%;
+height:100%;
+
+object-fit:contain;
+
+filter:
+drop-shadow(0 0 6px rgba(255,215,0,.5));
+
+}
+
+.balance-history:hover{
+
+transform:scale(1.15);
+
+filter:drop-shadow(0 0 10px gold);
+
+}
+
+
+
+/* ================= PAYOUT TEXT ================= */
+
+.payout-text{
+
+margin-top:8px;
+
+font-size:14px;
+font-weight:900;
+
+letter-spacing:1px;
+
+text-align:center;
+
+}
+
+/* dragon */
+
+.dragon-pay{
+color:#ff4040;
+text-shadow:0 0 8px rgba(255,80,80,.8);
+}
+
+/* tiger */
+
+.tiger-pay{
+color:#4090ff;
+text-shadow:0 0 8px rgba(80,150,255,.8);
+}
+
+/* phoenix */
+
+.phoenix-pay{
+color:#ff9b00;
+text-shadow:0 0 8px rgba(255,180,80,.8);
+}
+
+
+/* card column */
+
+.bet-col{
+
+display:flex;
+flex-direction:column;
+align-items:center;
+
+width:28%;
+max-width:260px;
+
+}
+
+
+
+/* ================= HELP BUTTON ================= */
+
+.help-btn{
+
+margin-left:auto;
+
+width:42px;
+height:42px;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+cursor:pointer;
+
+transition:.25s;
+
+}
+
+.help-btn img{
+
+width:100%;
+height:100%;
+
+object-fit:contain;
+
+filter:
+drop-shadow(0 0 6px rgba(255,215,0,.6));
+
+}
+
+.help-btn:hover{
+
+transform:scale(1.2);
+
+filter:drop-shadow(0 0 12px gold);
+
+}
+
+
+
+
+/* ================= GUIDE MODAL ================= */
+
+.guide-modal{
+
+position:fixed;
+inset:0;
+
+background:rgba(0,0,0,.9);
+
+display:none;
+
+align-items:center;
+justify-content:center;
+
+z-index:120;
+
+}
+
+.guide-box{
+
+width:90%;
+max-width:420px;
+
+background:#0a0a0a;
+
+border-radius:18px;
+
+padding:22px;
+
+border:1px solid rgba(255,255,255,.1);
+
+box-shadow:
+0 0 30px rgba(255,215,0,.2);
+
+}
+
+.guide-title{
+
+font-size:18px;
+font-weight:900;
+
+margin-bottom:14px;
+
+text-align:center;
+
+letter-spacing:2px;
+
+}
+
+.guide-content{
+
+font-size:14px;
+
+line-height:1.6;
+
+opacity:.9;
+
+}
+
+.guide-close{
+
+margin-top:18px;
+
+padding:10px;
+
+text-align:center;
+
+background:#222;
+
+border-radius:10px;
+
+cursor:pointer;
+
+}
+
+
+/* ================= GUIDE STEP ================= */
+
+.guide-step{
+
+display:flex;
+gap:12px;
+
+margin-bottom:16px;
+
+align-items:center;
+
+background:rgba(255,255,255,.03);
+
+padding:10px;
+
+border-radius:10px;
+
+border:1px solid rgba(255,255,255,.05);
+
+}
+
+.guide-step img{
+
+width:70px;
+height:70px;
+
+object-fit:contain;
+
+border-radius:8px;
+
+}
+
+.guide-text{
+
+font-size:13px;
+line-height:1.5;
+
+}
+
+
+
+
+/* ================= MONKEY NOTIFY ================= */
+
+.notify-modal{
+position:fixed;
+inset:0;
+
+background:rgba(0,0,0,.75);
+
+display:none;
+align-items:center;
+justify-content:center;
+
+z-index:200;
+}
+
+/* container */
+
+.notify-wrap{
+position:relative;
+width:340px;
+}
+
+.notify-bg{
+width:100%;
+display:block;
+}
+
+.notify-content{
+
+position:absolute;
+
+top:150px;
+left:50%;
+
+transform:translateX(-50%);
+
+width:70%;
+text-align:center;
+
+}
+
+.notify-text{
+
+font-size:18px;
+font-weight:800;
+color:#3b1f00;
+
+margin-bottom:55px;
+
+}
+
+.notify-ok-area{
+
+position:absolute;
+
+/* chỉnh vị trí theo ảnh */
+bottom:85px;
+left:50%;
+
+transform:translateX(-50%);
+
+width:125px;
+height:28px;
+
+cursor:pointer;
+
+}
+
+
+
+/* ================= ORIENTATION LOCK ================= */
+
+.rotate-lock{
+position:fixed;
+inset:0;
+
+background:#000;
+
+display:none;
+align-items:center;
+justify-content:center;
+
+z-index:9999;
+
+font-size:22px;
+font-weight:800;
+
+text-align:center;
+color:#ffd700;
+
+padding:40px;
+}
+
+@media screen and (orientation:landscape){
+
+.rotate-lock{
+display:flex;
+}
+
+body > *:not(.rotate-lock){
+display:none !important;
+}
+
+}
+
+
+
+
+
+
+
+/* ================= CINEMATIC LOADER ================= */
+
+.loading-overlay{
+position:fixed;
+inset:0;
+
+background:
+linear-gradient(
+rgba(0,0,0,.1),
+rgba(0,0,0,.1)
+),
+url("/assets/dtp/btp-loading.jpg");
+
+background-size:cover;
+background-position:center;
+
+display:flex;
+align-items:flex-end;
+justify-content:center;
+
+padding-bottom:140px;
+
+z-index:10000;
+}
+
+
+.loading-overlay::after{
+
+content:"";
+
+position:absolute;
+
+inset:0;
+
+background-image:
+radial-gradient(circle,rgba(255,180,80,.6) 2px,transparent 2px);
+
+background-size:120px 120px;
+
+opacity:.2;
+
+animation:embersMove 30s linear infinite;
+
+pointer-events:none;
+
+}
+
+@keyframes embersMove{
+
+0%{background-position:0 0}
+100%{background-position:400px 800px}
+
+}
+
+
+
+/* center */
+
+.loading-center{
+width:80%;
+max-width:320px;
+text-align:center;
+}
+
+
+/* spinner */
+
+.loading-spinner{
+
+width:70px;
+height:70px;
+
+margin:0 auto 26px auto;
+
+border-radius:50%;
+
+border:6px solid rgba(255,255,255,.1);
+border-top:6px solid #ffd700;
+
+animation:spin 1s linear infinite;
+
+filter:
+drop-shadow(0 0 10px gold);
+
+}
+
+@keyframes spin{
+0%{transform:rotate(0deg)}
+100%{transform:rotate(360deg)}
+}
+
+
+/* progress bar */
+
+.loading-bar{
+
+width:100%;
+height:12px;
+
+border-radius:30px;
+
+background:
+linear-gradient(
+180deg,
+#1a1a1a,
+#050505
+);
+
+border:2px solid rgba(255,215,0,.4);
+
+overflow:hidden;
+
+box-shadow:
+inset 0 2px 6px rgba(0,0,0,.8),
+0 0 15px rgba(255,215,0,.35);
+
+position:relative;
+
+}
+
+
+/* progress */
+
+.loading-progress{
+
+height:100%;
+width:0%;
+
+background:
+linear-gradient(
+90deg,
+#ff3c3c,
+#ff9b00,
+#ffd700,
+#00ff9c,
+#ffd700,
+#ff9b00,
+#ff3c3c
+);
+
+background-size:400% 100%;
+
+animation:progressFire 1.6s linear infinite;
+
+box-shadow:
+0 0 10px #ffd700,
+0 0 25px rgba(255,215,0,.8),
+0 0 50px rgba(255,150,0,.6);
+
+transition:width .2s linear;
+
+}
+
+@keyframes progressFire{
+
+0%{background-position:0%}
+100%{background-position:400%}
+
+}
+
+
+.loading-progress::after{
+
+content:"";
+
+position:absolute;
+
+top:0;
+left:-40%;
+
+width:40%;
+height:100%;
+
+background:
+linear-gradient(
+120deg,
+transparent,
+rgba(255,255,255,.5),
+transparent
+);
+
+animation:shine 2s infinite;
+
+}
+
+@keyframes shine{
+
+0%{ left:-40%; }
+100%{ left:120%; }
+
+}
+
+.loading-center::before{
+
+content:"";
+
+position:absolute;
+
+width:240px;
+height:240px;
+
+left:50%;
+top:-80px;
+
+transform:translateX(-50%);
+
+background:
+radial-gradient(
+circle,
+rgba(255,215,0,.35),
+rgba(255,215,0,.08),
+transparent 70%
+);
+
+filter:blur(20px);
+
+animation:auraPulse 3s infinite;
+
+pointer-events:none;
+
+}
+
+@keyframes auraPulse{
+
+0%{transform:translateX(-50%) scale(.9)}
+50%{transform:translateX(-50%) scale(1.1)}
+100%{transform:translateX(-50%) scale(.9)}
+
+}
+
+/* text */
+
+.loading-text{
+
+margin-top:14px;
+
+font-size:13px;
+
+letter-spacing:2px;
+
+color:#ffd700;
+
+text-shadow:
+0 0 8px rgba(255,215,0,.8);
+
+animation:loadingPulse 1.5s infinite;
+
+}
+
+
+/* pulse */
+
+@keyframes loadingPulse{
+
+0%{opacity:.3}
+50%{opacity:1}
+100%{opacity:.3}
+
+}
+
+
+
+.revealFlash{
+  position:fixed;
+  inset:0;
+  background:#fff7cc;
+  opacity:0;
+  pointer-events:none;
+  z-index:10001;
+  animation:revealFlashOut .6s ease;
+}
+
+@keyframes revealFlashOut{
+  0%{ opacity:.45; }
+  100%{ opacity:0; }
+}
+
+
+
+
+/* =============================================
+   DRAGON - TIGER - PHOENIX
+   FULL BACKGROUND + HITBOX
+   REFERENCE IMAGE: 882 x 1784
+   MOBILE FRAME: MAX 430px
+============================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background: #000;
+}
+
+body::before {
+  display: none;
+}
+
+/* ========== BACKGROUND ========== */
+
+.dtp-screen {
+  position: relative;
+  isolation: isolate;
+  z-index: 1;
+
+  width: 100%;
+  max-width: 430px;
+
+  height: 100vh;
+  height: 100dvh;
+
+  margin: 0 auto;
+  padding: 0;
+  overflow: hidden;
+
+  background-image:
+    url("/assets/dtp/dragon_tiger_phoenix_casino_interface.png");
+
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ========== CLEAR OLD STYLES ========== */
+
+.dtp-screen .dtp-hit,
+.dtp-screen .dtp-beast,
+.dtp-screen .dtp-chip {
+  appearance: none;
+  -webkit-appearance: none;
+
+  position: absolute;
+  display: block;
+
+  margin: 0;
+  padding: 0;
+
+  border: 0 !important;
+  border-radius: 0;
+  outline: none;
+
+  background: transparent !important;
+  box-shadow: none !important;
+
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  transform: none;
+  transition: none;
+
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.dtp-screen .dtp-hit:focus-visible,
+.dtp-screen .dtp-beast:focus-visible,
+.dtp-screen .dtp-chip:focus-visible {
+  outline: 2px solid #ffe1a3 !important;
+  outline-offset: -3px;
+}
+
+/* ========== EXIT / HELP ========== */
+
+.dtp-screen .dtp-exit {
+  left: 1.4%;
+  top: 2.35%;
+  width: 19.8%;
+  height: 3.7%;
+  z-index: 8;
+}
+
+.dtp-screen .dtp-help {
+  right: 1.7%;
+  top: 2.35%;
+  width: 19.1%;
+  height: 3.7%;
+  z-index: 8;
+}
+
+/* ========== LAST 8 RESULTS ========== */
+
+.dtp-screen .dtp-recent {
+  position: absolute;
+
+  left: 61px;
+  top: 127px;
+
+  width: 308px;
+  height: 31px;
+
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  align-items: center;
+  gap: 3%;
+
+  padding: 0;
+  margin: 0;
+
+  background: none;
+  border: none;
+  box-shadow: none;
+
+  overflow: hidden;
+  z-index: 5;
+}
+
+.dtp-screen .history-item {
+  width: 100%;
+  height: 100%;
+
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.dtp-screen .history-icon {
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+  filter: drop-shadow(0 0 3px #000);
+}
+
+/* ========== LIVE DATA BASE ========== */
+
+.dtp-screen .dtp-data {
+  position: absolute;
+  z-index: 6;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin: 0;
+  padding: 0 2px;
+
+  background: transparent;
+  border: 0;
+
+  color: #ffe4ac;
+  font-weight: 900;
+  text-align: center;
+
+  white-space: nowrap;
+  overflow: hidden;
+
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  text-shadow: 0 2px 5px #000;
+}
+
+/* ========== ROUND ========== */
+
+.dtp-screen .dtp-round-value {
+  left: 110px;
+  top: 203px;
+
+  width: 19.2%;
+  height: 2.35%;
+
+  font-size: clamp(13px, 3.5vw, 21px);
+}
+
+/* ========== TIMER ========== */
+
+.dtp-screen .dtp-timer-value {
+  left: 239px;
+  top: 203px;
+
+  width: 19.2%;
+  height: 2.35%;
+
+  font-size: clamp(15px, 3.5vw, 24px);
+  color: #fff0c6;
+}
+
+/* ========== TIMER BAR ========== */
+
+.dtp-screen .dtp-time-track {
+  position: absolute;
+
+  left: 105px;
+  top: 231px;
+
+  width: 221px;
+  height: 11px;
+
+  overflow: hidden;
+  border-radius: 20px;
+
+  background: #120b0b;
+  z-index: 6;
+}
+
+.dtp-screen #betBar {
+  display: block;
+  width: 100%;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: linear-gradient(
+    90deg,
+    #b86e27,
+    #ffe5a5,
+    #f6b735
+  );
+
+  box-shadow: none;
+  transition: width 1s linear;
+}
+
+/* ========== ANIMAL HITBOXES ========== */
+
+.dtp-screen .dtp-beast {
+  top: 266px;
+  height: 30.85%;
+  width: 31.6%;
+
+  max-width: none;
+  aspect-ratio: auto;
+
+  overflow: visible;
+  z-index: 7;
+}
+
+.dtp-screen .dtp-beast::before,
+.dtp-screen .dtp-beast::after {
+  display: none;
+}
+
+/* DRAGON */
+.dtp-screen .dtp-dragon {
+  left: 1.6%;
+}
+
+/* TIGER */
+.dtp-screen .dtp-tiger {
+  left: 34.25%;
+}
+
+/* PHOENIX */
+.dtp-screen .dtp-phoenix {
+  left: 66.9%;
+}
+
+/* CLICK EFFECT */
+.dtp-screen .dtp-beast:active {
+  outline: 2px solid rgba(255,218,135,.75) !important;
+  outline-offset: -4px;
+}
+
+/* WINNER HIGHLIGHT */
+.dtp-screen .dtp-beast.dtp-winner {
+  border-radius: 13px;
+  box-shadow:
+    inset 0 0 0 3px #ffe4a1,
+    0 0 20px rgba(255,202,96,.9) !important;
+}
+
+/* ========== MY BET VALUES ========== */
+
+.dtp-screen .dtp-bet-num {
+  position: absolute;
+
+  left: 8%;
+  bottom: 5%;
+
+  width: 84%;
+  height: 11.5%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 2px;
+  margin: 0;
+
+  background: transparent;
+  border: none;
+
+  color: #ffe9b7;
+  font-size: clamp(12px, 3.7vw, 19px);
+  font-weight: 900;
+
+  white-space: nowrap;
+  overflow: hidden;
+
+  text-shadow: 0 2px 5px #000;
+  font-variant-numeric: tabular-nums;
+
+  pointer-events: none;
+}
+
+/* ========== POOL VALUES ========== */
+
+.dtp-screen .dtp-pool {
+  top: 568px;
+  height: 2.55%;
+  width: 26.2%;
+
+  font-size: clamp(11px, 3.45vw, 17px);
+}
+
+.dtp-screen .dtp-pool-dragon {
+  left: 3.9%;
+}
+
+.dtp-screen .dtp-pool-tiger {
+  left: 36.8%;
+}
+
+.dtp-screen .dtp-pool-phoenix {
+  left: 69.35%;
+}
+
+/* POOL ANIMATION */
+.dtp-screen .dtp-pool.bump {
+  animation: dtpPoolPulse .25s ease;
+}
+
+@keyframes dtpPoolPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .55;
+  }
+}
+
+/* ========== COIN BALANCE ========== */
+
+.dtp-screen .dtp-balance-value {
+  left: 208px;
+  top: 674px;
+
+  width: 36%;
+  height: 2.8%;
+
+  justify-content: flex-start;
+
+  padding: 0 4px;
+
+  font-size: clamp(14px, 4.5vw, 22px);
+  color: #ffe2a3;
+}
+
+/* ========== MY HISTORY BUTTON ========== */
+
+.dtp-screen .dtp-history-btn {
+  left: 79.4%;
+  top: 74.4%;
+
+  width: 16%;
+  height: 6.3%;
+
+  z-index: 8;
+}
+
+/* ========== CHIPS HITBOX ========== */
+
+.dtp-screen .dtp-chip {
+  top: 721px;
+
+  width: 88px;
+  height: 80px;
+
+  border-radius: 50%;
+  overflow: visible;
+
+  z-index: 8;
+}
+
+/* Giữ ảnh chip cho JavaScript lấy src
+   nhưng không hiển thị chồng lên background */
+
+.dtp-screen .dtp-chip img {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+  opacity: 0;
+
+  pointer-events: none;
+}
+
+.dtp-screen .dtp-chip span {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* CHIP POSITIONS */
+
+.dtp-screen .dtp-chip-10 {
+  left: 18px;
+}
+
+.dtp-screen .dtp-chip-50 {
+  left: 120px;
+}
+
+.dtp-screen .dtp-chip-100 {
+  left: 220px;
+}
+
+.dtp-screen .dtp-chip-500 {
+  left: 322px;
+}
+
+/* ACTIVE CHIP */
+
+.dtp-screen .dtp-chip.active {
+  border-radius: 50%;
+}
+
+.dtp-screen .dtp-chip.active::after {
+  content: "";
+  position: absolute;
+
+  inset: 7%;
+  border-radius: 50%;
+
+  border: 2px solid rgba(255,231,165,.95);
+  box-shadow: 0 0 15px rgba(255,199,82,.65);
+
+  pointer-events: none;
+}
+
+/* ========== FLYING CHIP ========== */
+
+.flying-chip {
+  position: fixed;
+  z-index: 999;
+
+  width: 60px;
+  height: 60px;
+
+  object-fit: contain;
+  pointer-events: none;
+
+  transition: all .6s cubic-bezier(.2,.8,.2,1);
+}
+
+/* ========== RESULT POPUP ========== */
+
+.result {
+  z-index: 100;
+}
+
+.result.hidden {
+  display: none !important;
+}
+
+/* ========== DEBUG HITBOX ========== */
+
+body.dtp-debug .dtp-hit,
+body.dtp-debug .dtp-beast,
+body.dtp-debug .dtp-chip {
+  background: rgba(0,255,120,.2) !important;
+  outline: 1px dashed #00ff88 !important;
+}
+
+body.dtp-debug .dtp-beast {
+  box-shadow: inset 0 0 0 1px #00ff88 !important;
+}
+
+body.dtp-debug .dtp-chip img {
+  opacity: 0;
+}
+
+/* ========== SMALL SCREEN ========== */
+
+@media (max-width: 360px) {
+  .dtp-screen .dtp-bet-num {
+    font-size: 12px;
+  }
+
+  .dtp-screen .dtp-pool {
+    font-size: 11px;
+  }
+
+  .dtp-screen .dtp-balance-value {
+    font-size: 15px;
+  }
+}
+
+
+
+/* ============================================
+   DTP - FIXED 430 x 870 COORDINATE SYSTEM
+   ALL HITBOXES USE THE SAME DESIGN SPACE
+============================================ */
+
+html,
+body {
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  background: #000 !important;
+  overscroll-behavior: none;
+}
+
+/* GAME FRAME: NEVER STRETCH */
+.dtp-screen {
+  position: fixed !important;
+
+  left: 0 !important;
+  top: 0 !important;
+
+  width: 430px !important;
+  min-width: 430px !important;
+  max-width: none !important;
+
+  height: 870px !important;
+  min-height: 870px !important;
+  max-height: none !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow: hidden !important;
+
+  background-image:
+    url("/assets/dtp/dragon_tiger_phoenix_casino_interface.png");
+
+  background-size: 430px 870px !important;
+  background-position: 0 0 !important;
+  background-repeat: no-repeat !important;
+
+  transform-origin: top left !important;
+
+  transform:
+    translate3d(
+      var(--dtp-offset-x, 0px),
+      var(--dtp-offset-y, 0px),
+      0
+    )
+    scale(var(--dtp-scale, 1)) !important;
+
+  z-index: 1;
+}
+
+/* ALL HITBOXES: FIXED PIXEL COORDINATES */
+
+.dtp-screen .dtp-hit,
+.dtp-screen .dtp-beast,
+.dtp-screen .dtp-chip {
+  position: absolute !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+/* EXIT */
+.dtp-screen .dtp-exit {
+  left: 7px !important;
+  top: 21px !important;
+  width: 79px !important;
+  height: 31px !important;
+}
+
+/* HELP */
+.dtp-screen .dtp-help {
+  left: 337px !important;
+  right: auto !important;
+  top: 21px !important;
+  width: 86px !important;
+  height: 31px !important;
+}
+
+/* LAST 8 RESULTS */
+.dtp-screen .dtp-recent {
+  position: absolute !important;
+
+  left: 61px !important;
+  top: 128px !important;
+
+  width: 308px !important;
+  height: 29px !important;
+
+  display: grid !important;
+  grid-template-columns:
+    repeat(8, minmax(0, 1fr)) !important;
+
+  gap: 2% !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.dtp-screen .history-item {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.dtp-screen .history-icon {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+/* ROUND */
+.dtp-screen .dtp-round-value {
+  left: 109px !important;
+  top: 204px !important;
+
+  width: 83px !important;
+  height: 19px !important;
+
+  font-size: 15px !important;
+}
+
+/* TIMER */
+.dtp-screen .dtp-timer-value {
+  left: 238px !important;
+  top: 204px !important;
+
+  width: 83px !important;
+  height: 19px !important;
+
+  font-size: 15px !important;
+}
+
+/* TIMER PROGRESS */
+.dtp-screen .dtp-time-track {
+  position: absolute !important;
+
+  left: 105px !important;
+  top: 231px !important;
+
+  width: 221px !important;
+  height: 11px !important;
+}
+
+/* ANIMAL HITBOXES */
+.dtp-screen .dtp-beast {
+  position: absolute !important;
+
+  top: 261px !important;
+
+  width: 136px !important;
+  height: 270px !important;
+
+  max-width: none !important;
+
+  border: 0 !important;
+  background: transparent !important;
+
+  transform: none !important;
+  z-index: 7;
+}
+
+/* DRAGON */
+.dtp-screen .dtp-dragon {
+  left: 7px !important;
+}
+
+/* TIGER */
+.dtp-screen .dtp-tiger {
+  left: 149px !important;
+  width: 132px !important;
+}
+
+/* PHOENIX */
+.dtp-screen .dtp-phoenix {
+  left: 288px !important;
+}
+
+/* MY BET VALUES */
+.dtp-screen .dtp-bet-num {
+  position: absolute !important;
+
+  left: 10px !important;
+  bottom: 12px !important;
+
+  width: calc(100% - 20px) !important;
+  height: 25px !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 2px !important;
+  font-size: 18px !important;
+
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  pointer-events: none;
+}
+
+/* POOL VALUES */
+.dtp-screen .dtp-pool {
+  position: absolute !important;
+
+  top: 569px !important;
+
+  width: 109px !important;
+  height: 22px !important;
+
+  font-size: 16px !important;
+}
+
+.dtp-screen .dtp-pool-dragon {
+  left: 20px !important;
+}
+
+.dtp-screen .dtp-pool-tiger {
+  left: 162px !important;
+}
+
+.dtp-screen .dtp-pool-phoenix {
+  left: 302px !important;
+}
+
+/* BALANCE */
+.dtp-screen .dtp-balance-value {
+  left: 204px !important;
+  top: 673px !important;
+
+  width: 148px !important;
+  height: 27px !important;
+
+  font-size: 20px !important;
+  justify-content: flex-start !important;
+}
+
+/* MY HISTORY */
+.dtp-screen .dtp-history-btn {
+  left: 340px !important;
+  top: 646px !important;
+
+  width: 72px !important;
+  height: 53px !important;
+}
+
+/* CHIPS */
+.dtp-screen .dtp-chip {
+  position: absolute !important;
+
+  top: 717px !important;
+
+  width: 96px !important;
+  height: 89px !important;
+
+  border-radius: 50% !important;
+  transform: none !important;
+}
+
+/* CHIP 10 */
+.dtp-screen .dtp-chip-10 {
+  left: 16px !important;
+}
+
+/* CHIP 50 */
+.dtp-screen .dtp-chip-50 {
+  left: 116px !important;
+}
+
+/* CHIP 100 */
+.dtp-screen .dtp-chip-100 {
+  left: 216px !important;
+}
+
+/* CHIP 500 */
+.dtp-screen .dtp-chip-500 {
+  left: 317px !important;
+}
+
+/* Keep original chip image for JS animation */
+.dtp-screen .dtp-chip img,
+.dtp-screen .dtp-chip span {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* ALL LIVE TEXT: NO DEVICE-DEPENDENT FONTS */
+.dtp-screen .dtp-data,
+.dtp-screen .dtp-bet-num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* DEBUG: SHOW HITBOXES */
+body.dtp-debug .dtp-hit,
+body.dtp-debug .dtp-beast,
+body.dtp-debug .dtp-chip {
+  outline: 2px dashed #00ff88 !important;
+  background: rgba(0,255,80,.18) !important;
+}
+
+
+
+
+
+/* ============================================
+   MYTHIC ROYAL RESULT POPUP
+   DRAGON / TIGER / PHOENIX
+============================================ */
+
+.result.dtp-result {
+  --beast-accent: #e7bf74;
+  --beast-glow: rgba(231,191,116,.28);
+
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 15px;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 45%,
+      rgba(26,28,42,.65),
+      rgba(0,0,0,.96) 75%
+    );
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Hide */
+.result.dtp-result.hidden {
+  display: none !important;
+}
+
+/* Three beast theme colors */
+.result.dtp-result[data-beast="dragon"] {
+  --beast-accent: #ff8375;
+  --beast-glow: rgba(255,73,57,.35);
+}
+
+.result.dtp-result[data-beast="tiger"] {
+  --beast-accent: #87bbff;
+  --beast-glow: rgba(55,132,255,.35);
+}
+
+.result.dtp-result[data-beast="phoenix"] {
+  --beast-accent: #ffcb72;
+  --beast-glow: rgba(255,151,33,.38);
+}
+
+/* ========== MAIN FRAME ========== */
+
+.result.dtp-result .result-box {
+  position: relative;
+
+  width: min(360px, calc(100vw - 30px));
+  max-width: 360px;
+  max-height: calc(100dvh - 30px);
+
+  padding: 26px 22px 24px;
+
+  text-align: center;
+  overflow: hidden;
+
+  border: 1px solid #af874e;
+  border-radius: 22px;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 28%,
+      rgba(76,59,41,.28),
+      transparent 58%
+    ),
+    linear-gradient(
+      155deg,
+      #25202a 0%,
+      #10121c 36%,
+      #090d16 68%,
+      #211a20 100%
+    );
+
+  box-shadow:
+    0 25px 80px rgba(0,0,0,.85),
+    0 0 50px var(--beast-glow),
+    inset 0 1px 0 rgba(255,236,190,.25),
+    inset 0 0 30px rgba(207,153,75,.08);
+
+  animation:
+    dtpResultEnter .5s
+    cubic-bezier(.2,.9,.25,1.15) both;
+
+  scrollbar-width: none;
+  overflow-y: auto;
+}
+
+.result.dtp-result .result-box::-webkit-scrollbar {
+  display: none;
+}
+
+/* Inner frame */
+.result.dtp-result .result-box::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+
+  border: 1px solid rgba(230,187,109,.19);
+  border-radius: 16px;
+
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Top decorative jewel */
+.result.dtp-result .result-box::after {
+  content: "◆";
+
+  position: absolute;
+  left: 50%;
+  top: -7px;
+
+  transform: translateX(-50%);
+
+  padding: 0 9px;
+
+  color: #f4d696;
+  background: #211c24;
+
+  font-size: 15px;
+  z-index: 3;
+}
+
+/* Content above glow */
+.result.dtp-result .result-box > *:not(.result-glow) {
+  position: relative;
+  z-index: 2;
+}
+
+/* ========== HEADER ========== */
+
+.result.dtp-result .result-kicker {
+  color: #bda77e;
+
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.7px;
+  line-height: 1.5;
+}
+
+.result.dtp-result .result-kicker-dot {
+  display: inline-block;
+  margin: 0 6px;
+  color: #e2b771;
+  font-size: 8px;
+}
+
+.result.dtp-result .result-title {
+  margin: 10px 0 0;
+
+  color: #f7ddb0;
+  font-size: clamp(18px, 5vw, 23px);
+  font-weight: 900;
+  letter-spacing: 1.3px;
+
+  line-height: 1.25;
+  opacity: 1;
+
+  text-shadow:
+    0 2px 8px rgba(0,0,0,.65);
+}
+
+/* Divider */
+.result.dtp-result .result-rule {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  width: 82%;
+  margin: 13px auto 10px;
+}
+
+.result.dtp-result .result-rule span {
+  flex: 1;
+  height: 1px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #a7834c
+  );
+}
+
+.result.dtp-result .result-rule span:last-child {
+  transform: rotate(180deg);
+}
+
+.result.dtp-result .result-rule i {
+  font-style: normal;
+  font-size: 10px;
+  color: #ebc985;
+}
+
+/* ========== WINNING BEAST NAME ========== */
+
+.result.dtp-result .result-name {
+  margin: 6px 0 0;
+
+  font-size: clamp(25px, 8vw, 34px);
+  font-weight: 1000;
+  letter-spacing: 2px;
+  line-height: 1.15;
+
+  color: var(--beast-accent);
+
+  text-shadow:
+    0 2px 5px #000,
+    0 0 17px var(--beast-glow);
+
+  animation: dtpNameReveal .5s ease both;
+}
+
+/* ========== BEAST IMAGE ========== */
+
+.result.dtp-result .result-image {
+  position: relative;
+
+  width: min(238px, 64vw);
+  height: clamp(145px, 27dvh, 223px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin: 4px auto 9px;
+  isolation: isolate;
+}
+
+.result.dtp-result .result-halo {
+  position: absolute;
+  left: 50%;
+  top: 51%;
+
+  width: 90%;
+  aspect-ratio: 1;
+
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      var(--beast-glow) 0%,
+      rgba(255,215,140,.08) 40%,
+      transparent 73%
+    );
+
+  filter: blur(12px);
+  z-index: 0;
+
+  animation: dtpHaloBreath 2.7s ease-in-out infinite;
+}
+
+.result.dtp-result .result-image::before {
+  content: "";
+
+  position: absolute;
+  left: 50%;
+  top: 50%;
+
+  width: 83%;
+  aspect-ratio: 1;
+
+  transform: translate(-50%, -50%);
+
+  border-radius: 50%;
+  border: 1px solid rgba(231,190,112,.29);
+
+  box-shadow:
+    inset 0 0 22px var(--beast-glow),
+    0 0 14px rgba(237,192,107,.10);
+
+  z-index: 0;
+}
+
+.result.dtp-result .result-image img {
+  position: relative;
+  z-index: 1;
+
+  display: block;
+  width: 100%;
+  height: 100%;
+
+  margin: 0;
+  object-fit: contain;
+
+  filter:
+    drop-shadow(0 8px 12px rgba(0,0,0,.75))
+    drop-shadow(0 0 11px var(--beast-glow));
+
+  animation: dtpBeastFloat 2.8s ease-in-out infinite;
+}
+
+/* ========== PROFIT SECTION ========== */
+
+.result.dtp-result .result-payoff {
+  padding: 15px 12px 13px;
+
+  border-radius: 13px;
+  border: 1px solid rgba(222,178,106,.3);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.045),
+      rgba(0,0,0,.22)
+    );
+
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07);
+}
+
+.result.dtp-result .result-payoff-label {
+  color: #bda984;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.35px;
+}
+
+.result.dtp-result .result-money-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 7px;
+
+  margin-top: 8px;
+}
+
+.result.dtp-result .result-profit {
+  display: block;
+
+  margin: 0;
+
+  font-size: clamp(29px, 9vw, 39px);
+  font-weight: 1000;
+  letter-spacing: .5px;
+  line-height: 1.15;
+
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.result.dtp-result .result-profit.win {
+  color: #67e6ad;
+  text-shadow: 0 0 15px rgba(70,235,158,.23);
+}
+
+.result.dtp-result .result-profit.lose {
+  color: #ff8585;
+  text-shadow: 0 0 15px rgba(255,80,80,.24);
+}
+
+.result.dtp-result .result-profit.even {
+  color: #edd39f;
+  text-shadow: none;
+}
+
+.result.dtp-result .result-unit {
+  color: #bfa980;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.result.dtp-result .result-message {
+  margin-top: 8px;
+
+  color: #d8c6a8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+/* ========== FOOTER ========== */
+
+.result.dtp-result .result-footer {
+  margin-top: 18px;
+
+  color: #aa987d;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.result.dtp-result .result-footer span {
+  color: #e7bd7d;
+  margin: 0 4px;
+}
+
+/* ========== CLOSE PROGRESS ========== */
+
+.result.dtp-result .result-close-progress {
+  position: absolute !important;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 3px;
+  background: rgba(255,255,255,.06);
+
+  overflow: hidden;
+}
+
+.result.dtp-result .result-close-progress::after {
+  content: "";
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  background: linear-gradient(
+    90deg,
+    #886238,
+    #fbe0a0,
+    #a67b3f
+  );
+
+  transform-origin: left;
+}
+
+.result.dtp-result:not(.hidden)
+.result-close-progress::after {
+  animation: dtpResultClose 4s linear forwards;
+}
+
+/* ========== BACKGROUND LIGHT ========== */
+
+.result.dtp-result .result-glow {
+  position: absolute;
+
+  inset: -40px;
+  z-index: 0;
+
+  background:
+    radial-gradient(
+      ellipse at center,
+      var(--beast-glow),
+      transparent 70%
+    );
+
+  opacity: .55;
+  pointer-events: none;
+
+  animation: none;
+}
+
+/* ========== ANIMATIONS ========== */
+
+@keyframes dtpResultEnter {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(.93);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dtpNameReveal {
+  from {
+    opacity: 0;
+    letter-spacing: 7px;
+  }
+  to {
+    opacity: 1;
+    letter-spacing: 2px;
+  }
+}
+
+@keyframes dtpBeastFloat {
+  0%,100% {
+    transform: translateY(2px);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes dtpHaloBreath {
+  0%,100% {
+    opacity: .55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes dtpResultClose {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+/* ========== SHORT SCREENS ========== */
+
+@media (max-height: 640px) {
+  .result.dtp-result .result-box {
+    padding: 18px 18px 20px;
+  }
+
+  .result.dtp-result .result-title {
+    font-size: 17px;
+    margin-top: 5px;
+  }
+
+  .result.dtp-result .result-rule {
+    margin: 8px auto 6px;
+  }
+
+  .result.dtp-result .result-image {
+    height: 142px;
+  }
+
+  .result.dtp-result .result-footer {
+    margin-top: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .result.dtp-result *,
+  .result.dtp-result *::before,
+  .result.dtp-result *::after {
+    animation-duration: .01ms !important;
+  }
+}
+
+
+
+
+/* ===========================================
+   MYTHIC ROYAL HISTORY - BLACK & GOLD
+=========================================== */
+
+.my-history {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  padding: 12px;
+
+  background: rgba(0,0,0,.82);
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+}
+
+/* BACKDROP */
+
+.my-history .my-history-backdrop {
+  position: absolute;
+  inset: 0;
+}
+
+/* MAIN FRAME */
+
+.my-history .my-history-box {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  width: min(410px, 100%);
+  max-width: 410px;
+  max-height: calc(100dvh - 24px);
+
+  padding: 0;
+  overflow: hidden;
+
+  border-radius: 19px;
+  border: 1px solid #ae8750;
+
+  background:
+    radial-gradient(
+      ellipse at top,
+      rgba(95,68,31,.25),
+      transparent 45%
+    ),
+    linear-gradient(
+      160deg,
+      #22212a 0%,
+      #10141e 45%,
+      #090d15 100%
+    );
+
+  box-shadow:
+    0 25px 80px rgba(0,0,0,.85),
+    0 0 30px rgba(186,133,57,.15),
+    inset 0 1px 0 rgba(255,236,187,.2);
+
+  animation: mythicHistoryIn .3s ease-out;
+}
+
+/* HEADER */
+
+.my-history .my-history-top {
+  position: relative;
+  padding: 25px 34px 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.my-history .my-history-eyebrow {
+  color: #b69a69;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.my-history .my-history-title {
+  margin: 8px 0 5px;
+
+  color: #f4d99e;
+  font-size: 23px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  line-height: 1.2;
+
+  text-shadow: 0 2px 8px rgba(0,0,0,.55);
+}
+
+.my-history .my-history-subtitle {
+  color: #8e8e94;
+  font-size: 10px;
+  letter-spacing: 1.3px;
+}
+
+.my-history .my-history-x {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+
+  width: 31px;
+  height: 31px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(255,255,255,.035);
+  color: #c9b48c;
+
+  border: 1px solid rgba(218,186,125,.25);
+  border-radius: 9px;
+
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.my-history .my-history-divider {
+  height: 1px;
+  margin: 0 22px;
+  flex-shrink: 0;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #bc955a,
+    transparent
+  );
+}
+
+/* ========== STAT CARDS ========== */
+
+.my-history .history-stats {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 10px;
+
+  margin: 0;
+  padding: 17px 15px;
+
+  font-size: 12px;
+  opacity: 1;
+  flex-shrink: 0;
+}
+
+.my-history .stat {
+  position: relative;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 14px 5px 12px;
+
+  border: 1px solid rgba(211,177,111,.25);
+  border-radius: 12px;
+
+  background: linear-gradient(
+    160deg,
+    rgba(37,42,55,.8),
+    rgba(13,17,27,.95)
+  );
+
+  text-align: center;
+  overflow: hidden;
+}
+
+.my-history .stat::before {
+  content: "";
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  top: 0;
+  height: 1px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #e5bc76,
+    transparent
+  );
+}
+
+.my-history .stat-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  color: #bda981;
+}
+
+.my-history .stat span {
+  display: block;
+  max-width: 100%;
+
+  margin-top: 9px;
+
+  color: #68e1ab;
+  font-size: clamp(19px,5.5vw,26px);
+  font-weight: 900;
+  line-height: 1.2;
+
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.my-history #historyProfit {
+  color: #68e1ab;
+}
+
+.my-history #historyProfit.negative {
+  color: #ff8989;
+}
+
+.my-history #historyProfit.neutral {
+  color: #e4d1ad;
+}
+
+.my-history #historyWinrate {
+  color: #f2d48f;
+}
+
+.my-history .stat-caption {
+  margin-top: 7px;
+
+  color: #7f8390;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .9px;
+}
+
+/* ========== TABLE CONTAINER ========== */
+
+.my-history .history-table {
+  display: flex;
+  flex-direction: column;
+
+  min-height: 0;
+  margin: 0 13px;
+
+  border-radius: 11px;
+  border: 1px solid rgba(212,177,110,.2);
+  background: #0c111b;
+
+  overflow: hidden;
+}
+
+/* Fixed six-column layout */
+
+.my-history .history-head,
+.my-history .history-row {
+  display: grid;
+
+  grid-template-columns:
+    44px
+    repeat(3,minmax(0,1fr))
+    45px
+    62px;
+
+  gap: 1px;
+  align-items: center;
+  text-align: center;
+}
+
+/* ========== TABLE HEADER ========== */
+
+.my-history .history-head {
+  min-height: 43px;
+  flex-shrink: 0;
+
+  padding: 5px 2px;
+  margin: 0;
+
+  background: linear-gradient(
+    180deg,
+    #40301e,
+    #261f1b
+  );
+
+  border-bottom: 1px solid rgba(219,180,108,.32);
+
+  color: #f2d69d;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  opacity: 1;
+}
+
+.my-history .history-head > div,
+.my-history .history-row > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* Header animal images */
+
+.my-history .history-head .history-icon {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  opacity: 1;
+  filter: drop-shadow(0 2px 4px #000);
+}
+
+/* ========== SCROLL HISTORY ========== */
+
+.my-history #myHistoryList {
+  display: block;
+
+  min-height: 60px;
+  max-height: min(350px, 43dvh);
+
+  padding: 4px;
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #745b38 transparent;
+}
+
+.my-history #myHistoryList::-webkit-scrollbar {
+  width: 4px;
+}
+
+.my-history #myHistoryList::-webkit-scrollbar-thumb {
+  background: #745b38;
+  border-radius: 10px;
+}
+
+/* ========== HISTORY ROWS ========== */
+
+.my-history .history-row {
+  min-height: 43px;
+
+  margin: 0;
+  padding: 6px 2px;
+
+  border: 0;
+  border-bottom: 1px solid rgba(255,255,255,.045);
+
+  border-left: 0 !important;
+
+  color: #d8d9df;
+  font-size: 11px;
+  font-weight: 650;
+
+  transition: background .15s ease;
+}
+
+.my-history .history-row:nth-child(odd) {
+  background: #141a26;
+}
+
+.my-history .history-row:nth-child(even) {
+  background: #1b202b;
+}
+
+.my-history .history-row:last-child {
+  border-bottom: 0;
+}
+
+/* Round column */
+
+.my-history .history-row > div:first-child {
+  color: #cdb989;
+  font-size: 10px;
+}
+
+/* Dragon bet */
+
+.my-history .history-row > div:nth-child(2) {
+  color: #f2a0a0;
+}
+
+/* Tiger bet */
+
+.my-history .history-row > div:nth-child(3) {
+  color: #9ec7ff;
+}
+
+/* Phoenix bet */
+
+.my-history .history-row > div:nth-child(4) {
+  color: #f5ce92;
+}
+
+/* Result image */
+
+.my-history .history-row .history-icon {
+  width: 27px;
+  height: 27px;
+  object-fit: contain;
+
+  filter: drop-shadow(0 1px 4px rgba(0,0,0,.6));
+}
+
+/* Profit column */
+
+.my-history .history-row > div:last-child {
+  font-weight: 900;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.my-history .history-row.history-win > div:last-child {
+  color: #65e3aa;
+}
+
+.my-history .history-row.history-lose > div:last-child {
+  color: #ff8585;
+}
+
+.my-history .history-row.history-even > div:last-child {
+  color: #e5d0a6;
+}
+
+/* Big win - subtle gold highlight */
+
+.my-history .history-row.history-bigwin {
+  background: linear-gradient(
+    90deg,
+    rgba(128,94,39,.23),
+    rgba(25,29,40,.9)
+  );
+  text-shadow: none;
+}
+
+/* Empty history */
+
+.my-history #myHistoryList:empty::after {
+  content: "NO BET HISTORY YET";
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  min-height: 80px;
+
+  color: #948975;
+  font-size: 11px;
+  letter-spacing: 1.1px;
+}
+
+/* ========== FOOTER ========== */
+
+.my-history .my-history-footer {
+  padding: 16px 15px 17px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.my-history .my-history-footer-caption {
+  margin-bottom: 12px;
+
+  color: #8e816d;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+/* Close button */
+
+.my-history .close-history {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-height: 43px;
+
+  margin: 0;
+  padding: 10px 14px;
+
+  border: 1px solid #bc9256;
+  border-radius: 10px;
+
+  background: linear-gradient(
+    180deg,
+    #69502d,
+    #3d2d1b
+  );
+
+  color: #f9e4b9;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,234,182,.18);
+}
+
+.my-history .close-history:active {
+  transform: scale(.985);
+}
+
+.my-history button:focus-visible {
+  outline: 2px solid #f7d99a;
+  outline-offset: 2px;
+}
+
+/* ========== ANIMATION ========== */
+
+@keyframes mythicHistoryIn {
+  from {
+    opacity: 0;
+    transform: translateY(17px) scale(.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ========== SMALL PHONE ========== */
+
+@media (max-width:360px) {
+  .my-history .history-stats {
+    padding: 12px 10px;
+    gap: 8px;
+  }
+
+  .my-history .history-table {
+    margin: 0 9px;
+  }
+
+  .my-history .history-head,
+  .my-history .history-row {
+    grid-template-columns:
+      39px repeat(3,minmax(0,1fr)) 41px 55px;
+  }
+
+  .my-history .history-row {
+    font-size: 10px;
+  }
+
+  .my-history .history-row > div:last-child {
+    font-size: 10px;
+  }
+
+  .my-history .my-history-title {
+    font-size: 20px;
+  }
+}
+
+@media (max-height:650px) {
+  .my-history .my-history-top {
+    padding-top: 15px;
+    padding-bottom: 10px;
+  }
+
+  .my-history .history-stats {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .my-history .stat {
+    padding: 9px 5px;
+  }
+
+  .my-history #myHistoryList {
+    max-height: 32dvh;
+  }
+
+  .my-history .my-history-footer {
+    padding: 10px 12px;
+  }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .my-history .my-history-box {
+    animation: none;
+  }
+}
+
+
+
+/* ==========================================
+   MYTHIC ROYAL NOTIFICATION
+   LUXURY BLACK & GOLD
+========================================== */
+
+.notify-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+  padding: 16px;
+
+  background: rgba(2, 4, 9, .88);
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* MAIN CONTAINER */
+
+.notify-modal .notify-wrap {
+  position: relative;
+
+  box-sizing: border-box;
+  width: min(365px, 100%);
+  max-height: calc(100dvh - 32px);
+
+  padding: 34px 24px 23px;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  border: 1px solid #b28c52;
+  border-radius: 20px;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(190, 141, 61, .16),
+      transparent 60%
+    ),
+    linear-gradient(
+      155deg,
+      #20212a 0%,
+      #11151f 45%,
+      #080b12 100%
+    );
+
+  box-shadow:
+    0 25px 80px rgba(0,0,0,.8),
+    0 0 32px rgba(200,153,77,.14),
+    inset 0 1px 0 rgba(255,239,199,.18);
+
+  text-align: center;
+
+  animation: notifyRoyalIn .3s ease both;
+}
+
+/* INNER GOLD BORDER */
+
+.notify-modal .notify-wrap::before {
+  content: "";
+  position: absolute;
+
+  inset: 6px;
+  border: 1px solid rgba(214,178,111,.2);
+  border-radius: 14px;
+
+  pointer-events: none;
+}
+
+/* TOP GOLDEN LINE */
+
+.notify-modal .notify-topline {
+  position: absolute;
+  top: 0;
+  left: 25%;
+  right: 25%;
+
+  height: 2px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #ffe3a2,
+    transparent
+  );
+}
+
+/* NOTICE SYMBOL */
+
+.notify-modal .notify-symbol {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 18px;
+
+  border-radius: 50%;
+  border: 1px solid #b9955c;
+
+  background:
+    radial-gradient(
+      circle at 35% 25%,
+      #58442a,
+      #201a16 72%
+    );
+
+  box-shadow:
+    0 0 0 6px rgba(196,145,70,.06),
+    0 0 20px rgba(230,176,81,.16),
+    inset 0 1px 0 rgba(255,236,176,.2);
+}
+
+.notify-modal .notify-symbol span {
+  color: #f9dfaa;
+  font-family: Georgia, serif;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* BRAND */
+
+.notify-modal .notify-brand {
+  margin-bottom: 8px;
+
+  color: #ac956e;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+/* TITLE */
+
+.notify-modal .notify-title {
+  margin: 0;
+
+  color: #f7dcaa;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  line-height: 1.35;
+
+  text-shadow: 0 2px 8px rgba(0,0,0,.65);
+}
+
+/* DIVIDER */
+
+.notify-modal .notify-divider {
+  position: relative;
+
+  width: 78%;
+  height: 1px;
+  margin: 19px auto;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #b18a54,
+    transparent
+  );
+}
+
+.notify-modal .notify-divider::after {
+  content: "◆";
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  padding: 0 9px;
+
+  background: #161821;
+  color: #d4af70;
+
+  font-size: 9px;
+}
+
+/* CONTENT - OVERRIDE OLD ABSOLUTE POSITION */
+
+.notify-modal .notify-content {
+  position: relative;
+
+  top: auto;
+  left: auto;
+
+  transform: none;
+
+  width: 100%;
+  margin: 0;
+  padding: 0;
+
+  text-align: center;
+}
+
+/* MAIN MESSAGE */
+
+.notify-modal .notify-text {
+  margin: 0;
+  padding: 0;
+
+  color: #f1e9dc;
+  font-size: 17px;
+  font-weight: 750;
+  line-height: 1.55;
+
+  overflow-wrap: anywhere;
+}
+
+/* DESCRIPTION */
+
+.notify-modal .notify-description {
+  margin: 10px 0 0;
+
+  color: #aaa49b;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.6;
+
+  overflow-wrap: anywhere;
+}
+
+.notify-modal .notify-description:empty {
+  display: none;
+}
+
+/* CONFIRM BUTTON */
+
+.notify-modal .notify-confirm {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+
+  width: 100%;
+  min-height: 48px;
+
+  margin-top: 27px;
+  padding: 12px 16px;
+
+  border: 1px solid #d0a767;
+  border-radius: 11px;
+
+  background: linear-gradient(
+    180deg,
+    #796039,
+    #4e3922 65%,
+    #3b2a1b
+  );
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,232,175,.32),
+    0 6px 16px rgba(0,0,0,.26);
+
+  color: #ffe6b4;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 1.7px;
+
+  cursor: pointer;
+  touch-action: manipulation;
+
+  transition:
+    background .18s ease,
+    transform .18s ease;
+}
+
+.notify-modal .notify-confirm:active {
+  transform: scale(.98);
+
+  background: linear-gradient(
+    180deg,
+    #9c7a47,
+    #624626
+  );
+}
+
+.notify-modal .notify-confirm:focus-visible {
+  outline: 2px solid #ffe2a2;
+  outline-offset: 3px;
+}
+
+/* FOOTER */
+
+.notify-modal .notify-footer {
+  margin-top: 19px;
+
+  color: #857760;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.35px;
+}
+
+/* STATE COLORS */
+
+.notify-modal[data-type="warning"] .notify-symbol {
+  border-color: #e4ab58;
+}
+
+.notify-modal[data-type="warning"] .notify-symbol span {
+  color: #ffc776;
+}
+
+.notify-modal[data-type="error"] .notify-symbol {
+  border-color: #ca6b6b;
+  background: linear-gradient(145deg,#4a2428,#211519);
+}
+
+.notify-modal[data-type="error"] .notify-symbol span {
+  color: #ffa2a2;
+}
+
+.notify-modal[data-type="success"] .notify-symbol {
+  border-color: #67b58b;
+  background: linear-gradient(145deg,#244535,#131e1b);
+}
+
+.notify-modal[data-type="success"] .notify-symbol span {
+  color: #80ebae;
+}
+
+/* OPEN ANIMATION */
+
+@keyframes notifyRoyalIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* SMALL DEVICES */
+
+@media (max-width: 360px) {
+  .notify-modal {
+    padding: 12px;
+  }
+
+  .notify-modal .notify-wrap {
+    padding: 28px 19px 21px;
+  }
+
+  .notify-modal .notify-title {
+    font-size: 19px;
+  }
+
+  .notify-modal .notify-text {
+    font-size: 15px;
+  }
+}
+
+@media (max-height: 550px) {
+  .notify-modal .notify-wrap {
+    padding-top: 17px;
+    padding-bottom: 14px;
+  }
+
+  .notify-modal .notify-symbol {
+    width: 42px;
+    height: 42px;
+    margin-bottom: 10px;
+  }
+
+  .notify-modal .notify-symbol span {
+    font-size: 24px;
+  }
+
+  .notify-modal .notify-divider {
+    margin: 12px auto;
+  }
+
+  .notify-modal .notify-confirm {
+    margin-top: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notify-modal .notify-wrap {
+    animation: none;
+  }
+}
+
+
+
+/* =========================================
+   MYTHIC ROYAL GUIDE
+   LUXURY BLACK & GOLD
+========================================= */
+
+#guideModal {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  padding: 14px;
+  box-sizing: border-box;
+
+  background: rgba(2, 4, 9, .88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* BACKDROP */
+
+#guideModal .guide-backdrop {
+  position: absolute;
+  inset: 0;
+}
+
+/* MAIN CONTAINER */
+
+#guideModal .guide-box {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  box-sizing: border-box;
+
+  width: min(410px, 100%);
+  max-width: 410px;
+
+  max-height: calc(100vh - 28px);
+  max-height: calc(100dvh - 28px);
+
+  margin: 0;
+  padding: 0;
+
+  overflow: hidden;
+
+  border-radius: 20px;
+  border: 1px solid #ad874e;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(160, 111, 43, .17),
+      transparent 48%
+    ),
+    linear-gradient(
+      160deg,
+      #22232d 0%,
+      #111520 46%,
+      #080c14 100%
+    );
+
+  box-shadow:
+    0 25px 80px rgba(0,0,0,.85),
+    0 0 28px rgba(199,151,77,.12),
+    inset 0 1px 0 rgba(255,231,181,.18);
+
+  animation: guideRoyalOpen .28s ease-out;
+}
+
+/* INNER BORDER */
+
+#guideModal .guide-box::before {
+  content: "";
+
+  position: absolute;
+  inset: 5px;
+
+  border: 1px solid rgba(214,173,107,.15);
+  border-radius: 15px;
+
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* HEADER */
+
+#guideModal .guide-header {
+  position: relative;
+  z-index: 1;
+
+  padding: 25px 44px 17px;
+
+  flex-shrink: 0;
+  text-align: center;
+}
+
+#guideModal .guide-brand {
+  color: #bca16f;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+#guideModal .guide-title {
+  margin: 9px 0 5px;
+
+  color: #f7dda8;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: 1.4px;
+
+  text-shadow: 0 2px 8px rgba(0,0,0,.6);
+}
+
+#guideModal .guide-subtitle {
+  color: #9f998c;
+  font-size: 10px;
+  letter-spacing: 1.2px;
+}
+
+/* CLOSE X */
+
+#guideModal .guide-x {
+  position: absolute;
+  top: 13px;
+  right: 13px;
+
+  width: 32px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(211,176,112,.3);
+  border-radius: 9px;
+
+  background: rgba(255,255,255,.04);
+
+  color: #d6bd90;
+  font-size: 23px;
+  line-height: 1;
+
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* GOLD DIVIDER */
+
+#guideModal .guide-divider {
+  height: 1px;
+  flex-shrink: 0;
+
+  margin: 0 23px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #bb9459,
+    transparent
+  );
+}
+
+/* CONTENT */
+
+#guideModal .guide-content {
+  position: relative;
+  z-index: 1;
+
+  flex: 1;
+  min-height: 0;
+
+  padding: 17px 14px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  opacity: 1;
+
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+
+  scrollbar-width: thin;
+  scrollbar-color: #79603d transparent;
+}
+
+#guideModal .guide-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+#guideModal .guide-content::-webkit-scrollbar-thumb {
+  background: #79603d;
+  border-radius: 8px;
+}
+
+/* STEP CARD */
+
+#guideModal .guide-step {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  flex: 0 0 auto;
+  gap: 13px;
+
+  min-height: 93px;
+  margin: 0;
+  padding: 12px;
+
+  border-radius: 12px;
+  border: 1px solid rgba(219,183,117,.19);
+
+  background: linear-gradient(
+    135deg,
+    rgba(37,41,52,.85),
+    rgba(15,19,30,.95)
+  );
+
+  transition:
+    border-color .2s ease,
+    background .2s ease;
+}
+
+/* SUBTLE GOLD DETAIL */
+
+#guideModal .guide-step::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  top: 20%;
+  bottom: 20%;
+
+  width: 2px;
+  border-radius: 2px;
+
+  background: linear-gradient(
+    180deg,
+    transparent,
+    #d2a767,
+    transparent
+  );
+}
+
+/* IMAGE AREA */
+
+#guideModal .guide-step-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 72px;
+
+  width: 72px;
+  height: 72px;
+
+  overflow: hidden;
+}
+
+/* GUIDE IMAGE */
+
+#guideModal .guide-step img {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  border: 0;
+  border-radius: 0;
+
+  filter: drop-shadow(
+    0 3px 7px rgba(0,0,0,.5)
+  );
+}
+
+/* TEXT CONTENT */
+
+#guideModal .guide-text {
+  min-width: 0;
+  flex: 1;
+
+  color: #ded7cb;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+#guideModal .guide-step-label {
+  color: #b99a6e;
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+
+  margin-bottom: 3px;
+}
+
+#guideModal .guide-step-title {
+  color: #f2d49c;
+
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .45px;
+
+  margin-bottom: 5px;
+}
+
+#guideModal .guide-text p {
+  margin: 0;
+
+  color: #c9c5bd;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+#guideModal .guide-text b,
+#guideModal .guide-text strong {
+  font-weight: 900;
+}
+
+/* ANIMAL COLORS */
+
+#guideModal .guide-dragon {
+  color: #ff9595;
+}
+
+#guideModal .guide-tiger {
+  color: #98c4ff;
+}
+
+#guideModal .guide-phoenix {
+  color: #ffca80;
+}
+
+/* MULTIPLIER */
+
+#guideModal .guide-multiplier {
+  color: #f3d58e;
+  white-space: nowrap;
+}
+
+/* FOOTER */
+
+#guideModal .guide-footer {
+  position: relative;
+  z-index: 2;
+
+  flex-shrink: 0;
+
+  padding: 14px 16px 16px;
+
+  border-top: 1px solid rgba(218,180,112,.16);
+
+  background: linear-gradient(
+    180deg,
+    #12151e,
+    #090c13
+  );
+
+  text-align: center;
+}
+
+/* CLOSE BUTTON */
+
+#guideModal .guide-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+
+  width: 100%;
+  min-height: 46px;
+
+  margin: 0;
+  padding: 12px 16px;
+
+  border-radius: 10px;
+  border: 1px solid #c39b60;
+
+  background: linear-gradient(
+    180deg,
+    #745934,
+    #422f1d
+  );
+
+  color: #ffe4ad;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 1.4px;
+
+  text-align: center;
+  cursor: pointer;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,230,171,.25);
+
+  touch-action: manipulation;
+
+  transition: transform .18s ease;
+}
+
+#guideModal .guide-close:active {
+  transform: scale(.98);
+}
+
+#guideModal .guide-x:focus-visible,
+#guideModal .guide-close:focus-visible {
+  outline: 2px solid #f6d693;
+  outline-offset: 2px;
+}
+
+/* FOOTER BRAND */
+
+#guideModal .guide-footer-brand {
+  margin-top: 12px;
+
+  color: #857a67;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+}
+
+/* OPEN ANIMATION */
+
+@keyframes guideRoyalOpen {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* SMALL PHONE */
+
+@media (max-width: 360px) {
+
+  #guideModal {
+    padding: 10px;
+  }
+
+  #guideModal .guide-header {
+    padding: 20px 40px 13px;
+  }
+
+  #guideModal .guide-title {
+    font-size: 21px;
+  }
+
+  #guideModal .guide-content {
+    padding: 12px 10px;
+    gap: 8px;
+  }
+
+  #guideModal .guide-step {
+    padding: 10px;
+    gap: 9px;
+    min-height: 82px;
+  }
+
+  #guideModal .guide-step-visual {
+    flex-basis: 58px;
+    width: 58px;
+    height: 58px;
+  }
+
+  #guideModal .guide-step-title {
+    font-size: 11px;
+  }
+
+  #guideModal .guide-text p {
+    font-size: 11px;
+  }
+
+}
+
+/* SHORT SCREEN */
+
+@media (max-height: 640px) {
+
+  #guideModal .guide-header {
+    padding-top: 14px;
+    padding-bottom: 10px;
+  }
+
+  #guideModal .guide-title {
+    margin: 5px 0 3px;
+    font-size: 19px;
+  }
+
+  #guideModal .guide-content {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  #guideModal .guide-step {
+    min-height: 73px;
+    padding: 9px;
+  }
+
+  #guideModal .guide-step-visual {
+    width: 56px;
+    height: 56px;
+    flex-basis: 56px;
+  }
+
+  #guideModal .guide-footer {
+    padding: 10px 13px;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #guideModal .guide-box {
+    animation: none;
+  }
+}
+
+
+
+
+/* ==========================================
+   MYTHIC ROYAL LOADING V2
+   DRAGON / TIGER / PHOENIX
+========================================== */
+
+#loadingOverlay.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  padding: 20px 16px;
+
+  overflow: hidden;
+  isolation: isolate;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(3,5,10,.88) 0%,
+      rgba(9,12,20,.78) 38%,
+      rgba(4,6,12,.95) 100%
+    ),
+    url("/assets/dtp/btp-loading.jpg")
+    center center / cover no-repeat;
+
+  color: #f6e6c4;
+}
+
+/* SUBTLE PARTICLES */
+
+#loadingOverlay.loading-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+
+  background-image:
+    radial-gradient(
+      circle,
+      rgba(240,199,117,.7) 1px,
+      transparent 2px
+    );
+
+  background-size: 90px 110px;
+  background-repeat: repeat;
+
+  opacity: .14;
+  pointer-events: none;
+
+  animation: dtpLoaderDust 25s linear infinite;
+}
+
+/* MAIN CONTENT */
+
+#loadingOverlay .loading-center {
+  position: relative;
+  z-index: 2;
+
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  max-width: 430px;
+
+  height: 100%;
+  max-height: 750px;
+
+  margin: 0;
+  padding: 12px 8px;
+
+  text-align: center;
+}
+
+/* REMOVE OLD GLOW LAYER */
+
+#loadingOverlay .loading-center::before {
+  display: none !important;
+  content: none !important;
+}
+
+/* ========== BRAND ========== */
+
+#loadingOverlay .loading-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+
+  width: 100%;
+  margin-bottom: 29px;
+
+  color: #d1b57e;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2.1px;
+  white-space: nowrap;
+}
+
+#loadingOverlay .loading-brand-line {
+  width: 23px;
+  height: 1px;
+  flex: 0 0 23px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #bc9154
+  );
+}
+
+#loadingOverlay .loading-brand-line:last-child {
+  transform: rotate(180deg);
+}
+
+/* ========== THREE BEASTS ========== */
+
+#loadingOverlay .loading-beasts {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+
+  width: 100%;
+  max-width: 372px;
+  gap: 12px;
+}
+
+#loadingOverlay .loading-beast {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+
+  flex: 1;
+  min-width: 0;
+
+  --spirit: #d7b477;
+  --spirit-glow: rgba(218,175,98,.22);
+}
+
+/* DRAGON */
+
+#loadingOverlay .loading-dragon {
+  --spirit: #f48d82;
+  --spirit-glow: rgba(255,78,62,.25);
+}
+
+/* TIGER */
+
+#loadingOverlay .loading-tiger {
+  --spirit: #91c1ff;
+  --spirit-glow: rgba(56,131,255,.25);
+}
+
+/* PHOENIX */
+
+#loadingOverlay .loading-phoenix {
+  --spirit: #ffce82;
+  --spirit-glow: rgba(255,167,54,.26);
+}
+
+/* BEAST IMAGE FRAME */
+
+#loadingOverlay .loading-beast-image {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  max-width: 111px;
+  aspect-ratio: 1;
+
+  border-radius: 50%;
+  border: 1px solid rgba(218,183,119,.25);
+
+  background:
+    radial-gradient(
+      circle,
+      var(--spirit-glow) 0%,
+      rgba(15,18,28,.7) 60%,
+      rgba(5,7,12,.9) 100%
+    );
+
+  box-shadow:
+    0 0 25px var(--spirit-glow),
+    inset 0 0 18px rgba(0,0,0,.5);
+}
+
+/* THIN INNER RING */
+
+#loadingOverlay .loading-beast-image::after {
+  content: "";
+
+  position: absolute;
+  inset: 5px;
+
+  border-radius: 50%;
+
+  border: 1px solid rgba(231,196,131,.14);
+
+  pointer-events: none;
+}
+
+/* BEAST IMAGE */
+
+#loadingOverlay .loading-beast-image img {
+  display: block;
+
+  width: 93%;
+  height: 93%;
+
+  object-fit: contain;
+
+  filter:
+    drop-shadow(0 4px 7px #000)
+    drop-shadow(0 0 7px var(--spirit-glow));
+
+  animation: dtpSpiritFloat 3s ease-in-out infinite;
+}
+
+#loadingOverlay .loading-tiger img {
+  animation-delay: .35s;
+}
+
+#loadingOverlay .loading-phoenix img {
+  animation-delay: .7s;
+}
+
+/* ANIMAL NAME */
+
+#loadingOverlay .loading-beast > span {
+  color: var(--spirit);
+
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  text-shadow: 0 0 10px var(--spirit-glow);
+}
+
+/* ========== MAGIC SEAL ========== */
+
+#loadingOverlay .loading-seal {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 94px;
+  height: 94px;
+
+  margin: 32px auto 24px;
+}
+
+/* ROTATING GOLDEN RING */
+
+#loadingOverlay .loading-spinner {
+  position: absolute;
+  inset: 0;
+
+  width: 94px;
+  height: 94px;
+
+  margin: 0;
+
+  border: 2px solid transparent;
+  border-top-color: #f2d59c;
+  border-right-color: rgba(213,166,89,.75);
+  border-bottom-color: rgba(213,166,89,.15);
+  border-left-color: rgba(213,166,89,.15);
+
+  border-radius: 50%;
+
+  box-shadow:
+    0 0 18px rgba(218,173,92,.12),
+    inset 0 0 15px rgba(218,173,92,.06);
+
+  filter: none;
+
+  animation: dtpSealRotate 2.4s linear infinite;
+}
+
+/* INNER SEAL */
+
+#loadingOverlay .loading-seal-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 69px;
+  height: 69px;
+
+  border-radius: 50%;
+
+  border: 1px solid rgba(233,191,117,.4);
+
+  background:
+    radial-gradient(
+      circle at 50% 35%,
+      #34301f 0%,
+      #161923 65%,
+      #090c14 100%
+    );
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,239,198,.14),
+    0 0 14px rgba(224,170,77,.12);
+}
+
+#loadingOverlay .loading-seal-inner span {
+  color: #f3d8a4;
+
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+}
+
+/* ========== MAIN TITLE ========== */
+
+#loadingOverlay .loading-main-title {
+  max-width: 100%;
+
+  color: #f4deb0;
+
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(22px, 5.8vw, 29px);
+  font-weight: 800;
+  line-height: 1.25;
+
+  letter-spacing: 1.1px;
+
+  text-shadow:
+    0 3px 10px rgba(0,0,0,.7),
+    0 0 20px rgba(231,185,103,.14);
+}
+
+#loadingOverlay .loading-subtitle {
+  margin-top: 10px;
+
+  color: #b8a788;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+/* GOLD DIVIDER */
+
+#loadingOverlay .loading-gold-divider {
+  width: 110px;
+  height: 1px;
+
+  margin: 23px auto 0;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #e5bc78,
+    transparent
+  );
+}
+
+/* ========== PROGRESS AREA ========== */
+
+#loadingOverlay .loading-progress-area {
+  width: 100%;
+  max-width: 330px;
+
+  margin-top: 42px;
+}
+
+/* STATUS + PERCENT */
+
+#loadingOverlay .loading-progress-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+  width: 100%;
+
+  margin-bottom: 12px;
+}
+
+#loadingOverlay .loading-text {
+  min-width: 0;
+  flex: 1;
+
+  margin: 0;
+
+  color: #c8b998;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .3px;
+
+  text-align: left;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  animation: none;
+  text-shadow: none;
+}
+
+#loadingOverlay .loading-percent {
+  flex-shrink: 0;
+
+  color: #f5d89e;
+  font-size: 16px;
+  font-weight: 900;
+
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ========== PROGRESS BAR ========== */
+
+#loadingOverlay .loading-bar {
+  position: relative;
+
+  box-sizing: border-box;
+
+  width: 100%;
+  height: 7px;
+
+  margin: 0;
+  padding: 1px;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(203,168,104,.38);
+  border-radius: 20px;
+
+  background: #171a20;
+
+  box-shadow:
+    inset 0 1px 3px rgba(0,0,0,.5);
+
+  filter: none;
+}
+
+/* PROGRESS FILL */
+
+#loadingOverlay .loading-progress {
+  position: relative;
+
+  width: 0%;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: linear-gradient(
+    90deg,
+    #987044,
+    #e8c588 60%,
+    #fff0bf
+  );
+
+  background-size: 100% 100%;
+
+  box-shadow:
+    0 0 8px rgba(239,194,116,.25);
+
+  animation: none;
+
+  transition: width .15s linear;
+}
+
+/* REMOVE OLD MULTICOLOR SHINE */
+
+#loadingOverlay .loading-progress::after {
+  display: none;
+  content: none;
+}
+
+/* BOTTOM CAPTION */
+
+#loadingOverlay .loading-bottom-caption {
+  margin-top: 18px;
+
+  color: #8c806c;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+}
+
+/* ========== ANIMATIONS ========== */
+
+@keyframes dtpSealRotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dtpSpiritFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes dtpLoaderDust {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 90px -220px;
+  }
+}
+
+/* ========== SMALL SCREENS ========== */
+
+@media (max-width: 360px) {
+  #loadingOverlay .loading-brand {
+    font-size: 9px;
+    gap: 8px;
+    letter-spacing: 1.5px;
+  }
+
+  #loadingOverlay .loading-beasts {
+    gap: 7px;
+  }
+
+  #loadingOverlay .loading-beast > span {
+    font-size: 9px;
+  }
+
+  #loadingOverlay .loading-main-title {
+    font-size: 21px;
+  }
+
+  #loadingOverlay .loading-progress-area {
+    max-width: 290px;
+  }
+}
+
+@media (max-height: 690px) {
+  #loadingOverlay .loading-brand {
+    margin-bottom: 18px;
+  }
+
+  #loadingOverlay .loading-beast-image {
+    max-width: 86px;
+  }
+
+  #loadingOverlay .loading-beast {
+    gap: 7px;
+  }
+
+  #loadingOverlay .loading-seal {
+    width: 72px;
+    height: 72px;
+    margin: 19px auto 15px;
+  }
+
+  #loadingOverlay .loading-spinner {
+    width: 72px;
+    height: 72px;
+  }
+
+  #loadingOverlay .loading-seal-inner {
+    width: 53px;
+    height: 53px;
+  }
+
+  #loadingOverlay .loading-seal-inner span {
+    font-size: 11px;
+  }
+
+  #loadingOverlay .loading-gold-divider {
+    margin-top: 16px;
+  }
+
+  #loadingOverlay .loading-progress-area {
+    margin-top: 24px;
+  }
+
+  #loadingOverlay .loading-bottom-caption {
+    margin-top: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #loadingOverlay .loading-spinner,
+  #loadingOverlay .loading-beast-image img,
+  #loadingOverlay.loading-overlay::after {
+    animation: none !important;
+  }
+}
+
+
+
+
+/* ==========================================
+   DTP ROYAL LOADING - IMAGE INTEGRATED
+   BACKGROUND REFERENCE: 941 x 1672
+========================================== */
+
+/* FULL SCREEN BACKDROP */
+#loadingOverlay.loading-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 10000 !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  width: 100% !important;
+  height: 100dvh !important;
+  padding: 0 !important;
+  margin: 0 !important;
+
+  overflow: hidden !important;
+  background: #000 !important;
+  box-sizing: border-box !important;
+}
+
+/* REMOVE OLD PARTICLES */
+#loadingOverlay.loading-overlay::before,
+#loadingOverlay.loading-overlay::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* IMAGE STAGE */
+#loadingOverlay .dtp-loading-scene {
+  position: relative;
+
+  width: min(100vw, 430px);
+  height: 100%;
+  flex-shrink: 0;
+
+  overflow: hidden;
+
+  background:
+    url("/assets/dtp/dtp-loading-royal.png")
+    center center / 100% 100%
+    no-repeat;
+
+  isolation: isolate;
+}
+
+/* RESET PREVIOUS LOADING LAYOUT */
+#loadingOverlay .loading-center {
+  position: absolute !important;
+  inset: 0 !important;
+
+  display: block !important;
+
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  overflow: hidden;
+  transform: none !important;
+
+  background: transparent !important;
+}
+
+#loadingOverlay .loading-center::before,
+#loadingOverlay .loading-center::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* ==========================================
+   DYNAMIC GOLD PROGRESS
+   POSITION INSIDE THE IMAGE'S GOLD BAR
+========================================== */
+
+#loadingOverlay .loading-bar {
+  position: absolute !important;
+
+  left: 9.8% !important;
+  top: 71.05% !important;
+
+  width: 80.4% !important;
+  height: 2.35% !important;
+
+  display: block !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  border: 0 !important;
+  border-radius: 999px !important;
+
+  /* Hide the pre-rendered 76% fill */
+  background: #230e09 !important;
+
+  box-shadow:
+    inset 0 2px 7px rgba(0,0,0,.85) !important;
+
+  overflow: hidden !important;
+  z-index: 4;
+}
+
+/* LIVE FILL */
+#loadingOverlay .loading-progress {
+  position: relative !important;
+
+  display: block !important;
+
+  width: 0%;
+  height: 100% !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border: 0 !important;
+  border-radius: 999px !important;
+
+  background: linear-gradient(
+    180deg,
+    #fff6bf 0%,
+    #ffd34c 20%,
+    #ffa600 56%,
+    #e96c00 100%
+  ) !important;
+
+  background-size: 100% 100% !important;
+
+  box-shadow:
+    inset 0 2px 2px rgba(255,255,255,.7),
+    0 0 9px rgba(255,170,20,.8) !important;
+
+  animation: none !important;
+  transition: width .15s linear !important;
+}
+
+/* SOFT MOVING REFLECTION */
+#loadingOverlay .loading-progress::before {
+  content: "";
+  position: absolute;
+
+  top: 0;
+  left: -50%;
+
+  width: 45%;
+  height: 100%;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,.38),
+    transparent
+  );
+
+  animation: dtpRoyalProgressShine 2s linear infinite;
+}
+
+#loadingOverlay .loading-progress::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* ==========================================
+   LIVE PERCENTAGE
+   COVER STATIC "76%" INSIDE IMAGE
+========================================== */
+
+#loadingOverlay .loading-percent {
+  position: absolute !important;
+
+  left: 41% !important;
+  top: 75.05% !important;
+
+  width: 18% !important;
+  height: 2.45% !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  background: linear-gradient(
+    180deg,
+    #430e08 0%,
+    #590e06 55%,
+    #360a07 100%
+  ) !important;
+
+  border: 0 !important;
+  border-radius: 4px !important;
+
+  color: #ffdb73 !important;
+
+  font-family: Georgia, serif !important;
+  font-size: clamp(17px, 5vw, 24px) !important;
+  font-weight: 900 !important;
+
+  font-variant-numeric: tabular-nums;
+  line-height: 1 !important;
+
+  text-shadow:
+    0 2px 3px #170400,
+    0 0 7px rgba(255,192,51,.4);
+
+  white-space: nowrap !important;
+
+  box-shadow:
+    0 0 5px 2px rgba(65,11,7,.65);
+
+  z-index: 5;
+}
+
+/* ==========================================
+   DYNAMIC LOADING STATUS
+   REPLACE BAKED "Loading assets..."
+========================================== */
+
+#loadingOverlay .loading-text {
+  position: absolute !important;
+
+  left: 32.5% !important;
+  top: 78.75% !important;
+
+  width: 35% !important;
+  height: 2.6% !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 0 2px !important;
+  margin: 0 !important;
+
+  overflow: hidden !important;
+
+  background: #300c09 !important;
+  border: 0 !important;
+  border-radius: 4px !important;
+
+  color: #f8d18c !important;
+
+  font-family: Georgia, serif !important;
+  font-size: clamp(9px, 2.8vw, 13px) !important;
+  font-style: italic !important;
+  font-weight: 700 !important;
+
+  letter-spacing: 0 !important;
+  line-height: 1.2 !important;
+  text-align: center !important;
+
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+
+  text-shadow: 0 1px 4px #000 !important;
+
+  box-shadow: 0 0 7px 2px #300c09;
+
+  animation: none !important;
+  z-index: 5;
+}
+
+/* ANIMATION */
+@keyframes dtpRoyalProgressShine {
+  from {
+    left: -50%;
+  }
+
+  to {
+    left: 120%;
+  }
+}
+
+/* SMALLER MOBILE */
+@media (max-width: 360px) {
+
+  #loadingOverlay .loading-percent {
+    font-size: 18px !important;
+  }
+
+  #loadingOverlay .loading-text {
+    font-size: 10px !important;
+  }
+
+}
+
+/* REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+  #loadingOverlay .loading-progress::before {
+    animation: none !important;
+  }
+}
+
+
+</style>
+</head>
+
+<body>
+
+
+
+<!-- =========================================
+     DTP - FULL BACKGROUND + HITBOX
+========================================= -->
+
+<main class="dtp-screen" id="dtpScreen">
+
+  <!-- EXIT -->
+  <button type="button"
+    class="dtp-hit dtp-exit"
+    aria-label="Exit"
+    onclick="location.href='/invest.html'">
+  </button>
+
+  <!-- HELP -->
+  <button type="button"
+    class="dtp-hit dtp-help"
+    aria-label="How to play"
+    onclick="openGuide()">
+  </button>
+
+  <!-- 8 ROUND HISTORY -->
+  <div id="historyBar"
+    class="history-bar dtp-recent">
+  </div>
+
+  <!-- ROUND NUMBER -->
+  <div id="roundId"
+    class="dtp-data dtp-round-value">0</div>
+
+  <!-- TIMER -->
+  <div class="dtp-data dtp-timer-value">
+    <span id="timer">35</span>
+  </div>
+
+  <!-- TIME PROGRESS -->
+  <div class="dtp-time-track" style="display: none;">
+    <div id="betBar"></div>
+  </div>
+
+  <!-- ========== DRAGON ========== -->
+  <button type="button"
+    class="bet-card dragon dtp-beast dtp-dragon"
+    aria-label="Bet on Dragon"
+    onclick="placeBet('dragon')">
+
+    <span id="betDragon"
+      class="dtp-bet-num">0</span>
+  </button>
+
+  <!-- ========== TIGER ========== -->
+  <button type="button"
+    class="bet-card tiger dtp-beast dtp-tiger"
+    aria-label="Bet on Tiger"
+    onclick="placeBet('tiger')">
+
+    <span id="betTiger"
+      class="dtp-bet-num">0</span>
+  </button>
+
+  <!-- ========== PHOENIX ========== -->
+  <button type="button"
+    class="bet-card phoenix dtp-beast dtp-phoenix"
+    aria-label="Bet on Phoenix"
+    onclick="placeBet('phoenix')">
+
+    <span id="betPhoenix"
+      class="dtp-bet-num">0</span>
+  </button>
+
+  <!-- ========== TOTAL POOLS ========== -->
+  <div id="poolDragon"
+    class="dtp-data dtp-pool dtp-pool-dragon">0</div>
+
+  <div id="poolTiger"
+    class="dtp-data dtp-pool dtp-pool-tiger">0</div>
+
+  <div id="poolPhoenix"
+    class="dtp-data dtp-pool dtp-pool-phoenix">0</div>
+
+  <!-- ========== BALANCE ========== -->
+  <div id="coins"
+    class="dtp-data dtp-balance-value">0</div>
+
+  <!-- HISTORY BUTTON -->
+  <button type="button"
+    class="dtp-hit dtp-history-btn"
+    aria-label="My bet history"
+    onclick="openMyHistory()">
+  </button>
+
+  <!-- ========== CHIP 10 ========== -->
+  <button type="button"
+    class="chip dtp-chip dtp-chip-10 active"
+    aria-label="Select 10"
+    onclick="setBet(10,this)">
+
+    <img src="/assets/dtp/chip-dragon.png" alt="">
+    <span>10</span>
+  </button>
+
+  <!-- ========== CHIP 50 ========== -->
+  <button type="button"
+    class="chip dtp-chip dtp-chip-50"
+    aria-label="Select 50"
+    onclick="setBet(50,this)">
+
+    <img src="/assets/dtp/chip-tiger.png" alt="">
+    <span>50</span>
+  </button>
+
+  <!-- ========== CHIP 100 ========== -->
+  <button type="button"
+    class="chip dtp-chip dtp-chip-100"
+    aria-label="Select 100"
+    onclick="setBet(100,this)">
+
+    <img src="/assets/dtp/chip-phoenix.png" alt="">
+    <span>100</span>
+  </button>
+
+  <!-- ========== CHIP 500 ========== -->
+  <button type="button"
+    class="chip dtp-chip dtp-chip-500"
+    aria-label="Select 500"
+    onclick="setBet(500,this)">
+
+    <img src="/assets/dtp/chip-lion.png" alt="">
+    <span>500</span>
+  </button>
+
+</main>
+
+
+
+
+<!-- ==================================
+     MYTHIC RESULT POPUP
+================================== -->
+
+<div id="result"
+     class="result dtp-result hidden"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="resultText">
+
+  <div class="result-box">
+
+    <!-- Decorative light -->
+    <div class="result-glow"></div>
+
+    <!-- Header -->
+    <div class="result-kicker">
+      ROUND <span id="resultRoundNumber">0</span>
+      <span class="result-kicker-dot">◆</span>
+      BATTLE RESULT
+    </div>
+
+    <div class="result-title">
+      VICTORY REVEALED
+    </div>
+
+    <div class="result-rule">
+      <span></span>
+      <i>◆</i>
+      <span></span>
+    </div>
+
+    <!-- Winning beast -->
+    <div id="resultText"
+         class="result-name">
+      DRAGON
+    </div>
+
+    <div class="result-image">
+      <div class="result-halo"></div>
+
+      <img id="winnerImg"
+           alt="Winning beast">
+    </div>
+
+    <!-- Profit / Loss -->
+    <div class="result-payoff">
+
+      <div class="result-payoff-label">
+        ROUND NET PROFIT / LOSS
+      </div>
+
+      <div class="result-money-row">
+        <div id="resultProfit"
+             class="result-profit">
+          0
+        </div>
+        <span class="result-unit">MEAT</span>
+      </div>
+
+      <div id="resultMessage"
+           class="result-message">
+        ROUND COMPLETED
+      </div>
+
+    </div>
+
+    <!-- Bottom decoration -->
+    <div class="result-footer">
+      DRAGON <span>·</span>
+      TIGER <span>·</span>
+      PHOENIX
+    </div>
+
+    <!-- Automatic close progress -->
+    <div class="result-close-progress"></div>
+
+  </div>
+
+</div>
+
+
+
+
+
+
+
+<!-- ======================================
+     MYTHIC ROYAL BET HISTORY
+====================================== -->
+
+<div id="myHistoryModal"
+     class="my-history"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="myHistoryTitle">
+
+  <!-- BACKDROP -->
+  <div class="my-history-backdrop"
+       onclick="closeMyHistory()"></div>
+
+  <div class="my-history-box">
+
+    <!-- HEADER -->
+    <div class="my-history-top">
+
+      <div class="my-history-eyebrow">
+        MYTHIC ROYAL ARENA
+      </div>
+
+      <h2 class="my-history-title"
+          id="myHistoryTitle">
+        MY BET HISTORY
+      </h2>
+
+      <div class="my-history-subtitle">
+        PERSONAL BATTLE RECORD
+      </div>
+
+      <button type="button"
+              class="my-history-x"
+              aria-label="Close history"
+              onclick="closeMyHistory()">
+        &times;
+      </button>
+
+    </div>
+
+    <!-- GOLD DIVIDER -->
+    <div class="my-history-divider"></div>
+
+    <!-- STATISTICS -->
+    <div class="history-stats">
+
+      <div class="stat stat-profit">
+
+        <div class="stat-label">
+          TOTAL P/L
+        </div>
+
+        <span id="historyProfit">0</span>
+
+        <div class="stat-caption">
+          NET PROFIT / LOSS
+        </div>
+
+      </div>
+
+      <div class="stat stat-winrate">
+
+        <div class="stat-label">
+          WIN RATE
+        </div>
+
+        <span id="historyWinrate">0%</span>
+
+        <div class="stat-caption">
+          WINNING ROUNDS
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- HISTORY TABLE -->
+    <div class="history-table">
+
+      <div class="history-head">
+
+        <div>ROUND</div>
+
+        <div class="th-dragon">
+          <img src="/assets/dtp/dragon-head.png"
+               class="history-icon"
+               alt="Dragon">
+        </div>
+
+        <div class="th-tiger">
+          <img src="/assets/dtp/tiger-head.png"
+               class="history-icon"
+               alt="Tiger">
+        </div>
+
+        <div class="th-phoenix">
+          <img src="/assets/dtp/phoenix-head.png"
+               class="history-icon"
+               alt="Phoenix">
+        </div>
+
+        <div>RESULT</div>
+
+        <div>P/L</div>
+
+      </div>
+
+      <!-- SOCKET.IO RENDER DATA -->
+      <div id="myHistoryList"></div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="my-history-footer">
+
+      <div class="my-history-footer-caption">
+        DRAGON · TIGER · PHOENIX
+      </div>
+
+      <button type="button"
+              class="close-history"
+              onclick="closeMyHistory()">
+        CLOSE HISTORY
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+<!-- ===================================
+     MYTHIC ROYAL - HOW TO PLAY
+=================================== -->
+
+<div id="guideModal"
+     class="guide-modal"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="guideTitle">
+
+  <!-- BACKDROP -->
+  <div class="guide-backdrop"
+       onclick="closeGuide()"></div>
+
+  <div class="guide-box">
+
+    <!-- HEADER -->
+    <div class="guide-header">
+
+      <div class="guide-brand">
+        MYTHIC ROYAL ARENA
+      </div>
+
+      <h2 class="guide-title" id="guideTitle">
+        HOW TO PLAY
+      </h2>
+
+      <div class="guide-subtitle">
+        THE BATTLE GUIDE
+      </div>
+
+      <button type="button"
+              class="guide-x"
+              onclick="closeGuide()"
+              aria-label="Close guide">
+        &times;
+      </button>
+
+    </div>
+
+    <div class="guide-divider"></div>
+
+    <!-- SCROLLABLE CONTENT -->
+    <div class="guide-content">
+
+      <!-- STEP 1 -->
+      <div class="guide-step">
+
+        <div class="guide-step-visual">
+          <img src="/assets/dtp/guide-bet.png"
+               alt="Choose beast">
+        </div>
+
+        <div class="guide-text">
+
+          <div class="guide-step-label">
+            STEP 01
+          </div>
+
+          <div class="guide-step-title">
+            CHOOSE YOUR BEAST
+          </div>
+
+          <p>
+            Select
+            <b class="guide-dragon">DRAGON</b>,
+            <b class="guide-tiger">TIGER</b>
+            or
+            <b class="guide-phoenix">PHOENIX</b>.
+          </p>
+
+        </div>
+
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="guide-step">
+
+        <div class="guide-step-visual">
+          <img src="/assets/dtp/guide-chip.png"
+               alt="Betting chips">
+        </div>
+
+        <div class="guide-text">
+
+          <div class="guide-step-label">
+            STEP 02
+          </div>
+
+          <div class="guide-step-title">
+            PLACE YOUR BET
+          </div>
+
+          <p>
+            Choose your chip value and
+            tap a beast to place your bet.
+          </p>
+
+        </div>
+
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="guide-step">
+
+        <div class="guide-step-visual">
+          <img src="/assets/dtp/guide-win.png"
+               alt="Winning result">
+        </div>
+
+        <div class="guide-text">
+
+          <div class="guide-step-label">
+            STEP 03
+          </div>
+
+          <div class="guide-step-title">
+            WIN THE ROUND
+          </div>
+
+          <p>
+            If your chosen beast wins,
+            receive
+            <strong class="guide-multiplier">
+              x3 PAYOUT
+            </strong>.
+          </p>
+
+        </div>
+
+      </div>
+
+      <!-- STEP 4 -->
+      <div class="guide-step">
+
+        <div class="guide-step-visual">
+          <img src="/assets/dtp/guide-history.png"
+               alt="Recent history">
+        </div>
+
+        <div class="guide-text">
+
+          <div class="guide-step-label">
+            STEP 04
+          </div>
+
+          <div class="guide-step-title">
+            CHECK RESULTS
+          </div>
+
+          <p>
+            View recent results in the
+            history bar and review your
+            personal betting records.
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- FIXED FOOTER -->
+    <div class="guide-footer">
+
+      <button type="button"
+              class="guide-close"
+              onclick="closeGuide()">
+        CLOSE GUIDE
+      </button>
+
+      <div class="guide-footer-brand">
+        DRAGON · TIGER · PHOENIX
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+<!-- ======================================
+     MYTHIC ROYAL NOTIFICATION
+====================================== -->
+
+<div id="notifyModal"
+     class="notify-modal"
+     role="alertdialog"
+     aria-modal="true"
+     aria-labelledby="notifyTitle"
+     aria-describedby="notifyText">
+
+  <div class="notify-wrap">
+
+    <div class="notify-topline"></div>
+
+    <div class="notify-symbol" aria-hidden="true">
+      <span>!</span>
+    </div>
+
+    <div class="notify-brand">
+      MYTHIC ROYAL ARENA
+    </div>
+
+    <h2 id="notifyTitle" class="notify-title">
+      NOTIFICATION
+    </h2>
+
+    <div class="notify-divider"></div>
+
+    <div class="notify-content">
+
+      <div id="notifyText" class="notify-text">
+        Message
+      </div>
+
+      <p id="notifyDescription"
+         class="notify-description">
+      </p>
+
+    </div>
+
+    <button type="button"
+            class="notify-confirm"
+            onclick="closeNotify()">
+      CONFIRM
+    </button>
+
+    <div class="notify-footer">
+      DRAGON · TIGER · PHOENIX
+    </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+
+<div class="rotate-lock">
+Please rotate your device
+</div>
+
+
+
+
+
+
+<!-- =====================================
+     DRAGON TIGER PHOENIX
+     ROYAL IMAGE LOADING
+===================================== -->
+
+<div id="loadingOverlay"
+     class="loading-overlay"
+     role="status"
+     aria-label="Loading battle arena">
+
+  <div class="dtp-loading-scene">
+
+    <div class="loading-center">
+
+      <!-- THANH TẢI THỰC -->
+      <div class="loading-bar">
+        <div id="loadingProgress"
+             class="loading-progress"></div>
+      </div>
+
+      <!-- PHẦN TRĂM -->
+      <div id="loadingPercent"
+           class="loading-percent">
+        0%
+      </div>
+
+      <!-- TRẠNG THÁI -->
+      <div id="loadingText"
+           class="loading-text">
+        Connecting Arena...
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+<script>
+
+/* ================= SOCKET ================= */
+document.body.classList.add("loading");
+
+
+
+/* =============================================
+   DTP - UNIVERSAL SCREEN FIT
+   DESIGN SIZE: 430 x 870
+============================================= */
+
+const DTP_DESIGN_WIDTH = 430;
+const DTP_DESIGN_HEIGHT = 870;
+
+function fitDtpScreen() {
+
+  const screen = document.getElementById("dtpScreen");
+  if (!screen) return;
+
+  // Kích thước vùng nhìn thấy thực tế
+  const viewport = window.visualViewport;
+
+  const viewWidth = viewport
+    ? viewport.width
+    : document.documentElement.clientWidth;
+
+  const viewHeight = viewport
+    ? viewport.height
+    : window.innerHeight;
+
+  const offsetLeft = viewport
+    ? viewport.offsetLeft
+    : 0;
+
+  const offsetTop = viewport
+    ? viewport.offsetTop
+    : 0;
+
+  // Chỉ sử dụng một tỷ lệ cho X và Y
+  // Không phóng to quá khung thiết kế gốc
+  const scale = Math.min(
+    1,
+    viewWidth / DTP_DESIGN_WIDTH,
+    viewHeight / DTP_DESIGN_HEIGHT
+  );
+
+  const actualWidth = DTP_DESIGN_WIDTH * scale;
+  const actualHeight = DTP_DESIGN_HEIGHT * scale;
+
+  // Căn chính giữa khu vực hiển thị
+  const x = offsetLeft + (viewWidth - actualWidth) / 2;
+  const y = offsetTop + (viewHeight - actualHeight) / 2;
+
+  screen.style.setProperty(
+    "--dtp-scale",
+    String(scale)
+  );
+
+  screen.style.setProperty(
+    "--dtp-offset-x",
+    x + "px"
+  );
+
+  screen.style.setProperty(
+    "--dtp-offset-y",
+    y + "px"
+  );
+
+}
+
+// Thiết lập ngay khi mở trang
+fitDtpScreen();
+
+// Tự đồng bộ khi kích thước màn hình thay đổi
+window.addEventListener(
+  "resize",
+  fitDtpScreen,
+  { passive: true }
+);
+
+// Hỗ trợ Safari iOS và trình duyệt mobile
+if (window.visualViewport) {
+
+  window.visualViewport.addEventListener(
+    "resize",
+    fitDtpScreen,
+    { passive: true }
+  );
+
+  window.visualViewport.addEventListener(
+    "scroll",
+    fitDtpScreen,
+    { passive: true }
+  );
+
+}
+
+// Khi quay lại trang bằng Back/Forward
+window.addEventListener(
+  "pageshow",
+  fitDtpScreen
+);
+
+// Khi chuyển lại từ ứng dụng khác
+document.addEventListener(
+  "visibilitychange",
+  () => {
+    if (!document.hidden) {
+      fitDtpScreen();
+    }
+  }
+);
+
+
+
+const me = JSON.parse(localStorage.getItem("user_profile")||"{}");
+
+const socket = io({
+auth:{
+uid:me.uid
+}
+});
+
+
+
+/* ================= STATE ================= */
+
+
+
+
+let currentBet = 10;
+
+let currentRound = 1;
+
+let betDragon = 0;
+let betTiger = 0;
+let betPhoenix = 0;
+
+
+let coins = 0;
+
+
+const betDragonEl  = document.getElementById("betDragon");
+const betTigerEl   = document.getElementById("betTiger");
+const betPhoenixEl = document.getElementById("betPhoenix");
+
+
+let betRestored = false;
+
+/* ================= COIN ================= */
+
+socket.on("coin-update", data=>{
+
+coins = data.coins;   // 🔥 lưu số dư
+
+const el = document.getElementById("coins");
+
+el.textContent = coins;
+
+el.classList.add("coin-pop");
+
+setTimeout(()=>{
+el.classList.remove("coin-pop");
+},300);
+
+});
+
+/* ================= BET ================= */
+
+function setBet(v,el){
+
+currentBet = v;
+
+document.querySelectorAll(".chip")
+.forEach(c=>c.classList.remove("active"));
+
+el.classList.add("active");
+
+}
+
+
+function placeBet(side){
+
+if(document.getElementById("timer").textContent <= 5){
+showNotify("Betting closed");
+return;
+} 
+
+// 🔴 CHẶN KHI KHÔNG ĐỦ COINS
+if(coins < currentBet){
+showNotify("Not enough coins");
+return;
+}
+
+// trừ coins client ngay (tránh spam click)
+coins -= currentBet;
+document.getElementById("coins").textContent = coins;
+
+
+// ===== CHIP ANIMATION =====
+
+const chip = document.querySelector(".chip.active img");
+const chipRect = chip.getBoundingClientRect();
+
+const card = document.querySelector("." + side);
+const cardRect = card.getBoundingClientRect();
+
+const flying = document.createElement("img");
+flying.src = chip.src;
+flying.className = "flying-chip";
+
+flying.style.left = chipRect.left + "px";
+flying.style.top  = chipRect.top + "px";
+
+document.body.appendChild(flying);
+
+setTimeout(()=>{
+flying.style.left = cardRect.left + cardRect.width/2 + "px";
+flying.style.top  = cardRect.top + cardRect.height/2 + "px";
+flying.style.transform = "scale(.6)";
+},10);
+
+setTimeout(()=>{
+flying.remove();
+},600);
+
+
+// ===== SEND BET =====
+
+socket.emit("dtp-bet",{ side, bet:currentBet });
+
+
+// ===== UPDATE UI =====
+
+if(side==="dragon"){
+betDragon+=currentBet;
+betDragonEl.textContent=betDragon;
+}
+
+if(side==="tiger"){
+betTiger+=currentBet;
+betTigerEl.textContent=betTiger;
+}
+
+if(side==="phoenix"){
+betPhoenix+=currentBet;
+betPhoenixEl.textContent=betPhoenix;
+}
+
+}
+
+/* ================= ROUND ================= */
+
+socket.on("dtp-round-new", data=>{
+
+if(currentRound !== data.roundId){
+
+   betDragon = 0;
+   betTiger = 0;
+   betPhoenix = 0;
+
+   document.getElementById("betDragon").textContent = 0;
+   document.getElementById("betTiger").textContent = 0;
+   document.getElementById("betPhoenix").textContent = 0;
+
+   // 🔥 RESET POOL
+   document.getElementById("poolDragon").textContent = 0;
+   document.getElementById("poolTiger").textContent = 0;
+   document.getElementById("poolPhoenix").textContent = 0;
+
+   betRestored = false;
+}
+
+currentRound = data.roundId;
+document.getElementById("roundId").textContent = data.roundId;
+
+});
+
+/* ================= TIMER ================= */
+
+/* ================= TIMER 35S ================= */
+
+const DTP_ROUND_SECONDS = 35;
+
+socket.on("dtp-timer", t => {
+
+  const remain = Math.max(0, Number(t) || 0);
+
+  // Hiển thị thời gian từ server
+  document.getElementById("timer").textContent = remain;
+
+  // Cập nhật thanh tiến trình theo 35 giây
+  const percent = Math.max(
+    0,
+    Math.min(100, remain / DTP_ROUND_SECONDS * 100)
+  );
+
+  document.getElementById("betBar").style.width =
+    percent + "%";
+
+});
+
+
+
+
+/* ================= RESULT ================= */
+
+let dtpHistory = [];
+
+socket.on("dtp-result", data=>{
+
+const result = document.getElementById("result");
+const text   = document.getElementById("resultText");
+const img    = document.getElementById("winnerImg");
+const profitEl = document.getElementById("resultProfit");
+
+// =============================
+// SHOW RESULT
+// =============================
+
+result.classList.remove("hidden");
+
+
+/* =============================
+   RESULT DISPLAY - MYTHIC UI
+============================= */
+
+const beastNames = {
+  dragon: "DRAGON",
+  tiger: "TIGER",
+  phoenix: "PHOENIX"
+};
+
+const winner = data.winner;
+
+// Áp dụng màu theo thú thắng
+result.dataset.beast = beastNames[winner]
+  ? winner
+  : "";
+
+// Tên thú chiến thắng
+text.textContent = beastNames[winner] || "WINNER";
+
+// Hình thú chiến thắng
+if (beastNames[winner]) {
+  img.src = "/assets/dtp/" + winner + ".png";
+} else {
+  img.removeAttribute("src");
+}
+
+// Phiên hiện tại
+document.getElementById("resultRoundNumber")
+  .textContent = currentRound;
+
+// Khởi động lại hiệu ứng popup
+const resultBox = result.querySelector(".result-box");
+
+resultBox.style.animation = "none";
+void resultBox.offsetWidth;
+resultBox.style.animation = "";
+
+
+
+// =============================
+// CALCULATE PROFIT / LOSS
+// =============================
+
+const totalBet =
+betDragon + betTiger + betPhoenix;
+
+let win = 0;
+
+if(data.winner === "dragon")  win = betDragon * 3;
+if(data.winner === "tiger")   win = betTiger * 3;
+if(data.winner === "phoenix") win = betPhoenix * 3;
+
+const profit = win - totalBet;
+
+
+
+/* =============================
+   PROFIT / LOSS DISPLAY
+============================= */
+
+const resultMessage =
+  document.getElementById("resultMessage");
+
+profitEl.textContent =
+  (profit > 0 ? "+" : "") + profit.toLocaleString("en-US");
+
+profitEl.classList.remove("win", "lose", "even");
+
+if (profit > 0) {
+
+  profitEl.classList.add("win");
+  resultMessage.textContent = "YOU WON THIS ROUND";
+
+} else if (profit < 0) {
+
+  profitEl.classList.add("lose");
+  resultMessage.textContent = "BETTER LUCK NEXT ROUND";
+
+} else {
+
+  profitEl.classList.add("even");
+
+  resultMessage.textContent =
+    totalBet === 0
+      ? "NO BET PLACED"
+      : "BREAK EVEN";
+
+}
+
+
+
+// =============================
+// HIGHLIGHT WIN CARD
+// =============================
+// Xóa hiệu ứng thắng của phiên trước
+document.querySelectorAll(".bet-card").forEach(c => {
+  c.classList.remove("dtp-winner");
+  c.style.boxShadow = "";
+});
+
+// Xác định thú thắng phiên này
+const winCard = document.querySelector(
+  ".bet-card." + data.winner
+);
+
+if (winCard) {
+
+  // Highlight trực tiếp trên hitbox
+  winCard.classList.add("dtp-winner");
+
+// =============================
+// WIN EXPLOSION
+// =============================
+
+const fx = document.createElement("div");
+fx.className = "win-explosion";
+
+winCard.appendChild(fx);
+
+setTimeout(()=>{
+fx.remove();
+},700);
+
+}
+
+
+// =============================
+// HISTORY 8 ROUND
+// =============================
+
+dtpHistory.unshift(data.winner);
+
+if(dtpHistory.length > 8){
+dtpHistory.pop();
+}
+
+renderDtpHistory();
+
+
+// =============================
+// HIDE RESULT
+// =============================
+
+setTimeout(() => {
+  result.classList.add("hidden");
+
+  document.querySelectorAll(".dtp-winner")
+    .forEach(card => {
+      card.classList.remove("dtp-winner");
+    });
+
+}, 4000);
+});
+
+// =============================
+// RENDER HISTORY
+// =============================
+
+function renderDtpHistory(){
+
+const bar = document.getElementById("historyBar");
+if(!bar) return;
+
+bar.innerHTML = "";
+
+dtpHistory.forEach(r=>{
+
+const item = document.createElement("div");
+item.className = "history-item history-"+r;
+
+const img = document.createElement("img");
+
+if(r === "dragon") img.src = "/assets/dtp/dragon-head.png";
+if(r === "tiger") img.src = "/assets/dtp/tiger-head.png";
+if(r === "phoenix") img.src = "/assets/dtp/phoenix-head.png";
+
+img.className = "history-icon";
+
+item.appendChild(img);
+
+bar.appendChild(item);
+
+});
+
+}
+
+
+
+socket.on("dtp-history-update", list=>{
+
+dtpHistory = list;
+
+renderDtpHistory();
+
+});
+
+
+socket.on("dtp-bet-update", data=>{
+
+updatePool("poolDragon",data.dragon);
+updatePool("poolTiger",data.tiger);
+updatePool("poolPhoenix",data.phoenix);
+
+});
+
+
+socket.on("dtp-my-bet", data=>{
+
+betDragon  = data.dragon  || 0;
+betTiger   = data.tiger   || 0;
+betPhoenix = data.phoenix || 0;
+
+document.getElementById("betDragon").textContent  = betDragon;
+document.getElementById("betTiger").textContent   = betTiger;
+document.getElementById("betPhoenix").textContent = betPhoenix;
+
+betRestored = true; // 🔥 thêm dòng này
+
+});
+
+
+
+
+function openMyHistory(){
+
+socket.emit("dtp-get-my-history");
+
+document.getElementById("myHistoryModal")
+.style.display = "flex";
+
+}
+
+function closeMyHistory(){
+
+document.getElementById("myHistoryModal")
+.style.display = "none";
+
+}
+
+
+
+
+
+socket.on("dtp-my-history", list=>{
+
+const box = document.getElementById("myHistoryList");
+
+box.innerHTML = "";
+
+let totalProfit = 0;
+let winCount = 0;
+
+list.forEach(r=>{
+
+const div = document.createElement("div");
+
+let iconSrc =
+r.winner==="dragon" ? "/assets/dtp/dragon-head.png" :
+r.winner==="tiger" ? "/assets/dtp/tiger-head.png" :
+"/assets/dtp/phoenix-head.png";
+
+let totalBet =
+(r.dragon||0) +
+(r.tiger||0) +
+(r.phoenix||0);
+
+let profit = (r.win||0) - totalBet;
+
+let resultClass =
+  profit > 0
+    ? "history-win"
+    : profit < 0
+      ? "history-lose"
+      : "history-even";
+
+if(profit >= 200){
+resultClass += " history-bigwin";
+}
+
+if(profit > 0) winCount++;
+
+totalProfit += profit;
+
+div.className = "history-row " + resultClass;
+
+div.innerHTML = `
+<div>#${r.round}</div>
+<div>${r.dragon||0}</div>
+<div>${r.tiger||0}</div>
+<div>${r.phoenix||0}</div>
+<div>
+<img src="${iconSrc}" class="history-icon">
+</div>
+<div>${profit>0?"+":""}${profit}</div>
+`;
+
+box.appendChild(div);
+
+});
+
+
+// =====================
+// STATS
+// =====================
+
+
+const historyProfitEl =
+  document.getElementById("historyProfit");
+
+// Hiển thị tổng lãi / lỗ
+historyProfitEl.textContent =
+  (totalProfit > 0 ? "+" : "") +
+  totalProfit.toLocaleString("en-US");
+
+// Tự đổi màu theo kết quả
+historyProfitEl.classList.toggle(
+  "negative",
+  totalProfit < 0
+);
+
+historyProfitEl.classList.toggle(
+  "neutral",
+  totalProfit === 0
+);
+
+
+const winrate =
+list.length
+? Math.round(winCount/list.length*100)
+: 0;
+
+document.getElementById("historyWinrate")
+.textContent = winrate + "%";
+
+});
+
+
+
+function updatePool(id,value){
+
+const el = document.getElementById(id);
+
+el.textContent=value;
+
+el.classList.add("bump");
+
+setTimeout(()=>el.classList.remove("bump"),200);
+
+}
+
+
+
+function openGuide(){
+
+document.getElementById("guideModal")
+.style.display = "flex";
+
+}
+
+function closeGuide(){
+
+document.getElementById("guideModal")
+.style.display = "none";
+
+}
+
+
+
+
+/* ====================================
+   MYTHIC ROYAL NOTIFICATION ENGINE
+==================================== */
+
+let notifyPreviousFocus = null;
+
+function showNotify(msg) {
+
+  const modal = document.getElementById("notifyModal");
+  const title = document.getElementById("notifyTitle");
+  const text = document.getElementById("notifyText");
+  const desc = document.getElementById("notifyDescription");
+  const symbol = modal.querySelector(".notify-symbol span");
+  const confirmBtn = modal.querySelector(".notify-confirm");
+
+  const message = String(msg ?? "");
+  const key = message.trim().toLowerCase();
+
+  // Default message
+  let type = "warning";
+  let heading = "NOTIFICATION";
+  let description = "";
+  let mark = "!";
+
+  // Betting closed
+  if (key === "betting closed") {
+
+    type = "warning";
+    heading = "BETTING CLOSED";
+
+    description =
+      "Please wait for the next round to place your bet.";
+
+  }
+
+  // Insufficient balance
+  else if (key === "not enough coins") {
+
+    type = "error";
+    heading = "INSUFFICIENT BALANCE";
+
+    description =
+      "Your balance is too low for the selected bet.";
+
+  }
+
+  // Optional success messages
+  else if (
+    key === "success" ||
+    key === "successful"
+  ) {
+
+    type = "success";
+    heading = "SUCCESS";
+
+    description =
+      "Your request was completed.";
+
+    mark = "✓";
+  }
+
+  modal.dataset.type = type;
+
+  title.textContent = heading;
+  text.textContent = message;
+  desc.textContent = description;
+  symbol.textContent = mark;
+
+  // Save focus for returning after close
+  if (modal.style.display !== "flex") {
+    notifyPreviousFocus = document.activeElement;
+  }
+
+  // Show popup
+  modal.style.display = "flex";
+
+  // Move keyboard focus to confirm button
+  confirmBtn.focus({ preventScroll: true });
+
+}
+
+
+function closeNotify() {
+
+  const modal = document.getElementById("notifyModal");
+
+  modal.style.display = "none";
+
+  // Restore focus when possible
+  if (
+    notifyPreviousFocus &&
+    notifyPreviousFocus.isConnected &&
+    typeof notifyPreviousFocus.focus === "function"
+  ) {
+    notifyPreviousFocus.focus({ preventScroll: true });
+  }
+
+  notifyPreviousFocus = null;
+
+}
+
+// Allow Escape to dismiss notice
+document.addEventListener("keydown", function(e) {
+
+  const modal = document.getElementById("notifyModal");
+
+  if (
+    e.key === "Escape" &&
+    modal &&
+    modal.style.display === "flex"
+  ) {
+    closeNotify();
+  }
+
+});
+
+
+
+
+/* ==========================================
+   DTP REAL ASSET LOADING
+   NO FIXED TIMER
+========================================== */
+
+const loadingBarEl =
+  document.getElementById("loadingProgress");
+
+const loadingPercentEl =
+  document.getElementById("loadingPercent");
+
+const loadingTextEl =
+  document.getElementById("loadingText");
+
+const LOADING_BACKGROUND =
+  "/assets/dtp/dtp-loading-royal.png";
+
+/* ==========================================
+   GAME ASSETS
+========================================== */
+
+const gameAssets = [...new Set([
+
+  // Main game scene
+  "/assets/dtp/dragon_tiger_phoenix_casino_interface.png",
+
+  // Result animations
+  "/assets/dtp/dragon.png",
+  "/assets/dtp/tiger.png",
+  "/assets/dtp/phoenix.png",
+
+  // Images already used in HTML
+  ...Array.from(document.querySelectorAll("img[src]"))
+    .map(img => img.getAttribute("src"))
+    .filter(Boolean)
+
+])].filter(src => src !== LOADING_BACKGROUND);
+
+
+/* ==========================================
+   DISPLAY REAL PROGRESS
+========================================== */
+
+function updateLoading(percent, message) {
+
+  const value = Math.max(
+    0,
+    Math.min(100, Math.floor(percent))
+  );
+
+  if (loadingBarEl) {
+    loadingBarEl.style.width = value + "%";
+  }
+
+  if (loadingPercentEl) {
+    loadingPercentEl.textContent = value + "%";
+  }
+
+  if (loadingTextEl && message !== undefined) {
+    loadingTextEl.textContent = message;
+  }
+
+}
+
+
+/* ==========================================
+   LOAD AND DECODE IMAGE
+========================================== */
+
+async function loadImage(src) {
+
+  const img = new Image();
+
+  await new Promise((resolve, reject) => {
+
+    img.onload = resolve;
+
+    img.onerror = () => {
+      reject(new Error("Cannot load: " + src));
+    };
+
+    img.src = src;
+
+  });
+
+  // Wait until image can be rendered
+  if (typeof img.decode === "function") {
+    await img.decode();
+  }
+
+  return img;
+}
+
+
+/* ==========================================
+   WAIT FOR SOCKET CONNECTION
+========================================== */
+
+function waitForGameSocket() {
+
+  return new Promise(resolve => {
+
+    if (socket.connected) {
+      resolve();
+      return;
+    }
+
+    const onConnected = () => {
+
+      socket.off("connect_error", onError);
+
+      resolve();
+
+    };
+
+    const onError = error => {
+
+      console.warn(
+        "Socket connecting:",
+        error.message
+      );
+
+      if (loadingTextEl) {
+        loadingTextEl.textContent =
+          "Connecting to server...";
+      }
+
+    };
+
+    socket.once("connect", onConnected);
+    socket.on("connect_error", onError);
+
+  });
+
+}
+
+
+/* ==========================================
+   REVEAL GAME
+========================================== */
+
+function revealGame() {
+
+  const overlay =
+    document.getElementById("loadingOverlay");
+
+  // Make underlying game visible
+  document.body.classList.remove("loading");
+
+  if (!overlay) return;
+
+  overlay.style.pointerEvents = "none";
+
+  // Smooth entrance animation
+  overlay.style.transition =
+    "opacity .35s ease";
+
+  overlay.addEventListener(
+    "transitionend",
+    () => overlay.remove(),
+    { once: true }
+  );
+
+  requestAnimationFrame(() => {
+    overlay.style.opacity = "0";
+  });
+
+}
+
+
+/* ==========================================
+   MAIN LOADING PROCESS
+========================================== */
+
+async function initializeGameLoading() {
+
+  updateLoading(0, "Loading background...");
+
+  try {
+
+    /* STEP 1: LOADING BACKGROUND */
+
+    await loadImage(LOADING_BACKGROUND);
+
+    // Allow browser to paint the background
+    await new Promise(resolve => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(resolve);
+      });
+    });
+
+    console.log("Loading background ready");
+
+    /* STEP 2: LOAD GAME ASSETS */
+
+    const totalTasks = gameAssets.length + 1;
+    let completedTasks = 0;
+
+    const markCompleted = () => {
+
+      completedTasks++;
+
+      const percent =
+        completedTasks / totalTasks * 100;
+
+      updateLoading(
+        percent,
+        completedTasks === totalTasks
+          ? "Ready!"
+          : "Loading game assets..."
+      );
+
+    };
+
+    const imageTasks = gameAssets.map(async src => {
+
+      await loadImage(src);
+
+      markCompleted();
+
+    });
+
+    /* STEP 3: CONNECT TO SERVER */
+
+    const socketTask = (async () => {
+
+      await waitForGameSocket();
+
+      markCompleted();
+
+    })();
+
+    /* STEP 4: WAIT FOR EVERYTHING */
+
+    await Promise.all([
+      ...imageTasks,
+      socketTask
+    ]);
+
+    // Wait for page DOM if necessary
+    if (document.readyState === "loading") {
+
+      await new Promise(resolve => {
+        document.addEventListener(
+          "DOMContentLoaded",
+          resolve,
+          { once: true }
+        );
+      });
+
+    }
+
+    /* STEP 5: COMPLETE */
+
+    updateLoading(100, "Ready!");
+
+    console.log("Game assets ready");
+
+    revealGame();
+
+  } catch (error) {
+
+    console.error("Game loading failed:", error);
+
+    if (loadingTextEl) {
+      loadingTextEl.textContent =
+        "Loading failed. Please reload.";
+    }
+
+  }
+
+}
+
+
+/* ==========================================
+   START
+========================================== */
+
+initializeGameLoading();
+
+
+</script>
+
+</body>
+</html>

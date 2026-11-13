@@ -1,0 +1,30 @@
+{
+  "title": "Canh nấm",
+  "cover": "/assets/cooking/canh-nam.jpg",
+  "time": null,
+  "level": "Dễ",
+  "ingredients": [
+    "Nấm các loại",
+    "Hành lá"
+  ],
+  "steps": [
+    {
+      "text": "Đun nước sôi",
+      "detail": "Đun sôi nồi nước.",
+      "time": 360,
+      "tip": "Nước sôi già canh mới ngọt."
+    },
+    {
+      "text": "Nấu nấm",
+      "detail": "Cho nấm vào nấu chín.",
+      "time": 420,
+      "tip": "Không nấu quá lâu."
+    },
+    {
+      "text": "Hoàn thiện",
+      "detail": "Nêm gia vị, cho hành lá.",
+      "time": 120,
+      "tip": "Ăn nóng sẽ ngon hơn."
+    }
+  ]
+}

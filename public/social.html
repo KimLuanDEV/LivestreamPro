@@ -1,0 +1,3267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- PWA iOS -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Livestream Pro">
+
+<!-- Android / Chrome -->
+<meta name="mobile-web-app-capable" content="yes">
+
+
+<title>Livestream Pro • Social</title>
+<meta name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover">
+
+
+
+<link rel="manifest" href="/manifest.json">
+
+<!-- icon cho iOS -->
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+<link rel="stylesheet" href="/style.css">
+
+<script src="/lsp-page-transition.js"></script>
+
+<style>
+
+
+
+
+/* ===== LIVESTREAM PRO SOCIAL ===== */
+
+.lp-shell{
+  max-width:720px;
+  margin:0 auto;
+  padding: 0 10px;   /* ✅ không đẩy xuống */
+  padding-bottom:80px;
+}
+
+.lp-topbar{
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  /* ✅ SAFE ZONE */
+  padding-top: calc(12px + env(safe-area-inset-top));
+  padding-left: calc(16px + env(safe-area-inset-left));
+  padding-right: calc(16px + env(safe-area-inset-right));
+  padding-bottom: 12px;
+
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(14px);
+
+  border-bottom: 1px solid rgba(255,255,255,.12);
+  z-index: 1000;
+}
+
+
+
+.lp-title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:900;
+  letter-spacing:.6px;
+}
+
+.lp-dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#25F09A;
+  box-shadow:0 0 14px #25F09A;
+}
+
+/* Composer */
+.lp-compose{
+  width: 100vw;
+  margin-left: calc(50% - 50vw); /* phá max-width lp-shell */
+  margin-top: 0;
+  position: sticky;
+  top: calc(56px + env(safe-area-inset-top));
+  z-index: 900;
+  backdrop-filter: blur(12px);
+  background: rgba(0,0,0,.55);
+  border-top: 0;              /* ✅ khỏi bị 2 đường viền chồng */
+  border-bottom: 1px solid rgba(255,255,255,.14);
+  border-left: none;
+  border-right: none;
+
+  border-radius: 0; /* full width thì bỏ bo ngoài */
+  padding: 12px 16px;
+
+  transition:
+    padding .25s ease,
+    transform .25s ease,
+    opacity .25s ease;
+}
+
+
+.lp-compose-row{
+  display:flex;
+  gap:10px;
+}
+
+.lp-compose textarea{
+  flex:1;
+  height:70px;
+  resize:none;
+  background:rgba(0,0,0,.6);
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.12);
+  padding:10px;
+  color:#fff;
+}
+
+.lp-compose-actions{
+  display:flex;
+  justify-content:space-between;
+  margin-top:10px;
+}
+
+.lp-post-btn{
+  padding:10px 16px;
+  border-radius:999px;
+  background:linear-gradient(135deg,#25F09A,#5FA8FF);
+  border:none;
+  font-weight:900;
+  color:#000;
+}
+
+/* Feed */
+.lp-feed{
+  width: 100vw;
+  margin-left: calc(50% - 50vw); /* phá max-width lp-shell */
+  padding: 0;  
+  margin-top: 0;
+  display:flex;
+  flex-direction:column;
+  gap: 0px;
+  padding-top: 0;   /* ✅ dính sát compose */
+  border-top: 0;
+}
+
+.lp-post{
+  width: 100vw;                         /* ✅ full width */
+  margin-left: calc(50% - 50vw);        /* phá giới hạn */
+  background: rgba(0,0,0,.55);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;                           /* bỏ padding ngoài */
+}
+
+
+.lp-post-head{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.lp-ava{
+  width:44px;
+  height:44px;
+  border-radius:14px;
+  object-fit:cover;
+}
+
+.lp-post-name{
+  font-weight:900;
+}
+
+.lp-post-time{
+  font-size:12px;
+  opacity:.6;
+}
+
+.lp-post-text{
+  margin-top:10px;
+  line-height:1.4;
+}
+
+.lp-post-img{
+  width:100%;
+  margin-top:10px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.12);
+}
+
+
+.lp-actions{
+  display:flex;
+  gap:16px;
+  margin-top:12px;
+  font-weight:800;
+  padding-bottom: 8px;
+}
+.lp-action{
+  cursor:pointer;
+  opacity:.8;
+}
+.lp-action:hover{ color:#25F09A }
+
+.lp-comments{
+  margin-top:10px;
+  border-top:1px solid rgba(255,255,255,.12);
+  padding-top:8px;
+}
+
+.lp-comment{
+  display:flex;
+  gap:10px;
+  font-size:13px;
+  align-items:flex-start;
+  padding:6px 0;
+  opacity:.9;
+}
+
+
+.lp-cm-ava{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  object-fit:cover;
+  border:1px solid rgba(255,255,255,.15);
+}
+
+.lp-cm-body{
+  background:rgba(0,0,0,.55);
+  padding:8px 12px;
+  border-radius:14px;
+  flex:1;
+}
+
+.lp-cm-name{
+  font-weight:800;
+  font-size:13px;
+  color:#25F09A;
+}
+
+.lp-cm-text{
+  font-size:14px;
+  line-height:1.35;
+  margin-top:2px;
+}
+
+/* ===== COMMENT INPUT FIX ===== */
+
+.lp-comment-box{
+  display:flex;
+  gap:8px;
+  margin-top:8px;
+  align-items:center;
+}
+
+.lp-comment-input{
+  flex:1;
+  height:42px;
+  padding:0 14px;
+  border-radius:999px;
+  background:rgba(0,0,0,.6);
+  border:1px solid rgba(255,255,255,.15);
+  color:#fff;
+  font-size:14px;
+}
+
+.lp-comment-send{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#25F09A,#5FA8FF);
+  border:none;
+  font-size:18px;
+  font-weight:900;
+  color:#000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 0 14px rgba(37,240,154,.6);
+  cursor:pointer;
+}
+.lp-comment-send:hover{
+  filter:brightness(1.15);
+}
+
+
+
+.lp-cm-actions{
+  font-size:12px;
+  opacity:.7;
+  cursor:pointer;
+  margin-top:4px;
+}
+
+.lp-replies{
+  margin-top:8px;
+  padding-left:14px;
+  border-left:2px solid rgba(255,255,255,.1);
+}
+
+.lp-reply{
+  display:flex;
+  gap:8px;
+  margin-top:6px;
+}
+
+.lp-reply img{
+  width:26px;
+  height:26px;
+  border-radius:50%;
+}
+.lp-reply-box{
+  display:flex;
+  gap:6px;
+  margin-top:6px;
+}
+.lp-reply-box input{
+  flex:1;
+  background:rgba(0,0,0,.6);
+  border-radius:999px;
+}
+.lp-reply-box button{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+}
+
+.hidden{
+  display:none !important;
+}
+
+
+.lp-del{
+  margin-left:auto;
+  cursor:pointer;
+  opacity:.6;
+}
+.lp-del:hover{
+  color:#ff3b6b;
+}
+
+
+.cm-del{
+  margin-left:10px;
+  cursor:pointer;
+  opacity:.5;
+}
+.cm-del:hover{
+  color:#ff4d6d;
+}
+
+
+.cm-like{
+  cursor:pointer;
+  opacity:.8;
+}
+.cm-like:hover{
+  color:#ff3b6b;
+  filter:drop-shadow(0 0 6px rgba(255,59,107,.6));
+}
+
+
+/* ===== MOBILE TAB BAR ===== */
+
+.lp-tabbar{
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  height:64px;
+  display:flex;
+  justify-content:space-around;
+  align-items:center;
+  background:rgba(0,0,0,.85);
+  border-top:1px solid rgba(255,255,255,.15);
+  backdrop-filter: blur(12px);
+  z-index:9999;
+}
+
+.lp-tab{
+  flex:1;
+  text-align:center;
+  color:#aaa;
+  font-size:12px;
+  cursor:pointer;
+  position:relative;
+}
+
+.lp-tab .icon{
+  font-size:22px;
+  line-height:22px;
+}
+
+.lp-tab.active{
+  color:#25F09A;
+}
+
+.lp-tab.active .icon{
+  filter: drop-shadow(0 0 10px #25F09A);
+}
+
+.lp-tab .badge{
+  position:absolute;
+  top:4px;
+  right:30%;
+  width:10px;
+  height:10px;
+  background:#ff3b6b;
+  border-radius:50%;
+  box-shadow:0 0 10px #ff3b6b;
+}
+
+
+
+/* ===== TAB BAR HIDE ON SCROLL ===== */
+.lp-tabbar{
+  transition: transform .35s ease, opacity .35s ease;
+}
+
+.lp-tabbar.hide{
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.lp-post-video{
+  width:100%;
+  margin-top:10px;
+  border-radius:14px;
+  background:#000;
+}
+
+
+.lp-topbar{
+  position: sticky;       /* nếu muốn dính top */
+  top: 0;
+  left: 0;
+  width: 100vw;           /* FULL WIDTH */
+  margin-left: calc(50% - 50vw); /* phá giới hạn shell */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(0,0,0,.5);
+  border-bottom: 1px solid rgba(255,255,255,.12);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+}
+
+/* trạng thái thu gọn */
+.lp-compose.compact{
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+/* ẩn textarea + actions khi thu gọn */
+.lp-compose.compact textarea,
+.lp-compose.compact .lp-compose-actions{
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* avatar vẫn giữ */
+.lp-compose.compact .lp-compose-row{
+  align-items: center;
+}
+
+
+.lp-post + .lp-post{
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+
+
+.lp-post-inner{
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 14px 14px 30px; /* ✅ ĐỆM ĐÁY CHUẨN FACEBOOK */
+}
+
+
+.lp-post-text,
+.lp-cm-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+
+
+/* ===== FULLSCREEN COMPOSE MODAL ===== */
+.lp-compose-modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+  z-index:10000;
+  display:flex;
+  justify-content:center;
+  align-items:flex-end;
+}
+
+.lp-compose-modal.hidden{
+  display:none;
+}
+
+.lp-compose-sheet{
+  width:100%;
+  height:100%;
+  background:#000;
+  display:flex;
+  flex-direction:column;
+  animation: slideUp .28s ease;
+}
+
+@keyframes slideUp{
+  from{ transform:translateY(100%); }
+  to{ transform:translateY(0); }
+}
+
+.lp-compose-header{
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
+  height:52px;
+  padding: 0 14px;
+
+  background: rgba(10,10,10,.88);
+  backdrop-filter: blur(14px);
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+
+/* nút đóng */
+.lp-compose-header .lp-close{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  border:none;
+  background:rgba(255,255,255,.08);
+  color:#aaa;
+  font-size:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+
+/* title giữa */
+.lp-header-title{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  font-weight:700;
+  font-size:15px;
+  opacity:.9;
+}
+
+/* nút đăng */
+/* nút gửi (icon) */
+.lp-compose-header .lp-submit.icon{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  border:none;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-size:18px;
+  font-weight:900;
+
+  color:#000;
+  background:linear-gradient(135deg,#25F09A,#5FA8FF);
+  box-shadow:0 0 10px rgba(37,240,154,.45);
+
+  padding:0;
+}
+
+/* khi chưa có nội dung */
+.lp-compose-header .lp-submit.icon:disabled{
+  opacity:.35;
+  box-shadow:none;
+}
+
+
+.lp-compose-header .title{
+  padding-top: calc(14px + env(safe-area-inset-top));
+  font-weight:900;
+}
+
+.lp-compose-header button{
+  background:none;
+  border:none;
+  color:#25F09A;
+  font-size:16px;
+  font-weight:900;
+}
+
+.lp-compose-body{
+  flex:1;
+  padding:16px;
+  padding-bottom: 68px; /* chừa footer */
+  overflow-y:auto;
+  -webkit-overflow-scrolling: touch;
+
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+
+#postTextModal{
+  width:100%;
+  height:100%;
+  resize:none;
+  background:transparent;
+  border:none;
+  outline:none;
+  color:#fff;
+  font-size:16px;
+  line-height:1.45;
+}
+
+
+/* ===== COMPOSE FOOTER ===== */
+.lp-compose-footer{
+  position: fixed;   /* 🔥 đổi từ sticky → fixed */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10001;
+
+  display:flex;
+  gap:18px;
+  align-items:center;
+
+  height:52px;
+  padding:0 16px;
+
+  background: rgba(10,10,10,.95);
+  backdrop-filter: blur(14px);
+  border-top:1px solid rgba(255,255,255,.08);
+
+  transition: transform .25s ease;
+}
+
+/* icon tool */
+.lp-tool{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:rgba(255,255,255,.08);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-size:18px;
+  cursor:pointer;
+  user-select:none;
+}
+
+.lp-tool:hover{
+  background:rgba(255,255,255,.16);
+}
+
+
+
+
+
+/* ===== COMPOSE PREVIEW (FIX LAYOUT) ===== */
+/* container preview */
+.lp-compose-preview{
+  position: relative;
+
+  /* 🔥 ĐẨY LÊN CAO HƠN */
+  margin-top: 8px;
+  margin-bottom: auto;   /* QUAN TRỌNG: đẩy preview lên */
+
+  width: calc(100% - 32px);
+  max-height: 45vh;
+  min-height: 160px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border-radius:14px;
+  overflow:hidden;
+  background:rgba(0,0,0,.75);
+  border:1px solid rgba(255,255,255,.12);
+}
+
+
+.lp-compose-preview.hidden{
+  display:none;
+}
+/* ẢNH: hiển thị đầy đủ */
+.lp-compose-preview img{
+  max-width:100%;
+  max-height:100%;
+  object-fit: contain;     /* 🔥 KHÔNG CẮT ẢNH */
+  display:block;
+}
+
+/* VIDEO: vẫn cover cho đẹp */
+.lp-compose-preview video{
+  width:100%;
+  height:100%;
+  object-fit: cover;
+  background:#000;
+}
+
+/* nút xoá */
+.lp-preview-remove{
+  position:absolute;
+  top:8px;
+  right:8px;
+  z-index:5;
+
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  border:none;
+
+  background:rgba(0,0,0,.6);
+  color:#fff;
+  font-size:18px;
+}
+
+
+/* ===== CENTER IMAGE (KHÔNG CHE INPUT) ===== */
+.lp-compose-body.center-image{
+  justify-content: flex-start;
+}
+
+/* textarea vẫn hiện, nhưng gọn */
+.lp-compose-body.center-image textarea{
+  height: 64px;
+  min-height: 64px;
+  max-height: 64px;
+}
+
+/* preview được đẩy lên cao & nổi bật */
+.lp-compose-body.center-image .lp-compose-preview{
+  margin-top: 16px;
+  margin-bottom: auto;      /* 🔥 đẩy ảnh lên cao */
+  max-height: 55vh;         /* chiếm phần lớn modal */
+}
+
+
+/* 🔒 CHẶN SCROLL XUYÊN NỀN */
+.lp-compose-modal{
+  overscroll-behavior: contain;
+}
+
+/* body modal tự scroll */
+.lp-compose-sheet{
+  overscroll-behavior: contain;
+}
+
+
+.lp-post-images{
+  margin-top:10px;
+  display:grid;
+  gap:4px;
+}
+
+.lp-post-images.grid-1{
+  grid-template-columns:1fr;
+}
+
+.lp-post-images.grid-2{
+  grid-template-columns:1fr 1fr;
+}
+
+.lp-post-images.grid-3,
+.lp-post-images.grid-4{
+  grid-template-columns:1fr 1fr;
+}
+
+.lp-post-images img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:10px;
+}
+
+
+.lp-preview-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:6px;
+  width:100%;
+}
+
+.lp-preview-item{
+  position:relative;
+  border-radius:10px;
+  overflow:hidden;
+}
+
+.lp-preview-item img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.lp-preview-item .lp-preview-remove{
+  position:absolute;
+  top:4px;
+  right:4px;
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  border:none;
+  background:rgba(0,0,0,.6);
+  color:#fff;
+  font-size:14px;
+  cursor:pointer;
+}
+
+
+.lp-lightbox{
+  position:fixed;
+  inset:0;
+  z-index:20000;
+  background:rgba(0,0,0,.85);
+  backdrop-filter: blur(6px);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.lp-lightbox.hidden{
+  display:none;
+}
+
+.lp-lightbox img{
+  max-width:92vw;
+  max-height:92vh;
+  border-radius:14px;
+  object-fit:contain;
+  box-shadow:0 0 40px rgba(0,0,0,.6);
+  animation: zoomIn .18s ease;
+}
+
+@keyframes zoomIn{
+  from{ transform:scale(.92); opacity:0 }
+  to{ transform:scale(1); opacity:1 }
+}
+
+
+
+.lp-img-indicator{
+  position:fixed;
+  top:16px;
+  left:50%;
+  transform:translateX(-50%);
+
+  padding:6px 12px;
+  border-radius:999px;
+
+  background:rgba(0,0,0,.55);
+  color:#fff;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.5px;
+
+  z-index:20001;
+  pointer-events:none;
+  backdrop-filter: blur(6px);
+}
+
+
+/* ===== SUBMIT LOADING ===== */
+.lp-submit.loading{
+  pointer-events:none;
+  opacity:.6;
+}
+
+.lp-submit.loading::after{
+  content:"⏳";
+  margin-left:6px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin{
+  from{ transform:rotate(0deg) }
+  to{ transform:rotate(360deg) }
+}
+
+/* ===== TOAST ===== */
+.lp-toast{
+  position:fixed;
+  bottom:90px;
+  left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:rgba(0,0,0,.85);
+  color:#fff;
+  padding:10px 16px;
+  border-radius:12px;
+  font-size:14px;
+  z-index:30000;
+  opacity:0;
+  transition:.25s;
+}
+
+.lp-toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+
+
+.lp-post-img-wrap{
+  position:relative;
+  overflow:hidden;
+  border-radius:10px;
+}
+
+.lp-post-img-wrap img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.lp-more-overlay{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  color:#fff;
+  font-size:32px;
+  font-weight:900;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  backdrop-filter: blur(2px);
+}
+
+
+/* ===== FACEBOOK IMAGE LAYOUT ===== */
+.lp-post-images{
+  margin-top:10px;
+  display:grid;
+  gap:4px;
+}
+
+/* ảnh chung */
+.lp-post-images .fb-img{
+  position:relative;
+  overflow:hidden;
+  border-radius:12px;
+}
+
+.lp-post-images img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+/* ===== 1 ẢNH ===== */
+.lp-post-images.fb-1{
+  grid-template-columns:1fr;
+}
+.lp-post-images.fb-1 .fb-img{
+  aspect-ratio: 4 / 3;
+}
+
+/* ===== 2 ẢNH ===== */
+.lp-post-images.fb-2{
+  grid-template-columns:1fr 1fr;
+}
+.lp-post-images.fb-2 .fb-img{
+  aspect-ratio:1 / 1;
+}
+
+/* ===== 3 ẢNH ===== */
+.lp-post-images.fb-3{
+  grid-template-columns:2fr 1fr;
+  grid-template-rows:1fr 1fr;
+}
+.lp-post-images.fb-3 .img-0{
+  grid-row:1 / span 2;
+}
+
+/* ===== 4 ẢNH ===== */
+.lp-post-images.fb-4{
+  grid-template-columns:1fr 1fr;
+  grid-template-rows:1fr 1fr;
+}
+
+/* ===== ≥5 ẢNH ===== */
+.lp-post-images.fb-5{
+  grid-template-columns:2fr 1fr;
+  grid-template-rows:1fr 1fr;
+}
+.lp-post-images.fb-5 .img-0{
+  grid-row:1 / span 2;
+}
+
+/* overlay +N */
+.fb-more{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  color:#fff;
+  font-size:34px;
+  font-weight:900;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  backdrop-filter: blur(2px);
+}
+
+/* ===== GIỚI HẠN KHUNG ẢNH FEED (ANTI THÔ) ===== */
+
+/* wrapper ảnh */
+.lp-post-images .fb-img{
+  position:relative;
+  overflow:hidden;
+  border-radius:12px;
+
+  /* 🔥 GIỚI HẠN KHUNG */
+  aspect-ratio: 1 / 1;        /* mặc định vuông */
+  max-height: 420px;          /* không cao quá */
+}
+
+/* ảnh bên trong */
+.lp-post-images .fb-img img{
+  width:100%;
+  height:100%;
+  object-fit:cover;           /* crop nhẹ */
+  display:block;
+}
+
+/* ẢNH ĐẦU TO HƠN */
+.lp-post-images .img-0{
+  aspect-ratio: 4 / 3;
+  max-height: 520px;
+}
+
+
+@media (max-width:600px){
+  .lp-post-images .fb-img{
+    max-height: 320px;
+  }
+
+  .lp-post-images .img-0{
+    max-height: 420px;
+  }
+}
+
+
+.lp-post-tools{
+  margin-left:auto;
+  display:flex;
+  gap:10px;
+}
+
+.lp-edit{
+  cursor:pointer;
+  opacity:.6;
+}
+.lp-edit:hover{
+  color:#25F09A;
+}
+
+
+/* ===== HIDE TOPBAR + COMPOSE ON SCROLL ===== */
+.lp-topbar,
+.lp-compose{
+  transition: transform .35s ease, opacity .25s ease;
+}
+
+/* trạng thái ẩn */
+.lp-topbar.hide,
+.lp-compose.hide{
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+
+
+.lp-gift-users{
+  margin-top:6px;
+  font-size:13px;
+  opacity:.8;
+  cursor:pointer;
+}
+.lp-gift-users:hover{
+  color:#25F09A;
+}
+.gift-user{
+  margin-right:6px;
+  font-weight:700;
+}
+
+
+
+.lp-gift-users{
+  margin-top:6px;
+  font-size:13px;
+  opacity:.9;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.gift-user{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:rgba(255,255,255,.06);
+  padding:4px 8px;
+  border-radius:999px;
+}
+
+.gift-user img{
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  object-fit:cover;
+}
+
+.gift-user b{
+  font-weight:700;
+  font-size:12px;
+}
+
+.gift-user i{
+  font-style:normal;
+  font-weight:800;
+  color:#25F09A;
+}
+
+.gift-more{
+  font-weight:900;
+  margin-left:4px;
+}
+
+
+.lp-verified {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #1d9bf0; /* xanh verified */
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+  vertical-align: middle;
+}
+
+
+#socialConfirmModal{display:none;position:fixed;inset:0;z-index:9999}
+#socialConfirmModal.show{display:block}
+.scm-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55)}
+.scm-box{
+  position:relative;
+  width:340px;
+  max-width:90%;
+  margin:18vh auto;
+  background:#111;
+  color:#fff;
+  border-radius:14px;
+  padding:16px;
+}
+.scm-input{
+  width:100%;
+  padding:8px;
+  border-radius:8px;
+  border:none;
+  margin:10px 0;
+}
+.scm-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+}
+.scm-actions button{
+  border:none;
+  padding:6px 14px;
+  border-radius:8px;
+}
+
+
+
+#forceLogoutModal{
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  display:none;
+}
+
+#forceLogoutModal.show{
+  display:block;
+}
+
+.fl-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  backdrop-filter: blur(6px);
+}
+
+.fl-box{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  width:88%;
+  max-width:360px;
+  background:#121212;
+  border-radius:18px;
+  padding:26px 22px;
+  text-align:center;
+  color:#fff;
+  box-shadow:0 0 40px rgba(255,0,80,.35);
+  animation:pop .25s ease;
+}
+
+@keyframes pop{
+  from{ transform:translate(-50%,-55%) scale(.95); opacity:0 }
+  to{ transform:translate(-50%,-50%) scale(1); opacity:1 }
+}
+
+.fl-icon{
+  font-size:42px;
+  margin-bottom:10px;
+}
+
+.fl-title{
+  font-size:18px;
+  font-weight:700;
+  margin-bottom:6px;
+}
+
+.fl-msg{
+  font-size:14px;
+  opacity:.9;
+  margin-bottom:10px;
+}
+
+.fl-sub{
+  font-size:12px;
+  opacity:.6;
+}
+
+
+
+
+/* ==========================================
+   LIVESTREAM PRO - LUXURY SOCIAL
+   PREMIUM BLACK & GOLD
+========================================== */
+
+:root {
+  --sg-bg: #08090d;
+  --sg-panel: #17181d;
+  --sg-gold: #d8b87b;
+  --sg-light: #f4dfb5;
+  --sg-muted: #aaa5a0;
+  --sg-border: rgba(217,184,123,.32);
+  --sg-red: #d97979;
+}
+
+body.social-page {
+  margin: 0;
+  padding: 0;
+  min-height: 100dvh;
+  overflow-x: hidden;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(175,126,53,.1),
+      transparent 55%
+    ),
+    linear-gradient(180deg,#101116,#08090d);
+
+  color: #f7efe0;
+  font-family:
+    system-ui,-apple-system,"Segoe UI",sans-serif;
+
+  -webkit-text-size-adjust: 100%;
+}
+
+body.social-page *,
+body.social-page *::before,
+body.social-page *::after {
+  box-sizing: border-box;
+}
+
+body.social-page .hidden,
+body.social-page [hidden] {
+  display: none !important;
+}
+
+/* ===== SVG ===== */
+
+body.social-page .lp-i {
+  width: 21px;
+  height: 21px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+/* ==========================================
+   HEADER
+========================================== */
+
+body.social-page .lp-topbar {
+  position: sticky;
+  top: 0;
+  left: auto;
+
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+
+  min-height: 72px;
+
+  padding:
+    calc(env(safe-area-inset-top,0px) + 8px)
+    16px
+    11px;
+
+  display: grid;
+  grid-template-columns: 43px minmax(0,1fr) 43px;
+  align-items: center;
+  gap: 9px;
+
+  background:
+    radial-gradient(
+      ellipse at top,
+      rgba(203,153,78,.12),
+      transparent 80%
+    ),
+    rgba(13,14,18,.97);
+
+  border-bottom: 1px solid var(--sg-border);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  z-index: 1000;
+}
+
+body.social-page .lp-topbar::after {
+  content: "";
+  position: absolute;
+
+  left: 16%;
+  right: 16%;
+  bottom: -1px;
+
+  height: 1px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #e1bd7c,
+    transparent
+  );
+}
+
+/* BACK */
+
+body.social-page .lp-back-btn {
+  width: 43px;
+  height: 43px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  border: 1px solid rgba(220,182,112,.42);
+  border-radius: 13px;
+
+  background: linear-gradient(
+    145deg,
+    #30271d,
+    #121419
+  );
+
+  color: var(--sg-light);
+}
+
+body.social-page .lp-back-btn:active {
+  transform: scale(.95);
+}
+
+/* CENTER BRAND */
+
+body.social-page .lp-head-center {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 4px;
+  text-align: center;
+}
+
+body.social-page .lp-head-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.7px;
+  color: var(--sg-gold);
+  white-space: nowrap;
+}
+
+body.social-page .lp-head-brand .lp-i {
+  width: 15px;
+  height: 15px;
+}
+
+body.social-page .lp-head-center h1 {
+  margin: 0;
+
+  font-family: Georgia,"Times New Roman",serif;
+  font-size: 27px;
+  line-height: 1.15;
+  font-weight: 700;
+
+  color: var(--sg-light);
+  text-shadow: 0 3px 16px rgba(211,161,77,.16);
+}
+
+body.social-page .lp-head-line {
+  width: 45px;
+  height: 1px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--sg-gold),
+    transparent
+  );
+}
+
+body.social-page .lp-head-symbol {
+  display: grid;
+  place-items: center;
+
+  color: var(--sg-gold);
+}
+
+body.social-page .lp-head-symbol .lp-i {
+  width: 26px;
+  height: 26px;
+}
+
+/* ==========================================
+   COMPOSER
+========================================== */
+
+body.social-page .lp-compose {
+  position: sticky;
+  top: calc(72px + env(safe-area-inset-top,0px));
+
+  width: 100%;
+  max-width: 720px;
+
+  margin: 0 auto;
+  padding: 16px;
+
+  border: none;
+  border-bottom: 1px solid var(--sg-border);
+  border-radius: 0;
+
+  background:
+    linear-gradient(
+      140deg,
+      rgba(34,29,24,.97),
+      rgba(15,17,22,.98)
+    );
+
+  box-shadow: 0 9px 25px rgba(0,0,0,.24);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  z-index: 900;
+}
+
+body.social-page .lp-compose-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+
+  margin-bottom: 13px;
+}
+
+body.social-page .lp-compose-heading-left {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  color: var(--sg-light);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+}
+
+body.social-page .lp-compose-heading-left .lp-i {
+  width: 15px;
+  height: 15px;
+  color: var(--sg-gold);
+}
+
+body.social-page .lp-compose-kicker {
+  color: #9d8968;
+  font-size: 9px;
+  letter-spacing: 1.3px;
+}
+
+body.social-page .lp-compose-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+body.social-page .lp-compose-row .lp-ava {
+  width: 47px;
+  height: 47px;
+  flex: 0 0 47px;
+
+  padding: 2px;
+
+  border: 2px solid var(--sg-gold);
+  border-radius: 50%;
+
+  object-fit: cover;
+  background: #18191d;
+}
+
+body.social-page #postText {
+  flex: 1;
+  min-width: 0;
+
+  height: 47px;
+  min-height: 47px;
+
+  padding: 13px 14px;
+  margin: 0;
+
+  border: 1px solid var(--sg-border);
+  border-radius: 13px;
+  outline: none;
+
+  resize: none;
+  overflow: hidden;
+
+  background: linear-gradient(
+    130deg,
+    #29251f,
+    #14161b
+  );
+
+  color: #f5e5c6;
+  font-size: 16px;
+  line-height: 1.3;
+
+  cursor: pointer;
+}
+
+body.social-page #postText::placeholder {
+  color: #b1a69a;
+}
+
+body.social-page .lp-compose-trigger {
+  width: 45px;
+  height: 45px;
+  flex-shrink: 0;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  border: 1px solid #ebcc8f;
+  border-radius: 13px;
+
+  background: linear-gradient(
+    135deg,
+    #f4deb1,
+    #be9658
+  );
+
+  color: #241b10;
+}
+
+body.social-page .lp-compose-trigger:active {
+  transform: scale(.95);
+}
+
+/* Thu gọn khi cuộn, giữ chức năng cũ */
+
+body.social-page .lp-compose.compact {
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+
+body.social-page .lp-compose.compact
+.lp-compose-heading {
+  display: none;
+}
+
+body.social-page .lp-compose.compact #postText {
+  height: 0;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  border: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ==========================================
+   FEED
+========================================== */
+
+body.social-page .lp-feed {
+  width: 100%;
+  max-width: 720px;
+
+  margin: 0 auto;
+  padding:
+    14px
+    12px
+    calc(110px + env(safe-area-inset-bottom,0px));
+
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  border: none;
+  background: transparent;
+}
+
+body.social-page .lp-post {
+  width: 100%;
+  max-width: 100%;
+
+  margin: 0;
+  padding: 0;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(223,185,114,.31);
+  border-radius: 19px;
+
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(191,140,67,.08),
+      transparent 54%
+    ),
+    linear-gradient(
+      145deg,
+      #211e1c,
+      #13151a 65%
+    );
+
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.035),
+    0 9px 30px rgba(0,0,0,.3);
+}
+
+body.social-page .lp-post + .lp-post {
+  border-top: 1px solid rgba(223,185,114,.31);
+}
+
+body.social-page .lp-post-inner {
+  width: 100%;
+  max-width: 100%;
+
+  margin: 0;
+  padding: 15px 15px 18px;
+}
+
+/* ===== POST HEADER ===== */
+
+body.social-page .lp-post-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  min-width: 0;
+}
+
+body.social-page .lp-post-head > div:not(.lp-post-tools) {
+  min-width: 0;
+  flex: 1;
+}
+
+body.social-page .lp-post-head .lp-ava {
+  width: 49px;
+  height: 49px;
+  flex: 0 0 49px;
+
+  padding: 2px;
+
+  border: 2px solid var(--sg-gold);
+  border-radius: 50%;
+
+  object-fit: cover;
+  background: #17181b;
+}
+
+body.social-page .lp-post-name {
+  color: #f5e5c5;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+body.social-page .lp-post-time {
+  margin-top: 5px;
+  color: #a8a1a0;
+  font-size: 11px;
+  opacity: 1;
+}
+
+body.social-page .lp-verified {
+  background: #2377b8;
+  color: white;
+  border: 1px solid #73bfff;
+}
+
+/* EDIT / DELETE */
+
+body.social-page .lp-post-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+body.social-page .lp-edit,
+body.social-page .lp-del {
+  width: 33px;
+  height: 33px;
+
+  display: inline-grid;
+  place-items: center;
+
+  margin: 0;
+  opacity: 1;
+
+  border: 1px solid var(--sg-border);
+  border-radius: 10px;
+
+  background: #29251f;
+  color: var(--sg-gold);
+
+  font-size: 14px;
+}
+
+body.social-page .lp-del {
+  color: #e19b96;
+  border-color: rgba(220,128,120,.35);
+}
+
+/* ===== POST TEXT ===== */
+
+body.social-page .lp-post-text {
+  margin-top: 15px;
+
+  font-size: 14px;
+  line-height: 1.75;
+  font-weight: 400;
+
+  color: #ece5d9;
+
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* ===== MEDIA ===== */
+
+body.social-page .lp-post-images {
+  width: 100%;
+  margin-top: 14px;
+  gap: 5px;
+}
+
+body.social-page .lp-post-images .fb-img {
+  overflow: hidden;
+  border-radius: 11px;
+  background: #090a0d;
+}
+
+body.social-page .lp-post-images img {
+  display: block;
+  width: 100%;
+  object-fit: cover;
+}
+
+body.social-page .lp-post-images.fb-1 .fb-img {
+  aspect-ratio: auto;
+  max-height: none;
+}
+
+body.social-page .lp-post-images.fb-1 img {
+  width: 100%;
+  height: auto;
+  max-height: 480px;
+  object-fit: contain;
+}
+
+body.social-page .lp-post-video {
+  display: block;
+  width: 100%;
+  max-height: 470px;
+
+  margin-top: 14px;
+
+  border: 1px solid var(--sg-border);
+  border-radius: 12px;
+  background: #000;
+}
+
+/* ==========================================
+   LIKE / COMMENT / GIFT BUTTONS
+========================================== */
+
+body.social-page .lp-actions {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 8px;
+
+  margin-top: 17px;
+  padding-top: 14px;
+  padding-bottom: 0;
+
+  border-top: 1px solid rgba(218,183,119,.19);
+}
+
+body.social-page .lp-action {
+  min-width: 0;
+  min-height: 43px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  padding: 8px 6px;
+
+  border: 1px solid rgba(218,183,119,.26);
+  border-radius: 11px;
+
+  background: linear-gradient(
+    145deg,
+    #29251f,
+    #191a1e
+  );
+
+  color: #e8d2a9;
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+  opacity: 1;
+}
+
+body.social-page .lp-actions .lp-action {
+  width: 100%;
+  font-family: inherit;
+}
+
+body.social-page .lp-action .lp-i {
+  width: 18px;
+  height: 18px;
+  color: var(--sg-gold);
+}
+
+body.social-page .lp-action b {
+  font-size: 11px;
+  color: #d9bd8b;
+  font-weight: 750;
+}
+
+body.social-page .lp-action:active {
+  transform: scale(.97);
+}
+
+/* ===== GIFT USERS ===== */
+
+body.social-page .lp-gift-users {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+
+  margin-top: 13px;
+  padding-top: 12px;
+
+  border-top: 1px solid rgba(218,183,119,.15);
+
+  color: #c5ad82;
+  font-size: 11px;
+}
+
+body.social-page .gift-user {
+  padding: 5px 8px;
+
+  border: 1px solid rgba(219,184,118,.25);
+  border-radius: 20px;
+
+  background: #29241e;
+  color: #f0debf;
+}
+
+body.social-page .gift-user i {
+  color: #e7c98f;
+}
+
+/* ==========================================
+   COMMENTS
+========================================== */
+
+body.social-page .lp-comments {
+  margin-top: 15px;
+  padding-top: 14px;
+
+  border-top: 1px solid var(--sg-border);
+}
+
+body.social-page .lp-comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+body.social-page .lp-comment {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+
+  padding: 0;
+  opacity: 1;
+}
+
+body.social-page .lp-cm-ava {
+  width: 35px;
+  height: 35px;
+  flex-shrink: 0;
+
+  border: 1px solid var(--sg-gold);
+  border-radius: 50%;
+
+  object-fit: cover;
+  background: #17191d;
+}
+
+body.social-page .lp-cm-body {
+  min-width: 0;
+  flex: 1;
+
+  padding: 10px 12px;
+
+  border: 1px solid rgba(221,182,113,.2);
+  border-radius: 13px;
+
+  background: #1e2025;
+}
+
+body.social-page .lp-cm-name {
+  font-size: 12px;
+  font-weight: 800;
+  color: #e5c68c;
+}
+
+body.social-page .lp-cm-text {
+  margin-top: 5px;
+
+  font-size: 13px;
+  line-height: 1.6;
+  color: #eae4db;
+
+  overflow-wrap: anywhere;
+}
+
+body.social-page .lp-cm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+
+  margin-top: 9px;
+
+  font-size: 11px;
+  color: #b6aa9e;
+
+  cursor: pointer;
+  opacity: 1;
+}
+
+body.social-page .cm-like {
+  color: #d89b93;
+}
+
+body.social-page .cm-del {
+  color: #dd9391;
+}
+
+body.social-page .lp-replies {
+  margin-top: 12px;
+  padding-left: 12px;
+
+  border-left: 2px solid rgba(219,179,106,.35);
+}
+
+body.social-page .lp-reply {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+
+  margin-top: 10px;
+
+  color: #e9e2d5;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+body.social-page .lp-reply img {
+  width: 29px;
+  height: 29px;
+  flex-shrink: 0;
+  border-radius: 50%;
+
+  object-fit: cover;
+  border: 1px solid var(--sg-border);
+}
+
+body.social-page .lp-reply-box {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  margin-top: 9px;
+}
+
+body.social-page .lp-reply-box input,
+body.social-page .lp-comment-input {
+  flex: 1;
+  min-width: 0;
+  height: 43px;
+
+  padding: 0 13px;
+
+  border: 1px solid var(--sg-border);
+  border-radius: 12px;
+  outline: none;
+
+  background: #242329;
+  color: #fff;
+  font-size: 16px;
+}
+
+body.social-page .lp-comment-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin-top: 15px;
+}
+
+body.social-page .lp-comment-send,
+body.social-page .lp-reply-box button {
+  width: 43px;
+  height: 43px;
+  flex: 0 0 43px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  border: 1px solid #efce91;
+  border-radius: 12px;
+
+  background: linear-gradient(
+    135deg,
+    #f3ddb0,
+    #bd9457
+  );
+
+  color: #21190e;
+  font-size: 18px;
+  font-weight: 800;
+  box-shadow: none;
+}
+
+/* ==========================================
+   BOTTOM NAVIGATION
+========================================== */
+
+body.social-page .lp-tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  width: 100%;
+  max-width: 720px;
+  height: calc(69px + env(safe-area-inset-bottom,0px));
+
+  margin: 0 auto;
+  padding:
+    7px
+    8px
+    calc(7px + env(safe-area-inset-bottom,0px));
+
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 3px;
+
+  border: 1px solid rgba(218,181,113,.29);
+  border-bottom: none;
+  border-radius: 19px 19px 0 0;
+
+  background: rgba(17,18,23,.97);
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  box-shadow: 0 -9px 35px #0008;
+
+  z-index: 9999;
+}
+
+body.social-page .lp-tabbar .lp-tab {
+  position: relative;
+
+  flex: 1;
+  min-width: 0;
+  height: 53px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+
+  padding: 5px 2px;
+
+  border: 1px solid transparent;
+  border-radius: 12px;
+
+  background: transparent;
+
+  color: #9a9287;
+  font-size: 10px;
+  font-weight: 650;
+
+  cursor: pointer;
+}
+
+body.social-page .lp-tabbar .lp-tab .icon {
+  display: grid;
+  place-items: center;
+
+  width: 23px;
+  height: 23px;
+
+  font-size: inherit;
+  line-height: normal;
+
+  background: none;
+}
+
+body.social-page .lp-tabbar .lp-tab .lp-i {
+  width: 22px;
+  height: 22px;
+}
+
+body.social-page .lp-tabbar .lp-tab.active {
+  color: #efd5a1;
+
+  border-color: rgba(224,184,112,.33);
+
+  background: linear-gradient(
+    145deg,
+    #3a2c1c,
+    #211e1b
+  );
+}
+
+body.social-page .lp-tabbar .lp-tab.active .icon {
+  color: #f4d7a0;
+  filter: none;
+}
+
+body.social-page .lp-tabbar .badge {
+  position: absolute;
+  top: 3px;
+  right: 19%;
+
+  min-width: 10px;
+  min-height: 10px;
+
+  background: #d95762;
+  border-radius: 99px;
+  box-shadow: 0 0 8px rgba(217,87,98,.4);
+}
+
+body.social-page .lp-tabbar.hide {
+  transform: translateY(110%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ==========================================
+   CREATE / EDIT POST MODALS
+========================================== */
+
+body.social-page .lp-compose-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+
+  background: rgba(0,0,0,.82);
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+body.social-page .lp-compose-modal.hidden {
+  display: none !important;
+}
+
+body.social-page .lp-compose-sheet {
+  width: 100%;
+  max-width: 720px;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  margin: 0;
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(193,145,67,.11),
+      transparent 50%
+    ),
+    #111318;
+
+  border-left: 1px solid var(--sg-border);
+  border-right: 1px solid var(--sg-border);
+}
+
+body.social-page .lp-compose-header {
+  position: relative;
+  flex-shrink: 0;
+
+  height: calc(64px + env(safe-area-inset-top,0px));
+  min-height: calc(64px + env(safe-area-inset-top,0px));
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding:
+    env(safe-area-inset-top,0px)
+    16px
+    0;
+
+  border-bottom: 1px solid var(--sg-border);
+
+  background: rgba(24,24,26,.96);
+}
+
+body.social-page .lp-compose-header .lp-close,
+body.social-page .lp-compose-header .lp-submit.icon {
+  width: 41px;
+  height: 41px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+  border-radius: 12px;
+
+  font-size: 20px;
+}
+
+body.social-page .lp-compose-header .lp-close {
+  border: 1px solid var(--sg-border);
+  background: #2b2824;
+  color: var(--sg-light);
+}
+
+body.social-page .lp-compose-header .lp-submit.icon {
+  border: 1px solid #eac78e;
+  background: linear-gradient(135deg,#f2dcaa,#bb9254);
+  color: #261b0f;
+  box-shadow: none;
+}
+
+body.social-page .lp-header-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+
+  font-family: Georgia,serif;
+  font-size: 19px;
+  font-weight: 700;
+
+  color: var(--sg-light);
+  white-space: nowrap;
+}
+
+body.social-page .lp-compose-body {
+  flex: 1;
+  min-height: 0;
+
+  padding: 20px 17px 85px;
+
+  overflow-y: auto;
+
+  background: transparent;
+}
+
+body.social-page #postTextModal,
+body.social-page #editText {
+  width: 100%;
+  min-height: 160px;
+
+  padding: 7px 0;
+  border: none;
+  outline: none;
+  resize: none;
+
+  background: transparent;
+  color: #f6ead4;
+
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+body.social-page #postTextModal::placeholder {
+  color: #8e8d91;
+}
+
+body.social-page .lp-compose-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  width: 100%;
+  max-width: 720px;
+
+  margin: 0 auto;
+
+  height: calc(65px + env(safe-area-inset-bottom,0px));
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding:
+    8px
+    17px
+    calc(8px + env(safe-area-inset-bottom,0px));
+
+  border-top: 1px solid var(--sg-border);
+
+  background: rgba(22,22,25,.97);
+  backdrop-filter: blur(17px);
+
+  z-index: 10001;
+}
+
+body.social-page .lp-tool {
+  width: 43px;
+  height: 43px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid var(--sg-border);
+  border-radius: 12px;
+
+  background: #30271f;
+  color: var(--sg-gold);
+
+  font-size: 19px;
+  cursor: pointer;
+}
+
+body.social-page .lp-tool .lp-i {
+  width: 22px;
+  height: 22px;
+}
+
+/* PREVIEW */
+
+body.social-page .lp-compose-preview {
+  border: 1px solid var(--sg-border);
+  border-radius: 15px;
+
+  background: #0c0e12;
+}
+
+body.social-page .lp-preview-item {
+  border: 1px solid var(--sg-border);
+  border-radius: 11px;
+}
+
+body.social-page .lp-preview-remove {
+  background: #442426;
+  border: 1px solid rgba(224,151,141,.5);
+  color: #fff;
+}
+
+/* ==========================================
+   GIFT MODALS
+========================================== */
+
+body.social-page #giftModal,
+body.social-page #giftUserModal {
+  align-items: flex-end;
+}
+
+body.social-page #giftModal .lp-compose-sheet,
+body.social-page #giftUserModal .lp-compose-sheet {
+  height: auto;
+  max-height: 83dvh;
+
+  overflow-y: auto;
+
+  border: 1px solid rgba(230,186,113,.4);
+  border-bottom: none;
+  border-radius: 23px 23px 0 0;
+
+  box-shadow: 0 -15px 55px rgba(0,0,0,.55);
+}
+
+body.social-page #giftModal .lp-compose-header,
+body.social-page #giftUserModal .lp-compose-header {
+  min-height: 62px;
+  height: 62px;
+  padding-top: 0;
+}
+
+body.social-page #giftList,
+body.social-page #giftUserList {
+  display: grid;
+  gap: 8px;
+}
+
+body.social-page #giftList .lp-action,
+body.social-page #giftUserList .lp-action {
+  border: 1px solid var(--sg-border);
+  border-radius: 12px;
+  background: #27231f;
+}
+
+/* ==========================================
+   CONFIRM POPUP
+========================================== */
+
+body.social-page #socialConfirmModal {
+  position: fixed;
+  inset: 0;
+  z-index: 40000;
+  display: none;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 18px;
+}
+
+body.social-page #socialConfirmModal.show {
+  display: flex;
+}
+
+body.social-page .scm-backdrop {
+  position: absolute;
+  inset: 0;
+
+  background: rgba(0,0,0,.86);
+  backdrop-filter: blur(7px);
+}
+
+body.social-page .scm-box {
+  position: relative;
+
+  width: 100%;
+  max-width: 355px;
+
+  margin: 0;
+  padding: 26px 21px 20px;
+
+  border: 1px solid rgba(227,186,111,.5);
+  border-radius: 21px;
+
+  background: linear-gradient(
+    145deg,
+    #29231d,
+    #15171c 75%
+  );
+
+  color: #f6e7ca;
+
+  box-shadow: 0 25px 65px rgba(0,0,0,.65);
+}
+
+body.social-page #scmTitle {
+  margin: 0 0 14px;
+
+  color: var(--sg-light);
+  font-family: Georgia,serif;
+  font-size: 21px;
+  text-align: center;
+}
+
+body.social-page #scmBody {
+  color: #c2b9ac;
+  font-size: 13px;
+  line-height: 1.7;
+  text-align: center;
+}
+
+body.social-page .scm-input {
+  width: 100%;
+  height: 45px;
+
+  padding: 0 13px;
+  margin: 14px 0 0;
+
+  border: 1px solid var(--sg-border);
+  border-radius: 11px;
+  outline: none;
+
+  background: #202127;
+  color: #fff;
+  font-size: 16px;
+}
+
+body.social-page .scm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+
+  margin-top: 22px;
+}
+
+body.social-page .scm-actions button {
+  min-height: 45px;
+
+  padding: 9px 12px;
+  border-radius: 11px;
+
+  font-size: 13px;
+  font-weight: 750;
+}
+
+body.social-page #scmCancel {
+  border: 1px solid var(--sg-border);
+  background: #302c29;
+  color: #e1d7c6;
+}
+
+body.social-page #scmOk {
+  border: 1px solid #edd09a;
+  background: linear-gradient(135deg,#f2dbad,#bd9557);
+  color: #271d11;
+}
+
+/* ==========================================
+   IMAGE LIGHTBOX / TOAST
+========================================== */
+
+body.social-page .lp-lightbox {
+  z-index: 30000;
+  background: rgba(0,0,0,.95);
+}
+
+body.social-page .lp-lightbox img {
+  max-width: 95vw;
+  max-height: 85dvh;
+  border-radius: 11px;
+  object-fit: contain;
+}
+
+body.social-page .lp-img-indicator {
+  top: calc(env(safe-area-inset-top,0px) + 16px);
+
+  background: #29241d;
+  border: 1px solid var(--sg-border);
+
+  color: var(--sg-light);
+}
+
+body.social-page .lp-toast {
+  bottom: calc(92px + env(safe-area-inset-bottom,0px));
+
+  padding: 12px 17px;
+
+  border: 1px solid var(--sg-border);
+  border-radius: 12px;
+
+  background: #242127;
+  color: #f5e2bb;
+
+  box-shadow: 0 10px 28px #0009;
+}
+
+body.social-page #toast-container {
+  position: fixed;
+  z-index: 50000;
+
+  top: calc(env(safe-area-inset-top,0px) + 16px);
+  left: 12px;
+  right: 12px;
+}
+
+body.social-page #toast-container .toast {
+  border: 1px solid var(--sg-border);
+  border-radius: 12px;
+
+  background: #252329;
+  color: #f5e2bb;
+}
+
+body.social-page .msg-toast {
+  border: 1px solid var(--sg-border);
+  box-shadow: 0 9px 25px #000a !important;
+}
+
+/* FORCE LOGOUT */
+
+body.social-page #forceLogoutModal {
+  z-index: 60000;
+}
+
+body.social-page .fl-box {
+  border: 1px solid var(--sg-border);
+  border-radius: 19px;
+
+  background: linear-gradient(145deg,#29231d,#13151b);
+  box-shadow: 0 24px 65px #000b;
+}
+
+body.social-page .fl-title {
+  color: var(--sg-light);
+}
+
+body.social-page .fl-msg,
+body.social-page .fl-sub {
+  color: #b4aca1;
+}
+
+/* ==========================================
+   RESPONSIVE MOBILE
+========================================== */
+
+@media (max-width: 600px) {
+
+  body.social-page .lp-topbar {
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+
+  body.social-page .lp-compose {
+    padding: 13px 12px;
+  }
+
+  body.social-page .lp-compose.compact {
+    padding: 8px 12px;
+  }
+
+  body.social-page .lp-feed {
+    padding: 11px 9px
+      calc(105px + env(safe-area-inset-bottom,0px));
+    gap: 11px;
+  }
+
+  body.social-page .lp-post {
+    border-radius: 16px;
+  }
+
+  body.social-page .lp-post-inner {
+    padding: 13px 12px 16px;
+  }
+
+  body.social-page .lp-post-text {
+    font-size: 13.5px;
+  }
+
+  body.social-page .lp-post-images.fb-1 img {
+    max-height: 420px;
+  }
+
+}
+
+@media (max-width: 370px) {
+
+  body.social-page .lp-head-center h1 {
+    font-size: 24px;
+  }
+
+  body.social-page .lp-head-brand {
+    font-size: 8px;
+    letter-spacing: 1.2px;
+  }
+
+  body.social-page .lp-compose-heading-left {
+    font-size: 9px;
+  }
+
+  body.social-page .lp-compose-kicker {
+    font-size: 8px;
+  }
+
+  body.social-page .lp-compose-row {
+    gap: 7px;
+  }
+
+  body.social-page .lp-compose-row .lp-ava {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  body.social-page .lp-compose-trigger {
+    width: 40px;
+    height: 40px;
+  }
+
+  body.social-page .lp-tabbar .lp-tab {
+    font-size: 9px;
+  }
+
+  body.social-page .lp-action {
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  body.social-page .lp-action .lp-i {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.social-page *,
+  body.social-page *::before,
+  body.social-page *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}
+
+
+
+/* HEADER KHÔNG CÓ NÚT BACK */
+
+/* Tiêu đề luôn nằm chính giữa */
+body.social-page .lp-topbar .lp-head-center {
+  grid-column: 2;
+  justify-self: center;
+  width: 100%;
+  text-align: center;
+}
+
+/* Biểu tượng trang ở góc phải */
+body.social-page .lp-topbar .lp-head-symbol {
+  grid-column: 3;
+  justify-self: center;
+}
+
+
+
+</style>
+
+</head>
+
+<body class="social-page">
+
+<script src="/guard.js"></script>
+
+
+
+<!-- ===== LUXURY SOCIAL ICONS ===== -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="0" height="0"
+     aria-hidden="true"
+     style="position:absolute;overflow:hidden">
+
+  <symbol id="ls-back" viewBox="0 0 24 24">
+    <path d="m15 18-6-6 6-6"/>
+  </symbol>
+
+  <symbol id="ls-crown" viewBox="0 0 24 24">
+    <path d="m2 8 5 4 5-8 5 8 5-4-2 11H4L2 8ZM4 22h16"/>
+  </symbol>
+
+  <symbol id="ls-sparkle" viewBox="0 0 24 24">
+    <path d="m12 2 2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2L12 2Z"/>
+  </symbol>
+
+  <symbol id="ls-edit" viewBox="0 0 24 24">
+    <path d="m15 5 4 4M4 20l4.5-1 11-11a2.8 2.8 0 0 0-4-4l-11 11L4 20Z"/>
+  </symbol>
+
+  <symbol id="ls-globe" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9"/>
+    <path d="M3 12h18M12 3c-5 5-5 13 0 18M12 3c5 5 5 13 0 18"/>
+  </symbol>
+
+  <symbol id="ls-store" viewBox="0 0 24 24">
+    <path d="M3 10h18l-2-6H5l-2 6ZM5 10v11h14V10M9 21v-7h6v7"/>
+  </symbol>
+
+  <symbol id="ls-home" viewBox="0 0 24 24">
+    <path d="m3 11 9-8 9 8v10H3V11ZM9 21v-7h6v7"/>
+  </symbol>
+
+  <symbol id="ls-chat" viewBox="0 0 24 24">
+    <path d="M20 11a8 8 0 0 1-8 8 9 9 0 0 1-3.5-.8L4 20l1.2-4.6A8 8 0 1 1 20 11Z"/>
+  </symbol>
+
+  <symbol id="ls-user" viewBox="0 0 24 24">
+    <circle cx="12" cy="8" r="4"/>
+    <path d="M4 21a8 8 0 0 1 16 0"/>
+  </symbol>
+
+  <symbol id="ls-heart" viewBox="0 0 24 24">
+    <path d="M20.8 8.2c0 4.3-8.8 10.4-8.8 10.4S3.2 12.5 3.2 8.2a4.7 4.7 0 0 1 8.8-2.1 4.7 4.7 0 0 1 8.8 2.1Z"/>
+  </symbol>
+
+  <symbol id="ls-gift" viewBox="0 0 24 24">
+    <rect x="3" y="10" width="18" height="11" rx="1"/>
+    <path d="M2 7h20v4H2zM12 7v14M12 7C5 7 5 2 9 2c2 0 3 3 3 5ZM12 7c7 0 7-5 3-5-2 0-3 3-3 5Z"/>
+  </symbol>
+
+  <symbol id="ls-image" viewBox="0 0 24 24">
+    <rect x="3" y="3" width="18" height="18" rx="3"/>
+    <circle cx="8.5" cy="8.5" r="1.5"/>
+    <path d="m3 17 5-5 4 4 3-3 6 6"/>
+  </symbol>
+
+  <symbol id="ls-video" viewBox="0 0 24 24">
+    <rect x="3" y="5" width="13" height="14" rx="3"/>
+    <path d="m16 10 5-3v10l-5-3"/>
+  </symbol>
+
+  <symbol id="ls-clip" viewBox="0 0 24 24">
+    <path d="m8 12 6-6a4 4 0 0 1 6 6l-9 9a6 6 0 0 1-8-9l9-9"/>
+  </symbol>
+
+  <symbol id="ls-send" viewBox="0 0 24 24">
+    <path d="m22 2-7 20-4-9-9-4 20-7ZM11 13 22 2"/>
+  </symbol>
+
+</svg>
+
+<!-- ===== PREMIUM HEADER ===== -->
+<header class="lp-topbar">
+
+
+  <div class="lp-head-center">
+
+    <div class="lp-head-brand">
+      <svg class="lp-i">
+        <use href="#ls-crown"></use>
+      </svg>
+      <span>LIVESTREAM PRO</span>
+    </div>
+
+    <h1>News Feed</h1>
+
+    <div class="lp-head-line"></div>
+
+  </div>
+
+  <div class="lp-head-symbol" aria-hidden="true">
+    <svg class="lp-i">
+      <use href="#ls-sparkle"></use>
+    </svg>
+  </div>
+
+</header>
+
+
+
+
+<!-- ===== PREMIUM POST COMPOSER ===== -->
+
+<div class="lp-compose">
+
+  <div class="lp-compose-heading">
+
+    <div class="lp-compose-heading-left">
+      <svg class="lp-i">
+        <use href="#ls-sparkle"></use>
+      </svg>
+      <span>SHARE YOUR MOMENTS</span>
+    </div>
+
+    <span class="lp-compose-kicker">SOCIAL FEED</span>
+
+  </div>
+
+<div class="lp-compose-row">
+
+  <img
+    id="meAvatar"
+    class="lp-ava"
+    alt="Your profile picture"
+  >
+
+  <textarea
+    id="postText"
+    placeholder="What's on your mind?"
+    aria-label="Create a post"
+    readonly
+  ></textarea>
+
+  <button
+    type="button"
+    class="lp-compose-trigger"
+    onclick="openComposeModal()"
+    aria-label="Create a new post"
+  >
+    <svg class="lp-i">
+      <use href="#ls-edit"></use>
+    </svg>
+  </button>
+
+</div>
+
+  <!-- GIỮ LẠI INPUT ẨN CHO JS UPLOAD -->
+  <div class="lp-compose-actions" style="display:none">
+
+    <input
+      type="file"
+      id="postImage"
+      accept="image/*"
+      multiple
+    >
+
+    <input
+      type="file"
+      id="postVideo"
+      accept="video/*"
+    >
+
+    <button
+      class="lp-post-btn"
+      onclick="submitPost()"
+    >
+      Đăng bài
+    </button>
+
+  </div>
+
+</div>
+
+
+  <!-- FEED -->
+  <div id="lpFeed" class="lp-feed"></div>
+
+<div class="lp-shell">
+</div>
+
+
+
+
+
+<!-- ===== LUXURY BOTTOM NAVIGATION ===== -->
+
+<nav class="lp-tabbar" aria-label="Main navigation">
+
+  <button type="button"
+          class="lp-tab active"
+          data-tab="social">
+
+    <span class="icon">
+      <svg class="lp-i">
+        <use href="#ls-globe"></use>
+      </svg>
+    </span>
+
+    <span class="txt">Status</span>
+  </button>
+
+  <button type="button"
+          class="lp-tab"
+          data-tab="market">
+
+    <span class="icon">
+      <svg class="lp-i">
+        <use href="#ls-store"></use>
+      </svg>
+    </span>
+
+    <span class="txt">Market</span>
+  </button>
+
+  <button type="button"
+          class="lp-tab"
+          data-tab="lobby">
+
+    <span class="icon">
+      <svg class="lp-i">
+        <use href="#ls-home"></use>
+      </svg>
+    </span>
+
+    <span class="txt">Lobby</span>
+  </button>
+
+  <button type="button"
+          class="lp-tab"
+          data-tab="messages">
+
+    <span class="icon">
+      <svg class="lp-i">
+        <use href="#ls-chat"></use>
+      </svg>
+    </span>
+
+    <span class="txt">Chat</span>
+
+    <span class="badge hidden" id="msgBadge"></span>
+
+  </button>
+
+<button type="button"
+        class="lp-tab"
+        data-tab="profile"
+        data-lsp-href="/profile.html"
+        data-lsp-label="Opening your profile...">
+
+  <span class="icon">
+    <svg class="lp-i">
+      <use href="#ls-user"></use>
+    </svg>
+  </span>
+
+  <span class="txt">Profile</span>
+
+</button>
+
+</nav>
+
+
+
+
+
+<!-- FULLSCREEN COMPOSE MODAL -->
+<div id="composeModal" class="lp-compose-modal hidden">
+
+  <div class="lp-compose-sheet">
+    
+    <div class="lp-compose-header">
+  <button class="lp-close" onclick="closeComposeModal()">✕</button>
+
+<div class="lp-header-title">
+    Create Post
+</div>
+
+<button
+  class="lp-submit icon"
+  onclick="submitFromModal()"
+  title="Post"
+>
+  ➤
+</button>
+
+</div>
+
+    <div class="lp-compose-body">
+      <textarea
+  id="postTextModal"
+  placeholder="Share something..."
+></textarea>
+    </div>
+
+
+  <!-- COMPOSE PREVIEW -->
+<div id="composePreview" class="lp-compose-preview hidden">
+  <button class="lp-preview-remove" onclick="clearComposeMedia()">✕</button>
+  <img id="previewImage" class="hidden" />
+  <video id="previewVideo" class="hidden" controls playsinline></video>
+</div>
+
+  </div>
+
+
+
+
+
+  
+
+<!-- ===== PREMIUM COMPOSE FOOTER ===== -->
+
+<div class="lp-compose-footer">
+
+  <!-- CHỌN ẢNH -->
+  <label class="lp-tool" aria-label="Choose photos">
+    <svg class="lp-i">
+      <use href="#ls-image"></use>
+    </svg>
+
+    <input
+      type="file"
+      id="modalImage"
+      accept="image/*"
+      multiple
+      hidden
+    >
+  </label>
+
+  <!-- CHỌN VIDEO -->
+  <label class="lp-tool" aria-label="Choose a video">
+    <svg class="lp-i">
+      <use href="#ls-video"></use>
+    </svg>
+
+    <input
+      type="file"
+      id="modalVideo"
+      accept="video/*"
+      hidden
+    >
+  </label>
+
+
+  <!-- ĐÍNH KÈM -->
+  <label class="lp-tool" aria-label="Attach a file">
+    <svg class="lp-i">
+      <use href="#ls-clip"></use>
+    </svg>
+
+    <input
+      type="file"
+      id="modalFile"
+      hidden
+    >
+  </label>
+
+</div>
+<!-- KẾT THÚC lp-compose-footer -->
+
+</div>
+<!-- KẾT THÚC composeModal -->
+
+
+
+
+
+<!-- IMAGE LIGHTBOX -->
+<div id="imgLightbox" class="lp-lightbox hidden">
+  <img id="imgLightboxView">
+   <div id="imgIndicator" class="lp-img-indicator"></div>
+</div>
+
+
+<div id="lpToast" class="lp-toast">
+  Post updated successfully
+</div>
+
+
+<div id="toast-container"></div>
+
+
+
+
+<!-- ===== POST GIFT MODAL ===== -->
+<div id="giftModal" class="lp-compose-modal hidden">
+  <div class="lp-compose-sheet" style="height:auto">
+    <div class="lp-compose-header">
+      <button class="lp-close" onclick="closeGift()">✕</button>
+      <div class="lp-header-title">🎁 Send a Gift</div>
+    </div>
+
+    <div class="lp-compose-body" id="giftList"></div>
+  </div>
+</div>
+
+
+
+
+<div id="giftUserModal" class="lp-compose-modal hidden">
+  <div class="lp-compose-sheet" style="height:auto">
+    <div class="lp-compose-header">
+      <button class="lp-close" onclick="closeGiftUsers()">✕</button>
+     <div class="lp-header-title">🎁 Gift Senders</div>
+    </div>
+
+    <div class="lp-compose-body" id="giftUserList"></div>
+  </div>
+</div>
+
+
+
+
+
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/chat-global.js"></script>
+<script src="/social.js"></script>
+<script src="/push-init.js"></script>
+
+</body>
+</html>

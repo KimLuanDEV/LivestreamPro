@@ -1,0 +1,2200 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>MILITARY Statistics</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="/socket.io/socket.io.js"></script>
+
+<style>
+
+
+/* ==========================================
+   MILITARY STATISTICS - WHEEL8
+   ARMY COMMAND CENTER
+========================================== */
+
+:root {
+    --army-bg: #07110a;
+    --army-panel: #17281a;
+    --army-panel-light: #304630;
+    --army-gold: #d8b768;
+    --army-green: #92ff64;
+    --army-line: #506a45;
+    --army-text: #e7eedc;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    min-height: 100%;
+    background: #050a06;
+}
+
+body {
+    margin: 0;
+    padding: 16px 12px 35px;
+    min-height: 100vh;
+
+    color: var(--army-text);
+    font-family: system-ui, sans-serif;
+
+    background:
+        radial-gradient(
+            ellipse at 50% 0%,
+            rgba(84,119,55,.28),
+            transparent 55%
+        ),
+        repeating-linear-gradient(
+            135deg,
+            transparent 0 45px,
+            rgba(150,170,90,.018) 45px 90px
+        ),
+        linear-gradient(
+            180deg,
+            #1b2d1d,
+            #0a170d 48%,
+            #030804
+        );
+}
+
+/* ==========================================
+   MAIN TITLE
+========================================== */
+
+h2 {
+    max-width: 1100px;
+    margin: 0 auto 20px;
+    padding: 18px 10px;
+
+    text-align: center;
+    font-size: clamp(19px, 4vw, 27px);
+    font-weight: 1000;
+    letter-spacing: 2px;
+
+    color: #f4d78c;
+
+    background:
+        linear-gradient(
+            120deg,
+            #42583a,
+            #172719 65%,
+            #0b150d
+        );
+
+    border: 2px solid #b99a50;
+    border-bottom: 4px solid #d2ae5a;
+    border-radius: 6px;
+
+    box-shadow:
+        0 8px 22px #0009,
+        inset 0 1px 0 #ffffff25;
+
+    text-shadow:
+        0 2px 3px #000,
+        0 0 12px #e6bd4d44;
+}
+
+/* ==========================================
+   MILITARY PANELS
+========================================== */
+
+.stat-box {
+    position: relative;
+
+    max-width: 1100px;
+    margin: 0 auto 18px;
+    padding: 16px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #304431 0%,
+            #192a1d 22%,
+            #0c190f 80%,
+            #071009 100%
+        );
+
+    border: 2px solid #a88c4c;
+    border-bottom: 3px solid #c5a45b;
+    border-radius: 7px;
+
+    box-shadow:
+        0 8px 22px #0009,
+        inset 0 1px 0 #ffffff1b,
+        inset 0 0 20px #0005;
+}
+
+.stat-box::before {
+    content: "";
+    position: absolute;
+    inset: 5px;
+
+    border: 1px solid #79905a44;
+    border-radius: 3px;
+
+    pointer-events: none;
+}
+
+.stat-box h3 {
+    position: relative;
+    margin: 0 0 16px;
+    padding: 11px 12px;
+
+    color: #f0d48b;
+    font-size: 15px;
+    font-weight: 1000;
+    letter-spacing: 1.5px;
+    text-align: center;
+
+    background: linear-gradient(
+        180deg,
+        #40583a,
+        #1c2e20
+    );
+
+    border: 1px solid #b69a52;
+    border-bottom: 2px solid #d3b369;
+    border-radius: 4px;
+
+    text-shadow: 0 2px 3px #000;
+}
+
+.stat-box h3::before,
+.stat-box h3::after {
+    content: "★";
+    margin: 0 10px;
+    color: #d7b25d;
+}
+
+/* ==========================================
+   ROUND / TIMER / RESULT
+========================================== */
+
+.round-info {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.round-left,
+.round-center,
+.round-right {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 104px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    padding: 12px 5px;
+
+    background: linear-gradient(
+        180deg,
+        #263c29,
+        #101e14
+    );
+
+    border: 1px solid #728556;
+    border-bottom: 2px solid #b89a51;
+    border-radius: 5px;
+
+    box-shadow:
+        inset 0 1px 0 #ffffff15,
+        inset 0 0 12px #0007;
+}
+
+.round-info .label {
+    margin-bottom: 8px;
+
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 1.3px;
+
+    color: #d9c48c;
+    opacity: 1;
+}
+
+#roundId {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+
+    color: #a3ff75;
+    font-size: clamp(14px, 3.8vw, 22px);
+    font-weight: 1000;
+
+    text-shadow:
+        0 0 8px #74ff3944,
+        0 2px 3px #000;
+}
+
+#roundTimer {
+    font-size: 30px;
+    font-weight: 1000;
+    font-variant-numeric: tabular-nums;
+
+    color: #a3ff75;
+
+    text-shadow:
+        0 0 8px #74ff3988,
+        0 0 18px #74ff3944;
+}
+
+#roundResult {
+    width: 60px;
+    height: 60px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #f6d78b;
+    font-size: 30px;
+    font-weight: 900;
+}
+
+.result-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+
+    filter: drop-shadow(0 3px 4px #0009);
+}
+
+/* ==========================================
+   LIVE TOP 5 WINNERS
+========================================== */
+
+.live-top-winners {
+    flex: 0 0 100%;
+    width: 100%;
+
+    margin-top: 8px;
+    padding-top: 14px;
+
+    border-top: 1px solid #8a995655;
+}
+
+.live-top-title {
+    margin-bottom: 12px;
+    padding: 9px;
+
+    text-align: center;
+
+    color: #f3d58c;
+    font-size: 13px;
+    font-weight: 1000;
+    letter-spacing: 1.5px;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        #415638,
+        transparent
+    );
+}
+
+.live-top-title::before,
+.live-top-title::after {
+    content: "★";
+    margin: 0 8px;
+    color: #d9b65d;
+}
+
+.live-top-list {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0,1fr));
+    gap: 8px;
+}
+
+.live-top-item {
+    min-width: 0;
+
+    display: grid;
+    grid-template-columns: 26px minmax(0,1fr);
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 6px;
+
+    padding: 10px 7px;
+
+    background: linear-gradient(
+        145deg,
+        #304830,
+        #122117
+    );
+
+    border: 1px solid #617a4b;
+    border-left: 3px solid #bba05b;
+    border-radius: 5px;
+
+    box-shadow: 0 4px 9px #0006;
+}
+
+.live-top-rank {
+    grid-row: 1 / 3;
+
+    color: #f2d37e;
+    font-size: 17px;
+    font-weight: 1000;
+    text-align: center;
+}
+
+.live-top-name {
+    min-width: 0;
+
+    color: #edf2df;
+    font-size: 12px;
+    font-weight: 800;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.live-top-win {
+    color: #91ff66;
+    font-size: 13px;
+    font-weight: 1000;
+    white-space: nowrap;
+}
+
+.live-top-empty {
+    grid-column: 1 / -1;
+    padding: 14px;
+    text-align: center;
+    color: #9fb395;
+    font-size: 12px;
+}
+
+/* ==========================================
+   LAST RESULTS
+========================================== */
+
+.result-list {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0,1fr));
+    gap: 9px;
+}
+
+.result {
+    position: relative;
+
+    width: 100%;
+    min-width: 0;
+    aspect-ratio: 1 / 1;
+    max-height: 90px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 5px;
+
+    background: linear-gradient(
+        145deg,
+        #38503a,
+        #0b1c10
+    );
+
+    border: 2px solid #849765;
+    border-radius: 6px;
+
+    box-shadow:
+        0 4px 9px #0008,
+        inset 0 1px 0 #ffffff20,
+        inset 0 -4px 8px #0008;
+
+    cursor: pointer;
+    transition: transform .15s, border-color .15s;
+}
+
+.result:hover {
+    transform: scale(1.05);
+    border-color: #f1d17d;
+    z-index: 2;
+}
+
+.result:active {
+    transform: scale(.96);
+}
+
+/* NHÓM SLOT 1,6,7,8 */
+
+.result.result-blue {
+    background: linear-gradient(
+        145deg,
+        #426447,
+        #1d3925 55%,
+        #0a1b10
+    );
+
+    border-color: #91ad70;
+
+    box-shadow:
+        0 4px 8px #0009,
+        inset 0 0 12px #75e65b22;
+}
+
+/* NHÓM SLOT 2,3,4,5 */
+
+.result.result-red {
+    background: linear-gradient(
+        145deg,
+        #71483d,
+        #422921 55%,
+        #1c1411
+    );
+
+    border-color: #b98466;
+
+    box-shadow:
+        0 4px 8px #0009,
+        inset 0 0 12px #e56c4b22;
+}
+
+.result .result-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* ==========================================
+   SLOT MISS COUNT
+========================================== */
+
+.miss-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0,1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.miss-box {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    padding: 12px 5px;
+
+    background: linear-gradient(
+        145deg,
+        #304630,
+        #102014
+    );
+
+    border: 1px solid #71865b;
+    border-bottom: 2px solid #b99c55;
+    border-radius: 5px;
+
+    box-shadow:
+        0 4px 9px #0007,
+        inset 0 1px 0 #ffffff17;
+}
+
+.miss-box img {
+    display: block;
+    width: 48px;
+    height: 48px;
+
+    margin: 0 auto 8px;
+    object-fit: contain;
+
+    filter: drop-shadow(0 3px 4px #0009);
+}
+
+.miss-count {
+    min-width: 45px;
+    padding: 5px 8px;
+
+    text-align: center;
+    font-size: 21px;
+    font-weight: 1000;
+    font-variant-numeric: tabular-nums;
+
+    color: #a0ff73;
+
+    background: #07140b;
+
+    border: 1px solid #4d7140;
+    border-radius: 4px;
+
+    text-shadow: 0 0 8px #74ff3966;
+}
+
+.miss-hot {
+    color: #ff8974;
+    border-color: #a65345;
+    text-shadow: 0 0 8px #ff4c3c66;
+}
+
+/* ==========================================
+   TOP WINNERS MODAL
+========================================== */
+
+.top-modal {
+    position: fixed;
+    inset: 0;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    padding: 15px;
+
+    background: rgba(0,5,2,.86);
+    backdrop-filter: blur(5px);
+
+    z-index: 9999;
+}
+
+.top-modal.show {
+    display: flex;
+}
+
+.top-modal-box {
+    width: min(440px,100%);
+    max-height: 85vh;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+
+    background: linear-gradient(
+        160deg,
+        #314632,
+        #142619 40%,
+        #07120b
+    );
+
+    border: 2px solid #b99a50;
+    border-bottom: 4px solid #d1ae60;
+    border-radius: 7px;
+
+    box-shadow:
+        0 15px 45px #000c,
+        inset 0 1px 0 #ffffff20;
+}
+
+.top-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 15px;
+
+    background: linear-gradient(
+        180deg,
+        #405638,
+        #1c2d20
+    );
+
+    border-bottom: 2px solid #b99a50;
+}
+
+.top-modal-title {
+    color: #f2d58b;
+    font-size: 17px;
+    font-weight: 1000;
+    letter-spacing: 1px;
+}
+
+.top-modal-close {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    background: linear-gradient(
+        145deg,
+        #536448,
+        #17271b
+    );
+
+    border: 2px solid #bfa35d;
+    border-radius: 5px;
+
+    color: #ffe2a0;
+    font-size: 24px;
+    font-weight: 900;
+
+    cursor: pointer;
+}
+
+.top-round {
+    padding: 12px 16px;
+
+    color: #a4ff78;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 1px;
+
+    border-bottom: 1px solid #6b835244;
+}
+
+.top-list {
+    min-height: 0;
+    padding: 12px 14px 18px;
+    overflow-y: auto;
+}
+
+.top-winner {
+    display: grid;
+    grid-template-columns: 42px minmax(0,1fr) auto;
+    align-items: center;
+    gap: 10px;
+
+    margin-bottom: 8px;
+    padding: 12px 10px;
+
+    background: linear-gradient(
+        110deg,
+        #2e442f,
+        #132219
+    );
+
+    border: 1px solid #60784b;
+    border-left: 3px solid #bda25c;
+    border-radius: 5px;
+
+    box-shadow: 0 3px 9px #0005;
+}
+
+.top-rank {
+    color: #f1d17b;
+    font-size: 20px;
+    font-weight: 1000;
+    text-align: center;
+}
+
+.top-name {
+    min-width: 0;
+
+    color: #edf2e7;
+    font-size: 13px;
+    font-weight: 800;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.top-win {
+    color: #96ff70;
+    font-size: 15px;
+    font-weight: 1000;
+    white-space: nowrap;
+}
+
+.top-empty {
+    padding: 24px 12px;
+    text-align: center;
+    color: #b0c3a2;
+    font-size: 13px;
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media (max-width: 700px) {
+    .live-top-list {
+        grid-template-columns: 1fr;
+    }
+
+    .live-top-item {
+        grid-template-columns: 42px minmax(0,1fr) auto;
+        grid-template-rows: auto;
+        min-height: 52px;
+        padding: 10px;
+    }
+
+    .live-top-rank {
+        grid-row: auto;
+    }
+
+    .live-top-win {
+        text-align: right;
+    }
+}
+
+@media (max-width: 430px) {
+    body {
+        padding: 10px 8px 25px;
+    }
+
+    .stat-box {
+        padding: 11px;
+    }
+
+    .round-info {
+        gap: 6px;
+    }
+
+    .round-left,
+    .round-center,
+    .round-right {
+        min-height: 90px;
+    }
+
+    .result-list {
+        gap: 6px;
+    }
+
+    .miss-grid {
+        gap: 6px;
+    }
+
+    .miss-box {
+        padding: 9px 3px;
+    }
+
+    .miss-box img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .miss-count {
+        font-size: 17px;
+    }
+}
+
+
+
+/* =========================================
+   MILITARY - SPECIAL EVENT RESULTS
+========================================= */
+
+.result.result-event-x5 {
+    background: linear-gradient(
+        145deg,
+        #365e26,
+        #142c13,
+        #061407
+    );
+
+    border: 2px solid #8dff53;
+
+    box-shadow:
+        inset 0 0 12px #76ff4033,
+        0 0 10px #76ff4033;
+}
+
+.result.result-event-x45 {
+    background: linear-gradient(
+        145deg,
+        #6c4c16,
+        #302008,
+        #110d05
+    );
+
+    border: 2px solid #ffd15e;
+
+    box-shadow:
+        inset 0 0 12px #ffcc4433,
+        0 0 10px #ffcc4433;
+}
+
+.result.result-event-x5 img,
+.result.result-event-x45 img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+
+
+/* ==========================================
+   HISTORY THEME SELECTOR
+========================================== */
+
+#historyThemeControl {
+    max-width: 1100px;
+    margin: -7px auto 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.history-theme-label {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: #d8bd82;
+}
+
+.history-theme-options {
+    display: flex;
+    gap: 5px;
+    padding: 4px;
+
+    background: #152619;
+    border: 1px solid #817249;
+    border-radius: 8px;
+}
+
+.history-theme-options button {
+    min-width: 83px;
+    padding: 9px 11px;
+
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 5px;
+
+    color: #b7c7ad;
+    font-size: 10px;
+    font-weight: 900;
+
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.history-theme-options button.is-current {
+    background: linear-gradient(
+        135deg, #516649, #283e2d
+    );
+    border-color: #c4a86c;
+    color: #ffe5ac;
+}
+
+/* ==========================================
+   FRUIT STATISTICS COLOR SYSTEM
+========================================== */
+
+body.history-fruit {
+    --army-bg: #fff3df;
+    --army-panel: #ffecd3;
+    --army-panel-light: #f9cfaa;
+    --army-gold: #bd7849;
+    --army-green: #669d48;
+    --army-line: #d9a77f;
+    --army-text: #854b32;
+
+    color: #854b32;
+
+    background:
+        radial-gradient(
+            ellipse at 50% 0%,
+            #fffdf4 0%,
+            transparent 65%
+        ),
+        linear-gradient(
+            180deg,
+            #ffeccf,
+            #ffd8b5 55%,
+            #f4bf9d
+        );
+}
+
+/* THEME SELECTOR - FRUIT */
+
+body.history-fruit
+.history-theme-label {
+    color: #9d5b3d;
+}
+
+body.history-fruit
+.history-theme-options {
+    background: #fff4e4;
+    border-color: #d9a274;
+}
+
+body.history-fruit
+.history-theme-options button {
+    color: #9c7356;
+}
+
+body.history-fruit
+.history-theme-options button.is-current {
+    background: linear-gradient(
+        135deg, #ffdfc2, #f4b89c
+    );
+
+    border-color: #d98063;
+    color: #a54432;
+}
+
+/* ==========================================
+   MAIN TITLE
+========================================== */
+
+body.history-fruit h2 {
+    background: linear-gradient(
+        135deg,
+        #fff9eb,
+        #ffe0bc 65%,
+        #f4bf98
+    );
+
+    border: 1px solid #d69c69;
+    border-bottom: 3px solid #c48053;
+    border-radius: 10px;
+
+    color: #a64835;
+    text-shadow: none;
+
+    box-shadow:
+        0 7px 18px #a36a3a25,
+        inset 0 1px 0 #ffffffdd;
+}
+
+/* ==========================================
+   MAIN STATISTICS PANELS
+========================================== */
+
+body.history-fruit .stat-box {
+    background: linear-gradient(
+        145deg,
+        #fff9eb,
+        #ffe9ce 65%,
+        #f6d2af
+    );
+
+    border: 1px solid #dba577;
+    border-bottom: 3px solid #ce8d5e;
+    border-radius: 12px;
+
+    box-shadow:
+        0 6px 18px #a66b3b2b,
+        inset 0 1px 0 #fff;
+}
+
+body.history-fruit .stat-box::before {
+    border-color: #e5b99366;
+    border-radius: 8px;
+}
+
+/* PANEL TITLES */
+
+body.history-fruit .stat-box h3 {
+    background: linear-gradient(
+        135deg,
+        #ffe6c7,
+        #f5bf99
+    );
+
+    border: 1px solid #d99b6a;
+    border-bottom: 2px solid #ca8457;
+    border-radius: 7px;
+
+    color: #984c32;
+    text-shadow: none;
+}
+
+/* REMOVE MILITARY STARS */
+
+body.history-fruit .stat-box h3::before,
+body.history-fruit .stat-box h3::after {
+    content: "";
+    margin: 0;
+}
+
+/* ==========================================
+   ROUND / TIMER / RESULT
+========================================== */
+
+body.history-fruit
+:is(.round-left, .round-center, .round-right) {
+    background: linear-gradient(
+        145deg,
+        #fffdf5,
+        #ffe8cd
+    );
+
+    border: 1px solid #dfb28d;
+    border-bottom: 2px solid #d19467;
+    border-radius: 9px;
+
+    box-shadow: inset 0 1px 0 #fff;
+}
+
+body.history-fruit .round-info .label {
+    color: #a16c4b;
+}
+
+body.history-fruit #roundId,
+body.history-fruit #roundTimer {
+    color: #ba5037;
+    text-shadow: none;
+}
+
+body.history-fruit #roundResult {
+    color: #b95336;
+}
+
+body.history-fruit .result-img {
+    filter: drop-shadow(
+        0 3px 4px #ae795044
+    );
+}
+
+/* ==========================================
+   LIVE TOP 5 WINNERS
+========================================== */
+
+body.history-fruit .live-top-winners {
+    border-top-color: #ddb18d;
+}
+
+body.history-fruit .live-top-title {
+    background: linear-gradient(
+        90deg,
+        transparent,
+        #f9cda8,
+        transparent
+    );
+
+    color: #a34d33;
+}
+
+body.history-fruit .live-top-title::before,
+body.history-fruit .live-top-title::after {
+    content: "";
+    margin: 0;
+}
+
+body.history-fruit .live-top-item {
+    background: linear-gradient(
+        135deg,
+        #fffdf5,
+        #ffedd8
+    );
+
+    border: 1px solid #e3ba98;
+    border-left: 3px solid #d28d60;
+    border-radius: 8px;
+
+    box-shadow: 0 3px 8px #a36c3b20;
+}
+
+body.history-fruit .live-top-rank {
+    color: #b66738;
+}
+
+body.history-fruit .live-top-name {
+    color: #804b35;
+}
+
+body.history-fruit .live-top-win {
+    color: #669640;
+}
+
+body.history-fruit .live-top-empty {
+    color: #a37b5e;
+}
+
+/* ==========================================
+   LAST 50 RESULTS
+========================================== */
+
+body.history-fruit .result {
+    background: linear-gradient(
+        145deg, #fffaf0, #ffe4ca
+    );
+
+    border: 1px solid #dca77e;
+    border-radius: 9px;
+
+    box-shadow:
+        0 3px 8px #9f6b3a27,
+        inset 0 1px 0 #fff;
+}
+
+/* GROUP BLUE -> SOFT GREEN */
+
+body.history-fruit
+.result.result-blue {
+    background: linear-gradient(
+        145deg, #f5ffe8, #dff0c9
+    );
+
+    border-color: #a3c585;
+    box-shadow: 0 3px 8px #729b4920;
+}
+
+/* GROUP RED -> SOFT CORAL */
+
+body.history-fruit
+.result.result-red {
+    background: linear-gradient(
+        145deg, #fff6ee, #fbdac8
+    );
+
+    border-color: #dfa28f;
+    box-shadow: 0 3px 8px #bb6a4b20;
+}
+
+/* EVENT X5 */
+
+body.history-fruit
+.result.result-event-x5 {
+    background: linear-gradient(
+        145deg, #f3ffe0, #d4edae
+    );
+
+    border: 2px solid #93bd6d;
+    box-shadow: 0 3px 9px #7ca85730;
+}
+
+/* EVENT X45 */
+
+body.history-fruit
+.result.result-event-x45 {
+    background: linear-gradient(
+        145deg, #fff2cf, #f5ce88
+    );
+
+    border: 2px solid #d5a25a;
+    box-shadow: 0 3px 9px #c3954c30;
+}
+
+/* ==========================================
+   SLOT MISS COUNT
+========================================== */
+
+body.history-fruit .miss-box {
+    background: linear-gradient(
+        145deg, #fffdf5, #ffebd5
+    );
+
+    border: 1px solid #dfb591;
+    border-bottom: 2px solid #cd926a;
+    border-radius: 9px;
+
+    box-shadow:
+        0 3px 9px #a7734229,
+        inset 0 1px 0 #fff;
+}
+
+body.history-fruit .miss-box img {
+    filter: drop-shadow(
+        0 3px 4px #b4825944
+    );
+}
+
+body.history-fruit .miss-count {
+    background: #fff8ec;
+
+    border: 1px solid #e0b391;
+    border-radius: 6px;
+
+    color: #ae5235;
+    text-shadow: none;
+}
+
+body.history-fruit
+.miss-count.miss-hot {
+    color: #d24e3e;
+    border-color: #d88470;
+    background: #ffe4d8;
+}
+
+/* ==========================================
+   TOP 5 WINNERS MODAL
+========================================== */
+
+body.history-fruit .top-modal {
+    background: rgba(66,39,22,.58);
+    backdrop-filter: blur(5px);
+}
+
+body.history-fruit .top-modal-box {
+    background: linear-gradient(
+        160deg,
+        #fff9ec,
+        #ffe7cb 65%,
+        #f4c7a6
+    );
+
+    border: 1px solid #dca06d;
+    border-bottom: 3px solid #c98457;
+    border-radius: 12px;
+
+    box-shadow:
+        0 15px 45px #63391c65,
+        inset 0 1px 0 #fff;
+}
+
+body.history-fruit .top-modal-header {
+    background: linear-gradient(
+        135deg,
+        #fff4df,
+        #f8cfa9
+    );
+
+    border-bottom: 2px solid #d69c69;
+}
+
+body.history-fruit .top-modal-title {
+    color: #a44935;
+}
+
+body.history-fruit .top-modal-close {
+    background: linear-gradient(
+        135deg, #fffdf5, #f3d4b2
+    );
+
+    border: 1px solid #cf936a;
+    border-radius: 8px;
+
+    color: #a34c35;
+}
+
+body.history-fruit .top-round {
+    color: #a45135;
+    border-bottom-color: #d4a48066;
+}
+
+body.history-fruit .top-winner {
+    background: linear-gradient(
+        115deg, #fffdf6, #ffe9d1
+    );
+
+    border: 1px solid #dfb590;
+    border-left: 3px solid #d89569;
+    border-radius: 8px;
+
+    box-shadow: 0 3px 8px #aa754125;
+}
+
+body.history-fruit .top-rank {
+    color: #b26a3e;
+}
+
+body.history-fruit .top-name {
+    color: #854b32;
+}
+
+body.history-fruit .top-win {
+    color: #639342;
+}
+
+body.history-fruit .top-empty {
+    color: #a06e50;
+}
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media (max-width: 430px) {
+
+    #historyThemeControl {
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .history-theme-options button {
+        min-width: 75px;
+        padding: 8px;
+    }
+
+    body.history-fruit .stat-box {
+        border-radius: 9px;
+    }
+
+}
+
+
+</style>
+</head>
+
+<body>
+
+
+<h2 id="historyPageTitle">
+  MILITARY STATISTICS
+</h2>
+
+<!-- ===================================
+     STATISTICS THEME SWITCHER
+=================================== -->
+
+<div id="historyThemeControl">
+
+  <span class="history-theme-label">
+    GAME THEME
+  </span>
+
+  <div class="history-theme-options">
+
+    <button
+      type="button"
+      data-theme="military"
+      onclick="historySetTheme('military')">
+      MILITARY
+    </button>
+
+    <button
+      type="button"
+      data-theme="titanium"
+      onclick="historySetTheme('titanium')">
+      FRUIT
+    </button>
+
+  </div>
+
+</div>
+
+
+
+
+<div class="stat-box round-info">
+
+<div class="round-left">
+<div class="label">ROUND</div>
+<div id="roundId">--</div>
+</div>
+
+<div class="round-center">
+<div class="label">TIME LEFT</div>
+<div id="roundTimer">--</div>
+</div>
+
+<div class="round-right">
+<div class="label">RESULT</div>
+<div id="roundResult">?</div>
+</div>
+
+<div class="live-top-winners">
+
+  <div class="live-top-title">
+    TOP 5 WINNERS
+  </div>
+
+  <div id="liveTopWinnerList" class="live-top-list">
+
+    <div class="live-top-empty">
+      Waiting for result...
+    </div>
+
+  </div>
+
+</div>
+
+</div>
+
+
+
+<div class="stat-box">
+<h3>LAST RESULTS</h3>
+<div id="lastResults" class="result-list"></div>
+</div>
+
+<div class="stat-box">
+<h3>SLOT MISS COUNT</h3>
+<div id="slotMiss" class="miss-grid"></div>
+</div>
+
+
+<div id="topModal" class="top-modal">
+  <div class="top-modal-box">
+
+    <div class="top-modal-header">
+      <div class="top-modal-title">TOP 5 WINNERS</div>
+
+      <button
+        id="topModalClose"
+        class="top-modal-close"
+        type="button"
+      >×</button>
+    </div>
+
+    <div id="topRound" class="top-round"></div>
+
+    <div id="topWinnerList" class="top-list"></div>
+
+  </div>
+</div>
+
+
+
+<script>
+
+const socket = io()
+
+
+socket.emit("wheel8-get-history")
+
+
+let roundResultResetTimer = null
+let liveTopClearTimer = null
+
+
+socket.on("wheel8-history",list=>{
+
+renderStats(list)
+
+})
+
+
+function renderStats(list){
+
+renderLast(list)
+
+renderMiss(list)
+
+}
+
+
+
+function renderLast(list) {
+
+  const box = document.getElementById("lastResults");
+  box.innerHTML = "";
+
+  const last50 = list.slice(0, 50);
+
+  last50.forEach(r => {
+
+    const div = document.createElement("div");
+    div.className = "result";
+
+    const slot = Number(r.slot);
+    const event = r.event;
+
+    const img = document.createElement("img");
+    img.className = "result-img";
+
+    // =====================================
+    // EVENT ĐẶC BIỆT
+    // =====================================
+
+    if (event === "x5-all") {
+
+      img.src = "/assets/police/event-x5-all.png";
+      div.classList.add("result-event-x5");
+
+    } else if (event === "x45-all") {
+
+      img.src = "/assets/police/event-x45-all.png";
+      div.classList.add("result-event-x45");
+
+    } else {
+
+      // =====================================
+      // SLOT THÔNG THƯỜNG
+      // =====================================
+
+      img.src = `/assets/police/slot${slot}.png`;
+
+      if ([2, 3, 4, 5].includes(slot)) {
+        div.classList.add("result-red");
+      } else if ([1, 6, 7, 8].includes(slot)) {
+        div.classList.add("result-blue");
+      }
+
+    }
+
+    img.onerror = () => {
+      console.warn("Không tải được ảnh:", img.src);
+    };
+
+    div.appendChild(img);
+
+    div.title = "Click để xem top 5 thắng";
+
+    div.addEventListener("click", () => {
+      openTopWinners(r);
+    });
+
+    box.appendChild(div);
+
+  });
+
+}
+
+
+
+function formatWin(value){
+
+const n = Number(value || 0)
+
+return Math.round(n).toLocaleString("en-US")
+
+}
+
+
+function openTopWinners(round){
+
+const modal = document.getElementById("topModal")
+const roundBox = document.getElementById("topRound")
+const listBox = document.getElementById("topWinnerList")
+
+roundBox.textContent =
+  "ROUND: " + (round.roundId ?? "--")
+
+const winners =
+  Array.isArray(round.topWinners)
+    ? [...round.topWinners]
+    : Array.isArray(round.top)
+      ? [...round.top]
+      : []
+
+winners.sort((a,b)=>{
+  return Number(b.win || b.amount || 0)
+       - Number(a.win || a.amount || 0)
+})
+
+const top5 = winners.slice(0,5)
+
+if(!top5.length){
+
+  listBox.innerHTML = `
+    <div class="top-empty">
+      Phiên này chưa có dữ liệu người thắng
+    </div>
+  `
+
+}else{
+
+  listBox.innerHTML = top5.map((item,index)=>{
+
+    const name =
+      item.name ||
+      item.displayName ||
+      "???"
+
+    const win =
+      item.win ??
+      item.amount ??
+      0
+
+    return `
+      <div class="top-winner">
+
+        <div class="top-rank">
+          #${index + 1}
+        </div>
+
+        <div class="top-name">
+          ${escapeTopHtml(name)}
+        </div>
+
+        <div class="top-win">
+          ${formatWin(win)}
+        </div>
+
+      </div>
+    `
+
+  }).join("")
+
+}
+
+modal.classList.add("show")
+
+}
+
+
+function closeTopWinners(){
+
+document
+  .getElementById("topModal")
+  .classList.remove("show")
+
+}
+
+
+function escapeTopHtml(value){
+
+return String(value)
+  .replaceAll("&","&amp;")
+  .replaceAll("<","&lt;")
+  .replaceAll(">","&gt;")
+  .replaceAll('"',"&quot;")
+  .replaceAll("'","&#039;")
+
+}
+
+
+document
+  .getElementById("topModalClose")
+  .addEventListener("click",closeTopWinners)
+
+
+document
+  .getElementById("topModal")
+  .addEventListener("click",event=>{
+
+    if(event.target.id === "topModal"){
+      closeTopWinners()
+    }
+
+  })
+
+
+document.addEventListener("keydown",event=>{
+
+  if(event.key === "Escape"){
+    closeTopWinners()
+  }
+
+})
+
+
+
+
+
+
+let roundEnd = 0
+
+socket.on("wheel8-round-info",(data)=>{
+
+document.getElementById("roundId").textContent =
+data.roundId
+
+roundEnd = data.endAt
+
+clearTimeout(liveTopClearTimer)
+
+liveTopClearTimer = setTimeout(()=>{
+
+  const liveTopBox =
+    document.getElementById("liveTopWinnerList")
+
+  if(liveTopBox){
+
+    liveTopBox.innerHTML = `
+      <div class="live-top-empty">
+        Waiting for result...
+      </div>
+    `
+
+  }
+
+},5000)
+
+
+clearTimeout(roundResultResetTimer)
+
+roundResultResetTimer = setTimeout(()=>{
+
+  const box = document.getElementById("roundResult")
+  box.innerHTML = "?"
+
+},10000)
+
+})
+
+
+
+socket.on("wheel8-timer",(sec)=>{
+document.getElementById("roundTimer").textContent = sec
+})
+
+
+
+function renderLiveTopWinners(data){
+
+const box =
+  document.getElementById("liveTopWinnerList")
+
+if(!box) return
+
+const winners =
+  Array.isArray(data.topWinners)
+    ? [...data.topWinners]
+    : Array.isArray(data.top)
+      ? [...data.top]
+      : []
+
+winners.sort((a,b)=>{
+
+  const winA = Number(
+    a.win ??
+    a.amount ??
+    a.totalWin ??
+    0
+  )
+
+  const winB = Number(
+    b.win ??
+    b.amount ??
+    b.totalWin ??
+    0
+  )
+
+  return winB - winA
+
+})
+
+const top5 = winners.slice(0,5)
+
+if(!top5.length){
+
+  box.innerHTML = `
+    <div class="live-top-empty">
+      No winners this round
+    </div>
+  `
+
+  return
+}
+
+box.innerHTML = top5.map((item,index)=>{
+
+  const name =
+    item.name ||
+    item.displayName ||
+    "???"
+
+  const win =
+    item.win ??
+    item.amount ??
+    item.totalWin ??
+    0
+
+  return `
+    <div class="live-top-item">
+
+      <div class="live-top-rank">
+        #${index + 1}
+      </div>
+
+      <div class="live-top-name">
+        ${escapeTopHtml(name)}
+      </div>
+
+      <div class="live-top-win">
+        ${formatWin(win)}
+      </div>
+
+    </div>
+  `
+
+}).join("")
+
+}
+
+
+socket.on("wheel8-result",(data)=>{
+
+
+const slot =
+  data.slot ??
+  data.winSlot ??
+  data.resultSlot ??
+  data.slots?.[0]
+
+if(!slot) return
+
+renderLiveTopWinners(data)
+
+clearTimeout(roundResultResetTimer)
+
+const box = document.getElementById("roundResult")
+box.innerHTML = ""
+
+const img = document.createElement("img")
+img.src = `/assets/police/slot${slot}.png`
+img.className = "result-img"
+
+img.onerror = ()=>{
+  box.innerHTML = "?"
+}
+
+box.appendChild(img)
+
+})
+
+
+
+function renderMiss(list){
+
+const miss=[0,0,0,0,0,0,0,0]
+let missX5=0
+let missX45=0
+
+// tính slot miss
+for(let i=0;i<8;i++){
+
+let count=0
+
+for(let r of list){
+
+if(r.slot===i+1) break
+
+count++
+
+}
+
+miss[i]=count
+
+}
+
+// tính event miss
+for(let r of list){
+
+if(r.event==="x5-all") break
+missX5++
+
+}
+
+for(let r of list){
+
+if(r.event==="x45-all") break
+missX45++
+
+}
+
+const box=document.getElementById("slotMiss")
+
+box.innerHTML=""
+
+// render slot theo layout:
+// hàng trên: 1 - 6 - 7 - 8
+// hàng dưới: 2 - 3 - 4 - 5
+const slotOrder = [1,8,7,6,2,3,4,5]
+
+slotOrder.forEach(slot=>{
+
+const v = miss[slot-1]
+
+box.innerHTML+=`
+<div class="miss-box">
+
+<img src="/assets/police/slot${slot}.png">
+
+<div class="miss-count ${v>15?'miss-hot':''}">
+${v}
+</div>
+
+</div>
+`
+
+})
+
+// render event x5
+box.innerHTML+=`
+<div class="miss-box">
+
+<img src="/assets/police/event-x5-all.png">
+
+<div class="miss-count ${missX5>30?'miss-hot':''}">
+${missX5}
+</div>
+
+</div>
+`
+
+// render event x45
+box.innerHTML+=`
+<div class="miss-box">
+
+<img src="/assets/police/event-x45-all.png">
+
+<div class="miss-count ${missX45>30?'miss-hot':''}">
+${missX45}
+</div>
+
+</div>
+`
+
+}
+
+
+
+</script>
+
+
+
+
+<script>
+/* ==========================================
+   HISTORY POLICE - THEME SYSTEM
+   MILITARY / FRUIT
+========================================== */
+
+const HISTORY_THEME_STORE = "w8_image_theme";
+
+const HISTORY_BASE_DIR =
+    "/assets/police/";
+
+const HISTORY_FRUIT_DIR =
+    "/assets/police/theme-titanium/";
+
+let historyActiveTheme = "military";
+
+/* ==========================================
+   SYNC AN IMAGE
+========================================== */
+
+function historySyncImage(img) {
+
+    if (!(img instanceof HTMLImageElement)) {
+        return;
+    }
+
+    const current =
+        img.getAttribute("src") || "";
+
+    // Chỉ xử lý ảnh thuộc assets/police
+    if (
+        !current.startsWith(HISTORY_BASE_DIR) &&
+        !current.startsWith(HISTORY_FRUIT_DIR)
+    ) {
+        return;
+    }
+
+    // Lưu đường dẫn gốc MILITARY
+    if (!img.dataset.historyBaseSrc) {
+
+        img.dataset.historyBaseSrc =
+            current.startsWith(HISTORY_FRUIT_DIR)
+                ? HISTORY_BASE_DIR +
+                  current.slice(HISTORY_FRUIT_DIR.length)
+                : current;
+
+    }
+
+    const base =
+        img.dataset.historyBaseSrc;
+
+    const fruit =
+        HISTORY_FRUIT_DIR +
+        base.slice(HISTORY_BASE_DIR.length);
+
+    const useFruit =
+        historyActiveTheme === "titanium" &&
+        img.dataset.historyFruitMissing !== "1";
+
+    const target = useFruit ? fruit : base;
+
+    if (current !== target) {
+        img.setAttribute("src", target);
+    }
+
+}
+
+/* ==========================================
+   SYNC ALL EXISTING IMAGES
+========================================== */
+
+function historySyncAllImages() {
+
+    document.querySelectorAll("img").forEach(
+        historySyncImage
+    );
+
+}
+
+/* ==========================================
+   FALLBACK WHEN FRUIT IMAGE IS MISSING
+========================================== */
+
+document.addEventListener(
+    "error",
+    function(event) {
+
+        const img = event.target;
+
+        if (!(img instanceof HTMLImageElement)) {
+            return;
+        }
+
+        const current =
+            img.getAttribute("src") || "";
+
+        if (!current.startsWith(HISTORY_FRUIT_DIR)) {
+            return;
+        }
+
+        // Ngăn handler cũ xử lý ảnh FRUIT lỗi
+        // trước khi được thử ảnh MILITARY.
+        event.stopPropagation();
+
+        img.dataset.historyFruitMissing = "1";
+
+        const original =
+            img.dataset.historyBaseSrc ||
+            HISTORY_BASE_DIR +
+            current.slice(HISTORY_FRUIT_DIR.length);
+
+        img.setAttribute("src", original);
+
+    },
+    true
+);
+
+/* ==========================================
+   WATCH IMAGES ADDED BY SOCKET.IO
+========================================== */
+
+const historyImageObserver =
+    new MutationObserver(function(records) {
+
+        records.forEach(function(record) {
+
+            record.addedNodes.forEach(function(node) {
+
+                if (node instanceof HTMLImageElement) {
+
+                    historySyncImage(node);
+
+                } else if (node instanceof Element) {
+
+                    node.querySelectorAll("img").forEach(
+                        historySyncImage
+                    );
+
+                }
+
+            });
+
+        });
+
+    });
+
+historyImageObserver.observe(
+    document.body,
+    {
+        childList: true,
+        subtree: true
+    }
+);
+
+/* ==========================================
+   APPLY THEME
+========================================== */
+
+function historySetTheme(theme, save = true) {
+
+    historyActiveTheme =
+        theme === "titanium"
+            ? "titanium"
+            : "military";
+
+    const isFruit =
+        historyActiveTheme === "titanium";
+
+    // Chuyển CSS
+    document.body.classList.toggle(
+        "history-fruit",
+        isFruit
+    );
+
+    // Đổi tên trang
+    const pageTitle =
+        document.getElementById("historyPageTitle");
+
+    if (pageTitle) {
+        pageTitle.textContent = isFruit
+            ? "FRUIT STATISTICS"
+            : "MILITARY STATISTICS";
+    }
+
+    document.title = isFruit
+        ? "FRUIT Statistics"
+        : "MILITARY Statistics";
+
+    // Đổi tiêu đề hai khu thống kê
+    const sectionTitles =
+        document.querySelectorAll(".stat-box > h3");
+
+    if (sectionTitles[0]) {
+        sectionTitles[0].textContent =
+            "LAST RESULTS";
+    }
+
+    if (sectionTitles[1]) {
+        sectionTitles[1].textContent = isFruit
+            ? "FRUIT MISS COUNT"
+            : "SLOT MISS COUNT";
+    }
+
+    // Cập nhật lựa chọn MILITARY / FRUIT
+    document.querySelectorAll(
+        "#historyThemeControl [data-theme]"
+    ).forEach(function(button) {
+
+        const selected =
+            button.dataset.theme === historyActiveTheme;
+
+        button.classList.toggle(
+            "is-current",
+            selected
+        );
+
+        button.setAttribute(
+            "aria-pressed",
+            String(selected)
+        );
+
+    });
+
+    // Đổi ảnh
+    historySyncAllImages();
+
+    // Lưu theme chung với trang game
+    if (save) {
+        try {
+            localStorage.setItem(
+                HISTORY_THEME_STORE,
+                historyActiveTheme
+            );
+        } catch (_) {}
+    }
+
+}
+
+/* ==========================================
+   RESTORE THEME FROM MAIN GAME
+========================================== */
+
+let savedHistoryTheme = "military";
+
+try {
+
+    savedHistoryTheme =
+        localStorage.getItem(HISTORY_THEME_STORE) ||
+        "military";
+
+} catch (_) {}
+
+historySetTheme(savedHistoryTheme, false);
+
+/* ==========================================
+   SYNC THEME ACROSS TABS
+========================================== */
+
+window.addEventListener(
+    "storage",
+    function(event) {
+
+        if (event.key === HISTORY_THEME_STORE) {
+
+            historySetTheme(
+                event.newValue || "military",
+                false
+            );
+
+        }
+
+    }
+);
+
+</script>
+
+
+
+</body>
+</html>

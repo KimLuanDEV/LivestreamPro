@@ -1,0 +1,14447 @@
+
+
+const MAX_VIEWERS = 40;        // Render safe
+const SOFT_CAP    = 30;       // bắt đầu degrade
+
+const bcrypt = require("bcrypt");
+const crypto = require("crypto");
+
+
+const ROOM_RELEASE_DELAY = 15000; // 15 giây (tuỳ bạn)
+
+const multer = require("multer");
+const express = require("express");
+const http = require("http");
+const path = require("path");
+const { Server } = require("socket.io");
+const twilio = require("twilio");
+
+
+const fs = require("fs");
+
+
+
+
+
+function ensureWheelSecret(round){
+  if (!round) return;
+
+  if (round.secretResult && round.secretResult.multiplier != null) {
+    return; // ✅ đã có → không tạo lại
+  }
+
+const weightedMultipliers = [
+  { m: 0.5, w: 65 },
+  { m: 1.2, w: 15 },
+  { m: 1.5, w: 8 },
+  { m: 2,   w: 7 },
+  { m: 5,   w: 3 },
+  { m: 10,  w: 2 }
+];
+
+
+  const total = weightedMultipliers.reduce((s, x) => s + x.w, 0);
+  let r = Math.random() * total;
+
+  let multiplier = 0;
+  for (const item of weightedMultipliers){
+    if ((r -= item.w) <= 0){
+      multiplier = item.m;
+      break;
+    }
+  }
+
+  const multipliers = weightedMultipliers.map(x => x.m);
+  const index = multipliers.indexOf(multiplier);
+
+  const hash = crypto
+    .createHash("sha256")
+    .update(round.id + ":" + multiplier)
+    .digest("hex");
+
+  round.secretResult = {
+    multiplier,
+    index,
+    hash
+  };
+
+  console.log("🔐 [WHEEL] secretResult created for round", round.id);
+}
+
+
+
+
+// ================================
+// 📜 WHEEL8 USER BET HISTORY
+// ================================
+const WHEEL8_USER_HISTORY_FILE =
+"/opt/render/project/data/wheel8_user_history.json"
+
+function loadWheel8UserHistory(){
+
+try{
+
+if(!fs.existsSync(WHEEL8_USER_HISTORY_FILE))
+return {}
+
+return JSON.parse(
+fs.readFileSync(WHEEL8_USER_HISTORY_FILE,"utf8")
+)
+
+}catch(e){
+
+console.error("❌ Load wheel8 user history failed",e)
+return {}
+
+}
+
+}
+
+function saveWheel8UserHistory(db){
+
+try{
+
+fs.writeFileSync(
+WHEEL8_USER_HISTORY_FILE,
+JSON.stringify(db,null,2)
+)
+
+}catch(e){
+
+console.error("❌ Save wheel8 user history failed",e)
+
+}
+
+}
+
+
+
+function getAdminWheel8Data(){
+
+  const users = loadUsers()
+
+  const slotPool = [0,0,0,0,0,0,0,0]
+
+  const map = {}
+
+  wheel8Round.bets.forEach(b=>{
+
+    // tổng pool
+    slotPool[b.slot-1] += b.bet
+
+    // gom theo user
+    if(!map[b.uid]){
+   map[b.uid] = {
+  name: users[b.uid]?.profile?.name || "Player",
+  coins: users[b.uid]?.profile?.coins || 0,
+  total: 0,
+  slots: [0,0,0,0,0,0,0,0]
+}
+    }
+
+    map[b.uid].slots[b.slot-1] += b.bet
+    map[b.uid].total += b.bet
+
+  })
+
+  return {
+    round: wheel8Round.id,
+    pool: slotPool,
+    players: Object.values(map)
+  }
+}
+
+
+
+function getTimeRaceBetList(){
+
+  const users = loadUsers()
+  const list = {}
+
+  // 👤 PLAYER
+  timeRaceRound.bets.forEach(b=>{
+    if(!list[b.uid]){
+      list[b.uid] = {
+        name: "???",
+        total: 0
+      }
+    }
+    list[b.uid].total += b.bet
+  })
+
+  // 🤖 BOT (KHÔNG RANDOM LẠI)
+  if(timeRaceRound.bots){
+    timeRaceRound.bots.forEach(bot=>{
+      list[bot.uid] = bot
+    })
+  }
+
+  return Object.values(list)
+}
+
+
+
+let wheel8UserHistory = loadWheel8UserHistory()
+let wheel8NeedReset = false
+
+
+const WHEEL8_ROUND_FILE =
+"/opt/render/project/data/wheel8_round_count.json"
+
+function loadWheel8Round(){
+
+try{
+
+if(!fs.existsSync(WHEEL8_ROUND_FILE)){
+return {
+dayTs: getTodayStartTsVN(),
+count: 0
+}
+}
+
+return JSON.parse(
+fs.readFileSync(WHEEL8_ROUND_FILE,"utf8")
+)
+
+}catch(e){
+
+console.error("Load wheel8 round failed",e)
+
+return {
+dayTs: getTodayStartTsVN(),
+count: 0
+}
+
+}
+
+}
+
+function saveWheel8Round(data){
+
+try{
+
+fs.writeFileSync(
+WHEEL8_ROUND_FILE,
+JSON.stringify(data,null,2)
+)
+
+}catch(e){
+console.error("Save wheel8 round failed",e)
+}
+
+}
+
+const WHEEL8_HISTORY_FILE =
+"/opt/render/project/data/wheel8_history.json"
+
+const MAX_WHEEL8_HISTORY = 500
+
+
+function loadWheel8History(){
+  try{
+    if(!fs.existsSync(WHEEL8_HISTORY_FILE)) return []
+    return JSON.parse(
+      fs.readFileSync(WHEEL8_HISTORY_FILE,"utf8")
+    )
+  }catch(e){
+    console.error("❌ Load wheel8 history failed",e)
+    return []
+  }
+}
+
+function saveWheel8History(list){
+  try{
+    fs.writeFileSync(
+      WHEEL8_HISTORY_FILE,
+      JSON.stringify(list,null,2)
+    )
+  }catch(e){
+    console.error("❌ Save wheel8 history failed",e)
+  }
+}
+
+
+
+
+// ================================
+// 🏭 DIAMOND FACTORY DATA
+// ================================
+const FACTORY_FILE =
+  "/opt/render/project/data/diamond_factory.json";
+
+function loadFactories(){
+  try{
+    if(!fs.existsSync(FACTORY_FILE)) return {};
+    return JSON.parse(
+      fs.readFileSync(FACTORY_FILE,"utf8")
+    );
+  }catch(e){
+    console.error("❌ Load factory failed", e);
+    return {};
+  }
+}
+
+function saveFactories(db){
+  try{
+    fs.writeFileSync(
+      FACTORY_FILE,
+      JSON.stringify(db,null,2)
+    );
+  }catch(e){
+    console.error("❌ Save factory failed", e);
+  }
+}
+
+let factoryDB = loadFactories();
+
+
+// ================================
+// 🧹 FORCE SINGLE FACTORY CLEANUP
+// ================================
+Object.keys(factoryDB).forEach(uid => {
+
+  const list = factoryDB[uid];
+  if(!Array.isArray(list)) return;
+
+  // Nếu có nhiều hơn 1 → chỉ giữ lại cái đầu tiên đã build
+  const firstBuilt = list.find(f => f && !f.empty);
+
+  if(firstBuilt){
+    factoryDB[uid] = [ firstBuilt ];
+  }else{
+    factoryDB[uid] = [ { empty:true } ];
+  }
+
+});
+
+saveFactories(factoryDB);
+
+
+
+// ================================
+// 🔥 INIT FIRE FIELD (SAFE)
+// ================================
+Object.keys(factoryDB).forEach(uid=>{
+  factoryDB[uid].forEach(f=>{
+    if(!f || f.empty) return;
+
+    if(typeof f.burned === "undefined")
+      f.burned = false;
+
+    if(typeof f.fireAt === "undefined")
+      f.fireAt = null;
+
+if(typeof f.repairing === "undefined")
+  f.repairing = false;
+
+if(typeof f.repairEndAt === "undefined")
+  f.repairEndAt = null;
+
+if(typeof f.fireDefenseLevel === "undefined")
+  f.fireDefenseLevel = 0;
+
+if(typeof f.hospitalLevel === "undefined")
+  f.hospitalLevel = 0;
+
+
+  });
+});
+
+saveFactories(factoryDB);
+
+
+
+
+// ================================
+// 🔥 FIX BASE RATE = 1 PER WORKER
+// ================================
+Object.keys(factoryDB).forEach(uid=>{
+  factoryDB[uid].forEach(f=>{
+    if(!f || f.empty) return;
+    f.baseRate = 1;  // 🔥 mỗi worker = 1/s
+  });
+});
+
+saveFactories(factoryDB);
+
+
+
+
+
+
+// ================================
+// 🔥 FACTORY FIRE DISASTER ENGINE
+// ================================
+
+const FIRE_INTERVAL = 10000; // 10s
+const FIRE_CHANCE   = 0.005; // 0.5% hỏa hoạn giây
+const MAX_FIRE_DEFENSE_LEVEL = 20;
+
+
+
+setInterval(()=>{
+
+  const users = loadUsers();
+  let changed = false;
+
+  Object.keys(factoryDB).forEach(uid=>{
+
+    const user = users[uid];
+    if(!user?.profile) return;
+
+    factoryDB[uid].forEach((f, index)=>{
+
+      if(!f || f.empty) return;
+      if(f.burned) return;        // đã cháy rồi bỏ qua
+      if(!f.active) return;       // không hoạt động thì không cháy
+
+      
+      // 🔥 TÍNH TỶ LỆ CHÁY THEO LEVEL PHÒNG CHÁY
+const baseChance = FIRE_CHANCE;
+
+// mỗi level giảm 0.0002 (0.02%)
+const defenseLevel = Math.min(
+  f.fireDefenseLevel || 0,
+  MAX_FIRE_DEFENSE_LEVEL
+);
+
+const reduce = defenseLevel * 0.0002;
+
+// không bao giờ dưới 0.001 (0.1%)
+const finalChance = Math.max(
+  0.001,
+  baseChance - reduce
+);
+
+if(Math.random() < finalChance){
+
+        console.log("🔥 FIRE at factory", uid, index);
+
+// 🔥 RESET NHÀ MÁY
+f.workers = 0;
+f.stored  = 0;
+
+// 🔻 GIẢM 1 LEVEL (không xuống dưới 1)
+f.level ||= 1;
+if(f.level > 1){
+  f.level -= 1;
+}
+
+// 🔧 cập nhật lại chỉ số theo level mới
+f.storage  = 100 * f.level;
+f.baseRate = 1;
+
+// 🔥 UPDATE MAX WORKER THEO LEVEL
+f.maxWorkers = f.level;
+
+// 🔒 Clamp worker nếu vượt quá level mới
+if(f.workers > f.maxWorkers){
+  f.workers = f.maxWorkers;
+}
+
+
+
+// 🔥 reset timer
+f.lastUpdate    = Date.now();
+f.lastCollectAt = Date.now();
+f.lastTickAt    = Date.now();
+
+f.active  = false;
+f.burned  = true;
+f.fireAt  = Date.now();
+
+
+        changed = true;
+
+        // 🔔 Emit realtime cho user
+emitToUser(uid,"factory-fire",{
+  index,
+  message:"A fire has broken out at your factory!"
+});
+
+      }
+
+    });
+
+  });
+
+  if(changed){
+    saveUsers(users);
+    saveFactories(factoryDB);
+  }
+
+}, FIRE_INTERVAL);
+
+
+
+
+
+
+
+
+// ================================
+// ☠️ WORKER DEATH ENGINE
+// ================================
+const WORKER_DEATH_INTERVAL = 10000; // 10s
+const WORKER_DEATH_CHANCE = 0.005;    // 0.5% mỗi worker
+
+setInterval(()=>{
+
+  let changed = false;
+
+  Object.keys(factoryDB).forEach(uid=>{
+
+    factoryDB[uid].forEach((f,index)=>{
+
+      if(!f || f.empty) return;
+      if(!f.active) return;
+      if(f.burned) return;
+
+      const workers = Number(f.workers || 0);
+      if(workers <= 0) return;
+
+      let deadCount = 0;
+
+      for(let i=0;i<workers;i++){
+
+
+  const hospitalLevel = Math.min(
+  f.hospitalLevel || 0 ,20);
+
+// mỗi level giảm 0.0002 (0.02%)
+// level 20 giảm 0.004 = 0.4%
+const hospitalReduce = hospitalLevel * 0.0002;
+
+const finalDeathChance = Math.max(
+  0.001, // không bao giờ dưới 0.1%
+  WORKER_DEATH_CHANCE - hospitalReduce
+);
+
+if(Math.random() < finalDeathChance){
+         
+         
+          deadCount++;
+        }
+      }
+
+      if(deadCount > 0){
+
+        f.workers -= deadCount;
+        if(f.workers < 0) f.workers = 0;
+
+        // nếu hết worker → dừng nhà máy
+        if(f.workers === 0){
+          f.active = false;
+        }
+
+        changed = true;
+
+        emitToUser(uid,"worker-death",{
+          index,
+          dead: deadCount,
+          remain: f.workers
+        });
+
+        emitToUser(uid,"notify",{
+          type:"bad",
+          message:`☠️ ${deadCount} The worker has died!`
+        });
+
+      }
+
+    });
+
+  });
+
+  if(changed){
+    saveFactories(factoryDB);
+  }
+
+}, WORKER_DEATH_INTERVAL);
+
+
+
+
+
+// ================================
+// ⏱️ FACTORY COST ENGINE (PER SECOND)
+// ================================
+setInterval(()=>{
+
+  const users = loadUsers();
+  let changed = false;
+
+  Object.keys(factoryDB).forEach(uid=>{
+
+    const user = users[uid];
+    if(!user?.profile) return;
+
+    let userChanged = false;
+
+    factoryDB[uid].forEach(f=>{
+
+      if(!f || f.empty) return;
+      if(!f.active) return;
+      if(f.burned) return;
+
+      const workers = Number(f.workers || 0);
+      const baseRate = Number(f.baseRate || 0);
+
+      if(workers <= 0 || baseRate <= 0) return;
+
+      // ❗ Nếu kho đầy → không sản xuất → không tính cost
+      if(f.stored >= f.storage) return;
+
+      // =========================
+      // 💰 GROSS PROFIT / SECOND
+      // =========================
+      const grossPerSec = baseRate * workers;
+
+// =========================
+// 💰 BASE COST (70%)
+// =========================
+const operatingCost = grossPerSec * 0.5;  // 50%
+const salaryCost    = grossPerSec * 0.2;  // 20%
+
+// 🔥 FIRE DEFENSE COST (scale theo level)
+let fireDefenseCost = 0;
+
+const defenseLevel = Math.min(
+  f.fireDefenseLevel || 0,
+  MAX_FIRE_DEFENSE_LEVEL
+);
+
+// mỗi level = 0.5%
+// level 20 = 10%
+const defensePercent = defenseLevel * 0.005;
+
+fireDefenseCost = grossPerSec * defensePercent;
+
+
+// 🏥 HOSPITAL COST (scale theo level)
+
+let hospitalCost = 0;
+
+const MAX_HOSPITAL_LEVEL = 20;
+
+const hospitalLevel = Math.min(
+  f.hospitalLevel || 0,
+  MAX_HOSPITAL_LEVEL
+);
+
+// mỗi level = 0.5%
+// level 20 = 10%
+const hospitalPercent = hospitalLevel * 0.005;
+
+hospitalCost = grossPerSec * hospitalPercent;
+
+
+const totalCost =
+  operatingCost +
+  salaryCost +
+  fireDefenseCost +
+  hospitalCost;
+
+      
+      // =========================
+      // 💸 TRỪ COIN
+      // =========================
+      if(user.profile.coins >= totalCost){
+
+      user.profile.coins =
+  Math.round(
+    (Number(user.profile.coins || 0) - totalCost) * 100
+  ) / 100;
+
+        userChanged = true;
+
+      }else{
+
+        // 💥 Không đủ tiền → dừng nhà máy
+        f.active = false;
+        f.workers = 0;
+
+        emitToUser(uid,"factory-stopped",{
+          message:"💸 Factory stopped (insufficient funds)"
+        });
+
+        userChanged = true;
+      }
+
+      changed = true;
+
+    });
+
+    // 🔥 REALTIME UPDATE COIN
+    if(userChanged){
+      emitCoinUpdate(uid);
+    }
+
+  });
+
+  if(changed){
+    saveUsers(users);
+    saveFactories(factoryDB);
+  }
+
+}, 1000);
+
+
+
+
+// ================================
+// 🔧 FACTORY REPAIR ENGINE
+// ================================
+setInterval(()=>{
+
+  let changed = false;
+
+  Object.keys(factoryDB).forEach(uid=>{
+
+    factoryDB[uid].forEach((f,index)=>{
+
+      if(!f || f.empty) return;
+      if(!f.repairing) return;
+
+      if(Date.now() >= f.repairEndAt){
+
+f.repairing = false;
+f.repairEndAt = null;
+
+f.burned = false;
+
+// 🔥 Đảm bảo worker đúng theo level hiện tại
+f.maxWorkers = f.level;
+
+if(f.workers > f.maxWorkers){
+  f.workers = f.maxWorkers;
+}
+
+// 🔥 KHÔNG tự bật lại nếu chưa có worker
+f.active = (f.workers > 0);
+
+
+
+// 🔥 reset lại chu kỳ sản xuất
+f.stored = 0;
+
+f.lastUpdate    = Date.now();   // 🔥 FIX TRIỆT ĐỂ
+f.lastCollectAt = Date.now();
+f.lastTickAt    = Date.now();
+
+        changed = true;
+
+        emitToUser(uid,"factory-repaired",{ index });
+      }
+
+    });
+
+  });
+
+  if(changed){
+    saveFactories(factoryDB);
+  }
+
+},1000);
+
+
+
+
+
+// ================================
+// 🧠 HEALTH DATA (PER USER)
+// ================================
+const HEALTH_DIR = path.join("/opt/render/project/data", "health");
+
+if (!fs.existsSync(HEALTH_DIR)) {
+  fs.mkdirSync(HEALTH_DIR, { recursive: true });
+  console.log("📁 Created health data dir");
+}
+
+
+
+
+const ONE_DAY = 24 * 60 * 60 * 1000; // 🔥 24h
+
+
+// ================================
+// 🔢 RPS ROUND COUNT PERSIST (24H)
+// ================================
+const RPS_ROUND_COUNT_FILE =
+  "/opt/render/project/data/rps_round_count.json";
+
+function loadRpsRoundCount(){
+  try{
+    if (!fs.existsSync(RPS_ROUND_COUNT_FILE)) {
+      return {
+        dayTs: getTodayStartTsVN(),
+        count: 0
+      };
+    }
+    return JSON.parse(
+      fs.readFileSync(RPS_ROUND_COUNT_FILE, "utf8")
+    );
+  }catch(e){
+    console.error("❌ Load RPS round count failed", e);
+    return {
+      dayTs: getTodayStartTsVN(),
+      count: 0
+    };
+  }
+}
+
+function saveRpsRoundCount(data){
+  try{
+    fs.writeFileSync(
+      RPS_ROUND_COUNT_FILE,
+      JSON.stringify(data, null, 2)
+    );
+  }catch(e){
+    console.error("❌ Save RPS round count failed", e);
+  }
+}
+
+
+
+  // ================================
+// 🔢 ROUND COUNT PERSIST (24H)
+// ================================
+const WHEEL_ROUND_COUNT_FILE =
+  "/opt/render/project/data/wheel_round_count.json";
+
+function loadWheelRoundCount(){
+  try{
+    if (!fs.existsSync(WHEEL_ROUND_COUNT_FILE)) {
+      return {
+        dayTs: getTodayStartTsVN(),
+        count: 0
+      };
+    }
+    return JSON.parse(
+      fs.readFileSync(WHEEL_ROUND_COUNT_FILE, "utf8")
+    );
+  }catch(e){
+    console.error("❌ Load wheel round count failed", e);
+    return {
+      dayTs: getTodayStartTsVN(),
+      count: 0
+    };
+  }
+}
+
+function saveWheelRoundCount(data){
+  try{
+    fs.writeFileSync(
+      WHEEL_ROUND_COUNT_FILE,
+      JSON.stringify(data, null, 2)
+    );
+  }catch(e){
+    console.error("❌ Save wheel round count failed", e);
+  }
+}
+
+
+
+function getTodayStartTsVN() {
+  // VN = UTC+7
+  const offsetMin = 7 * 60;
+
+  const now = Date.now();
+
+  // đổi sang "giờ VN"
+  const vnNow = now + offsetMin * 60 * 1000;
+
+  // lấy 00:00 theo VN (tính trên epoch VN)
+  const vnDayStart = Math.floor(vnNow / ONE_DAY) * ONE_DAY;
+
+  // trả về timestamp thật (UTC epoch)
+  return vnDayStart - offsetMin * 60 * 1000;
+}
+
+
+
+
+
+// ================================
+// ✊✋✌️ RPS HISTORY (GLOBAL)
+// ================================
+const RPS_HISTORY_FILE =
+  "/opt/render/project/data/rps_history.json";
+
+const MAX_RPS_HISTORY = 20;
+
+function loadRpsHistory(){
+  try{
+    if(!fs.existsSync(RPS_HISTORY_FILE)) return [];
+    return JSON.parse(fs.readFileSync(RPS_HISTORY_FILE,"utf8"));
+  }catch(e){
+    console.error("❌ Load RPS history failed", e);
+    return [];
+  }
+}
+
+function saveRpsHistory(list){
+  try{
+    fs.writeFileSync(
+      RPS_HISTORY_FILE,
+      JSON.stringify(list,null,2)
+    );
+  }catch(e){
+    console.error("❌ Save RPS history failed", e);
+  }
+}
+
+let rpsHistoryGlobal = loadRpsHistory();
+
+
+
+
+// ================================
+// 👑⚔ KING VS SLAVE (SOLO VS SERVER)
+// ================================
+let ksRoundId = 1;
+let ksKingIndex = Math.floor(Math.random() * 5); // 🎯 random KING mỗi round
+let ksSlaveIndex = Math.floor(Math.random() * 5);
+const ksUserState = new Map();
+
+// helper: tạo deck và pick index
+
+function ksPickKingIndex(){
+  // 5 lá: 4 common + 1 king => random 0..4
+  return Math.floor(Math.random()*5);
+}
+
+
+function getFavIndex(history){
+
+  if(!history || history.length < 5) return null;
+
+  const count = {};
+
+  history.forEach(i=>{
+    count[i] = (count[i]||0)+1;
+  });
+
+  let maxIndex = null;
+  let maxCount = 0;
+
+  for(const k in count){
+    if(count[k] > maxCount){
+      maxCount = count[k];
+      maxIndex = Number(k);
+    }
+  }
+
+  // nếu 1 vị trí chiếm >50% lượt gần đây
+  if(maxCount / history.length >= 0.6){
+    return maxIndex;
+  }
+
+  return null;
+}
+
+
+
+function ksCardByIndex(role, idx){
+
+  if(role === "king"){
+    return idx === ksKingIndex
+      ? "KING"
+      : "Warrior";
+  }
+
+  if(role === "player"){
+    return idx === ksSlaveIndex
+      ? "SLAVE"
+      : "Warrior";
+  }
+
+  return "Warrior";
+}
+
+
+
+// ================================
+// 🥚 EGG HISTORY (GLOBAL)
+// ================================
+const EGG_HISTORY_FILE =
+  "/opt/render/project/data/egg_history.json";
+
+const MAX_EGG_HISTORY = 20;
+
+function loadEggHistory(){
+  try{
+    if(!fs.existsSync(EGG_HISTORY_FILE)) return [];
+    return JSON.parse(
+      fs.readFileSync(EGG_HISTORY_FILE,"utf8")
+    );
+  }catch(e){
+    console.error("❌ Load egg history failed", e);
+    return [];
+  }
+}
+
+function saveEggHistory(list){
+  try{
+    fs.writeFileSync(
+      EGG_HISTORY_FILE,
+      JSON.stringify(list,null,2)
+    );
+  }catch(e){
+    console.error("❌ Save egg history failed", e);
+  }
+}
+
+
+
+
+
+// ================================
+// 🥚 EGG ROUND COUNT PERSIST (24H)
+// ================================
+const EGG_ROUND_COUNT_FILE =
+  "/opt/render/project/data/egg_round_count.json";
+
+function loadEggRoundCount(){
+  try{
+    if (!fs.existsSync(EGG_ROUND_COUNT_FILE)) {
+      return {
+        dayTs: getTodayStartTsVN(),
+        count: 0
+      };
+    }
+    return JSON.parse(
+      fs.readFileSync(EGG_ROUND_COUNT_FILE, "utf8")
+    );
+  }catch(e){
+    console.error("❌ Load egg round count failed", e);
+    return {
+      dayTs: getTodayStartTsVN(),
+      count: 0
+    };
+  }
+}
+
+function saveEggRoundCount(data){
+  try{
+    fs.writeFileSync(
+      EGG_ROUND_COUNT_FILE,
+      JSON.stringify(data, null, 2)
+    );
+  }catch(e){
+    console.error("❌ Save egg round count failed", e);
+  }
+}
+
+
+let eggHistory = loadEggHistory();
+
+
+
+const eggRoundState = loadEggRoundCount();
+
+let eggRoundCount = eggRoundState.count || 0;
+let eggRoundDayTs = eggRoundState.dayTs || getTodayStartTsVN();
+
+// reset nếu qua ngày mới
+const eggTodayStart = getTodayStartTsVN();
+if (eggTodayStart !== eggRoundDayTs) {
+  eggRoundCount = 0;
+  eggRoundDayTs = eggTodayStart;
+
+  saveEggRoundCount({
+    dayTs: eggRoundDayTs,
+    count: eggRoundCount
+  });
+}
+
+
+
+// ================================
+// 🎡 WHEEL HISTORY (REALTIME + PERSIST)
+// ================================
+const WHEEL_HISTORY_FILE =
+  "/opt/render/project/data/wheel_history.json";
+
+const MAX_WHEEL_HISTORY = 20;
+
+function loadWheelHistory(){
+  try{
+    if (!fs.existsSync(WHEEL_HISTORY_FILE)) return [];
+    return JSON.parse(
+      fs.readFileSync(WHEEL_HISTORY_FILE, "utf8")
+    );
+  }catch(e){
+    console.error("❌ Load wheel history failed", e);
+    return [];
+  }
+}
+
+
+
+
+function saveWheelHistory(list){
+  try{
+    fs.writeFileSync(
+      WHEEL_HISTORY_FILE,
+      JSON.stringify(list, null, 2)
+    );
+  }catch(e){
+    console.error("❌ Save wheel history failed", e);
+  }
+}
+
+// 📜 history global
+let wheelHistory = loadWheelHistory();
+
+// ================================
+// 🔢 ROUND COUNT TODAY (SERVER)
+// ================================
+const wheelRoundState = loadWheelRoundCount();
+
+let wheelRoundCountToday = wheelRoundState.count || 0;
+let wheelRoundDayTs = wheelRoundState.dayTs || getTodayStartTsVN();
+
+
+
+// 🔥 chỉ giữ lịch sử vòng quay trong 24h
+const now = Date.now();
+wheelHistory = wheelHistory.filter(
+  h => h.ts && now - h.ts <= ONE_DAY
+);
+
+// 💾 lưu lại sau khi dọn rác
+saveWheelHistory(wheelHistory);
+
+
+
+
+
+
+
+const INVEST_HISTORY_FILE =
+  "/opt/render/project/data/invest_history.json";
+
+
+const INVEST_STATE_FILE =
+  "/opt/render/project/data/invest_state.json";
+
+
+
+
+  function loadInvestState(){
+  try{
+    if(!fs.existsSync(INVEST_STATE_FILE)) return null;
+    return JSON.parse(
+      fs.readFileSync(INVEST_STATE_FILE, "utf8")
+    );
+  }catch(e){
+    console.error("❌ Load invest state failed", e);
+    return null;
+  }
+}
+
+
+function saveInvestState(state){
+  if (!state || !INVEST_STATE_FILE) return;
+  try{
+    fs.writeFileSync(
+      INVEST_STATE_FILE,
+      JSON.stringify(state, null, 2)
+    );
+  }catch(e){
+    console.error("❌ Save invest state failed", e);
+  }
+}
+
+
+
+
+
+const webpush = require("web-push");
+
+const { uploadToR2 } = require("./r2");
+
+
+
+
+// ================================
+// 📊 INVEST ROUND STATE (GLOBAL)
+// ================================
+let investRound = null;
+
+
+
+
+// 🔄 Load invest round từ file
+investRound = loadInvestState();
+
+// nếu chưa có round hoặc round đã hết hạn → tạo mới
+if (!investRound || investRound.endAt <= Date.now()) {
+  const id = Date.now();
+  investRound = {
+    id,
+    startAt: id,
+    endAt: id + 60000,
+    orders: [],
+    chart: generateChart(id),
+    closedEarly: [] // 🔒 BẮT BUỘC
+  };
+  saveInvestState(investRound);
+}
+
+// 🛡️ phòng trường hợp file cũ thiếu field
+if (!Array.isArray(investRound.closedEarly)) {
+  investRound.closedEarly = [];
+}
+if (!Array.isArray(investRound.orders)) {
+  investRound.orders = [];
+}
+
+
+
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "";
+
+function normalizeAvatar(url) {
+  if (!url) return "";
+
+  // avatar legacy dạng /avatars/xxx.jpg
+  if (url.startsWith("/avatars/")) {
+    return R2_PUBLIC_URL + url;
+  }
+
+  return url;
+}
+
+
+
+
+const chatUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 500 * 1024 * 1024 }
+});
+
+const avatarCoverUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+});
+
+const postMediaUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 500 * 1024 * 1024 } // 500MB (video)
+});
+
+
+
+const LIVE_STATE_FILE = path.join("/opt/render/project/data", "live_state.json");
+const SOCIAL_FILE = path.join("/opt/render/project/data", "social_posts.json");
+const MEDIA_DIRS = [
+  "/opt/render/project/data/post-images",
+  "/opt/render/project/data/post-videos"
+];
+
+MEDIA_DIRS.forEach(dir=>{
+  if(!fs.existsSync(dir)){
+    fs.mkdirSync(dir,{ recursive:true });
+    console.log("📁 Created", dir);
+  }
+});
+
+
+
+
+
+
+function loadInvestHistory(){
+  try{
+    if(!fs.existsSync(INVEST_HISTORY_FILE)) return [];
+    return JSON.parse(
+      fs.readFileSync(INVEST_HISTORY_FILE, "utf8")
+    );
+  }catch(e){
+    console.error("❌ Load invest history failed", e);
+    return [];
+  }
+}
+
+function saveInvestHistory(list){
+  try{
+    fs.writeFileSync(
+      INVEST_HISTORY_FILE,
+      JSON.stringify(list, null, 2)
+    );
+  }catch(e){
+    console.error("❌ Save invest history failed", e);
+  }
+}
+
+
+const INBOX_FILE = "/opt/render/project/data/inbox.json";
+
+function loadInbox(){
+  try{
+    if(!fs.existsSync(INBOX_FILE)) return {};
+    const raw = fs.readFileSync(INBOX_FILE,"utf8");
+    if(!raw.trim()) return {};
+    return JSON.parse(raw);
+  }catch(e){
+    console.error("❌ Inbox JSON corrupted → reset", e.message);
+    return {};
+  }
+}
+
+
+
+
+
+
+
+
+
+
+const MARKET_FILE = "/opt/render/project/data/market_booths.json";
+
+function loadMarket(){
+  if(!fs.existsSync(MARKET_FILE)) return {};
+  return JSON.parse(fs.readFileSync(MARKET_FILE,"utf8"));
+}
+function saveMarket(db){
+  fs.writeFileSync(MARKET_FILE, JSON.stringify(db,null,2));
+}
+
+
+// 🔒 HELPER: CHẶN MỌI HÀNH ĐỘNG KHI BOOTH BỊ KHOÁ
+function blockIfBoothLockedById(boothId, uid) {
+  if (!boothId || !uid) return false;
+
+  const market = loadMarket();
+  const booth = market[boothId];
+  if (!booth) return false;
+
+  const users = loadUsers();
+  const me = users[uid];
+  const isAdmin = me?.role === "admin";
+
+  return booth.locked && !isAdmin;
+}
+
+
+function blockSocketIfBoothLocked(socket, boothId) {
+  const uid = socket.data.uid;
+  if (!uid || !boothId) return false;
+
+if (blockIfBoothLockedById(boothId, uid)) {
+  socket.emit("booth-locked", {
+    boothId,
+    message: "This booth has been locked by an admin"
+  });
+    return true;
+  }
+  return false;
+}
+
+
+
+function cleanupExpiredBooths(){
+  const market = loadMarket();
+  let changed = false;
+  const now = Date.now();
+
+  Object.keys(market).forEach(id=>{
+    const booth = market[id];
+    if(!booth) return;
+
+    if(booth.expireAt && booth.expireAt < now){
+      console.log("⏱ Booth expired:", id);
+      market[id] = null;
+      changed = true;
+    }
+  });
+
+  if(changed){
+    saveMarket(market);
+  }
+}
+
+
+
+// ================================
+// 🐣 ANIMAL FARM DATA
+// ================================
+const ANIMAL_FILE =
+  "/opt/render/project/data/animal_farm.json";
+
+function loadAnimals(){
+  try{
+    if(!fs.existsSync(ANIMAL_FILE)) return {};
+    return JSON.parse(fs.readFileSync(ANIMAL_FILE,"utf8"));
+  }catch(e){
+    console.error("❌ Load animal data failed", e);
+    return {};
+  }
+}
+
+function saveAnimals(db){
+  try{
+    fs.writeFileSync(
+      ANIMAL_FILE,
+      JSON.stringify(db,null,2)
+    );
+  }catch(e){
+    console.error("❌ Save animal data failed", e);
+  }
+}
+
+let animalDB = loadAnimals();
+
+
+Object.values(animalDB).forEach(list=>{
+  list.forEach(a=>{
+
+    if(typeof a.broken === "undefined")
+      a.broken = null;
+
+    if(typeof a.stage === "undefined")
+      a.stage = 0;
+
+    if(typeof a.finalized === "undefined"){
+      // 🔥 nếu đã stage 2 thì auto finalize
+      a.finalized = (a.stage === 2);
+    }
+
+  });
+});
+saveAnimals(animalDB);
+
+
+
+
+// ================================
+// 🏰 BARN CONFIG
+// ================================
+const BARN_CONFIG = {
+  1: { max: 4,  price: 500 },
+  2: { max: 6,  price: 1200 },
+  3: { max: 10, price: 3000 },
+  4: { max: 16, price: 7000 }
+};
+
+
+
+
+
+const WITHDRAW_FILE = "/opt/render/project/data/withdraw_requests.json";
+
+function loadWithdraws(){
+  if(!fs.existsSync(WITHDRAW_FILE)) return [];
+  try {
+    return JSON.parse(fs.readFileSync(WITHDRAW_FILE, "utf8"));
+  } catch {
+    return [];
+  }
+}
+
+
+function saveWithdraws(list){
+  fs.writeFileSync(WITHDRAW_FILE, JSON.stringify(list, null, 2));
+}
+
+
+
+
+
+function saveInbox(db){
+  fs.writeFileSync(INBOX_FILE, JSON.stringify(db,null,2));
+}
+
+let userInbox = new Map(Object.entries(loadInbox()));
+
+
+
+
+
+
+
+
+
+function loadLiveState() {
+  try {
+    if (!fs.existsSync(LIVE_STATE_FILE)) return {};
+    return JSON.parse(fs.readFileSync(LIVE_STATE_FILE, "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+function saveLiveState(state) {
+  try {
+    fs.writeFileSync(LIVE_STATE_FILE, JSON.stringify(state, null, 2));
+  } catch (e) {
+    console.error("Save live state failed:", e);
+  }
+}
+
+function loadSocial(){
+  try{
+    if(!fs.existsSync(SOCIAL_FILE)) return [];
+    return JSON.parse(fs.readFileSync(SOCIAL_FILE,"utf8"));
+  }catch(e){
+    console.error("Load social failed",e);
+    return [];
+  }
+}
+
+function saveSocial(){
+  try{
+    fs.writeFileSync(SOCIAL_FILE, JSON.stringify(lpPosts,null,2));
+  }catch(e){
+    console.error("Save social failed",e);
+  }
+}
+
+
+// ================================
+// 🧠 TREND ENGINE (LEVEL 11)
+// ================================
+function pickTrend(rng) {
+  const r = rng();
+  if (r < 0.45) return "UP";
+  if (r < 0.9)  return "DOWN";
+  return "SIDE";
+}
+
+
+
+
+
+function generateChart(roundId) {
+  const base = 100;
+  const vol = {
+  gold: 1,
+  silver: 1.5,
+  diamond: 3,
+  oil: 5,        // 🔥 rung mạnh
+  estate: 3.5,
+  atomic: 8.5 
+};
+
+
+const chart = {
+  gold: [],
+  silver: [],
+  diamond: [],
+  oil: [],
+  estate: [],
+  atomic: []
+};
+
+
+  // 🔥 1️⃣ RNG gốc cho cả phiên
+  const roundRng = seededRandom("trend:" + roundId);
+
+  // 🧠 2️⃣ Chọn trend cho từng asset
+const trends = {
+  gold: pickTrend(roundRng),
+  silver: pickTrend(roundRng),
+  diamond: pickTrend(roundRng),
+  oil: pickTrend(roundRng),
+  estate: pickTrend(roundRng),
+   atomic: pickTrend(roundRng)
+};
+
+
+  // 📈 3️⃣ Bias theo trend
+  const trendBias = {
+    UP:   0.04,
+    DOWN: -0.04,
+    SIDE: 0
+  };
+
+  for (let t = 0; t < 60; t++) {
+    for (const k in chart) {
+      const rng = seededRandom(roundId + ":" + k + ":" + t);
+      const prev = chart[k][t - 1] ?? base;
+
+      const noise = (rng() - 0.5) * vol[k];
+      const bias  = trendBias[trends[k]];
+
+let next = prev + noise + bias;
+
+// 🔥 KHÔNG CLAMP – GIÁ TỰ DO
+chart[k][t] = Number(next.toFixed(4));
+
+
+    }
+  }
+
+  // 🔎 (optional) log debug
+  console.log("📊 Round", roundId, "trends:", trends);
+
+  return chart;
+}
+
+
+
+// ================================
+// 📊 TÍNH KẾT QUẢ TỪ CHART (LEVEL 10)
+// ================================
+function calcResultFromChart(chart) {
+  const result = {};
+
+  for (const asset in chart) {
+    const prices = chart[asset];
+
+    if (!Array.isArray(prices) || prices.length < 2) {
+      result[asset] = 0;
+      continue;
+    }
+
+    const start = prices[0];
+    const end   = prices[prices.length - 1];
+
+    // % thay đổi THỰC, KHÔNG clamp
+    const percent = Math.round(
+      (end - start) / start * 100
+    );
+
+    result[asset] = percent;
+  }
+
+  return result;
+}
+
+
+
+function seededRandom(seed) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return () => {
+    h += 0x6D2B79F5;
+    let t = Math.imul(h ^ h >>> 15, 1 | h);
+    t ^= t + Math.imul(t ^ t >>> 7, 61 | t);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: "*" } });
+const activeUsers = new Map();
+
+
+
+
+/* =========================================
+   WHEEL8 - DAILY USER BET HISTORY
+   RESET AT 00:00 VIETNAM TIME
+========================================= */
+
+let wheel8HistoryDayTs = null;
+
+function cleanWheel8UserHistory(forceSave = false) {
+
+  const todayStart = getTodayStartTsVN();
+  const todayEnd = todayStart + 86400000;
+
+  const isNewDay =
+    wheel8HistoryDayTs !== null &&
+    wheel8HistoryDayTs !== todayStart;
+
+  // Không cần xử lý lại nếu vẫn cùng ngày
+  if (!forceSave && wheel8HistoryDayTs === todayStart) {
+    return;
+  }
+
+  const cleanedHistory = {};
+  let changed = false;
+
+  for (const [uid, list] of Object.entries(wheel8UserHistory || {})) {
+
+    if (!Array.isArray(list)) {
+      changed = true;
+      continue;
+    }
+
+    // Chỉ giữ lịch sử thuộc ngày hôm nay
+    const todayHistory = list.filter(item => {
+
+      const ts = Number(item?.ts);
+
+      return (
+        Number.isFinite(ts) &&
+        ts >= todayStart &&
+        ts < todayEnd
+      );
+
+    });
+
+    if (todayHistory.length !== list.length) {
+      changed = true;
+    }
+
+    if (todayHistory.length > 0) {
+      cleanedHistory[uid] = todayHistory;
+    } else {
+      changed = true;
+    }
+
+  }
+
+  wheel8UserHistory = cleanedHistory;
+  wheel8HistoryDayTs = todayStart;
+
+  // Lưu dữ liệu đã được làm sạch
+  if (changed || forceSave) {
+    saveWheel8UserHistory(wheel8UserHistory);
+  }
+
+  // Thông báo tới tất cả người chơi khi qua ngày mới
+  if (isNewDay) {
+
+    console.log("WHEEL8: RESET DAILY BET HISTORY");
+
+    io.emit("wheel8-my-history-reset", {
+      dayTs: todayStart
+    });
+
+  }
+
+}
+
+// Làm sạch lịch sử ngay khi server khởi động
+cleanWheel8UserHistory();
+
+// Kiểm tra ngày mới mỗi giây
+setInterval(() => {
+  cleanWheel8UserHistory();
+}, 1000);
+
+
+
+
+
+// ================================
+// 🎡 LUCKY WHEEL 8 ENGINE
+// ================================
+
+// load history
+let wheel8History = loadWheel8History()
+
+// chỉ giữ 24h
+const ONE_DAYS = 24 * 60 * 60 * 1000
+
+wheel8History = wheel8History.filter(
+  h => Date.now() - h.ts <= ONE_DAYS
+)
+
+saveWheel8History(wheel8History)
+
+
+// ================================
+// ROUND STATE
+// ================================
+
+const wheel8State = loadWheel8Round()
+
+let wheel8RoundCounter = wheel8State.count || 0
+let wheel8RoundDayTs   = wheel8State.dayTs || getTodayStartTsVN()
+
+const wheel8TodayStart = getTodayStartTsVN()
+
+// reset khi qua ngày
+if(wheel8TodayStart !== wheel8RoundDayTs){
+
+  wheel8RoundCounter = 0
+  wheel8RoundDayTs = wheel8TodayStart
+
+  saveWheel8Round({
+    dayTs: wheel8RoundDayTs,
+    count: wheel8RoundCounter
+  })
+
+}
+
+
+// ================================
+// SLOT TABLE
+// ================================
+
+const WHEEL8_SLOTS = [
+  { m:5,  w:19.6 },
+  { m:10, w:10 },
+  { m:15, w:6.6 },
+  { m:25, w:4 },
+  { m:45, w:1 },
+  { m:5,  w:19.6 },
+  { m:5,  w:19.6 },
+  { m:5,  w:19.6 }
+];
+
+
+// ================================
+// CREATE ROUND
+// ================================
+
+
+
+
+/* =====================================
+   WHEEL8 ADMIN PASSWORD AUTHENTICATION
+===================================== */
+
+const WHEEL8_ADMIN_ROOM = "wheel8-admin";
+const WHEEL8_ADMIN_PASSWORD =
+  process.env.WHEEL8_ADMIN_PASSWORD || "";
+
+function wheel8PasswordMatches(password) {
+  if (!WHEEL8_ADMIN_PASSWORD) return false;
+  if (typeof password !== "string") return false;
+  if (password.length > 256) return false;
+
+  const provided = crypto
+    .createHash("sha256")
+    .update(password, "utf8")
+    .digest();
+
+  const expected = crypto
+    .createHash("sha256")
+    .update(WHEEL8_ADMIN_PASSWORD, "utf8")
+    .digest();
+
+  return crypto.timingSafeEqual(provided, expected);
+}
+
+function emitWheel8Admin(event, data) {
+  io.to(WHEEL8_ADMIN_ROOM).emit(event, data);
+}
+
+
+
+
+function createWheel8Round(){
+
+  const todayStart = getTodayStartTsVN()
+
+  // 🔥 nếu qua ngày → chỉ đánh dấu (KHÔNG reset ngay)
+  if(todayStart !== wheel8RoundDayTs){
+    wheel8NeedReset = true
+  }
+
+  // 🔥 nếu cần reset → reset TRƯỚC khi tạo round mới
+  if(wheel8NeedReset){
+
+    console.log("🌅 RESET AFTER ROUND FINISH")
+
+    wheel8RoundCounter = 0
+    wheel8RoundDayTs = todayStart
+    wheel8NeedReset = false
+
+    saveWheel8Round({
+      dayTs: wheel8RoundDayTs,
+      count: wheel8RoundCounter
+    })
+  }
+
+  // 🔢 TĂNG ROUND
+  wheel8RoundCounter++
+
+  const round = {
+    id: wheel8RoundCounter,
+    startAt: Date.now(),
+    endAt: Date.now() + 35000,
+    bets: [],
+    slotPool: [0,0,0,0,0,0,0,0]
+  }
+
+
+
+  
+  // 🔐 SECRET
+  const result = pickWheel8()
+
+  round.secret = {
+    slot: result.slot,
+    multiplier: result.multiplier,
+    hash: crypto
+      .createHash("sha256")
+      .update(round.id + ":" + result.slot + ":" + result.multiplier)
+      .digest("hex")
+  }
+
+  // 🔔 ADMIN
+ emitWheel8Admin("admin-wheel8-secret", {
+    roundId: round.id,
+    slot: round.secret.slot,
+    multiplier: round.secret.multiplier,
+    hash: round.secret.hash,
+    endAt: round.endAt
+  })
+
+  saveWheel8Round({
+    dayTs: wheel8RoundDayTs,
+    count: wheel8RoundCounter
+  })
+
+  return round
+}
+
+let wheel8Round = createWheel8Round()
+
+let lastWheel8Result = null
+
+
+
+
+
+
+function pickWheel8(){
+
+const total = WHEEL8_SLOTS.reduce((s,x)=>s+x.w,0)
+
+let r = Math.random()*total
+
+for(let i=0;i<WHEEL8_SLOTS.length;i++){
+
+const s = WHEEL8_SLOTS[i]
+
+if((r-=s.w)<=0){
+return {
+slot:i+1,
+multiplier:s.m
+}
+}
+
+}
+
+return {slot:1,multiplier:5}
+
+}
+
+// ================================
+// ⏱ WHEEL8 TIMER REALTIME
+// ================================
+setInterval(()=>{
+
+const remain =
+Math.max(
+0,
+Math.floor(
+(wheel8Round.endAt - Date.now())/1000
+)
+)
+
+io.emit("wheel8-timer",remain)
+
+},1000)
+
+
+// ================================
+// 🎯 WHEEL8 PREDICTION
+// ================================
+function generateWheel8Prediction(){
+
+  const arr = []
+
+  while(arr.length < 3){
+
+    const s = Math.floor(Math.random()*8)+1
+
+    if(!arr.includes(s)){
+      arr.push(s)
+    }
+
+  }
+
+  return arr
+
+}
+
+
+
+// ================================
+// 🎡 WHEEL8 AUTO ROUND
+// ================================
+setInterval(()=>{
+
+const users = loadUsers()
+
+// 🎯 SPECIAL EVENT
+let specialEvent = false;
+let winSlots = [];
+let multiplier = null;
+
+const forcedEvent = wheel8Round.forcedEvent;
+
+if(forcedEvent === "x5-all"){
+
+  specialEvent = true;
+  winSlots = [1,6,7,8];
+  multiplier = 5;
+
+}else if(forcedEvent === "x45-all"){
+
+  specialEvent = true;
+  winSlots = [2,3,4,5];
+  multiplier = 45;
+
+}else if(wheel8Round.secret.overridden){
+
+  // Admin đã chọn slot thường
+  winSlots = [wheel8Round.secret.slot];
+  multiplier = wheel8Round.secret.multiplier;
+
+}else if(Math.random() < 0.0001){
+
+  // EVENT ngẫu nhiên khi Admin không override
+  specialEvent = true;
+
+  if(Math.random() < 0.5){
+    winSlots = [1,6,7,8];
+    multiplier = 5;
+  }else{
+    winSlots = [2,3,4,5];
+    multiplier = 45;
+  }
+
+}else{
+
+  winSlots = [wheel8Round.secret.slot];
+  multiplier = wheel8Round.secret.multiplier;
+
+}
+
+const resultSlot = winSlots[0] || 1;
+
+
+// =======================
+// 💰 PAYOUT
+// =======================
+
+wheel8Round.bets.forEach(o=>{
+
+const me = users[o.uid]
+if(!me?.profile) return
+
+let win = 0
+
+if(winSlots.includes(o.slot)){
+
+  // lấy multiplier theo slot
+  const slotMulti = WHEEL8_SLOTS[o.slot-1].m
+
+  win = o.bet * slotMulti
+
+  me.profile.coins += win
+
+}
+
+// =====================
+// 📜 SAVE USER HISTORY
+// =====================
+
+if(!wheel8UserHistory[o.uid])
+wheel8UserHistory[o.uid] = []
+
+wheel8UserHistory[o.uid].unshift({
+roundId: wheel8Round.id,
+slot: o.slot,
+bet: o.bet,
+multiplier: multiplier,
+win: win,
+winSlot: resultSlot,
+event: specialEvent
+  ? (winSlots.includes(1) ? "x5-all" : "x45-all")
+  : null,
+ts: Number(wheel8Round.startAt) || Date.now()
+})
+
+
+// ===========================
+// 🔒 GIỮ 50 ROUND GẦN NHẤT
+// ===========================
+
+const roundMap = {}
+
+wheel8UserHistory[o.uid].forEach(r=>{
+
+if(!roundMap[r.roundId]){
+roundMap[r.roundId] = []
+}
+
+roundMap[r.roundId].push(r)
+
+})
+
+const roundIds =
+Object.keys(roundMap)
+.sort((a,b)=>{
+
+const ta = roundMap[a][0]?.ts || 0
+const tb = roundMap[b][0]?.ts || 0
+
+return tb - ta
+
+})
+.slice(0,50)
+
+const newHistory = []
+
+roundIds.forEach(id=>{
+newHistory.push(...roundMap[id])
+})
+
+wheel8UserHistory[o.uid] = newHistory
+
+})
+
+
+// 💾 LƯU LỊCH SỬ CHỈ TRONG NGÀY
+cleanWheel8UserHistory(true)
+
+
+// lưu user
+saveUsers(users)
+
+// =======================
+// 💎 REALTIME COIN UPDATE
+// =======================
+
+wheel8Round.bets.forEach(o=>{
+emitCoinUpdate(o.uid)
+})
+
+
+// =======================
+// 🏆 TOP WINNERS
+// =======================
+
+const winMap = {}
+
+wheel8Round.bets.forEach(o=>{
+
+  let win = 0
+
+  if(winSlots.includes(o.slot)){
+    const slotMulti = WHEEL8_SLOTS[o.slot-1].m
+    win = o.bet * slotMulti
+  }
+
+  if(win > 0){
+
+const users = loadUsers()
+const user = users[o.uid]
+
+let displayName = "???"
+
+if(user?.profile?.showTopName){
+  displayName = user.profile.name
+}
+
+if(!winMap[o.uid]){
+  winMap[o.uid] = {
+    uid:o.uid,
+    name:displayName,
+    win:0
+  }
+}
+
+    winMap[o.uid].win += win
+  }
+
+})
+
+
+// =======================
+// 🤖 BOT CONFIG
+// =======================
+
+const botNames = [
+  "???","???","???",
+  "???","???","???"
+]
+
+function fakeWin(winSlots){
+
+  let totalWin = 0
+
+  // 🔥 detect event (multi-slot)
+  const isEvent = winSlots.length > 1
+
+  // =========================
+  // 🎯 EVENT → cược nhiều slot
+  // =========================
+  if(isEvent){
+
+    const betCount = Math.floor(Math.random()*3) + 2 // 2 → 4 slot
+
+    for(let i=0;i<betCount;i++){
+
+      const slotIndex =
+        Math.floor(Math.random()*WHEEL8_SLOTS.length) + 1
+
+      const slot = WHEEL8_SLOTS[slotIndex-1]
+      const m = slot.m
+
+      let betList
+
+      if(m === 5){
+        betList = [500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2100,2200,2300,2400,2500,2600,2700,2800,2900,3000,3100,3200,3300,3400,3500,3600,3700,3800,3900,4000,4500,5000,5500,6000]
+      }
+      else if(m === 10 || m === 15){
+        betList = [800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2100,2200,2300,2400,2500,2600,2700,2800,2900,3000]
+      }
+      else if(m === 25){
+        betList = [400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000]
+      }
+      else if(m === 45){
+        betList = [200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500]
+      }
+      else{
+        betList = [500,600,700,800,900,1000]
+      }
+
+      const bet =
+        betList[Math.floor(Math.random()*betList.length)]
+
+      if(winSlots.includes(slotIndex)){
+        totalWin += bet * m
+      }
+
+    }
+
+  }
+
+  // =========================
+  // 🎯 NORMAL → chỉ 1 slot
+  // =========================
+  else{
+
+    const slotIndex = winSlots[0]
+
+    const slot = WHEEL8_SLOTS[slotIndex-1]
+    const m = slot.m
+
+    let betList
+
+      if(m === 5){
+        betList = [500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2100,2200,2300,2400,2500,2600,2700,2800,2900,3000,3500,4000,4500,5000,5500,6000]
+      }
+      else if(m === 10 || m === 15){
+        betList = [800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2100,2200,2300,2400,2500,2600,2700,2800,2900,3000]
+      }
+      else if(m === 25){
+        betList = [400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000]
+      }
+      else if(m === 45){
+        betList = [200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500]
+      }
+      else{
+        betList = [500,600,700,800,900,1000]
+      }
+
+    const bet =
+      betList[Math.floor(Math.random()*betList.length)]
+
+    totalWin = bet * m
+  }
+
+
+  // 🔒 đảm bảo luôn có win
+  if(totalWin === 0){
+    return fakeWin(winSlots)
+  }
+
+  // 🔥 variance (top 1)
+  if(Math.random() < 0.3){
+    totalWin *= 2
+  }
+
+  return totalWin
+}
+
+// =======================
+// 🤖 CREATE BOT FIRST
+// =======================
+
+let botTop = []
+const usedWins = new Set()
+
+while(botTop.length < 5){
+
+  let win
+
+  do{
+    win = fakeWin(winSlots) // 🔥 FIX QUAN TRỌNG
+  }while(usedWins.has(win))
+
+  usedWins.add(win)
+
+  botTop.push({
+    uid: "bot_"+Math.random(),
+    name: botNames[Math.floor(Math.random()*botNames.length)],
+    win,
+    fake:true
+  })
+}
+
+
+// =======================
+// 🧑 PLAYER LIST
+// =======================
+
+let playerList = Object.values(winMap)
+
+
+// =======================
+// 🔥 MERGE LOGIC
+// =======================
+
+// 🔥 ghép bot trước
+let merged = [...botTop]
+
+// 🔥 chỉ add player nếu đủ mạnh
+playerList.forEach(p=>{
+
+  // nếu player thắng > bot yếu nhất → cho vào
+  const minBotWin = Math.min(...merged.map(x=>x.win))
+
+  if(p.win > minBotWin){
+    merged.push(p)
+  }
+
+})
+
+
+// =======================
+// 🔥 SORT FINAL
+// =======================
+
+merged.sort((a,b)=>b.win - a.win)
+
+const topWinners = merged.slice(0,5)
+
+// =======================
+// 🎡 EMIT RESULT
+// =======================
+
+lastWheel8Result = {
+  slot: resultSlot,
+  slots: winSlots,
+  multiplier: multiplier,
+  event: specialEvent
+    ? (winSlots.includes(1) ? "x5-all" : "x45-all")
+    : null,
+  top: topWinners
+}
+
+io.emit("wheel8-result", lastWheel8Result)
+
+
+// =======================
+// 📜 SAVE HISTORY
+// =======================
+
+wheel8History.unshift({
+  roundId: wheel8Round.id,
+  slot: resultSlot,
+  multi: multiplier,
+  ts: Date.now(),
+  slots: winSlots,
+  event: specialEvent
+    ? (winSlots.includes(1) ? "x5-all" : "x45-all")
+    : null,
+
+  // lưu top 3 của phiên vào lịch sử
+  topWinners: topWinners
+})
+
+if(wheel8History.length > MAX_WHEEL8_HISTORY){
+wheel8History.pop()
+}
+
+saveWheel8History(wheel8History)
+
+
+io.emit("wheel8-history",wheel8History)
+
+
+// =======================
+// 🔄 NEW ROUND
+// =======================
+
+// 🔥 CHECK QUA NGÀY SAU KHI KẾT THÚC ROUND
+const todayStart = getTodayStartTsVN()
+
+if(todayStart !== wheel8RoundDayTs){
+  wheel8NeedReset = true
+}
+
+
+wheel8Round = createWheel8Round()
+
+
+
+saveWheel8Round({
+dayTs: wheel8RoundDayTs,
+count: wheel8RoundCounter
+})
+
+
+
+// gửi thông tin round mới
+io.emit("wheel8-round-info",{
+  roundId: wheel8Round.id,
+  endAt: wheel8Round.endAt
+})
+
+
+
+io.emit("wheel8-pool-update",wheel8Round.slotPool)
+
+io.emit("wheel8-round-new",{
+roundId: wheel8Round.id
+})
+
+
+// 🎯 gửi gợi ý sau 5 giây
+setTimeout(()=>{
+
+  const prediction = generateWheel8Prediction()
+
+  io.emit("wheel8-prediction",{
+    slots: prediction
+  })
+
+},5000)
+
+
+emitWheel8Admin("admin-wheel8-bets-update", getAdminWheel8Data())
+
+},35000)
+
+
+
+// ================================
+// 🐉🐯🔥 DTP ROUND COUNT (24H)
+// ================================
+
+
+
+const DTP_ROUND_FILE =
+"/opt/render/project/data/dtp_round_count.json";
+
+const DTP_HISTORY_FILE =
+"/opt/render/project/data/dtp_history.json";
+
+
+let fakePool = {
+  dragon: 0,
+  tiger: 0,
+  phoenix: 0
+};
+
+
+
+/* ======================================
+   DTP ADMIN - PASSWORD AUTHENTICATION
+====================================== */
+
+const DTP_ADMIN_PASSWORD =
+  process.env.DTP_ADMIN_PASSWORD || "";
+
+const DTP_ADMIN_TTL_MS = 8 * 60 * 60 * 1000;
+const dtpAdminAttempts = new Map();
+
+// Dọn dữ liệu chống thử mật khẩu liên tục
+setInterval(() => {
+  const now = Date.now();
+
+  for (const [ip, entry] of dtpAdminAttempts) {
+    if (
+      now - entry.lastAttempt > 30 * 60 * 1000 &&
+      now > entry.blockedUntil
+    ) {
+      dtpAdminAttempts.delete(ip);
+    }
+  }
+}, 10 * 60 * 1000).unref();
+
+// So sánh mật khẩu phía server
+function dtpPasswordMatches(password) {
+  if (
+    !DTP_ADMIN_PASSWORD ||
+    typeof password !== "string" ||
+    !password ||
+    password.length > 256
+  ) {
+    return false;
+  }
+
+  const a = crypto
+    .createHash("sha256")
+    .update(password, "utf8")
+    .digest();
+
+  const b = crypto
+    .createHash("sha256")
+    .update(DTP_ADMIN_PASSWORD, "utf8")
+    .digest();
+
+  return crypto.timingSafeEqual(a, b);
+}
+
+// Kiểm tra quyền trên từng kết nối
+function isDtpAdminSocket(socket) {
+  const expiresAt = Number(
+    socket.data.dtpAdminUntil || 0
+  );
+
+  if (expiresAt > Date.now()) {
+    return true;
+  }
+
+  socket.data.dtpAdminUntil = 0;
+  return false;
+}
+
+// Dữ liệu đầy đủ của bảng quản trị
+function getDtpAdminSnapshot() {
+  return {
+    round: dtpRound.id,
+    secret: dtpRound.secretResult,
+    endAt: dtpRound.endAt,
+    pool: getDtpPool(),
+    bets: getAdminDtpBetList()
+  };
+}
+
+// Chỉ gửi sự kiện cho kết nối đã xác thực
+function emitToDtpAdmins(event, data) {
+  for (const client of io.sockets.sockets.values()) {
+    if (isDtpAdminSocket(client)) {
+      client.emit(event, data);
+    }
+  }
+}
+
+
+function getDtpPool(){
+
+  const pool = {
+    dragon: fakePool.dragon,
+    tiger: fakePool.tiger,
+    phoenix: fakePool.phoenix
+  };
+
+  dtpRound.bets.forEach(b=>{
+    pool[b.side] += b.bet;
+  });
+
+  return pool;
+}
+
+
+function getAdminDtpBetList(){
+
+const users = loadUsers();
+
+const map = {};
+
+dtpRound.bets.forEach(b=>{
+
+if(!map[b.uid]){
+  map[b.uid] = {
+    name: users[b.uid]?.profile?.name || "Player",
+    dragon:0,
+    tiger:0,
+    phoenix:0
+  };
+}
+
+map[b.uid][b.side] += b.bet;
+
+});
+
+return Object.values(map).map(p=>({
+
+name:p.name,
+dragon:p.dragon,
+tiger:p.tiger,
+phoenix:p.phoenix,
+total:p.dragon + p.tiger + p.phoenix
+
+}));
+
+}
+
+
+
+function emitAdminDtpBets() {
+
+  emitToDtpAdmins(
+    "admin-dtp-bets-update",
+    {
+      round: dtpRound.id,
+      pool: getDtpPool(),
+      bets: getAdminDtpBetList()
+    }
+  );
+
+}
+
+
+
+setInterval(()=>{
+
+  const remain =
+    Math.floor((dtpRound.endAt - Date.now())/1000);
+
+  const elapsed =
+    Math.floor((Date.now() - dtpRound.startAt)/1000);
+
+  // ❌ 5s đầu: animation result
+  if(elapsed < 5) return;
+
+  // ❌ 5s cuối: khóa cược
+  if(remain <= 5) return;
+
+  const sides = ["dragon","tiger","phoenix"];
+  const side = sides[Math.floor(Math.random()*3)];
+
+  const fakeBet = (Math.floor(Math.random()*100) + 1) * 10;
+
+  fakePool[side] += fakeBet;
+
+  io.emit("dtp-bet-update", getDtpPool());
+
+},500);
+
+
+
+let dtpHistory = loadDtpHistory();
+const MAX_DTP_HISTORY = 8;
+
+
+function loadDtpHistory(){
+  try{
+    if(!fs.existsSync(DTP_HISTORY_FILE)) return [];
+    return JSON.parse(
+      fs.readFileSync(DTP_HISTORY_FILE,"utf8")
+    );
+  }catch(e){
+    console.error("❌ Load DTP history failed",e);
+    return [];
+  }
+}
+
+function saveDtpHistory(list){
+  try{
+    fs.writeFileSync(
+      DTP_HISTORY_FILE,
+      JSON.stringify(list,null,2)
+    );
+  }catch(e){
+    console.error("❌ Save DTP history failed",e);
+  }
+}
+
+
+function loadDtpRoundCount(){
+  try{
+    if(!fs.existsSync(DTP_ROUND_FILE)){
+      return {
+        dayTs: getTodayStartTsVN(),
+        count: 0
+      };
+    }
+    return JSON.parse(
+      fs.readFileSync(DTP_ROUND_FILE,"utf8")
+    );
+  }catch(e){
+    return {
+      dayTs: getTodayStartTsVN(),
+      count: 0
+    };
+  }
+}
+
+function saveDtpRoundCount(data){
+  fs.writeFileSync(
+    DTP_ROUND_FILE,
+    JSON.stringify(data,null,2)
+  );
+}
+
+
+function pickDtpWinner(){
+
+  const r = Math.random();
+
+  if(r < 0.333) return "dragon";
+  if(r < 0.666) return "tiger";
+  return "phoenix";
+
+}
+
+
+
+const dtpRoundState = loadDtpRoundCount();
+
+let dtpRoundCount =
+  dtpRoundState.count || 0;
+
+let dtpRoundDayTs =
+  dtpRoundState.dayTs || getTodayStartTsVN();
+
+
+// ================================
+// 🐉🐯🔥 DRAGON TIGER PHOENIX ROUND
+// ================================
+
+dtpRoundCount++;
+
+saveDtpRoundCount({
+  dayTs: dtpRoundDayTs,
+  count: dtpRoundCount
+});
+
+let dtpRound = {
+  id: dtpRoundCount,
+  startAt: Date.now(),
+  endAt: Date.now() + 35000,
+  bets: [],
+  secretResult: pickDtpWinner()
+};
+
+
+
+setInterval(()=>{
+
+  const users = loadUsers();
+
+const winner = dtpRound.secretResult || pickDtpWinner();
+
+dtpRound.bets.forEach(o=>{
+
+  const me = users[o.uid];
+  if(!me?.profile) return;
+
+  let win = 0;
+
+  if(o.side === winner){
+
+    win = o.bet * 3;
+
+    me.profile.coins += win;
+
+  }
+
+  // =====================
+  // SAVE USER HISTORY
+  // =====================
+
+me.dtpHistory ||= [];
+
+// tìm round hiện tại
+let row = me.dtpHistory.find(r => r.round === dtpRound.id);
+
+if(!row){
+
+row = {
+  round: dtpRound.id,
+  dragon:0,
+  tiger:0,
+  phoenix:0,
+  win:0,
+  winner:winner
+};
+
+  me.dtpHistory.unshift(row);
+
+}
+
+// cộng bet theo cửa
+row[o.side] += o.bet;
+
+// cộng tiền thắng
+row.win += win;
+
+// giữ tối đa 30 round
+me.dtpHistory = me.dtpHistory.slice(0,30);
+
+});
+
+  
+
+  saveUsers(users);
+
+  dtpRound.bets.forEach(o=>{
+    emitCoinUpdate(o.uid);
+  });
+
+  io.emit("dtp-result",{
+    roundId: dtpRound.id,
+    winner
+  });
+
+
+  // =====================
+// SAVE HISTORY
+// =====================
+
+dtpHistory.unshift(winner);
+
+if(dtpHistory.length > MAX_DTP_HISTORY){
+  dtpHistory.pop();
+}
+
+saveDtpHistory(dtpHistory); // 🔥 thêm dòng này
+
+io.emit("dtp-history-update", dtpHistory);
+
+
+
+  // new round
+const todayStart = getTodayStartTsVN();
+
+if(todayStart !== dtpRoundDayTs){
+  dtpRoundCount = 0;
+  dtpRoundDayTs = todayStart;
+}
+
+dtpRoundCount++;
+
+saveDtpRoundCount({
+  dayTs: dtpRoundDayTs,
+  count: dtpRoundCount
+});
+
+dtpRound = {
+  id: dtpRoundCount,
+  startAt: Date.now(),
+  endAt: Date.now() + 35000,
+  bets: [],
+  secretResult: pickDtpWinner()   // 🔥 thêm dòng này
+};
+
+
+
+function randomPool(){
+  return 0;
+}
+
+fakePool = {
+  dragon: randomPool(),
+  tiger: randomPool(),
+  phoenix: randomPool()
+};
+
+
+  io.emit("dtp-round-new",{
+    roundId: dtpRound.id
+  });
+
+emitAdminDtpBets();
+
+},35000);
+
+
+
+setInterval(()=>{
+
+  const remain =
+    Math.max(
+      0,
+      Math.floor((dtpRound.endAt - Date.now())/1000)
+    );
+
+  io.emit("dtp-timer", remain);
+
+},1000);
+
+
+
+
+// ================================
+// 🚀 STAR WAR SESSION STORE
+// ================================
+const starWarSessions = new Map();
+
+// ================================
+// 🔢 RPS ROUND COUNT STATE
+// ================================
+const rpsRoundState = loadRpsRoundCount();
+
+let rpsRoundCount = rpsRoundState.count || 0;
+let rpsRoundDayTs = rpsRoundState.dayTs || getTodayStartTsVN();
+
+
+// ================================
+// 🎡 WHEEL ROUND STATE (GLOBAL)
+// ================================
+let wheelRound = {
+  id: Date.now(),
+  startAt: Date.now(),
+  endAt: Date.now() + 60000,
+  bets: []
+};
+
+
+
+
+// ================================
+// 🥚 EGG ROUND STATE (GLOBAL)
+// ================================
+
+
+
+
+
+const ROUND_DURATION = 60000;       // 60s tổng
+const RESULT_ANIM = 10000;          // 10s hoạt cảnh
+const NEXT_ROUND_TIME = ROUND_DURATION - RESULT_ANIM; // 50s
+const EGG_DISPLAY_POOL = [
+  { type:"normal",    img:"egg1.png",  w:20 },
+  { type:"forest",    img:"egg5.png",  w:20 },
+  { type:"gold",      img:"egg2.png",  w:15 },
+  { type:"thunder",   img:"egg6.png",  w:15 },
+  { type:"diamond",   img:"egg3.png",  w:10 },
+  { type:"shadow",    img:"egg7.png",  w:8 },
+  { type:"dragon",    img:"egg4.png",  w:6 },
+  { type:"phoenix",   img:"egg8.png",  w:4 },
+  { type:"celestial", img:"egg9.png",  w:1 },
+  { type:"voidlord",  img:"egg10.png", w:1 }
+];
+
+function pickDisplayEgg(){
+  const total = EGG_DISPLAY_POOL.reduce((s,x)=>s+x.w,0);
+  let r = Math.random()*total;
+  for(const e of EGG_DISPLAY_POOL){
+    if((r -= e.w) <= 0) return e;
+  }
+  return EGG_DISPLAY_POOL[0];
+}
+
+
+function ensureEggSecret(round){
+  if(!round) return;
+
+  if(round.secretResult && round.secretResult.multiplier != null){
+    return;
+  }
+
+  const multiplier = pickEggMultiplier();
+
+  const hash = crypto
+    .createHash("sha256")
+    .update(round.id + ":" + multiplier)
+    .digest("hex");
+
+  round.secretResult = {
+    multiplier,
+    hash,
+    overridden:false
+  };
+}
+
+let eggRound = (() => {
+
+  eggRoundCount++;
+
+  saveEggRoundCount({
+    dayTs: eggRoundDayTs,
+    count: eggRoundCount
+  });
+
+  const id = eggRoundCount;
+
+  const round = {
+    id,
+    startAt: Date.now(),
+    endAt: Date.now() + ROUND_DURATION,
+    bets: [],
+    displayEgg: pickDisplayEgg(),
+    secretResult: null
+  };
+
+  ensureEggSecret(round);
+
+  return round;
+})();
+
+
+
+function pickEggMultiplier(){
+
+  const r = Math.random();
+
+  // 💀 30% x0
+  if(r < 0.30){
+    return 0;
+  }
+
+  // 🔻 25% (0.4 → 0.9)
+  if(r < 0.55){
+    return Number((0.4 + Math.random() * 0.5).toFixed(2));
+  }
+
+  // ⚖️ 20% (1.0 → 1.6)
+  if(r < 0.75){
+    return Number((1 + Math.random() * 0.6).toFixed(2));
+  }
+
+  // 🔥 15% (1.7 → 2.5)
+  if(r < 0.90){
+    return Number((1.7 + Math.random() * 0.8).toFixed(2));
+  }
+
+  // 💎 7% (2.6 → 4.0)
+  if(r < 0.97){
+    return Number((2.6 + Math.random() * 1.4).toFixed(2));
+  }
+
+  // 🚀 2.5% (4 → 7)
+  if(r < 0.995){
+    return Number((4 + Math.random() * 3).toFixed(2));
+  }
+
+  // 🎰 0.5% (8 → 10)
+  return Number((8 + Math.random() * 2).toFixed(2));
+}
+
+
+
+
+ensureWheelSecret(wheelRound);
+
+const RPS_BET_LOCK_BEFORE_MS = 5000; // 🔒 khóa trước 5s
+
+
+// ================================
+// ✊✋✌️ RPS ROUND STATE (GLOBAL)
+// ================================
+const todayStart = getTodayStartTsVN();
+if (todayStart !== rpsRoundDayTs) {
+  rpsRoundCount = 0;
+  rpsRoundDayTs = todayStart;
+
+  saveRpsRoundCount({
+    dayTs: rpsRoundDayTs,
+    count: rpsRoundCount
+  });
+}
+
+rpsRoundCount++;
+
+let rpsRound = {
+  id: rpsRoundCount,          // ✅ round trong ngày
+  startAt: Date.now(),
+  endAt: Date.now() + 60000,
+  secretHand: pickRpsHand(),
+  bets: []
+};
+
+
+function pickRpsHand(){
+  return ["rock","paper","scissors"][
+    Math.floor(Math.random()*3)
+  ];
+}
+
+function calcRps(me, enemy){
+  if(me === enemy) return "draw";
+  if(
+    (me==="rock" && enemy==="scissors") ||
+    (me==="paper" && enemy==="rock") ||
+    (me==="scissors" && enemy==="paper")
+  ) return "win";
+  return "lose";
+}
+
+
+// ================================
+// 🐣 AUTO GROW ANIMALS (FIX)
+// ================================
+setInterval(()=>{
+
+  const now = Date.now();
+  let changedUsers = new Set();
+
+  Object.keys(animalDB).forEach(uid=>{
+
+    animalDB[uid].forEach(a=>{
+
+      const age = now - a.createdAt;
+      const growTime = a.growTime || 60000;
+
+if(age >= growTime){
+
+  // 🔒 Nếu đã finalize rồi → KHÔNG BAO GIỜ ĐỤNG NỮA
+  if(a.finalized) return;
+
+  if(a.stage !== 2){
+
+    const failRateMap = {
+      normal: 0.5,
+      forest: 0.5,
+      gold: 0.5,
+      thunder: 0.5,
+      diamond: 0.5,
+      shadow: 0.5,
+      dragon: 0.5,
+      phoenix: 0.5,
+      celestial: 0.5,
+      voidlord: 0.5
+    };
+
+    const failRate = failRateMap[a.type] || 0.1;
+    a.broken = Math.random() < failRate;
+
+    a.stage = 2;
+    a.finalized = true;  // 🔥 LOCK VĨNH VIỄN
+
+    changedUsers.add(uid);
+  }
+}
+
+
+
+    });
+
+  });
+
+  if(changedUsers.size > 0){
+    saveAnimals(animalDB);
+
+    changedUsers.forEach(uid=>{
+      emitToUser(uid,"animal-update", animalDB[uid]);
+    });
+  }
+
+}, 3000);
+
+
+
+
+// ================================
+// ⏱️ AUTO SPIN WHEEL EVERY 60s
+// ================================
+setInterval(() => {
+  try {
+
+    // 🔐 ĐẢM BẢO ROUND LUÔN CÓ KẾT QUẢ
+ensureWheelSecret(wheelRound);
+
+// 🔁 RESET ROUND KHI QUA NGÀY MỚI (0H VN)
+const todayStart = getTodayStartTsVN();
+if (todayStart !== wheelRoundDayTs) {
+  wheelRoundCountToday = 0;
+  wheelRoundDayTs = todayStart;
+
+  saveWheelRoundCount({
+    dayTs: wheelRoundDayTs,
+    count: wheelRoundCountToday
+  });
+}
+
+
+
+
+    const users = loadUsers();
+
+// 🎯 DÙNG KẾT QUẢ ĐÃ CHỐT TỪ ĐẦU ROUND
+const multiplier = wheelRound.secretResult.multiplier;
+const index      = wheelRound.secretResult.index;
+
+
+
+// 🏆 TOP WINNERS CHO PHIÊN HIỆN TẠI
+const roundWinners = [];
+// 🔢 ROUND ĐANG KẾT THÚC
+const currentRoundToday = wheelRoundCountToday + 1;
+
+
+
+wheelRound.bets.forEach(o => {
+  const me = users[o.uid];
+  if (!me?.profile) return;
+
+  let winAmount = 0;
+
+  if (multiplier > 0){
+    winAmount = Math.floor(o.bet * multiplier);
+
+    // 💰 cộng coin
+me.profile.coins = Math.floor(
+  Number(me.profile.coins || 0) + winAmount
+);
+
+    // 🏆 chỉ add top nếu thắng
+    roundWinners.push({
+      uid: o.uid,
+      name: me.profile.name || "Player",
+      winAmount
+    });
+  }
+
+  // ============================
+  // 📜 LƯU LỊCH SỬ CƯỢC CỦA USER
+  // ============================
+  me.wheelBetHistory ||= [];
+
+me.wheelBetHistory.unshift({
+  roundId: wheelRound.id,            // (giữ nếu cần debug)
+  roundToday: currentRoundToday,  // ✅ ROUND TRONG NGÀY
+  ts: Date.now(),
+  bet: o.bet,
+  multiplier,
+  winAmount
+});
+
+
+  // 🔥 CHỈ GIỮ 24H
+  const now = Date.now();
+  me.wheelBetHistory = me.wheelBetHistory.filter(
+    h => now - h.ts <= ONE_DAY
+  );
+});
+
+
+
+// 📜 LƯU LỊCH SỬ – 1 DÒNG / 1 ROUND
+wheelHistory.unshift({
+  roundId: wheelRound.id,
+  multiplier,
+  ts: Date.now()
+});
+
+
+
+
+// 🥇 TOP 3 THẮNG NHIỀU NHẤT TRONG PHIÊN NÀY
+const topRoundWinners = roundWinners
+  .sort((a, b) => b.winAmount - a.winAmount)
+  .slice(0, 3);
+
+// 🔔 gửi cho client
+io.emit("wheel-top-winners", topRoundWinners);
+
+
+    saveUsers(users);
+
+    wheelRound.bets.forEach(o => emitCoinUpdate(o.uid));
+
+
+// ➕ ROUND MỚI TRONG NGÀY
+wheelRoundCountToday++;
+
+
+saveWheelRoundCount({
+  dayTs: wheelRoundDayTs,
+  count: wheelRoundCountToday
+});
+
+
+io.emit("wheel-round-result", {
+  roundId: wheelRound.id,
+  index,
+  multiplier,
+  roundCountToday: wheelRoundCountToday
+});
+
+
+
+
+// 🔒 giữ tối đa N kết quả
+wheelHistory = wheelHistory.slice(0, MAX_WHEEL_HISTORY);
+
+// 💾 lưu file (chống restart)
+saveWheelHistory(wheelHistory);
+
+// 🔔 realtime push – CHỈ 1 LẦN / ROUND
+io.emit("wheel-history-update", wheelHistory.slice(0, MAX_WHEEL_HISTORY));
+
+
+
+ const id = Date.now();
+
+// 🎯 WEIGHTED MULTIPLIER (CHỐT NGAY KHI ROUND BẮT ĐẦU)
+const weightedMultipliers = [
+  { m: 0.5, w: 55 },
+  { m: 1.2, w: 20 },
+  { m: 1.5, w: 12 },
+  { m: 2,   w: 10 },
+  { m: 5,   w: 2 },
+  { m: 10,  w: 1 }
+];
+
+function pickMultiplierWeighted(){
+  const total = weightedMultipliers.reduce((s, x) => s + x.w, 0);
+  let r = Math.random() * total;
+  for (const item of weightedMultipliers){
+    if ((r -= item.w) <= 0) return item.m;
+  }
+  return 0;
+}
+
+const secretMultiplier = pickMultiplierWeighted();
+const multipliers = weightedMultipliers.map(x => x.m);
+const secretIndex = multipliers.indexOf(secretMultiplier);
+
+// 🔐 COMMIT HASH (ADMIN VERIFY)
+const commitHash = crypto
+  .createHash("sha256")
+  .update(id + ":" + secretMultiplier)
+  .digest("hex");
+
+wheelRound = {
+  id,
+  startAt: id,
+  endAt: id + 60000,
+  bets: [],
+
+  // 🔐 TUYỆT ĐỐI KHÔNG EMIT
+  secretResult: {
+    multiplier: secretMultiplier,
+    index: secretIndex,
+    hash: commitHash
+  }
+};
+
+
+
+    
+    io.emit("wheel-round-new", {
+      roundId: wheelRound.id,
+      endAt: wheelRound.endAt
+    });
+
+io.emit("admin-wheel-bet-reset", {
+  roundId: wheelRound.id
+});
+
+
+
+// 🔔 CẬP NHẬT ROUND ĐANG CHẠY CHO TẤT CẢ CLIENT
+io.emit("wheel-round-count", {
+  roundCountToday: wheelRoundCountToday + 1
+});
+
+
+  } catch (e) {
+    console.error("❌ wheel round error", e);
+  }
+}, 60000);
+
+
+// ================================
+// ⏱️ AUTO RPS RESULT EVERY 60s
+// ================================
+setInterval(() => {
+  try {
+    const users = loadUsers();
+    const enemy = rpsRound.secretHand;
+
+    // =========================
+    // 1️⃣ TÍNH KẾT QUẢ & CẬP NHẬT COIN
+    // =========================
+rpsRound.bets.forEach(o => {
+  const me = users[o.uid];
+  if (!me?.profile) return;
+
+  const result = calcRps(o.hand, enemy);
+  let win = 0;
+
+  if (result === "win") {
+    win = o.bet * 2;           // 🔥 thắng x2
+    me.profile.coins = Math.floor(
+  Number(me.profile.coins || 0) + win
+);
+  } else if (result === "draw") {
+    me.profile.coins += o.bet; // 🔄 hoàn tiền
+  }
+  // ❌ lose: không cộng gì
+
+  me.rpsHistory ||= [];
+
+  // ✅ TẠO 1 OBJECT DUY NHẤT
+  const historyItem = {
+    roundId: rpsRound.id,
+    ts: Date.now(),
+    myHand: o.hand,
+    enemy,
+    bet: o.bet,
+    result,
+    win
+  };
+
+  // 📜 LƯU VÀO USER
+  me.rpsHistory.unshift(historyItem);
+
+  // 🔒 GIỚI HẠN LỊCH SỬ (VD 30)
+  if (me.rpsHistory.length > 30) {
+    me.rpsHistory.length = 30;
+  }
+
+  // 🔥 REALTIME APPEND CHO RIÊNG USER
+  emitToUser(o.uid, "rps-my-history-append", historyItem);
+});
+
+
+    // =========================
+    // 2️⃣ LƯU USER TRƯỚC
+    // =========================
+    saveUsers(users);
+
+    // =========================
+    // 3️⃣ EMIT COIN REALTIME (SAU KHI SAVE)
+    // =========================
+    rpsRound.bets.forEach(o=>{
+      emitCoinUpdate(o.uid);
+    });
+
+    // =========================
+    // 4️⃣ EMIT KẾT QUẢ ROUND
+    // =========================
+    io.emit("rps-round-result",{
+      roundId: rpsRound.id,
+      enemyHand: enemy
+    });
+
+
+// =========================
+// 📜 LƯU LỊCH SỬ ROUND (DÙ CÓ BET HAY KHÔNG)
+// =========================
+rpsHistoryGlobal.unshift({
+  roundId: rpsRound.id,
+  ts: Date.now(),
+  enemy: enemy,
+  betCount: rpsRound.bets.length,
+  hasBet: rpsRound.bets.length > 0
+});
+
+
+// chỉ giữ N round
+rpsHistoryGlobal = rpsHistoryGlobal.slice(0, MAX_RPS_HISTORY);
+
+// 💾 lưu file
+saveRpsHistory(rpsHistoryGlobal);
+
+// 🔔 realtime push cho client
+io.emit("rps-history-update", rpsHistoryGlobal);
+
+
+
+
+// 🔁 RESET ROUND KHI QUA NGÀY MỚI (0H VN)
+const todayStart = getTodayStartTsVN();
+if (todayStart !== rpsRoundDayTs) {
+  rpsRoundCount = 0;
+  rpsRoundDayTs = todayStart;
+}
+
+// ➕ ROUND MỚI
+rpsRoundCount++;
+
+saveRpsRoundCount({
+  dayTs: rpsRoundDayTs,
+  count: rpsRoundCount
+});
+
+rpsRound = {
+  id: rpsRoundCount,          // ✅ #1 → #N trong ngày
+  startAt: Date.now(),
+  endAt: Date.now() + 60000,
+  secretHand: pickRpsHand(),
+  bets: []
+};
+
+
+// 🔔 ADMIN REALTIME – ROUND MỚI
+io.emit("admin-rps-secret-update", {
+  roundId: rpsRound.id,
+  secretHand: rpsRound.secretHand,
+  endAt: rpsRound.endAt,
+  overridden: false
+});
+
+
+io.emit("admin-rps-bet-reset", {
+  roundId: rpsRound.id
+});
+
+
+
+
+io.emit("rps-round-new",{
+  roundId: rpsRound.id,
+  endAt: rpsRound.endAt
+});
+
+
+
+
+  } catch(e){
+    console.error("❌ RPS ROUND ERROR", e);
+  }
+}, 60000);
+
+
+
+// ================================
+// 🥚 AUTO EGG RESULT
+// ================================
+setInterval(() => {
+  try {
+
+    const users = loadUsers();
+    const multiplier = eggRound.secretResult.multiplier;
+
+
+    eggRound.bets.forEach(o=>{
+      const me = users[o.uid];
+      if(!me?.profile) return;
+
+      const win = Math.floor(o.bet * multiplier);
+    me.profile.coins = Math.floor(
+  Number(me.profile.coins || 0) + win
+);
+    });
+
+    saveUsers(users);
+
+    eggRound.bets.forEach(o=>{
+      emitCoinUpdate(o.uid);
+    });
+
+    const now = Date.now();
+    const animEndAt = now + RESULT_ANIM;
+
+
+
+// 📜 LƯU LỊCH SỬ ROUND
+eggHistory.unshift({
+  roundId: eggRound.id,
+  multiplier,
+  ts: Date.now(),
+  eggType: eggRound.displayEgg.type
+});
+
+// Giữ tối đa 20
+eggHistory = eggHistory.slice(0, MAX_EGG_HISTORY);
+
+saveEggHistory(eggHistory);
+
+// Push realtime
+io.emit("egg-history-update", eggHistory);
+
+
+
+
+    // 🔥 EMIT RESULT + ANIM TIMER
+io.emit("egg-round-result",{
+  roundId: eggRound.id,
+  multiplier,
+  animEndAt,
+  eggType: eggRound.displayEgg.type   // 🔥 QUAN TRỌNG
+});
+
+
+setTimeout(()=>{
+
+  // 🔄 Nếu qua ngày mới VN → reset counter
+  const todayStart = getTodayStartTsVN();
+  if (todayStart !== eggRoundDayTs) {
+    eggRoundCount = 0;
+    eggRoundDayTs = todayStart;
+  }
+
+  // ➕ Tăng round
+  eggRoundCount++;
+
+  // 💾 Lưu persist
+  saveEggRoundCount({
+    dayTs: eggRoundDayTs,
+    count: eggRoundCount
+  });
+
+  const id = eggRoundCount;
+  const now = Date.now();
+
+  eggRound = {
+    id,                         // 🔥 Round #1 #2 #3
+    startAt: now,               // vẫn dùng timestamp cho thời gian
+    endAt: now + NEXT_ROUND_TIME,
+    bets: [],
+    displayEgg: pickDisplayEgg(),
+    secretResult: null
+  };
+
+  ensureEggSecret(eggRound);
+
+  // 🔥 emit cho admin biết trước
+  io.emit("admin-egg-secret-update", {
+    roundId: eggRound.id,
+    multiplier: eggRound.secretResult.multiplier,
+    hash: eggRound.secretResult.hash,
+    endAt: eggRound.endAt,
+    eggType: eggRound.displayEgg.type
+  });
+
+  io.emit("egg-round-new",{
+    roundId: eggRound.id,
+    endAt: eggRound.endAt,
+    displayEgg: eggRound.displayEgg
+  });
+
+}, RESULT_ANIM);
+
+
+
+  } catch(e){
+    console.error("❌ egg round error", e);
+  }
+
+}, ROUND_DURATION);
+
+
+
+// ================================
+// 🔢 TIME RACE ROUND COUNT (24H)
+// ================================
+const TIME_RACE_ROUND_FILE =
+  "/opt/render/project/data/time_race_round_count.json";
+
+function loadTimeRaceRoundCount(){
+  try{
+    if(!fs.existsSync(TIME_RACE_ROUND_FILE)){
+      return {
+        dayTs: getTodayStartTsVN(),
+        count: 0
+      };
+    }
+    return JSON.parse(
+      fs.readFileSync(TIME_RACE_ROUND_FILE,"utf8")
+    );
+  }catch(e){
+    return {
+      dayTs: getTodayStartTsVN(),
+      count: 0
+    };
+  }
+}
+
+function saveTimeRaceRoundCount(data){
+  try{
+    fs.writeFileSync(
+      TIME_RACE_ROUND_FILE,
+      JSON.stringify(data,null,2)
+    );
+  }catch(e){}
+}
+
+
+function startFakeBotFlow(){
+
+  if(!timeRaceRound) return
+
+  const roundId = timeRaceRound.id
+  const betList = [50,100,150,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,3000,3500,4000,4500,5000,6000,7000,8000,9000,10000,11000,12000,13000,14000,15000,16000,17000,18000,19000,20000,50,100,150,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,3000,3500,4000,4500,5000,6000,7000,8000,9000,10000,11000,12000,13000,14000,15000,16000,17000,18000,19000,20000]
+
+  let botIndex = 0
+
+  function spawnOne(){
+
+    // ⛔ nếu đã sang round khác thì dừng
+    if(!timeRaceRound || timeRaceRound.id !== roundId){
+      return
+    }
+
+    // ⛔ dừng khi còn <= 3s là khóa cược
+    if(timeRaceRound.betEndAt - Date.now() <= 3000){
+      return
+    }
+
+    const bot = {
+      uid: "bot_" + roundId + "_" + botIndex,
+      name: "???",
+      total: betList[Math.floor(Math.random() * betList.length)]
+    }
+
+    timeRaceRound.bots.push(bot)
+    botIndex++
+
+    io.emit("time-race-bet-list", getTimeRaceBetList())
+
+    // delay ngẫu nhiên rồi tự gọi tiếp
+    const delay = Math.floor(800 + Math.random()*1200)
+    setTimeout(spawnOne, delay)
+  }
+
+  // bắt đầu
+  spawnOne()
+}
+
+
+
+
+const timeRaceRoundState = loadTimeRaceRoundCount();
+
+let timeRaceRoundCount =
+  timeRaceRoundState.count || 0;
+
+let timeRaceRoundDayTs =
+  timeRaceRoundState.dayTs || getTodayStartTsVN();
+
+
+
+
+// ================================
+// 📜 TIME RACE HISTORY (GLOBAL)
+// ================================
+const TIME_RACE_HISTORY_FILE =
+  "/opt/render/project/data/time_race_history.json";
+
+const MAX_TIME_RACE_HISTORY = 20;
+
+function loadTimeRaceHistory(){
+  try{
+    if(!fs.existsSync(TIME_RACE_HISTORY_FILE)) return [];
+    return JSON.parse(
+      fs.readFileSync(TIME_RACE_HISTORY_FILE,"utf8")
+    );
+  }catch(e){
+    console.error("❌ Load time race history failed",e);
+    return [];
+  }
+}
+
+function saveTimeRaceHistory(list){
+  try{
+    fs.writeFileSync(
+      TIME_RACE_HISTORY_FILE,
+      JSON.stringify(list,null,2)
+    );
+  }catch(e){
+    console.error("❌ Save time race history failed",e);
+  }
+}
+
+let timeRaceHistory = loadTimeRaceHistory();
+
+
+
+// ================================
+// ⏱️ TIME RACE (CRASH GAME)
+// ================================
+
+const TIME_RACE_TOTAL = 60000;   // 60s 1 round
+const TIME_RACE_BET = 15000;     // 15s đặt cược
+const TIME_RACE_TICK = 100;      // update mỗi 100ms
+
+function pickCrashPoint(){
+
+  const houseEdge = 0.05; // 5% nhà cái
+
+  const r = Math.random();
+
+  // 1% auto crash tại x1.00 (tăng cảm giác kịch tính)
+if(r < 0.01){
+  return 0;
+}
+
+  const crash = (1 - houseEdge) / (1 - r);
+
+  return Number(Math.max(1, crash).toFixed(2));
+}
+
+function createTimeRaceRound(){
+
+  const todayStart = getTodayStartTsVN();
+  if(todayStart !== timeRaceRoundDayTs){
+    timeRaceRoundCount = 0;
+    timeRaceRoundDayTs = todayStart;
+  }
+
+  const now = Date.now();
+
+  return {
+    id: timeRaceRoundCount + 1,   // ✅ dùng round trong ngày
+    startAt: now,
+    betEndAt: now + TIME_RACE_BET,
+    endAt: now + TIME_RACE_TOTAL,
+    crashPoint: pickCrashPoint(),
+    currentMultiplier: 1,
+    bets: [],
+    stopped: [],
+    crashed: false,
+    overridden: false, // ✅ THÊM DÒNG NÀY
+      // ✅ CHÈN NGAY ĐÂY
+    bots: []
+  };
+}
+
+let timeRaceRound = createTimeRaceRound();
+
+
+function emitTimeRacePlayers(){
+
+  const users = loadUsers();
+
+  const list = timeRaceRound.bets.map(b=>{
+    const me = users[b.uid];
+    return {
+      uid: b.uid,
+      name: me?.profile?.name || "Player",
+      bet: b.bet,
+      stopped: timeRaceRound.stopped.includes(b.uid)
+    };
+  });
+
+  io.emit("admin-time-race-players",{
+    roundId: timeRaceRound.id,
+    players: list
+  });
+}
+
+
+
+// 🔔 Emit secret round đầu tiên cho admin
+io.on("connection", socket => {
+  const usersNow = loadUsers();
+  const uid = socket.data?.uid;
+  if (!uid) return;
+
+  const me = usersNow[uid];
+  if (me?.role === "admin") {
+    socket.emit("admin-time-race-secret-update", {
+      roundId: timeRaceRound.id,
+      crashPoint: timeRaceRound.crashPoint,
+      betEndAt: timeRaceRound.betEndAt,
+      endAt: timeRaceRound.endAt,
+      crashed: timeRaceRound.crashed
+    });
+  }
+});
+
+
+
+setInterval(()=>{
+
+  const now = Date.now();
+
+  if(timeRaceRound.crashed) return;
+
+  if(now < timeRaceRound.betEndAt) return;
+
+  const elapsed = (now - timeRaceRound.betEndAt)/1000;
+
+  const multiplier = Number((Math.exp(elapsed * 0.045)).toFixed(2));
+
+  timeRaceRound.currentMultiplier = multiplier;
+
+  io.emit("time-race-tick",{
+    multiplier
+  });
+
+if(multiplier >= timeRaceRound.crashPoint){
+
+  timeRaceRound.crashed = true;
+
+  // 📜 LƯU HISTORY GLOBAL
+  timeRaceHistory.unshift({
+    roundId: timeRaceRoundCount + 1,
+    crashPoint: timeRaceRound.crashPoint,
+    ts: Date.now()
+  });
+
+  timeRaceHistory =
+    timeRaceHistory.slice(0, MAX_TIME_RACE_HISTORY);
+
+  saveTimeRaceHistory(timeRaceHistory);
+
+  io.emit("time-race-history-update",
+    timeRaceHistory
+  );
+
+  const users = loadUsers();
+
+  // 🔥 xử lý tất cả người chơi
+  timeRaceRound.bets.forEach(b=>{
+
+    const me = users[b.uid];
+    if(!me?.profile) return;
+
+    const stopped =
+      timeRaceRound.stopped.includes(b.uid);
+
+    if(!stopped){
+
+      // ❌ emit thua
+      emitToUser(b.uid,"time-race-lost",{
+        crashPoint: timeRaceRound.crashPoint
+      });
+
+      // ============================
+      // 📜 LƯU LỊCH SỬ THUA
+      // ============================
+      me.timeRaceHistory ||= [];
+
+      me.timeRaceHistory.unshift({
+        roundId: timeRaceRound.id,
+        ts: Date.now(),
+        bet: b.bet,
+        stopMultiplier: timeRaceRound.crashPoint,
+        win: 0,
+        result: "lose"
+      });
+
+      if(me.timeRaceHistory.length > 30){
+        me.timeRaceHistory.length = 30;
+      }
+
+      // 🔥 cập nhật realtime cho user
+      emitToUser(
+        b.uid,
+        "time-race-my-history",
+        me.timeRaceHistory
+      );
+    }
+
+  });
+
+  saveUsers(users);
+
+
+const displayCrash =
+  timeRaceRound.crashPoint <= 1
+    ? 0
+    : timeRaceRound.crashPoint;
+
+io.emit("time-race-crash",{
+  crashPoint: displayCrash
+});
+
+  setTimeout(()=>{
+
+    timeRaceRoundCount++;
+
+    saveTimeRaceRoundCount({
+      dayTs: timeRaceRoundDayTs,
+      count: timeRaceRoundCount
+    });
+
+    timeRaceRound = createTimeRaceRound();
+
+    startFakeBotFlow()
+    io.emit("time-race-bet-list", [])
+
+
+    emitTimeRacePlayers();
+
+    io.emit("admin-time-race-secret-update", {
+      roundId: timeRaceRound.id,
+      crashPoint: timeRaceRound.crashPoint,
+      betEndAt: timeRaceRound.betEndAt,
+      endAt: timeRaceRound.endAt,
+      crashed: false
+    });
+
+    io.emit("time-race-round-count",{
+      roundCountToday: timeRaceRoundCount
+    });
+
+    io.emit("time-race-new",{
+      roundId: timeRaceRound.id,
+      betEndAt: timeRaceRound.betEndAt,
+      serverNow: Date.now()
+    });
+
+    io.emit("time-race-tick",{
+      multiplier:1
+    });
+
+  },5000);
+
+}
+
+
+}, TIME_RACE_TICK);
+
+
+// ================================
+// 🔐 SOCKET AUTH & FORCE LOGOUT (FIX)
+// ================================
+io.on("connection", socket => {
+
+
+
+  
+  const { uid, deviceId } = socket.handshake.auth || {};
+
+  socket.data.uid = uid;
+
+  socket.data.deviceId = deviceId;
+
+
+// =======================================
+// DTP ADMIN - LOGIN BẰNG MẬT KHẨU
+// =======================================
+
+socket.data.dtpAdminUntil = 0;
+
+socket.on("dtp-admin-login", (data, callback) => {
+
+  const reply = typeof callback === "function"
+    ? callback
+    : () => {};
+
+  const ip = String(
+    socket.handshake.address || "unknown"
+  );
+
+  const now = Date.now();
+
+  const record = dtpAdminAttempts.get(ip) || {
+    failures: 0,
+    blockedUntil: 0,
+    lastAttempt: now
+  };
+
+  record.lastAttempt = now;
+
+  // Khóa tạm thời khi thử quá nhiều lần
+  if (now < record.blockedUntil) {
+    return reply({
+      ok: false,
+      message: "Too many attempts. Please try again in 15 minutes."
+    });
+  }
+
+  if (!DTP_ADMIN_PASSWORD) {
+    return reply({
+      ok: false,
+      message: 	"DTP_ADMIN_PASSWORD has not been configured on the server."
+    });
+  }
+
+  if (!dtpPasswordMatches(data?.password)) {
+
+    record.failures++;
+
+    if (record.failures >= 5) {
+      record.failures = 0;
+      record.blockedUntil =
+        now + 15 * 60 * 1000;
+    }
+
+    dtpAdminAttempts.set(ip, record);
+
+    return reply({
+      ok: false,
+      message: "Incorrect admin password."
+    });
+  }
+
+  // Xác thực thành công
+  dtpAdminAttempts.delete(ip);
+
+  socket.data.dtpAdminUntil =
+    now + DTP_ADMIN_TTL_MS;
+
+  return reply({
+    ok: true,
+    ...getDtpAdminSnapshot()
+  });
+
+});
+
+
+// =======================================
+// DTP ADMIN - GET CURRENT STATE
+// =======================================
+
+socket.on("dtp-admin-get-state", (_data, callback) => {
+
+  const reply = typeof callback === "function"
+    ? callback
+    : () => {};
+
+  if (!isDtpAdminSocket(socket)) {
+    return reply({
+      ok: false,
+      code: "AUTH_REQUIRED",
+      message: "Please enter your password again."
+    });
+  }
+
+  reply({
+    ok: true,
+    ...getDtpAdminSnapshot()
+  });
+
+});
+
+
+// =======================================
+// DTP ADMIN - OVERRIDE RESULT
+// =======================================
+
+socket.on("dtp-admin-override", (data, callback) => {
+
+  const reply = typeof callback === "function"
+    ? callback
+    : () => {};
+
+  // BẮT BUỘC ĐÃ XÁC THỰC
+  if (!isDtpAdminSocket(socket)) {
+    return reply({
+      ok: false,
+      code: "AUTH_REQUIRED",
+      message: "Your authentication session has expired."
+    });
+  }
+
+  const winner = data?.winner;
+
+  if (!["dragon", "tiger", "phoenix"].includes(winner)) {
+    return reply({
+      ok: false,
+      message: "Invalid result."
+    });
+  }
+
+  if (Date.now() >= dtpRound.endAt) {
+    return reply({
+      ok: false,
+      message: "The current round has ended."
+    });
+  }
+
+  // Cập nhật kết quả hiện tại
+  dtpRound.secretResult = winner;
+
+  console.warn(
+    "[DTP ADMIN] Change result",
+    dtpRound.id,
+    winner
+  );
+
+  const snapshot = getDtpAdminSnapshot();
+
+  reply({
+    ok: true,
+    ...snapshot
+  });
+
+  // Đồng bộ riêng cho admin
+  emitToDtpAdmins(
+    "dtp-admin-secret-update",
+    snapshot
+  );
+
+});
+
+
+// =======================================
+// DTP ADMIN - LOGOUT
+// =======================================
+
+socket.on("dtp-admin-logout", (_data, callback) => {
+
+  socket.data.dtpAdminUntil = 0;
+
+  if (typeof callback === "function") {
+    callback({ ok: true });
+  }
+
+});
+
+  
+// ========================================
+// 🔐 WHEEL8 ADMIN - PASSWORD LOGIN
+// ========================================
+
+socket.data.wheel8Admin = false;
+
+let wheel8LoginFailures = 0;
+let wheel8LoginBlockedUntil = 0;
+
+socket.on("wheel8-admin-login", async (data, callback) => {
+  const reply = typeof callback === "function"
+    ? callback
+    : () => {};
+
+  if (socket.data.wheel8Admin) {
+    return reply({ ok: true });
+  }
+
+  const now = Date.now();
+
+  if (now < wheel8LoginBlockedUntil) {
+    return reply({
+      ok: false,
+      message: "Too many attempts. Please try again later."
+    });
+  }
+
+  if (!WHEEL8_ADMIN_PASSWORD) {
+    return reply({
+      ok: false,
+      message: "The Wheel8 admin password has not been configured on the server."
+    });
+  }
+
+  const password = data?.password;
+
+  if (!wheel8PasswordMatches(password)) {
+    wheel8LoginFailures++;
+
+    if (wheel8LoginFailures >= 5) {
+      wheel8LoginBlockedUntil = Date.now() + 60000;
+      wheel8LoginFailures = 0;
+    }
+
+    return reply({
+      ok: false,
+      message: "Incorrect admin password."
+    });
+  }
+
+  wheel8LoginFailures = 0;
+  wheel8LoginBlockedUntil = 0;
+
+  socket.data.wheel8Admin = true;
+  socket.join(WHEEL8_ADMIN_ROOM);
+
+  reply({ ok: true });
+
+  // Gửi dữ liệu hiện tại sau khi xác thực
+  if (wheel8Round?.secret) {
+    socket.emit("admin-wheel8-secret", {
+      roundId: wheel8Round.id,
+      slot: wheel8Round.secret.slot,
+      multiplier: wheel8Round.secret.multiplier,
+      hash: wheel8Round.secret.hash,
+      endAt: wheel8Round.endAt,
+      overridden: wheel8Round.secret.overridden || false,
+      event: wheel8Round.forcedEvent || null
+    });
+  }
+
+  socket.emit(
+    "admin-wheel8-bets-update",
+    getAdminWheel8Data()
+  );
+});
+
+// ========================================
+// 🛠 WHEEL8 ADMIN OVERRIDE - PASSWORD AUTH
+// ========================================
+
+socket.on("admin-wheel8-override", (data, callback) => {
+
+  const reply = typeof callback === "function"
+    ? callback
+    : () => {};
+
+  // 🔒 Chỉ kết nối đã nhập đúng mật khẩu
+  if (!socket.data.wheel8Admin) {
+    return reply({
+      ok: false,
+      message: "You have not authenticated with the admin password."
+    });
+  }
+
+  if (!wheel8Round?.secret) {
+    return reply({
+      ok: false,
+      message: "No Wheel8 round is currently available."
+    });
+  }
+
+  const validEvents = ["x5-all", "x45-all"];
+  const event = data?.event;
+  const isEvent = validEvents.includes(event);
+
+  const slot = Number(data?.slot);
+
+  if (!isEvent &&
+      (!Number.isInteger(slot) || slot < 1 || slot > 8)) {
+    return reply({
+      ok: false,
+      message: "Invalid slot."
+    });
+  }
+
+  const remain = Math.max(
+    0,
+    Math.floor((wheel8Round.endAt - Date.now()) / 1000)
+  );
+
+  if (remain <= 2) {
+    return reply({
+      ok: false,
+      message: "The customization window has expired."
+    });
+  }
+
+  const selectedSlot = isEvent
+    ? (event === "x5-all" ? 1 : 2)
+    : slot;
+
+  const multiplier = isEvent
+    ? (event === "x5-all" ? 5 : 45)
+    : WHEEL8_SLOTS[selectedSlot - 1].m;
+
+  wheel8Round.forcedEvent = isEvent ? event : null;
+
+  wheel8Round.secret = {
+    slot: selectedSlot,
+    multiplier,
+    event: wheel8Round.forcedEvent,
+
+    hash: crypto
+      .createHash("sha256")
+      .update(
+        wheel8Round.id + ":" +
+        selectedSlot + ":" +
+        multiplier + ":" +
+        (wheel8Round.forcedEvent || "")
+      )
+      .digest("hex"),
+
+    overridden: true
+  };
+
+  console.log("🛠 WHEEL8 ADMIN OVERRIDE:", {
+    roundId: wheel8Round.id,
+    slot: selectedSlot,
+    multiplier,
+    event: wheel8Round.forcedEvent
+  });
+
+  emitWheel8Admin("admin-wheel8-secret", {
+    roundId: wheel8Round.id,
+    slot: selectedSlot,
+    multiplier,
+    hash: wheel8Round.secret.hash,
+    endAt: wheel8Round.endAt,
+    overridden: true,
+    event: wheel8Round.forcedEvent
+  });
+
+  reply({
+    ok: true,
+    message: 	"The Wheel8 result has been updated."
+  });
+});
+
+
+
+  if (!uid) return;
+
+
+// ================================
+// 🎡 RESTORE WHEEL8 BETS WHEN RELOAD
+// ================================
+
+
+
+socket.on("toggle-top-name", ()=>{
+
+  const uid = socket.data.uid
+  if(!uid) return
+
+  const users = loadUsers()
+  const me = users[uid]
+
+  if(!me?.profile) return
+
+  me.profile.showTopName = !me.profile.showTopName
+
+  saveUsers(users)
+
+  socket.emit("top-name-status", me.profile.showTopName)
+
+})
+
+
+
+socket.on("wheel8-get-history",()=>{
+socket.emit("wheel8-history",wheel8History)
+})
+
+
+socket.emit("wheel8-round-info",{
+  roundId: wheel8Round.id,
+  endAt: wheel8Round.endAt
+})
+
+// ================================
+// 📜 SEND USER BET HISTORY
+// ================================
+
+socket.on("wheel8-get-my-history", () => {
+
+  const uid = socket.data.uid;
+  if (!uid) return;
+
+  // Đồng bộ lịch sử theo ngày hiện tại
+  cleanWheel8UserHistory();
+
+  // Chỉ gửi dữ liệu còn hiệu lực
+  socket.emit(
+    "wheel8-my-history",
+    wheel8UserHistory[uid] || []
+  );
+
+});
+
+
+
+
+
+// gửi round hiện tại khi user vào game
+socket.emit("wheel8-round-new",{
+roundId: wheel8Round.id
+})
+
+
+socket.emit("wheel8-history",wheel8History)
+
+
+
+const myWheelBets = [0,0,0,0,0,0,0,0];
+
+wheel8Round.bets
+.filter(b => b.uid === uid)
+.forEach(b => {
+  myWheelBets[b.slot - 1] += b.bet;
+});
+
+socket.emit("wheel8-my-bets", myWheelBets);
+
+
+
+    // 🔥 gửi danh sách cược hiện tại cho admin
+  emitAdminDtpBets();
+  
+  bindSocketToUser(uid, socket);
+
+
+
+  // ================================
+  // 🔐 SEND CURRENT EGG SECRET TO ADMIN (REALTIME FIX)
+  // ================================
+  const usersNow = loadUsers();
+  const meNow = usersNow[uid];
+
+
+
+
+
+
+
+// ================================
+// 💎 SEND DIAMOND WHEN CONNECT
+// ================================
+if (meNow?.profile) {
+
+  meNow.profile.diamonds = Math.floor(
+    Number(meNow.profile.diamonds || 0)
+  );
+
+    meNow.profile.coins = Math.floor(
+    Number(meNow.profile.coins || 0)
+  );
+
+
+socket.emit("coin-update", {
+  coins: meNow.profile.coins
+});
+}
+
+// ================================
+// 👑 RESTORE KING VS SLAVE STATE
+// ================================
+const ksState = ksUserState.get(uid);
+
+if(ksState && ksState.bet > 0){
+
+  socket.emit("ks-state",{
+    roundId: ksRoundId,
+    myBet: ksState.bet,
+    playerUsed: ksState.playerUsed || [],
+    kingUsed: ksState.kingUsed || []
+  });
+
+}else{
+
+  socket.emit("ks-state",{
+    roundId: ksRoundId,
+    myBet: 0,
+    playerUsed: [],
+    kingUsed: []
+  });
+
+}
+
+
+  if (meNow?.role === "admin" && eggRound?.secretResult) {
+
+    socket.emit("admin-egg-secret-update", {
+      roundId: eggRound.id,
+      multiplier: eggRound.secretResult.multiplier,
+      hash: eggRound.secretResult.hash,
+      endAt: eggRound.endAt,
+      eggType: eggRound.displayEgg?.type,
+      overridden: eggRound.secretResult.overridden || false
+    });
+
+  }
+
+
+
+// ================================
+// 💣 SEND CURRENT TIME RACE SECRET TO ADMIN
+// ================================
+if (meNow?.role === "admin" && timeRaceRound) {
+
+  socket.emit("admin-time-race-secret-update", {
+    roundId: timeRaceRound.id,
+    crashPoint: timeRaceRound.crashPoint,
+    betEndAt: timeRaceRound.betEndAt,
+    endAt: timeRaceRound.endAt,
+    crashed: timeRaceRound.crashed
+  });
+
+}
+
+
+
+
+  // 🔥 GỬI COIN NGAY KHI CONNECT (QUAN TRỌNG)
+  const users = loadUsers();
+  const me = users[uid];
+
+  const coins = Number(me?.profile?.coins || 0);
+
+
+// ================================
+// 🏭 SEND FACTORY DATA (FIX RELOAD BUG)
+// ================================
+factoryDB[uid] ||= [
+  {empty:true},
+];
+
+// Nếu lỡ còn dư slot → cắt bỏ
+if(factoryDB[uid].length > 1){
+  factoryDB[uid] = [ factoryDB[uid][0] ];
+}
+
+
+// 🔥 TÍNH SẢN LƯỢNG SERVER-SIDE
+factoryDB[uid].forEach(f=>{
+
+  // 🛡 HARD GUARD
+  if(
+    !f ||
+    f.empty ||
+    f.burned ||
+    !f.workers ||
+    f.workers <= 0
+  ){
+    // 🔥 đảm bảo không tích lũy ngầm
+    f.active = false;
+    f.stored = Math.floor(f.stored || 0);
+    f.lastUpdate = Date.now();
+    return;
+  }
+
+  if(!f.active){
+    f.lastUpdate = Date.now();
+    return;
+  }
+
+  const now = Date.now();
+  f.lastUpdate ||= now;
+
+  const seconds = Math.floor((now - f.lastUpdate)/1000);
+  if(seconds <= 0) return;
+
+  const productionRate =
+    f.workers * (f.baseRate || 1);
+
+  f.stored += seconds * productionRate;
+
+  if(f.stored > f.storage){
+    f.stored = f.storage;
+  }
+
+  f.stored = Math.floor(f.stored);
+  f.lastUpdate = now;
+});
+
+// 💾 lưu lại để không tính lại lần sau
+saveFactories(factoryDB);
+
+socket.emit("factory-update", factoryDB[uid]);
+
+
+
+
+
+
+// ================================
+// 🎡 WHEEL8 BET
+// ================================
+
+const betCooldown = new Map()
+
+socket.on("wheel8-bet",({slot,bet})=>{
+
+const uid = socket.data.uid
+if(!uid) return
+
+// =====================
+// 🚫 ANTI SPAM
+// =====================
+const now = Date.now()
+const last = betCooldown.get(uid) || 0
+
+if(now - last < 80){
+return
+}
+
+betCooldown.set(uid, now)
+
+
+// =====================
+// ⏱ TIME CHECK
+// =====================
+const remain = Math.max(
+0,
+Math.floor((wheel8Round.endAt - Date.now()) / 1000)
+)
+
+if(remain <= 5){
+socket.emit("wheel8-bet-fail",{
+  message:"Betting closed"
+})
+return
+}
+
+
+// =====================
+// 👤 USER
+// =====================
+const users = loadUsers()
+const me = users[uid]
+
+if(!me?.profile) return
+
+
+// =====================
+// 🔧 FIX INPUT
+// =====================
+slot = Number(slot) || 0
+bet  = Math.floor(Number(bet) || 0)
+
+if(slot < 1 || slot > 8){
+socket.emit("wheel8-bet-fail",{message:"Invalid slot"})
+return
+}
+
+if(bet <= 0){
+socket.emit("wheel8-bet-fail",{message:"Invalid bet"})
+return
+}
+
+
+// =====================
+// 💰 CHECK COIN
+// =====================
+if(me.profile.coins < bet){
+socket.emit("wheel8-bet-fail",{
+  message:"Not enough coins"
+})
+return
+}
+
+
+// =====================
+// 💸 TRỪ COIN
+// =====================
+me.profile.coins -= bet
+
+
+// =====================
+// 📥 LƯU BET (THEO USER)
+// =====================
+
+// 🔥 FIX QUAN TRỌNG
+if(!wheel8Round.userBets){
+  wheel8Round.userBets = {}
+}
+
+if(!wheel8Round.userBets[uid]){
+  wheel8Round.userBets[uid] = [0,0,0,0,0,0,0,0]
+}
+
+wheel8Round.userBets[uid][slot-1] += bet
+
+
+// =====================
+// 📦 LƯU LOG (GIỮ NGUYÊN)
+// =====================
+wheel8Round.bets.push({
+uid,
+slot,
+bet
+})
+
+
+// =====================
+// 💎 POOL
+// =====================
+wheel8Round.slotPool ||= [0,0,0,0,0,0,0,0]
+wheel8Round.slotPool[slot-1] += bet
+
+
+// =====================
+// 💾 SAVE
+// =====================
+saveUsers(users)
+
+
+// =====================
+// 💰 UPDATE COIN
+// =====================
+emitCoinUpdate(uid)
+
+
+// =====================
+// 🎡 UPDATE POOL
+// =====================
+io.emit("wheel8-pool-update", wheel8Round.slotPool)
+
+
+// =====================
+// ✅ CONFIRM
+// =====================
+socket.emit("wheel8-bet-ok")
+
+
+// =====================
+// 🔥 SYNC CHUẨN (ANTI LỆCH)
+// =====================
+socket.emit("wheel8-my-bets",
+  wheel8Round.userBets[uid]
+)
+
+
+
+emitWheel8Admin("admin-wheel8-bets-update", getAdminWheel8Data())
+
+})
+
+
+// ================================
+// 🚀 STAR WAR ENTRY
+// ================================
+socket.on("star-war-start-request", ()=>{
+
+  const ENTRY_FEE = 50;
+
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  const users = loadUsers();
+  const me = users[uid];
+
+  if(!me?.profile){
+    socket.emit("star-war-start-denied",{
+      message:"User not found"
+    });
+    return;
+  }
+
+  if(me.profile.coins < ENTRY_FEE){
+    socket.emit("star-war-start-denied",{
+      message:"❌ Not enough diamonds"
+    });
+    return;
+  }
+
+  me.profile.coins -= ENTRY_FEE;
+
+  saveUsers(users);
+  emitCoinUpdate(uid);
+
+  // 🔐 TẠO SESSION
+  starWarSessions.set(uid, {
+    startedAt: Date.now()
+  });
+
+  socket.emit("star-war-start-approved");
+
+});
+
+
+
+socket.on("star-war-reward", ({ reward })=>{
+
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  // ❌ Không có session → chặn
+  if(!starWarSessions.has(uid)){
+    return;
+  }
+
+  const users = loadUsers();
+  const me = users[uid];
+  if(!me?.profile) return;
+
+  const MAX_REWARD = 500; // 🔥 cap reward
+
+  const safeReward = Math.min(
+    Math.max(0, Number(reward || 0)),
+    MAX_REWARD
+  );
+
+  me.profile.coins =
+    Math.floor(Number(me.profile.coins || 0) + safeReward);
+
+  saveUsers(users);
+  emitCoinUpdate(uid);
+
+  // 🔒 XÓA SESSION (1 game chỉ reward 1 lần)
+  starWarSessions.delete(uid);
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+//=====DTP=====
+
+// =====================
+// SEND CURRENT BETS
+// =====================
+
+const betSummary = {
+  dragon:0,
+  tiger:0,
+  phoenix:0
+};
+
+const myBetRestore = {
+  dragon:0,
+  tiger:0,
+  phoenix:0
+};
+
+dtpRound.bets.forEach(b=>{
+
+  // tổng bet toàn phòng
+  if(betSummary[b.side] !== undefined){
+     betSummary[b.side] += b.bet;
+  }
+
+  // bet của chính user
+  if(b.uid === uid){
+     if(myBetRestore[b.side] !== undefined){
+        myBetRestore[b.side] += b.bet;
+     }
+  }
+
+});
+
+
+
+
+
+socket.on("dtp-get-my-history",()=>{
+
+const uid = socket.data.uid;
+
+const users = loadUsers();
+
+const list = users[uid]?.dtpHistory || [];
+
+socket.emit("dtp-my-history", list);
+
+});
+
+
+
+socket.emit("dtp-round-new",{
+  roundId: dtpRound.id
+});
+
+socket.emit("dtp-history-update", dtpHistory);
+
+socket.emit("dtp-bet-update", betSummary);
+
+// restore cược user
+socket.emit("dtp-my-bet", myBetRestore);
+
+
+socket.on("dtp-bet", ({ side, bet }) => {
+
+  const uid = socket.data.uid;
+  if (!uid) return;
+
+  // Khóa cược trong 5 giây cuối phiên
+  const remainMs = dtpRound.endAt - Date.now();
+
+  if (remainMs <= 5000) {
+    socket.emit("notify", {
+      type: "bad",
+      message: "Betting closed"
+    });
+    return;
+  }
+
+  // Kiểm tra cửa cược hợp lệ
+  if (!["dragon", "tiger", "phoenix"].includes(side)) {
+    return;
+  }
+
+  bet = Number(bet);
+
+  if (!Number.isSafeInteger(bet) || bet <= 0) {
+    return;
+  }
+
+  const users = loadUsers();
+
+
+  const me = users[uid];
+  if(!me?.profile) return;
+
+  bet = Number(bet || 0);
+
+  if(me.profile.coins < bet){
+    socket.emit("notify",{
+      type:"bad",
+      message:"Not enough coins"
+    });
+    return;
+  }
+
+  // trừ coin
+  me.profile.coins -= bet;
+
+  dtpRound.bets.push({
+    uid,
+    side,
+    bet
+  });
+
+  emitAdminDtpBets();
+  saveUsers(users);
+  emitCoinUpdate(uid);
+
+  // =====================
+  // UPDATE POOL (REAL + FAKE)
+  // =====================
+
+  io.emit("dtp-bet-update", getDtpPool());
+
+  // =====================
+  // UPDATE MY BET
+  // =====================
+
+  const myBet = {
+    dragon:0,
+    tiger:0,
+    phoenix:0
+  };
+
+  dtpRound.bets.forEach(b=>{
+    if(b.uid === uid){
+      if(myBet[b.side] !== undefined){
+        myBet[b.side] += b.bet;
+      }
+    }
+  });
+
+  socket.emit("dtp-my-bet", myBet);
+
+});
+
+
+
+
+
+
+// ================================
+// 🏭 DIAMOND FACTORY
+// ================================
+
+
+
+
+
+
+
+socket.on("hospital-upgrade", ({ index })=>{
+
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  const users = loadUsers();
+  const me = users[uid];
+  if(!me?.profile) return;
+
+  const f = factoryDB[uid]?.[index];
+  if(!f || f.empty) return;
+
+  const current = f.hospitalLevel || 0;
+
+  if(current >= 20){
+    socket.emit("notify",{
+      type:"warn",
+      message:"🏥 Hospital max level reached"
+    });
+    return;
+  }
+
+  const cost = (current + 1) * 800;
+
+  if(me.profile.coins < cost){
+    socket.emit("notify",{
+      type:"bad",
+      message:"Not enough 💎"
+    });
+    return;
+  }
+
+  me.profile.coins -= cost;
+
+  f.hospitalLevel += 1;
+
+  saveUsers(users);
+  saveFactories(factoryDB);
+
+  emitCoinUpdate(uid);
+
+  socket.emit("hospital-updated",{
+    index,
+    hospitalLevel: f.hospitalLevel
+  });
+
+});
+
+
+
+
+
+
+
+socket.on("factory-upgrade-fire-defense", ()=>{
+
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  const users = loadUsers();
+  const me = users[uid];
+  if(!me?.profile) return;
+
+  const list = factoryDB[uid];
+  if(!list || !list[0]) return;
+
+  const f = list[0];
+
+const level = f.fireDefenseLevel || 0;
+
+// 🔥 CHẶN MAX LEVEL
+if(level >= MAX_FIRE_DEFENSE_LEVEL){
+  socket.emit("factory-error",{
+    message:"MAX_FIRE_DEFENSE_LEVEL"
+  });
+  return;
+}
+
+const cost = (level + 1) * 200;
+
+  if(me.profile.coins < cost){
+    socket.emit("factory-error",{
+      message:"NOT_ENOUGH_COIN"
+    });
+    return;
+  }
+
+  me.profile.coins -= cost;
+
+
+  f.fireDefenseLevel = Math.min(
+  level + 1,
+  MAX_FIRE_DEFENSE_LEVEL
+);
+
+  saveUsers(users);
+  saveFactories(factoryDB);
+
+  emitCoinUpdate(uid);
+
+  socket.emit("fire-defense-updated",{
+    level: f.fireDefenseLevel
+  });
+
+});
+
+
+
+socket.on("factory-toggle", ()=>{
+
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  const users = loadUsers();
+  const user = users[uid];
+  if(!user?.profile) return;
+
+  const list = factoryDB[uid];
+  if(!list || !list[0] || list[0].empty) return;
+
+  const f = list[0];
+
+  // ❌ Không cho bật nếu đang cháy
+  if(f.burned){
+    return emitToUser(uid,"factory-status",{ active:false });
+  }
+
+  // 🔄 Toggle trạng thái
+  const newState = !f.active;
+
+  // ✅ Nếu bật lại
+  if(newState){
+
+    // Không có worker thì không cho bật
+    if(!f.workers || f.workers <= 0){
+      return emitToUser(uid,"factory-status",{ active:false });
+    }
+
+    f.active = true;
+
+    // 🔥 Reset mốc thời gian để production chạy tiếp
+    f.lastTickAt = Date.now();
+    f.lastUpdate = Date.now();
+
+  }else{
+
+    // ⛔ Tắt
+    f.active = false;
+
+  }
+
+  saveFactories(factoryDB);
+
+  // 🔔 Emit trạng thái
+  emitToUser(uid,"factory-status",{
+    active: f.active
+  });
+
+  // 🔥 QUAN TRỌNG: Emit lại full factory để client cập nhật preview
+  emitToUser(uid,"factory-update", factoryDB[uid]);
+
+});
+
+
+
+
+// ================================
+// 👷 HIRE WORKER
+// ================================
+socket.on("factory-hire-worker", ({ index })=>{
+
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  const users = loadUsers();
+  const me = users[uid];
+  if(!me?.profile) return;
+
+  factoryDB[uid] ||= [];
+  const f = factoryDB[uid][index];
+
+  if(!f || f.empty) return;
+
+if(f.burned){
+  socket.emit("factory-error",{
+    message:"FACTORY_BURNED"
+  });
+  return;
+}
+
+  f.workers ||= 0;
+  f.maxWorkers ||= 1;
+  f.baseRate ||= 1; // tốc độ mỗi worker
+
+  // 🔒 CHECK MAX TRƯỚC KHI TRỪ TIỀN
+  if(f.workers >= f.maxWorkers){
+    socket.emit("factory-error",{
+      message:"MAX_WORKER_REACHED"
+    });
+    return;
+  }
+
+  const cost = f.workerCost || 150;
+
+  if(me.profile.coins < cost){
+    socket.emit("factory-error",{
+      message:"NOT_ENOUGH_COIN"
+    });
+    return;
+  }
+
+  // 💰 TRỪ TIỀN
+  me.profile.coins = Math.floor(
+    Number(me.profile.coins || 0) - cost
+  );
+
+f.workers += 1;
+
+// 🔥 RESET TIMER SẢN XUẤT KHI THUÊ WORKER
+f.stored = 0;
+f.lastUpdate = Date.now();
+
+f.rate = f.workers * f.baseRate;
+f.active = true;
+
+  saveUsers(users);
+  saveFactories(factoryDB);
+
+  emitCoinUpdate(uid);
+  socket.emit("factory-update", factoryDB[uid]);
+});
+
+
+
+socket.on("factory-collect", ({ index })=>{
+
+
+
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  const users = loadUsers();
+  const me = users[uid];
+  if(!me?.profile) return;
+
+  factoryDB[uid] ||= [];
+  const f = factoryDB[uid][index];
+
+
+  if(!f.workers || f.workers <= 0){
+  socket.emit("factory-error",{
+    message:"NO_WORKER"
+  });
+  return;
+}
+
+  if(f.active === false){
+  socket.emit("factory-error",{
+    message:"FACTORY_INACTIVE"
+  });
+  return;
+}
+
+
+  if(!f || f.empty) return;
+
+  if(f.burned){
+  socket.emit("factory-error",{
+    message:"FACTORY_BURNED"
+  });
+  return;
+}
+
+  // 🔥 TÍNH LẠI SERVER-SIDE TRƯỚC KHI THU
+  const now = Date.now();
+  f.lastUpdate ||= Date.now();
+const seconds = Math.floor((now - f.lastUpdate)/1000);
+
+  if(seconds > 0){
+
+    const productionRate =
+  f.workers * (f.baseRate || 1);
+
+f.stored += seconds * productionRate;
+
+    if(f.stored > f.storage){
+      f.stored = f.storage;
+    }
+    f.stored = Math.floor(f.stored);
+    f.lastUpdate = now;
+  }
+
+  const amount = Math.floor(f.stored);
+  if(amount <= 0) return;
+
+  // 💰 cộng coin
+  me.profile.coins = Math.floor(
+    Number(me.profile.coins || 0) + amount
+  );
+
+  // 🗑 reset kho
+  f.stored = 0;
+  f.lastUpdate = Date.now();
+
+  saveUsers(users);
+  saveFactories(factoryDB);
+
+  emitCoinUpdate(uid);
+  socket.emit("factory-update", factoryDB[uid]);
+});
+
+
+
+socket.on("factory-build", ({ index })=>{
+
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  const users = loadUsers();
+  const me = users[uid];
+  if(!me?.profile) return;
+
+  // 🔒 Chỉ cho phép 1 slot duy nhất
+  factoryDB[uid] ||= [{ empty:true }];
+
+  // 🔐 Nếu đã có nhà máy → chặn build
+  const alreadyBuilt = factoryDB[uid].some(f => !f.empty);
+  if(alreadyBuilt){
+    socket.emit("factory-error",{
+      message:"ONLY_ONE_FACTORY_ALLOWED"
+    });
+    return;
+  }
+
+  const cost = 500; // 💎 giá cố định
+
+  if(me.profile.coins < cost){
+    socket.emit("factory-error",{
+      message:"NOT_ENOUGH_COIN"
+    });
+    return;
+  }
+
+  // 💰 Trừ coin
+  me.profile.coins = Math.floor(
+    Number(me.profile.coins || 0) - cost
+  );
+
+  // 🏗 Tạo nhà máy duy nhất ở index 0
+  factoryDB[uid][0] = {
+    id: 1,
+    level: 1,
+
+    baseRate: 1,
+    storage: 100,
+    stored: 0,
+    lastUpdate: Date.now(),
+
+    workers: 0,
+    maxWorkers: 1,
+    workerCost: 150,
+
+    workerSalary: 50,
+    nextSalaryAt: Date.now() + ONE_DAY,
+
+    active: false,
+    dailyFee: 200,
+    nextFeeAt: Date.now() + ONE_DAY
+  };
+
+  saveUsers(users);
+  saveFactories(factoryDB);
+
+  emitCoinUpdate(uid);
+
+  socket.emit("factory-build-success",
+    factoryDB[uid]
+  );
+});
+
+
+
+socket.on("factory-repair", ({ index })=>{
+
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  const f = factoryDB[uid]?.[index];
+  if(!f || !f.burned || f.repairing) return;
+
+  const users = loadUsers();
+  const user = users[uid];
+  if(!user?.profile) return;
+
+  const repairCost = 500;
+  const REPAIR_TIME = 15000; // 15s
+
+  if(user.profile.coins < repairCost){
+    socket.emit("factory-error",{ message:"NOT_ENOUGH_COINS" });
+    return;
+  }
+
+  user.profile.coins -= repairCost;
+
+  f.repairing = true;
+  f.repairEndAt = Date.now() + REPAIR_TIME;
+
+  saveUsers(users);
+  saveFactories(factoryDB);
+
+  emitCoinUpdate(uid);
+
+  emitToUser(uid,"factory-repair-start",{
+    index,
+    repairEndAt: f.repairEndAt
+  });
+});
+
+
+
+socket.on("factory-upgrade", ({ index })=>{
+
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  const users = loadUsers();
+  const me = users[uid];
+  if(!me?.profile) return;
+
+  factoryDB[uid] ||= [];
+  const f = factoryDB[uid][index];
+
+if(!f.workers || f.workers <= 0){
+  socket.emit("factory-error",{
+    message:"NO_WORKER"
+  });
+  return;
+}
+
+
+if(f.active === false){
+  socket.emit("factory-error",{
+    message:"FACTORY_INACTIVE"
+  });
+  return;
+}
+  
+  if(!f || f.empty) return;
+
+if(f.burned){
+  socket.emit("factory-error",{
+    message:"FACTORY_BURNED"
+  });
+  return;
+}
+
+  // ============================
+  // 🔥 1️⃣ THU TRƯỚC KHI NÂNG CẤP
+  // ============================
+  const now = Date.now();
+
+  f.lastUpdate ||= Date.now();
+const seconds = Math.floor((now - f.lastUpdate)/1000);
+
+  if(seconds > 0){
+
+const productionRate = f.workers * (f.baseRate || 1);
+f.stored += seconds * productionRate;
+
+    if(f.stored > f.storage){
+      f.stored = f.storage;
+    }
+  }
+
+  const harvestAmount = Math.floor(f.stored);
+
+  if(harvestAmount > 0){
+    me.profile.coins = Math.floor(
+      Number(me.profile.coins || 0) + harvestAmount
+    );
+  }
+
+  // reset kho sau khi thu
+  f.stored = 0;
+  f.lastUpdate = now;
+
+  // ============================
+  // 🔢 2️⃣ TÍNH GIÁ NÂNG CẤP
+  // ============================
+  const cost = f.level * 300;
+
+  if(me.profile.coins < cost){
+    socket.emit("factory-error",{
+      message:"NOT_ENOUGH_COIN"
+    });
+    return;
+  }
+
+  // ============================
+  // 💰 3️⃣ TRỪ TIỀN
+  // ============================
+  me.profile.coins = Math.floor(
+    Number(me.profile.coins || 0) - cost
+  );
+
+  // ============================
+  // ⬆ 4️⃣ NÂNG CẤP
+  // ============================
+f.level += 1;
+
+// 📦 tăng kho theo level
+f.storage += 100;
+
+// 👷 tăng max worker theo level
+f.maxWorkers = f.level;
+
+  saveUsers(users);
+  saveFactories(factoryDB);
+
+  emitCoinUpdate(uid);
+  socket.emit("factory-update", factoryDB[uid]);
+});
+// ================================
+// 🥚 BUY EGG
+// ================================
+socket.on("animal-buy-egg", type=>{
+
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  const users = loadUsers();
+  const me = users[uid];
+  if(!me?.profile) return;
+
+  // 🏰 CHECK BARN SLOT (PHẢI ĐẶT SAU KHI CÓ me)
+  const barnLevel = me.barnLevel || 1;
+  const maxSlot = BARN_CONFIG[barnLevel]?.max || 4;
+
+  animalDB[uid] ||= [];
+
+  if(animalDB[uid].length >= maxSlot){
+    socket.emit("animal-error",{
+      message:"BARN_FULL"
+    });
+    return;
+  }
+
+const eggMap = {
+
+  // ===== COMMON =====
+  normal:{ 
+    price:100, 
+    grow:60000, 
+    min:150, 
+    max:210 
+  },
+  forest:{ 
+    price:180, 
+    grow:60000, 
+    min:270, 
+    max:380 
+  },
+
+  // ===== RARE =====
+  gold:{ 
+    price:300, 
+    grow:60000, 
+    min:450, 
+    max:650 
+  },
+  thunder:{ 
+    price:450, 
+    grow:48000, 
+    min:700, 
+    max:950 
+  },
+
+  // ===== EPIC =====
+  diamond:{ 
+    price:800, 
+    grow:60000, 
+    min:1200, 
+    max:1800 
+  },
+  shadow:{ 
+    price:1200, 
+    grow:60000, 
+    min:1800, 
+    max:2600 
+  },
+
+  // ===== LEGENDARY =====
+  dragon:{ 
+    price:2000, 
+    grow:60000, 
+    min:3200, 
+    max:4800 
+  },
+  phoenix:{ 
+    price:3500, 
+    grow:60000, 
+    min:5600, 
+    max:8000 
+  },
+
+  // ===== MYTHIC =====
+  celestial:{ 
+    price:6000, 
+    grow:60000, 
+    min:10000, 
+    max:14000 
+  },
+  voidlord:{ 
+    price:10000, 
+    grow:60000, 
+    min:17000, 
+    max:24000 
+  }
+
+};
+
+
+
+  const cfg = eggMap[type];
+  if(!cfg) return;
+
+  if(me.profile.coins < cfg.price){
+    socket.emit("animal-error",{ message:"NOT_ENOUGH_COIN" });
+    return;
+  }
+
+  me.profile.coins -= cfg.price;
+
+  animalDB[uid].push({
+    stage:0,
+    broken: null,
+    finalized: false, 
+    createdAt: Date.now(),
+    growTime: cfg.grow,
+    value: Math.floor(cfg.min + Math.random()*(cfg.max-cfg.min)),
+    type
+  });
+
+  saveUsers(users);
+  saveAnimals(animalDB);
+
+  emitCoinUpdate(uid);
+  socket.emit("animal-update", animalDB[uid]);
+});
+
+
+
+// ================================
+// 🐔 SELL ANIMAL
+// ================================
+socket.on("animal-sell", index=>{
+
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  const list = animalDB[uid];
+  if(!list || !list[index]) return;
+
+  const a = list[index];
+
+  // ❌ Chưa sẵn sàng
+  if(a.stage !== 2){
+    socket.emit("animal-error",{ message:"NOT_READY" });
+    return;
+  }
+
+  // 💀 Trứng bị hỏng
+  if(a.broken){
+    socket.emit("animal-error",{ message:"EGG_BROKEN" });
+    return;
+  }
+
+  const users = loadUsers();
+  const me = users[uid];
+  if(!me?.profile) return;
+
+  // 💰 Cộng coin
+  me.profile.coins += a.value;
+
+  // 🗑 Xóa khỏi chuồng
+  list.splice(index,1);
+
+  saveUsers(users);
+  saveAnimals(animalDB);
+
+  emitCoinUpdate(uid);
+
+  socket.emit("animal-update", list);
+});
+
+
+
+socket.on("animal-discard", index=>{
+
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  const list = animalDB[uid];
+  if(!list || !list[index]) return;
+
+  const a = list[index];
+  if(a.stage !== 2 || !a.broken) return;
+
+  list.splice(index,1);
+
+  saveAnimals(animalDB);
+
+  socket.emit("animal-update", list);
+});
+
+
+
+// ================================
+// 🏰 UPGRADE BARN
+// ================================
+socket.on("barn-upgrade", ()=>{
+
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  const users = loadUsers();
+  const me = users[uid];
+  if(!me?.profile) return;
+
+  const current = me.barnLevel || 1;
+  const next = current + 1;
+
+  if(!BARN_CONFIG[next]){
+    socket.emit("animal-error",{ message:"MAX_LEVEL" });
+    return;
+  }
+
+  const price = BARN_CONFIG[next].price;
+
+  if(me.profile.coins < price){
+    socket.emit("animal-error",{ message:"NOT_ENOUGH_COIN" });
+    return;
+  }
+
+  me.profile.coins -= price;
+  me.barnLevel = next;
+
+  saveUsers(users);
+  emitCoinUpdate(uid);
+
+  socket.emit("barn-update",{
+    level: next,
+    config: BARN_CONFIG
+  });
+
+});
+
+
+
+socket.emit("egg-history", eggHistory);
+
+
+
+socket.emit("coin-update", { coins });
+
+
+
+// ================================
+// 🔄 RESTORE TIME RACE STATE
+// ================================
+
+if(timeRaceRound){
+
+  const uidNow = socket.data.uid;
+
+  const myBetObj = timeRaceRound.bets.find(
+    b => b.uid === uidNow
+  );
+
+  const hasStopped =
+    timeRaceRound.stopped.includes(uidNow);
+
+  socket.emit("time-race-restore",{
+    roundId: timeRaceRound.id,
+    betEndAt: timeRaceRound.betEndAt,
+    serverNow: Date.now(),
+    multiplier: timeRaceRound.currentMultiplier,
+    crashed: timeRaceRound.crashed,
+    hasBet: !!myBetObj,
+    stopped: hasStopped,
+    myBet: myBetObj?.bet || 0   // 🔥 THÊM DÒNG NÀY
+  });
+
+}
+
+
+// ================================
+// ⏱️ SEND TIME RACE STATE
+// ================================
+socket.emit("time-race-state",{
+  roundId: timeRaceRound.id,
+  betEndAt: timeRaceRound.betEndAt,
+  multiplier: timeRaceRound.currentMultiplier,
+  crashed: timeRaceRound.crashed,
+  serverNow: Date.now()
+});
+
+
+socket.emit("time-race-history",
+  timeRaceHistory
+);
+
+
+// ================================
+// 📜 SEND MY TIME RACE HISTORY
+// ================================
+socket.emit("time-race-my-history",
+  me?.timeRaceHistory || []
+);
+
+socket.on("time-race-get-my-history", ()=>{
+
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  const users = loadUsers();
+  const meNow = users[uid];
+
+  socket.emit("time-race-my-history",
+    meNow?.timeRaceHistory || []
+  );
+});
+
+socket.emit("time-race-round-count",{
+  roundCountToday: timeRaceRoundCount + 1
+});
+
+
+// ✊✋✌️ gửi lịch sử RPS cho user mới vào
+socket.emit("rps-history", rpsHistoryGlobal);
+
+// ✊✋✌️ gửi lịch sử RPS của RIÊNG USER
+socket.emit("rps-my-history", me?.rpsHistory || []);
+
+
+
+
+// 📜 gửi lịch sử vòng quay cho user mới vào
+socket.emit("wheel-history", wheelHistory);
+
+
+// 🐣 SEND ANIMAL DATA
+socket.emit("animal-update", animalDB[uid] || []);
+
+
+
+socket.emit("wheel-round-count", {
+  roundCountToday: wheelRoundCountToday + 1
+});
+
+
+
+// 🥚 SEND EGG ROUND STATE
+const myEggBet = eggRound.bets.find(b => b.uid === uid);
+
+socket.emit("egg-round-state",{
+  roundId: eggRound.id,
+  endAt: eggRound.endAt,
+  hasBet: !!myEggBet,
+  bet: myEggBet?.bet || 0,
+  displayEgg: eggRound.displayEgg
+});
+
+
+socket.emit("barn-update", {
+  level: meNow?.barnLevel || 1,
+  config: BARN_CONFIG
+});
+
+
+
+
+// ================================
+// 👑⚔ KING VS SLAVE – SOCKET
+// ================================
+
+
+// 🔥 GỬI THÔNG TIN ROUND & SLAVE INDEX KHI USER CONNECT
+socket.emit("ks-init",{
+  roundId: ksRoundId,
+  slaveIndex: ksSlaveIndex
+});
+
+
+socket.on("ks-get-state", ()=>{
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  const st = ksUserState.get(uid);
+
+  if(!st){
+    return socket.emit("ks-state",{
+      roundId: ksRoundId,
+      myBet: 0,
+      playerUsed: [],
+      kingUsed: []
+    });
+  }
+
+  socket.emit("ks-state",{
+    roundId: ksRoundId,
+    myBet: st.bet || 0,
+    playerUsed: st.playerUsed || [],
+    kingUsed: st.kingUsed || []
+  });
+});
+
+
+socket.on("ks-reset", ()=>{
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  ksUserState.set(uid, {
+  bet:0,
+  playerUsed: [],
+  kingUsed: []
+});
+
+  socket.emit("ks-round-new",{ roundId: ksRoundId });
+});
+
+
+socket.on("ks-bet", (data)=>{
+
+  const uid = socket.data.uid;
+  if(!uid)
+    return socket.emit("ks-error",{ message:"NOT_LOGIN" });
+
+  const bet = Math.floor(Number(data?.bet));
+  if(!bet || bet <= 0)
+    return socket.emit("ks-error",{ message:"BET_INVALID" });
+
+  const users = loadUsers();
+  const me = users[uid];
+  if(!me?.profile)
+    return socket.emit("ks-error",{ message:"USER_INVALID" });
+
+  me.profile.coins = Math.floor(Number(me.profile.coins || 0));
+
+  if(me.profile.coins < bet)
+    return socket.emit("ks-error",{ message:"NOT_ENOUGH_COIN" });
+
+  // trừ coin
+  me.profile.coins -= bet;
+
+  saveUsers(users);
+
+  emitToUser(uid, "coin-update", {
+    coins: me.profile.coins
+  });
+
+
+const old = ksUserState.get(uid);
+
+ksUserState.set(uid, {
+  bet,
+  playerUsed: old?.playerUsed || [],
+  kingUsed: old?.kingUsed || [],
+  drawStreak: old?.drawStreak || 0   // 🔥 thêm dòng này
+});
+
+  socket.emit("ks-bet-ok",{
+    roundId: ksRoundId,
+    bet
+  });
+
+});
+
+socket.on("ks-pick", (data)=>{
+
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  const st = ksUserState.get(uid);
+  if(!st?.bet)
+    return socket.emit("ks-error",{ message:"NEED_BET" });
+
+  const youIndex = Math.floor(Number(data?.index));
+  if(!(youIndex >= 0 && youIndex <= 4))
+    return socket.emit("ks-error",{ message:"PICK_INVALID" });
+
+  // ❌ chặn dùng lại bài cũ
+  if(st.playerUsed.includes(youIndex))
+    return socket.emit("ks-error",{ message:"CARD_USED" });
+
+  st.playerUsed.push(youIndex);
+
+  // ============================
+  // 🔥 LƯU PICK HISTORY
+  // ============================
+  st.pickHistory ||= [];
+  st.pickHistory.push(youIndex);
+  if(st.pickHistory.length > 10){
+    st.pickHistory.shift();
+  }
+
+  // 🎯 chọn king chưa dùng
+  const available = [0,1,2,3,4].filter(
+    i => !st.kingUsed.includes(i)
+  );
+
+  if(available.length === 0){
+    return socket.emit("ks-error",{ message:"NO_CARD_LEFT" });
+  }
+
+  // ============================
+  // 🔥 ANTI NUÔI SLOT
+  // ============================
+
+  let kingPickIndex;
+  const fav = getFavIndex(st.pickHistory);
+
+  if(fav !== null && Math.random() < 0.65){
+
+    // 65% tránh vị trí đang bị nuôi
+    const safe = available.filter(i => i !== fav);
+
+    if(safe.length > 0){
+      kingPickIndex =
+        safe[Math.floor(Math.random()*safe.length)];
+    }else{
+      kingPickIndex =
+        available[Math.floor(Math.random()*available.length)];
+    }
+
+  }else{
+
+    kingPickIndex =
+      available[Math.floor(Math.random()*available.length)];
+  }
+
+  st.kingUsed.push(kingPickIndex);
+
+  const you  = ksCardByIndex("player", youIndex);
+  const king = ksCardByIndex("king", kingPickIndex);
+
+  let result = "draw";
+
+  if(you === "SLAVE" && king === "KING") result = "win";
+  else if(you === "Warrior" && king === "Warrior") result = "draw";
+  else result = "lose";
+
+  const users = loadUsers();
+  const me = users[uid];
+  if(!me?.profile) return;
+
+  let win = 0;
+
+  // ==============================
+  // 🔥 DRAW STREAK LOGIC
+  // ==============================
+  if(result === "draw"){
+      st.drawStreak = (st.drawStreak || 0) + 1;
+  } else {
+      st.drawStreak = 0;
+  }
+
+  // ==============================
+  // 🏆 WIN
+  // ==============================
+  if(result === "win"){
+
+      win = st.bet * 5;
+      me.profile.coins = Math.floor(
+  Number(me.profile.coins || 0) + win
+);
+
+      saveUsers(users);
+      emitToUser(uid,"coin-update",{ coins: me.profile.coins });
+
+      ksUserState.set(uid,{
+          bet: 0,
+          playerUsed: [],
+          kingUsed: [],
+          drawStreak: 0,
+          pickHistory: []
+      });
+
+  }
+  // ==============================
+  // ❌ LOSE
+  // ==============================
+  else if(result === "lose"){
+
+      ksUserState.set(uid,{
+          bet: 0,
+          playerUsed: [],
+          kingUsed: [],
+          drawStreak: 0,
+          pickHistory: []
+      });
+
+  }
+  // ==============================
+  // ⚖️ DRAW → giữ nguyên state
+  // ==============================
+  else {
+      ksUserState.set(uid, st);
+  }
+
+  socket.emit("ks-result",{
+    roundId: ksRoundId,
+    you,
+    king,
+    youIndex,
+    kingIndex: kingPickIndex,
+    result,
+    bet: st.bet,
+    win,
+    drawStreak: st.drawStreak || 0
+  });
+
+  if(result === "draw"){
+    socket.emit("ks-open-pick",{
+      drawStreak: st.drawStreak
+    });
+  }
+
+});
+
+
+// ================================
+// 🏳️ KS RETREAT (sau khi draw)
+// ================================
+socket.on("ks-retreat", ()=>{
+
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  const st = ksUserState.get(uid);
+  if(!st?.bet) return;
+
+  // ❌ Không cho retreat nếu chưa hòa lần nào
+  if(!st.drawStreak || st.drawStreak <= 0){
+    return socket.emit("ks-error",{ message:"RETREAT_NOT_ALLOWED" });
+  }
+
+  // ❌ Khóa retreat sau draw thứ 3
+  if(st.drawStreak > 3){
+    return socket.emit("ks-error",{ message:"RETREAT_LOCKED" });
+  }
+
+  const users = loadUsers();
+  const me = users[uid];
+  if(!me?.profile) return;
+
+  // 🎯 Multiplier theo số draw
+  let multiplier = 1.2;     // draw 1
+
+  if(st.drawStreak === 2) multiplier = 1.3;
+  if(st.drawStreak === 3) multiplier = 1.45;
+
+  const reward = Math.floor(st.bet * multiplier);
+
+  me.profile.coins += reward;
+
+  saveUsers(users);
+  emitToUser(uid,"coin-update",{ coins: me.profile.coins });
+
+  // 🔥 Reset toàn bộ state
+  ksUserState.set(uid,{
+    bet: 0,
+    playerUsed: [],
+    kingUsed: [],
+    drawStreak: 0
+  });
+
+  socket.emit("ks-retreat-ok",{ 
+    reward,
+    multiplier,
+    streak: st.drawStreak
+  });
+
+  socket.emit("ks-state",{
+    roundId: ksRoundId,
+    myBet: 0,
+    playerUsed: [],
+    kingUsed: []
+  });
+
+});
+
+
+socket.on("ks-next", ()=>{
+
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  ksRoundId++;
+  ksKingIndex = Math.floor(Math.random() * 5);
+  ksSlaveIndex = Math.floor(Math.random() * 5);
+
+  // ✅ reset state cho round mới
+  ksUserState.set(uid,{
+    bet: 0,
+    playerUsed: [],
+    kingUsed: []
+  });
+
+  socket.emit("ks-init",{
+    roundId: ksRoundId,
+    slaveIndex: ksSlaveIndex
+  });
+
+  socket.emit("ks-round-new",{
+    roundId: ksRoundId
+  });
+});
+
+
+
+socket.on("time-race-bet", data=>{
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  // 🔒 khóa đặt cược khi còn <= 3s
+  if(timeRaceRound.betEndAt - Date.now() <= 3000){
+    return socket.emit("time-race-error",{message:"BET_CLOSED"});
+  }
+
+  if(Date.now() > timeRaceRound.betEndAt)
+    return socket.emit("time-race-error",{message:"BET_CLOSED"});
+
+  const bet = Math.floor(Number(data?.bet));
+  if(!bet || bet <= 0)
+    return socket.emit("time-race-error",{message:"BET_INVALID"});
+
+  const users = loadUsers();
+  const me = users[uid];
+  if(!me?.profile) return;
+
+  if(timeRaceRound.bets.some(b=>b.uid===uid))
+    return socket.emit("time-race-error",{message:"ALREADY_BET"});
+
+  if(me.profile.coins < bet)
+    return socket.emit("time-race-error",{message:"NOT_ENOUGH_COIN"});
+
+  // =========================
+  // 💸 TRỪ COIN
+  // =========================
+  me.profile.coins -= bet;
+  saveUsers(users);
+  emitCoinUpdate(uid);
+
+  // =========================
+  // 📥 LƯU BET
+  // =========================
+  timeRaceRound.bets.push({uid, bet});
+
+  // =========================
+  // 📊 DANH SÁCH NGƯỜI CƯỢC
+  // =========================
+  const betList = timeRaceRound.bets.map(b => ({
+    name: users[b.uid]?.profile?.name || "Player",
+    bet: b.bet
+  }));
+
+  // 🔥 sort lớn → nhỏ
+  betList.sort((a,b)=>b.bet - a.bet);
+
+  // 🔔 emit realtime cho ALL
+  io.emit("time-race-bet-list", betList);
+
+  // (giữ lại nếu bạn đang dùng UI cũ)
+  emitTimeRacePlayers();
+
+  socket.emit("time-race-bet-ok");
+
+  io.emit("time-race-bet-list", getTimeRaceBetList())
+});
+
+socket.on("time-race-stop", ()=>{
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+if(
+  timeRaceRound.crashed ||
+  timeRaceRound.currentMultiplier >= timeRaceRound.crashPoint
+){
+  return;
+}
+
+  const bet = timeRaceRound.bets.find(b=>b.uid===uid);
+  if(!bet) return;
+
+if(timeRaceRound.stopped.includes(uid)) return;
+
+timeRaceRound.stopped.push(uid);
+emitTimeRacePlayers();
+
+  const win = Math.floor(
+    bet.bet * timeRaceRound.currentMultiplier
+  );
+
+  const users = loadUsers();
+  const me = users[uid];
+  if(!me?.profile) return;
+
+  me.profile.coins = Math.floor(
+  Number(me.profile.coins || 0) + win
+);
+
+
+  // ============================
+// 📜 LƯU LỊCH SỬ TIME RACE USER
+// ============================
+me.timeRaceHistory ||= [];
+
+me.timeRaceHistory.unshift({
+  roundId: timeRaceRound.id,
+  ts: Date.now(),
+  bet: bet.bet,
+  stopMultiplier: timeRaceRound.currentMultiplier,
+  win,
+  result: "win"
+});
+
+if(me.timeRaceHistory.length > 30){
+  me.timeRaceHistory.length = 30;
+}
+
+
+socket.emit("time-race-my-history",
+  me.timeRaceHistory
+);
+
+
+
+  saveUsers(users);
+  emitCoinUpdate(uid);
+
+  socket.emit("time-race-stopped",{
+    multiplier: timeRaceRound.currentMultiplier,
+    win
+  });
+});
+
+
+  
+// ✊✋✌️ RPS ROUND INFO
+
+const myBet = rpsRound.bets.find(b => b.uid === uid);
+
+socket.emit("rps-round-state",{
+  roundId: rpsRound.id,
+  endAt: rpsRound.endAt,
+
+  hasBet: !!myBet,
+  myHand: myBet?.hand || null,
+  bet: myBet?.bet || 0
+});
+
+
+
+// ================================
+// 🎡 GAME WHEEL – SERVER SIDE
+// ================================
+socket.on("wheel-bet", data => {
+
+
+  const uid = socket.data.uid;
+  if (!uid) return socket.emit("wheel-error",{ message:"NOT_LOGIN" });
+
+  const bet = Math.floor(Number(data?.bet));
+  if (!bet || bet <= 0)
+    return socket.emit("wheel-error",{ message:"BET_INVALID" });
+
+  const users = loadUsers();
+  const me = users[uid];
+  if (!me?.profile)
+    return socket.emit("wheel-error",{ message:"USER_INVALID" });
+
+  // ⛔ mỗi phiên chỉ 1 cược
+  if (wheelRound.bets.some(b => b.uid === uid))
+    return socket.emit("wheel-error",{ message:"ALREADY_BET" });
+
+  if (me.profile.coins < bet)
+    return socket.emit("wheel-error",{ message:"NOT_ENOUGH_COIN" });
+
+  // 🔻 trừ coin NGAY KHI CƯỢC
+  me.profile.coins -= bet;
+  saveUsers(users);
+  emitCoinUpdate(uid);
+
+  wheelRound.bets.push({ uid, bet });
+
+  // 🔔 EMIT LIVE BET CHO ADMIN
+io.emit("admin-wheel-bet-new", {
+  roundId: wheelRound.id,
+  uid,
+  bet
+});
+
+
+  socket.emit("wheel-bet-ok", {
+    roundId: wheelRound.id,
+    bet
+  });
+});
+
+
+// ================================
+// 🥚 EGG BET
+// ================================
+socket.on("egg-bet", data=>{
+
+  const uid = socket.data.uid;
+  if(!uid) return socket.emit("egg-error",{ message:"NOT_LOGIN" });
+
+  const bet = Math.floor(Number(data?.bet));
+  if(!bet || bet <= 0)
+    return socket.emit("egg-error",{ message:"BET_INVALID" });
+
+  const users = loadUsers();
+  const me = users[uid];
+  if(!me?.profile)
+    return socket.emit("egg-error",{ message:"USER_INVALID" });
+
+  // ⛔ mỗi round chỉ 1 bet
+  if(eggRound.bets.some(b=>b.uid === uid))
+    return socket.emit("egg-error",{ message:"ALREADY_BET" });
+
+  // ⛔ khóa trước 5s cuối
+  if(eggRound.endAt - Date.now() <= 5000)
+    return socket.emit("egg-error",{ message:"ROUND_CLOSED" });
+
+  // 🔥 CHẶN KHÔNG ĐỦ COIN
+  if(me.profile.coins < bet)
+    return socket.emit("egg-error",{ message:"NOT_ENOUGH_COIN" });
+
+  // 🔻 trừ coin ngay
+  me.profile.coins -= bet;
+  saveUsers(users);
+
+  eggRound.bets.push({ uid, bet });
+
+  emitCoinUpdate(uid);
+
+  socket.emit("egg-bet-ok");
+});
+
+
+
+
+
+// user đã vào lệnh trong round hiện tại?
+const alreadyBet =
+  Array.isArray(wheelRound.bets) &&
+  wheelRound.bets.some(b => b.uid === uid);
+
+if (alreadyBet && wheelRound.endAt > Date.now()) {
+  // 🔒 KHÓA – PHẢI ĐỢI ROUND MỚI
+  socket.emit("wheel-locked", {
+    reason: "WAIT_NEXT_ROUND",
+    roundId: wheelRound.id,
+    endAt: wheelRound.endAt
+  });
+} else {
+  // ✅ CHO PHÉP VÀO GAME
+  socket.emit("wheel-open", {
+    roundId: wheelRound.id,
+    endAt: wheelRound.endAt
+  });
+}
+
+
+  socket.on("disconnect", () => {
+    const uid = socket.data.uid;
+    if (!uid) return;
+
+    const set = activeUsers.get(uid);
+    if (set) {
+      set.delete(socket.id);
+      if (set.size === 0) {
+        activeUsers.delete(uid);
+      }
+    }
+  });
+});
+
+
+
+
+let investPrice = {
+  gold: 100,
+  silver: 100,
+  diamond: 100
+};
+
+
+
+// 💾 lưu lại ngay
+saveInvestState(investRound);
+
+
+let investHistory = loadInvestHistory();
+const MAX_HISTORY = 10;
+
+
+setInterval(() => {
+  const sec = Math.floor(
+    (Date.now() - investRound.startAt) / 1000
+  );
+
+  if (sec < 0 || sec >= 60) return;
+
+  io.emit("invest-price", {
+    roundId: investRound.id,
+    second: sec,
+price: {
+  gold: investRound.chart.gold[sec],
+  silver: investRound.chart.silver[sec],
+  diamond: investRound.chart.diamond[sec],
+  oil: investRound.chart.oil[sec],
+  estate: investRound.chart.estate[sec],
+  atomic: investRound.chart.atomic[sec]
+}
+
+  });
+}, 1000);
+
+
+
+
+
+
+setInterval(() => {
+  const round = investRound;
+
+// ================================
+// 🎯 KẾT QUẢ PHIÊN – LẤY TỪ CHART
+// ================================
+const result = calcResultFromChart(round.chart);
+
+// 🔥 GIÁ CHỐT CUỐI PHIÊN (CHUẨN SERVER)
+const endPrice = {
+  gold: round.chart.gold.at(-1),
+  silver: round.chart.silver.at(-1),
+  diamond: round.chart.diamond.at(-1),
+  oil: round.chart.oil.at(-1),
+  estate: round.chart.estate.at(-1),
+  atomic: round.chart.atomic.at(-1)
+};
+
+
+
+
+  // ================================
+  // 💰 CHỈ XỬ LÝ COIN NẾU CÓ LỆNH
+  // ================================
+  if (round.orders.length) {
+    const users = loadUsers();
+
+    round.orders.forEach(o => {
+      const me = users[o.uid];
+      if (!me?.profile) return;
+
+const prices = round.chart[o.asset];
+if (!prices) return;
+
+const entry = o.entryPrice;
+const end   = prices[prices.length - 1];
+
+let rawPercent =
+  Math.round((end - entry) / entry * 100);
+
+// 🔁 đảo chiều nếu chọn DOWN
+let percent =
+  o.direction === "down"
+    ? -rawPercent
+    : rawPercent;
+
+// 🔒 clamp an toàn
+percent = Math.max(-30, Math.min(30, percent));
+
+
+const profit =
+  Math.round(o.coin * percent / 100);
+
+// ➕ hoàn coin + lời/lỗ
+me.profile.coins += o.coin + profit;
+
+
+me.investHistory = me.investHistory || [];
+
+me.investHistory.unshift({
+  roundId: round.id,
+  ts: Date.now(),
+  asset: o.asset,
+  direction: o.direction,
+  coin: o.coin,
+  percent,
+  profit,
+  entryPrice: o.entryPrice,
+  endPrice: end
+});
+
+// 🔥 CHỈ GIỮ LỊCH SỬ 24H
+const now = Date.now();
+me.investHistory = me.investHistory.filter(
+  h => now - h.ts <= ONE_DAY
+);
+
+
+
+    });
+
+    saveUsers(users);
+  }
+
+  // ================================
+  // 🔔 EMIT KẾT QUẢ PHIÊN (AI CŨNG NHẬN)
+  // ================================
+io.emit("invest-round-result", {
+  roundId: round.id,
+  result,
+  endPrice // 🔥 GỬI GIÁ CHỐT CHUẨN
+});
+
+
+  // ================================
+  // 📜 LƯU LỊCH SỬ (DÙ CÓ LỆNH HAY KHÔNG)
+  // ================================
+investHistory.unshift({
+  roundId: round.id,
+  ts: Date.now(),
+  chart: round.chart,
+  result,
+  orders: round.orders.map(o => ({
+    uid: o.uid,
+    asset: o.asset,
+    coin: o.coin,
+    entryPrice: o.entryPrice
+  }))
+});
+
+// 🔥 CHỈ GIỮ ROUND TRONG 24H
+const now = Date.now();
+investHistory = investHistory.filter(
+  r => now - r.ts <= ONE_DAY
+);
+
+
+// 🔐 LƯU FILE → CHỐNG RESTART
+saveInvestHistory(investHistory);
+
+
+  // ================================
+  // 🔄 TẠO PHIÊN MỚI
+  // ================================
+ const id = Date.now();
+
+investRound = {
+  id,
+  startAt: id,
+  endAt: id + 60000,
+  orders: [],
+  chart: generateChart(id),
+  closedEarly: [] // 🔒 LƯU USER ĐÃ CHỐT SỚM
+};
+
+
+saveInvestState(investRound);
+
+
+
+  io.emit("invest-round-new", {
+    roundId: investRound.id,
+    endAt: investRound.endAt
+  });
+
+}, 60000);
+
+
+
+
+
+
+
+function kickOldSessions(uid, newSocket) {
+  const sockets = activeUsers.get(uid);
+  if (!sockets) return;
+
+  for (const sid of sockets) {
+    const s = io.sockets.sockets.get(sid);
+    if (!s) continue;
+
+    // 🛑 CÙNG THIẾT BỊ → KHÔNG KICK
+    if (
+      s.data.deviceId &&
+      newSocket.data.deviceId &&
+      s.data.deviceId === newSocket.data.deviceId
+    ) {
+      continue;
+    }
+
+    // ⛔ ĐANG POLLING → KHÔNG KICK NGAY (TRÁNH 400)
+    if (s.conn?.transport?.name === "polling") {
+      console.log("⏳ Skip kick polling socket:", s.id);
+      continue;
+    }
+
+    // ❌ KHÁC THIẾT BỊ → KICK
+    s.emit("force-logout", {
+      reason: "logged_in_elsewhere",
+      message: "Connection error. Please check your internet connection!"
+    });
+
+    s.disconnect(true);
+  }
+}
+
+
+function emitToUser(uid, event, data) {
+  const sockets = activeUsers.get(uid);
+  if (!sockets) return;
+
+  for (const sid of sockets) {
+    const s = io.sockets.sockets.get(sid);
+    if (s) s.emit(event, data);
+  }
+}
+
+
+
+
+function bindSocketToUser(uid, socket) {
+  let set = activeUsers.get(uid);
+  if (!set) {
+    set = new Set();
+    activeUsers.set(uid, set);
+  }
+
+  // 🔥 chỉ kick khác device
+ set.add(socket.id);          // bind trước
+kickOldSessions(uid, socket); // kick sau
+
+
+  socket.data.uid = uid;
+
+  console.log("🔐 SOCKET BIND:", uid, socket.id, socket.data.deviceId);
+}
+
+
+
+
+// 🔧 Parse JSON body (BẮT BUỘC cho admin API)
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+
+
+
+/* ============================================
+   LSP MAIN ADMIN - PASSWORD SESSION
+   Không yêu cầu người truy cập đăng nhập UID
+============================================ */
+
+const LSP_ADMIN_COOKIE = "lsp_admin_sid";
+const LSP_ADMIN_TTL = 8 * 60 * 60 * 1000;
+const lspAdminSessions = new Map();
+const lspAdminAttempts = new Map();
+
+// Render sử dụng reverse proxy
+app.set("trust proxy", 1);
+
+function getLspAdminActorUid() {
+  const users = loadUsers();
+
+  const selected =
+    String(process.env.LSP_ADMIN_ACTOR_UID || "").trim();
+
+  if (selected) {
+    return users[selected]?.role === "admin"
+      ? selected
+      : null;
+  }
+
+  // Tự lấy nếu hệ thống chỉ có một admin
+  const admins = Object.keys(users).filter(
+    uid => users[uid]?.role === "admin"
+  );
+
+  return admins.length === 1 ? admins[0] : null;
+}
+
+function lspAdminPasswordValid(password) {
+  const expected = process.env.LSP_ADMIN_PASSWORD;
+
+  if (
+    typeof expected !== "string" ||
+    !expected ||
+    typeof password !== "string" ||
+    !password ||
+    password.length > 256
+  ) {
+    return false;
+  }
+
+  const a = crypto
+    .createHash("sha256")
+    .update(password, "utf8")
+    .digest();
+
+  const b = crypto
+    .createHash("sha256")
+    .update(expected, "utf8")
+    .digest();
+
+  return crypto.timingSafeEqual(a, b);
+}
+
+function lspAdminTokenHash(token) {
+  return crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+}
+
+function getLspAdminSession(req) {
+  const cookies = String(req.headers.cookie || "");
+
+  const match = cookies.match(
+    /(?:^|;\s*)lsp_admin_sid=([a-f0-9]{64})(?:;|$)/
+  );
+
+  if (!match) return null;
+
+  const key = lspAdminTokenHash(match[1]);
+  const session = lspAdminSessions.get(key);
+
+  if (!session) return null;
+
+  if (session.expiresAt <= Date.now()) {
+    lspAdminSessions.delete(key);
+    return null;
+  }
+
+  return {
+    key,
+    session
+  };
+}
+
+function setLspAdminCookie(req, res, token, maxAge) {
+  const https =
+    req.secure ||
+    String(req.headers["x-forwarded-proto"] || "")
+      .split(",")[0].trim() === "https";
+
+  const cookie = [
+    `${LSP_ADMIN_COOKIE}=${token}`,
+    "HttpOnly",
+    "SameSite=Strict",
+    "Path=/api/admin",
+    `Max-Age=${maxAge}`,
+    ...(https ? ["Secure"] : [])
+  ].join("; ");
+
+  res.setHeader("Set-Cookie", cookie);
+}
+
+function lspAdminSameOrigin(req) {
+  const origin = req.get("origin");
+
+  if (!origin) return true;
+
+  try {
+    return new URL(origin).host === req.get("host");
+  } catch {
+    return false;
+  }
+}
+
+// ĐĂNG NHẬP BẰNG MẬT KHẨU
+app.post("/api/admin/auth/login", (req, res) => {
+  if (!lspAdminSameOrigin(req)) {
+    return res.status(403).json({
+      ok: false,
+      error: "INVALID_ORIGIN"
+    });
+  }
+
+  const ip = req.ip || req.socket.remoteAddress;
+  const now = Date.now();
+
+  let attempt = lspAdminAttempts.get(ip);
+
+  if (!attempt || now > attempt.resetAt) {
+    attempt = {
+      failures: 0,
+      resetAt: now + 15 * 60 * 1000
+    };
+  }
+
+  if (attempt.failures >= 8) {
+    return res.status(429).json({
+      ok: false,
+      error: "TOO_MANY_ATTEMPTS",
+      message: "Please try again after the time limit expires."
+    });
+  }
+
+  const actorUid = getLspAdminActorUid();
+
+  if (!actorUid) {
+    return res.status(503).json({
+      ok: false,
+      error: "ADMIN_NOT_CONFIGURED",
+      message: "The internal admin account has not been configured."
+    });
+  }
+
+  if (!lspAdminPasswordValid(req.body?.password)) {
+    attempt.failures += 1;
+    lspAdminAttempts.set(ip, attempt);
+
+    return res.status(401).json({
+      ok: false,
+      error: "INVALID_PASSWORD",
+      message: "Incorrect admin password."
+    });
+  }
+
+  lspAdminAttempts.delete(ip);
+
+  // Dọn phiên đã hết hạn
+  for (const [key, value] of lspAdminSessions) {
+    if (value.expiresAt <= now) {
+      lspAdminSessions.delete(key);
+    }
+  }
+
+  // Giới hạn số phiên tồn tại trong bộ nhớ
+  if (lspAdminSessions.size >= 100) {
+    const oldestKey = lspAdminSessions.keys().next().value;
+    if (oldestKey) lspAdminSessions.delete(oldestKey);
+  }
+
+  const token = crypto.randomBytes(32).toString("hex");
+
+  lspAdminSessions.set(lspAdminTokenHash(token), {
+    actorUid,
+    expiresAt: now + LSP_ADMIN_TTL
+  });
+
+  setLspAdminCookie(
+    req,
+    res,
+    token,
+    Math.floor(LSP_ADMIN_TTL / 1000)
+  );
+
+  res.json({
+    ok: true,
+    actorUid
+  });
+});
+
+
+
+/* ==========================================
+   KIỂM TRA TRẠNG THÁI PHIÊN ADMIN
+========================================== */
+
+app.get("/api/admin/auth/status", (req, res) => {
+  res.set("Cache-Control", "no-store");
+
+  const auth = getLspAdminSession(req);
+  const actorUid = getLspAdminActorUid();
+
+  const authenticated = Boolean(
+    auth &&
+    actorUid &&
+    auth.session.actorUid === actorUid
+  );
+
+  return res.status(200).json({
+    ok: authenticated,
+    authenticated,
+    ...(authenticated ? { actorUid } : {})
+  });
+});
+
+
+
+
+// ĐĂNG XUẤT
+app.post("/api/admin/auth/logout", (req, res) => {
+  if (!lspAdminSameOrigin(req)) {
+    return res.status(403).json({ ok: false });
+  }
+
+  const auth = getLspAdminSession(req);
+
+  if (auth) {
+    lspAdminSessions.delete(auth.key);
+  }
+
+  setLspAdminCookie(req, res, "", 0);
+
+  res.json({ ok: true });
+});
+
+// BẢO VỆ TOÀN BỘ API /api/admin/*
+app.use("/api/admin", (req, res, next) => {
+  if (!lspAdminSameOrigin(req)) {
+    return res.status(403).json({
+      ok: false,
+      error: "INVALID_ORIGIN"
+    });
+  }
+
+  const auth = getLspAdminSession(req);
+  const actorUid = getLspAdminActorUid();
+
+  if (
+    !auth ||
+    !actorUid ||
+    auth.session.actorUid !== actorUid
+  ) {
+    return res.status(401).json({
+      ok: false,
+      error: "ADMIN_AUTH_REQUIRED"
+    });
+  }
+
+  // UID được gán từ server, không tin UID gửi từ client
+  req.headers["x-uid"] = actorUid;
+
+  if (req.body && typeof req.body === "object") {
+    req.body.adminUid = actorUid;
+  }
+
+  req.lspAdminActorUid = actorUid;
+
+  next();
+});
+
+
+
+app.use(express.static(path.join(__dirname, "public")));
+
+// 🔥 SERVE FILE DATA (CHO GAME PHÁ ÁN)
+app.use("/data", express.static(path.join(__dirname, "data")));
+
+
+
+
+app.post("/api/deposit",(req,res)=>{
+
+const { username, amount } = req.body
+
+if(!username || !amount || amount <= 0){
+return res.json({
+success:false,
+message:"Invalid request"
+})
+}
+
+const users = loadUsers()
+
+const user = users[username]
+
+if(!user || !user.profile){
+return res.json({
+success:false,
+message:"User not found"
+})
+}
+
+// 🔒 chuẩn hóa số nạp
+const add = Math.floor(Number(amount))
+
+if(add <= 0){
+return res.json({
+success:false,
+message:"Amount invalid"
+})
+}
+
+// 💎 cộng coin
+user.profile.coins =
+(user.profile.coins || 0) + add
+
+// 💳 cộng tổng đã nạp
+user.profile.coinDeposit =
+(user.profile.coinDeposit || 0) + add
+
+// 🧾 log nạp (khuyên dùng)
+user.profile.depositLogs ||= []
+user.profile.depositLogs.unshift({
+amount:add,
+time:Date.now(),
+type:"deposit"
+})
+
+saveUsers(users)
+
+// 🔄 realtime update client
+emitCoinUpdate(user.profile.uid)
+
+res.json({
+success:true,
+message:"Successfully added " + add + " diamonds"
+})
+
+})
+
+
+
+
+
+app.post("/api/rps/bet",(req,res)=>{
+  const uid = req.headers["x-uid"];
+  const { bet, hand } = req.body;
+
+// ⏱️ SERVER-SIDE TIME CHECK (ANTI-LAG)
+const now = Date.now();
+const remainMs = rpsRound.endAt - now;
+
+if (remainMs <= RPS_BET_LOCK_BEFORE_MS) {
+  return res.json({
+    ok: false,
+    message: "The betting period has ended"
+  });
+}
+
+
+  if(!uid || !hand)
+    return res.json({ ok:false });
+
+  const users = loadUsers();
+  const me = users[uid];
+  if(!me?.profile)
+    return res.json({ ok:false });
+
+  const coin = Math.floor(Number(bet));
+  if(!coin || coin <= 0)
+    return res.json({ ok:false });
+
+  if(me.profile.coins < coin)
+    return res.json({ ok:false, message:"NOT_ENOUGH_COIN" });
+
+  // ⛔ mỗi round chỉ 1 lệnh
+  if (rpsRound.bets.some(b => b.uid === uid))
+    return res.json({ ok:false, message:"ALREADY_BET" });
+
+  // 🔻 trừ coin NGAY
+  me.profile.coins -= coin;
+  saveUsers(users);
+  emitCoinUpdate(uid);
+
+  rpsRound.bets.push({
+    uid,
+    hand,
+    bet: coin
+  });
+
+// 🔔 REALTIME PUSH CHO ADMIN
+io.emit("admin-rps-bet-new", {
+  roundId: rpsRound.id,
+  uid,
+  hand,
+  bet: coin,
+  name: me.profile.name || "Player"
+});
+
+
+
+  return res.json({
+    ok:true,
+    roundId: rpsRound.id,
+    endAt: rpsRound.endAt
+  });
+});
+
+// 🛑 ADMIN OVERRIDE EGG RESULT (DANGEROUS)
+app.post("/api/admin/egg/override", (req, res) => {
+
+  const uid = req.headers["x-uid"];
+  const { multiplier } = req.body;
+
+  if (!uid) return res.status(401).json({ ok:false });
+
+  const users = loadUsers();
+  const me = users[uid];
+
+  if (me?.role !== "admin")
+    return res.status(403).json({ ok:false });
+
+  if (!eggRound || !eggRound.secretResult)
+    return res.json({ ok:false, message:"NO_ACTIVE_ROUND" });
+
+  if (Date.now() >= eggRound.endAt)
+    return res.json({ ok:false, message:"ROUND_ENDED" });
+
+  const m = Number(multiplier);
+  if (isNaN(m) || m < 0)
+    return res.json({ ok:false, message:"INVALID_MULTIPLIER" });
+
+  const hash = crypto
+    .createHash("sha256")
+    .update(eggRound.id + ":" + m + ":override")
+    .digest("hex");
+
+  eggRound.secretResult = {
+    multiplier: m,
+    hash,
+    overridden: true,
+    overriddenBy: uid,
+    overriddenAt: Date.now()
+  };
+
+  console.warn(
+    "🛑 [EGG OVERRIDE]",
+    "round", eggRound.id,
+    "→ x" + m,
+    "by", uid
+  );
+
+  // 🔔 realtime cho admin
+  io.emit("admin-egg-secret-update", {
+    roundId: eggRound.id,
+    multiplier: m,
+    hash,
+    endAt: eggRound.endAt,
+    eggType: eggRound.displayEgg.type,
+    overridden: true
+  });
+
+  res.json({
+    ok:true,
+    roundId: eggRound.id,
+    result: eggRound.secretResult
+  });
+});
+
+
+
+
+app.post("/api/admin/time-race/override", (req, res) => {
+
+  const uid = req.headers["x-uid"];
+  const { crashPoint } = req.body;
+
+  if (!uid) 
+    return res.status(401).json({ ok:false });
+
+  const cp = Number(crashPoint);
+
+  if (!cp || cp < 1)
+    return res.json({ ok:false, message:"INVALID_CRASH" });
+
+  if (!timeRaceRound || timeRaceRound.crashed)
+    return res.json({ ok:false, message:"ROUND_ENDED" });
+
+  // ✅ Override trực tiếp
+  timeRaceRound.crashPoint = Number(cp.toFixed(2));
+  timeRaceRound.overridden = true;
+
+  console.log("💣 OVERRIDE CRASH:", cp);
+
+  io.emit("admin-time-race-secret-update", {
+    roundId: timeRaceRound.id,
+    crashPoint: timeRaceRound.crashPoint,
+    betEndAt: timeRaceRound.betEndAt,
+    endAt: timeRaceRound.endAt,
+    crashed: timeRaceRound.crashed,
+    overridden: true
+  });
+
+  return res.json({ ok:true });
+});
+
+
+// 🛑 ADMIN OVERRIDE WHEEL RESULT (DANGEROUS)
+app.post("/api/admin/wheel/override", (req, res) => {
+  const uid = req.headers["x-uid"];
+  const { multiplier } = req.body;
+
+  if (!uid) return res.status(401).json({ ok:false });
+
+  const users = loadUsers();
+  const me = users[uid];
+  if (me?.role !== "admin")
+    return res.status(403).json({ ok:false });
+
+  if (!wheelRound || !wheelRound.secretResult)
+    return res.json({ ok:false, message:"NO_ACTIVE_ROUND" });
+
+  // ⛔ không cho override khi round đã kết thúc
+  if (Date.now() >= wheelRound.endAt)
+    return res.json({ ok:false, message:"ROUND_ENDED" });
+
+  const allowed = [0.5,1.2,1.5,2,5,10];
+  if (!allowed.includes(multiplier))
+    return res.json({ ok:false, message:"INVALID_MULTIPLIER" });
+
+  const index = allowed.indexOf(multiplier);
+
+  const hash = crypto
+    .createHash("sha256")
+    .update(wheelRound.id + ":" + multiplier + ":override")
+    .digest("hex");
+
+  // 🔥 OVERRIDE THẲNG
+  wheelRound.secretResult = {
+    multiplier,
+    index,
+    hash,
+    overridden: true,
+    overriddenBy: uid,
+    overriddenAt: Date.now()
+  };
+
+  console.warn(
+    "🛑 [WHEEL OVERRIDE]",
+    "round", wheelRound.id,
+    "→ x" + multiplier,
+    "by", uid
+  );
+
+  res.json({
+    ok:true,
+    roundId: wheelRound.id,
+    result: wheelRound.secretResult
+  });
+});
+
+
+
+
+
+app.post("/api/admin/dtp-override", express.json(), (req,res)=>{
+
+const { winner } = req.body;
+
+if(!["dragon","tiger","phoenix"].includes(winner)){
+  return res.json({ ok:false });
+}
+
+// 🔥 ghi đè kết quả round hiện tại
+dtpRound.secretResult = winner;
+
+console.log("ADMIN OVERRIDE:", winner);
+
+res.json({
+  ok:true,
+  round: dtpRound.id,
+  winner
+});
+
+});
+
+
+
+
+
+
+
+app.post("/api/invest/close-early", (req, res) => {
+  try {
+    const uid = req.headers["x-uid"];
+    if (!uid) {
+      return res.json({ ok:false, message:"NOT_LOGIN" });
+    }
+
+    if (!investRound || !Array.isArray(investRound.orders)) {
+      return res.json({
+        ok:false,
+        message:"The session is not ready yet"
+      });
+    }
+
+    const order = investRound.orders.find(o => o.uid === uid);
+    if (!order) {
+      return res.json({
+        ok:false,
+        message:"You have not placed an order"
+      });
+    }
+
+    // ⏱ kiểm tra 10 giây
+    if (!order.entryTime || Date.now() - order.entryTime < 10_000) {
+      return res.json({
+        ok:false,
+        message:"You can close your position only after 10 seconds"
+      });
+    }
+
+    const asset = order.asset;
+    const chart = investRound.chart?.[asset];
+    if (!Array.isArray(chart)) {
+      return res.json({
+        ok:false,
+        message:"Price data is unavailable"
+      });
+    }
+
+    const nowSec = Math.min(
+      chart.length - 1,
+      Math.floor((Date.now() - investRound.startAt) / 1000)
+    );
+
+    const priceNow = chart[nowSec];
+    if (typeof priceNow !== "number") {
+      return res.json({
+        ok:false,
+        message:"Unable to retrieve the current price"
+      });
+    }
+
+    // 📈 tính %
+    let rawPercent =
+      Math.round((priceNow - order.entryPrice) / order.entryPrice * 100);
+
+    let percent =
+      order.direction === "down" ? -rawPercent : rawPercent;
+
+    percent = Math.max(-30, Math.min(30, percent));
+
+    const profit =
+      Math.round(order.coin * percent / 100);
+
+    // 💰 cộng coin
+    const users = loadUsers();
+    const me = users[uid];
+    if (!me?.profile) {
+      return res.json({ ok:false, message:"USER_INVALID" });
+    }
+
+    me.profile.coins += order.coin + profit;
+
+    me.investHistory = me.investHistory || [];
+    me.investHistory.unshift({
+      roundId: investRound.id, 
+      ts: Date.now(),
+      asset,
+      direction: order.direction,
+      coin: order.coin,
+      percent,
+      profit,
+      entryPrice: order.entryPrice,
+      endPrice: priceNow,
+      earlyClose: true
+    });
+
+    const now = Date.now();
+me.investHistory = me.investHistory.filter(
+  h => now - h.ts <= ONE_DAY
+);
+
+
+    saveUsers(users);
+    emitCoinUpdate(uid);
+
+
+// 🔒 ĐÁNH DẤU ĐÃ CHỐT SỚM TRONG ROUND
+investRound.closedEarly ||= [];
+if (!investRound.closedEarly.includes(uid)) {
+  investRound.closedEarly.push(uid);
+}
+
+// ❌ xoá lệnh khỏi round
+investRound.orders =
+  investRound.orders.filter(o => o.uid !== uid);
+
+saveInvestState(investRound);
+
+
+    // ✅ TRẢ KẾT QUẢ CHO CLIENT
+    return res.json({
+      ok:true,
+      percent,
+      profit,
+      coin: order.coin,
+      direction: order.direction,
+      entryPrice: order.entryPrice,
+      endPrice: priceNow
+    });
+
+  } catch (err) {
+    console.error("❌ close-early error:", err);
+    return res.status(500).json({
+      ok:false,
+      message:"SERVER_ERROR"
+    });
+  }
+});
+
+
+
+app.get("/admin-time-race.html",(req,res)=>{
+  res.sendFile(
+    path.join(__dirname,"public/admin-time-race.html")
+  );
+});
+
+
+
+app.get("/api/deposit-history",(req,res)=>{
+
+  const uid = req.headers["x-uid"];
+
+  if(!uid) return res.json({history:[]});
+
+  const users = loadUsers();
+  const user = users[uid];
+
+  if(!user) return res.json({history:[]});
+
+  res.json({
+    history: user.profile.depositLogs || []
+  });
+
+});
+
+
+
+
+app.get("/api/user-info",(req,res)=>{
+
+const q = String(req.query.uid || "").toLowerCase()
+
+const users = loadUsers()
+
+let found = null
+
+for(const uid in users){
+
+const u = users[uid]
+
+if(
+uid.toLowerCase() === q ||
+u.profile?.name?.toLowerCase() === q
+){
+found = u
+break
+}
+
+}
+
+if(!found){
+return res.json({
+success:false
+})
+}
+
+res.json({
+success:true,
+user:{
+uid: found.profile.uid,
+name: found.profile.name,
+avatar: found.profile.avatar,
+coins: found.profile.coins
+}
+})
+
+})
+
+
+
+app.get("/api/wheel8-round",(req,res)=>{
+
+res.json({
+roundId: wheel8Round.id
+})
+
+})
+
+
+
+
+app.get("/api/time-race/my-history",(req,res)=>{
+
+  const uid = req.headers["x-uid"];
+  if(!uid) return res.json([]);
+
+  const users = loadUsers();
+  const me = users[uid];
+
+  res.json(me?.timeRaceHistory || []);
+});
+
+
+// 🔐 ADMIN – GET CURRENT RPS BETS
+app.get("/api/admin/rps/bets", (req, res) => {
+
+  const uid = req.headers["x-uid"];
+  if (!uid) return res.status(401).json({ ok:false });
+
+  const users = loadUsers();
+  const me = users[uid];
+
+  if (me?.role !== "admin")
+    return res.status(403).json({ ok:false });
+
+  if (!rpsRound || !Array.isArray(rpsRound.bets)) {
+    return res.json({ ok:true, list: [] });
+  }
+
+  const list = rpsRound.bets.map(b => {
+    const u = users[b.uid];
+    return {
+      uid: b.uid,
+      name: u?.profile?.name || "Player",
+      bet: b.bet,
+      hand: b.hand
+    };
+  });
+
+  res.json({
+    ok:true,
+    roundId: rpsRound.id,
+    list
+  });
+});
+
+
+
+
+// ================================
+// 🔐 ADMIN – XEM TRƯỚC KẾT QUẢ RPS
+// ================================
+app.get("/api/admin/rps/secret", (req, res) => {
+
+  const uid = req.headers["x-uid"];
+  if (!uid) return res.status(401).json({ ok:false });
+
+  const users = loadUsers();
+  const me = users[uid];
+
+  if (me?.role !== "admin") {
+    return res.status(403).json({ ok:false });
+  }
+
+  if (!rpsRound) {
+    return res.json({ ok:false, message:"NO_ACTIVE_ROUND" });
+  }
+
+  return res.json({
+    ok: true,
+    roundId: rpsRound.id,
+    endAt: rpsRound.endAt,
+    secretHand: rpsRound.secretHand
+  });
+});
+
+
+
+app.get("/api/admin/dtp-bets",(req,res)=>{
+
+const users = loadUsers();
+
+const map = {};
+
+dtpRound.bets.forEach(b=>{
+
+  if(!map[b.uid]){
+    map[b.uid] = {
+      name: users[b.uid]?.profile?.name || "Player",
+      dragon:0,
+      tiger:0,
+      phoenix:0
+    };
+  }
+
+  map[b.uid][b.side] += b.bet;
+
+});
+
+// gộp theo user
+const list = Object.values(map).map(p=>({
+
+  name: p.name,
+  dragon: p.dragon,
+  tiger: p.tiger,
+  phoenix: p.phoenix,
+  total: p.dragon + p.tiger + p.phoenix
+
+}));
+
+// 🔥 tính pool toàn phòng
+const pool = {
+  dragon:0,
+  tiger:0,
+  phoenix:0
+};
+
+dtpRound.bets.forEach(b=>{
+  pool[b.side] += b.bet;
+});
+
+// trả dữ liệu
+res.json({
+  round: dtpRound.id,
+  bets: list,
+  pool: pool   // 🔥 THÊM DÒNG NÀY
+});
+
+});
+
+
+
+// 🛑 ADMIN OVERRIDE RPS RESULT (DANGEROUS)
+app.post("/api/admin/rps/override", (req, res) => {
+
+  const uid = req.headers["x-uid"];
+  const { hand } = req.body;
+
+  if (!uid) return res.status(401).json({ ok:false });
+
+  const users = loadUsers();
+  const me = users[uid];
+
+  if (me?.role !== "admin") {
+    return res.status(403).json({ ok:false });
+  }
+
+  if (!rpsRound) {
+    return res.json({ ok:false, message:"NO_ACTIVE_ROUND" });
+  }
+
+  // ⛔ Không cho override khi round đã kết thúc
+  if (Date.now() >= rpsRound.endAt) {
+    return res.json({ ok:false, message:"ROUND_ENDED" });
+  }
+
+  const allowed = ["rock","paper","scissors"];
+  if (!allowed.includes(hand)) {
+    return res.json({ ok:false, message:"INVALID_HAND" });
+  }
+
+  // 🔥 OVERRIDE THẲNG
+  rpsRound.secretHand = hand;
+
+// 🔔 REALTIME PUSH CHO ADMIN
+io.emit("admin-rps-secret-update", {
+  roundId: rpsRound.id,
+  secretHand: rpsRound.secretHand,
+  endAt: rpsRound.endAt,
+  overridden: true
+});
+
+
+
+  console.warn(
+    "🛑 [RPS OVERRIDE]",
+    "round", rpsRound.id,
+    "→", hand,
+    "by", uid
+  );
+
+  res.json({
+    ok:true,
+    roundId: rpsRound.id,
+    secretHand: rpsRound.secretHand
+  });
+});
+
+
+
+// 🔐 ADMIN – GET CURRENT WHEEL BETS
+app.get("/api/admin/wheel/bets", (req, res) => {
+  const uid = req.headers["x-uid"];
+  if (!uid) return res.status(401).json({ ok:false });
+
+  const users = loadUsers();
+  const me = users[uid];
+  if (me?.role !== "admin")
+    return res.status(403).json({ ok:false });
+
+  if (!wheelRound || !Array.isArray(wheelRound.bets)) {
+    return res.json({ ok:true, list: [] });
+  }
+
+  const list = wheelRound.bets.map(b => {
+    const u = users[b.uid];
+    return {
+      uid: b.uid,
+      name: u?.profile?.name || "Player",
+      bet: b.bet
+    };
+  });
+
+  res.json({
+    ok:true,
+    roundId: wheelRound.id,
+    list
+  });
+});
+
+
+app.get("/api/admin/wheel/secret", (req, res) => {
+  const uid = req.headers["x-uid"];
+  if (!uid) return res.status(401).json({ ok:false });
+
+  const users = loadUsers();
+  const me = users[uid];
+
+  if (me?.role !== "admin") {
+    return res.status(403).json({ ok:false });
+  }
+
+  if (!wheelRound?.secretResult) {
+    return res.json({ ok:false, message:"NO_ROUND" });
+  }
+
+res.json({
+  ok: true,
+  roundId: wheelRound.id,              // giữ nếu cần debug
+  roundToday: wheelRoundCountToday + 1, // ✅ ROUND TRONG NGÀY
+  startAt: wheelRound.startAt,
+  endAt: wheelRound.endAt,
+  result: wheelRound.secretResult
+});
+
+});
+
+
+
+// Admin DTP ===//
+app.get("/api/admin/dtp-secret",(req,res)=>{
+
+res.json({
+round: dtpRound.id,
+secret: dtpRound.secretResult,
+endAt: dtpRound.endAt
+});
+
+});
+
+
+// ================================
+// 🧠 HEALTH – GET DATA
+// ================================
+app.get("/api/health/:uid", (req, res) => {
+  const { uid } = req.params;
+
+  if (!uid) {
+    return res.status(400).json({ ok: false, error: "NO_UID" });
+  }
+
+  const file = path.join(HEALTH_DIR, `${uid}.json`);
+
+  if (!fs.existsSync(file)) {
+    return res.json({
+      ok: true,
+      healthData: {}
+    });
+  }
+
+  try {
+    const raw = fs.readFileSync(file, "utf8");
+    const json = raw ? JSON.parse(raw) : {};
+    return res.json({
+      ok: true,
+      healthData: json.healthData || {}
+    });
+  } catch (e) {
+    console.error("❌ Load health failed:", e);
+    return res.status(500).json({
+      ok: false,
+      error: "READ_HEALTH_FAILED"
+    });
+  }
+});
+
+
+
+// ================================
+// 📜 WHEEL – MY BET HISTORY
+// ================================
+app.get("/api/wheel/my-history", (req, res) => {
+  const uid = req.headers["x-uid"];
+  if (!uid) return res.json({ ok:false });
+
+  const users = loadUsers();
+  const me = users[uid];
+  if (!me) return res.json({ ok:false });
+
+  res.json({
+    ok: true,
+    list: me.wheelBetHistory || []
+  });
+});
+
+
+
+app.get("/api/invest/my-history", (req, res) => {
+  const uid = req.headers["x-uid"];
+  if (!uid) return res.json({ ok: false });
+
+  const users = loadUsers();
+  const me = users[uid];
+  if (!me) return res.json({ ok: false });
+
+  res.json({
+    ok: true,
+    list: me.investHistory || []
+  });
+});
+
+
+
+app.get("/api/invest/chart", (req, res) => {
+  res.json({
+    ok: true,
+    roundId: investRound.id,
+    startAt: investRound.startAt,
+    chart: investRound.chart
+  });
+});
+
+
+
+app.get("/api/invest/round", (req, res) => {
+  const uid = req.headers["x-uid"];
+
+  res.json({
+    ok: true,
+    roundId: investRound.id,
+    startAt: investRound.startAt,
+    endAt: investRound.endAt,
+    orders: investRound.orders || [],
+    closedEarly: investRound.closedEarly?.includes(uid) || false
+  });
+});
+
+
+
+// ================================
+// 🔒 CHECK USER CÓ ĐƯỢC VÀO INVEST KHÔNG
+// ================================
+app.get("/api/invest/can-enter", (req, res) => {
+  const uid = req.headers["x-uid"];
+  if (!uid) {
+    return res.json({ ok: false, reason: "NOT_LOGIN" });
+  }
+
+  // round hiện tại
+  if (!investRound) {
+    return res.json({ ok: true });
+  }
+
+  const now = Date.now();
+
+  // 🔍 user có lệnh đang mở không
+  const hasOrder =
+    Array.isArray(investRound.orders) &&
+    investRound.orders.some(o => o.uid === uid);
+
+  // 🔒 round chưa kết thúc + đã vào lệnh
+  if (hasOrder && investRound.endAt > now) {
+    return res.json({
+      ok: false,
+      locked: true,
+      roundId: investRound.id,
+      endAt: investRound.endAt
+    });
+  }
+
+  // 🔒 user đã chốt sớm trong round này
+  if (
+    Array.isArray(investRound.closedEarly) &&
+    investRound.closedEarly.includes(uid) &&
+    investRound.endAt > now
+  ) {
+    return res.json({
+      ok: false,
+      locked: true,
+      roundId: investRound.id,
+      endAt: investRound.endAt
+    });
+  }
+
+  // ✅ cho phép vào
+  return res.json({ ok: true });
+});
+
+
+
+// ================================
+// 📜 INVEST HISTORY – CHỈ 24H
+// ================================
+app.get("/api/invest/history", (req, res) => {
+  const now = Date.now();
+
+  // 🔥 lọc lại lần nữa cho chắc (kể cả file cũ)
+  const list24h = (investHistory || []).filter(
+    r => r.ts && now - r.ts <= ONE_DAY
+  );
+
+  res.json({
+    ok: true,
+    list: list24h
+  });
+});
+
+
+
+// ================================
+// 🧠 HEALTH – SAVE DATA
+// ================================
+app.post("/api/health/:uid", (req, res) => {
+  const { uid } = req.params;
+  const healthData = req.body;
+
+  if (!uid) {
+    return res.status(400).json({ ok: false, error: "NO_UID" });
+  }
+
+  if (!healthData || typeof healthData !== "object") {
+    return res.status(400).json({
+      ok: false,
+      error: "INVALID_DATA"
+    });
+  }
+
+  const file = path.join(HEALTH_DIR, `${uid}.json`);
+
+  try {
+    fs.writeFileSync(
+      file,
+      JSON.stringify(
+        {
+          uid,
+          healthData,
+          updatedAt: Date.now()
+        },
+        null,
+        2
+      )
+    );
+
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error("❌ Save health failed:", e);
+    return res.status(500).json({
+      ok: false,
+      error: "SAVE_HEALTH_FAILED"
+    });
+  }
+});
+
+
+
+
+app.post("/api/invest", (req, res) => {
+  try {
+    const uid = req.headers["x-uid"];
+    const { type, coin, direction } = req.body;
+
+    // 🔐 auth
+    if (!uid) {
+      return res.json({ ok:false, message:"NOT_LOGIN" });
+    }
+
+    // 🔒 chặn user đã chốt sớm
+    if (Array.isArray(investRound.closedEarly) &&
+        investRound.closedEarly.includes(uid)) {
+      return res.json({
+        ok:false,
+        message:"You have already closed a position early in this round. Please wait for the next round."
+      });
+    }
+
+    // 🎯 validate body
+    if (!type || !coin || !["up","down"].includes(direction)) {
+      return res.json({
+        ok:false,
+        message:"Invalid order data"
+      });
+    }
+
+    // ⛔ chặn vào nhiều lệnh
+    if (investRound.orders.some(o => o.uid === uid)) {
+      return res.json({
+        ok:false,
+        message:"You have already placed an order in this round"
+      });
+    }
+
+    // ⏳ chặn sát giờ
+    const leftSec = Math.floor(
+      (investRound.endAt - Date.now()) / 1000
+    );
+    if (leftSec <= 5) {
+      return res.json({
+        ok:false,
+        message:"This round is about to end"
+      });
+    }
+
+    // 👤 user
+    const users = loadUsers();
+    const me = users[uid];
+    if (!me?.profile) {
+      return res.json({ ok:false, message:"USER_INVALID" });
+    }
+
+    if (me.profile.coins < coin) {
+      return res.json({
+        ok:false,
+        message:"Insufficient coins"
+      });
+    }
+
+    // 📊 xác định entry price TRƯỚC
+    const nowSec = Math.floor(
+      (Date.now() - investRound.startAt) / 1000
+    );
+
+    const entryPrice =
+      investRound.chart?.[type]?.[nowSec];
+
+    if (typeof entryPrice !== "number") {
+      return res.json({
+        ok:false,
+        message:"Unable to retrieve the entry price"
+      });
+    }
+
+    // ➖ trừ coin SAU KHI OK HẾT
+    me.profile.coins -= coin;
+    saveUsers(users);
+    emitCoinUpdate(uid);
+
+    // 📥 lưu lệnh
+    investRound.orders.push({
+      uid,
+      asset: type,
+      coin,
+      direction,
+      entrySec: nowSec,
+      entryPrice,
+      entryTime: Date.now()
+    });
+
+    saveInvestState(investRound);
+
+    // 🔔 realtime
+    io.emit("invest-order-new", {
+      uid,
+      asset: type,
+      coin,
+      direction,
+      entrySec: nowSec,
+      entryPrice
+    });
+
+    return res.json({
+      ok:true,
+      roundId: investRound.id,
+      endAt: investRound.endAt
+    });
+
+  } catch (err) {
+    console.error("❌ /api/invest error:", err);
+    return res.status(500).json({
+      ok:false,
+      message:"SERVER_ERROR"
+    });
+  }
+});
+
+
+
+
+
+
+
+// ===== GET INBOX (SYNC KHI MỞ MESSAGES) =====
+app.get("/api/inbox", (req, res) => {
+  const uid = req.headers["x-uid"];
+  if (!uid) return res.status(403).json({ error: "no_auth" });
+
+  const list = userInbox.get(uid) || [];
+
+  res.json({
+    ok: true,
+    list
+  });
+});
+
+
+
+app.get("/api/withdraw-history", (req, res) => {
+  const uid = req.headers["x-uid"];
+  if (!uid) return res.status(403).json({ error: "no_auth" });
+
+  const list = loadWithdraws();
+
+  // 🔒 chỉ trả về của chính user
+  const mine = list.filter(w => w.uid === uid);
+
+  res.json({
+    ok: true,
+    list: mine
+  });
+});
+
+
+// 🔐 BẢO VỆ TRANG ADMIN
+app.get("/lsp-admin-128995.html", (req, res) => {
+  const uid = req.headers["x-uid"];
+  if (!uid) return res.status(403).send("Forbidden");
+
+  const db = loadUsers();
+  const acc = db[uid];
+
+  if (!acc || acc.role !== "admin") {
+    return res.status(403).send("Not allowed");
+  }
+
+  res.sendFile(path.join(__dirname, "public", "lsp-admin-128995.html"));
+});
+
+
+app.post("/api/admin/market/approve-dispute", (req,res)=>{
+  const { adminUid, orderId } = req.body;
+
+  const users = loadUsers();
+  if(!users[adminUid] || users[adminUid].role !== "admin")
+    return res.status(403).json({ error:"not_admin" });
+
+  const market = loadMarket();
+  let found, booth, boothId;
+
+  for(const [id,b] of Object.entries(market)){
+    const o = (b.orders||[]).find(x=>x.id===orderId);
+    if(o){
+      found=o; booth=b; boothId=id;
+      break;
+    }
+  }
+
+  if(!found || found.status !== "dispute"){
+    return res.json({ ok:false, error:"NOT_DISPUTE" });
+  }
+
+  // ✅ set done
+  found.status = "done";
+  found.doneAt = Date.now();
+  found.adminApproved = true;   // 🧑‍⚖️ ĐÁNH DẤU ADMIN DUYỆT
+  found.adminApprovedAt = Date.now();
+
+
+  // 💰 trả tiền cho seller
+  const seller = users[booth.ownerUid];
+  const amount = Number(found.escrow || 0);
+
+  if(seller?.profile && amount > 0){
+    seller.profile.coinReceived =
+      (seller.profile.coinReceived || 0) + amount;
+    found.escrow = 0;
+  }
+
+  saveUsers(users);
+  saveMarket(market);
+
+  emitCoinUpdate(booth.ownerUid);
+
+  io.emit("order-updated",{ boothId, order: found });
+
+  // 🔔 notify buyer + seller
+  sendPushToUser(found.buyerUid,{
+    title:"Dispute resolved",
+    body:"An admin has approved the order.",
+    tag:"dispute-approved"
+  });
+
+  sendPushToUser(booth.ownerUid,{
+    title:"Order approved",
+    body:`An admin has approved order ${found.productName}`,
+    tag:"dispute-approved"
+  });
+
+  res.json({ ok:true });
+});
+
+
+
+app.get("/api/admin/market/disputes", (req,res)=>{
+  const adminUid = req.headers["x-uid"];
+  const users = loadUsers();
+
+  if(!users[adminUid] || users[adminUid].role !== "admin")
+    return res.status(403).json({ error:"not_admin" });
+
+  const market = loadMarket();
+  const list = [];
+
+  for(const [boothId, booth] of Object.entries(market)){
+    (booth?.orders || []).forEach(o=>{
+      if(o.status === "dispute"){
+        list.push({
+          boothId,
+          boothName: booth.name,
+          ownerUid: booth.ownerUid,
+          order: o
+        });
+      }
+    });
+  }
+
+  res.json({ ok:true, list });
+});
+
+
+
+
+// ===== ADMIN LIST USERS =====
+app.get("/api/admin/users", (req, res) => {
+  const adminUid = req.headers["x-uid"];
+  if (!adminUid) return res.status(403).json({ error: "no_auth" });
+
+  const db = loadUsers();
+  const admin = db[adminUid];
+
+  if (!admin || admin.role !== "admin") {
+    return res.status(403).json({ error: "not_admin" });
+  }
+
+  const users = Object.values(db).map(u => ({
+    uid: u.profile?.uid,
+    name: u.profile?.name || "",
+    coins: u.profile?.coins || 0,
+    level: u.profile?.level || 1,
+    exp: u.profile?.exp || 0,
+    coinSent: u.profile?.coinSent || 0,
+    coinReceived: u.profile?.coinReceived || 0,
+    role: u.role || "user",
+    blocked: !!u.profile?.accountBlocked
+
+
+  }));
+
+  res.json({ ok: true, users });
+});
+
+// ===== ADMIN: LIVE ROOMS =====
+app.get("/api/admin/live-rooms", (req, res) => {
+  const adminUid = req.headers["x-uid"];
+  if (!adminUid) return res.status(403).json({ error: "no_auth" });
+
+  const db = loadUsers();
+  const admin = db[adminUid];
+
+  if (!admin || admin.role !== "admin") {
+    return res.status(403).json({ error: "not_admin" });
+  }
+
+  res.json({
+    ok: true,
+    rooms: getLobbyList(),
+    ts: Date.now()
+  });
+});
+
+app.get("/api/market", (req,res)=>{
+  cleanupExpiredBooths();
+  const market = loadMarket();
+
+  // 🔧 đảm bảo product nào cũng có images[]
+  Object.values(market).forEach(booth=>{
+    (booth?.products || []).forEach(p=>{
+      if (!Array.isArray(p.images) || p.images.length === 0) {
+        p.images = p.image ? [p.image] : [];
+      }
+    });
+  });
+
+  res.json({ ok:true, market });
+});
+
+
+app.post("/api/market/order/received", (req,res)=>{
+  const uid = req.headers["x-uid"];
+  const { orderId } = req.body;
+
+  if(!uid) return res.json({ ok:false, error:"NOT_LOGIN" });
+
+  const market = loadMarket();
+  let found, booth, boothId;
+
+  for(const [id,b] of Object.entries(market)){
+    const o = (b.orders || []).find(x=>x.id===orderId);
+    if(o){
+      found = o;
+      booth = b;
+      boothId = id;
+      break;
+    }
+  }
+
+  if(!found) return res.json({ ok:false, error:"ORDER_NOT_FOUND" });
+  if(found.buyerUid !== uid)
+    return res.json({ ok:false, error:"NO_PERMISSION" });
+
+  if(found.status !== "contacted"){
+    return res.json({
+      ok:false,
+      error:"INVALID_STATUS",
+      message:"You can confirm only after the seller has contacted the buyer."
+    });
+  }
+
+
+  found.status = "buyer_received";
+  found.receivedAt = Date.now();
+
+  saveMarket(market);
+
+  io.emit("order-updated",{ boothId, order: found });
+
+
+// =========================
+// 🔔 NOTIFY SELLER: BUYER ĐÃ NHẬN HÀNG
+// =========================
+const notifyText =
+  `The buyer has confirmed receipt of: ${found.productName} ×${found.qty}`;
+
+// 1️⃣ REALTIME (nếu seller đang online)
+const sockets = activeUsers.get(booth.ownerUid);
+if (sockets) {
+  for (const sid of sockets) {
+    io.to(sid).emit("system-notify", {
+      type: "order-received",
+      boothId,
+      orderId: found.id,
+      text: notifyText,
+      ts: Date.now()
+    });
+  }
+}
+
+// 2️⃣ PUSH NOTIFICATION (offline / tab khác)
+sendPushToUser(booth.ownerUid, {
+  title: "The buyer has received the order",
+  body: notifyText,
+  tag: "order-received"
+});
+
+  res.json({ ok:true });
+});
+
+
+
+
+app.post("/api/market/order/dispute", (req,res)=>{
+  const uid = req.headers["x-uid"];
+  const { orderId, reason } = req.body;
+
+  if(!uid) return res.json({ ok:false, error:"NOT_LOGIN" });
+
+  const market = loadMarket();
+  let found, booth, boothId;
+
+  for(const [id,b] of Object.entries(market)){
+    const o = (b.orders||[]).find(x=>x.id===orderId);
+    if(o){
+      found=o; booth=b; boothId=id;
+      break;
+    }
+  }
+
+  if(!found) return res.json({ ok:false, error:"ORDER_NOT_FOUND" });
+  if(found.buyerUid !== uid)
+    return res.json({ ok:false, error:"NO_PERMISSION" });
+
+  if(!["contacted","buyer_received"].includes(found.status)){
+    return res.json({
+      ok:false,
+      message:"You cannot file a dispute in the current order status."
+    });
+  }
+
+  // 🔒 gắn dispute
+  found.status = "dispute";
+
+found.dispute = {
+  reason,
+  evidences: Array.isArray(req.body.evidences)
+    ? req.body.evidences
+    : [],
+  ts: Date.now()
+};
+
+
+  saveMarket(market);
+
+  io.emit("order-updated",{ boothId, order: found });
+
+  // 🔔 notify seller
+  sendPushToUser(booth.ownerUid,{
+    title:"Order disputed",
+    body:`${found.productName} ×${found.qty}`,
+    tag:"order-dispute"
+  });
+
+  res.json({ ok:true });
+});
+
+
+
+app.post("/api/admin/market/refund", (req,res)=>{
+  const { adminUid, orderId } = req.body;
+
+  const users = loadUsers();
+  if(!users[adminUid] || users[adminUid].role!=="admin")
+    return res.status(403).json({ error:"not_admin" });
+
+  const market = loadMarket();
+  let found, booth, boothId;
+
+  for(const [id,b] of Object.entries(market)){
+    const o=(b.orders||[]).find(x=>x.id===orderId);
+    if(o){
+      found=o; booth=b; boothId=id;
+      break;
+    }
+  }
+
+  if(!found || found.status!=="dispute")
+    return res.json({ ok:false, error:"NOT_DISPUTE" });
+
+  const buyer = users[found.buyerUid];
+  if(buyer?.profile){
+    buyer.profile.coins += found.escrow;
+  }
+
+  found.status = "refunded";
+  found.escrow = 0;
+  found.refundedAt = Date.now();
+
+  saveUsers(users);
+  saveMarket(market);
+
+  emitCoinUpdate(found.buyerUid);
+
+  io.emit("order-updated",{ boothId, order: found });
+
+  res.json({ ok:true });
+});
+
+
+app.post("/api/market/order/hide", (req, res) => {
+  const uid = req.headers["x-uid"];
+  const { orderId, role } = req.body; 
+  // role = "buyer" | "seller"
+
+  if (!uid) return res.json({ ok: false, error: "NOT_LOGIN" });
+
+  const market = loadMarket();
+  let order, booth, boothId;
+
+  // ✅ PHẢI LẤY boothId TỪ KEY
+  for (const [id, b] of Object.entries(market)) {
+    const o = (b.orders || []).find(x => x.id === orderId);
+    if (o) {
+      order = o;
+      booth = b;
+      boothId = id; // 🔥 CHÍNH LÀ CHỖ NÀY
+      break;
+    }
+  }
+
+  if (!order) return res.json({ ok:false, error:"ORDER_NOT_FOUND" });
+
+// 🔒 CHỈ CHO XOÁ KHI ĐƠN ĐÃ HOÀN TẤT HOẶC ĐÃ HUỶ
+if (!["done", "cancelled", "refunded"].includes(order.status)) {
+
+  return res.json({
+    ok: false,
+    error: "ORDER_NOT_ALLOWED",
+    message: "Order history can only be deleted after the order is completed or canceled."
+  });
+}
+
+
+
+
+  if (role === "buyer") {
+    if (order.buyerUid !== uid)
+      return res.json({ ok:false, error:"NO_PERMISSION" });
+    order.hiddenByBuyer = true;
+  }
+
+  if (role === "seller") {
+    if (booth.ownerUid !== uid)
+      return res.json({ ok:false, error:"NO_PERMISSION" });
+    order.hiddenBySeller = true;
+  }
+
+  saveMarket(market);
+
+  // 🔄 realtime update ĐÚNG boothId
+  io.emit("order-updated", {
+    boothId,
+    order
+  });
+
+  res.json({ ok:true });
+});
+
+
+// 📎 UPLOAD BẰNG CHỨNG KHIẾU NẠI (ảnh / video)
+app.post("/api/upload-dispute-media", postMediaUpload.single("file"), async (req, res) => {
+
+    if (!req.file)
+      return res.status(400).json({ error: "NO_FILE" });
+
+    const safeName = req.file.originalname
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9._-]/g, "_");
+
+    const key = `disputes/${Date.now()}_${safeName}`;
+
+    const url = await uploadToR2(
+      req.file.buffer,
+      key,
+      req.file.mimetype
+    );
+
+    res.json({
+      ok: true,
+      url,
+      type: req.file.mimetype.startsWith("video")
+        ? "video"
+        : "image"
+    });
+  }
+);
+
+
+
+
+
+app.post("/api/market/order/done", (req, res) => {
+  const uid = req.headers["x-uid"];
+  const { orderId } = req.body;
+
+  if (!uid) return res.json({ ok: false, error: "NOT_LOGIN" });
+
+  const market = loadMarket();
+  let found, booth, boothId;
+
+  // 🔍 tìm đơn + boothId ĐÚNG
+  for (const [id, b] of Object.entries(market)) {
+    const o = (b.orders || []).find(x => x.id === orderId);
+    if (o) {
+      found = o;
+      booth = b;
+      boothId = id;
+      break;
+    }
+  }
+
+  if (!found) return res.json({ ok: false, error: "ORDER_NOT_FOUND" });
+
+  // 🔒 chỉ chủ shop
+  if (booth.ownerUid !== uid)
+    return res.json({ ok: false, error: "NO_PERMISSION" });
+
+  // 🔒 chỉ khi người mua đã nhận hàng
+  if (found.status !== "buyer_received") {
+    return res.json({
+      ok: false,
+      error: "WAIT_BUYER",
+      message: "Waiting for the buyer to confirm receipt."
+    });
+  }
+
+  // =========================
+  // ✅ 1️⃣ cập nhật trạng thái
+  // =========================
+  found.status = "done";
+  found.doneAt = Date.now();
+
+  // =========================
+  // 💰 2️⃣ TRẢ TIỀN CHO SELLER
+  // =========================
+  const users = loadUsers();
+  const seller = users[booth.ownerUid];
+
+  const amount = Number(found.escrow || found.totalPrice || 0);
+
+  if (seller && seller.profile && amount > 0) {
+    seller.profile.coinReceived =
+      (seller.profile.coinReceived || 0) + amount;
+
+    // 🔓 giải phóng escrow
+    found.escrow = 0;
+  }
+
+  saveUsers(users);
+  saveMarket(market);
+
+  // 🔄 realtime update ĐÚNG boothId
+  io.emit("order-updated", {
+    boothId,
+    order: found
+  });
+
+  // 🔄 realtime update coin cho seller
+  emitCoinUpdate(booth.ownerUid);
+
+  // =========================
+  // 🔔 notify buyer
+  // =========================
+ const notifyText = `Order completed: ${found.productName} ×${found.qty}`;
+
+  const sockets = activeUsers.get(found.buyerUid);
+  if (sockets) {
+    for (const sid of sockets) {
+      io.to(sid).emit("system-notify", {
+        type: "order-done",
+        boothId,
+        text: notifyText,
+        ts: Date.now()
+      });
+    }
+  }
+
+  sendPushToUser(found.buyerUid, {
+    title: "Order completed",
+    body: notifyText,
+    tag: "order-done"
+  });
+
+  res.json({ ok: true });
+});
+
+
+
+
+
+app.post("/api/market/order/contact", (req, res) => {
+  const uid = req.headers["x-uid"];
+  const { orderId } = req.body;
+
+  if (!uid) return res.json({ ok:false, error:"NOT_LOGIN" });
+
+  const market = loadMarket();
+  let found, booth;
+
+  for (const b of Object.values(market)) {
+    const o = (b.orders || []).find(x => x.id === orderId);
+    if (o) {
+      found = o;
+      booth = b;
+      break;
+    }
+  }
+
+  if (!found) return res.json({ ok:false, error:"ORDER_NOT_FOUND" });
+
+  // 🔒 chỉ chủ gian
+  if (booth.ownerUid !== uid)
+    return res.json({ ok:false, error:"NO_PERMISSION" });
+
+  // 🔒 chỉ khi pending
+  if (found.status !== "pending") {
+    return res.json({
+      ok:false,
+      error:"INVALID_STATUS",
+      message:"This order cannot be confirmed."
+    });
+  }
+
+  // ✅ cập nhật trạng thái
+  found.status = "contacted";
+  found.contactedAt = Date.now();
+
+  saveMarket(market);
+
+  // 🔄 realtime update booth
+io.emit("order-updated", {
+  boothId: booth.boothId,
+  order: found
+});
+
+
+
+  // 🔔 notify buyer
+  const notifyText = `The seller has contacted the buyer about: ${found.productName}`;
+
+  const sockets = activeUsers.get(found.buyerUid);
+  if (sockets) {
+    for (const sid of sockets) {
+      io.to(sid).emit("system-notify", {
+        type: "order-contacted",
+        boothId: booth.id,
+        text: notifyText,
+        ts: Date.now()
+      });
+    }
+  }
+
+  sendPushToUser(found.buyerUid, {
+    title: "Order contact confirmed",
+    body: notifyText,
+    tag: "order-contacted"
+  });
+
+  res.json({ ok:true });
+});
+
+
+
+app.post("/api/market/order/cancel", (req,res)=>{
+  const uid = req.headers["x-uid"];
+  const { orderId } = req.body;
+
+  if(!uid) return res.json({ ok:false, error:"NOT_LOGIN" });
+
+  const market = loadMarket();
+  let found, booth, product;
+
+  for(const b of Object.values(market)){
+    const o = (b.orders || []).find(x => x.id === orderId);
+    if(o){
+      found = o;
+      booth = b;
+      product = (b.products || []).find(p => p.id === o.productId);
+      break;
+    }
+  }
+
+  if(!found) return res.json({ ok:false, error:"ORDER_NOT_FOUND" });
+  if(found.buyerUid !== uid)
+    return res.json({ ok:false, error:"NO_PERMISSION" });
+
+if(found.status === "contacted"){
+  return res.json({
+    ok:false,
+    error:"ORDER_CONTACTED",
+    message:"The seller has already contacted the buyer. This order cannot be canceled."
+  });
+}
+
+if(found.status !== "pending"){
+  return res.json({
+    ok:false,
+    error:"CANNOT_CANCEL",
+    message:"This order cannot be canceled."
+  });
+}
+
+
+  // =========================
+  // 1️⃣ cập nhật trạng thái
+  // =========================
+  found.status = "cancelled";
+  found.cancelledAt = Date.now();
+
+  // =========================
+  // 2️⃣ hoàn stock
+  // =========================
+  if(product) product.stock += found.qty;
+
+  // =========================
+  // 3️⃣ HOÀN / ĐIỀU CHỈNH COIN
+  // =========================
+  const users = loadUsers();
+
+  // 👤 BUYER
+  const buyer = users[found.buyerUid];
+  if(buyer && buyer.profile){
+    buyer.profile.coins += found.totalPrice;
+    buyer.profile.coinSent = Math.max(
+      0,
+      (buyer.profile.coinSent || 0) - found.totalPrice
+    );
+  }
+
+  // 🏪 SELLER
+  const owner = users[booth.ownerUid];
+  if(owner && owner.profile){
+    owner.profile.coinReceived = Math.max(
+      0,
+      (owner.profile.coinReceived || 0) - found.totalPrice
+    );
+  }
+
+  saveUsers(users);
+  saveMarket(market);
+
+  // 🔄 REALTIME UPDATE COIN
+  emitCoinUpdate(found.buyerUid);
+  emitCoinUpdate(booth.ownerUid);
+
+  // =========================
+  // 4️⃣ notify chủ gian
+  // =========================
+  const notifyText = `Order canceled: ${found.productName} ×${found.qty}`;
+
+  const sockets = activeUsers.get(booth.ownerUid);
+  if(sockets){
+    for(const sid of sockets){
+      io.to(sid).emit("system-notify",{
+        type:"order-cancel",
+        boothId: booth.id,
+        text: notifyText,
+        ts: Date.now()
+      });
+    }
+  }
+
+  sendPushToUser(booth.ownerUid,{
+    title:"Order canceled",
+    body: notifyText,
+    tag:"order-cancel"
+  });
+
+
+// 🔄 REALTIME ORDER UPDATE (KHÔNG RELOAD)
+io.emit("order-updated", {
+  boothId: booth.boothId,
+  order: found
+});
+
+
+
+
+  res.json({ ok:true });
+});
+
+
+
+
+
+app.post("/api/upload-product-image",
+  postMediaUpload.single("image"),
+  async (req, res) => {
+
+  if (!req.file)
+    return res.status(400).json({ error: "No file" });
+
+  const safeName = req.file.originalname
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9._-]/g, "_");
+
+  const key = `products/${Date.now()}_${safeName}`;
+
+  const url = await uploadToR2(
+    req.file.buffer,
+    key,
+    req.file.mimetype
+  );
+
+  res.json({ url });
+});
+
+
+
+
+
+// ===== ADD PRODUCT TO BOOTH =====
+app.post("/api/market/product/add", (req, res) => {
+  const uid = req.headers["x-uid"];
+  const { boothId, product } = req.body || {};
+
+  if (!uid || !boothId || !product)
+    return res.status(400).json({ error: "missing" });
+
+  // 🔒 booth bị khoá thì chặn
+  if (blockIfBoothLockedById(boothId, uid)) {
+    return res.status(403).json({ error: "booth_locked" });
+  }
+
+  const users = loadUsers();
+  const me = users[uid];
+  if (!me || !me.profile)
+    return res.status(403).json({ error: "no_auth" });
+
+  const market = loadMarket();
+  const booth = market[boothId];
+
+  if (!booth)
+    return res.status(404).json({ error: "booth_not_found" });
+
+  if (booth.ownerUid !== uid)
+    return res.status(403).json({ error: "not_owner" });
+
+  // ✅ đảm bảo có mảng products
+  booth.products ||= [];
+
+const images =
+  Array.isArray(product.images) && product.images.length
+    ? product.images
+    : (product.image ? [product.image] : []);
+
+const newProduct = {
+  id: "p_" + Date.now(),
+  name: String(product.name || "").trim(),
+  price: Number(product.price || 0),
+
+  image: images[0] || "",   // ảnh đại diện
+  images: images,           // ✅ LƯU TẤT CẢ ẢNH
+
+  desc: product.desc || "",
+  stock: Number(product.stock || 0),
+  createdAt: Date.now()
+};
+
+
+  booth.products.unshift(newProduct);
+
+  saveMarket(market);
+  emitMarketUpdate("product-add", boothId);
+
+  res.json({
+    ok: true,
+    product: newProduct
+  });
+});
+
+
+// ===== UPDATE PRODUCT =====
+app.post("/api/market/product/update", (req, res) => {
+  const uid = req.headers["x-uid"];
+  const { boothId, productId, product } = req.body || {};
+
+  if (!uid || !boothId || !productId || !product)
+    return res.status(400).json({ error: "missing" });
+
+  if (blockIfBoothLockedById(boothId, uid))
+    return res.status(403).json({ error: "booth_locked" });
+
+  const market = loadMarket();
+  const booth = market[boothId];
+  if (!booth) return res.status(404).json({ error: "booth_not_found" });
+
+  if (booth.ownerUid !== uid)
+    return res.status(403).json({ error: "not_owner" });
+
+  const p = (booth.products || []).find(x => x.id === productId);
+  if (!p) return res.status(404).json({ error: "product_not_found" });
+
+  // ✏️ update fields
+  p.name  = String(product.name || p.name).trim();
+  p.price = Number(product.price ?? p.price);
+  p.desc  = product.desc ?? p.desc;
+  p.stock = Number(product.stock ?? p.stock);
+
+  // 🖼️ update gallery nếu có gửi lên
+if (Array.isArray(product.images) && product.images.length) {
+  p.images = product.images;
+  p.image  = product.images[0];
+}
+
+
+  saveMarket(market);
+  emitMarketUpdate("product-update", boothId);
+
+  res.json({ ok: true });
+});
+
+
+// ===== BUY PRODUCT =====
+// ===== BUY PRODUCT =====
+// ===== BUY PRODUCT (FIXED) =====
+app.post("/api/market/product/buy", (req, res) => {
+  const buyerUid = req.headers["x-uid"];
+  const { boothId, productId, buyerInfo } = req.body || {};
+
+  if (!buyerUid || !boothId || !productId || !buyerInfo)
+    return res.status(400).json({ error: "missing" });
+
+  const qty = Math.max(1, Number(buyerInfo.qty || 1));
+
+  const users = loadUsers();
+  const buyer = users[buyerUid];
+  if (!buyer || !buyer.profile)
+    return res.status(403).json({ error: "no_auth" });
+
+  const market = loadMarket();
+
+  const booth = market[boothId];
+  if (!booth)
+    return res.status(404).json({ error: "booth_not_found" });
+
+  // 🔒 BOOTH BỊ KHOÁ → KHÔNG CHO MUA
+if (blockIfBoothLockedById(boothId, buyerUid)) {
+  return res.status(403).json({
+    ok: false,
+    error: "booth_locked"
+  });
+}
+
+
+  const product = (booth.products || []).find(p => p.id === productId);
+  if (!product)
+    return res.status(404).json({ error: "product_not_found" });
+
+  if (product.stock < qty)
+    return res.json({ ok: false, error: "out_of_stock" });
+
+  const price = Number(product.price || 0);
+  const totalPrice = price * qty;
+  const buyerCoins = Number(buyer.profile.coins || 0);
+
+  if (buyerCoins < totalPrice)
+    return res.json({ ok: false, error: "not_enough_coin" });
+
+  // 💎 TRỪ COIN NGƯỜI MUA
+  buyer.profile.coins -= totalPrice;
+  buyer.profile.coinSent =
+    (buyer.profile.coinSent || 0) + totalPrice;
+
+
+  // 📦 TRỪ STOCK
+  product.stock -= qty;
+
+  // 🧾 LƯU ĐƠN HÀNG
+  booth.orders ||= [];
+  booth.orders.unshift({
+    id: "o_" + Date.now(),
+    productId,
+    productName: product.name,
+    price,
+    qty,
+    totalPrice,
+    buyerUid,
+    buyerInfo,
+    status: "pending", // pending | contacted | done
+    escrow: totalPrice,
+    createdAt: Date.now()
+  });
+
+  saveUsers(users);
+  saveMarket(market);
+
+  emitMarketUpdate("product-buy", boothId);
+  emitCoinUpdate(buyerUid);
+  emitCoinUpdate(booth.ownerUid);
+
+  // 🔔 INBOX CHO CHỦ SHOP
+  if (!userInbox.has(booth.ownerUid))
+    userInbox.set(booth.ownerUid, []);
+
+  userInbox.get(booth.ownerUid).unshift({
+    type: "market-order",
+    boothId,
+    text: `New order: ${product.name} ×${qty}`,
+    time: Date.now(),
+    read: false
+  });
+
+  saveInbox(Object.fromEntries(userInbox));
+
+
+
+// ===============================
+// 🔔 REALTIME + PUSH NOTIFY CHỦ GIAN
+// ===============================
+const notifyText = `New order: ${product.name} ×${qty}`;
+
+// 1️⃣ REALTIME NẾU CHỦ GIAN ĐANG ONLINE
+const sockets = activeUsers.get(booth.ownerUid);
+if (sockets) {
+  for (const sid of sockets) {
+    io.to(sid).emit("system-notify", {
+      type: "market-order",
+      boothId,
+      productId,
+      text: notifyText,
+      ts: Date.now()
+    });
+  }
+}
+
+// 2️⃣ PUSH NOTIFICATION (KHI OFFLINE / TAB KHÁC)
+sendPushToUser(booth.ownerUid, {
+  title: "New order",
+  body: `${product.name} ×${qty} — ${totalPrice.toLocaleString()} 💎`,
+  tag: "market-order"
+});
+
+
+
+  res.json({ ok: true });
+
+
+
+  
+});
+
+
+
+
+app.get("/api/me/coin", (req, res) => {
+  const uid = req.headers["x-uid"];
+  if (!uid) return res.json({ ok:false });
+
+  const users = loadUsers();
+  const me = users[uid];
+  if (!me || !me.profile) return res.json({ ok:false });
+
+  res.json({
+    ok: true,
+    coins: Number(me.profile.coins) || 0
+  });
+});
+
+
+
+
+// ===== DELETE PRODUCT =====
+app.post("/api/market/product/delete", (req, res) => {
+  const uid = req.headers["x-uid"];
+  const { boothId, productId } = req.body || {};
+
+  if (!uid || !boothId || !productId)
+    return res.status(400).json({ error: "missing" });
+
+  if (blockIfBoothLockedById(boothId, uid))
+    return res.status(403).json({ error: "booth_locked" });
+
+  const market = loadMarket();
+  const booth = market[boothId];
+  if (!booth) return res.status(404).json({ error: "booth_not_found" });
+
+  if (booth.ownerUid !== uid)
+    return res.status(403).json({ error: "not_owner" });
+
+  booth.products = (booth.products || []).filter(p => p.id !== productId);
+
+  saveMarket(market);
+  emitMarketUpdate("product-delete", boothId);
+
+  res.json({ ok: true });
+});
+
+
+app.post("/api/market/extend", (req, res) => {
+  const uid = req.headers["x-uid"];
+  const { boothId, days, price } = req.body || {};
+
+  if (!uid || !boothId || !days || !price)
+    return res.status(400).json({ error: "missing" });
+
+  const users = loadUsers();
+  const user = users[uid];
+  if (!user || !user.profile)
+    return res.status(403).json({ error: "no_auth" });
+
+  if ((user.profile.coins || 0) < price)
+    return res.status(400).json({ error: "not_enough_coin" });
+
+  const market = loadMarket();
+  const booth = market[boothId];
+
+  if (!booth)
+    return res.status(404).json({ error: "booth_not_found" });
+
+  if (booth.ownerUid !== uid)
+    return res.status(403).json({ error: "not_owner" });
+
+// 🔒 BOOTH BỊ KHOÁ → KHÔNG CHO GIA HẠN
+if (blockIfBoothLockedById(boothId, uid)) {
+  return res.status(403).json({ error: "booth_locked" });
+}
+
+
+  
+  // ➕ GIA HẠN
+  booth.expireAt = Math.max(booth.expireAt, Date.now())
+    + days * 24 * 60 * 60 * 1000;
+
+  // ➖ TRỪ COIN
+  user.profile.coins -= price;
+  user.profile.coinSent = (user.profile.coinSent || 0) + price;
+
+  saveUsers(users);
+  saveMarket(market);
+  emitCoinUpdate(uid);
+  emitMarketUpdate("extend", boothId);
+
+  res.json({
+    ok: true,
+    expireAt: booth.expireAt,
+    coins: user.profile.coins
+  });
+});
+
+
+
+app.get("/api/market/booth/:id", (req, res) => {
+  const boothId = req.params.id;
+  const uid = req.headers["x-uid"];
+
+  const users = loadUsers();
+  const me = uid ? users[uid] : null;
+  const isAdmin = me?.role === "admin";
+
+  const market = loadMarket();
+  const booth = market[boothId];
+
+  if (!booth) {
+    return res.status(404).json({
+      ok: false,
+      message: "Booth not found"
+    });
+  }
+
+  // 🔒 Booth bị khoá
+  if (booth.locked && !isAdmin) {
+    return res.status(403).json({
+      ok: false,
+      locked: true,
+      message: "This booth has been locked by an admin"
+    });
+  }
+
+// 🔧 đảm bảo product nào cũng có images[]
+(booth.products || []).forEach(p=>{
+  if (!Array.isArray(p.images) || p.images.length === 0) {
+    p.images = p.image ? [p.image] : [];
+  }
+});
+
+res.json({
+  ok: true,
+  booth
+});
+
+});
+
+
+
+
+app.post("/api/admin/market/lock", (req,res)=>{
+  const uid = req.headers["x-uid"];
+  const { boothId, lock } = req.body || {};
+
+  const users = loadUsers();
+  if(!users[uid] || users[uid].role !== "admin")
+    return res.status(403).json({ error:"no_permission" });
+
+  const market = loadMarket();
+  if(!market[boothId])
+    return res.status(404).json({ error:"not_found" });
+
+
+  market[boothId].locked = !!lock;
+  saveMarket(market);
+
+  emitMarketUpdate(lock ? "lock" : "unlock", boothId); // 🔥 REALTIME
+
+
+// 🚨 KICK REALTIME TOÀN BỘ USER ĐANG TRONG BOOTH
+io.emit("booth-force-locked", {
+  boothId,
+  locked: !!lock,
+  ts: Date.now()
+});
+
+
+
+
+// 🔔 NOTIFY CHỦ GIAN
+const booth = market[boothId];
+const ownerUid = booth.ownerUid;
+
+if (ownerUid) {
+  const msg = lock
+    ? `🔒 Your booth #${boothId} has been locked by an admin`
+    : `🔓 Your booth #${boothId} has been unlocked by an admin`;
+
+  // 1️⃣ LƯU INBOX (offline vẫn thấy)
+  if (!userInbox.has(ownerUid)) userInbox.set(ownerUid, []);
+  userInbox.get(ownerUid).unshift({
+    type: "market-booth",
+    boothId,
+    action: lock ? "lock" : "unlock",
+    text: msg,
+    time: Date.now(),
+    read: false
+  });
+  saveInbox(Object.fromEntries(userInbox));
+
+  // 2️⃣ REALTIME NẾU ONLINE
+  const sockets = activeUsers.get(ownerUid);
+  if (sockets) {
+    for (const sid of sockets) {
+      io.to(sid).emit("system-notify", {
+        type: "market-booth",
+        boothId,
+        action: lock ? "lock" : "unlock",
+        text: msg
+      });
+    }
+  }
+
+  // 3️⃣ PUSH NOTIFICATION (KHI OFFLINE)
+  sendPushToUser(ownerUid, {
+    title: lock ? "Booth locked" : "Booth unlocked",
+    body: msg,
+    tag: "market-booth"
+  });
+}
+
+
+
+
+
+
+  res.json({ ok:true });
+
+
+});
+
+
+app.post("/api/admin/market/revoke", (req,res)=>{
+  const uid = req.headers["x-uid"];
+  const { boothId } = req.body || {};
+
+  const users = loadUsers();
+  if(!users[uid] || users[uid].role !== "admin")
+    return res.status(403).json({ error:"no_permission" });
+
+  const market = loadMarket();
+  if(!market[boothId])
+    return res.status(404).json({ error:"not_found" });
+
+market[boothId] = null;
+saveMarket(market);
+
+emitMarketUpdate("revoke", boothId); // 🔥 REALTIME
+
+res.json({ ok:true });
+
+
+});
+
+
+
+app.post("/api/market/rent", (req,res)=>{
+  const uid = req.headers["x-uid"];
+  const { boothId, days, price, trial } = req.body || {};
+
+  if(!uid || !boothId || !days)
+    return res.status(400).json({ error:"missing" });
+
+  const db = loadUsers();
+  const user = db[uid];
+  if(!user || !user.profile)
+    return res.status(403).json({ error:"no_auth" });
+
+  const market = loadMarket();
+
+  // 🔒 MỖI USER CHỈ ĐƯỢC 1 GIAN
+  const alreadyHaveBooth = Object.values(market).some(
+    b => b && b.ownerUid === uid
+  );
+  if (alreadyHaveBooth) {
+    return res.status(400).json({ error: "already_have_booth" });
+  }
+
+  if(market[boothId])
+    return res.status(400).json({ error:"already_rented" });
+
+  // =================================================
+  // 🎁 TRIAL MODE – DÙNG THỬ MIỄN PHÍ 30 NGÀY
+  // =================================================
+  if(trial === true){
+
+    if(user.profile.hasUsedTrial){
+      return res.status(400).json({ error:"trial_used" });
+    }
+
+    market[boothId] = {
+      boothId,
+      ownerUid: uid,
+      name: user.profile.name,
+      logo: user.profile.avatar,
+      expireAt: Date.now() + 30*24*60*60*1000,
+      locked: false,
+      trial: true,
+      products: []
+    };
+
+    user.profile.hasUsedTrial = true;
+
+    saveUsers(db);
+    saveMarket(market);
+
+    emitMarketUpdate("rent", boothId);
+
+    return res.json({
+      ok: true,
+      trial: true,
+      booth: market[boothId]
+    });
+  }
+
+  // =================================================
+  // 💎 RENT THƯỜNG – TRỪ COIN
+  // =================================================
+  const cost = Number(price || 0);
+  const coins = Number(user.profile.coins || 0);
+
+  if(cost <= 0)
+    return res.status(400).json({ error:"invalid_price" });
+
+  if(coins < cost)
+    return res.status(400).json({ error:"not_enough_coin" });
+
+  // ➖ TRỪ COIN
+  user.profile.coins -= cost;
+  user.profile.coinSent = (user.profile.coinSent || 0) + cost;
+
+  market[boothId] = {
+    boothId,
+    ownerUid: uid,
+    name: user.profile.name,
+    logo: user.profile.avatar,
+    expireAt: Date.now() + days*24*60*60*1000,
+    locked: false,
+    products: []
+  };
+
+  saveUsers(db);
+  saveMarket(market);
+
+  emitCoinUpdate(uid);
+  emitMarketUpdate("rent", boothId);
+
+  res.json({
+    ok:true,
+    booth: market[boothId],
+    coins: user.profile.coins
+  });
+});
+
+
+
+
+// ===== ADMIN DELETE COMMENT / REPLY =====
+app.post("/api/admin/delete-comment", (req, res) => {
+  const { adminUid, postId, commentId, replyId, reason } = req.body || {};
+
+  if (!adminUid || !postId || !commentId) {
+    return res.status(400).json({ error: "missing" });
+  }
+
+  const db = loadUsers();
+  const admin = db[adminUid];
+
+  if (!admin || admin.role !== "admin") {
+    return res.status(403).json({ error: "not_admin" });
+  }
+
+  const post = lpPosts.find(p => p.id === postId);
+  if (!post || !Array.isArray(post.comments)) {
+    return res.status(404).json({ error: "post_not_found" });
+  }
+
+  const cmt = post.comments.find(c => c.id === commentId);
+  if (!cmt) {
+    return res.status(404).json({ error: "comment_not_found" });
+  }
+
+  // 🔹 XOÁ REPLY
+  if (replyId) {
+    const idx = (cmt.replies || []).findIndex(r => r.id === replyId);
+    if (idx === -1) {
+      return res.status(404).json({ error: "reply_not_found" });
+    }
+
+    const reply = cmt.replies[idx];
+    cmt.replies.splice(idx, 1);
+
+    saveSocial();
+
+    // 🔔 inbox user bị xoá reply
+    if (reply.uid) {
+      userInbox.set(reply.uid, userInbox.get(reply.uid) || []);
+      userInbox.get(reply.uid).unshift({
+        type: "reply-deleted",
+        text: `Your reply was deleted by an admin${reason ? `\nReason: ${reason}` : ""}`,
+        time: Date.now(),
+        read: false
+      });
+      saveInbox(Object.fromEntries(userInbox));
+    }
+
+    io.emit("social-update", {
+      type: "reply-deleted",
+      postId,
+      commentId,
+      replyId
+    });
+
+    return res.json({ ok: true });
+  }
+
+  // 🔸 XOÁ COMMENT
+  const idx = post.comments.findIndex(c => c.id === commentId);
+  const removed = post.comments[idx];
+  post.comments.splice(idx, 1);
+  saveSocial();
+
+  // 🔔 inbox user bị xoá comment
+  if (removed.uid) {
+    userInbox.set(removed.uid, userInbox.get(removed.uid) || []);
+    userInbox.get(removed.uid).unshift({
+      type: "comment-deleted",
+      text: `Your comment was deleted by an admin${reason ? `\nReason: ${reason}` : ""}`,
+      time: Date.now(),
+      read: false
+    });
+    saveInbox(Object.fromEntries(userInbox));
+  }
+
+  io.emit("social-update", {
+    type: "comment-deleted",
+    postId,
+    commentId
+  });
+
+  res.json({ ok: true });
+});
+
+
+// ===== ADMIN DELETE POST =====
+app.post("/api/admin/delete-post", (req, res) => {
+  const { adminUid, postId, reason } = req.body || {};
+
+  if (!adminUid || !postId) {
+    return res.status(400).json({ error: "missing" });
+  }
+
+  const db = loadUsers();
+  const admin = db[adminUid];
+
+  // 🔒 chỉ admin
+  if (!admin || admin.role !== "admin") {
+    return res.status(403).json({ error: "not_admin" });
+  }
+
+  const idx = lpPosts.findIndex(p => p.id === postId);
+  if (idx === -1) {
+    return res.status(404).json({ error: "post_not_found" });
+  }
+
+  const post = lpPosts[idx];
+
+  // 🧾 log admin action (nên có)
+  post.adminDeleted = {
+    by: adminUid,
+    reason: reason || "",
+    ts: Date.now()
+  };
+
+  // ❌ xoá khỏi danh sách hiển thị
+  lpPosts.splice(idx, 1);
+  saveSocial();
+
+  // 🔔 thông báo cho chủ bài đăng (nếu còn tồn tại)
+  const ownerUid = post.uid;
+  if (ownerUid) {
+    if (!userInbox.has(ownerUid)) userInbox.set(ownerUid, []);
+    userInbox.get(ownerUid).unshift({
+      type: "post-deleted",
+      text: `Your post was deleted by an admin${reason ? `\nReason: ${reason}` : ""}`,
+      time: Date.now(),
+      read: false
+    });
+    saveInbox(Object.fromEntries(userInbox));
+  }
+
+  // 🔁 realtime cập nhật feed
+  io.emit("social-update", { type: "post-deleted", postId });
+
+  res.json({ ok: true });
+});
+
+
+app.post("/api/admin/close-room", (req, res) => {
+  const { adminUid, roomId, reason } = req.body || {};
+
+  if(!adminUid || !roomId){
+    return res.status(400).json({ error: "missing" });
+  }
+
+  const db = loadUsers();
+  const admin = db[adminUid];
+
+  if(!admin || admin.role !== "admin"){
+    return res.status(403).json({ error: "not_admin" });
+  }
+
+  const rid = String(roomId).trim().toLowerCase();
+  const room = rooms.get(rid);
+
+  if(!room || !room.broadcasterId){
+    return res.status(404).json({ error: "room_not_live" });
+  }
+
+  // 🚨 ĐÓNG ROOM
+  closeRoom(rid, "admin_closed");
+
+  // 🔔 notify host nếu có
+  if(room.hostProfile?.uid){
+    const uid = room.hostProfile.uid;
+
+    // realtime
+    const sockets = activeUsers.get(uid);
+    if(sockets){
+      for(const sid of sockets){
+        io.to(sid).emit("system-notify", {
+title: "🚫 Livestream room closed",
+body: reason || "Your livestream room was closed by an admin",
+        });
+      }
+    }
+
+    // push offline
+    sendPushToUser(uid, {
+      title: "🚫 Phòng live bị đóng",
+      body: reason || "Phòng live của bạn đã bị Admin đóng",
+      tag: "admin-close-room"
+    });
+  }
+
+  res.json({ ok:true });
+});
+
+
+
+// ===== ADMIN LOCK / UNLOCK USER =====
+app.post("/api/admin/lock-user", (req, res) => {
+
+const body = req.body || {};
+const { adminUid, targetUid, lock, reason } = body;
+
+
+
+
+  if (!adminUid || !targetUid) {
+    return res.status(400).json({ error: "missing" });
+  }
+
+  const db = loadUsers();
+  const admin = db[adminUid];
+  const user = db[targetUid];
+
+  if (!admin || admin.role !== "admin") {
+    return res.status(403).json({ error: "not_admin" });
+  }
+
+  if (!user || !user.profile) {
+    return res.status(404).json({ error: "user_not_found" });
+  }
+
+  // 🚫 KHÔNG CHO KHOÁ ADMIN
+if (user.role === "admin" || targetUid === adminUid) {
+  return res.status(403).json({ error: "cannot_lock_admin" });
+}
+
+
+  user.profile.accountBlocked = !!lock;
+
+  user.profile.blockedAt = lock ? Date.now() : null;
+
+// 🧾 LOG LÝ DO KHOÁ / MỞ KHOÁ
+user.profile.blockLogs ||= [];
+user.profile.blockLogs.unshift({
+  by: adminUid,
+  action: lock ? "lock" : "unlock",
+  reason: reason || "",
+  ts: Date.now()
+});
+
+
+
+
+  saveUsers(db);
+
+// 🔔 PUSH NOTIFY KHI KHOÁ USER
+if (lock) {
+const msg = reason
+  ? `Your account has been locked.\nReason: ${reason}`
+  : "Your account has been locked. Please contact support.";
+
+  // 1️⃣ realtime nếu online
+  const sockets = activeUsers.get(targetUid);
+  if (sockets) {
+    for (const sid of sockets) {
+      io.to(sid).emit("system-notify", {
+        type: "blocked",
+        text: msg
+      });
+    }
+  }
+
+  // 2️⃣ push notification (offline)
+  sendPushToUser(targetUid, {
+    title: "Account locked",
+    body: msg,
+    tag: "account-blocked"
+  });
+}
+
+
+// 🔓 PUSH NOTIFY KHI MỞ KHOÁ USER
+if (!lock) {
+const msg = reason
+  ? `🔓 Your account has been unlocked.\nNote: ${reason}`
+  : "🔓 Your account has been unlocked. You can use the service again.";
+
+  // 1️⃣ realtime nếu online
+  const sockets = activeUsers.get(targetUid);
+  if (sockets) {
+    for (const sid of sockets) {
+      io.to(sid).emit("system-notify", {
+        type: "unblocked",
+        text: msg
+      });
+    }
+  }
+
+  // 2️⃣ push notification (offline)
+  sendPushToUser(targetUid, {
+    title: "Account unlocked",
+    body: msg,
+    tag: "account-unblocked"
+  });
+}
+
+
+
+  res.json({
+    ok: true,
+    uid: targetUid,
+    blocked: user.profile.blocked
+  });
+});
+
+
+
+
+app.post("/api/upload-chat-image", chatUpload.single("image"), async (req, res) => {
+
+  if (!req.file) return res.status(400).json({ error: "No file" });
+
+const safeName = req.file.originalname
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "") // bỏ dấu tiếng Việt
+  .replace(/[^a-zA-Z0-9._-]/g, "_");
+
+
+const key = `chat/images/${Date.now()}_${safeName}`;
+
+
+  const url = await uploadToR2(
+    req.file.buffer,
+    key,
+    req.file.mimetype
+  );
+
+  res.json({ url });
+});
+
+app.post("/api/upload-chat-video", chatUpload.single("video"), async (req, res) => {
+
+  if (!req.file) return res.status(400).json({ error: "No file" });
+
+const safeName = req.file.originalname
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "") // bỏ dấu tiếng Việt
+  .replace(/[^a-zA-Z0-9._-]/g, "_");
+
+
+const key = `chat/videos/${Date.now()}_${safeName}`;
+
+  const url = await uploadToR2(
+    req.file.buffer,
+    key,
+    req.file.mimetype
+  );
+
+  res.json({ url });
+});
+
+app.get("/", (_, res) => {
+  res.redirect("/social.html");
+});
+
+
+
+app.post("/api/upload-avatar", avatarCoverUpload.single("avatar"), async (req, res) => {
+
+    if (!req.file) return res.status(400).json({ error: "No file" });
+
+    const safeName = req.file.originalname
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9._-]/g, "_");
+
+    const uid = req.headers["x-uid"] || "guest";
+
+    const key = `avatars/${uid}_${Date.now()}_${safeName}`;
+
+    const url = await uploadToR2(
+      req.file.buffer,
+      key,
+      req.file.mimetype
+    );
+
+    res.json({ url });
+  }
+);
+
+app.post("/api/upload-cover", avatarCoverUpload.single("cover"), async (req, res) => {
+
+    if (!req.file) return res.status(400).json({ error: "No file" });
+
+    const safeName = req.file.originalname
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9._-]/g, "_");
+
+    const uid = req.headers["x-uid"] || "guest";
+
+    const key = `covers/${uid}_${Date.now()}_${safeName}`;
+
+    const url = await uploadToR2(
+      req.file.buffer,
+      key,
+      req.file.mimetype
+    );
+
+    res.json({ url });
+  }
+);
+
+app.post("/api/upload-post-image",
+  postMediaUpload.single("image"),
+  async (req, res) => {
+
+  if (!req.file) return res.status(400).json({ error: "No file" });
+
+  const safeName = req.file.originalname
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9._-]/g, "_");
+
+  const key = `posts/images/${Date.now()}_${safeName}`;
+
+  const url = await uploadToR2(
+    req.file.buffer,
+    key,
+    req.file.mimetype
+  );
+
+  res.json({ url });
+});
+
+app.post("/api/upload-post-video",
+  postMediaUpload.single("video"),
+  async (req, res) => {
+
+  if (!req.file) return res.status(400).json({ error: "No file" });
+
+  const safeName = req.file.originalname
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9._-]/g, "_");
+
+  const key = `posts/videos/${Date.now()}_${safeName}`;
+
+  const url = await uploadToR2(
+    req.file.buffer,
+    key,
+    req.file.mimetype
+  );
+
+  res.json({ url });
+});
+
+app.post("/api/withdraw-request", async (req, res) => {
+  const uid = req.headers["x-uid"];
+  const { amount, bank, securityCode } = req.body || {};
+
+
+  if (!securityCode) {
+  return res.status(400).json({
+    error: "missing_security_code"
+  });
+}
+
+
+if (!uid || !bank || amount == null) {
+  return res.status(400).json({ error: "missing" });
+}
+
+const amt = Number(amount);
+if (!Number.isFinite(amt) || amt <= 0) {
+  return res.status(400).json({ error: "invalid_amount" });
+}
+
+
+  const db = loadUsers();
+
+
+  const user = db[uid];
+
+  if (!user || !user.profile) {
+    return res.status(404).json({ error: "user_not_found" });
+  }
+
+
+// 🔐 KIỂM TRA MÃ BẢO MẬT
+const okSec = await bcrypt.compare(
+  String(securityCode),
+  user.securityCode
+);
+
+if (!okSec) {
+  return res.status(403).json({
+    error: "invalid_security_code"
+  });
+}
+
+
+
+  const canWithdraw = Number(user.profile.coinReceived || 0);
+
+  if (amount > canWithdraw) {
+    return res.status(400).json({ error: "not_enough_received" });
+  }
+
+  if (amount < 100) {
+  return res.status(400).json({ error: "min_withdraw" });
+}
+
+
+  const list = loadWithdraws();
+
+
+
+// ➖ TRỪ KIM CƯƠNG NGAY KHI GỬI
+user.profile.coinReceived -= amt;
+
+
+// 🧾 LOG (rất nên có)
+user.profile.withdrawHold ||= [];
+user.profile.withdrawHold.unshift({
+  amount: amt,
+  ts: Date.now(),
+  status: "pending"
+});
+
+list.unshift({
+  id: Date.now() + "_" + uid,
+  uid,
+  name: user.profile.name,
+  amount: amt,
+  bank,
+  status: "pending",
+  createdAt: Date.now()
+});
+
+saveUsers(db);          // 🔥 LƯU USER NGAY
+saveWithdraws(list);
+emitWithdrawUpdate();
+emitCoinUpdate(uid);    // 🔁 realtime coin
+
+
+  // 🔔 thông báo cho user
+  const text = `Withdrawal request submitted for ${Number(amount).toLocaleString()} 💎`;
+
+  if (!userInbox.has(uid)) userInbox.set(uid, []);
+  userInbox.get(uid).unshift({
+    type: "withdraw-request",
+    text,
+    time: Date.now(),
+    read: false
+  });
+  saveInbox(Object.fromEntries(userInbox));
+
+  res.json({ ok: true });
+});
+
+app.get("/api/admin/withdraw-requests", (req, res) => {
+  const adminUid = req.headers["x-uid"];
+  if (!adminUid) return res.status(403).json({ error: "no_auth" });
+
+  const db = loadUsers();
+  const admin = db[adminUid];
+  if (!admin || admin.role !== "admin") {
+    return res.status(403).json({ error: "not_admin" });
+  }
+
+  const list = loadWithdraws();
+  res.json({ ok: true, list });
+});
+
+app.post("/api/admin/withdraw-action", (req, res) => {
+  const { adminUid, withdrawId, id, action, note } = req.body || {};
+  const wid = withdrawId || id;
+
+  // 🔍 validate
+  if (!adminUid || !wid || !action) {
+    return res.status(400).json({ error: "missing" });
+  }
+
+  if (!["approve", "reject"].includes(action)) {
+    return res.status(400).json({ error: "invalid_action" });
+  }
+
+  const db = loadUsers();
+  const admin = db[adminUid];
+  if (!admin || admin.role !== "admin") {
+    return res.status(403).json({ error: "not_admin" });
+  }
+
+  const list = loadWithdraws();
+  const reqItem = list.find(x => x.id === wid);
+  if (!reqItem) {
+    return res.status(404).json({ error: "not_found" });
+  }
+
+  if (reqItem.status !== "pending") {
+    return res.status(400).json({ error: "already_processed" });
+  }
+
+  const user = db[reqItem.uid];
+  if (!user?.profile) {
+    return res.status(404).json({ error: "user_not_found" });
+  }
+
+  const amount = Number(reqItem.amount) || 0;
+
+  // =========================
+  // ❌ REJECT → HOÀN LẠI
+  // =========================
+  if (action === "reject") {
+    reqItem.status = "rejected";
+    reqItem.note = note || "";
+    reqItem.handledBy = adminUid;
+    reqItem.handledAt = Date.now();
+
+    // hoàn lại đúng những gì đã hold
+    user.profile.coinReceived =
+      (user.profile.coinReceived || 0) + amount;
+
+    saveUsers(db);
+    saveWithdraws(list);
+
+    emitCoinUpdate(reqItem.uid);
+    io.emit("withdraw-update", { id: wid, action });
+
+    return res.json({ ok: true });
+  }
+
+  // =========================
+  // ✅ APPROVE → CHỈ ĐỔI STATUS
+  // =========================
+  reqItem.status = "approved";
+  reqItem.note = note || "";
+  reqItem.handledBy = adminUid;
+  reqItem.handledAt = Date.now();
+
+  saveUsers(db);
+  saveWithdraws(list);
+
+  emitCoinUpdate(reqItem.uid);
+  io.emit("withdraw-update", { id: wid, action });
+
+  return res.json({ ok: true });
+});
+
+
+app.post("/api/profile/bank-default", (req, res) => {
+  const uid = req.headers["x-uid"];
+  const { name, account, owner } = req.body || {};
+
+  if (!uid || !name || !account || !owner) {
+    return res.status(400).json({ error: "missing" });
+  }
+
+  const db = loadUsers();
+  const user = db[uid];
+  if (!user || !user.profile) {
+    return res.status(404).json({ error: "user_not_found" });
+  }
+
+  user.profile.bankDefault = {
+    name,
+    account,
+    owner
+  };
+
+  saveUsers(db);
+  res.json({ ok: true });
+});
+
+app.get("/api/profile/bank-default", (req, res) => {
+  const uid = req.headers["x-uid"];
+  if (!uid) return res.status(403).json({ error: "no_auth" });
+
+  const db = loadUsers();
+  const user = db[uid];
+  if (!user || !user.profile) {
+    return res.json({ ok: true, bank: null });
+  }
+
+  res.json({
+    ok: true,
+    bank: user.profile.bankDefault || null
+  });
+});
+
+
+const rooms = new Map();
+
+// ===== LIVESTREAM PRO SOCIAL =====
+const lpPosts = loadSocial();
+
+
+
+// 🔴🟢 EMIT REALTIME ONLINE / OFFLINE ĐẠI LÝ
+function emitAgentStatus(uid, online) {
+  if (!uid) return;
+
+  const db = loadUsers();
+  const acc = db[uid];
+  if (!acc) return;
+
+  const roles = acc.roles || [];
+const role  = acc.role;
+
+const isAgent =
+  role === "agent" ||
+  roles.includes("agent");
+
+if (!isAgent) return;
+
+
+  io.emit("agent-status", {
+    uid,
+    online,
+    ts: Date.now()
+  });
+}
+
+
+
+function getPost(id){
+  return lpPosts.find(p=>p.id===id);
+}
+
+
+function getActiveUserList(){
+  const list = [];
+
+for (const [uid, sockets] of activeUsers.entries()) {
+  for (const socketId of sockets) {
+    const s = io.sockets.sockets.get(socketId);
+    if (!s) continue;
+
+
+    
+    if(!s) continue;
+
+    const profile = s.data.profile || {};
+
+    const displayName =
+      profile.name ||
+      profile.displayName ||
+      "Player";
+
+    list.push({
+      socketId,
+      uid,   
+      name: displayName,  
+         
+avatar:
+  normalizeAvatar(profile.avatar) ||
+  "https://i.ibb.co/GvJWn19q/icon-192.png" +
+  encodeURIComponent(displayName),
+
+
+      level: Number(profile.level || 1),
+      role: s.data.role || "user",
+      roomId: s.data.roomId || null
+    });
+  }
+}
+  return list;
+}
+
+
+
+
+function emitActiveUsers(){
+  io.emit("active-users", {
+    users: getActiveUserList(),
+    online: Array.from(activeUsers.keys()),
+    ts: Date.now()
+  });
+}
+
+
+function emitAllUsers(){
+  const db = loadUsers();
+  const list = [];
+
+  for(const uid in db){
+    const acc = db[uid];
+    const p = acc.profile || {};
+
+    list.push({
+      uid,
+      name: p.name || uid,
+      avatar: normalizeAvatar(p.avatar) || "",
+      cover: p.cover || "",
+      level: p.level || 1,
+      role: acc.role || "user" ,  // 🔥 QUAN TRỌNG
+      roles: acc.roles || []   // 🔥 THÊM DÒNG NÀY
+    });
+  }
+
+  io.emit("all-users", list);
+}
+
+
+
+
+function pushNotify(uid, payload){
+  if(!uid) return;
+  if(!userInbox.has(uid)) userInbox.set(uid, []);
+  userInbox.get(uid).unshift({
+    ...payload,
+    ts: Date.now(),
+    read:false
+  });
+}
+
+
+
+const USERS_FILE = path.join("/opt/render/project/data", "users.json");
+
+
+
+function loadUsers(){
+  if(!fs.existsSync(USERS_FILE)) return {};
+  return JSON.parse(fs.readFileSync(USERS_FILE,"utf8"));
+}
+function saveUsers(db){
+  fs.writeFileSync(USERS_FILE, JSON.stringify(db,null,2));
+}
+
+
+/* =========================================
+   BỔ SUNG ĐẠI LÝ NẠP KIM CƯƠNG
+   LIVESTREAM PRO
+========================================= */
+
+const NEW_TOPUP_AGENTS = [
+
+  // ĐẠI LÝ THỨ 2
+  {
+    uid: "NguyenPhuongVu",
+    bank: {
+      name: "Vietcombank",
+      account: "1017495554",
+      owner: "Nguyễn Phương Vũ",
+      qr: "/images/topup/qr-phuong-vu.png"
+    }
+  },
+
+  // ĐẠI LÝ THỨ 3
+  {
+    uid: "HoangHiep",
+    bank: {
+      name: "Techcombank",
+      account: "2888388888",
+      owner: "Hoàng Kim Hiệp",
+      qr: "/images/topup/qr-hoang-hiep.png"
+    }
+  }
+
+];
+
+/* ĐĂNG KÝ ĐẠI LÝ VÀO USERS.JSON */
+
+function registerTopupAgents() {
+
+  const db = loadUsers();
+  let changed = false;
+
+  for (const item of NEW_TOPUP_AGENTS) {
+
+    const uid = String(item.uid || "").trim();
+    const bank = item.bank || {};
+
+    // Không dùng thông tin mẫu chưa được thay
+    if (
+      !uid ||
+      uid.startsWith("UID_DAI_LY_") ||
+      !bank.name ||
+      bank.name.startsWith("TEN_NGAN_HANG_") ||
+      !bank.account ||
+      bank.account.startsWith("SO_TAI_KHOAN_") ||
+      !bank.owner ||
+      bank.owner.startsWith("TEN_CHU_TAI_KHOAN_")
+    ) {
+      console.warn("[TOPUP] Thông tin đại lý chưa hợp lệ:", uid);
+      continue;
+    }
+
+    // Đại lý phải là tài khoản đã tồn tại
+    const acc = db[uid];
+
+    if (!acc || !acc.profile) {
+      console.warn("[TOPUP] Không tìm thấy tài khoản:", uid);
+      continue;
+    }
+
+    // Giữ nguyên quyền hiện tại, bổ sung quyền agent
+    if (!Array.isArray(acc.roles)) {
+      acc.roles = [];
+    }
+
+    if (!acc.roles.includes("agent")) {
+      acc.roles.push("agent");
+      changed = true;
+    }
+
+    // Giữ lại thông tin ngân hàng đã có
+    if (!acc.profile.bank) {
+      acc.profile.bank = {};
+      changed = true;
+    }
+
+
+// Bổ sung thông tin ngân hàng còn thiếu
+for (const key of ["name", "account", "owner"]) {
+  const value = String(bank[key] || "").trim();
+
+  if (!acc.profile.bank[key] && value) {
+    acc.profile.bank[key] = value;
+    changed = true;
+  }
+}
+
+// Cập nhật đường dẫn QR theo cấu hình mới
+const newQr = String(bank.qr || "").trim();
+
+if (newQr && acc.profile.bank.qr !== newQr) {
+  acc.profile.bank.qr = newQr;
+  changed = true;
+}
+
+
+    console.log("[TOPUP] Đại lý đã được đăng ký:", uid);
+  }
+
+  if (changed) {
+    saveUsers(db);
+    console.log("[TOPUP] Đã cập nhật danh sách đại lý");
+  }
+}
+
+registerTopupAgents();
+
+
+
+function emitWithdrawUpdate() {
+  io.emit("withdraw-update", {
+    ts: Date.now()
+  });
+}
+
+
+
+function emitMarketUpdate(action, boothId){
+  io.emit("market-update", {
+    action,      // "lock" | "unlock" | "revoke" | "rent" | "extend"
+    boothId,
+    ts: Date.now()
+  });
+}
+
+
+
+
+// 🔥 REALTIME COIN SYNC (ANTI FLOAT SAFE)
+function emitCoinUpdate(uid) {
+  if (!uid) return;
+
+  const db = loadUsers();
+  const user = db[uid];
+  if (!user || !user.profile) return;
+
+  // 🔒 ÉP SỐ NGUYÊN & CHỐNG NaN
+  user.profile.coins = Math.floor(
+    Number(user.profile.coins || 0)
+  );
+
+  user.profile.coinSent = Math.floor(
+    Number(user.profile.coinSent || 0)
+  );
+
+  user.profile.coinReceived = Math.floor(
+    Number(user.profile.coinReceived || 0)
+  );
+
+  user.profile.level = Math.floor(
+    Number(user.profile.level || 1)
+  );
+
+  user.profile.exp = Math.floor(
+    Number(user.profile.exp || 0)
+  );
+
+  // 🔒 Không cho coin âm
+  if (user.profile.coins < 0) {
+    user.profile.coins = 0;
+  }
+
+const payload = {
+  coins: user.profile.coins,
+  coinSent: user.profile.coinSent,
+  coinReceived: user.profile.coinReceived,
+  coinDeposit: user.profile.coinDeposit || 0,
+  level: user.profile.level,
+  exp: user.profile.exp
+};
+
+  const sockets = activeUsers.get(uid);
+  if (!sockets) return;
+
+  for (const sid of sockets) {
+    io.to(sid).emit("coin-update", payload);
+  }
+}
+
+
+
+
+
+webpush.setVapidDetails(
+  "mailto:admin@livestream.pro",
+  process.env.VAPID_PUBLIC,
+  process.env.VAPID_PRIVATE
+);
+
+// uid -> Set<subscription>
+const pushSubs = new Map();
+
+
+
+// ===== ADMIN TOPUP COIN =====
+app.post("/api/admin/topup", (req, res) => {
+  const { adminUid, targetUid, amount, note } = req.body;
+
+  if (!adminUid || !targetUid || !amount) {
+    return res.status(400).json({ error: "missing" });
+  }
+
+  const db = loadUsers();
+  const admin = db[adminUid];
+  const user  = db[targetUid];
+
+  // 🔐 check admin
+  if (!admin || admin.role !== "admin") {
+    return res.status(403).json({ error: "not_admin" });
+  }
+
+  if (!user || !user.profile) {
+    return res.status(404).json({ error: "user_not_found" });
+  }
+
+  const add = Math.max(0, Number(amount) || 0);
+
+  user.profile.coins = (user.profile.coins || 0) + add;
+
+  // 💳 tổng kim cương đã nạp
+  user.profile.coinDeposit =
+  (user.profile.coinDeposit || 0) + add;
+
+
+  
+// 📜 lịch sử nạp
+user.profile.depositLogs ||= [];
+
+user.profile.depositLogs.unshift({
+  amount: add,
+  time: Date.now(),
+  by: adminUid,
+  note: note || ""
+});
+
+
+
+  // 🧾 log (optional nhưng nên có)
+  user.profile.adminLogs ||= [];
+  user.profile.adminLogs.unshift({
+    type: "topup",
+    by: adminUid,
+    amount: add,
+    note: note || "",
+    ts: Date.now()
+  });
+
+  saveUsers(db);
+
+  // 🔁 realtime sync
+  emitCoinUpdate(targetUid);
+
+
+// 🔔 THÔNG BÁO USER KHI ĐƯỢC NẠP COIN
+const notifyText =
+  `You have received ${add.toLocaleString()} coins` +
+  (note ? `\nNote: ${note}` : "");
+
+// 1️⃣ LƯU INBOX (xem lại được)
+if (!userInbox.has(targetUid)) userInbox.set(targetUid, []);
+userInbox.get(targetUid).unshift({
+  type: "topup",
+  from: adminUid,
+  text: notifyText,
+  amount: add,
+  time: Date.now(),
+  read: false
+});
+saveInbox(Object.fromEntries(userInbox));
+
+// 2️⃣ REALTIME NẾU USER ĐANG ONLINE
+const sockets = activeUsers.get(targetUid);
+if (sockets) {
+  for (const sid of sockets) {
+    io.to(sid).emit("system-notify", {
+      type: "topup",
+      text: notifyText,
+      amount: add
+    });
+  }
+}
+
+// 3️⃣ PUSH NOTIFICATION (KHI OFFLINE)
+sendPushToUser(targetUid, {
+  title: "Coins added successfully",
+  body: `You have received ${add.toLocaleString()} coins`,
+  tag: "admin-topup"
+});
+
+
+
+  res.json({
+    ok: true,
+    uid: targetUid,
+    coins: user.profile.coins
+  });
+});
+
+// ===== ADMIN WITHDRAW COIN =====
+app.post("/api/admin/withdraw", (req, res) => {
+  const { adminUid, targetUid, amount, note } = req.body || {};
+
+  if (!adminUid || !targetUid || !amount) {
+    return res.status(400).json({ error: "missing" });
+  }
+
+  const db = loadUsers();
+  const admin = db[adminUid];
+  const user  = db[targetUid];
+
+  // 🔐 chỉ admin
+  if (!admin || admin.role !== "admin") {
+    return res.status(403).json({ error: "not_admin" });
+  }
+
+  if (!user || !user.profile) {
+    return res.status(404).json({ error: "user_not_found" });
+  }
+
+const sub = Math.max(0, Number(amount) || 0);
+const cur = Number(user.profile.coins || 0);
+
+if (sub <= 0) {
+  return res.status(400).json({ error: "invalid_amount" });
+}
+
+if (cur < sub) {
+  return res.status(400).json({ error: "not_enough_coin" });
+}
+
+// ➖ TRỪ COIN (không cho âm)
+user.profile.coins = Math.max(0, cur - sub);
+
+// 🧾 LOG ADMIN
+user.profile.adminLogs ||= [];
+user.profile.adminLogs.unshift({
+  type: "withdraw",
+  by: adminUid,
+  amount: sub,
+  note: note || "",
+  before: cur,
+  after: user.profile.coins,
+  ts: Date.now()
+});
+
+  saveUsers(db);
+
+  // 🔁 realtime sync
+  emitCoinUpdate(targetUid);
+
+const notifyText =
+  `➖ ${sub.toLocaleString()} coins have been deducted` +
+  (note ? `\nReason: ${note}` : "");
+
+  // 1️⃣ inbox
+  if (!userInbox.has(targetUid)) userInbox.set(targetUid, []);
+  userInbox.get(targetUid).unshift({
+    type: "withdraw",
+    from: adminUid,
+    text: notifyText,
+    amount: sub,
+    time: Date.now(),
+    read: false
+  });
+  saveInbox(Object.fromEntries(userInbox));
+
+  // 2️⃣ realtime nếu online
+  const sockets = activeUsers.get(targetUid);
+  if (sockets) {
+    for (const sid of sockets) {
+      io.to(sid).emit("system-notify", {
+        type: "withdraw",
+        text: notifyText,
+        amount: sub
+      });
+    }
+  }
+
+  // 3️⃣ push offline
+sendPushToUser(targetUid, {
+  title: "➖ Coins deducted",
+  body: `Your account has been charged ${sub.toLocaleString()} coins`,
+  tag: "admin-withdraw"
+});
+
+  res.json({
+    ok: true,
+    uid: targetUid,
+    coins: user.profile.coins
+  });
+});
+
+
+
+app.post("/api/register", async (req,res)=>{
+
+  const { username, password, name, securityCode } = req.body;
+
+  if(!username || !password || !name || !securityCode)
+    return res.json({ error:"missing" });
+
+  const db = loadUsers();
+  if(db[username]) return res.json({error:"exists"});
+
+  const hash = await bcrypt.hash(password,10);
+  const secHash = await bcrypt.hash(securityCode,10);
+
+  db[username] = {
+    password: hash,
+    securityCode: secHash, 
+    profile:{
+      uid: username,
+      name,
+      avatar: "https://i.ibb.co/GvJWn19q/icon-192.png" ,
+      bio: "",  
+      coins:0,
+      coinDeposit:0,
+      level:1,
+      exp:0,
+      coinSent:0,
+      coinReceived:0,
+      showTopName:false 
+    }
+  };
+
+  saveUsers(db);
+  res.json({ok:true});
+});
+
+
+app.post("/api/prelogin", async (req,res)=>{
+  const { username, password } = req.body;
+  const db = loadUsers();
+
+  const acc = db[username];
+  if(!acc) return res.json({ ok:false });
+
+  const ok = await bcrypt.compare(String(password), acc.password);
+  if(!ok) return res.json({ ok:false });
+
+  // Đúng user + pass → cho phép nhập mã bảo mật
+  res.json({ ok:true });
+});
+
+
+
+app.post("/api/login", async (req,res)=>{
+  const { username, password, securityCode } = req.body;
+  const db = loadUsers();
+
+  const acc = db[username];
+
+  // 🚫 USER BỊ KHOÁ → KHÔNG CHO LOGIN
+if (acc.profile?.accountBlocked) {
+
+  return res.status(403).json({
+    error: "blocked",
+    message: "Your account has been locked"
+  });
+}
+
+
+  if(!acc) return res.json({ error:"invalid" });
+
+ const okPass = await bcrypt.compare(String(password), acc.password);
+
+let okSec;
+if (securityCode === "__TRUSTED__") {
+  okSec = true;            // ✅ bypass khi máy đã trusted
+} else {
+  okSec = await bcrypt.compare(String(securityCode), acc.securityCode);
+}
+
+
+  if(!okPass || !okSec){
+    return res.json({ error:"invalid" });
+  }
+
+  const trusted = crypto.randomBytes(24).toString("hex");
+
+acc.trusted = acc.trusted || {};
+acc.trusted[trusted] = Date.now() + 30*24*60*60*1000; // 30 ngày
+
+saveUsers(db);
+
+res.json({
+  ok:true,
+  profile: {
+    ...acc.profile,
+    role: acc.role || "user" ,  // 🔥 THÊM
+    roles: acc.roles || []     // 🔥 THÊM DÒNG NÀY
+  },
+  trustedToken: trusted
+});
+
+
+});
+
+app.post("/api/check-trusted", (req,res)=>{
+  const { username, trustedToken } = req.body;
+  const db = loadUsers();
+  const acc = db[username];
+
+
+
+  if(!acc || !acc.trusted) return res.json({ ok:false });
+
+  const exp = acc.trusted[trustedToken];
+  if(!exp || exp < Date.now()){
+    delete acc.trusted[trustedToken];
+    saveUsers(db);
+    return res.json({ ok:false });
+  }
+
+  res.json({ ok:true });
+});
+
+
+
+app.get("/api/me/:uid", (req, res) => {
+  const targetUid = req.params.uid;
+  const viewerUid = req.headers["x-uid"]; // uid người đang xem
+
+  const db = loadUsers();
+  const target = db[targetUid];
+  if (!target || !target.profile) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  // 🚫 BLOCK CHECK (2 CHIỀU)
+  if (viewerUid && db[viewerUid]) {
+    const me = db[viewerUid].profile;
+    const you = target.profile;
+
+const blockedByMe =
+  (me.blockedUsers || []).includes(targetUid);
+const blockedByYou =
+  (you.blockedUsers || []).includes(viewerUid);
+
+
+    if (blockedByMe || blockedByYou) {
+      return res.status(403).json({
+        error: "blocked"
+      });
+    }
+  }
+
+  res.json({
+    profile: target.profile
+  });
+});
+
+
+
+
+// ===== API: DANH SÁCH ĐẠI LÝ NẠP COIN =====
+app.get("/api/topup-agents", (req, res) => {
+  const db = loadUsers();
+  const list = [];
+
+  for (const uid in db) {
+    const acc = db[uid];
+
+const roles = acc.roles || [];
+const role  = acc.role;
+
+if (
+  !roles.includes("agent") &&
+  role !== "agent"
+) continue;
+
+
+
+    const p = acc.profile || {};
+    const bank = p.bank || {};
+
+    list.push({
+      uid,
+      name: p.name || uid,
+      avatar: normalizeAvatar(p.avatar) ||
+        "https://i.ibb.co/GvJWn19q/icon-192.png" + uid,
+      bank: bank.name || "",
+      account: bank.account || "",
+      owner: bank.owner || "",
+      qr: bank.qr || "",
+      online: activeUsers.has(uid)
+
+    });
+  }
+
+  res.json({
+    ok: true,
+    agents: list
+  });
+});
+
+
+
+
+app.get("/api/all-users", (req,res)=>{
+  const db = loadUsers();
+  const list = [];
+
+  for(const uid in db){
+    const p = db[uid].profile || {};
+    list.push({
+      uid,
+      name: p.name || uid,
+      avatar: p.avatar || "https://i.ibb.co/GvJWn19q/icon-192.png" + uid,
+      cover: p.cover || "",
+      bio: p.bio || "",
+      level: p.level || 1,
+      role: db[uid].role || "user",
+      verified: !!p.verified   // ⭐ thêm
+    });
+  }
+
+  res.json(list);
+});
+
+
+
+ // ===== RESET / CHANGE PASSWORD =====
+
+app.post("/api/change-password", async (req,res)=>{
+  const { username, securityCode, newPassword } = req.body;
+  if(!username || !securityCode || !newPassword)
+    return res.json({ error:"missing" });
+
+  const db = loadUsers();
+
+  const acc = db[username];
+if(!acc) return res.json({ error:"notfound" });
+
+const ok = await bcrypt.compare(String(securityCode), acc.securityCode);
+if(!ok) return res.json({ error:"invalid" });
+
+acc.password = await bcrypt.hash(String(newPassword), 10);
+
+  saveUsers(db);
+
+  res.json({ ok:true });
+});
+
+
+app.post("/api/push-subscribe", (req, res) => {
+  const { uid, sub } = req.body;
+  if (!uid || !sub) return res.sendStatus(400);
+
+  if (!pushSubs.has(uid)) pushSubs.set(uid, []);
+  const arr = pushSubs.get(uid);
+
+  // tránh trùng endpoint
+  if (!arr.find(s => s.endpoint === sub.endpoint)) {
+    arr.push(sub);
+  }
+
+  res.json({ ok: true });
+});
+
+
+
+
+// ♻️ RESTORE LIVE ROOMS AFTER SERVER RESTART
+const persisted = loadLiveState();
+
+for (const roomId in persisted) {
+  const data = persisted[roomId];
+
+rooms.set(roomId, {
+  broadcasterId: null,
+  viewers: new Set(),
+  viewerProfiles: new Map(),
+  liveStartTs: null,
+  pinnedNote: null,
+  hostProfile: null,
+  giftTotal: 0,
+  giftByUser: new Map(),
+  releaseTimer: null,
+  pendingRelease: false,
+  streamReady: false // ✅ THÊM
+});
+
+
+}
+
+console.log("♻️ Restored live rooms:", Object.keys(persisted));
+
+
+
+
+
+
+// ===== GIFT ENGINE (coins) =====
+const GIFT_CATALOG = {
+  heart:      { emoji: "❤️", cost: 50, title: "Heart" },
+  flower:     { emoji: "🌸", cost: 100, title: "Flower" },
+  rocket:     { emoji: "🚀", cost: 200, title: "Rocket" },
+  coin:       { emoji: "💰", cost: 500, title: "Money Bag" },
+  king:       { emoji: "👑", cost: 1000, title: "Crown" },
+  galaxy:     { emoji: "🌌", cost: 2000, title: "Galaxy" },
+  meteor:     { emoji: "☄️", cost: 5000, title: "Meteor" },
+  dragon:     { emoji: "🐉", cost: 10000, title: "Dragon" },
+  phoenix:    { emoji: "🦅", cost: 10000, title: "Phoenix" },
+  dragonking: { emoji: "🐲", cost: 10000, title: "Dragon King" },
+  supernova:  { emoji: "🌠", cost: 10000, title: "Supernova" }
+};
+
+
+
+const START_COINS = 0; // coin mặc định cho mỗi người (demo)
+function clampInt(n, min, max){
+  n = Number(n);
+  if (!Number.isFinite(n)) n = 0;
+  n = Math.floor(n);
+  return Math.max(min, Math.min(max, n));
+}
+function safeName(name){
+  return String(name || "Anonymous").trim().slice(0, 20);
+}
+function roomGiftTop(room, limit=5){
+  const arr = [];
+  try{
+
+   for (const [k,v] of safeMap(room.giftByUser).entries()){
+  arr.push({ name: k, coins: v });
+}
+
+    
+  }catch{}
+  arr.sort((a,b)=>b.coins-a.coins);
+  return arr.slice(0, limit);
+}
+// ===== /GIFT ENGINE =====
+
+function normRoomId(roomId) {
+  return String(roomId || "").trim().toLowerCase();
+}
+
+
+function safeMap(m){ return m instanceof Map ? m : new Map(); }
+function safeSet(s){ return s instanceof Set ? s : new Set(); }
+
+function calcBitrate(viewerCount){
+  if(viewerCount < 5)   return 1500; // kbps
+  if(viewerCount < 15)  return 1000;
+  if(viewerCount < 30)  return 600;
+  if(viewerCount < 50)  return 400;
+  return 250;
+}
+
+
+function getRoom(roomId) {
+  roomId = normRoomId(roomId);
+  if (!rooms.has(roomId)) {
+
+ rooms.set(roomId, {
+  broadcasterId: null,
+  viewers: new Set(),
+  viewerProfiles: new Map(),
+  liveStartTs: null,
+  pinnedNote: null,
+  hostProfile: null,
+  giftTotal: 0,
+  giftByUser: new Map(),
+  releaseTimer: null,
+  pendingRelease: false,
+ 
+});
+
+
+  }
+  return rooms.get(roomId);
+}
+
+
+
+
+
+function emitViewerCount(roomId) {
+  const room = rooms.get(roomId);
+  if (!room) return;
+
+const active = [...safeMap(room.viewerProfiles).values()]
+  .filter(v => !v.mini).length;
+
+
+  io.to(roomId).emit("viewer-count", { count: active });
+
+   const vc = safeMap(room.viewerProfiles).size;
+  const br = calcBitrate(vc);
+  io.to(roomId).emit("set-bitrate", { bitrate: br });
+}
+
+
+/* ===== LOBBY (SẢNH CHỜ) ===== */
+function getLobbyList() {
+  const list = [];
+  for (const [roomId, room] of rooms.entries()) {
+    // điều kiện "đang live": có host + đã live-start
+    if (room.broadcasterId && room.liveStartTs) {
+      list.push({
+  roomId,
+  viewers: safeSet(room.viewers).size,
+  liveStartTs: room.liveStartTs,
+  host: room.hostProfile || null, // 👈 thêm
+});
+
+    }
+  }
+  // ưu tiên phòng đông người xem
+  list.sort((a, b) => (b.viewers - a.viewers) || (b.liveStartTs - a.liveStartTs));
+  return list;
+}
+
+function emitLobbyUpdate() {
+  io.emit("lobby-update", { rooms: getLobbyList(), ts: Date.now() });
+}
+
+
+// ICE servers from Twilio (TURN). Client will filter invalid STUN urls if any.
+app.get("/ice", async (_req, res) => {
+  try {
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+
+    if (!accountSid || !authToken) {
+      return res.status(500).json({ error: "Missing TWILIO_ACCOUNT_SID or TWILIO_AUTH_TOKEN" });
+    }
+
+    const client = twilio(accountSid, authToken);
+    const token = await client.tokens.create();
+
+    return res.json({ iceServers: token.iceServers });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+
+async function sendPushToUser(uid, payload) {
+  const subs = pushSubs.get(uid);
+  if (!subs || !subs.length) return;
+
+  for (let i = subs.length - 1; i >= 0; i--) {
+    try {
+      await webpush.sendNotification(subs[i], JSON.stringify(payload));
+    } catch (e) {
+      if (e.statusCode === 410 || e.statusCode === 404) {
+        subs.splice(i, 1); // xoá sub chết
+      }
+    }
+  }
+}
+
+
+
+
+
+function closeRoom(roomId, reason = "host_left") {
+  const room = rooms.get(roomId);   // 🔥 LẤY ROOM TRƯỚC
+  if (!room) return;
+
+
+
+
+  // 🔔 notify host
+  if(room.hostProfile?.uid){
+    pushNotify(room.hostProfile.uid,{
+      type:"system",
+      text:"Your livestream room has been closed"
+    });
+  }
+
+  // 💾 xóa live_state
+  const state = loadLiveState();
+  delete state[roomId];
+  saveLiveState(state);
+
+  // 🚨 báo cho toàn bộ viewer + guest
+  io.to(roomId).emit("room-closed", { reason });
+
+  // clear state
+  room.broadcasterId = null;
+  room.liveStartTs = null;
+  room.viewers.clear();
+  safeMap(room.viewerProfiles).clear();
+
+
+  room.giftTotal = 0;
+  room.giftByUser = new Map();
+
+  emitLobbyUpdate();
+
+  // xoá room sau 1 chút cho client kịp nhận event
+  setTimeout(() => {
+    rooms.delete(roomId);
+  }, 1000);
+}
+
+
+
+
+
+
+
+
+io.on("connection", (socket) => {
+
+
+
+
+
+
+
+ // lấy deviceId từ client
+  socket.data.deviceId = socket.handshake.auth?.deviceId;
+
+  // 🔐 ADMIN / USER REGISTER
+  socket.on("register-admin", (uid) => {
+    if (!uid) return;
+    bindSocketToUser(uid, socket);
+    console.log("🧑‍⚖️ ADMIN REGISTER:", uid, socket.id);
+  });
+
+  socket.on("register-user", (uid) => {
+    if (!uid) return;
+    bindSocketToUser(uid, socket);
+    console.log("👤 USER REGISTER:", uid, socket.id);
+  });
+
+
+
+// 🔐 AUTH SOCKET (BẮT BUỘC – TOÀN APP)
+socket.on("auth", ({ uid, deviceId }) => {
+  if (!uid) return;
+
+  const users = loadUsers();
+  const me = users[uid];
+
+  socket.data.uid = uid;
+  socket.data.deviceId = deviceId || null;
+
+  // 🔥 thêm dòng này
+  socket.data.role = me?.role || me?.profile?.role || "user";
+
+  bindSocketToUser(uid, socket);
+});
+
+
+
+socket.on("disconnect", () => {
+  const uid = socket.data.uid;
+  if (!uid) return;
+
+  const set = activeUsers.get(uid);
+  if (!set) return;
+
+  set.delete(socket.id);
+  if (set.size === 0) activeUsers.delete(uid);
+
+  console.log("🔌 SOCKET DISCONNECT:", uid, socket.id);
+});
+
+
+
+
+// ================================
+// 💬 CHAT 1–1 (ADMIN BYPASS FRIEND)
+// ================================
+socket.on("private-message", async ({ to, text, msgId }) => {
+
+  const fromUid = socket.data.uid
+  const toUid = to
+
+  if (!fromUid || !toUid) return
+
+  const db = loadUsers()
+  const fromAcc = db[fromUid]
+  const toAcc   = db[toUid]
+
+  if (!fromAcc || !toAcc) return
+
+
+  // 🚫 BLOCK CHECK
+  if (
+    (fromAcc.profile?.blockedUsers || []).includes(toUid) ||
+    (toAcc.profile?.blockedUsers || []).includes(fromUid)
+  ){
+    return
+  }
+
+
+// =========================
+// 👑 ADMIN CHECK
+// =========================
+const senderIsAdmin =
+  socket.data.role === "admin" ||
+  fromAcc.role === "admin" ||
+  fromAcc.profile?.role === "admin"
+
+const receiverIsAdmin =
+  toAcc.role === "admin" ||
+  toAcc.profile?.role === "admin"
+
+
+// =========================
+// 👥 FRIEND CHECK
+// =========================
+const needFriendCheck =
+  !senderIsAdmin && !receiverIsAdmin
+
+if (needFriendCheck) {
+
+  const friends = fromAcc.profile?.friends || []
+
+  if (!friends.includes(toUid)) {
+
+    socket.emit("msg-blocked",{
+      reason:"not_friend"
+    })
+
+    return
+  }
+
+}
+
+
+  const msg = {
+    id: msgId || Date.now()+"_"+Math.random().toString(36).slice(2),
+    from: fromUid,
+    to: toUid,
+    text: text || "",
+    time: Date.now(),
+    read:false
+  }
+
+
+  // 💾 SAVE INBOX
+  ;[fromUid,toUid].forEach(uid=>{
+    if(!userInbox.has(uid)) userInbox.set(uid,[])
+    userInbox.get(uid).unshift(msg)
+  })
+
+  saveInbox(Object.fromEntries(userInbox))
+
+
+  // 🔁 REALTIME
+  const sockets = activeUsers.get(toUid)
+
+  if(sockets){
+    for(const sid of sockets){
+      io.to(sid).emit("private-message",{
+        from:{
+          uid:fromUid,
+          name:fromAcc.profile.name,
+          avatar:fromAcc.profile.avatar
+        },
+        text:msg.text,
+        msgId:msg.id
+      })
+    }
+  }
+
+
+  // 🔔 PUSH OFFLINE
+  await sendPushToUser(toUid,{
+    title: senderIsAdmin
+      ? "You have a new message."
+      : "New message",
+
+    body: text?.slice(0,80) || "You have a new message",
+
+    url:`/messages.html?uid=${fromUid}`,
+    tag:"chat-message"
+  })
+
+})
+
+
+// ================================
+// 🔔 USER ĐÃ CHUYỂN KHOẢN (TOPUP)
+// ================================
+socket.on("topup-transferred", async ({ fromUid, agentUid, time }) => {
+  if (!fromUid || !agentUid) return;
+
+  console.log("💸 TOPUP TRANSFER:", fromUid, "→", agentUid);
+
+  const ts = time || Date.now();
+
+  // =====================
+  // 1️⃣ REALTIME cho đại lý (nếu online)
+  // =====================
+  const sockets = activeUsers.get(agentUid);
+  if (sockets) {
+    for (const sid of sockets) {
+      io.to(sid).emit("topup-user-waiting", {
+        fromUid,
+        time: ts
+      });
+    }
+  }
+
+  // =====================
+  // 2️⃣ LƯU INBOX cho đại lý (offline vẫn thấy)
+  // =====================
+  if (!userInbox.has(agentUid)) {
+    userInbox.set(agentUid, []);
+  }
+
+  userInbox.get(agentUid).unshift({
+    type: "topup-waiting",
+    from: fromUid,
+    text: `${fromUid} has sent a transfer — please check`,
+    time: ts,
+    read: false
+  });
+
+  saveInbox(Object.fromEntries(userInbox));
+
+  // =====================
+  // 3️⃣ PUSH NOTIFICATION cho đại lý (khi offline)
+  // =====================
+  await sendPushToUser(agentUid, {
+    title: "Coin top-up request",
+    body: `${fromUid} has sent a transfer`,
+    url: "/lsp-admin-128995.html#topup",
+    tag: "topup-waiting"
+  });
+
+  // =====================
+  // 4️⃣ THÔNG BÁO CHO ADMIN (realtime)
+  // =====================
+  for (const [uid, sockets] of activeUsers.entries()) {
+    const db = loadUsers();
+    if (db[uid]?.role !== "admin") continue;
+
+    for (const sid of sockets) {
+      io.to(sid).emit("topup-admin-notify", {
+        fromUid,
+        agentUid,
+        time: ts
+      });
+    }
+  }
+
+});
+
+
+
+
+// 🔐 LOGIN SOCKET (CHUẨN HOÁ)
+socket.on("socket-login", ({ uid }) => {
+  bindSocketToUser(uid, socket);
+  emitAgentStatus(uid, true);
+});
+
+socket.on("auth-login", ({ uid }) => {
+  bindSocketToUser(uid, socket);
+  emitAgentStatus(uid, true);
+});
+
+
+// ❌ HANDLE DISCONNECT (BẮT BUỘC)
+socket.on("disconnect", () => {
+  const uid = socket.data.uid;
+  if (!uid) return;
+
+  const set = activeUsers.get(uid);
+  if (set) {
+    set.delete(socket.id);
+    if (set.size === 0) {
+      activeUsers.delete(uid);
+      emitAgentStatus(uid, false);
+    }
+  }
+
+  console.log("❌ SOCKET OFFLINE:", uid, socket.id);
+});
+
+
+socket.on("lp-gift-post", async ({ postId, toUid, fromUid, giftId, coin }) => {
+
+  // 🔒 CHẶN USER BỊ KHOÁ
+  if (blockIfLocked(socket)) return;
+
+  // 🚫 CHẶN GUEST
+  if (String(socket.data.uid || "").startsWith("guest_")) {
+    socket.emit("need-login", { feature: "gift" });
+    return;
+  }
+
+  if (!postId || !toUid || !fromUid || !coin) return;
+
+  const db = loadUsers();
+  const from = db[fromUid];
+  const to   = db[toUid];
+  const post = getPost(postId);
+
+  if (!from || !to || !post) return;
+
+  // 🚫 không cho tự tặng chính mình
+  if (fromUid === toUid) return;
+
+  const cost = Number(coin);
+  if (!Number.isFinite(cost) || cost <= 0) return;
+
+  // 🚫 không đủ kim cương
+  if ((from.profile.coins || 0) < cost) {
+    socket.emit("gift-failed", { reason: "not_enough_coin" });
+    return;
+  }
+
+  // =========================
+  // 💰 TRỪ / CỘNG COIN
+  // =========================
+  from.profile.coins -= cost;
+  from.profile.coinSent = (from.profile.coinSent || 0) + cost;
+
+  to.profile.coinReceived =
+    (to.profile.coinReceived || 0) + cost;
+
+  // =========================
+  // ⭐ EXP + LEVEL (NGƯỜI NHẬN)
+  // =========================
+  let toLevelUp = false;
+
+  to.profile.exp = (to.profile.exp || 0) + cost;
+
+  while (to.profile.exp >= (to.profile.level || 1) * 100) {
+    to.profile.exp -= (to.profile.level || 1) * 100;
+    to.profile.level = (to.profile.level || 1) + 1;
+    toLevelUp = true;
+  }
+
+  // =========================
+  // ⭐ EXP + LEVEL (NGƯỜI TẶNG)
+  // =========================
+  let fromLevelUp = false;
+
+  // tặng quà nhận ít exp hơn
+  from.profile.exp =
+    (from.profile.exp || 0) + Math.floor(cost * 0.5);
+
+  while (from.profile.exp >= (from.profile.level || 1) * 100) {
+    from.profile.exp -= (from.profile.level || 1) * 100;
+    from.profile.level = (from.profile.level || 1) + 1;
+    fromLevelUp = true;
+  }
+
+  // =========================
+  // 🎁 LƯU GIFT VÀO POST
+  // =========================
+  post.gifts ||= { total: 0, byUser: {} };
+
+  post.gifts.total += cost;
+
+  post.gifts.byUser[fromUid] =
+    (post.gifts.byUser[fromUid] || 0) + cost;
+
+  saveUsers(db);
+  saveSocial();
+
+  // =========================
+  // 🔄 REALTIME UPDATE
+  // =========================
+  io.emit("lp-gift-post", {
+    postId,
+    total: post.gifts.total,
+    fromUid,
+    amount: cost
+  });
+
+  emitCoinUpdate(fromUid);
+  emitCoinUpdate(toUid);
+
+  // =========================
+  // 🔔 INBOX + PUSH
+  // =========================
+  const giftText =
+    `🎁 ${from.profile.name} gifted you ${cost.toLocaleString()} 💎`;
+
+  if (!userInbox.has(toUid)) userInbox.set(toUid, []);
+
+  userInbox.get(toUid).unshift({
+    type: "post-gift",
+    from: fromUid,
+    text: giftText,
+    postId,
+    amount: cost,
+    time: Date.now(),
+    read: false
+  });
+
+  saveInbox(Object.fromEntries(userInbox));
+
+  await sendPushToUser(toUid, {
+    title: "You received a gift",
+    body: giftText,
+    url: `/social.html#post-${postId}`,
+    tag: "post-gift"
+  });
+
+});
+
+
+socket.on("coin-transfer", ({target, amount}) => {
+
+  const fromUid = socket.data.uid;
+  if(!fromUid || !target) return;
+
+  const users = loadUsers();
+
+  let toUid = null;
+
+  // 1️⃣ nếu nhập UID
+  if(users[target]){
+    toUid = target;
+  }
+
+  // 2️⃣ nếu không phải UID → tìm theo tên
+  if(!toUid){
+    const key = Object.keys(users).find(uid =>
+      users[uid]?.profile?.name
+        ?.toLowerCase() === target.toLowerCase()
+    );
+
+    if(key) toUid = key;
+  }
+
+  if(!toUid){
+    return emitToUser(fromUid,"notify",{
+      type:"bad",
+      message:"Player not found"
+    });
+  }
+
+  if(toUid === fromUid){
+    return emitToUser(fromUid,"notify",{
+      type:"bad",
+      message:"You cannot send coins to yourself"
+    });
+  }
+
+  const from = users[fromUid];
+  const to   = users[toUid];
+
+  amount = Math.floor(Number(amount));
+
+  if(from.profile.coins < amount){
+    return emitToUser(fromUid,"notify",{
+      type:"bad",
+      message:"Insufficient diamonds"
+    });
+  }
+
+// 💎 transfer
+from.profile.coins -= amount;
+to.profile.coins   += amount;
+
+// 📊 thống kê người gửi
+from.profile.coinSent =
+  (from.profile.coinSent || 0) + amount;
+
+// ❌ KHÔNG cộng coinReceived
+
+
+// lưu lịch sử
+from.transferHistory = from.transferHistory || [];
+to.transferHistory   = to.transferHistory || [];
+
+from.transferHistory.unshift({
+  type:"send",
+  uid:toUid,
+  name:to.profile.name,
+  avatar:to.profile.avatar,
+  amount,
+  time:Date.now()
+})
+
+to.transferHistory.unshift({
+  type:"receive",
+  uid:fromUid,
+  name:from.profile.name,
+  avatar:from.profile.avatar,
+  amount,
+  time:Date.now()
+})
+
+// giữ tối đa 50
+from.transferHistory = from.transferHistory.slice(0,50);
+to.transferHistory   = to.transferHistory.slice(0,50);
+
+
+  saveUsers(users);
+
+  emitCoinUpdate(fromUid);
+  emitCoinUpdate(toUid);
+
+emitToUser(fromUid,"notify",{
+  type:"good",
+  message:`💎 Sent ${amount} diamonds to ${to.profile.name}`
+});
+
+emitToUser(toUid,"notify",{
+  type:"good",
+  message:`🎁 ${from.profile.name} sent you ${amount} diamonds`
+});
+});
+
+
+socket.on("transfer-preview", ({target}) => {
+
+  const users = loadUsers();
+
+  let uid = null;
+
+  if(users[target]){
+    uid = target;
+  }
+
+  if(!uid){
+    const key = Object.keys(users).find(u =>
+      users[u]?.profile?.name?.toLowerCase() === target.toLowerCase()
+    );
+    if(key) uid = key;
+  }
+
+  if(!uid){
+    return socket.emit("transfer-preview-result",{ok:false});
+  }
+
+  const u = users[uid];
+
+  socket.emit("transfer-preview-result",{
+    ok:true,
+    uid,
+    name: u.profile.name,
+    avatar: u.profile.avatar,
+    level: u.profile.level,
+    coins: u.profile.coins
+  });
+
+});
+
+socket.on("coin-transfer-history", () => {
+
+  const uid = socket.data.uid
+  if(!uid) return
+
+  const users = loadUsers()
+  const me = users[uid]
+
+  socket.emit("coin-transfer-history-result", {
+    history: me.transferHistory || []
+  })
+
+})
+
+
+
+socket.on("coin-transfer-history-result",(list)=>{
+
+  const box =
+    document.getElementById("transferHistoryList");
+
+  box.innerHTML = "";
+
+  if(!list || list.length === 0){
+    box.innerHTML = "<div>No transactions yet</div>";
+    return;
+  }
+
+  list.forEach(t => {
+
+    const div = document.createElement("div");
+
+    div.style.padding = "8px";
+    div.style.borderBottom = "1px solid #333";
+
+    const type =
+      t.type === "send"
+      ? "Sent"
+      : "Received";
+
+    div.innerHTML = `
+      <div><b>${type}</b> ${t.amount} 💎</div>
+      <div>${t.name}</div>
+      <div style="font-size:12px;opacity:.7">
+        ${new Date(t.time).toLocaleString()}
+      </div>
+    `;
+
+    box.appendChild(div);
+
+  });
+
+});
+
+
+
+socket.on("clear-my-messages", ({ peer }) => {
+  const me = socket.data.uid;
+  if(!me || !peer) return;
+
+  console.log("🧹 Clear my messages:", me, "→", peer);
+
+  // 1️⃣ XÓA OFFLINE INBOX (CẢ 2 USER)
+  [me, peer].forEach(uid => {
+    const inbox = userInbox.get(uid);
+    if(!inbox) return;
+
+    const filtered = inbox.filter(
+      m => !(m.from === me && m.to === peer)
+    );
+
+    userInbox.set(uid, filtered);
+  });
+
+  saveInbox(Object.fromEntries(userInbox));
+
+  // 2️⃣ REALTIME: báo B để xóa local
+  const sockets = activeUsers.get(peer);
+  if (sockets) {
+    for (const sid of sockets) {
+      io.to(sid).emit("peer-cleared-my-messages", {
+        by: me
+      });
+    }
+  }
+});
+
+
+
+
+
+  // 🚫 THU HỒI TIN NHẮN
+socket.on("revoke-message", ({ msgId }) => {
+  if (!msgId) return;
+
+  const fromUid = socket.data.uid;
+  if (!fromUid) return;
+
+  // 1️⃣ CẬP NHẬT INBOX SERVER (offline messages)
+  for (const [uid, inbox] of userInbox.entries()) {
+    let changed = false;
+
+    for (const m of inbox) {
+      if (m.id === msgId && m.from === fromUid) {
+        m.text = "__REVOKED__";
+        m.revoked = true;
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      userInbox.set(uid, inbox);
+    }
+  }
+
+  saveInbox(Object.fromEntries(userInbox));
+
+  // 2️⃣ BẮN REALTIME CHO TẤT CẢ SOCKET KHÁC
+  socket.broadcast.emit("revoke-message", { msgId });
+});
+
+
+socket.on("user-block", ({ uid }) => {
+  const me = socket.data.uid;
+  if (!me || !uid || me === uid) return;
+
+  const db = loadUsers();
+  const uMe = db[me];
+  if (!uMe) return;
+
+uMe.profile.blockedUsers ||= [];
+
+  if (!uMe.profile.blockedUsers.includes(uid)) {
+  uMe.profile.blockedUsers.push(uid);
+  }
+
+  // 🔥 BLOCK → TỰ HUỶ KẾT BẠN NẾU CÓ
+  uMe.profile.friends = (uMe.profile.friends || []).filter(x => x !== uid);
+  const uYou = db[uid];
+  if (uYou) {
+    uYou.profile.friends =
+      (uYou.profile.friends || []).filter(x => x !== me);
+
+    // xoá request 2 chiều nếu còn
+    uYou.profile.friendRequests =
+      (uYou.profile.friendRequests || []).filter(x => x !== me);
+  }
+
+  saveUsers(db);
+
+
+  // 🔔 REALTIME: BLOCK (BÁO CHO NGƯỜI BỊ BLOCK)
+const sockets = activeUsers.get(uid);
+if (sockets) {
+  for (const sid of sockets) {
+    io.to(sid).emit("user-blocked", {
+      by: me
+    });
+  }
+}
+
+
+  socket.emit("user-blocked", { uid });
+});
+
+
+
+
+socket.on("user-unblock", ({ uid }) => {
+  const me = socket.data.uid;
+  if (!me || !uid) return;
+
+  const db = loadUsers();
+  const uMe = db[me];
+  if (!uMe) return;
+
+uMe.profile.blockedUsers =
+  (uMe.profile.blockedUsers || []).filter(x => x !== uid);
+
+
+  saveUsers(db);
+
+  // 🔔 realtime cho chính mình
+  socket.emit("user-unblocked", { uid });
+
+  // 🔔 realtime cho người vừa được unblock
+  const sockets = activeUsers.get(uid);
+  if (sockets) {
+    for (const sid of sockets) {
+      io.to(sid).emit("user-unblocked-by", {
+        by: me
+      });
+    }
+  }
+});
+
+
+
+
+socket.on("friend-request", ({ to }) => {
+
+  
+  const from = socket.data.uid;
+  if (!from || !to || from === to) return;
+
+  const db = loadUsers();
+  const uFrom = db[from];
+  const uTo = db[to];
+  if (!uFrom || !uTo) return;
+
+
+// 🚫 BLOCK CHECK
+if (
+  (uFrom.profile.blockedUsers || []).includes(to) ||
+  (uTo.profile.blockedUsers || []).includes(from)
+) {
+  return;
+}
+
+  uFrom.profile.friends ||= [];
+  uTo.profile.friends ||= [];
+  uTo.profile.friendRequests ||= [];
+
+  // đã là bạn → bỏ qua
+  if (uFrom.profile.friends.includes(to)) return;
+
+  // đã gửi rồi → bỏ qua
+  if (uTo.profile.friendRequests.includes(from)) return;
+
+  uTo.profile.friendRequests.push(from);
+  saveUsers(db);
+
+  // realtime nếu online
+  const sockets = activeUsers.get(to);
+  if (sockets) {
+    for (const sid of sockets) {
+      io.to(sid).emit("friend-request", {
+        from,
+        name: uFrom.profile.name,
+        avatar: uFrom.profile.avatar
+      });
+    }
+  }
+});
+
+socket.on("friend-respond", ({ from, accept }) => {
+  const to = socket.data.uid;
+  if (!from || !to) return;
+
+  const db = loadUsers();
+  const uFrom = db[from];
+  const uTo = db[to];
+  if (!uFrom || !uTo) return;
+
+  uFrom.profile.friends ||= [];
+  uTo.profile.friends ||= [];
+  uTo.profile.friendRequests ||= [];
+
+  // xoá request
+  uTo.profile.friendRequests =
+    uTo.profile.friendRequests.filter(x => x !== from);
+
+  if (accept) {
+    if (!uFrom.profile.friends.includes(to))
+      uFrom.profile.friends.push(to);
+
+    if (!uTo.profile.friends.includes(from))
+      uTo.profile.friends.push(from);
+  }
+
+  saveUsers(db);
+
+  // báo realtime cho người gửi
+  const sockets = activeUsers.get(from);
+  if (sockets) {
+    for (const sid of sockets) {
+      io.to(sid).emit("friend-respond", {
+        uid: to,
+        accept
+      });
+    }
+  }
+
+// 🔔 REALTIME: ĐÃ LÀ BẠN (BẬT CHAT CHO CẢ 2)
+if (accept) {
+  const socketsA = activeUsers.get(from); // người gửi lời mời
+  const socketsB = activeUsers.get(to);   // người accept
+
+  [socketsA, socketsB].forEach(socks => {
+    if (!socks) return;
+    for (const sid of socks) {
+      io.to(sid).emit("friend-accepted", {
+        a: from,
+        b: to
+      });
+    }
+  });
+}
+
+
+});
+
+
+socket.on("friend-cancel", ({ uid }) => {
+  const meUid = socket.data.uid;
+  if (!meUid || !uid) return;
+
+  const db = loadUsers();
+  const me = db[meUid];
+  const other = db[uid];
+
+  if (!me || !other) return;
+
+  // me.sent = lời mời đã gửi
+  me.friends ||= {};
+  other.friends ||= {};
+
+  me.friends.sent = (me.friends.sent || []).filter(u => u !== uid);
+  other.friends.requests = (other.friends.requests || []).filter(u => u !== meUid);
+
+  saveUsers(db);
+});
+
+
+
+
+
+socket.on("friend-remove", ({ uid }) => {
+  const me = socket.data.uid;
+  if (!me || !uid) return;
+
+  const db = loadUsers();
+  const uMe = db[me];
+  const uYou = db[uid];
+  if (!uMe || !uYou) return;
+
+  uMe.profile.friends ||= [];
+  uYou.profile.friends ||= [];
+
+  // ❌ xoá 2 chiều
+  uMe.profile.friends = uMe.profile.friends.filter(x => x !== uid);
+  uYou.profile.friends = uYou.profile.friends.filter(x => x !== me);
+
+  saveUsers(db);
+
+  // 🔁 realtime nếu người kia online
+  const sockets = activeUsers.get(uid);
+  if (sockets) {
+    for (const sid of sockets) {
+      io.to(sid).emit("friend-removed", { uid: me });
+    }
+  }
+
+  // báo lại cho người bấm
+  socket.emit("friend-removed", { uid });
+});
+
+socket.on("lp-like-reply", async ({ postId, commentIndex, replyId, uid }) => {
+  const post = getPost(postId);
+  if (!post) return;
+
+  const c = post.comments?.[commentIndex];
+  if (!c || !c.replies) return;
+
+  const r = c.replies.find(x => x.id === replyId);
+  if (!r) return;
+
+  r.likes = r.likes || [];
+
+  const i = r.likes.indexOf(uid);
+  const liked = i === -1;
+
+  if (liked) r.likes.push(uid);
+  else r.likes.splice(i, 1);
+
+  saveSocial();
+
+  io.emit("lp-like-reply", {
+    postId,
+    commentIndex,
+    replyId,
+    likes: r.likes.length
+  });
+
+  // 🔔 PUSH cho chủ reply
+  if (liked && r.uid && r.uid !== uid) {
+    await sendPushToUser(r.uid, {
+      	title: "❤️ Reply liked",
+      body: `${socket.data.profile?.name || "Someone"} liked your reply`,
+      url: `/social.html#post-${postId}`
+    });
+  }
+});
+
+socket.on("lp-reply-child", ({ postId, commentIndex, replyId, uid, name, avatar, text })=>{
+  const post = getPost(postId);
+  if(!post) return;
+
+  const c = post.comments?.[commentIndex];
+  if(!c || !c.replies) return;
+
+  const parent = c.replies.find(r => r.id === replyId);
+  if(!parent) return;
+
+  parent.replies = parent.replies || [];
+
+  const child = {
+    id: Date.now() + "_" + Math.random().toString(36).slice(2),
+    uid, name, avatar,
+    text: String(text).slice(0,200),
+    time: Date.now(),
+    likes: [],
+    replies:[]
+  };
+
+  parent.replies.push(child);
+  saveSocial();
+
+  io.emit("lp-reply-child", {
+    postId,
+    commentIndex,
+    replyId,
+    child
+  });
+});
+
+socket.on("lp-like-comment", async ({ postId, index, uid }) => {
+  const post = getPost(postId);
+  if (!post || !post.comments || !post.comments[index]) return;
+
+  const c = post.comments[index];
+  c.likes = c.likes || [];
+
+  const i = c.likes.indexOf(uid);
+  const liked = i === -1;
+
+  if (liked) c.likes.push(uid);
+  else c.likes.splice(i, 1);
+
+  saveSocial();
+
+  io.emit("lp-like-comment", {
+    postId,
+    index,
+    likes: c.likes.length
+  });
+
+  // 🔔 PUSH cho chủ comment
+  if (liked && c.uid && c.uid !== uid) {
+    await sendPushToUser(c.uid, {
+      	title: "❤️ Comment liked",
+     body: `${socket.data.profile?.name || "Someone"} liked your comment`,
+      url: `/social.html#post-${postId}`
+    });
+  }
+});
+
+socket.on("lp-delete", ({ postId, uid })=>{
+  const idx = lpPosts.findIndex(p => p.id === postId && p.uid === uid);
+  if(idx < 0) return;  // không phải chủ bài → không cho
+
+  lpPosts.splice(idx,1);
+  saveSocial();
+
+  io.emit("lp-delete", { postId });
+});
+
+
+  // ===== LIVESTREAM PRO SOCIAL =====
+
+// gửi feed khi user vừa kết nối
+socket.emit("lp-init", lpPosts.slice(0, 50));
+
+
+
+socket.on("lp-edit-post", ({ postId, uid, text, images })=>{
+  const post = getPost(postId);
+  if(!post) return;
+
+  // 🔐 chỉ chủ bài mới được sửa
+  if(post.uid !== uid) return;
+
+  post.text = String(text || "").slice(0,500);
+
+  // 🔥 QUAN TRỌNG: cập nhật ảnh
+  if (Array.isArray(images)) {
+    post.images = images;
+    delete post.image; // xoá legacy field nếu còn
+  }
+
+  post.edited = Date.now();
+
+  saveSocial();
+
+  // 🔥 EMIT ĐẦY ĐỦ
+  io.emit("lp-edit-post", {
+    postId,
+    text: post.text,
+    images: post.images || []
+  });
+});
+
+
+
+
+socket.on("lp-post", post => {
+ if(!post || !post.uid || (!post.text && !post.image && !post.video)) return;
+
+  const clean = {
+    id: Date.now() + "_" + Math.random().toString(36).slice(2),
+    uid: String(post.uid),
+    name: String(post.name || "User").slice(0,20),
+    avatar: String(post.avatar || ""),
+    text: String(post.text || "").slice(0, 500),
+    images: post.images || [],   // 🔥 MẢNG ẢNH
+    video: String(post.video || ""),   // 👈 THÊM
+    time: Date.now(),
+    likes: [],
+    comments: []
+  };
+
+  lpPosts.unshift(clean);
+  saveSocial();
+
+  if(lpPosts.length > 200) lpPosts.length = 200;
+
+  io.emit("lp-post", clean);
+});
+
+
+socket.on("lp-like", async ({ postId, uid }) => {
+  const post = getPost(postId);
+  if (!post || !uid) return;
+
+  post.likes = post.likes || [];
+
+  const i = post.likes.indexOf(uid);
+  const liked = i < 0;
+
+  if (liked) post.likes.push(uid);
+  else post.likes.splice(i, 1);
+
+  saveSocial();
+
+  io.emit("lp-like", {
+    postId,
+    likes: post.likes.length
+  });
+
+  // 🔔 PUSH cho chủ bài (nếu like mới & không tự like)
+  if (liked && post.uid !== uid) {
+    await sendPushToUser(post.uid, {
+      title: "❤️ Post liked",
+      body: `${socket.data.profile?.name || "Someone"} liked your post`,
+      url: `/social.html#post-${postId}`
+    });
+  }
+});
+
+
+socket.on("lp-comment", async ({ postId, uid, name, avatar, text }) => {
+  const post = getPost(postId);
+  if (!post || !uid || !text) return;
+
+  post.comments = post.comments || [];
+
+  const c = {
+    uid,
+    name,
+    avatar,
+    text: text.slice(0,200),
+    time: Date.now(),
+    likes:[]
+  };
+
+  post.comments.push(c);
+  saveSocial();
+
+  io.emit("lp-comment", {
+    postId,
+    postOwnerUid: post.uid,
+    comment: c,
+    count: post.comments.length
+  });
+
+  // 🔔 PUSH cho chủ bài
+  if (post.uid !== uid) {
+    await sendPushToUser(post.uid, {
+      title: "💬 New comment",
+      body: `${name}: ${text.slice(0,60)}`,
+      url: `/social.html#post-${postId}`
+    });
+  }
+});
+
+
+
+socket.on("lp-reply", async ({ postId, commentIndex, uid, name, avatar, text }) => {
+  const post = getPost(postId);
+  if (!post || !text) return;
+
+  const c = post.comments?.[commentIndex];
+  if (!c) return;
+
+  c.replies = c.replies || [];
+
+  const r = {
+    id: Date.now()+"_"+Math.random().toString(36).slice(2),
+    uid, name, avatar,
+    text: text.slice(0,200),
+    time: Date.now(),
+    likes:[]
+  };
+
+  c.replies.push(r);
+  saveSocial();
+
+  io.emit("lp-reply", {
+    postId,
+    commentIndex,
+    reply: r,
+    count: c.replies.length
+  });
+
+  // 🔔 PUSH cho người bị reply
+  if (c.uid && c.uid !== uid) {
+    await sendPushToUser(c.uid, {
+      title: "💬 Comment reply",
+      body: `${name}: ${text.slice(0,60)}`,
+      url: `/social.html#post-${postId}`
+    });
+  }
+});
+
+
+
+socket.on("lp-delete-comment", ({ postId, index, uid })=>{
+  const post = getPost(postId);
+  if(!post || !post.comments || !post.comments[index]) return;
+
+  const c = post.comments[index];
+
+  // 🔐 chỉ cho chủ comment hoặc chủ bài
+  if(c.uid !== uid && post.uid !== uid) return;
+
+  post.comments.splice(index,1);
+  saveSocial();
+
+  io.emit("lp-delete-comment", { postId, index });
+});
+
+
+
+socket.on("lp-delete-reply", ({ postId, commentIndex, replyId, uid })=>{
+  const post = getPost(postId);
+  if(!post) return;
+
+  const c = post.comments?.[commentIndex];
+  if(!c || !c.replies) return;
+
+  const idx = c.replies.findIndex(r=>r.id===replyId);
+  if(idx < 0) return;
+
+  const r = c.replies[idx];
+
+  // 🔐 chỉ chủ reply hoặc chủ bài
+  if(r.uid !== uid && post.uid !== uid) return;
+
+  c.replies.splice(idx,1);
+  saveSocial();
+
+  io.emit("lp-delete-reply", {
+    postId,
+    commentIndex,
+    replyId
+  });
+});
+
+
+
+socket.on("lp-delete-reply-child", ({ postId, commentIndex, replyId, childId, uid })=>{
+  const post = getPost(postId);
+  if(!post) return;
+
+  const c = post.comments?.[commentIndex];
+  if(!c || !c.replies) return;
+
+  const parent = c.replies.find(r=>r.id===replyId);
+  if(!parent || !parent.replies) return;
+
+  const idx = parent.replies.findIndex(x=>x.id===childId);
+  if(idx < 0) return;
+
+  const child = parent.replies[idx];
+
+  // 🔐 chỉ chủ reply-of-reply hoặc chủ bài
+  if(child.uid !== uid && post.uid !== uid) return;
+
+  parent.replies.splice(idx,1);
+  saveSocial();
+
+  io.emit("lp-delete-reply-child", {
+    postId,
+    commentIndex,
+    replyId,
+    childId
+  });
+});
+
+
+socket.on("lp-like-reply-child", async ({ postId, commentIndex, replyId, childId, uid }) => {
+  const post = getPost(postId);
+  if (!post) return;
+
+  const c = post.comments?.[commentIndex];
+  if (!c || !c.replies) return;
+
+  const parent = c.replies.find(r => r.id === replyId);
+  if (!parent || !parent.replies) return;
+
+  const child = parent.replies.find(x => x.id === childId);
+  if (!child) return;
+
+  child.likes = child.likes || [];
+
+  const i = child.likes.indexOf(uid);
+  const liked = i === -1;
+
+  if (liked) child.likes.push(uid);
+  else child.likes.splice(i, 1);
+
+  saveSocial();
+
+  io.emit("lp-like-reply-child", {
+    postId,
+    commentIndex,
+    replyId,
+    childId,
+    likes: child.likes.length
+  });
+
+  // 🔔 PUSH cho chủ reply-child
+  if (liked && child.uid && child.uid !== uid) {
+    await sendPushToUser(child.uid, {
+      title: "❤️ Reply liked",
+      body: `${socket.data.profile?.name || "Someone"} liked your reply`,
+      url: `/social.html#post-${postId}`
+    });
+  }
+});
+
+
+
+
+socket.on("private-message", async ({ to, text, type, media, msgId }) => {
+
+
+  if (blockIfLocked(socket)) return;
+
+
+  const fromUid = socket.data.uid;
+if (!fromUid || !to) return;
+
+
+
+
+
+// 🔒 CHỈ CHO PHÉP NHẮN TIN VỚI BẠN BÈ
+const db = loadUsers();
+const me = db[fromUid];
+const you = db[to];
+
+if (!me || !you) return;
+
+// 🚫 BLOCK CHECK (2 chiều)
+me.profile.blockedUsers ||= [];
+you.profile.blockedUsers ||= [];
+
+const blockedMe = me.profile.blockedUsers.includes(to);
+const blockedByYou = you.profile.blockedUsers.includes(fromUid);
+
+
+if (blockedMe || blockedByYou) {
+  socket.emit("msg-blocked", {
+    reason: "blocked",
+    to
+  });
+  return;
+}
+
+// 🔧 NORMALIZE FRIEND LIST (FIX BUG)
+const myFriends = Array.isArray(me.profile.friends)
+  ? me.profile.friends
+  : [];
+
+const yourFriends = Array.isArray(you.profile.friends)
+  ? you.profile.friends
+  : [];
+
+const isAdmin = me.role === "admin";
+
+
+
+
+// 🔒 USER THƯỜNG → BẮT BUỘC LÀ BẠN 2 CHIỀU
+if (
+  !isAdmin &&
+  (!myFriends.includes(to) || !yourFriends.includes(fromUid))
+) {
+  socket.emit("msg-blocked", {
+    reason: "not_friend",
+    to
+  });
+  return;
+}
+
+
+
+// 🔥 CHUẨN HOÁ NỘI DUNG TIN NHẮN
+let payloadText = text || "";
+
+if (type === "image" && media) {
+  payloadText = "/img " + media;
+}
+
+if (type === "video" && media) {
+  payloadText = "/video " + media;
+}
+
+
+
+ const id = msgId || Date.now() + "_" + Math.random().toString(36).slice(2);
+
+
+  const msg = {
+    id,
+    from: fromUid,
+    to,
+    text: payloadText,
+    peer: fromUid, 
+    time: Date.now(),
+    seen: false,
+    delivered: false
+  };
+
+  // 1️⃣ LƯU VÀO INBOX NGƯỜI NHẬN
+  if (!userInbox.has(to)) userInbox.set(to, []);
+  userInbox.get(to).push(msg);
+  saveInbox(Object.fromEntries(userInbox));
+
+  // 2️⃣ GỬI REALTIME NẾU ONLINE
+  const sockets = activeUsers.get(to);
+
+  if (sockets) {
+    const db = loadUsers();
+    const user = db[fromUid];
+
+    const fromProfile = {
+      ...(socket.data.profile || {}),
+      uid: fromUid,
+      verified: !!user?.profile?.verified
+    };
+
+    for (const sid of sockets) {
+      io.to(sid).emit("private-message", {
+        from: fromProfile,
+        text: payloadText,
+        msgId: id
+      });
+      io.to(sid).emit("inbox-new");
+    }
+
+    msg.delivered = true;
+  }
+
+ // 3️⃣ 🔔 LUÔN GỬI PUSH (KỂ CẢ ONLINE)
+const subs = pushSubs.get(to);
+
+if (subs && subs.length) {
+  const db = loadUsers();
+  const fromUser = db[fromUid];
+
+ const payload = JSON.stringify({
+  title: `💬 ${fromUser.profile.name}`,
+  body:
+    type === "image" ? "📷 Hình ảnh"
+  : type === "video" ? "🎥 Video"
+  : payloadText,
+
+  tag: "chat",
+
+  // 🔥 DATA QUAN TRỌNG NHẤT
+  data: {
+    type: "chat",
+    fromUid
+  },
+
+  // fallback nếu browser không support postMessage
+  url: `/messages.html?openChat=${fromUid}`
+});
+
+
+
+  for (let i = subs.length - 1; i >= 0; i--) {
+    try {
+      await webpush.sendNotification(subs[i], payload);
+    } catch (e) {
+      if (e.statusCode === 410 || e.statusCode === 404) {
+        subs.splice(i, 1); // 🧹 xoá sub chết
+      } else {
+        console.log("❌ Push failed:", e.message);
+      }
+    }
+  }
+}
+
+
+
+
+  // 4️⃣ BÁO NGƯỜI GỬI TRẠNG THÁI
+  socket.emit("msg-status", {
+    msgId: id,
+    status: sockets ? "delivered" : "stored"
+  });
+});
+
+
+
+
+app.get("/api/friends/:uid", (req, res) => {
+  const uid = req.params.uid;
+  const db = loadUsers();
+  const me = db[uid];
+  if (!me) return res.json({ friends: [], requests: [] });
+
+  const friends = (me.profile.friends || []).map(fid => {
+    const u = db[fid];
+    if (!u) return null;
+    return {
+      uid: fid,
+      name: u.profile.name,
+      avatar: normalizeAvatar(u.profile.avatar),
+      level: u.profile.level || 1,
+      verified: !!u.profile.verified
+    };
+  }).filter(Boolean);
+
+  const requests = (me.profile.friendRequests || []).map(fid => {
+    const u = db[fid];
+    if (!u) return null;
+    return {
+      uid: fid,
+      name: u.profile.name,
+      avatar: u.profile.avatar,
+      level: u.profile.level || 1
+    };
+  }).filter(Boolean);
+
+  res.json({ friends, requests });
+});
+
+
+app.get("/api/blocked/:uid", (req, res) => {
+  const uid = req.params.uid;
+  const db = loadUsers();
+  const me = db[uid];
+  if (!me) return res.json({ blocked: [] });
+
+const blocked = (me.profile.blockedUsers || []).map(bid => {
+
+    const u = db[bid];
+    if (!u) return null;
+    return {
+      uid: bid,
+      name: u.profile.name,
+      avatar: normalizeAvatar(u.profile.avatar),
+      level: u.profile.level || 1,
+      verified: !!u.profile.verified
+    };
+  }).filter(Boolean);
+
+  res.json({ blocked });
+});
+
+
+
+socket.on("msg-seen", ({ to, msgId }) => {
+
+const sockets = activeUsers.get(to);
+if (sockets) {
+  for (const sid of sockets) {
+    io.to(sid).emit("msg-status", {
+      msgId,
+      status: "seen"
+    });
+  }
+}
+
+
+  // 🔥 update inbox
+  const uid = socket.data.uid;
+  
+ const inbox = userInbox.get(uid);
+if(inbox){
+  for(const m of inbox){
+    if(m.id === msgId){
+      m.seen = true;
+      break;
+    }
+  }
+
+saveInbox(Object.fromEntries(userInbox));
+  // nếu hết tin chưa đọc → tắt badge
+  const unread = inbox.filter(m=>!m.seen).length;
+  if(unread === 0){
+    socket.emit("inbox-clear");
+  }
+}
+
+});
+
+
+
+  function isGuest(socket){
+  return String(socket.data.uid || "").startsWith("guest_");
+}
+
+function blockGuest(socket, feature){
+  if(isGuest(socket)){
+    socket.emit("need-login", { feature });
+    return true;
+  }
+  return false;
+}
+
+
+function blockIfLocked(socket){
+  const uid = socket.data.uid;
+  if (!uid) return false;
+
+  const db = loadUsers();
+ if (db[uid]?.profile?.accountBlocked) {
+
+    socket.emit("account-blocked", {
+      message: "Your account has been locked"
+    });
+    return true;
+  }
+  return false;
+}
+
+
+
+if(socket.data.uid?.startsWith("guest_")){
+  socket.data.role = "guest";
+}
+
+
+  socket.on("get-inbox", ()=>{
+  const uid = socket.data.uid;
+  if(!uid){
+    socket.emit("inbox-data", []);
+    return;
+  }
+  socket.emit("inbox-data", userInbox.get(uid) || []);
+});
+
+
+socket.on("msg-seen-all", ()=>{
+  const uid = socket.data.uid;
+  if(!uid) return;
+
+  const inbox = userInbox.get(uid);
+  if(!inbox) return;
+
+  let changed = false;
+
+  for(const m of inbox){
+    if(!m.seen){
+      m.seen = true;
+      changed = true;
+    }
+  }
+
+  if(changed){
+    socket.emit("inbox-clear"); // 🔴 tắt badge
+  }
+});
+
+
+
+socket.on("auth-ping", ({ uid }) => {
+  if (!uid) return;
+  socket.data.uid = uid;
+
+  if (!activeUsers.has(uid)) {
+    activeUsers.set(uid, new Set([socket.id]));
+    emitActiveUsers(); // 🔥 chỉ emit khi uid mới
+    return;
+  }
+
+  activeUsers.get(uid).add(socket.id);
+});
+
+
+
+ socket.on("auth-login", ({ uid }) => {
+  uid = String(uid || "").trim();
+  if (!uid) return;
+
+  // 🚫 BỎ QUA GUEST
+  if (uid.startsWith("guest_")) {
+    socket.data.uid = uid;
+    socket.data.role = "guest";
+    return;
+  }
+
+  const db = loadUsers();
+  if (db[uid]) {
+    socket.data.profile = {
+      ...db[uid].profile,
+      ...socket.data.profile
+    };
+  }
+
+    // 🔥 GẮN ROLE CHUẨN VÀO SOCKET (FIX ADMIN CHAT)
+  socket.data.role = db[uid]?.role || "user";
+
+
+  // ✅ KHÔNG ĐÁ – CHỈ GHI ĐÈ SOCKET MỚI
+ if (!activeUsers.has(uid)) {
+  activeUsers.set(uid, new Set());
+}
+activeUsers.get(uid).add(socket.id);
+
+
+ // 🔥 GỬI TIN OFFLINE – CHỈ 1 LẦN
+const inbox = userInbox.get(uid);
+if (inbox && inbox.length) {
+
+  // 👉 CHỈ LẤY TIN CHƯA GỬI
+  const toSend = inbox.filter(m => !m.delivered);
+
+  if (toSend.length) {
+
+    // gắn verified cho sender
+    for (const m of toSend) {
+      const u = db[m.from];
+      m.verified = !!u?.profile?.verified;
+    }
+
+    socket.emit("offline-messages", toSend);
+
+    // ✅ ĐÁNH DẤU ĐÃ GỬI
+    for (const m of toSend) {
+      m.delivered = true;
+    }
+
+
+    saveInbox(Object.fromEntries(userInbox)); // ✅ FIX QUAN TRỌNG
+
+    // 🔴 badge chỉ khi còn tin CHƯA XEM
+    const unread = inbox.filter(m => !m.seen).length;
+    if (unread > 0) {
+      socket.emit("inbox-new", { count: unread });
+    }
+  }
+
+  }
+
+  socket.data.uid = uid;
+  emitActiveUsers();
+  emitCoinUpdate(uid);
+  emitAllUsers(); // 🔁 đảm bảo FE luôn có role
+});
+
+
+
+
+
+
+socket.on("host-reconnect", ({ roomId }) => {
+  const room = getRoom(roomId);
+  if (!room) return;
+
+  room.broadcasterId = socket.id;
+  room.pendingRelease = false;
+
+  if (room.releaseTimer) {
+    clearTimeout(room.releaseTimer);
+    room.releaseTimer = null;
+  }
+
+  socket.join(roomId);
+
+ socket.emit("host-resume", {
+  liveStartTs: room.liveStartTs,
+  viewers: Array.from(safeMap(room.viewerProfiles).values())
+});
+
+
+  io.to(roomId).emit("host-back-online");
+});
+
+
+
+
+socket.on("host-profile-update", ({ roomId, level }) => {
+  const room = getRoom(roomId);
+  if (!room) return;
+  if (room.broadcasterId !== socket.id) return;
+
+  if (!room.hostProfile) room.hostProfile = {};
+
+  room.hostProfile.level = Number(level) || room.hostProfile.level || 1;
+
+  io.to(roomId).emit("host-profile-sync", room.hostProfile);
+  emitLobbyUpdate();
+});
+
+
+socket.on("profile-update", ({ name, avatar, level, cover, bio }) => {
+
+
+  // ===== 1. Cập nhật profile realtime cho lobby =====
+  if (!socket.data.profile) socket.data.profile = {};
+  if (name)   socket.data.profile.name   = safeName(name);
+  if (avatar) socket.data.profile.avatar = avatar;
+  if (level)  socket.data.profile.level  = Number(level) || socket.data.profile.level;
+  if (cover) socket.data.profile.cover = cover;
+
+  // ===== 2. Lưu vĩnh viễn vào users.json =====
+  const uid = socket.data.uid;
+  if (uid) {
+    const db = loadUsers();
+    for (const k in db) {
+      if (db[k].profile?.uid === uid) {
+        if (name)   db[k].profile.name   = safeName(name);
+        if (avatar) db[k].profile.avatar = avatar;
+        if (level)  db[k].profile.level  = Number(level) || db[k].profile.level;
+        if (cover) db[k].profile.cover = cover;
+        if (bio !== undefined) {db[k].profile.bio = String(bio).slice(0, 500);}
+
+        saveUsers(db);
+        break;
+      }
+    }
+  }
+
+    // ===== SYNC AVATAR VÀO TOÀN BỘ SOCIAL POSTS =====
+  if (uid && avatar) {
+    let changed = false;
+
+    for (const p of lpPosts) {
+      if (p.uid === uid) {
+        p.avatar = avatar;
+        changed = true;
+      }
+
+      if (p.comments) {
+        for (const c of p.comments) {
+          if (c.uid === uid) {
+            c.avatar = avatar;
+            changed = true;
+          }
+
+          if (c.replies) {
+            for (const r of c.replies) {
+              if (r.uid === uid) {
+                r.avatar = avatar;
+                changed = true;
+              }
+
+              if (r.replies) {
+                for (const ch of r.replies) {
+                  if (ch.uid === uid) {
+                    ch.avatar = avatar;
+                    changed = true;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (changed) saveSocial();
+
+    // 🔥 broadcast cho client update DOM
+    io.emit("social-avatar-sync", { uid, avatar });
+  }
+
+  // ===== SYNC NAME VÀO TOÀN BỘ SOCIAL POSTS =====
+if (uid && name) {
+  let changed = false;
+
+  for (const p of lpPosts) {
+    if (p.uid === uid) {
+      p.name = safeName(name);
+      changed = true;
+    }
+
+    if (p.comments) {
+      for (const c of p.comments) {
+        if (c.uid === uid) {
+          c.name = safeName(name);
+          changed = true;
+        }
+
+        if (c.replies) {
+          for (const r of c.replies) {
+            if (r.uid === uid) {
+              r.name = safeName(name);
+              changed = true;
+            }
+
+            if (r.replies) {
+              for (const ch of r.replies) {
+                if (ch.uid === uid) {
+                  ch.name = safeName(name);
+                  changed = true;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (changed) saveSocial();
+
+  // 🔥 broadcast cho client update DOM
+  io.emit("social-name-sync", { uid, name: safeName(name) });
+}
+
+
+  // ===== 3. Nếu user đang ở trong room thì sync viewer list =====
+  const roomId = socket.data.roomId;
+  if (roomId) {
+    const room = rooms.get(roomId);
+    
+  if (room) {
+  for (const p of safeMap(room.viewerProfiles).values()) {
+    if (p.socketId === socket.id) {
+      if (name)   p.name   = safeName(name);
+      if (avatar) p.avatar = avatar;
+      if (level)  p.level  = Number(level) || p.level;
+      break;
+    }
+  }
+
+
+      const list = Array.from(safeMap(room.viewerProfiles).values());
+
+      for (const v of list) {
+        if (!v.mini) {
+          io.to(v.socketId).emit("viewer-list", {
+            viewers: list.filter(x => !x.mini)
+          });
+        }
+      }
+    }
+  }
+
+  // ===== 4. Luôn refresh Sảnh người chơi =====
+  emitActiveUsers();
+  emitAllUsers();   // 🔥 THÊM DÒNG NÀY
+});
+
+
+
+
+
+socket.on("viewer-join", ({ roomId, profile }) => {
+  // ✅ lưu profile cho Player Lobby
+socket.data.profile = profile;
+
+
+if(isGuest(socket)){
+  // ép profile Guest an toàn
+  profile = {
+    uid: socket.data.uid,
+    name: "Guest",
+    avatar: "https://api.dicebear.com/7.x/thumbs/svg?seed=guest",
+    level: 1,
+    coins: 0
+  };
+}
+
+
+  roomId = normRoomId(roomId);
+  if (!roomId) return;
+
+  const room = getRoom(roomId);
+
+if (!room.streamReady) {
+  socket.emit("wait-host-stream");
+  return;
+}
+
+  const vc = safeMap(room.viewerProfiles).size;
+if(vc >= MAX_VIEWERS){
+  socket.emit("room-full");
+  return;
+}
+
+  if (!room) return;
+
+  // ✅ BẮT BUỘC: join phòng + set data để disconnect cleanup chạy đúng
+  socket.join(roomId);
+  socket.data.roomId = roomId;
+  // 🔥 KHÔNG GHI ĐÈ ROLE ADMIN
+if (socket.data.role !== "admin") {
+  socket.data.role = "viewer";
+}
+
+
+  // ✅ UID ổn định (ưu tiên profile.uid)
+  const uid = String(profile?.uid || "").trim() || safeName(profile?.name);
+
+  // 👻 CHỐNG MULTI-TAB: kick socket cũ
+  const old = room.viewerProfiles.get(uid);
+  if (old && old.socketId && old.socketId !== socket.id) {
+    io.to(old.socketId).emit("force-disconnect", { reason: "multi_tab" });
+
+    const oldSocket = io.sockets.sockets.get(old.socketId);
+    if (oldSocket) oldSocket.disconnect(true);
+
+    room.viewers.delete(old.socketId);
+  }
+
+  // add viewer
+  room.viewers.add(socket.id);
+
+  // upsert profile (giữ dữ liệu room cũ nếu có)
+  room.viewerProfiles.set(uid, {
+    uid,
+    socketId: socket.id,
+    name: safeName(profile?.name),
+    avatar: profile?.avatar || "https://i.ibb.co/GvJWn19q/icon-192.png" ,
+    level: Number(profile?.level) || 1,
+    coins: Number(profile?.coins) || 0,
+    coinSentRoom: old?.coinSentRoom || room.giftByUser.get(uid) || 0,
+    coinReceivedRoom: old?.coinReceivedRoom || 0,
+    mini: false   // 👈 thêm
+  });
+
+  emitViewerCount(roomId);
+
+  // ✅ CHỈ emit 1 lần cho cả phòng (đỡ spam)
+ const list = Array.from(safeMap(room.viewerProfiles).values());
+
+
+for (const v of list) {
+  if (v.mini) continue;   // ⛔ viewer thu nhỏ không nhận
+  io.to(v.socketId).emit("viewer-list", {
+    viewers: list.filter(x => !x.mini)
+  });
+}
+
+  emitLobbyUpdate();
+});
+
+
+socket.on("viewer-mini-mode", ({ roomId, mini }) => {
+  const room = getRoom(roomId);
+  if (!room) return;
+
+for (const v of safeMap(room.viewerProfiles).values()) {
+  if (v.socketId === socket.id) {
+    v.mini = mini === true;
+    break;
+  }
+}
+
+
+  emitViewerCount(roomId); // update số viewer active
+});
+
+
+
+socket.on("resume-viewers", ({ roomId }) => {
+  if (!roomId) return;
+  const room = rooms.get(roomId);
+  if (!room) return;
+  if (room.broadcasterId !== socket.id) return;
+
+  // gửi danh sách viewer hiện tại cho host
+ socket.emit("resume-viewers-list", {
+  viewers: Array.from(safeSet(room.viewers))
+});
+
+});
+
+
+
+
+socket.on("host-start-live", ({ roomId }) => {
+
+
+  const room = getRoom(roomId);
+  if (!room) return;
+  if (room.broadcasterId !== socket.id) return;
+
+  room.streamReady = false;
+
+  if (!room.liveStartTs) {
+    room.liveStartTs = Date.now();
+  }
+
+ // gửi cho toàn phòng (viewer)
+io.to(roomId).emit("host-live", {
+  liveStartTs: room.liveStartTs
+});
+
+// 🔥 gửi riêng cho host (chắc chắn nhận được)
+io.to(socket.id).emit("host-live", {
+  liveStartTs: room.liveStartTs
+});
+
+  emitLobbyUpdate();
+});
+
+
+
+socket.on("room-check", ({ roomId }, cb) => {
+  const rid = normRoomId(roomId);
+  if (!rid) return cb?.({ ok: false, reason: "empty" });
+
+  const room = rooms.get(rid);
+
+  // CHỈ CHẶN khi phòng đang có host online (đang chiếm room)
+  // -> host thoát/reload thì broadcasterId sẽ bị clear ở disconnect, nên tạo lại được.
+  const taken = !!(room && room.broadcasterId);
+
+  if (taken) return cb?.({ ok: false, reason: "taken", roomId: rid });
+
+  return cb?.({ ok: true, roomId: rid });
+});
+
+
+
+
+
+  // Client (lobby.html) gọi để lấy danh sách phòng đang live
+socket.on("lobby-get", () => {
+  socket.emit("lobby-update", { rooms: getLobbyList(), ts: Date.now() });
+});
+
+  // ===== ICE RESTART RELAY =====
+  // Any peer can ask another peer to perform ICE restart
+  socket.on("request-ice-restart", ({ to, reason }) => {
+    if (!to) return;
+    io.to(to).emit("request-ice-restart", { from: socket.id, reason: String(reason || "") });
+  });
+
+
+
+// ===== LIVE TIMER (server-side source of truth) =====
+// Host starts live => store start timestamp; late joiners will receive it.
+socket.on("live-start", ({ roomId }) => {
+  if (!roomId) return;
+
+  const room = getRoom(roomId);
+  if (!room) return;
+
+  // 🔥 CHO PHÉP host đã join dù socket.id có thay đổi do auth
+  if (!room.broadcasterId || room.broadcasterId !== socket.id) {
+    room.broadcasterId = socket.id;   // 👑 force bind host
+  }
+
+  if (!room.liveStartTs) {
+    room.liveStartTs = Date.now();
+  }
+
+  emitLobbyUpdate();
+});
+
+
+
+socket.on("live-stop", ({ roomId }) => {
+  if (!roomId) return;
+  const room = getRoom(roomId);
+  if (room.broadcasterId !== socket.id) return;
+
+// 📊 Thống kê buổi live
+  const stats = {
+    durationMs: room.liveStartTs ? Date.now() - room.liveStartTs : 0,
+    viewers: safeSet(room.viewers).size,
+
+    giftsCoins: room.giftTotal || 0,
+    topDonors: roomGiftTop(room, 5),
+  };
+
+  // ⛔ dừng live
+  room.liveStartTs = null;
+
+  // 🔔 gửi cho riêng HOST
+  socket.emit("live-ended-stats", stats);
+
+  emitLobbyUpdate();
+
+const state = loadLiveState();
+delete state[roomId];
+saveLiveState(state);
+
+  closeRoom(roomId, "host_stop");
+});
+
+
+
+  // Join room with role: broadcaster | viewer | guest
+  socket.on("join-room", ({ roomId, role, profile }) => {
+
+    if (blockIfLocked(socket)) return;
+
+
+    // 🔒 Guest chỉ được join với role=viewer
+if(isGuest(socket) && role !== "viewer"){
+  socket.emit("need-login", { feature:"join-as-host" });
+  return;
+}
+
+     roomId = normRoomId(roomId);
+    if (!roomId || !role) return;
+
+    socket.join(roomId);
+    socket.data.roomId = roomId;
+    socket.data.role = role;
+    socket.role = role;
+
+    // store profile (name/coins) for Gift Engine
+   socket.data.userName = safeName(
+  profile?.name || (role === "broadcaster" ? "Host" : "Viewer")
+);
+
+    socket.data.coins = clampInt(profile?.coins, 0, 1_000_000_000);
+    if (!socket.data.coins) socket.data.coins = START_COINS;
+
+    // sync wallet to this socket
+    socket.emit("wallet-sync", { coins: socket.data.coins });
+
+
+
+    const room = getRoom(roomId);
+
+// 👑 GỬI PROFILE HOST CHO VIEWER VỪA JOIN
+if (role === "viewer" && room.hostProfile) {
+  socket.emit("host-profile-sync", room.hostProfile);
+}
+
+
+
+    if (role === "broadcaster") {
+
+
+
+       if (room.releaseTimer) {
+    clearTimeout(room.releaseTimer);
+    room.releaseTimer = null;
+  }
+  room.pendingRelease = false;
+
+  const old = room.broadcasterId;
+  room.broadcasterId = socket.id;
+
+
+// 🔄 AUTO RESUME LIVE NẾU ĐANG LIVE TRƯỚC ĐÓ
+if (room.liveStartTs) {
+  // gửi lại mốc thời gian cho host
+  socket.emit("live-resume", {
+    startTs: room.liveStartTs
+  });
+
+  // báo cho viewer biết host đã quay lại
+  io.to(roomId).emit("host-back-online");
+}
+
+
+       // ✅ Lưu profile host
+    const name = String(profile?.name || "").trim().slice(0, 20);
+    const avatar = String(profile?.avatar || "").trim();
+
+ room.hostProfile = {
+  uid: profile?.uid || socket.data.uid,   // 🔥 THÊM
+  name: name || "Host",
+  avatar: avatar || "",
+  level: Number(profile?.level) || 1,
+  ts: Date.now(),
+};
+
+
+
+      if (old && old !== socket.id) {
+        io.to(roomId).emit("broadcaster-changed");
+      }
+
+      // Tell broadcaster current viewers list
+      socket.emit("room-viewers", Array.from(room.viewers));
+      socket.to(roomId).emit("broadcaster-online");
+      emitViewerCount(roomId);
+    }
+
+    if (role === "viewer") {
+      room.viewers.add(socket.id);
+      emitViewerCount(roomId);
+      emitLobbyUpdate();
+
+      io.to(roomId).emit("viewer-join", { id: socket.id, count: room.viewers.size });
+
+      if (room.broadcasterId) {
+        io.to(room.broadcasterId).emit("watcher", { viewerId: socket.id, roomId });
+        socket.emit("broadcaster-online");
+      } else {
+        socket.emit("broadcaster-offline");
+      }
+    }
+
+    // If room is already live, send start timestamp to this socket (late joiners)
+    if (room.liveStartTs) {
+      socket.emit("live-start", { startTs: room.liveStartTs });
+    }
+
+    // If has pinned note, send to late joiner
+    if (room.pinnedNote) {
+      socket.emit("pin-note-update", room.pinnedNote);
+    }
+  
+
+    // Gift stats for late joiners
+    try{
+      socket.emit("gift-stats", {
+        totalCoins: room.giftTotal || 0,
+        topDonors: roomGiftTop(room, 5)
+      });
+    }catch{}
+
+});
+
+ socket.on("chat", ({ roomId, text }) => {
+
+  if (blockIfLocked(socket)) return;
+
+  if (!roomId || !text) return;
+
+  const room = getRoom(roomId);
+  if (!room) return;
+
+  const r = String(socket.data.role || "").toLowerCase();
+  const role = (r === "broadcaster") ? "host" : "viewer";
+
+  let profile = null;
+
+  // 👑 HOST
+  if (role === "host") {
+    profile = room.hostProfile;
+  }
+
+  // 👀 VIEWER / GUEST → TÌM THEO socketId
+  if (role !== "host") {
+    for (const p of safeMap(room.viewerProfiles).values()) {
+    if (p.socketId === socket.id) {
+    profile = p;
+    break;
+  }
+}
+  }
+
+  const msg = {
+    role,
+    name: profile?.name || "Anonymous",
+    avatar: profile?.avatar,
+    level: Number(profile?.level) || 1,
+    text: String(text).slice(0, 300),
+    ts: Date.now(),
+  };
+
+for (const v of safeMap(room.viewerProfiles).values()) {
+  if (!v.mini) io.to(v.socketId).emit("chat", msg);
+}
+
+// host vẫn nhận
+if (room.broadcasterId) io.to(room.broadcasterId).emit("chat", msg);
+
+});
+
+
+
+
+// ===== REACTIONS (emoji/hearts) =====
+// client emits: { roomId, emoji, x, y }
+socket.on("reaction", ({ roomId, emoji, x, y }) => {
+  if(blockGuest(socket,"reaction")) return;   // 🔒
+
+
+
+  if (!roomId) return;
+  const em = String(emoji || "❤️").slice(0, 4);
+  const msg = {
+    emoji: em,
+    x: typeof x === "number" ? x : Number(x),
+    y: typeof y === "number" ? y : Number(y),
+    ts: Date.now(),
+  };
+
+const room = getRoom(roomId);
+if (!room) return;
+
+for (const v of safeMap(room.viewerProfiles).values()) {
+  if (!v.mini) io.to(v.socketId).emit("reaction", msg);
+}
+
+if (room.broadcasterId) io.to(room.broadcasterId).emit("reaction", msg);
+
+});
+
+  // ===== PIN NOTE (host creates custom pinned content + draggable position) =====
+  function __clamp01(n){ n = Number(n); if (!isFinite(n)) return 0.5; return Math.max(0, Math.min(1, n)); }
+
+  socket.on("pin-note-set", ({ roomId, text, x, y }) => {
+if(blockGuest(socket,"pin")) return;
+
+
+    if (!roomId) return;
+    const room = getRoom(roomId);
+    if (room.broadcasterId !== socket.id) return; // host only
+    const t = String(text || "").trim().slice(0, 220);
+    if (!t) return;
+    const note = { text: t, x: __clamp01(x), y: __clamp01(y), ts: Date.now() };
+    room.pinnedNote = note;
+
+ for (const v of safeMap(room.viewerProfiles).values()) {
+  if (!v.mini) io.to(v.socketId).emit("pin-note-update", note);
+}
+
+if (room.broadcasterId) io.to(room.broadcasterId).emit("pin-note-update", note);
+
+  });
+
+socket.on("pin-note-move", ({ roomId, x, y }) => {
+  if(blockGuest(socket,"pin")) return;
+
+  if (!roomId) return;
+  const room = getRoom(roomId);
+  if (!room || room.broadcasterId !== socket.id) return;
+  if (!room.pinnedNote) return;
+
+  room.pinnedNote.x = __clamp01(x);
+  room.pinnedNote.y = __clamp01(y);
+  room.pinnedNote.ts = Date.now();
+
+  for (const v of safeMap(room.viewerProfiles).values()) {
+  if (!v.mini) io.to(v.socketId).emit("pin-note-update", room.pinnedNote);
+}
+
+
+  if (room.broadcasterId) io.to(room.broadcasterId).emit("pin-note-update", room.pinnedNote);
+});
+
+ socket.on("pin-note-clear", ({ roomId }) => {
+  if(blockGuest(socket,"pin")) return;
+
+  if (!roomId) return;
+  const room = getRoom(roomId);
+  if (!room || room.broadcasterId !== socket.id) return;
+
+  room.pinnedNote = null;
+
+ for (const v of safeMap(room.viewerProfiles).values()) {
+  if (!v.mini) io.to(v.socketId).emit("pin-note-update", null);
+}
+
+
+
+  if (room.broadcasterId) io.to(room.broadcasterId).emit("pin-note-update", null);
+});
+
+  // ===== /PIN NOTE =====
+
+
+// ===== ANTI SPAM GIFT =====
+const GIFT_COOLDOWN_MS = 1500; // 1.5s / lần gửi
+
+const giftCooldown = new Map(); // key: socket.id
+
+function canSendGift(socket) {
+  const now = Date.now();
+  const last = giftCooldown.get(socket.id) || 0;
+  if (now - last < GIFT_COOLDOWN_MS) return false;
+  giftCooldown.set(socket.id, now);
+  return true;
+}
+
+
+
+// ===== GIFT ENGINE (paid gifts) =====
+socket.on("send-gift", ({ roomId, gift, name }) => {
+
+  if (blockIfLocked(socket)) return;   // 🚫 THÊM DÒNG NÀY
+
+  if (blockGuest(socket, "gift")) return;
+
+  roomId = normRoomId(roomId);
+  if (!roomId || !gift) return;
+
+  // 🚫 CHẶN SPAM
+  if (!canSendGift(socket)) {
+    socket.emit("gift-failed", {
+      reason: "spam",
+      	message: "You are sending gifts too quickly"
+    });
+    return;
+  }
+
+  const room = getRoom(roomId);
+  if (!room?.broadcasterId || !room.liveStartTs) return;
+
+  const type = String(gift.type || "").toLowerCase();
+  const catalog = GIFT_CATALOG[type];
+  if (!catalog) return;
+
+  const qty = clampInt(gift.qty ?? 1, 1, 999);
+  const cost = catalog.cost * qty;
+
+  // ===== WALLET CHECK (PERSIST users.json) =====
+  const senderUid = socket.data.uid;
+  if (!senderUid) return;
+
+  const db = loadUsers();
+  const sender = db[senderUid];
+  if (!sender?.profile) return;
+
+  const curCoins = clampInt(sender.profile.coins ?? 0, 0, 1_000_000_000);
+  if (curCoins < cost) {
+    socket.emit("gift-failed", {
+      reason: "no_coins",
+      need: cost,
+      coins: curCoins
+    });
+    return;
+  }
+
+  // 🔥 TRỪ COIN THẬT
+  sender.profile.coins = curCoins - cost;
+  sender.profile.coinSent =
+    (sender.profile.coinSent || 0) + cost;
+
+  const hostUid = room.hostProfile?.uid;
+  if (hostUid && db[hostUid]?.profile) {
+    db[hostUid].profile.coinReceived =
+      (db[hostUid].profile.coinReceived || 0) + cost;
+  }
+
+  // ===== 🎯 CỘNG EXP + LEVEL CHO NGƯỜI NHẬN QUÀ =====
+if (hostUid && db[hostUid]?.profile) {
+  const hp = db[hostUid].profile;
+
+  // + EXP (1 coin = 1 exp)
+  hp.exp = (hp.exp || 0) + cost;
+
+  // ⬆️ LEVEL UP (loop để tránh miss nhiều level)
+  let leveledUp = false;
+  while (hp.exp >= (hp.level || 1) * 100) {
+    hp.exp -= (hp.level || 1) * 100;
+    hp.level = (hp.level || 1) + 1;
+    leveledUp = true;
+  }
+
+  // 🔔 realtime sync cho host
+  emitCoinUpdate(hostUid);
+
+  // (optional) notify level up
+  if (leveledUp) {
+    pushNotify(hostUid, {
+      type: "level-up",
+      text: `You have reached level ${hp.level}!`
+    });
+  }
+}
+
+// ===== 💎 CỘNG EXP x2 CHO NGƯỜI TẶNG =====
+if (senderUid && db[senderUid]?.profile) {
+  const sp = db[senderUid].profile;
+
+  // 🎁 donor nhận EXP gấp đôi
+  sp.exp = (sp.exp || 0) + cost * 1.5;
+
+  // ⬆️ LEVEL UP donor
+  while (sp.exp >= (sp.level || 1) * 100) {
+    sp.exp -= (sp.level || 1) * 100;
+    sp.level = (sp.level || 1) + 1;
+  }
+
+  // 🔔 realtime sync cho donor
+  emitCoinUpdate(senderUid);
+}
+
+
+  saveUsers(db);
+
+  // 🔔 REALTIME WALLET
+  emitCoinUpdate(senderUid);
+  if (hostUid) emitCoinUpdate(hostUid);
+
+  socket.data.coins = sender.profile.coins;
+  socket.emit("wallet-update", { coins: sender.profile.coins });
+
+
+  // ===== TÌM DONOR PROFILE =====
+  let donorProfile = null;
+  for (const p of safeMap(room.viewerProfiles).values()) {
+    if (p.socketId === socket.id) {
+      donorProfile = p;
+      break;
+    }
+  }
+
+
+  // ✅ SYNC COIN VÀO VIEWER PROFILE (để viewer list/mini profile đúng)
+if (donorProfile) {
+  donorProfile.coins = sender.profile.coins;
+  donorProfile.coinSentRoom = (donorProfile.coinSentRoom || 0) + cost;
+}
+
+
+  const donorName = safeName(
+    name || donorProfile?.name || socket.data.userName || "Anonymous"
+  );
+
+  // 🔒 SYNC DONOR PROFILE (RẤT QUAN TRỌNG)
+  if (donorProfile) {
+    donorProfile.coins = sender.profile.coins;
+    donorProfile.coinSentRoom =
+      (donorProfile.coinSentRoom || 0) + cost;
+  }
+
+  // 🔔 Notify host
+  if (hostUid) {
+    pushNotify(hostUid, {
+      type: "gift",
+      text: `${donorName} gifted ${cost} coins`
+    });
+
+    const sockets = activeUsers.get(hostUid);
+    if (sockets) {
+      for (const sid of sockets) {
+        io.to(sid).emit("inbox-new");
+      }
+    }
+  }
+
+  // ===== UPDATE ROOM STATS =====
+  room.giftTotal = clampInt(
+    (room.giftTotal || 0) + cost,
+    0,
+    1_000_000_000
+  );
+
+  if (donorProfile?.uid) {
+    room.giftByUser.set(
+      donorProfile.uid,
+      (room.giftByUser.get(donorProfile.uid) || 0) + cost
+    );
+  }
+
+  // ===== SYNC VIEWER LIST =====
+  const list = Array.from(safeMap(room.viewerProfiles).values());
+  for (const v of list) {
+    if (!v.mini) {
+      io.to(v.socketId).emit("viewer-list", {
+        viewers: list.filter(x => !x.mini)
+      });
+    }
+  }
+
+  // ===== EMIT GIFT EVENT =====
+  const payload = {
+    gift: {
+      type,
+      emoji: catalog.emoji,
+      cost: catalog.cost,
+      qty,
+      coins: cost
+    },
+    donor: donorName,
+    uid: donorProfile?.uid || senderUid,
+    totalCoins: room.giftTotal,
+    ts: Date.now()
+  };
+
+  for (const v of list) {
+    if (!v.mini) io.to(v.socketId).emit("gift", payload);
+  }
+  if (room.broadcasterId) {
+    io.to(room.broadcasterId).emit("gift", payload);
+  }
+
+  // stats
+  for (const v of list) {
+    if (!v.mini) {
+      io.to(v.socketId).emit("gift-stats", {
+        totalCoins: room.giftTotal,
+        topDonors: roomGiftTop(room, 5)
+      });
+    }
+  }
+  if (room.broadcasterId) {
+    io.to(room.broadcasterId).emit("gift-stats", {
+      totalCoins: room.giftTotal,
+      topDonors: roomGiftTop(room, 5)
+    });
+  }
+
+});
+
+
+socket.on("host-stream-ready", ({ roomId }) => {
+  const room = getRoom(roomId);
+  if (!room) return;
+  if (room.broadcasterId !== socket.id) return;
+
+  room.streamReady = true;
+
+  // 🔔 báo cho viewer đang đợi
+  io.to(roomId).emit("host-stream-ready");
+});
+
+
+  // WebRTC signaling passthrough
+  socket.on("offer", ({ to, description }) => {
+    io.to(to).emit("offer", { from: socket.id, description });
+  });
+
+  socket.on("answer", ({ to, description }) => {
+    io.to(to).emit("answer", { from: socket.id, description });
+  });
+
+  socket.on("candidate", ({ to, candidate }) => {
+    io.to(to).emit("candidate", { from: socket.id, candidate });
+  });
+
+  socket.on("disconnect", () => {
+
+
+
+    
+
+
+
+const uid = socket.data.uid;
+if (uid && activeUsers.has(uid)) {
+  const set = activeUsers.get(uid);
+  set.delete(socket.id);
+
+  if (set.size === 0) {
+    activeUsers.delete(uid);
+  }
+
+  emitActiveUsers();
+}
+
+
+
+
+  const roomId = socket.data.roomId;
+  const role = socket.data.role;
+  if (!roomId) return;
+
+  const room = rooms.get(roomId);
+  if (!room) return;
+
+  /* ========= VIEWER ========= */
+  if (role === "viewer") {
+    // xoá khỏi viewers set
+    room.viewers.delete(socket.id);
+
+    // xoá profile viewer
+   for (const [uid, profile] of safeMap(room.viewerProfiles).entries()) {
+  if (profile.socketId === socket.id) {
+    room.viewerProfiles.delete(uid);
+    break;
+  }
+}
+
+
+    emitViewerCount(roomId);
+
+const list = Array.from(safeMap(room.viewerProfiles).values());
+
+
+for (const v of list) {
+  if (v.mini) continue;   // ⛔ viewer thu nhỏ không nhận
+  io.to(v.socketId).emit("viewer-list", {
+    viewers: list.filter(x => !x.mini)
+  });
+}
+
+
+    emitLobbyUpdate();
+   
+
+  }
+
+
+
+
+  /* ========= HOST ========= */
+  if (role === "broadcaster") {
+    room.streamReady = false;
+    room.pendingRelease = true;
+
+ room.releaseTimer = setTimeout(() => {
+  // ⛔ CHỈ đóng room nếu host KHÔNG quay lại
+  if (room.pendingRelease && !room.broadcasterId) {
+    closeRoom(roomId, "host_timeout");
+  }
+}, ROOM_RELEASE_DELAY);
+
+
+    io.to(roomId).emit("host-temp-offline");
+
+  
+
+  }
+
+
+
+// ===== SOCKET DISCONNECT TRACK =====
+
+if (uid) {
+  const set = activeUsers.get(uid);
+  if (set) {
+    set.delete(socket.id);
+    if (set.size === 0) {
+      activeUsers.delete(uid);
+
+      // ⚪ AGENT OFFLINE REALTIME
+      emitAgentStatus(uid, false);
+    }
+  }
+}
+
+  
+
+  /* ========= CLEAN ROOM ========= */
+/*
+ if (!room.broadcasterId && safeSet(room.viewers).size === 0) {
+  rooms.delete(roomId);
+}
+*/
+});
+
+
+
+});
+
+
+
+
+
+app.get("/lobby", (_, res) => {
+  res.sendFile(path.join(__dirname, "public", "lobby.html"));
+});
+
+
+
+
+/* ==========================================
+   WHEEL8 - SCREEN SHARE SERVER
+   WebRTC + Socket.io
+   ========================================== */
+
+const wheel8ScreenShares = new Map();
+const W8_SHARE_LIMIT = 8;
+
+function closeWheel8ScreenShare(token) {
+  const session = wheel8ScreenShares.get(token);
+  if (!session) return;
+
+  wheel8ScreenShares.delete(token);
+
+  for (const viewerId of session.viewers) {
+    const viewer = io.sockets.sockets.get(viewerId);
+
+    if (viewer) viewer.data.w8Watching = null;
+
+    io.to(viewerId).emit("w8share:ended");
+  }
+
+  const host = io.sockets.sockets.get(session.hostId);
+  if (host) host.data.w8Hosting = null;
+}
+
+io.on("connection", (socket) => {
+
+  // Người chơi bắt đầu chia sẻ
+  socket.on("w8share:start", (_data, ack) => {
+    if (typeof ack !== "function") return;
+
+    const uid = socket.data.uid;
+
+    if (!uid || !loadUsers()[uid]?.profile) {
+      return ack({
+        ok: false,
+        error: "You must log in to share your screen."
+      });
+    }
+
+    if (socket.data.w8Hosting) {
+      closeWheel8ScreenShare(socket.data.w8Hosting);
+    }
+
+    const token = crypto.randomBytes(18).toString("hex");
+
+    wheel8ScreenShares.set(token, {
+      hostId: socket.id,
+      viewers: new Set()
+    });
+
+    socket.data.w8Hosting = token;
+
+    ack({ ok: true, token });
+  });
+
+  // Người xem mở link
+  socket.on("w8share:join", (data, ack) => {
+    if (typeof ack !== "function") return;
+
+    const token = String(data?.token || "");
+
+    if (!/^[a-f0-9]{36}$/.test(token)) {
+      return ack({
+        ok: false,
+        error: "Invalid link."
+      });
+    }
+
+    const session = wheel8ScreenShares.get(token);
+
+    if (!session ||
+        !io.sockets.sockets.has(session.hostId)) {
+      return ack({
+        ok: false,
+        error: "This sharing session has ended."
+      });
+    }
+
+    if (
+      session.viewers.size >= W8_SHARE_LIMIT &&
+      !session.viewers.has(socket.id)
+    ) {
+      return ack({
+        ok: false,
+        error: "The viewing room is full."
+      });
+    }
+
+    // Rời phiên xem cũ nếu có
+    const oldToken = socket.data.w8Watching;
+
+    if (oldToken && oldToken !== token) {
+      const old = wheel8ScreenShares.get(oldToken);
+
+      if (old) {
+        old.viewers.delete(socket.id);
+
+        io.to(old.hostId).emit("w8share:left", {
+          viewerId: socket.id,
+          count: old.viewers.size
+        });
+      }
+    }
+
+    session.viewers.add(socket.id);
+    socket.data.w8Watching = token;
+
+    ack({ ok: true });
+
+    // Yêu cầu máy chủ chia sẻ gửi video
+    io.to(session.hostId).emit("w8share:viewer", {
+      viewerId: socket.id,
+      count: session.viewers.size
+    });
+  });
+
+
+  
+/* ==========================================
+   WHEEL8 LIVE COMMENTS
+   Viewer -> Host + Viewers
+========================================== */
+
+socket.on("w8share:comment", (data, callback) => {
+
+  const reply =
+    typeof callback === "function"
+      ? callback
+      : () => {};
+
+  const token =
+    typeof data?.token === "string"
+      ? data.token
+      : "";
+
+  const session = wheel8ScreenShares.get(token);
+
+  // Chỉ thành viên đang xem LIVE mới được bình luận
+  if (
+    !session ||
+    !io.sockets.sockets.has(session.hostId) ||
+    socket.data.w8Watching !== token ||
+    !session.viewers.has(socket.id)
+  ) {
+    return reply({
+      ok: false,
+      error: "You have not joined the LIVE session."
+    });
+  }
+
+  const now = Date.now();
+
+  // Chống spam: mỗi 2 giây tối đa 1 bình luận
+  if (now - (socket.data.w8LastComment || 0) < 2000) {
+    return reply({
+      ok: false,
+      	error: "Please wait 2 seconds before posting another comment."
+    });
+  }
+
+  // Làm sạch nội dung
+  function cleanComment(value, maxLength) {
+
+    if (typeof value !== "string") return "";
+
+    return value
+      .replace(/[\u0000-\u001F\u007F]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, maxLength);
+  }
+
+  const name =
+    cleanComment(data?.name, 20) || "Viewer";
+
+  const content = cleanComment(data?.text, 120);
+
+  if (!content) {
+    return reply({
+      ok: false,
+      error: "Please enter a comment."
+    });
+  }
+
+  socket.data.w8LastComment = now;
+
+  const message = {
+    id: crypto.randomUUID(),
+    token,
+    name,
+    text: content,
+    time: now
+  };
+
+  // Gửi bình luận đến người đang phát
+  io.to(session.hostId).emit(
+    "w8share:comment",
+    message
+  );
+
+  // Gửi đến toàn bộ người xem cùng phiên
+  for (const viewerId of session.viewers) {
+
+    io.to(viewerId).emit(
+      "w8share:comment",
+      message
+    );
+
+  }
+
+  reply({ ok: true });
+
+});
+
+
+
+  
+// =======================================
+// MOBILE GAME FRAME RELAY
+// =======================================
+
+socket.on("w8share:frame", (data) => {
+
+  const token = String(data?.token || "");
+  const session = wheel8ScreenShares.get(token);
+
+  if (!session) return;
+
+  // Chỉ chủ phiên mới được gửi ảnh
+  if (
+    session.hostId !== socket.id ||
+    socket.data.w8Hosting !== token
+  ) return;
+
+  if (session.viewers.size === 0) return;
+
+  const image = data?.image;
+
+  if (
+    typeof image !== "string" ||
+    !image.startsWith("data:image/jpeg;base64,") ||
+    image.length > 180000
+  ) return;
+
+  // Giới hạn tốc độ gửi ảnh
+  const now = Date.now();
+
+  if (now - (session.lastFrameAt || 0) < 900) {
+    return;
+  }
+
+  session.lastFrameAt = now;
+
+  // Phát ảnh tới các người xem của phiên
+  for (const viewerId of session.viewers) {
+
+    io.to(viewerId).volatile.emit("w8share:frame", {
+      image
+    });
+
+  }
+
+});
+
+
+
+  // Chuyển tín hiệu WebRTC
+  socket.on("w8share:signal", (data) => {
+    const token = String(data?.token || "");
+    const session = wheel8ScreenShares.get(token);
+
+    if (!session) return;
+
+    const to = String(data?.to || "");
+    const packet = data?.packet;
+
+    if (
+      !packet ||
+      !["offer", "answer", "candidate"].includes(packet.type)
+    ) return;
+
+    if (JSON.stringify(packet).length > 30000) return;
+
+    const isHost = session.hostId === socket.id;
+    const isViewer = session.viewers.has(socket.id);
+
+    const allowed =
+      (isHost && session.viewers.has(to)) ||
+      (isViewer && to === session.hostId);
+
+    if (!allowed) return;
+
+    io.to(to).emit("w8share:signal", {
+      from: socket.id,
+      packet
+    });
+  });
+
+  // Người chơi chủ động dừng
+  socket.on("w8share:stop", (data) => {
+    const token = String(data?.token || "");
+
+    if (socket.data.w8Hosting === token) {
+      closeWheel8ScreenShare(token);
+    }
+  });
+
+  // Dọn dẹp khi mất kết nối
+  socket.on("disconnect", () => {
+    if (socket.data.w8Hosting) {
+      closeWheel8ScreenShare(socket.data.w8Hosting);
+    }
+
+    if (socket.data.w8Watching) {
+      const session = wheel8ScreenShares.get(
+        socket.data.w8Watching
+      );
+
+      if (session) {
+        session.viewers.delete(socket.id);
+
+        io.to(session.hostId).emit("w8share:left", {
+          viewerId: socket.id,
+          count: session.viewers.size
+        });
+      }
+    }
+  });
+
+});
+
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+
+
+// ⏱ kiểm tra gian hết hạn mỗi 60 giây
+setInterval(()=>{
+  try{
+    cleanupExpiredBooths();
+  }catch(e){
+    console.error("cleanupExpiredBooths error", e);
+  }
+}, 60 * 1000);
+
+
+
+
+

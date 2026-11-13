@@ -1,0 +1,1976 @@
+const socket = io();
+
+const auth = JSON.parse(localStorage.getItem("user_profile") || "{}");
+const sysModal = document.getElementById("sysModal");
+const sysText = document.getElementById("sysText");
+const sysOk = document.getElementById("sysOk");
+const sysCancel = document.getElementById("sysCancel");
+
+
+
+
+let currentTargetUID = null;
+let currentTarget = null;
+let allUsers = [];
+let onlineSet = new Set();
+
+// ❌ HUỶ UPLOAD
+let currentUploadXHR = null;
+let currentUploadMsgId = null;
+
+// 🔒 CHỐNG RENDER TRÙNG TIN NHẮN
+const renderedMsgIds = new Set();
+
+
+
+
+
+const R2_PUBLIC_URL = "https://pub-a6a541cf3a9c4d0aa06613e3d1dc1c60.r2.dev";
+
+
+function isMyFriend(uid){
+  return Array.isArray(auth?.friends) && auth.friends.includes(uid);
+}
+
+
+function isAdmin(){
+  return auth?.role === "admin";
+}
+
+function canShowUserInList(u){
+
+  if (!u || !u.uid || u.uid === auth.uid) return false;
+
+  // 👑 ADMIN luôn thấy mọi user
+  if (isAdmin()) return true;
+
+  // 👑 USER luôn thấy ADMIN
+  if (u.role === "admin") return true;
+
+  // 👤 USER thường → chỉ thấy bạn bè
+  return isMyFriend(u.uid);
+}
+
+
+function fixMedia(url){
+  if (!url) return "";
+
+  // legacy absolute URL
+  if (url.startsWith(location.origin + "/avatars/")) {
+    return R2_PUBLIC_URL + url.replace(location.origin, "");
+  }
+
+  if (url.startsWith("/avatars/")) {
+    return R2_PUBLIC_URL + url;
+  }
+
+  return url;
+}
+
+
+async function loadAllUsers(){
+  const res = await fetch("/api/all-users");
+  allUsers = await res.json();
+  renderUserList();
+}
+
+loadAllUsers();
+
+
+
+// 🔔 NHẬN YÊU CẦU MỞ CHAT TỪ PUSH (SERVICE WORKER)
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.addEventListener("message", async e => {
+    if (e.data?.type === "open-chat" && e.data.fromUid) {
+      await openChatByUid(e.data.fromUid);
+    }
+  });
+}
+
+
+
+
+function chatKey(){
+  if(!auth?.uid || !currentTargetUID) return null;
+
+  const a = auth.uid;
+  const b = currentTargetUID;
+
+  return a < b
+    ? "chat_" + a + "_" + b
+    : "chat_" + b + "_" + a;
+}
+
+
+
+function getChatKeyByUID(peer){
+  if(!auth?.uid || !peer) return null;
+  return auth.uid < peer
+    ? "chat_" + auth.uid + "_" + peer
+    : "chat_" + peer + "_" + auth.uid;
+}
+
+
+
+function saveChat(msg){
+  if(!msg?.id || !msg.peer) return;
+
+  const key = getChatKeyByUID(msg.peer);
+  if(!key) return;
+
+  const arr = JSON.parse(localStorage.getItem(key) || "[]");
+
+  const exist = arr.find(m => m.id === msg.id);
+  if (exist) {
+    if (msg.revoked || msg.text === "__REVOKED__") {
+      exist.text = "__REVOKED__";
+      exist.revoked = true;
+    }
+    return;
+  }
+
+  arr.push(msg);
+  localStorage.setItem(key, JSON.stringify(arr));
+}
+
+
+
+// 🔄 SYNC INBOX TỪ SERVER (CHỐNG MẤT TIN)
+async function syncInboxFromServer() {
+  if (!auth?.uid) return;
+
+  const res = await fetch("/api/inbox", {
+    headers: { "x-uid": auth.uid }
+  });
+
+  const data = await res.json();
+  if (!data.ok || !Array.isArray(data.list)) return;
+
+  data.list.forEach(m => {
+    if (!m.id || !m.from || !m.to) return;
+
+    const peer = m.from === auth.uid ? m.to : m.from;
+
+    saveChat({
+      id: m.id,
+      from: m.from,
+      to: m.to,
+      text: m.text,
+      time: m.time,
+      peer,
+      seen: false,
+      revoked: m.text === "__REVOKED__"
+    });
+  });
+}
+
+
+
+
+function loadChat(){
+  renderedMsgIds.clear(); // 🔥 reset chống trùng khi đổi chat
+
+  const key = chatKey();
+  if(!key) return;
+
+let arr = JSON.parse(localStorage.getItem(key) || "[]");
+
+// 🔥 DEDUPE THEO msgId (CỰC KỲ QUAN TRỌNG)
+const map = new Map();
+arr.forEach(m => {
+  if (!m?.id) return;
+
+  // ưu tiên bản revoked
+  if (!map.has(m.id) || m.revoked) {
+    map.set(m.id, m);
+  }
+});
+
+arr = [...map.values()];
+
+// 🔥 ghi ngược lại localStorage (dọn rác)
+localStorage.setItem(key, JSON.stringify(arr));
+
+chatBox.innerHTML = "";
+
+arr.forEach(m => {
+  const isMe = m.from === auth.uid;
+  const text = m.revoked ? "__REVOKED__" : m.text;
+
+  pushMsg(
+    isMe ? "You" : currentTarget.name,
+    text,
+    isMe,
+    m.id,
+    "",
+    isMe ? auth.avatar : currentTarget.avatar
+  );
+});
+
+}
+
+
+
+
+
+function showModal(text, okText="OK", cancelText=null){
+  return new Promise(resolve=>{
+    sysText.textContent = text;
+    sysOk.textContent = okText;
+    sysCancel.style.display = cancelText ? "block" : "none";
+    sysCancel.textContent = cancelText || "";
+
+    sysModal.classList.remove("hidden");
+
+    sysOk.onclick = () => {
+      sysModal.classList.add("hidden");
+      resolve(true);
+    };
+    sysCancel.onclick = () => {
+      sysModal.classList.add("hidden");
+      resolve(false);
+    };
+  });
+}
+
+
+
+
+socket.on("connect", async () => {
+  offlineHandled = false;
+
+  if (auth?.uid) {
+    socket.emit("auth-login", { uid: auth.uid });
+
+    // 🔔 ĐĂNG KÝ PUSH
+    setTimeout(() => {
+      enablePush().catch(console.error);
+    }, 1000);
+  }
+});
+
+
+
+
+
+
+const userList = document.getElementById("userList");
+const chatBox = document.getElementById("chatBox");
+const chatTitle = document.getElementById("chatTitle");
+// 🔽 NÚT KÉO XUỐNG CUỐI CHAT
+const btnScrollBottom = document.getElementById("btnScrollBottom");
+
+// bấm nút → về cuối
+btnScrollBottom.onclick = () => {
+  scrollChatToBottom(true);
+  btnScrollBottom.classList.add("hidden");
+};
+
+// theo dõi scroll để hiện / ẩn nút
+chatBox.addEventListener("scroll", () => {
+  const nearBottom =
+    chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 80;
+
+  if (nearBottom) {
+    btnScrollBottom.classList.add("hidden");
+  } else {
+    btnScrollBottom.classList.remove("hidden");
+  }
+});
+
+
+socket.on("active-users", ({ online }) => {
+  onlineSet = new Set(online || []);
+  if (allUsers.length) {
+    renderUserList();
+  }
+});
+
+// 💸 THÔNG BÁO USER ĐÃ CHUYỂN KHOẢN (CHO ĐẠI LÝ)
+socket.on("topup-user-waiting", ({ fromUid, time }) => {
+  if (!fromUid) return;
+
+  // 🔔 toast realtime
+showToast(
+  `💸 ${fromUid} has sent a transfer. Please verify it.`,
+  "success",
+  6000
+);
+
+  // 🔴 hiện chấm đỏ inbox
+  if (typeof showInboxDot === "function") {
+    showInboxDot(1);
+  }
+
+  // 📥 thêm system message vào khung chat (nếu đang mở)
+  const box = document.getElementById("chatBox");
+  if (box) {
+    const div = document.createElement("div");
+    div.className = "chat-system";
+    div.textContent = `💸 ${fromUid} has sent a transfer`;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  // 👉 (tuỳ chọn) mở chat user luôn
+  // openChatByUid(fromUid);
+});
+
+
+
+
+document.getElementById("sendBtn").onclick = () => {
+  if (currentUploadXHR) return; // ⛔ đang upload → không gửi
+  const input = document.getElementById("msgInput");
+  const txt = input.value.trim();
+  if(!txt || !currentTarget) return;
+
+  const msgId = Date.now() + "_" + Math.random().toString(36).slice(2);
+
+ socket.emit("private-message", {
+  to: currentTarget.uid,   // 🔥 GỬI THEO UID
+  text: txt,
+  msgId
+});
+
+  pushMsg("You", txt, true, msgId, "⏳");
+
+saveChat({
+  id: msgId,  
+  from: auth.uid,
+  to: currentTargetUID,
+  text: txt,
+  time: Date.now(),
+  peer: currentTargetUID,   // 🔥 QUAN TRỌNG
+  seen: true
+});
+
+ // ✅ XÓA INPUT NGAY LẬP TỨC (QUAN TRỌNG)
+  input.value = "";
+  input.blur();
+  setTimeout(()=>input.focus(),20);
+};
+
+
+socket.on("private-message", ({ from, text, msgId }) => {
+
+  const peer = from.uid;
+
+  // 🔐 xác định đúng chatKey
+  const key =
+    auth.uid < peer
+      ? "chat_" + auth.uid + "_" + peer
+      : "chat_" + peer + "_" + auth.uid;
+
+ 
+
+  // 2️⃣ NẾU MODAL ĐANG MỞ & ĐÚNG CHAT → RENDER
+  if (!chatModal.classList.contains("hidden")) {
+    const curKey = chatKey();
+
+ if (curKey === key) {
+
+  // 🔥 BẮT BUỘC: LƯU LOCAL CHO NGƯỜI NHẬN
+  saveChat({
+    id: msgId,
+    from: peer,
+    to: auth.uid,
+    text,
+    time: Date.now(),
+    peer,
+    seen: true
+  });
+
+  pushMsg(
+    from.name,
+    text,
+    false,
+    msgId,
+    "",
+    from.avatar
+  );
+
+  socket.emit("msg-seen", { to: peer, msgId });
+  return;
+}
+
+  }
+
+// 🔔 3️⃣ MODAL ĐANG ĐÓNG
+if (chatModal.classList.contains("hidden")) {
+
+  // 🔥 BẮT BUỘC: LƯU TIN NHẮN VÀO LOCAL
+  saveChat({
+    id: msgId,
+    from: peer,
+    to: auth.uid,
+    text,
+    time: Date.now(),
+    peer,
+    seen: false
+  });
+
+  showInboxDot(1);
+
+  showMessageToast({
+    name: from.name,
+    text,
+    avatar: from.avatar,
+    uid: from.uid
+  });
+
+  return;
+}
+
+
+});
+
+
+
+
+
+socket.on("msg-status", ({ msgId, status }) => {
+  const el = document.querySelector(`[data-msg-id="${msgId}"] .msg-status`);
+  if(!el) return;
+
+  if(status === "delivered") el.textContent = "✓";
+  if(status === "seen") el.textContent = "👁";
+});
+
+
+
+
+function pushMsg(name, text, isMe=false, msgId=null, status="", avatar="") {
+
+
+
+  if (msgId && renderedMsgIds.has(msgId)) return;
+  if (msgId) renderedMsgIds.add(msgId);
+
+  const div = document.createElement("div");
+  div.className = "chat-line " + (isMe ? "me" : "other");
+  div.dataset.msgId = msgId || "";
+
+
+if (text === "__REVOKED__") {
+  div.innerHTML = `
+    <div class="msg-revoked">
+      🚫 This message was unsent
+    </div>
+  `;
+
+
+
+
+
+
+const nearBottom =
+  chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight < 80;
+
+chatBox.appendChild(div);
+
+if (nearBottom) {
+  scrollChatToBottom(true);
+} else {
+  btnScrollBottom.classList.remove("hidden"); // 🔔 có tin mới
+}
+
+
+  return;
+}
+
+
+  let html = "";
+
+
+
+
+
+  // 🖼️ IMAGE → KHÔNG BUBBLE
+  if (text?.startsWith("/img ")) {
+
+   let url = text.slice(5);
+
+// 🔥 FIX LEGACY PATH (/chat-images)
+if (url.startsWith("/chat-images/")) {
+  url = url.replace(
+    "/chat-images/",
+    process.env.R2_PUBLIC_URL + "/chat/images/"
+  );
+}
+
+
+    html = `
+      <div class="chat-media ${isMe ? "me" : "other"}">
+        <img src="${url}" class="chat-img">
+      </div>
+    `;
+  }
+
+  
+
+  // 🎥 VIDEO → KHÔNG BUBBLE
+  else if (text?.startsWith("/video ")) {
+    const url = text.slice(7);
+
+    html = `
+      <div class="chat-media ${isMe ? "me" : "other"}">
+        <video src="${url}" controls playsinline class="chat-video"></video>
+      </div>
+    `;
+  }
+
+// 🖼️ ALBUM + INDICATOR
+else if (text?.startsWith("/album ")) {
+  const urls = text.slice(7).split("|");
+  const total = urls.length;
+  const showUrls = total > 4 ? urls.slice(0, 4) : urls;
+
+  html = `
+    <div class="chat-album ${isMe ? "me" : "other"}">
+      ${showUrls.map((u, i) => {
+        const isLast = i === 3 && total > 4;
+        const more = total - 3;
+
+        return `
+          <div class="album-item"
+               onclick='openAlbumZoom(${JSON.stringify(urls)}, ${i})'>
+            <img src="${u}" class="album-img">
+            ${isLast ? `<div class="album-more">+${more}</div>` : ""}
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+  
+}// 📍 LOCATION
+else if (text?.startsWith("/location ")) {
+  const raw = text.slice(10);
+  const [coords, url] = raw.split("|");
+
+  html = `
+    <div class="chat-location ${isMe ? "me" : "other"}">
+      <div class="location-card">
+        <div class="location-icon">📍</div>
+        <div class="location-text">
+          <div class="location-title">Current Location</div>
+          <div class="location-coords">${coords}</div>
+        </div>
+        <a href="${url}" target="_blank" class="location-open">
+          Open Map
+        </a>
+      </div>
+    </div>
+  `;
+}
+
+
+
+
+  // 💬 TEXT → GIỮ BUBBLE
+  else {
+    html = `
+      <div>
+         <span class="bubble-text ${isMe ? "me" : "other"}">${text}</span>
+      </div>
+    `;
+  }
+
+  div.innerHTML = `
+    ${html}
+    <div class="chat-time">
+      ${new Date().toLocaleTimeString("en-GB",{
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false
+})}
+      ${isMe ? `<span class="msg-status">${status}</span>` : ""}
+    </div>
+  `;
+
+
+
+// 🗑️ THU HỒI – chỉ cho tin của mình
+if (isMe && msgId) {
+  // PC: click phải
+  div.oncontextmenu = e => {
+    e.preventDefault();
+    confirmRevoke(msgId);
+  };
+
+  // Mobile: giữ lâu
+  let pressTimer;
+  div.addEventListener("touchstart", () => {
+    pressTimer = setTimeout(() => {
+      confirmRevoke(msgId);
+    }, 500);
+  });
+
+  div.addEventListener("touchend", () => {
+    clearTimeout(pressTimer);
+  });
+}
+
+
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+
+
+
+
+
+const chatModal = document.getElementById("chatModal");
+
+
+function renderUserList(){
+  userList.innerHTML = "";
+
+  const adminMode = isAdmin();
+
+  // 1️⃣ ADMIN: xem toàn bộ user
+  // 2️⃣ USER THƯỜNG: chỉ xem bạn bè
+  const usersToShow = allUsers.filter(u =>
+    u &&
+    u.uid &&
+    u.name &&
+    canShowUserInList(u)
+  );
+
+  // nếu không có ai
+if (!usersToShow.length) {
+
+  userList.innerHTML = `
+    <div class="empty">
+      ${
+        adminMode
+          ? "No users available yet."
+          : "No friends yet.<br><small>Add friends to start chatting.</small>"
+      }
+    </div>
+  `;
+
+  return;
+}
+
+  // sort: online trước
+usersToShow.sort((a,b)=>{
+
+  if(a.role === "admin") return -1
+  if(b.role === "admin") return 1
+
+  const ao = onlineSet.has(a.uid)
+  const bo = onlineSet.has(b.uid)
+
+  return bo - ao
+})
+
+  usersToShow.forEach(u => {
+    const isOnline = onlineSet.has(u.uid);
+
+    const div = document.createElement("div");
+    div.className = "msg-user " + (isOnline ? "online" : "offline");
+
+    div.innerHTML = `
+      <img class="msg-ava" src="${fixMedia(u.avatar)}">
+
+      <div class="msg-uinfo">
+        <div class="msg-uname">
+          ${u.name}
+          ${u.role === "admin"
+            ? `<span class="tick-blue" title="Verified Admin">✔︎</span>`
+            : ""
+          }
+
+          ${countUnread(u.uid) > 0
+            ? `<span class="msg-badge">
+                ${countUnread(u.uid) > 9 ? "9+" : countUnread(u.uid)}
+              </span>`
+            : ""
+          }
+        </div>
+
+        <div class="msg-ustatus ${isOnline ? "on" : "off"}">
+          ${isOnline ? "Online" : "Offline"}
+        </div>
+      </div>
+    `;
+
+    div.onclick = () => {
+      currentTarget = u;
+      currentTargetUID = u.uid;
+
+      chatTitle.innerHTML = `
+        ${u.name}
+        ${u.role === "admin" ? `
+          <span class="tick-blue" title="Verified Admin">
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="white">
+              <path d="M9 16.2l-3.5-3.5L4 14.2l5 5 12-12-1.4-1.4z"/>
+            </svg>
+          </span>
+        ` : ``}
+      `;
+
+      document.getElementById("chatHeaderAvatar").src =
+        fixMedia(u.avatar) || "";
+
+      openChat();
+    };
+
+    userList.appendChild(div);
+  });
+
+  // Áp dụng lại bộ lọc khi danh sách cập nhật
+  filterMessageUsers();
+}
+
+
+
+
+// 🔥 MỞ MODAL CHAT THEO UID (DÙ TỪ PUSH / URL)
+
+async function openChatByUid(uid) {
+  if (!uid) return;
+
+  if (!allUsers.length) {
+    await loadAllUsers();
+  }
+
+  const u = allUsers.find(x => x.uid === uid);
+  if (!u) return;
+
+  currentTarget = u;
+  currentTargetUID = u.uid;
+
+  // ✅ SET TÊN ĐÚNG THEO HTML
+  chatTitle.innerHTML = `
+    ${u.name}
+    ${u.verified ? `
+      <span class="tick-blue">
+        <svg viewBox="0 0 24 24" width="10" height="10" fill="white">
+          <path d="M9 16.2l-3.5-3.5L4 14.2l5 5 12-12-1.4-1.4z"/>
+        </svg>
+      </span>
+    ` : ``}
+  `;
+
+  // ✅ SET AVATAR
+  document.getElementById("chatHeaderAvatar").src =
+    fixMedia(u.avatar) || "";
+
+  await openChat(); // sync + load + seen
+}
+
+
+
+async function openChat(){
+  document.body.style.overflow = "hidden";
+  chatModal.classList.remove("hidden");
+
+  // 🔥 BẮT BUỘC: sync inbox từ server
+  await syncInboxFromServer();
+
+  // render lại chat sau khi sync
+  loadChat();
+  scrollChatToBottom(true);
+
+  // ✅ chỉ mark seen SAU KHI ĐÃ LOAD
+  if (currentTargetUID) {
+    markPeerSeen(currentTargetUID);
+    socket.emit("msg-seen-all", { peer: currentTargetUID });
+  }
+
+  clearInboxDot();
+}
+
+
+
+function markPeerSeen(peer){
+  const key =
+    auth.uid < peer
+      ? "chat_" + auth.uid + "_" + peer
+      : "chat_" + peer + "_" + auth.uid;
+
+  const arr = JSON.parse(localStorage.getItem(key) || "[]");
+  let changed = false;
+
+  arr.forEach(m=>{
+    if (!m.seen && m.from === peer) {
+      m.seen = true;
+      changed = true;
+    }
+  });
+
+  if (changed) {
+    localStorage.setItem(key, JSON.stringify(arr));
+    renderUserList(); // 🔄 update badge
+  }
+}
+
+function countUnread(peer){
+  const key =
+    auth.uid < peer
+      ? "chat_" + auth.uid + "_" + peer
+      : "chat_" + peer + "_" + auth.uid;
+
+  const arr = JSON.parse(localStorage.getItem(key) || "[]");
+  return arr.filter(m => !m.seen && m.from === peer).length;
+}
+
+
+
+function closeChat(){
+  document.body.style.overflow = ""; // mở lại
+  chatModal.classList.add("hidden");
+  currentTarget = null;
+}
+
+
+let baseHeight = window.innerHeight;
+
+window.addEventListener("resize", () => {
+  const h = window.innerHeight;
+  const diff = baseHeight - h;
+
+  // nếu bàn phím mở
+  if(diff > 150){
+    document
+      .getElementById("chatModal")
+      .style.setProperty("--kb", diff + "px");
+  }else{
+    document
+      .getElementById("chatModal")
+      .style.setProperty("--kb", "0px");
+  }
+});
+
+
+
+
+
+// 🔔 THÔNG BÁO CÓ TIN NHẮN MỚI Ở SẢNH MESSAGES
+socket.on("inbox-new", (data = {}) => {
+  showInboxDot(data.count);
+});
+
+
+function showInboxDot(count){
+  const dot = document.querySelector(".msg-title .dot");
+  if(!dot) return;
+
+  dot.classList.add("active");
+
+  // nếu muốn hiện số (tuỳ chọn)
+  if(count && count > 0){
+    dot.textContent = count > 9 ? "9+" : count;
+  }
+}
+
+function clearInboxDot(){
+  const dot = document.querySelector(".msg-title .dot");
+  if(!dot) return;
+
+  dot.classList.remove("active");
+  dot.textContent = "";
+}
+
+
+// 🔔 TOAST TIN NHẮN (MESSAGES)
+function showMessageToast({ name, text, avatar, uid }) {
+  // tránh spam nhiều toast cùng lúc
+  if (document.querySelector(".msg-toast")) return;
+
+  const div = document.createElement("div");
+  div.className = "msg-toast";
+
+  div.innerHTML = `
+    <img src="${fixMedia(avatar) || '/icons/icon-192.png'}" class="toast-ava">
+
+    <div class="toast-body">
+      <div class="toast-name">${name}</div>
+      <div class="toast-text">${text}</div>
+    </div>
+  `;
+
+  Object.assign(div.style, {
+    position: "fixed",
+    left: "50%",
+    bottom: "90px",
+    transform: "translateX(-50%)",
+    background: "rgba(0,0,0,.88)",
+    color: "#fff",
+    borderRadius: "14px",
+    padding: "10px 14px",
+    display: "flex",
+    gap: "10px",
+    alignItems: "center",
+    maxWidth: "90%",
+    zIndex: 9999,
+    boxShadow: "0 0 18px rgba(255,59,107,.6)",
+    cursor: "pointer"
+  });
+
+  div.querySelector(".toast-ava").style.cssText = `
+    width:36px;height:36px;border-radius:50%;object-fit:cover
+  `;
+
+div.onclick = async () => {
+  const u = allUsers.find(x => x.uid === uid);
+  if (u) {
+    currentTarget = u;
+    currentTargetUID = u.uid;
+    await openChat(); // 🔥 openChat đã tự sync + load
+  }
+  div.remove();
+};
+
+
+  document.body.appendChild(div);
+
+  setTimeout(() => div.remove(), 2500);
+}
+
+
+async function enablePush() {
+  if (!("serviceWorker" in navigator)) return;
+  if (!auth?.uid) return;
+
+  const reg = await navigator.serviceWorker.register("/sw.js");
+
+  let sub = await reg.pushManager.getSubscription();
+
+  if (!sub) {
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted") return;
+
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: "BPG9kTxtU0Fso5VZqUFhqn_ZZLvTeKM32km3pLDnH2UCdKce-owuTMZ5PLzrKyrw_patHMVavHdDM4axJ7L9N7E"
+    });
+  }
+
+  // 🔥 GỬI SUB LÊN SERVER MỖI LẦN (UPSERT)
+  await fetch("/api/push-subscribe", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ uid: auth.uid, sub })
+  });
+}
+
+
+socket.on("msg-blocked", ({ reason }) => {
+
+  if (reason === "not_friend") {
+
+    if (currentTarget?.role === "admin") return;
+
+    showModal(
+      "You can only send messages to people you are friends with."
+    );
+
+  }
+
+});
+
+
+function uploadChatFileWithProgress(file, type, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    currentUploadXHR = xhr; // 🔥 lưu để huỷ
+
+    const fd = new FormData();
+    fd.append(type, file);
+
+    xhr.open(
+      "POST",
+      type === "image"
+        ? "/api/upload-chat-image"
+        : "/api/upload-chat-video"
+    );
+
+    xhr.upload.onprogress = e => {
+      if (e.lengthComputable && onProgress) {
+        let percent = Math.round((e.loaded / e.total) * 100);
+        if (percent > 95) percent = 95; // 🧠 giữ 95%
+        onProgress(percent);
+      }
+    };
+
+    xhr.onload = () => {
+      try {
+        onProgress && onProgress(100); // ✅ server xong
+        resolve(JSON.parse(xhr.responseText));
+      } catch {
+        reject();
+      } finally {
+        currentUploadXHR = null;
+        currentUploadMsgId = null;
+      }
+    };
+
+    xhr.onerror = () => {
+      reject();
+      currentUploadXHR = null;
+      currentUploadMsgId = null;
+    };
+
+    xhr.onabort = () => {
+      reject("aborted");
+      currentUploadXHR = null;
+      currentUploadMsgId = null;
+    };
+
+    xhr.send(fd);
+  });
+}
+
+
+
+
+function pushUploadProgress(msgId) {
+  const div = document.createElement("div");
+  div.className = "chat-line me";
+  div.dataset.msgId = msgId;
+
+  div.innerHTML = `
+    <div class="upload-ring" id="ring-${msgId}">
+      <span id="ring-text-${msgId}">0%</span>
+    </div>
+  `;
+
+  chatBox.appendChild(div);
+  scrollChatToBottom(true);
+}
+
+
+function updateUploadProgress(msgId, percent) {
+  const ring = document.getElementById(`ring-${msgId}`);
+  const text = document.getElementById(`ring-text-${msgId}`);
+  if (!ring || !text) return;
+
+  ring.style.background =
+    `conic-gradient(#00eaff ${percent * 3.6}deg, rgba(255,255,255,.15) 0deg)`;
+
+  text.textContent = percent + "%";
+}
+
+
+
+
+
+
+
+const msgInput = document.getElementById("msgInput");
+const sendBtn = document.getElementById("sendBtn");
+
+
+// 🔥 AUTO GROW TEXTAREA
+msgInput.addEventListener("input", () => {
+  msgInput.style.height = "auto";
+  msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + "px";
+
+  // giữ logic mờ / hiện nút gửi
+  sendBtn.style.opacity = msgInput.value.trim() ? "1" : "0.4";
+});
+
+
+function openImgZoom(url) {
+  const modal = document.getElementById("imgZoom");
+  const img = document.getElementById("imgZoomView");
+  img.src = url;
+  modal.classList.remove("hidden");
+}
+
+
+
+
+
+  let zoomImages = [];
+let zoomIndex = 0;
+
+// mở viewer với danh sách ảnh
+function openAlbumZoom(urls, index = 0) {
+  zoomImages = urls;
+  zoomIndex = index;
+
+  const modal = document.getElementById("imgZoom");
+  modal.classList.remove("hidden");
+
+  renderZoomImage();
+}
+
+// render ảnh + indicator
+function renderZoomImage() {
+  const img = document.getElementById("imgZoomView");
+  const ind = document.getElementById("imgZoomIndicator");
+
+  img.src = zoomImages[zoomIndex];
+  ind.textContent = `${zoomIndex + 1} / ${zoomImages.length}`;
+}
+
+// điều hướng
+function nextImg() {
+  if (!zoomImages.length) return;
+
+  zoomIndex = (zoomIndex + 1) % zoomImages.length;
+  renderZoomImage();
+}
+
+function prevImg() {
+  if (!zoomImages.length) return;
+
+  zoomIndex =
+    (zoomIndex - 1 + zoomImages.length) % zoomImages.length;
+  renderZoomImage();
+}
+
+
+
+// phím ← →
+window.addEventListener("keydown", e => {
+  const modal = document.getElementById("imgZoom");
+  if (modal.classList.contains("hidden")) return;
+
+  if (e.key === "ArrowRight") nextImg();
+  if (e.key === "ArrowLeft") prevImg();
+  if (e.key === "Escape")
+    modal.classList.add("hidden");
+});
+
+// 👉 SWIPE MOBILE
+let touchStartX = 0;
+
+document
+  .getElementById("imgZoomView")
+  .addEventListener("touchstart", e => {
+    touchStartX = e.touches[0].clientX;
+  });
+
+document
+  .getElementById("imgZoomView")
+  .addEventListener("touchend", e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (dx > 50) prevImg();
+    if (dx < -50) nextImg();
+  });
+
+
+  function scrollChatToBottom(force = false) {
+  if (!chatBox) return;
+
+  // đợi DOM render xong (rất quan trọng)
+  requestAnimationFrame(() => {
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
+}
+
+
+
+const imgZoom = document.getElementById("imgZoom");
+const imgZoomBackdrop = imgZoom.querySelector(".img-zoom-backdrop");
+const imgZoomInner = imgZoom.querySelector(".img-zoom-inner");
+
+// 👉 Click RA NGOÀI → đóng
+imgZoomBackdrop.addEventListener("click", () => {
+  imgZoom.classList.add("hidden");
+});
+
+// 👉 Click BÊN TRONG (ảnh, nút) → KHÔNG đóng
+imgZoomInner.addEventListener("click", e => {
+  e.stopPropagation();
+});
+
+
+function closeImgZoom() {
+  document.getElementById("imgZoom").classList.add("hidden");
+}
+
+
+async function confirmRevoke(msgId) {
+
+  const ok = await showModal(
+    "Unsend this message?",
+    "Unsend",
+    "Cancel"
+  );
+
+  if (!ok) return;
+
+  revokeMessage(msgId);
+}
+
+
+function revokeMessage(msgId) {
+  // 1️⃣ cập nhật localStorage
+  Object.keys(localStorage)
+    .filter(k => k.startsWith("chat_"))
+    .forEach(key => {
+      const arr = JSON.parse(localStorage.getItem(key) || "[]");
+      let changed = false;
+
+      arr.forEach(m => {
+        if (m.id === msgId && m.from === auth.uid) {
+          m.text = "__REVOKED__";
+          m.revoked = true;
+          changed = true;
+        }
+      });
+
+      if (changed) {
+        localStorage.setItem(key, JSON.stringify(arr));
+      }
+    });
+
+  // 2️⃣ update UI ngay
+  const el = document.querySelector(
+    `[data-msg-id="${msgId}"]`
+  );
+  if (el) {
+    el.innerHTML = `
+      <div class="msg-revoked">
+        🚫 This message was unsent
+      </div>
+    `;
+  }
+
+  // 3️⃣ báo cho người kia
+  socket.emit("revoke-message", { msgId });
+}
+
+
+// 🔥 NHẬN TIN THU HỒI TỪ NGƯỜI KHÁC
+socket.on("revoke-message", ({ msgId }) => {
+  if (!msgId) return;
+
+  // 1️⃣ update UI nếu đang hiển thị
+  const el = document.querySelector(`[data-msg-id="${msgId}"]`);
+  if (el) {
+    el.innerHTML = `
+      <div class="msg-revoked">
+        🚫 This message was unsent
+      </div>
+    `;
+  }
+
+  // 2️⃣ update localStorage (KHÔNG CHECK auth.uid)
+  Object.keys(localStorage)
+    .filter(k => k.startsWith("chat_"))
+    .forEach(key => {
+      const arr = JSON.parse(localStorage.getItem(key) || "[]");
+      let changed = false;
+
+      arr.forEach(m => {
+        if (m.id === msgId) {
+          m.text = "__REVOKED__";
+          m.revoked = true;
+          changed = true;
+        }
+      });
+
+      if (changed) {
+        localStorage.setItem(key, JSON.stringify(arr));
+      }
+    });
+});
+
+
+
+async function confirmClearMyMessages() {
+
+  if (!currentTargetUID) return;
+
+  const ok = await showModal(
+    "Delete your sent messages?\nThe other person's messages will be kept.",
+    "Delete My Messages",
+    "Cancel"
+  );
+
+  if (!ok) return;
+
+  clearMyMessages(currentTargetUID);
+}
+
+
+function clearMyMessages(peer){
+  const me = auth.uid;
+  if(!me || !peer) return;
+
+  const key =
+    me < peer ? `chat_${me}_${peer}` : `chat_${peer}_${me}`;
+
+  // 1️⃣ XÓA TOÀN BỘ LOCAL CHAT
+  localStorage.removeItem(key);
+
+  // 2️⃣ RESET UI + STATE
+  renderedMsgIds.clear();
+  chatBox.innerHTML = "";
+
+  // 3️⃣ BÁO SERVER (chỉ để dọn inbox offline)
+  socket.emit("clear-my-messages", { peer });
+}
+
+
+
+socket.on("peer-cleared-my-messages", ({ by }) => {
+  // 🔥 NẾU CHÍNH MÌNH LÀ NGƯỜI BẤM CLEAR → BỎ QUA
+  if (by === auth.uid) return;
+
+  const me = auth.uid;
+  if(!me || !by) return;
+
+  const key =
+    me < by ? `chat_${me}_${by}` : `chat_${by}_${me}`;
+
+  let arr = JSON.parse(localStorage.getItem(key) || "[]");
+
+  // ❌ xóa tin của người kia
+  arr = arr.filter(m => m.from !== by);
+  localStorage.setItem(key, JSON.stringify(arr));
+
+  // ❌ chỉ render nếu đang mở chat
+  if (currentTargetUID === by) {
+    renderedMsgIds.clear();
+    chatBox.innerHTML = "";
+
+    arr.forEach(m => {
+      const isMe = m.from === me;
+      pushMsg(
+        isMe ? "You" : currentTarget.name,
+        m.revoked ? "__REVOKED__" : m.text,
+        isMe,
+        m.id,
+        "",
+        isMe ? auth.avatar : currentTarget.avatar
+      );
+    });
+  }
+
+  renderUserList();
+});
+
+
+
+
+
+document.getElementById("btnLocation").onclick = async () => {
+  if (!currentTarget) return;
+
+  if (!navigator.geolocation) {
+    showModal("Your device does not support location services.");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude.toFixed(6);
+      const lng = pos.coords.longitude.toFixed(6);
+
+      const mapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+
+      const text = `/location ${lat},${lng}|${mapUrl}`;
+
+      const msgId =
+        Date.now() + "_" + Math.random().toString(36).slice(2);
+
+      socket.emit("private-message", {
+        to: currentTarget.uid,
+        text,
+        msgId
+      });
+
+      pushMsg("You", text, true, msgId, "✓");
+
+      saveChat({
+        id: msgId,
+        from: auth.uid,
+        to: currentTarget.uid,
+        text,
+        time: Date.now(),
+        peer: currentTarget.uid,
+        seen: true
+      });
+    },
+    err => {
+      showModal("Unable to get your current location.");
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000
+    }
+  );
+};
+
+
+function setTextSendingDisabled(disabled) {
+
+  msgInput.disabled = disabled;
+  sendBtn.disabled = disabled;
+
+  msgInput.style.opacity = disabled ? "0.5" : "1";
+  sendBtn.style.opacity = disabled ? "0.4" : "1";
+
+  if (disabled) {
+
+    msgInput.placeholder = "Uploading... Please wait";
+
+  } else {
+
+    msgInput.placeholder = "Type a message...";
+
+  }
+}
+
+
+
+
+function setToolLoading(btn, loading=true){
+  if(!btn) return;
+  btn.classList.toggle("is-loading", loading);
+}
+
+const btnImage = document.getElementById("btnImage");
+const imgInput = document.getElementById("imgInput");
+
+btnImage.onclick = () => {
+  if (currentUploadXHR) {
+    currentUploadXHR.abort(); // ❌ huỷ upload
+
+    if (currentUploadMsgId) {
+      document
+        .querySelector(`[data-msg-id="${currentUploadMsgId}"]`)
+        ?.remove();
+    }
+
+    showToolCancelled(btnImage); // 🔥 HIỆN “Đã huỷ”
+    return;
+  }
+
+  imgInput.click();
+  setTextSendingDisabled(false); // 🔓 mở gửi text khi huỷ
+
+};
+
+
+
+imgInput.onchange = async e => {
+  if (!currentTarget) return;
+
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+
+  const msgId = Date.now() + "_" + Math.random().toString(36).slice(2);
+  currentUploadMsgId = msgId;
+  pushUploadProgress(msgId);
+  setTextSendingDisabled(true); // ⛔ khoá gửi text
+
+  const urls = [];
+
+  let imgStartTime = Date.now();
+
+  for (const file of files) {
+    const { url } = await uploadChatFileWithProgress(
+  file,
+  "image",
+p => {
+  const { speedMB, etaSec } = calcSpeedETA(
+    imgStartTime,
+    file.size * (p / 100),
+    file.size
+  );
+
+  updateUploadProgress(msgId, p);
+  updateToolProgress(btnImage, p, "image", { speedMB, etaSec });
+}
+);
+    urls.push(url);
+  }
+
+  // 🔥 XÓA PROGRESS
+  document.querySelector(`[data-msg-id="${msgId}"]`)?.remove();
+  setTextSendingDisabled(false); // 🔓 mở gửi text
+  const text = "/album " + urls.join("|");
+
+  pushMsg("You", text, true, msgId, "✓");
+  saveChat({
+    id: msgId,
+    from: auth.uid,
+    to: currentTarget.uid,
+    text,
+    time: Date.now(),
+    peer: currentTarget.uid,
+    seen: true
+  });
+
+  socket.emit("private-message", { to: currentTarget.uid, msgId, text });
+  e.target.value = "";
+};
+
+
+const btnVideo = document.getElementById("btnVideo");
+const videoInput = document.getElementById("videoInput");
+
+btnVideo.onclick = () => {
+  if (currentUploadXHR) {
+    currentUploadXHR.abort(); // ❌ huỷ upload
+
+    if (currentUploadMsgId) {
+      document
+        .querySelector(`[data-msg-id="${currentUploadMsgId}"]`)
+        ?.remove();
+    }
+
+    showToolCancelled(btnVideo); // 🔥 HIỆN “Đã huỷ”
+    return;
+  }
+
+  videoInput.click();
+  setTextSendingDisabled(false); // 🔓 mở gửi text khi huỷ
+
+};
+
+
+
+videoInput.onchange = async e => {
+  if (!currentTarget) return;
+
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const msgId = Date.now() + "_" + Math.random().toString(36).slice(2);
+  currentUploadMsgId = msgId;
+
+
+  // 1️⃣ Hiện progress ring
+  pushUploadProgress(msgId);
+  setTextSendingDisabled(true); // ⛔ khoá gửi text
+
+const videoStartTime = Date.now();
+
+  // 2️⃣ Upload video + %
+  const { url } = await uploadChatFileWithProgress(
+  file,
+  "video",
+p => {
+  const { speedMB, etaSec } = calcSpeedETA(
+    videoStartTime,
+    file.size * (p / 100),
+    file.size
+  );
+
+  updateUploadProgress(msgId, p);
+  updateToolProgress(btnVideo, p, "video", { speedMB, etaSec });
+}
+
+);
+
+
+  // 3️⃣ Xóa progress
+  document.querySelector(`[data-msg-id="${msgId}"]`)?.remove();
+  setTextSendingDisabled(false); // 🔓 mở gửi text
+  const text = "/video " + url;
+
+  pushMsg("You", text, true, msgId, "✓");
+
+  saveChat({
+    id: msgId,
+    from: auth.uid,
+    to: currentTarget.uid,
+    text,
+    time: Date.now(),
+    peer: currentTarget.uid,
+    seen: true
+  });
+
+  socket.emit("private-message", { to: currentTarget.uid, msgId, text });
+  e.target.value = "";
+};
+
+
+
+const btnLocation = document.getElementById("btnLocation");
+
+btnLocation.onclick = () => {
+  if (!currentTarget) return;
+
+  setToolLoading(btnLocation, true);
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude.toFixed(6);
+      const lng = pos.coords.longitude.toFixed(6);
+      const url = `https://www.google.com/maps?q=${lat},${lng}`;
+      const text = `/location ${lat},${lng}|${url}`;
+      const msgId = Date.now() + "_" + Math.random().toString(36).slice(2);
+
+      pushMsg("You", text, true, msgId, "✓");
+      saveChat({ id: msgId, from: auth.uid, to: currentTarget.uid, text, time: Date.now(), peer: currentTarget.uid, seen:true });
+      socket.emit("private-message", { to: currentTarget.uid, msgId, text });
+    },
+    () => showModal("Unable to get your current location."),
+    { enableHighAccuracy:true, timeout:10000 }
+  );
+
+  setTimeout(()=>setToolLoading(btnLocation,false),1200);
+};
+
+
+
+function showToolCancelled(btn) {
+  if (!btn) return;
+
+  const icon = btn.querySelector(".tool-icon");
+
+  btn.classList.add("uploading");
+  btn.style.setProperty("--deg", "360deg");
+
+  icon.innerHTML = `
+    <div style="color:#ff5a5a;font-size:16px;text-shadow:0 0 8px #ff5a5a">
+      ✕
+    </div>
+    <div class="tool-sub">Cancelled</div>
+  `;
+
+  setTimeout(() => {
+    btn.classList.remove("uploading", "image", "video");
+    icon.innerHTML = restoreMessageToolIcon(btn);
+  }, 700);
+}
+
+
+
+
+
+function updateToolProgress(btn, percent, type, stats = {}) {
+  if (!btn) return;
+
+  btn.classList.add("uploading", type);
+  btn.style.setProperty("--deg", percent * 3.6 + "deg");
+
+  const icon = btn.querySelector(".tool-icon");
+
+  // 🟡 95% → đang xử lý server
+  if (percent === 95) {
+    icon.innerHTML = `
+      <div>95%</div>
+      <div class="tool-sub">Processing...</div>
+    `;
+    return;
+  }
+
+  // ⏱ Upload bình thường
+  if (percent < 95) {
+    icon.innerHTML = `
+      <div>${percent}%</div>
+      ${
+        stats.speedMB
+          ? `<div class="tool-sub">${stats.speedMB} MB/s • ~${stats.etaSec}s</div>`
+          : ""
+      }
+    `;
+    return;
+  }
+
+  // 🟢 100% → tick ✓
+  if (percent >= 100) {
+    icon.innerHTML = `
+      <div style="color:#2dff7a;font-size:16px;text-shadow:0 0 8px #2dff7a">
+        ✓
+      </div>
+    `;
+
+    // giữ tick 600ms rồi reset
+    setTimeout(() => {
+      btn.classList.remove("uploading", "image", "video");
+      icon.innerHTML = restoreMessageToolIcon(btn);
+    }, 600);
+  }
+}
+
+
+
+
+
+
+function calcSpeedETA(startTime, loaded, total) {
+  const now = Date.now();
+  const elapsed = (now - startTime) / 1000; // giây
+  if (elapsed <= 0) return { speed: 0, eta: 0 };
+
+  const speed = loaded / elapsed; // bytes/s
+  const remaining = total - loaded;
+  const eta = remaining / speed;
+
+  return {
+    speedMB: (speed / 1024 / 1024).toFixed(1),
+    etaSec: Math.max(0, Math.ceil(eta))
+  };
+}
+
+
+
+
+socket.on("system-notify", data => {
+
+  if (!data) return;
+
+  // COIN TOP-UP
+  if (data.type === "topup") {
+
+    showToast(
+      data.text || "Coins have been added to your account.",
+      "success"
+    );
+
+    return;
+  }
+
+  // COIN WITHDRAWAL NOTIFICATION
+  if (data.type === "withdraw") {
+    notifyWithdraw(data);
+  }
+
+  // ACCOUNT LOCKED
+  if (data.type === "lock") {
+
+    showToast(
+      data.reason || "Your account has been locked.",
+      "error"
+    );
+
+    localStorage.removeItem("user_profile");
+    localStorage.removeItem("login_uid");
+    localStorage.removeItem("isGuest");
+
+    setTimeout(() => {
+      location.href = "/login.html";
+    }, 2000);
+  }
+
+});
+
+
+function showToast(text, type = "info", timeout = 3500){
+  const box = document.getElementById("toast-container");
+  if(!box) return;
+
+  const icons = {
+    info:"ℹ️",
+    success:"✅",
+    error:"❌",
+    warn:"⚠️"
+  };
+
+  const div = document.createElement("div");
+  div.className = `toast ${type}`;
+  div.innerHTML = `
+    <span class="icon">${icons[type] || "🔔"}</span>
+    <span class="msg">${text}</span>
+  `;
+
+  box.appendChild(div);
+
+  setTimeout(()=>div.remove(), timeout);
+}
+
+
+
+function showWithdrawNotify(data){
+  const text =
+    data.text ||
+"Coins have been deducted from your account.";
+
+  openSysModal(text);
+}
+
+
+function notifyWithdraw(data){
+  const text =
+data?.text ||
+"Coins have been deducted from your account.";
+
+  // ưu tiên modal nếu tồn tại
+  if (typeof openSysModal === "function") {
+    openSysModal(text);
+    return;
+  }
+
+  // fallback toast
+  if (typeof showToast === "function") {
+    showToast(text, "error", 5000);
+    return;
+  }
+
+  // fallback cuối cùng
+  alert(text);
+}
+
+
+
+// 🔁 MỞ CHAT TỰ ĐỘNG NẾU LOAD TỪ PUSH (URL)
+const qs = new URLSearchParams(location.search);
+const openUid = qs.get("openChat");
+
+if (openUid) {
+  setTimeout(() => {
+    openChatByUid(openUid);
+  }, 500);
+}
+
+
+
+function showForceLogoutModal(message){
+  let modal = document.getElementById("forceLogoutModal");
+  if(!modal){
+    modal = document.createElement("div");
+    modal.id = "forceLogoutModal";
+    modal.innerHTML = `
+      <div class="fl-backdrop"></div>
+     <div class="fl-box">
+
+  <div class="fl-icon">🚫</div>
+
+  <div class="fl-title">
+    Session Ended
+  </div>
+
+  <div class="fl-msg"></div>
+
+  <div class="fl-sub">
+    You will be redirected to the login page...
+  </div>
+
+</div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  modal.querySelector(".fl-msg").textContent = message;
+  modal.classList.add("show");
+}
+
+
+socket.on("force-logout", (data) => {
+  const msg =
+  data?.message || "You have been signed out.";
+
+  showForceLogoutModal(msg);
+
+  // clear auth
+  localStorage.removeItem("user_profile");
+  localStorage.removeItem("login_uid");
+  localStorage.removeItem("isGuest");
+
+  // redirect sau 2s
+  setTimeout(()=>{
+    location.href = "/login.html";
+  }, 3000);
+});
+
+
+
+
+/* ===== LUXURY MESSAGE SEARCH ===== */
+
+function filterMessageUsers() {
+  const input = document.getElementById("msgUserSearch");
+  const noResults = document.getElementById("msgNoResults");
+
+  if (!input || !userList) return;
+
+  const keyword = input.value
+    .trim()
+    .toLocaleLowerCase("vi-VN");
+
+  let visible = 0;
+
+  userList.querySelectorAll(".msg-user").forEach(card => {
+    const name = card.querySelector(".msg-uname")
+      ?.textContent
+      .toLocaleLowerCase("vi-VN") || "";
+
+    const match = name.includes(keyword);
+
+    card.style.display = match ? "" : "none";
+
+    if (match) visible++;
+  });
+
+  if (noResults) {
+    const hasCards =
+      userList.querySelectorAll(".msg-user").length > 0;
+
+    noResults.hidden =
+      !keyword || !hasCards || visible > 0;
+  }
+}
+
+document.getElementById("msgUserSearch")
+  ?.addEventListener("input", filterMessageUsers);
+
+
+
+
+  
+function restoreMessageToolIcon(btn) {
+  const iconId = btn.id === "btnImage"
+    ? "mi-image"
+    : "mi-video";
+
+  return `
+    <svg class="msg-svg" aria-hidden="true">
+      <use href="#${iconId}"></use>
+    </svg>
+  `;
+}
+
+
+
+/* ===== MOBILE VISUAL VIEWPORT ===== */
+
+function syncLuxuryChatViewport() {
+  const modal = document.getElementById("chatModal");
+
+  if (!modal) return;
+
+  const viewport = window.visualViewport;
+
+  const height = viewport
+    ? viewport.height
+    : window.innerHeight;
+
+  const top = viewport
+    ? viewport.offsetTop
+    : 0;
+
+  modal.style.setProperty(
+    "--lux-vh",
+    Math.round(height) + "px"
+  );
+
+  modal.style.setProperty(
+    "--lux-top",
+    Math.round(top) + "px"
+  );
+}
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener(
+    "resize",
+    syncLuxuryChatViewport
+  );
+
+  window.visualViewport.addEventListener(
+    "scroll",
+    syncLuxuryChatViewport
+  );
+}
+
+window.addEventListener(
+  "resize",
+  syncLuxuryChatViewport
+);
+
+syncLuxuryChatViewport();
+
+

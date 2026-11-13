@@ -1,0 +1,2640 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>Dragon Tiger Phoenix Admin</title>
+
+<style>
+
+/* ============================================
+   DRAGON TIGER PHOENIX ADMIN
+   MYTHIC ROYAL CONTROL PANEL
+============================================ */
+
+:root {
+  --gold:#f3cf84;
+  --gold-dark:#92642b;
+  --gold-light:#fff0c0;
+
+  --background:#09090d;
+  --panel:#151015;
+
+  --dragon:#f45b4c;
+  --tiger:#75b7ff;
+  --phoenix:#ffbd54;
+
+  --text:#f4e8d5;
+  --muted:#af9d82;
+}
+
+* {
+  box-sizing:border-box;
+}
+
+html {
+  min-height:100%;
+  background:#08080d;
+}
+
+body {
+  margin:0;
+  min-height:100vh;
+  padding:0;
+
+  font-family:
+    Georgia,"Times New Roman",serif;
+
+  color:var(--text);
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(126,71,26,.24),
+      transparent 52%
+    ),
+    linear-gradient(
+      180deg,
+      #140e13,
+      #09090d 48%,
+      #08080a
+    );
+
+  overflow-x:hidden;
+}
+
+/* SUBTLE PALACE ATMOSPHERE */
+
+body::before {
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+
+  background:
+    radial-gradient(
+      circle at 10% 20%,
+      rgba(255,119,34,.07),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 95% 70%,
+      rgba(238,150,56,.07),
+      transparent 35%
+    );
+
+  z-index:0;
+}
+
+/* MAIN WRAPPER */
+
+.dtp-admin {
+  position:relative;
+  z-index:1;
+
+  width:min(100%,1000px);
+  margin:0 auto;
+  padding:15px 17px 38px;
+}
+
+/* ============================================
+   HEADER
+============================================ */
+
+.admin-header {
+  position:relative;
+  text-align:center;
+  margin-bottom:23px;
+  padding-bottom:16px;
+
+  border-bottom:1px solid rgba(223,169,82,.3);
+}
+
+.admin-top-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+
+
+.admin-connection {
+  display:flex;
+  align-items:center;
+  gap:8px;
+
+  min-height:34px;
+  padding:0 13px;
+
+  border:1px solid #77603f;
+  border-radius:30px;
+
+  background:#161b16;
+
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:1px;
+
+  color:#d8c7a7;
+}
+
+.connection-dot {
+  width:8px;
+  height:8px;
+  border-radius:50%;
+
+  background:#f5a941;
+  box-shadow:0 0 8px #f5a941;
+}
+
+.admin-connection.online {
+  border-color:#527c46;
+  color:#aeed9c;
+}
+
+.admin-connection.online .connection-dot {
+  background:#5fed69;
+  box-shadow:0 0 11px #5fed69;
+}
+
+.admin-connection.offline {
+  border-color:#843b3b;
+  color:#ff9b9b;
+}
+
+.admin-connection.offline .connection-dot {
+  background:#ff5151;
+  box-shadow:0 0 9px #ff5151;
+}
+
+/* DECORATIVE CREATURES */
+
+.header-creature {
+  position:absolute;
+  width:105px;
+  height:105px;
+
+  object-fit:contain;
+  pointer-events:none;
+
+  top:52px;
+  opacity:.92;
+}
+
+.header-dragon {
+  left:0;
+  filter:
+    drop-shadow(0 0 15px rgba(255,74,40,.3));
+}
+
+.header-phoenix {
+  right:0;
+  filter:
+    drop-shadow(0 0 15px rgba(255,164,32,.3));
+}
+
+.header-title {
+  margin:18px auto 8px;
+  padding:0 95px;
+
+  color:#ffdb9b;
+
+  font-size:clamp(20px,3.7vw,34px);
+  font-weight:900;
+  line-height:1.2;
+  letter-spacing:1px;
+
+  text-shadow:
+    0 2px 5px #000,
+    0 0 22px rgba(248,168,59,.24);
+}
+
+.admin-nameplate {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+
+  min-width:180px;
+  padding:5px 30px;
+
+  border:1px solid #d5a45d;
+  border-radius:4px;
+
+  background:
+    linear-gradient(90deg,#34100d,#6a1818,#34100d);
+
+  color:#ffe8b5;
+  font-size:19px;
+  font-weight:900;
+  letter-spacing:4px;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,235,170,.3),
+    0 0 14px rgba(200,120,41,.13);
+}
+
+.header-caption {
+  margin-top:11px;
+
+  color:#c3a472;
+  font:700 10px system-ui,sans-serif;
+  letter-spacing:4px;
+}
+
+/* ============================================
+   ORNAMENTED PANEL
+============================================ */
+
+.royal-panel {
+  position:relative;
+
+  margin-bottom:18px;
+  padding:22px;
+
+  border:1px solid #a67739;
+  border-radius:15px;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(151,95,32,.14),
+      transparent 65%
+    ),
+    linear-gradient(
+      160deg,#251917,#120e11 60%,#0d0d12
+    );
+
+  box-shadow:
+    0 10px 35px rgba(0,0,0,.33),
+    inset 0 1px 0 rgba(255,229,158,.16),
+    0 0 0 3px rgba(125,83,36,.06);
+}
+
+.royal-panel::before {
+  content:"";
+  position:absolute;
+  inset:6px;
+
+  border:1px solid rgba(213,158,74,.16);
+  border-radius:10px;
+
+  pointer-events:none;
+}
+
+/* SECTION BANNERS */
+
+.section-ribbon {
+  position:relative;
+  z-index:1;
+
+  width:fit-content;
+  min-width:240px;
+  max-width:100%;
+
+  margin:-34px auto 18px;
+  padding:8px 26px;
+
+  text-align:center;
+
+  border:1px solid #d8a459;
+  border-radius:7px;
+
+  background:
+    linear-gradient(180deg,#631b1a,#32100f);
+
+  box-shadow:
+    0 4px 14px rgba(0,0,0,.4),
+    inset 0 1px 0 rgba(255,223,155,.27);
+
+  color:#ffe3a7;
+  font-size:clamp(15px,2.4vw,21px);
+  font-weight:900;
+  letter-spacing:1.5px;
+
+  text-shadow:0 2px 4px #000;
+}
+
+/* ============================================
+   ROUND AND TIMER
+============================================ */
+
+.round-panel {
+  margin-top:20px;
+}
+
+.round-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+}
+
+.round-info {
+  min-width:0;
+  padding:16px 10px;
+  text-align:center;
+
+  border:1px solid rgba(210,162,82,.38);
+  border-radius:10px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #4c1713,
+      #180f13
+    );
+}
+
+.timer-info {
+  background:
+    linear-gradient(
+      135deg,
+      #122a46,
+      #0b111d
+    );
+}
+
+.metric-label {
+  color:#f5d399;
+  font-size:clamp(12px,2vw,17px);
+  font-weight:900;
+  letter-spacing:1px;
+}
+
+.metric-value {
+  margin-top:8px;
+  color:#ffe1a3;
+
+  font-size:clamp(32px,7vw,62px);
+  font-weight:900;
+  line-height:1.12;
+
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+
+  text-shadow:
+    0 2px 7px #000,
+    0 0 18px rgba(255,183,75,.25);
+}
+
+.timer-info .metric-value {
+  color:#f5d392;
+}
+
+/* ============================================
+   SECRET RESULT
+============================================ */
+
+.secret-panel {
+  margin-top:35px;
+}
+
+.secret-result {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:24px;
+
+  min-height:160px;
+  padding:12px 20px;
+
+  border:1px solid rgba(220,168,84,.4);
+  border-radius:12px;
+
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(107,64,20,.26),
+      transparent 75%
+    ),
+    linear-gradient(
+      130deg,#271a19,#100c11
+    );
+}
+
+.secret-art {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  flex:0 0 145px;
+
+  width:145px;
+  height:145px;
+}
+
+.secret-art img {
+  display:block;
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+
+  filter:
+    drop-shadow(0 0 16px rgba(245,148,67,.4));
+}
+
+.secret-text {
+  flex:1;
+  min-width:0;
+  text-align:center;
+}
+
+.secret-name {
+  font-size:clamp(33px,7vw,65px);
+  font-weight:900;
+  line-height:1.15;
+
+  color:var(--gold);
+
+  text-shadow:
+    0 2px 6px #000,
+    0 0 16px rgba(255,183,64,.32);
+
+  overflow-wrap:anywhere;
+}
+
+.secret-result[data-beast="dragon"] .secret-name {
+  color:#ff9a86;
+}
+
+.secret-result[data-beast="tiger"] .secret-name {
+  color:#a9d2ff;
+}
+
+.secret-result[data-beast="phoenix"] .secret-name {
+  color:#ffcc76;
+}
+
+.secret-sub {
+  margin-top:8px;
+
+  color:#b7a17b;
+  font:700 10px system-ui,sans-serif;
+  letter-spacing:2px;
+}
+
+/* OVERRIDE TITLE */
+
+.override-heading {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+
+  margin:20px 0 14px;
+
+  color:#f0ca8e;
+  font-size:13px;
+  font-weight:900;
+  letter-spacing:1.4px;
+  text-align:center;
+}
+
+.override-heading::before,
+.override-heading::after {
+  content:"";
+  flex:1;
+  max-width:80px;
+  height:1px;
+
+  background:
+    linear-gradient(90deg,transparent,#c79550);
+}
+
+.override-heading::after {
+  transform:rotate(180deg);
+}
+
+/* OVERRIDE BUTTONS */
+
+.override-buttons {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+}
+
+.beast-button {
+  position:relative;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+
+  min-width:0;
+  min-height:79px;
+
+  padding:11px 9px;
+
+  border:1px solid #b68445;
+  border-radius:11px;
+
+  font-family:inherit;
+  font-size:clamp(11px,2vw,17px);
+  font-weight:900;
+
+  color:#ffe7be;
+
+  cursor:pointer;
+  transition:
+    filter .18s,
+    transform .18s,
+    box-shadow .18s;
+}
+
+.beast-button img {
+  width:54px;
+  height:54px;
+  object-fit:contain;
+  flex-shrink:0;
+}
+
+.beast-button.dragon {
+  background:
+    linear-gradient(135deg,#741b1b,#2a0b0b);
+}
+
+.beast-button.tiger {
+  background:
+    linear-gradient(135deg,#173c64,#0b172e);
+}
+
+.beast-button.phoenix {
+  background:
+    linear-gradient(135deg,#733714,#29120d);
+}
+
+.beast-button:hover {
+  filter:brightness(1.13);
+}
+
+.beast-button:active {
+  transform:scale(.97);
+}
+
+.beast-button.selected {
+  box-shadow:
+    0 0 0 2px rgba(255,218,145,.65),
+    0 0 20px rgba(255,187,72,.3);
+}
+
+.beast-button:disabled {
+  opacity:.6;
+  cursor:wait;
+}
+
+.override-note {
+  margin:13px 0 0;
+
+  color:#988b78;
+  font:500 11px system-ui,sans-serif;
+  text-align:center;
+  line-height:1.5;
+}
+
+/* ============================================
+   POOL OVERVIEW
+============================================ */
+
+.pool-section {
+  margin-top:33px;
+}
+
+.pool-grid {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+}
+
+.pool-card {
+  min-width:0;
+
+  padding:14px 7px;
+  text-align:center;
+
+  border:1px solid rgba(222,166,79,.45);
+  border-radius:11px;
+
+  background:#190c0c;
+}
+
+.pool-card.dragon {
+  background:linear-gradient(155deg,#4c1414,#1c0a0a);
+}
+
+.pool-card.tiger {
+  background:linear-gradient(155deg,#173c65,#0a1222);
+}
+
+.pool-card.phoenix {
+  background:linear-gradient(155deg,#563012,#1c0e0a);
+}
+
+.pool-head {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+
+  color:#f9d79d;
+
+  font-size:clamp(10px,1.8vw,14px);
+  font-weight:900;
+  letter-spacing:.5px;
+}
+
+.pool-head img {
+  width:35px;
+  height:35px;
+  object-fit:contain;
+}
+
+.pool-amount {
+  margin-top:10px;
+
+  font-family:Georgia,serif;
+  font-size:clamp(15px,3.3vw,28px);
+  font-weight:900;
+  line-height:1.2;
+
+  color:#ffe3b0;
+  font-variant-numeric:tabular-nums;
+
+  overflow-wrap:anywhere;
+}
+
+/* ============================================
+   LIVE BETS TABLE
+============================================ */
+
+.bets-panel {
+  padding:19px 14px;
+}
+
+.bets-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+
+  margin-bottom:15px;
+}
+
+.bets-title {
+  margin:0;
+
+  color:#f5d59a;
+  font-size:clamp(18px,3vw,26px);
+  font-weight:900;
+  letter-spacing:1px;
+}
+
+.live-indicator {
+  display:flex;
+  align-items:center;
+  gap:6px;
+
+  color:#a89b84;
+  font:700 10px system-ui,sans-serif;
+  letter-spacing:1px;
+}
+
+.live-indicator i {
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#5edc7b;
+  box-shadow:0 0 8px #5edc7b;
+}
+
+.table-scroll {
+  width:100%;
+  overflow-x:auto;
+  overflow-y:auto;
+
+  max-height:430px;
+
+  border:1px solid rgba(201,152,76,.32);
+  border-radius:9px;
+
+  scrollbar-width:thin;
+  scrollbar-color:#84613c #161015;
+}
+
+#betTable {
+  width:100%;
+  min-width:600px;
+
+  border-collapse:collapse;
+  table-layout:auto;
+
+  font-family:system-ui,sans-serif;
+  font-size:13px;
+}
+
+#betTable thead {
+  position:sticky;
+  top:0;
+  z-index:1;
+}
+
+#betTable th {
+  padding:13px 10px;
+
+  background:linear-gradient(
+    180deg,#642019,#32110f
+  );
+
+  color:#f9dca9;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.5px;
+
+  text-align:center;
+  white-space:nowrap;
+}
+
+#betTable td {
+  padding:12px 10px;
+
+  color:#e4dcd0;
+  text-align:center;
+
+  border-bottom:
+    1px solid rgba(255,255,255,.055);
+
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+
+#betTable td:first-child {
+  text-align:left;
+  color:#f7ddb2;
+  font-weight:700;
+}
+
+#betTable td:last-child {
+  color:#f4d09a;
+  font-weight:900;
+}
+
+#betTable tbody tr:nth-child(even) {
+  background:rgba(255,255,255,.035);
+}
+
+#betTable tbody tr:hover {
+  background:rgba(206,155,79,.1);
+}
+
+.empty-table {
+  padding:24px !important;
+  text-align:center !important;
+  color:#9e9381 !important;
+  font-weight:500 !important;
+}
+
+.table-footer {
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+
+  margin-top:12px;
+
+  color:#948777;
+  font:500 11px system-ui,sans-serif;
+}
+
+/* ============================================
+   TOAST MESSAGE
+============================================ */
+
+#adminToast {
+  position:fixed;
+  z-index:5000;
+
+  left:50%;
+  bottom:24px;
+
+  width:max-content;
+  max-width:calc(100vw - 30px);
+
+  padding:13px 20px;
+
+  border:1px solid #bd9457;
+  border-radius:11px;
+
+  background:#201819;
+  box-shadow:0 10px 35px #000a;
+
+  color:#ffe2ad;
+
+  font:700 12px system-ui,sans-serif;
+  text-align:center;
+
+  transform:translate(-50%,20px);
+  opacity:0;
+  pointer-events:none;
+
+  transition:.2s ease;
+}
+
+#adminToast.show {
+  opacity:1;
+  transform:translate(-50%,0);
+}
+
+#adminToast.error {
+  border-color:#b64e4e;
+  color:#ffabab;
+}
+
+/* ============================================
+   MOBILE RESPONSIVE
+============================================ */
+
+@media(max-width:640px) {
+
+  .dtp-admin {
+    padding:12px 10px 22px;
+  }
+
+  .header-title {
+    padding:0 32px;
+    margin-top:21px;
+    font-size:20px;
+  }
+
+  .header-creature {
+    width:63px;
+    height:63px;
+    top:74px;
+    opacity:.65;
+  }
+
+  .admin-nameplate {
+    font-size:16px;
+    min-width:140px;
+  }
+
+  .header-caption {
+    font-size:9px;
+    letter-spacing:2.5px;
+  }
+
+  .royal-panel {
+    padding:14px 11px;
+    border-radius:12px;
+    margin-bottom:19px;
+  }
+
+  .round-grid {
+    gap:8px;
+  }
+
+  .round-info {
+    padding:14px 5px;
+  }
+
+  .metric-value {
+    font-size:clamp(25px,7vw,37px);
+  }
+
+  .secret-result {
+    gap:7px;
+    min-height:100px;
+    padding:9px 6px;
+  }
+
+  .secret-art {
+    flex-basis:95px;
+    width:95px;
+    height:95px;
+  }
+
+  .secret-name {
+    font-size:clamp(24px,7vw,38px);
+  }
+
+  .secret-sub {
+    font-size:8px;
+    letter-spacing:1px;
+  }
+
+  .beast-button {
+    flex-direction:column;
+    gap:5px;
+    min-height:89px;
+    padding:7px 3px;
+  }
+
+  .beast-button img {
+    width:47px;
+    height:47px;
+  }
+
+  .override-buttons {
+    gap:7px;
+  }
+
+  .pool-grid {
+    gap:6px;
+  }
+
+  .pool-card {
+    padding:10px 3px;
+  }
+
+  .pool-head {
+    flex-direction:column;
+    gap:3px;
+  }
+
+  .pool-head img {
+    width:36px;
+    height:36px;
+  }
+
+  .pool-amount {
+    font-size:clamp(12px,3.4vw,17px);
+  }
+
+  .bets-panel {
+    padding:15px 9px;
+  }
+
+  #betTable {
+    font-size:12px;
+  }
+
+}
+
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after {
+    transition:none !important;
+  }
+}
+
+
+
+
+/* =========================================
+   MYTHIC ROYAL - ADMIN LOGIN
+   BLACK / GOLD / DARK CRIMSON
+========================================= */
+
+#dtpAuthScreen[hidden],
+#dtpAdminPanel[hidden] {
+  display: none !important;
+}
+
+/* FULL SCREEN BACKGROUND */
+
+.dtp-auth-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  padding:
+    max(18px, env(safe-area-inset-top))
+    16px
+    max(18px, env(safe-area-inset-bottom));
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 35%,
+      rgba(127, 64, 23, .22),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at 10% 90%,
+      rgba(110, 18, 30, .17),
+      transparent 50%
+    ),
+    linear-gradient(
+      160deg,
+      #160e11,
+      #07080c 65%,
+      #110b10
+    );
+
+  font-family: system-ui, sans-serif;
+  isolation: isolate;
+}
+
+/* ATMOSPHERE */
+
+.dtp-auth-screen::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 79px,
+      rgba(221, 168, 79, .018) 80px
+    );
+
+  opacity: .8;
+}
+
+/* LOGIN CARD */
+
+.dtp-auth-box {
+  position: relative;
+
+  width: min(100%, 440px);
+  margin: auto 0;
+  padding: 7px;
+
+  border: 1px solid #856236;
+  border-radius: 19px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #d5a65e,
+      #47301c 30%,
+      #231a1b 65%,
+      #b48b4d
+    );
+
+  box-shadow:
+    0 25px 75px rgba(0, 0, 0, .7),
+    0 0 65px rgba(191, 115, 38, .09),
+    inset 0 1px 0 #ffe1a266;
+
+  text-align: center;
+}
+
+/* INNER PANEL */
+
+.dtp-auth-inner {
+  position: relative;
+  overflow: hidden;
+
+  padding: 31px 27px 24px;
+
+  border: 1px solid rgba(224, 174, 91, .28);
+  border-radius: 13px;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(123, 54, 32, .34),
+      transparent 58%
+    ),
+    linear-gradient(
+      180deg,
+      #21161a,
+      #101015 58%,
+      #0b0c11
+    );
+}
+
+/* GOLD CORNERS */
+
+.dtp-auth-inner::before,
+.dtp-auth-inner::after {
+  content: "";
+  position: absolute;
+
+  width: 48px;
+  height: 48px;
+
+  pointer-events: none;
+}
+
+.dtp-auth-inner::before {
+  top: 9px;
+  left: 9px;
+
+  border-top: 1px solid #d7a763;
+  border-left: 1px solid #d7a763;
+}
+
+.dtp-auth-inner::after {
+  right: 9px;
+  bottom: 9px;
+
+  border-right: 1px solid #d7a763;
+  border-bottom: 1px solid #d7a763;
+}
+
+/* TOP BRAND */
+
+.dtp-auth-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  color: #d8b87e;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 3px;
+}
+
+.dtp-auth-line {
+  width: 27px;
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      #cfa767
+    );
+}
+
+.dtp-auth-line:last-child {
+  transform: rotate(180deg);
+}
+
+/* THREE BEASTS */
+
+.dtp-auth-beasts {
+  position: relative;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  gap: 6px;
+  margin: 23px 0 18px;
+}
+
+.dtp-auth-beasts::before {
+  content: "";
+  position: absolute;
+
+  width: 230px;
+  height: 110px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      ellipse,
+      rgba(232, 151, 60, .18),
+      transparent 70%
+    );
+
+  filter: blur(12px);
+  pointer-events: none;
+}
+
+.dtp-auth-beast {
+  position: relative;
+  z-index: 1;
+
+  width: 92px;
+  height: 92px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dtp-auth-beast img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  filter:
+    drop-shadow(0 7px 8px #0009)
+    drop-shadow(0 0 12px #d69e4433);
+}
+
+.dtp-auth-beast:first-child img {
+  filter:
+    drop-shadow(0 7px 8px #000a)
+    drop-shadow(0 0 12px #d5453844);
+}
+
+.dtp-auth-beast:last-child img {
+  filter:
+    drop-shadow(0 7px 8px #000a)
+    drop-shadow(0 0 12px #eeac3c55);
+}
+
+.dtp-auth-beast.center {
+  width: 112px;
+  height: 112px;
+
+  margin: 0 -5px;
+  z-index: 2;
+}
+
+/* TITLES */
+
+.dtp-auth-heading {
+  margin-bottom: 24px;
+}
+
+.dtp-auth-small-title {
+  color: #bda176;
+
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.1px;
+}
+
+.dtp-auth-title {
+  margin: 10px 0 15px;
+
+  color: #f5d69c;
+
+  font-family: Georgia, serif;
+  font-size: clamp(24px, 6vw, 32px);
+  font-weight: 800;
+  letter-spacing: 2px;
+  line-height: 1.2;
+
+  text-shadow:
+    0 2px 5px #000,
+    0 0 25px #e4a24633;
+}
+
+/* DECORATIVE DIVIDER */
+
+.dtp-auth-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  margin: 0 auto 17px;
+}
+
+.dtp-auth-divider span {
+  width: 60px;
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      #aa7c45
+    );
+}
+
+.dtp-auth-divider span:last-child {
+  transform: rotate(180deg);
+}
+
+.dtp-auth-divider i {
+  width: 7px;
+  height: 7px;
+
+  border: 1px solid #e0b36f;
+  transform: rotate(45deg);
+
+  background: #9c682f;
+}
+
+
+
+/* FORM */
+
+.dtp-auth-form-area {
+  text-align: left;
+}
+
+.dtp-auth-form-area label {
+  display: block;
+
+  margin-bottom: 11px;
+
+  color: #dec18f;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.7px;
+}
+
+/* INPUT */
+
+.dtp-auth-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  height: 54px;
+
+  border: 1px solid #65513d;
+  border-radius: 9px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #090c12,
+      #13131a
+    );
+
+  transition:
+    border-color .2s,
+    box-shadow .2s;
+}
+
+.dtp-auth-input-wrap:focus-within {
+  border-color: #e7bd75;
+
+  box-shadow:
+    0 0 0 3px rgba(228, 175, 91, .12),
+    inset 0 1px 5px #0008;
+}
+
+/* SIMPLE CSS LOCK */
+
+.dtp-auth-lock {
+  position: relative;
+
+  flex: 0 0 15px;
+
+  width: 15px;
+  height: 13px;
+
+  margin-left: 17px;
+
+  border: 1.5px solid #b99a6c;
+  border-radius: 3px;
+}
+
+.dtp-auth-lock::before {
+  content: "";
+  position: absolute;
+
+  width: 8px;
+  height: 8px;
+
+  left: 2px;
+  top: -9px;
+
+  border: 1.5px solid #b99a6c;
+  border-bottom: 0;
+  border-radius: 7px 7px 0 0;
+}
+
+.dtp-auth-input-wrap input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+
+  padding: 0 14px;
+
+  border: 0;
+  outline: 0;
+
+  background: transparent;
+  color: #f7e7c9;
+
+  font-family: system-ui, sans-serif;
+  font-size: 16px;
+  letter-spacing: .5px;
+}
+
+.dtp-auth-input-wrap input::placeholder {
+  color: #777078;
+  letter-spacing: 0;
+}
+
+/* ERRORS */
+
+.dtp-auth-error {
+  min-height: 16px;
+
+  margin: 9px 0 11px;
+
+  color: #ff9a91;
+
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+/* LOGIN BUTTON */
+
+.dtp-auth-submit {
+  position: relative;
+
+  width: 100%;
+  min-height: 52px;
+
+  padding: 12px;
+
+  border: 1px solid #ffe4a6;
+  border-radius: 9px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #ffe7b0 0%,
+      #e0b46d 42%,
+      #ad773a 100%
+    );
+
+  color: #25160d;
+
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+
+  box-shadow:
+    inset 0 1px 0 #fff6d3,
+    0 6px 18px #0008,
+    0 0 24px #c8954933;
+
+  cursor: pointer;
+
+  transition:
+    transform .16s,
+    filter .16s;
+}
+
+.dtp-auth-submit:hover {
+  filter: brightness(1.08);
+}
+
+.dtp-auth-submit:active {
+  transform: scale(.985);
+}
+
+.dtp-auth-submit:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+/* FOOTER */
+
+.dtp-auth-footer {
+  margin-top: 25px;
+  padding-top: 20px;
+
+  border-top: 1px solid #94704430;
+
+  text-align: center;
+}
+
+.dtp-auth-security {
+  color: #766d65;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.7px;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 480px) {
+
+  .dtp-auth-screen {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .dtp-auth-box {
+    width: 100%;
+    max-width: 405px;
+  }
+
+  .dtp-auth-inner {
+    padding: 27px 19px 20px;
+  }
+
+  .dtp-auth-beast {
+    width: 76px;
+    height: 76px;
+  }
+
+  .dtp-auth-beast.center {
+    width: 98px;
+    height: 98px;
+  }
+
+  .dtp-auth-title {
+    font-size: 26px;
+  }
+
+  .dtp-auth-brand {
+    letter-spacing: 2px;
+  }
+
+  .dtp-auth-submit {
+    font-size: 11px;
+  }
+
+}
+
+@media (max-height: 650px) {
+
+  .dtp-auth-inner {
+    padding-top: 16px;
+    padding-bottom: 14px;
+  }
+
+  .dtp-auth-beasts {
+    margin: 10px 0;
+  }
+
+  .dtp-auth-heading {
+    margin-bottom: 15px;
+  }
+
+  .dtp-auth-footer {
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dtp-auth-submit {
+    transition: none;
+  }
+}
+
+
+.dtp-logout-btn {
+  display: block;
+
+  margin: 12px auto 0;
+  padding: 7px 13px;
+
+  border: 1px solid #8c6b43;
+  border-radius: 7px;
+
+  background: #181116;
+  color: #f0d19d;
+
+  font: 700 11px system-ui, sans-serif;
+
+  cursor: pointer;
+}
+
+
+</style>
+</head>
+
+
+<body>
+
+<!-- ==================================
+     DTP ADMIN AUTHENTICATION
+================================== -->
+
+<!-- ======================================
+     MYTHIC ROYAL ADMIN LOGIN
+====================================== -->
+
+<section
+  id="dtpAuthScreen"
+  class="dtp-auth-screen"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="dtpAuthTitle"
+>
+
+  <form
+    id="dtpAuthForm"
+    class="dtp-auth-box"
+    autocomplete="off"
+  >
+
+    <!-- VIỀN TRANG TRÍ -->
+    <div class="dtp-auth-inner">
+
+      <!-- THƯƠNG HIỆU -->
+      <div class="dtp-auth-brand">
+        <span class="dtp-auth-line"></span>
+        <span>ROYAL CONTROL</span>
+        <span class="dtp-auth-line"></span>
+      </div>
+
+      <!-- BA LINH THÚ -->
+      <div class="dtp-auth-beasts">
+
+        <div class="dtp-auth-beast">
+          <img
+            src="/assets/dtp/dragon-head.png"
+            alt="Dragon"
+          >
+        </div>
+
+        <div class="dtp-auth-beast center">
+          <img
+            src="/assets/dtp/tiger-head.png"
+            alt="Tiger"
+          >
+        </div>
+
+        <div class="dtp-auth-beast">
+          <img
+            src="/assets/dtp/phoenix-head.png"
+            alt="Phoenix"
+          >
+        </div>
+
+      </div>
+
+      <!-- TIÊU ĐỀ -->
+      <div class="dtp-auth-heading">
+
+        <div class="dtp-auth-small-title">
+          DRAGON · TIGER · PHOENIX
+        </div>
+
+        <h2
+          id="dtpAuthTitle"
+          class="dtp-auth-title"
+        >
+          ADMIN ACCESS
+        </h2>
+
+        <div class="dtp-auth-divider">
+          <span></span>
+          <i></i>
+          <span></span>
+        </div>
+
+    
+
+      </div>
+
+      <!-- FORM MẬT KHẨU -->
+      <div class="dtp-auth-form-area">
+
+        <label for="dtpPassword">
+          ADMIN PASSWORD
+        </label>
+
+        <div class="dtp-auth-input-wrap">
+
+          <span class="dtp-auth-lock" aria-hidden="true"></span>
+
+          <input
+            id="dtpPassword"
+            type="password"
+            required
+            maxlength="256"
+            placeholder="Input password"
+            autocomplete="off"
+          >
+
+        </div>
+
+        <!-- THÔNG BÁO LỖI -->
+        <p
+          id="dtpAuthError"
+          class="dtp-auth-error"
+          role="alert"
+          aria-live="polite"
+        ></p>
+
+        <!-- NÚT ĐĂNG NHẬP -->
+        <button
+          id="dtpAuthSubmit"
+          class="dtp-auth-submit"
+          type="submit"
+        >
+          LOGIN
+        </button>
+
+      </div>
+
+      <!-- FOOTER -->
+      <div class="dtp-auth-footer">
+
+        <div class="dtp-auth-security">
+          PRIVATE ADMINISTRATION SYSTEM
+        </div>
+
+
+      </div>
+
+    </div>
+
+  </form>
+
+</section>
+
+
+<!-- BẢNG ĐIỀU KHIỂN: MẶC ĐỊNH ẨN -->
+<main
+  id="dtpAdminPanel"
+  class="dtp-admin"
+  hidden
+>
+
+
+  <!-- ================= HEADER ================= -->
+
+  <header class="admin-header">
+
+<div class="admin-top-actions">
+
+  <div id="connectionStatus"
+       class="admin-connection">
+    <span class="connection-dot"></span>
+    <span id="connectionText">CONNECTING</span>
+  </div>
+
+</div>
+
+    <img src="/assets/dtp/dragon-head.png"
+         class="header-creature header-dragon"
+         alt="">
+
+    <img src="/assets/dtp/phoenix-head.png"
+         class="header-creature header-phoenix"
+         alt="">
+
+    <h1 class="header-title">
+      DRAGON · TIGER · PHOENIX
+    </h1>
+
+    <div class="admin-nameplate">
+      ADMIN
+    </div>
+
+    <div class="header-caption">
+      LIVE CONTROL PANEL
+    </div>
+
+
+
+<button
+  type="button"
+  class="dtp-logout-btn"
+  onclick="logoutDtpAdmin()"
+>
+  LOG OUT
+</button>
+
+  </header>
+
+  <!-- ================= ROUND ================= -->
+
+  <section class="royal-panel round-panel">
+
+    <div class="round-grid">
+
+      <div class="round-info">
+
+        <div class="metric-label">
+          CURRENT ROUND
+        </div>
+
+        <div class="metric-value">
+          #<span id="round">—</span>
+        </div>
+
+      </div>
+
+      <div class="round-info timer-info">
+
+        <div class="metric-label">
+          COUNTDOWN
+        </div>
+
+        <div class="metric-value"
+             id="timer">
+          00:35
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ================= SECRET RESULT ================= -->
+
+  <section class="royal-panel secret-panel">
+
+    <div class="section-ribbon">
+      SECRET RESULT
+    </div>
+
+    <div class="secret-result"
+         id="secretDisplay">
+
+      <div class="secret-art">
+
+        <img id="secretArt"
+             src="/assets/dtp/tiger-head.png"
+             alt="Secret animal">
+
+      </div>
+
+      <div class="secret-text">
+
+        <div class="secret-name"
+             id="secret">
+          LOADING...
+        </div>
+
+        <div class="secret-sub">
+          CURRENT ROUND OUTCOME
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="override-heading">
+      OVERRIDE RESULT
+    </div>
+
+    <div class="override-buttons">
+
+      <button type="button"
+              class="beast-button dragon"
+              data-winner="dragon"
+              onclick="setWinner('dragon')">
+
+        <img src="/assets/dtp/dragon-head.png"
+             alt="">
+
+        <span>DRAGON</span>
+
+      </button>
+
+      <button type="button"
+              class="beast-button tiger"
+              data-winner="tiger"
+              onclick="setWinner('tiger')">
+
+        <img src="/assets/dtp/tiger-head.png"
+             alt="">
+
+        <span>TIGER</span>
+
+      </button>
+
+      <button type="button"
+              class="beast-button phoenix"
+              data-winner="phoenix"
+              onclick="setWinner('phoenix')">
+
+        <img src="/assets/dtp/phoenix-head.png"
+             alt="">
+
+        <span>PHOENIX</span>
+
+      </button>
+
+    </div>
+
+    <p class="override-note">
+      Manual changes are applied to the active round,
+      subject to server authorization.
+    </p>
+
+  </section>
+
+  <!-- ================= POOLS ================= -->
+
+  <section class="royal-panel pool-section">
+
+    <div class="section-ribbon">
+      POOL OVERVIEW
+    </div>
+
+    <div class="pool-grid">
+
+      <div class="pool-card dragon">
+
+        <div class="pool-head">
+          <img src="/assets/dtp/dragon-head.png" alt="">
+          <span>DRAGON POOL</span>
+        </div>
+
+        <div id="poolDragon"
+             class="pool-amount">
+          0
+        </div>
+
+      </div>
+
+      <div class="pool-card tiger">
+
+        <div class="pool-head">
+          <img src="/assets/dtp/tiger-head.png" alt="">
+          <span>TIGER POOL</span>
+        </div>
+
+        <div id="poolTiger"
+             class="pool-amount">
+          0
+        </div>
+
+      </div>
+
+      <div class="pool-card phoenix">
+
+        <div class="pool-head">
+          <img src="/assets/dtp/phoenix-head.png" alt="">
+          <span>PHOENIX POOL</span>
+        </div>
+
+        <div id="poolPhoenix"
+             class="pool-amount">
+          0
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ================= LIVE BETS ================= -->
+
+  <section class="royal-panel bets-panel">
+
+    <div class="bets-header">
+
+      <h2 class="bets-title">
+        LIVE BETS
+      </h2>
+
+      <div class="live-indicator">
+        <i></i>
+        REALTIME
+      </div>
+
+    </div>
+
+    <div class="table-scroll">
+
+      <table id="betTable">
+
+        <thead>
+          <tr>
+            <th>PLAYER</th>
+            <th>DRAGON</th>
+            <th>TIGER</th>
+            <th>PHOENIX</th>
+            <th>TOTAL</th>
+          </tr>
+        </thead>
+
+        <tbody id="betRows">
+
+          <tr>
+            <td colspan="5"
+                class="empty-table">
+              Waiting for live betting data...
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <div class="table-footer">
+
+      <span>
+        Players: <b id="playerCount">0</b>
+      </span>
+
+      <span>
+        Last update:
+        <b id="lastUpdate">—</b>
+      </span>
+
+    </div>
+
+  </section>
+
+</main>
+
+<!-- MESSAGE -->
+<div id="adminToast"
+     role="status"
+     aria-live="polite"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+
+/* ==========================================
+   DRAGON TIGER PHOENIX ADMIN
+   KEEP ORIGINAL SERVER EVENTS / API
+========================================== */
+
+const socket = io();
+
+const $ = id => document.getElementById(id);
+
+const validBeasts = [
+  "dragon",
+  "tiger",
+  "phoenix"
+];
+
+const beastImage = {
+  dragon: "/assets/dtp/dragon-head.png",
+  tiger: "/assets/dtp/tiger-head.png",
+  phoenix: "/assets/dtp/phoenix-head.png"
+};
+
+let toastTimer = null;
+let overrideBusy = false;
+
+
+/* ==================================
+   DTP ADMIN AUTH CLIENT
+================================== */
+
+let dtpAuthorized = false;
+
+
+
+/* ====================================
+   DTP ADMIN - ENGLISH ERROR MESSAGES
+==================================== */
+
+function translateDtpMessage(message) {
+
+  const translations = {
+
+    "Mật khẩu quản trị không chính xác.":
+      "Incorrect administrator password.",
+
+    "Thử quá nhiều lần. Vui lòng thử lại sau 15 phút.":
+      "Too many attempts. Please try again in 15 minutes.",
+
+    "Server chưa cấu hình DTP_ADMIN_PASSWORD.":
+      "Administrator password is not configured on the server.",
+
+    "Vui lòng nhập lại mật khẩu.":
+      "Please enter your password again.",
+
+    "Phiên xác thực đã hết hạn.":
+      "Authentication session has expired.",
+
+    "Kết quả không hợp lệ.":
+      "Invalid result selection.",
+
+    "Vòng hiện tại đã kết thúc.":
+      "The current round has ended.",
+
+    "Phiên đã hết hạn, vui lòng đăng nhập lại.":
+      "Session expired. Please log in again."
+
+  };
+
+  const text = String(message || "");
+
+  if (translations[text]) {
+    return translations[text];
+  }
+
+  // Prevent untranslated server errors from appearing
+  if (/[À-ỹ]/u.test(text)) {
+    return "Request failed. Please try again.";
+  }
+
+  return text || "An unexpected error occurred.";
+
+}
+
+// Gửi yêu cầu xác thực đến Socket.IO
+function dtpSocketCall(event, data = {}) {
+
+  return new Promise((resolve, reject) => {
+
+    if (!socket.connected) {
+      return reject(
+        new Error("Not connected to the server.")
+      );
+    }
+
+    socket.timeout(8000).emit(
+      event,
+      data,
+      (error, result) => {
+
+        if (error) {
+          return reject(
+            new Error(
+              "Server is not responding. Please try again."
+            )
+          );
+        }
+
+const response = result || {
+  ok: false,
+  message: "Invalid server response."
+};
+
+if (!response.ok) {
+  response.message = translateDtpMessage(
+    response.message
+  );
+}
+
+resolve(response);
+      }
+    );
+
+  });
+
+}
+
+
+// Khóa giao diện
+function lockDtpAdmin(message = "") {
+
+  dtpAuthorized = false;
+
+  $("dtpAdminPanel").hidden = true;
+  $("dtpAuthScreen").hidden = false;
+
+  $("dtpPassword").value = "";
+  $("dtpAuthError").textContent = message;
+
+  $("secret").textContent = "—";
+  $("secretArt").style.visibility = "hidden";
+
+}
+
+
+// Cập nhật dữ liệu sau xác thực
+function applyDtpSnapshot(data) {
+
+  if (!dtpAuthorized || !data) return;
+
+  $("round").textContent =
+    data.round ?? "—";
+
+  updateSecretUI(data.secret);
+  renderDtpBets(data);
+
+}
+
+
+// Xử lý form đăng nhập
+$("dtpAuthForm").addEventListener(
+  "submit",
+  async event => {
+
+    event.preventDefault();
+
+    const btn = $("dtpAuthSubmit");
+    const password = $("dtpPassword").value;
+
+    btn.disabled = true;
+    btn.textContent = "AUTHENTICATING...";
+
+    $("dtpAuthError").textContent = "";
+
+    try {
+
+      const result = await dtpSocketCall(
+        "dtp-admin-login",
+        { password }
+      );
+
+      if (!result.ok) {
+        throw new Error(
+          result.message || "Authentication failed."
+        );
+      }
+
+      if (!socket.connected) {
+        throw new Error(
+          "Connection lost. Please log in again."
+        );
+      }
+
+      // Mở giao diện
+      dtpAuthorized = true;
+
+      $("dtpAuthScreen").hidden = true;
+      $("dtpAdminPanel").hidden = false;
+
+      $("dtpPassword").value = "";
+
+      applyDtpSnapshot(result);
+
+      showAdminToast(
+        "Admin authentication successful."
+      );
+
+    } catch (error) {
+
+      $("dtpPassword").value = "";
+
+      $("dtpAuthError").textContent =
+        error.message;
+
+    } finally {
+
+      btn.disabled = false;
+
+    btn.textContent = "LOGIN";
+
+    }
+
+  }
+);
+
+
+// Đăng xuất
+async function logoutDtpAdmin() {
+
+  try {
+
+    if (socket.connected) {
+      await dtpSocketCall("dtp-admin-logout");
+    }
+
+  } catch (_) {
+    // Mất kết nối vẫn khóa giao diện
+  }
+
+  lockDtpAdmin();
+
+}
+
+
+/* ================= FORMAT NUMBER ================= */
+
+function formatAmount(value) {
+  const number = Number(value);
+
+  return Number.isFinite(number)
+    ? number.toLocaleString("en-US")
+    : "0";
+}
+
+/* ================= TOAST ================= */
+
+function showAdminToast(message, error = false) {
+
+  const toast = $("adminToast");
+
+  toast.textContent = String(message);
+
+  toast.classList.toggle("error", error);
+  toast.classList.add("show");
+
+  clearTimeout(toastTimer);
+
+  toastTimer = setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2800);
+
+}
+
+/* ================= SECRET UI ================= */
+
+function updateSecretUI(winner) {
+
+  const name = String(winner || "").toLowerCase();
+
+  const display = $("secretDisplay");
+  const secret = $("secret");
+  const art = $("secretArt");
+
+  // Highlight selected override button
+  document.querySelectorAll(
+    ".beast-button"
+  ).forEach(button => {
+
+    button.classList.toggle(
+      "selected",
+      button.dataset.winner === name
+    );
+
+  });
+
+  if (!validBeasts.includes(name)) {
+
+    secret.textContent = "UNKNOWN";
+    display.removeAttribute("data-beast");
+
+    art.style.visibility = "hidden";
+    return;
+  }
+
+  display.dataset.beast = name;
+
+  secret.textContent = name.toUpperCase();
+
+  art.src = beastImage[name];
+  art.alt = name;
+  art.style.visibility = "visible";
+
+}
+
+/* ================= LOAD SECRET ================= */
+
+
+async function loadSecret() {
+
+  if (!dtpAuthorized) return;
+
+  try {
+
+    const result = await dtpSocketCall(
+      "dtp-admin-get-state"
+    );
+
+    if (!result.ok) {
+
+      if (result.code === "AUTH_REQUIRED") {
+        lockDtpAdmin(
+          "Session expired. Please log in again."
+        );
+      }
+
+      throw new Error(
+        result.message || "Unable to load data."
+      );
+    }
+
+    applyDtpSnapshot(result);
+
+  } catch (error) {
+
+    showAdminToast(error.message, true);
+
+  }
+
+}
+
+
+/* ================= OVERRIDE RESULT ================= */
+
+
+async function setWinner(winner) {
+
+  if (
+    !dtpAuthorized ||
+    overrideBusy ||
+    !validBeasts.includes(winner)
+  ) {
+    return;
+  }
+
+  overrideBusy = true;
+
+  const buttons = document.querySelectorAll(
+    ".beast-button"
+  );
+
+  buttons.forEach(button => {
+    button.disabled = true;
+  });
+
+  try {
+
+    const result = await dtpSocketCall(
+      "dtp-admin-override",
+      { winner }
+    );
+
+    if (!result.ok) {
+
+      if (result.code === "AUTH_REQUIRED") {
+        lockDtpAdmin(
+          "Phiên đã hết hạn, vui lòng đăng nhập lại."
+        );
+      }
+
+      throw new Error(
+        result.message ||
+        "Unable to override the result."
+      );
+
+    }
+
+    applyDtpSnapshot(result);
+
+showAdminToast(
+  winner.toUpperCase() + " selected successfully."
+);
+  } catch (error) {
+
+    showAdminToast(
+      error.message,
+      true
+    );
+
+  } finally {
+
+    overrideBusy = false;
+
+    buttons.forEach(button => {
+      button.disabled = false;
+    });
+
+  }
+
+}
+
+/* ================= SOCKET STATUS ================= */
+
+function setConnectionStatus(connected) {
+
+  const status = $("connectionStatus");
+  const text = $("connectionText");
+
+  status.classList.toggle(
+    "online",
+    connected
+  );
+
+  status.classList.toggle(
+    "offline",
+    !connected
+  );
+
+  text.textContent =
+    connected ? "ONLINE" : "OFFLINE";
+
+}
+
+
+socket.on("connect", () => {
+
+  setConnectionStatus(true);
+
+  // Mỗi kết nối mới đều yêu cầu xác thực
+  lockDtpAdmin();
+
+});
+
+socket.on("disconnect", () => {
+
+  setConnectionStatus(false);
+
+  lockDtpAdmin(
+    "Connection lost. Please authenticate again after reconnecting."
+  );
+
+});
+
+
+/* ================= NEW ROUND ================= */
+
+
+socket.on("dtp-round-new", () => {
+
+  if (dtpAuthorized) {
+    loadSecret();
+  }
+
+});
+
+// Nhận cập nhật kết quả riêng từ admin
+socket.on("dtp-admin-secret-update", data => {
+
+  if (dtpAuthorized) {
+    applyDtpSnapshot(data);
+  }
+
+});
+
+
+/* ================= TIMER ================= */
+
+socket.on("dtp-timer", time => {
+
+  const seconds = Math.max(
+    0,
+    Math.floor(Number(time) || 0)
+  );
+
+  const minutes = Math.floor(seconds / 60);
+
+  const remain = seconds % 60;
+
+  $("timer").textContent =
+    String(minutes).padStart(2, "0") +
+    ":" +
+    String(remain).padStart(2, "0");
+
+});
+
+/* ================= LIVE BETS ================= */
+
+function renderDtpBets(data) {
+
+  if (!dtpAuthorized || !data) return;
+
+  const pool = data.pool || {};
+
+  $("poolDragon").textContent =
+    formatAmount(pool.dragon);
+
+  $("poolTiger").textContent =
+    formatAmount(pool.tiger);
+
+  $("poolPhoenix").textContent =
+    formatAmount(pool.phoenix);
+
+  const bets = Array.isArray(data.bets)
+    ? data.bets
+    : [];
+
+  const tbody = $("betRows");
+
+  tbody.replaceChildren();
+
+  if (!bets.length) {
+
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+
+    cell.colSpan = 5;
+    cell.className = "empty-table";
+    cell.textContent = "No bets in this round yet.";
+
+    row.appendChild(cell);
+    tbody.appendChild(row);
+
+  } else {
+
+    const fragment = document.createDocumentFragment();
+
+    bets.forEach(bet => {
+
+      const row = document.createElement("tr");
+
+      const cells = [
+        bet.name ?? "Player",
+        formatAmount(bet.dragon),
+        formatAmount(bet.tiger),
+        formatAmount(bet.phoenix),
+        formatAmount(bet.total)
+      ];
+
+      cells.forEach(value => {
+
+        const cell = document.createElement("td");
+
+        // Avoid HTML injection from player names
+        cell.textContent = String(value);
+
+        row.appendChild(cell);
+
+      });
+
+      fragment.appendChild(row);
+
+    });
+
+    tbody.appendChild(fragment);
+
+  }
+
+  $("playerCount").textContent =
+    formatAmount(bets.length);
+
+$("lastUpdate").textContent =
+  new Date().toLocaleTimeString(
+    "en-GB",
+    { hour12: false }
+  );
+
+}
+
+// Chỉ cập nhật dữ liệu nếu đã đăng nhập
+socket.on(
+  "admin-dtp-bets-update",
+  renderDtpBets
+);
+
+/* ================= INITIAL LOAD ================= */
+
+lockDtpAdmin();
+
+</script>
+
+</body>
+</html>

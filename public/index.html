@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Livestream Web</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <script src="/guard.js"></script>
+  
+  <div class="container">
+    <div class="card">
+      <h1>Livestream Pro</h1>
+      <small>Nhập Room ID để tạo link Livestream</small>
+      <hr />
+      <div class="row">
+        <div class="card">
+          <div class="kv">
+            <label>Room ID (viết liền không dấu)</label>
+            <input id="room" placeholder="ví dụ: abc123..." value="" />
+            <button id="make">Tạo link</button>
+          </div>
+          <hr />
+          <div class="kv">
+            <div class="badge">📱 Link phát (Host)</div>
+            <code id="broadLink">-</code>
+            <button id="copyBroad">Copy link phát</button>
+
+            <div class="badge">👀 Link xem (Viewer)</div>
+            <code id="viewLink">-</code>
+            <button id="copyView">Copy link xem</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="badge">⚠️ Tính năng</div>
+          <div class="log" style="margin-top:10px">
+- Livestream không bị delay thời gian.
+- Người livestream và người xem có thể giao lưu trò chuyện.
+- Chat live trực tiếp.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const roomEl = document.getElementById('room');
+  const broadEl = document.getElementById('broadLink');
+  const viewEl = document.getElementById('viewLink');
+
+  function gen() {
+    const room = encodeURIComponent(roomEl.value.trim() || "abc123");
+    const base = location.origin;
+    broadEl.textContent = `${base}/broadcast.html?room=${room}`;
+    viewEl.textContent  = `${base}/viewer.html?room=${room}`;
+  }
+  document.getElementById('make').onclick = gen;
+  gen();
+
+  async function copyText(text) {
+    try { await navigator.clipboard.writeText(text); alert("Đã copy!"); }
+    catch { prompt("Copy thủ công:", text); }
+  }
+  document.getElementById('copyBroad').onclick = () => copyText(broadEl.textContent);
+  document.getElementById('copyView').onclick = () => copyText(viewEl.textContent);
+</script>
+</body>
+</html>

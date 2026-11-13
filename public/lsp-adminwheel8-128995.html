@@ -1,0 +1,5551 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+>
+
+<title>MILITARY | COMMAND CENTER</title>
+
+
+<script src="/socket.io/socket.io.js"></script>
+
+<style>
+body{
+  margin:0;
+  background:
+    radial-gradient(circle at center,#001a1a,#000);
+  color:#00eaff;
+  font-family:"Segoe UI",sans-serif;
+}
+
+/* ===== HEADER ===== */
+.header{
+  text-align:center;
+  font-size:16px;
+  font-weight:900;
+  padding:8px;
+  letter-spacing:2px;
+  color:#00ffff;
+  text-shadow:0 0 10px #00ffff;
+}
+
+/* ===== PANEL ===== */
+.panel{
+  width:420px;
+  margin:20px auto;
+  padding:25px;
+
+  background:rgba(0,20,20,0.6);
+  border:1px solid rgba(0,255,255,0.3);
+  border-radius:20px;
+
+  box-shadow:
+    0 0 20px rgba(0,255,255,0.2),
+    inset 0 0 10px rgba(0,255,255,0.1);
+}
+
+/* ===== ROW ===== */
+.row{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:12px;
+  font-size:14px;
+  opacity:0.8;
+}
+
+/* ===== BIG VALUE ===== */
+.big{
+  font-size:42px;
+  text-align:center;
+  font-weight:900;
+  margin:10px 0;
+
+  text-shadow:0 0 15px #00ffff;
+}
+
+/* ===== SLOT ===== */
+.slot{
+  font-size:60px;
+  text-align:center;
+  font-weight:900;
+
+  color:#00ffff;
+  text-shadow:0 0 25px #00ffff;
+}
+
+/* ===== MULTI ===== */
+.multi{
+  font-size:20px;
+  text-align:center;
+  font-weight:900;
+
+  color:#00ff88;
+  text-shadow:0 0 20px #00ff88;
+}
+
+/* ===== TIMER ===== */
+.timer{
+  text-align:center;
+  font-size:18px;
+  font-weight:900;
+  margin-top:10px;
+
+  text-shadow:0 0 15px #00ffff;
+}
+
+.timer.danger{
+  color:#ff4444;
+  text-shadow:0 0 20px red;
+}
+
+
+
+
+.slot-box{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin:10px 0;
+}
+
+.slot-img-admin{
+  width:70px;
+  height:70px;
+  object-fit:contain;
+
+  filter:
+    drop-shadow(0 0 15px #00aaff)
+    drop-shadow(0 0 30px #00aaff);
+
+  transition:.25s;
+}
+
+/* 🔥 hiệu ứng khi override */
+.slot-img-admin.flash{
+  transform:scale(1.2);
+
+  filter:
+    drop-shadow(0 0 25px #00ffff)
+    drop-shadow(0 0 50px #00ffff);
+}
+
+
+.override-panel{
+  margin-top:20px;
+  text-align:center;
+}
+
+.override-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:6px;
+  margin-top:10px;
+}
+
+.override-grid button{
+  padding:12px 0;
+  font-size:14px;
+  font-weight:900;
+
+  background:#001a33;
+  color:#00ffff;
+
+  border:1px solid #00ffff;
+  border-radius:10px;
+
+  cursor:pointer;
+
+  transition:.2s;
+}
+
+.override-grid button:hover{
+  background:#00ffff;
+  color:#000;
+  transform:scale(1.1);
+}
+
+
+#poolList div,
+#betList div{
+  display:flex;
+  justify-content:space-between;
+  padding:6px 0;
+  border-bottom:1px solid rgba(0,255,255,0.1);
+  font-size:13px;
+}
+
+.pool-grid{
+  display:grid;
+  grid-template-columns: repeat(4,1fr);
+  gap:6px;
+}
+
+.pool-slot{
+  position:relative;
+  border-radius:12px;
+  overflow:hidden;
+  background:#111;
+}
+
+.pool-slot img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+/* 💰 số tiền */
+.pool-value{
+  position:absolute;
+  bottom:4px;
+  left:0;
+  width:100%;
+  text-align:center;
+  font-size:10px;
+  font-weight:bold;
+  color:#0ff;
+  text-shadow:0 0 6px #0ff;
+}
+
+/* 🔥 HOT SLOT */
+.pool-slot.hot{
+  box-shadow:0 0 12px red;
+}
+
+/* 🧊 LOW SLOT */
+.pool-slot.low{
+  opacity:0.5;
+}
+
+
+
+.container{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  padding:8px;
+}
+
+.card{
+  background:rgba(0,20,20,0.6);
+  border:1px solid rgba(0,255,255,0.2);
+  border-radius:12px;
+  padding:10px;
+
+  box-shadow:
+    0 0 15px rgba(0,255,255,0.1),
+    inset 0 0 10px rgba(0,255,255,0.05);
+}
+
+.full-card{
+  margin:15px;
+}
+
+.top-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.label{
+  font-size:12px;
+  opacity:0.6;
+}
+
+.value{
+  font-size:22px;
+  font-weight:bold;
+}
+
+.section-title{
+  margin:15px 0 8px;
+  font-weight:bold;
+  font-size:14px;
+  opacity:0.8;
+}
+
+.center{
+  text-align:center;
+}
+
+/* override đẹp hơn */
+.override-grid button{
+  padding:10px;
+  font-size:16px;
+  border-radius:8px;
+
+  background:#001a33;
+  border:1px solid rgba(0,255,255,0.4);
+
+  transition:.2s;
+}
+
+.override-grid button:hover{
+  background:#00ffff;
+  color:#000;
+}
+
+/* player list */
+.bet-list div{
+  display:flex;
+  justify-content:space-between;
+  padding:6px 0;
+  border-bottom:1px solid rgba(0,255,255,0.1);
+}
+
+
+.pool-slot::after{
+  content:"";
+  position:absolute;
+  bottom:0;
+  left:0;
+  height:4px;
+  width:var(--percent);
+  background:linear-gradient(90deg,#00f,#0ff,#0f0,#ff0,#f00);
+}
+
+
+.bet-list div{
+  font-size:12px;
+  padding:4px 0;
+}
+
+
+
+
+@media(max-width:768px){
+
+  .container{
+    flex-direction:column;
+  }
+
+  .slot-img-admin{
+    width:70px;
+    height:70px;
+  }
+
+  .multi{
+    font-size:20px;
+  }
+
+  .timer{
+    font-size:18px;
+  }
+
+}
+
+
+
+.override-grid-img{
+  display:grid;
+  grid-template-columns: repeat(4,1fr);
+  gap:8px;
+  margin-top:10px;
+}
+
+.override-grid-img img{
+  width:100%;
+  height:70px;
+  object-fit:contain;
+
+  cursor:pointer;
+
+  border-radius:10px;
+
+  transition:.2s;
+
+  filter:
+    drop-shadow(0 0 8px #00aaff);
+}
+
+/* hover */
+.override-grid-img img:hover{
+  transform:scale(1.1);
+  filter:
+    drop-shadow(0 0 15px #00ffff)
+    drop-shadow(0 0 25px #00ffff);
+}
+
+/* click effect */
+.override-grid-img img:active{
+  transform:scale(0.95);
+    outline:2px solid #00ff88;
+  box-shadow:0 0 20px #00ff88;
+}
+
+
+.bet-card{
+  display:grid;
+  grid-template-columns: 1fr auto;
+  align-items:center;
+
+  padding:8px 10px;
+  margin-bottom:6px;
+
+  background:rgba(0,30,30,0.7);
+  border:1px solid rgba(0,255,255,0.2);
+  border-radius:10px;
+
+  box-shadow:
+    0 0 10px rgba(0,255,255,0.15),
+    inset 0 0 5px rgba(0,255,255,0.05);
+}
+
+.bet-left{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+
+
+
+.bet-name{
+  font-size:13px;
+  font-weight:bold;
+  color:#00ffff;
+}
+
+.bet-coins{
+  font-size:11px;
+  color:#00ff88;
+}
+
+.bet-slots{
+  display:grid;
+  grid-template-columns:repeat(4,20px);
+  gap:4px;
+  margin-top:4px;
+}
+
+.bet-slot{
+  width:20px;
+  height:20px;
+  position:relative;
+
+  opacity:.35;
+  transition:.2s;
+}
+
+
+.bet-slot.active{
+  opacity:1;
+
+  filter:
+    drop-shadow(0 0 6px #00ffff)
+    drop-shadow(0 0 12px #00ffff);
+}
+
+
+
+.bet-slot img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
+
+.bet-slot span{
+  position:absolute;
+  bottom:-2px;
+  right:-2px;
+
+  font-size:9px;
+  background:#000;
+  padding:1px 2px;
+  border-radius:3px;
+
+  color:#0ff;
+}
+
+.bet-total{
+  font-size:14px;
+  font-weight:bold;
+  color:#ffcc00;
+
+  padding:3px 6px;
+  border-radius:6px;
+
+  background:rgba(255,200,0,0.1);
+}
+
+
+
+.bet-row{
+  display:flex;
+  gap:4px;
+  margin-top:2px;
+}
+
+
+/* ===== ADMIN OVERRIDE 10 OPTIONS ===== */
+
+.override-grid-img{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  margin-top:10px;
+}
+
+.override-grid-img img{
+  width:100%;
+  height:70px;
+  object-fit:contain;
+  cursor:pointer;
+  border-radius:10px;
+  transition:transform .2s, filter .2s;
+}
+
+.override-grid-img img[data-event="x5-all"]{
+  grid-column:2;
+}
+
+.override-grid-img img[data-event="x45-all"]{
+  grid-column:3;
+}
+
+.override-grid-img img.active{
+  transform:scale(1.08);
+  filter:
+    drop-shadow(0 0 10px #00ff88)
+    drop-shadow(0 0 20px #00ff88);
+}
+
+
+/* ==========================================
+   MILITARY COMMAND CENTER - ADMIN WHEEL8
+   THEME: OLIVE / ARMY / GOLD / LED GREEN
+========================================== */
+
+:root {
+    --army-bg: #080f0a;
+    --army-panel: #192b1c;
+    --army-gold: #d4b46b;
+    --army-green: #a8ff70;
+    --army-border: #71815b;
+}
+
+/* NỀN TOÀN TRANG */
+html {
+    min-height: 100%;
+    background: var(--army-bg);
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    box-sizing: border-box;
+    overflow-x: hidden;
+
+    font-family: "Segoe UI", system-ui, sans-serif;
+    color: #e0e9d6;
+
+    background:
+        radial-gradient(
+            ellipse at 50% 0%,
+            rgba(85,113,61,.35),
+            transparent 65%
+        ),
+        repeating-linear-gradient(
+            135deg,
+            transparent 0 35px,
+            rgba(140,160,90,.025) 35px 70px
+        ),
+        linear-gradient(
+            180deg,
+            #263b29 0%,
+            #111f15 35%,
+            #060d08 100%
+        );
+}
+
+/* BỐ CỤC MOBILE-FIRST */
+.container {
+    width: 100%;
+    max-width: 650px;
+    margin: 0 auto;
+    padding: 12px;
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* KHUNG CHỈ HUY */
+.card {
+    position: relative;
+    min-width: 0;
+    padding: 15px;
+    box-sizing: border-box;
+    overflow: hidden;
+
+    background:
+        repeating-linear-gradient(
+            135deg,
+            transparent 0 14px,
+            rgba(255,255,255,.012) 14px 28px
+        ),
+        linear-gradient(
+            145deg,
+            #354832 0%,
+            #1a2d1d 45%,
+            #0b180f 100%
+        );
+
+    border: 1px solid #a18c58;
+    border-bottom: 3px solid #c7a75d;
+    border-radius: 8px;
+
+    box-shadow:
+        0 8px 20px rgba(0,0,0,.5),
+        inset 0 1px 0 rgba(255,255,255,.13),
+        inset 0 0 16px rgba(0,0,0,.35);
+}
+
+/* ĐƯỜNG KIM LOẠI */
+.card::before {
+    content: "";
+    position: absolute;
+    top: 4px;
+    left: 15px;
+    right: 15px;
+    height: 1px;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(246,213,135,.6),
+        transparent
+    );
+
+    pointer-events: none;
+}
+
+/* ROUND / TIMER */
+.top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.label {
+    color: #b6c8a7;
+    opacity: 1;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+}
+
+.value {
+    color: #f4d789;
+    font-size: 27px;
+    font-weight: 1000;
+    font-variant-numeric: tabular-nums;
+
+    text-shadow:
+        0 2px 2px #000,
+        0 0 10px rgba(255,205,90,.25);
+}
+
+/* ĐỒNG HỒ LED */
+.timer {
+    min-width: 82px;
+    height: 43px;
+    margin: 0;
+    padding: 0 12px;
+    box-sizing: border-box;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: linear-gradient(
+        180deg,
+        #233a25,
+        #07140b
+    );
+
+    border: 1px solid #a18c58;
+    border-bottom: 2px solid #d5b56c;
+    border-radius: 5px;
+
+    color: #a8ff70;
+    font-family: monospace;
+    font-size: 25px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+
+    text-shadow:
+        0 0 6px rgba(115,255,65,.7),
+        0 0 12px rgba(115,255,65,.35);
+
+    box-shadow:
+        inset 0 2px 8px #0009,
+        0 3px 8px #0008;
+}
+
+/* CẢNH BÁO 5 GIÂY CUỐI */
+.timer.danger {
+    color: #ff6960;
+    border-color: #e57555;
+
+    text-shadow:
+        0 0 8px #ff3333,
+        0 0 15px #ff333377;
+
+    animation: armyTimerDanger .65s infinite alternate;
+}
+
+@keyframes armyTimerDanger {
+    from { filter: brightness(1); }
+    to { filter: brightness(1.4); }
+}
+
+/* ẢNH KẾT QUẢ */
+.slot-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    min-height: 110px;
+    margin: 10px 0 5px;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(103,146,62,.18),
+            transparent 70%
+        );
+}
+
+.slot-img-admin {
+    width: 105px;
+    height: 105px;
+    object-fit: contain;
+
+    filter:
+        drop-shadow(0 0 8px rgba(156,255,87,.35))
+        drop-shadow(0 6px 8px #0009);
+}
+
+.slot-img-admin.flash {
+    transform: scale(1.12);
+    filter:
+        drop-shadow(0 0 15px #d8ba70)
+        drop-shadow(0 0 25px #8dff4c);
+}
+
+/* HỆ SỐ NHÂN */
+.multi {
+    margin: 5px 0 3px;
+
+    color: #f5d37d;
+    font-size: 27px;
+    font-weight: 1000;
+    letter-spacing: 1px;
+
+    text-shadow:
+        0 2px 3px #000,
+        0 0 12px rgba(255,211,90,.4);
+}
+
+/* TIÊU ĐỀ CÁC KHU VỰC */
+.section-title,
+.override-card > .label {
+    display: block;
+    margin: 5px 0 12px;
+
+    color: #f1d184;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 1.2px;
+    opacity: 1;
+    text-shadow: 0 2px 3px #000;
+}
+
+.override-card > .label::before {
+    content: "★ ";
+}
+
+.override-card > .label::after {
+    content: " ★";
+}
+
+/* LƯỚI CHỌN SLOT */
+.override-grid-img {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0,1fr));
+    gap: 9px;
+    margin-top: 12px;
+}
+
+.override-grid-img img {
+    display: block;
+    width: 100%;
+    height: 75px;
+    box-sizing: border-box;
+    padding: 5px;
+
+    object-fit: contain;
+    cursor: pointer;
+
+    background: linear-gradient(
+        145deg,
+        #334a31,
+        #152719 60%,
+        #09140c
+    );
+
+    border: 1px solid #647b54;
+    border-radius: 6px;
+
+    box-shadow:
+        inset 0 1px 0 #ffffff16,
+        0 3px 7px #0007;
+
+    filter: none;
+    transition:
+        transform .18s ease,
+        border-color .18s ease,
+        box-shadow .18s ease;
+}
+
+.override-grid-img img:hover {
+    transform: translateY(-2px);
+    border-color: #d8b76b;
+
+    filter: none;
+    box-shadow: 0 0 12px #d5b66544;
+}
+
+.override-grid-img img:active {
+    transform: scale(.95);
+}
+
+/* SLOT / EVENT ĐƯỢC CHỌN */
+.override-grid-img img.active {
+    transform: scale(1.03);
+
+    border: 2px solid #baff7b;
+    background: linear-gradient(
+        145deg,
+        #48633b,
+        #203a24
+    );
+
+    filter:
+        drop-shadow(0 0 5px #8cff4c66);
+
+    box-shadow:
+        0 0 12px #8cff4c77,
+        inset 0 0 10px #8cff4c22;
+}
+
+/* EVENT ĐẶC BIỆT */
+.override-grid-img img[data-event="x5-all"] {
+    grid-column: 2;
+    border-color: #c6a85d;
+}
+
+.override-grid-img img[data-event="x45-all"] {
+    grid-column: 3;
+    border-color: #c6a85d;
+}
+
+/* BẢNG SLOT POOL */
+.pool-grid {
+    display: grid;
+    grid-template-columns: repeat(4,minmax(0,1fr));
+    gap: 8px;
+}
+
+.pool-slot {
+    position: relative;
+    min-width: 0;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+
+    background: linear-gradient(
+        145deg,
+        #30452e,
+        #0c1b10
+    );
+
+    border: 1px solid #667b54;
+    border-radius: 6px;
+
+    box-shadow: inset 0 0 10px #0008;
+}
+
+.pool-slot img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 4px 4px 18px;
+    box-sizing: border-box;
+}
+
+.pool-value {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    padding: 4px 2px;
+    box-sizing: border-box;
+
+    background: rgba(5,15,8,.85);
+    color: #baff83;
+
+    font-size: 11px;
+    font-weight: 900;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 5px #73ff4c66;
+}
+
+.pool-slot.hot {
+    border-color: #e6ad5b;
+    box-shadow: 0 0 10px #e6ad5b44;
+}
+
+.pool-slot.low {
+    opacity: .65;
+}
+
+.pool-slot::after {
+    background: linear-gradient(
+        90deg,
+        #4d8436,
+        #aaff6b,
+        #e3c76b
+    );
+}
+
+/* DANH SÁCH NGƯỜI CHƠI */
+.bet-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.bet-card {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) auto;
+    gap: 10px;
+    align-items: center;
+
+    margin: 0;
+    padding: 10px;
+
+    background: linear-gradient(
+        145deg,
+        #263b28,
+        #101f14
+    );
+
+    border: 1px solid #617750;
+    border-radius: 6px;
+
+    box-shadow:
+        0 3px 8px #0005,
+        inset 0 1px 0 #ffffff12;
+}
+
+.bet-name {
+    color: #f0d58b;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.bet-coins {
+    color: #a9ff79;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.bet-slot.active {
+    filter: drop-shadow(0 0 6px #8cff50);
+}
+
+.bet-slot span {
+    background: #0c1c10;
+    color: #c6ff9a;
+    border: 1px solid #637a50;
+}
+
+.bet-total {
+    background: #263a24;
+    border: 1px solid #a78c51;
+    border-radius: 5px;
+
+    color: #f3d27d;
+    font-size: 14px;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+}
+
+/* CARD DANH SÁCH BÊN DƯỚI */
+.full-card {
+    width: calc(100% - 24px);
+    max-width: 626px;
+    margin: 0 auto 20px;
+}
+
+/* MOBILE */
+@media (max-width: 480px) {
+    .container {
+        padding: 9px;
+        gap: 9px;
+    }
+
+    .card {
+        padding: 12px;
+    }
+
+    .override-grid-img {
+        gap: 6px;
+    }
+
+    .override-grid-img img {
+        height: 66px;
+        padding: 3px;
+    }
+
+    .full-card {
+        width: calc(100% - 18px);
+    }
+
+    .slot-img-admin {
+        width: 95px;
+        height: 95px;
+    }
+}
+
+
+
+/* ==========================================
+   WHEEL8 MILITARY ADMIN LOGIN
+========================================== */
+
+.wheel8-login-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+  padding: 20px;
+
+  background:
+    radial-gradient(
+      circle at 50% 25%,
+      #304b32 0%,
+      #101d13 45%,
+      #030905 100%
+    );
+}
+
+.wheel8-login-screen.hidden {
+  display: none;
+}
+
+body:not(.wheel8-admin-unlocked) > .container,
+body:not(.wheel8-admin-unlocked) > .full-card {
+  visibility: hidden;
+}
+
+.wheel8-login-box {
+  width: 100%;
+  max-width: 380px;
+  box-sizing: border-box;
+
+  padding: 32px 23px;
+
+  background:
+    linear-gradient(145deg, #293e2b, #0c1b10);
+
+  border: 1px solid #bda36b;
+  border-bottom: 3px solid #d4b46b;
+  border-radius: 12px;
+
+  box-shadow:
+    0 20px 60px #000b,
+    inset 0 1px 0 #ffffff22,
+    0 0 25px #a6c16a16;
+
+  text-align: center;
+}
+
+.wheel8-login-icon {
+  font-size: 52px;
+  margin-bottom: 10px;
+  filter: drop-shadow(0 0 12px #9dbe68);
+}
+
+.wheel8-login-title {
+  font-size: 24px;
+  font-weight: 1000;
+  letter-spacing: 2px;
+  color: #ead18c;
+  text-shadow: 0 3px 6px #000;
+}
+
+
+
+.wheel8-login-line {
+  height: 1px;
+  margin: 25px 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #d4b46b,
+    transparent
+  );
+}
+
+.wheel8-login-box label {
+  display: block;
+  text-align: left;
+  margin-bottom: 10px;
+
+  color: #c8d5b8;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+}
+
+#wheel8AdminPassword {
+  width: 100%;
+  height: 50px;
+  box-sizing: border-box;
+  padding: 0 15px;
+
+  background: #07130b;
+  border: 1px solid #607750;
+  border-radius: 6px;
+  outline: none;
+
+  color: #e5f9d6;
+  font-size: 16px;
+  letter-spacing: 2px;
+
+  transition: .2s;
+}
+
+#wheel8AdminPassword:focus {
+  border-color: #b8d777;
+  box-shadow: 0 0 12px #9dff6b33;
+}
+
+#wheel8AdminPassword::placeholder {
+  color: #718168;
+  letter-spacing: 0;
+}
+
+#wheel8LoginBtn {
+  width: 100%;
+  min-height: 51px;
+  margin-top: 18px;
+  padding: 12px;
+
+  border: 1px solid #e7cf8f;
+  border-radius: 6px;
+
+  background: linear-gradient(
+    180deg,
+    #dec483,
+    #9b783e
+  );
+
+  color: #17220f;
+  font-size: 13px;
+  font-weight: 1000;
+  letter-spacing: .6px;
+
+  cursor: pointer;
+}
+
+#wheel8LoginBtn:active {
+  transform: scale(.98);
+}
+
+#wheel8LoginBtn:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+#wheel8LoginMessage {
+  min-height: 20px;
+  margin-top: 16px;
+  color: #ff9187;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.wheel8-login-footer {
+  margin-top: 12px;
+  color: #7f957b;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+}
+
+
+
+
+/* ==========================================
+   WHEEL8 ADMIN - FULL SCREEN RESPONSIVE
+   MOBILE / TABLET / DESKTOP
+========================================== */
+
+html {
+  width: 100%;
+  min-height: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* ===== KHUNG CHÍNH ===== */
+
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.container > .card {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 20px;
+}
+
+/* ===== ROUND / TIMER ===== */
+
+.label {
+  font-size: clamp(12px, 1.4vw, 16px);
+}
+
+.value {
+  font-size: clamp(28px, 3vw, 40px);
+}
+
+.timer {
+  min-width: 95px;
+  height: 52px;
+  font-size: clamp(25px, 3vw, 36px);
+}
+
+/* ===== KẾT QUẢ SLOT ===== */
+
+.slot-box {
+  min-height: 160px;
+  margin: 15px 0;
+}
+
+.slot-img-admin {
+  width: clamp(110px, 13vw, 170px);
+  height: clamp(110px, 13vw, 170px);
+  object-fit: contain;
+}
+
+.multi {
+  font-size: clamp(28px, 3vw, 42px);
+}
+
+/* ===== TIÊU ĐỀ ===== */
+
+.section-title,
+.override-card > .label {
+  font-size: clamp(14px, 1.5vw, 19px);
+  margin-bottom: 15px;
+}
+
+/* ===== LƯỚI SLOT OVERRIDE ===== */
+
+.override-grid-img {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.override-grid-img img {
+  width: 100%;
+  height: clamp(80px, 9vw, 125px);
+  padding: 8px;
+  object-fit: contain;
+}
+
+/* ===== SLOT POOL ===== */
+
+.full-card {
+  width: calc(100% - 32px);
+  max-width: 1368px;
+  margin: 0 auto 20px;
+  padding: 20px;
+}
+
+.pool-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pool-slot {
+  aspect-ratio: 1 / 1;
+}
+
+.pool-value {
+  font-size: clamp(12px, 1.5vw, 18px);
+  padding: 6px;
+}
+
+/* ===== PLAYER BETS ===== */
+
+.bet-card {
+  padding: 14px;
+  gap: 12px;
+}
+
+.bet-name {
+  font-size: clamp(14px, 1.5vw, 18px);
+}
+
+.bet-coins {
+  font-size: clamp(12px, 1.2vw, 15px);
+}
+
+.bet-total {
+  font-size: clamp(15px, 1.7vw, 20px);
+}
+
+.bet-slot {
+  width: 30px;
+  height: 30px;
+}
+
+.bet-slot span {
+  font-size: 10px;
+}
+
+/* ===== MÀN HÌNH ĐĂNG NHẬP ===== */
+
+.wheel8-login-screen {
+  width: 100%;
+  min-height: 100dvh;
+  padding: 16px;
+}
+
+.wheel8-login-box {
+  width: 100%;
+  max-width: 440px;
+  padding: 32px 24px;
+}
+
+/* ==========================================
+   TABLET
+========================================== */
+
+@media (max-width: 900px) {
+
+  .container {
+    grid-template-columns: 1fr;
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .container > .card {
+    padding: 16px;
+  }
+
+  .full-card {
+    width: calc(100% - 24px);
+    padding: 16px;
+  }
+
+  .slot-img-admin {
+    width: 130px;
+    height: 130px;
+  }
+
+  .override-grid-img img {
+    height: 95px;
+  }
+}
+
+/* ==========================================
+   MOBILE 320px - 600px
+========================================== */
+
+@media (max-width: 600px) {
+
+  .container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: none;
+    padding: 8px;
+    gap: 10px;
+  }
+
+  .container > .card {
+    width: 100%;
+    padding: 12px;
+  }
+
+  .main-card {
+    padding: 14px;
+  }
+
+  .label {
+    font-size: 13px;
+  }
+
+  .value {
+    font-size: 30px;
+  }
+
+  .timer {
+    min-width: 90px;
+    height: 47px;
+    font-size: 27px;
+  }
+
+  .slot-box {
+    min-height: 125px;
+    margin: 8px 0;
+  }
+
+  .slot-img-admin {
+    width: 115px;
+    height: 115px;
+  }
+
+  .multi {
+    font-size: 31px;
+  }
+
+  .override-grid-img {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+    margin-top: 10px;
+  }
+
+  .override-grid-img img {
+    width: 100%;
+    height: clamp(72px, 20vw, 105px);
+    padding: 5px;
+  }
+
+  .full-card {
+    width: calc(100% - 16px);
+    max-width: none;
+    margin: 0 auto 12px;
+    padding: 12px;
+  }
+
+  .section-title,
+  .override-card > .label {
+    font-size: 15px;
+  }
+
+  .pool-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .pool-value {
+    font-size: 11px;
+    padding: 4px 2px;
+  }
+
+  .bet-card {
+    padding: 10px;
+  }
+
+  .bet-name {
+    font-size: 14px;
+  }
+
+  .bet-coins {
+    font-size: 12px;
+  }
+
+  .bet-total {
+    font-size: 15px;
+  }
+
+  .bet-slot {
+    width: 24px;
+    height: 24px;
+  }
+
+  .wheel8-login-box {
+    max-width: 100%;
+    padding: 28px 20px;
+  }
+
+  .wheel8-login-title {
+    font-size: 23px;
+  }
+
+  #wheel8AdminPassword {
+    font-size: 16px;
+  }
+}
+
+
+
+
+/* =========================================
+   TACTICAL COMMAND CENTER V2
+   BLACK TITANIUM / OLIVE / CHAMPAGNE GOLD
+========================================= */
+
+:root {
+  --tc-bg: #090d0b;
+  --tc-panel: #141c18;
+  --tc-panel-deep: #101612;
+  --tc-border: #35423a;
+  --tc-gold: #d9bd82;
+  --tc-gold-dark: #84704b;
+  --tc-green: #a4d4a5;
+  --tc-text: #eef0e9;
+  --tc-muted: #87978b;
+}
+
+html {
+  background: var(--tc-bg);
+}
+
+body {
+  min-height: 100dvh;
+  color: var(--tc-text);
+  font-family: "Segoe UI", Arial, sans-serif;
+
+  background:
+    radial-gradient(
+      ellipse at 50% -15%,
+      rgba(74, 101, 72, .20),
+      transparent 60%
+    ),
+    linear-gradient(180deg, #121c16, #080c0a 75%);
+}
+
+/* HEADER */
+
+.tactical-header {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 26px 22px 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  border-bottom: 1px solid #ffffff0c;
+}
+
+.tactical-brand {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.brand-emblem {
+  width: 55px;
+  height: 55px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+
+  color: var(--tc-gold);
+  font-size: 30px;
+
+  border: 1px solid #8d7a52;
+  background: linear-gradient(145deg, #293b2e, #101713);
+  border-radius: 12px;
+
+  box-shadow: inset 0 1px #ffffff12;
+}
+
+.brand-eyebrow {
+  color: var(--tc-gold);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2.5px;
+}
+
+.brand-copy h1 {
+  margin: 5px 0;
+  color: #f3f1e7;
+  font-size: clamp(20px, 3vw, 31px);
+  font-weight: 800;
+  letter-spacing: 1.3px;
+  line-height: 1.15;
+}
+
+.brand-copy p {
+  margin: 0;
+  color: var(--tc-muted);
+  font-size: 11px;
+  letter-spacing: 1.1px;
+}
+
+.system-indicator {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  padding: 11px 15px;
+  border: 1px solid #3c5946;
+  border-radius: 30px;
+
+  background: #17241b;
+  color: #b6dbb5;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  letter-spacing: .7px;
+}
+
+.system-dot,
+.result-live-dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #83ce92;
+  box-shadow: 0 0 10px #83ce9270;
+}
+
+/* =========================================
+   MAIN LAYOUT
+========================================= */
+
+.tactical-layout {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 22px;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.tactical-card {
+  position: relative;
+  min-width: 0;
+  padding: 22px;
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      145deg,
+      #1b2720 0%,
+      #141d17 40%,
+      #101612 100%
+    );
+
+  border: 1px solid var(--tc-border);
+  border-radius: 15px;
+
+  box-shadow:
+    0 10px 32px #00000030,
+    inset 0 1px 0 #ffffff09;
+}
+
+.tactical-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 22px;
+  right: 22px;
+  height: 1px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #d8bb8066,
+    transparent
+  );
+}
+
+/* CARD HEADER */
+
+.tactical-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 15px;
+
+  margin-bottom: 22px;
+}
+
+.head-text {
+  min-width: 0;
+}
+
+.head-index {
+  display: block;
+  margin-bottom: 9px;
+
+  color: var(--tc-gold);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.head-text h2 {
+  margin: 0;
+  color: #f1f1e9;
+  font-size: clamp(19px, 2vw, 24px);
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.head-text p {
+  margin: 7px 0 0;
+  color: var(--tc-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.head-symbol {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+
+  border: 1px solid #394a3c;
+  border-radius: 10px;
+  background: #1e2b22;
+
+  color: var(--tc-gold);
+  font-size: 24px;
+}
+
+/* =========================================
+   01. SESSION MONITOR
+========================================= */
+
+.session-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.stat-block {
+  min-width: 0;
+  min-height: 105px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 9px;
+  padding: 16px;
+
+  background: linear-gradient(155deg, #111b15, #0c120e);
+  border: 1px solid #344238;
+  border-radius: 11px;
+}
+
+.stat-label {
+  color: #94a699;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.1px;
+}
+
+.stat-round {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+
+  color: var(--tc-gold);
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.stat-block .timer {
+  width: auto;
+  min-width: 0;
+  height: auto;
+  margin: 0;
+  padding: 0;
+
+  display: block;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+
+  color: #a7e0b1;
+  font-size: clamp(24px, 3vw, 35px);
+  font-weight: 800;
+  text-shadow: none;
+  line-height: 1.2;
+}
+
+.stat-block .timer.danger {
+  color: #ff8677;
+  animation: armyTimerDanger .65s infinite alternate;
+}
+
+.result-display {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid #3e4c3f;
+  border-radius: 12px;
+
+  background:
+    radial-gradient(
+      ellipse at center,
+      #25372a 0%,
+      #111b14 55%,
+      #0c120e 100%
+    );
+}
+
+.result-topline {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  color: #97a99b;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.result-corner {
+  margin-left: auto;
+  color: #bdab82;
+}
+
+.result-display .slot-box {
+  min-height: 190px;
+  margin: 12px 0;
+  display: grid;
+  place-items: center;
+  background: none;
+}
+
+.slot-image-stage {
+  width: 190px;
+  height: 190px;
+  max-width: 100%;
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+  border: 1px solid #5a6e5870;
+
+  background:
+    radial-gradient(circle, #2c422e, #16231a 68%, #0c130e);
+
+  box-shadow:
+    inset 0 0 30px #0006,
+    0 0 25px #4d80501a;
+}
+
+.result-display .slot-img-admin {
+  width: 150px;
+  height: 150px;
+  max-width: 85%;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 10px #0009);
+}
+
+.result-multiplier {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  padding: 13px 15px;
+  border: 1px solid #4c4c36;
+  border-radius: 8px;
+  background: #181d15;
+}
+
+.result-multiplier > span {
+  color: #b7b7a0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+}
+
+.result-multiplier .multi {
+  margin: 0;
+  color: #efcd84;
+  font-size: 31px;
+  font-weight: 800;
+  text-shadow: none;
+  line-height: 1;
+}
+
+.panel-footnote {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 16px;
+
+  color: #788a7b;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1.3px;
+}
+
+.footnote-mark {
+  color: #8cbb8b;
+}
+
+/* =========================================
+   02. CONTROL PANEL
+========================================= */
+
+.control-section-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 5px 0 12px;
+
+  color: #b4c3b5;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.control-section-label span:last-child {
+  color: #8c947c;
+  font-size: 10px;
+}
+
+/* STANDARD SLOTS */
+
+.control-panel .override-grid-img {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.control-panel .override-grid-img img {
+  display: block;
+  width: 100%;
+  height: clamp(78px, 8vw, 115px);
+  padding: 10px;
+
+  object-fit: contain;
+
+  background: linear-gradient(145deg, #233026, #101813);
+  border: 1px solid #3c4d40;
+  border-radius: 11px;
+
+  box-shadow: inset 0 1px 0 #ffffff09;
+  filter: none;
+  cursor: pointer;
+
+  transition:
+    transform .18s ease,
+    border-color .18s ease,
+    background .18s ease;
+}
+
+.control-panel .override-grid-img img:hover {
+  transform: translateY(-2px);
+  border-color: #b69b65;
+  filter: none;
+}
+
+.control-panel .override-grid-img img.active {
+  transform: none;
+  border: 2px solid #d7bc82;
+  background: #35402c;
+  box-shadow: inset 0 0 18px #d7bc8220;
+  filter: none;
+}
+
+/* SPECIAL EVENTS */
+
+.special-label {
+  margin-top: 25px;
+  padding-top: 19px;
+  border-top: 1px solid #354239;
+}
+
+.event-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.event-option {
+  min-width: 0;
+  padding: 12px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+
+  background: linear-gradient(150deg, #282a1f, #141b15);
+  border: 1px solid #71664c;
+  border-radius: 11px;
+}
+
+.event-tag {
+  align-self: flex-start;
+
+  color: #c7af78;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.event-option img {
+  width: 100%;
+  height: 100px;
+  padding: 5px;
+  object-fit: contain;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 9px;
+
+  transition: .2s;
+}
+
+.event-option img:hover {
+  transform: translateY(-2px);
+}
+
+.event-option img.active {
+  border-color: #e2c584;
+  background: #d9bd8215;
+  box-shadow: 0 0 15px #d9bd8220;
+}
+
+.event-name {
+  color: #e8d29e;
+  font-size: 14px;
+  font-weight: 850;
+  letter-spacing: 1px;
+}
+
+.control-note {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+
+  margin-top: 20px;
+  padding-top: 15px;
+
+  border-top: 1px solid #354239;
+  color: #778e7e;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1px;
+}
+
+/* =========================================
+   03. SLOT POOL
+========================================= */
+
+.pool-panel .pool-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pool-panel .pool-slot {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  padding: 9px;
+
+  display: block !important;
+
+  background: linear-gradient(145deg, #263529, #121a15);
+  border: 1px solid #3c4e40;
+  border-radius: 11px;
+  box-shadow: none;
+}
+
+.pool-panel .pool-slot.hot {
+  border-color: #beac78;
+  box-shadow: inset 0 0 12px #beac7814;
+}
+
+.pool-panel .pool-slot.low {
+  opacity: .7;
+}
+
+.pool-panel .pool-slot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 1px 1px 22px;
+  object-fit: contain;
+}
+
+.pool-panel .pool-value {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+
+  padding: 7px 3px;
+  background: #0c130fec;
+
+  color: #d5e1ce;
+  text-align: center;
+  font-size: clamp(11px, 1.2vw, 16px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-shadow: none;
+  border: 0;
+}
+
+.pool-panel .pool-slot::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: var(--percent, 0%);
+  height: 3px;
+  background: linear-gradient(90deg, #557c58, #e1c58d);
+}
+
+/* =========================================
+   04. PLAYER ACTIVITY
+========================================= */
+
+.players-table-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 11px 14px;
+
+  border-bottom: 1px solid #3a453c;
+
+  color: #9fae9e;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.1px;
+}
+
+.players-panel .bet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.players-panel .bet-card {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 14px;
+
+  background: linear-gradient(145deg, #1c2920, #101813);
+  border: 1px solid #35463a;
+  border-radius: 11px;
+  box-shadow: none;
+}
+
+.players-panel .bet-left {
+  min-width: 0;
+}
+
+.players-panel .bet-name {
+  overflow-wrap: anywhere;
+  color: #e8e9dd;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.players-panel .bet-coins {
+  margin: 4px 0 7px;
+  color: #a3cba0;
+  font-size: 12px;
+}
+
+.players-panel .bet-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+}
+
+.players-panel .bet-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+
+.players-panel .bet-slot {
+  width: 29px;
+  height: 29px;
+  opacity: .35;
+}
+
+.players-panel .bet-slot.active {
+  opacity: 1;
+  filter: none;
+}
+
+.players-panel .bet-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.players-panel .bet-slot span {
+  position: absolute;
+  bottom: -3px;
+  right: -4px;
+  padding: 1px 3px;
+
+  color: #e6d398;
+  background: #101810;
+  border: 1px solid #657358;
+  border-radius: 3px;
+
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.players-panel .bet-total {
+  min-width: 65px;
+  padding: 10px;
+  text-align: center;
+
+  color: #e8cd92;
+  font-size: 17px;
+  font-weight: 850;
+
+  border: 1px solid #625942;
+  border-radius: 8px;
+  background: #292719;
+}
+
+/* FOOTER */
+
+.tactical-footer {
+  padding: 20px 12px 30px;
+  text-align: center;
+
+  color: #6e8074;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1.5px;
+}
+
+.tactical-footer span {
+  margin: 0 7px;
+  color: #a99771;
+}
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 950px) {
+  .tactical-layout {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 14px;
+  }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+  .tactical-header {
+    padding: 17px 12px;
+    gap: 9px;
+  }
+
+  .tactical-brand {
+    gap: 10px;
+  }
+
+  .brand-emblem {
+    width: 43px;
+    height: 43px;
+    font-size: 24px;
+    border-radius: 9px;
+  }
+
+  .brand-eyebrow {
+    font-size: 8px;
+    letter-spacing: 1.3px;
+  }
+
+  .brand-copy h1 {
+    font-size: clamp(17px, 4.5vw, 23px);
+    letter-spacing: .4px;
+  }
+
+  .brand-copy p {
+    font-size: 9px;
+    letter-spacing: .2px;
+  }
+
+  .system-indicator {
+    padding: 8px;
+    font-size: 0;
+  }
+
+  .system-dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .tactical-layout {
+    padding: 9px;
+    gap: 10px;
+  }
+
+  .tactical-card {
+    padding: 15px;
+    border-radius: 12px;
+  }
+
+  .tactical-card-head {
+    margin-bottom: 17px;
+  }
+
+  .head-index {
+    font-size: 9px;
+  }
+
+  .head-text h2 {
+    font-size: 19px;
+  }
+
+  .head-text p {
+    font-size: 11px;
+  }
+
+  .head-symbol {
+    width: 36px;
+    height: 36px;
+    font-size: 21px;
+  }
+
+  .session-stats {
+    gap: 9px;
+  }
+
+  .stat-block {
+    min-height: 90px;
+    padding: 11px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+  }
+
+  .stat-round {
+    font-size: clamp(18px, 5.5vw, 26px);
+  }
+
+  .stat-block .timer {
+    font-size: 26px;
+  }
+
+  .result-display {
+    padding: 11px;
+  }
+
+  .result-display .slot-box {
+    min-height: 155px;
+    margin: 10px 0;
+  }
+
+  .slot-image-stage {
+    width: 155px;
+    height: 155px;
+  }
+
+  .result-display .slot-img-admin {
+    width: 125px;
+    height: 125px;
+  }
+
+  .result-multiplier .multi {
+    font-size: 27px;
+  }
+
+  .control-panel .override-grid-img {
+    gap: 7px;
+  }
+
+  .control-panel .override-grid-img img {
+    height: clamp(70px, 20vw, 100px);
+    padding: 5px;
+    border-radius: 8px;
+  }
+
+  .event-grid {
+    gap: 9px;
+  }
+
+  .event-option {
+    padding: 10px;
+  }
+
+  .event-option img {
+    height: 90px;
+  }
+
+  .pool-panel .pool-grid {
+    gap: 7px;
+  }
+
+  .pool-panel .pool-slot {
+    padding: 4px;
+    border-radius: 8px;
+  }
+
+  .pool-panel .pool-value {
+    font-size: 11px;
+  }
+
+  .players-panel .bet-card {
+    padding: 11px;
+  }
+
+  .players-panel .bet-slot {
+    width: 25px;
+    height: 25px;
+  }
+
+  .players-panel .bet-total {
+    min-width: 58px;
+    font-size: 14px;
+  }
+
+  .tactical-footer {
+    font-size: 9px;
+    letter-spacing: .7px;
+  }
+}
+
+
+
+
+/* =========================================
+   FIX OLD CSS CONFLICTS
+========================================= */
+
+#poolList.pool-grid > .pool-slot {
+  display: block !important;
+  justify-content: initial;
+  padding: 9px;
+  border-bottom: 1px solid #3c4e40;
+}
+
+#poolList.pool-grid .pool-value {
+  display: block;
+  width: 100%;
+  padding: 7px 3px;
+  border-bottom: 0;
+}
+
+#betList.bet-list .bet-card {
+  display: grid;
+  padding: 14px;
+  justify-content: initial;
+  border-bottom: 1px solid #35463a;
+}
+
+#betList.bet-list .bet-left {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: 0;
+}
+
+#betList.bet-list .bet-slots {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: 0;
+}
+
+#betList.bet-list .bet-row {
+  display: flex;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+}
+
+#betList.bet-list .bet-slot {
+  display: block;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+}
+
+#betList.bet-list .bet-name,
+#betList.bet-list .bet-coins {
+  display: block;
+  padding: 0;
+  border: 0;
+}
+
+#betList.bet-list .bet-total {
+  display: block;
+  padding: 10px;
+  border: 1px solid #625942;
+}
+
+/* Ẩn dashboard khi chưa đăng nhập */
+body:not(.wheel8-admin-unlocked) .tactical-header,
+body:not(.wheel8-admin-unlocked) .tactical-layout,
+body:not(.wheel8-admin-unlocked) .tactical-footer {
+  visibility: hidden;
+}
+
+@media (max-width: 600px) {
+  #poolList.pool-grid > .pool-slot {
+    padding: 4px;
+  }
+
+  #betList.bet-list .bet-card {
+    padding: 11px;
+  }
+}
+
+
+
+
+/* ==========================================
+   TACTICAL ADMIN LOGIN V3
+   BLACK TITANIUM / CHAMPAGNE GOLD
+========================================== */
+
+.wheel8-login-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  isolation: isolate;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 20%,
+      #294030 0%,
+      #111b15 43%,
+      #070c09 90%
+    );
+}
+
+.wheel8-login-screen.hidden {
+  display: none !important;
+}
+
+/* AMBIENT LIGHT */
+
+.login-atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      circle at 50% 45%,
+      #c1a67213,
+      transparent 55%
+    );
+}
+
+/* TECHNICAL GRID */
+
+.login-grid-pattern {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .30;
+
+  background-image:
+    linear-gradient(#8ba58d16 1px, transparent 1px),
+    linear-gradient(90deg, #8ba58d16 1px, transparent 1px);
+
+  background-size: 45px 45px;
+
+  mask-image: radial-gradient(
+    ellipse at center,
+    #000 5%,
+    transparent 80%
+  );
+}
+
+/* MAIN PANEL */
+
+.wheel8-login-screen .wheel8-login-box {
+  position: relative;
+  flex: 0 0 auto;
+  z-index: 1;
+
+  width: 100%;
+  max-width: 465px;
+  margin: auto;
+  padding: 0;
+
+  overflow: hidden;
+  text-align: center;
+
+  background:
+    linear-gradient(
+      155deg,
+      #202e24 0%,
+      #151f19 30%,
+      #0e1511 100%
+    );
+
+  border: 1px solid #5c6653;
+  border-radius: 16px;
+
+  box-shadow:
+    0 30px 90px #000000a8,
+    0 0 55px #d7ba7910,
+    inset 0 1px 0 #ffffff19;
+}
+
+.wheel8-login-box::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+
+  background: linear-gradient(
+    135deg,
+    #e9cb8220,
+    transparent 38%
+  );
+}
+
+/* TOP BAR */
+
+.login-topbar {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+
+  padding: 16px 23px;
+
+  background: #0b120eaa;
+  border-bottom: 1px solid #39463b;
+}
+
+.login-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  color: #b1c0ae;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+}
+
+.login-status-dot,
+.security-small-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+
+  background: #9ecb9e;
+  border-radius: 50%;
+  box-shadow: 0 0 9px #9ecb9e66;
+}
+
+.login-topbar-right {
+  color: #c6ae76;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+/* EMBLEM */
+
+.login-emblem-area {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+
+  gap: 15px;
+  padding-top: 32px;
+}
+
+.login-emblem {
+  position: relative;
+  width: 100px;
+  height: 100px;
+
+  display: grid;
+  place-items: center;
+
+  color: #e7cc90;
+  background: linear-gradient(145deg, #324235, #121b15);
+
+  border: 1px solid #877750;
+  border-radius: 25px;
+
+  box-shadow:
+    0 10px 30px #0006,
+    inset 0 1px 0 #ffffff24,
+    0 0 35px #c2a77316;
+}
+
+.login-emblem::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border: 1px solid #85704b33;
+  border-radius: 31px;
+  pointer-events: none;
+}
+
+.login-emblem svg {
+  display: block;
+  filter: drop-shadow(0 2px 8px #d4b46b40);
+}
+
+.login-emblem-caption {
+  color: #96a497;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+}
+
+/* HEADING */
+
+.login-heading {
+  padding: 27px 22px 0;
+}
+
+.login-eyebrow {
+  color: #c6aa76;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 2.3px;
+}
+
+.wheel8-login-screen .wheel8-login-title {
+  margin: 11px 0 10px;
+
+  color: #f1f1e8;
+  font-size: clamp(25px, 5vw, 35px);
+  font-weight: 850;
+  line-height: 1.15;
+  letter-spacing: 1.2px;
+  text-shadow: none;
+}
+
+.wheel8-login-title span {
+  color: #d8bb7e;
+}
+
+.wheel8-login-screen{
+  margin: 0;
+  color: #a0b1a3;
+
+  font-size: 13px;
+  font-weight: 450;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+/* DIVIDER */
+
+.login-section-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  margin: 31px 28px 26px;
+}
+
+.login-section-divider > span {
+  height: 1px;
+  flex: 1;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #786c4f
+  );
+}
+
+.login-section-divider > span:last-child {
+  transform: rotate(180deg);
+}
+
+.login-section-divider i {
+  color: #a99873;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+  white-space: nowrap;
+}
+
+/* PASSWORD FIELD */
+
+.login-field {
+  margin: 0 28px;
+  text-align: left;
+}
+
+.login-field-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 11px;
+}
+
+.wheel8-login-screen .login-field-heading label {
+  display: block;
+  margin: 0;
+
+  color: #d3d7c9;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.login-field-number {
+  color: #7f907f;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+.login-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  height: 58px;
+
+  background: #09120d;
+  border: 1px solid #485a49;
+  border-radius: 9px;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.login-input-wrap:focus-within {
+  border-color: #d4b77b;
+  box-shadow: 0 0 0 3px #d4b77b14;
+}
+
+.login-input-icon {
+  position: absolute;
+  left: 17px;
+  width: 20px;
+  height: 20px;
+  color: #b49d71;
+  pointer-events: none;
+}
+
+.wheel8-login-screen #wheel8AdminPassword {
+  display: block;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+
+  padding: 0 47px 0 49px;
+
+  background: transparent;
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+
+  color: #f0eddf;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 550;
+  letter-spacing: 1px;
+}
+
+.wheel8-login-screen #wheel8AdminPassword::placeholder {
+  color: #697d6e;
+  font-weight: 450;
+  letter-spacing: 0;
+}
+
+.login-password-toggle {
+  position: absolute;
+  right: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+
+  color: #8e9f90;
+  cursor: pointer;
+}
+
+.login-password-toggle:hover {
+  color: #e5c88b;
+  background: #ffffff08;
+}
+
+.login-password-toggle:focus-visible {
+  outline: 2px solid #d4b77b;
+  outline-offset: 1px;
+}
+
+/* LOGIN BUTTON */
+
+.wheel8-login-screen #wheel8LoginBtn.login-submit {
+  position: relative;
+  width: calc(100% - 56px);
+  min-height: 58px;
+  margin: 21px 28px 0;
+  padding: 0 17px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  color: #171d12;
+  background: linear-gradient(
+    180deg,
+    #eddaa8 0%,
+    #d9bd80 46%,
+    #ae8950 100%
+  );
+
+  border: 1px solid #f1dda9;
+  border-radius: 9px;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 850;
+  letter-spacing: .8px;
+  box-shadow: 0 5px 18px #0005;
+
+  cursor: pointer;
+  transition: filter .2s, transform .2s;
+}
+
+.wheel8-login-screen #wheel8LoginBtn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.wheel8-login-screen #wheel8LoginBtn:active:not(:disabled) {
+  transform: scale(.985);
+}
+
+.login-btn-symbol {
+  font-size: 23px;
+  font-weight: 500;
+}
+
+.login-btn-arrow {
+  font-size: 22px;
+  font-weight: 450;
+}
+
+.wheel8-login-screen #wheel8LoginBtn:disabled {
+  cursor: wait;
+  opacity: .55;
+}
+
+/* LOGIN ERROR / STATUS */
+
+.wheel8-login-screen #wheel8LoginMessage {
+  min-height: 19px;
+  margin: 14px 28px 0;
+
+  color: #f19a8f;
+  font-size: 12px;
+  font-weight: 650;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* SECURITY INFO */
+
+.login-security-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  margin: 5px 28px 26px;
+  padding-top: 14px;
+
+  border-top: 1px solid #ffffff0c;
+}
+
+.login-security-mark {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  color: #a1c5a1;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: .65px;
+}
+
+.login-security-info > span {
+  color: #778878;
+  font-size: 9px;
+  font-weight: 650;
+  text-align: right;
+  letter-spacing: .3px;
+}
+
+/* FOOTER */
+
+.wheel8-login-screen .wheel8-login-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 7px;
+
+  margin: 0;
+  padding: 17px 10px;
+
+  border-top: 1px solid #38443a;
+  background: #0c130f99;
+
+  color: #758778;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 1px;
+}
+
+.login-footer-separator {
+  color: #c4a96f;
+}
+
+.login-footer-rule {
+  display: none;
+}
+
+.login-background-label {
+  position: absolute;
+  bottom: 17px;
+  left: 12px;
+  right: 12px;
+
+  color: #647769;
+  font-size: 9px;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 1.6px;
+  pointer-events: none;
+}
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media (max-width: 600px) {
+
+  .wheel8-login-screen {
+    padding: 14px;
+  }
+
+  .wheel8-login-screen .wheel8-login-box {
+    max-width: 430px;
+    border-radius: 13px;
+  }
+
+  .login-topbar {
+    padding: 13px 17px;
+  }
+
+  .login-topbar-left,
+  .login-topbar-right {
+    font-size: 9px;
+  }
+
+  .login-emblem-area {
+    padding-top: 27px;
+  }
+
+  .login-emblem {
+    width: 84px;
+    height: 84px;
+    border-radius: 20px;
+  }
+
+  .login-emblem svg {
+    width: 42px;
+    height: 42px;
+  }
+
+  .login-heading {
+    padding-top: 24px;
+  }
+
+  .login-eyebrow {
+    font-size: 9px;
+    letter-spacing: 1.7px;
+  }
+
+  .wheel8-login-screen .wheel8-login-title {
+    font-size: clamp(24px, 7vw, 30px);
+  }
+
+  .wheel8-login-screen{
+    font-size: 12px;
+  }
+
+  .login-section-divider {
+    margin: 27px 20px 23px;
+    gap: 8px;
+  }
+
+  .login-field {
+    margin: 0 19px;
+  }
+
+  .login-input-wrap {
+    height: 55px;
+  }
+
+  .wheel8-login-screen #wheel8LoginBtn.login-submit {
+    width: calc(100% - 38px);
+    min-height: 55px;
+    margin: 19px 19px 0;
+    font-size: 12px;
+    padding: 0 13px;
+  }
+
+  .wheel8-login-screen #wheel8LoginMessage {
+    margin: 13px 19px 0;
+  }
+
+  .login-security-info {
+    margin: 5px 19px 20px;
+  }
+
+  .login-security-mark,
+  .login-security-info > span {
+    font-size: 8px;
+  }
+
+  .login-background-label {
+    display: none;
+  }
+}
+
+/* SHORT SCREENS */
+
+@media (max-height: 680px) {
+  .login-emblem-area {
+    padding-top: 18px;
+    gap: 9px;
+  }
+
+  .login-emblem {
+    width: 68px;
+    height: 68px;
+  }
+
+  .login-emblem svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .login-heading {
+    padding-top: 16px;
+  }
+
+  .login-section-divider {
+    margin-top: 18px;
+    margin-bottom: 16px;
+  }
+
+  .login-security-info {
+    margin-bottom: 13px;
+  }
+}
+
+
+/* =====================================
+   WHEEL8 ADMIN - IMAGE LOGO
+===================================== */
+
+.login-emblem-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 17px;
+  padding-top: 32px;
+}
+
+.wheel8-login-screen .login-emblem {
+  position: relative;
+
+  width: 150px;
+  height: 150px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: none;
+  border: none;
+  border-radius: 0;
+
+  box-shadow: none;
+  overflow: visible;
+}
+
+.wheel8-login-screen .login-emblem::before {
+  display: none;
+}
+
+.login-emblem-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+
+  filter:
+    drop-shadow(0 9px 15px rgba(0,0,0,.65))
+    drop-shadow(0 0 18px rgba(212,180,107,.18));
+
+  transition: transform .3s ease;
+}
+
+.login-emblem-img:hover {
+  transform: scale(1.05);
+}
+
+.login-emblem-caption {
+  color: #b9a47a;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+  text-align: center;
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+  .wheel8-login-screen .login-emblem {
+    width: 125px;
+    height: 125px;
+  }
+
+  .login-emblem-area {
+    padding-top: 25px;
+    gap: 13px;
+  }
+}
+
+/* MÀN HÌNH THẤP */
+
+@media (max-height: 680px) {
+  .wheel8-login-screen .login-emblem {
+    width: 95px;
+    height: 95px;
+  }
+}
+
+
+
+/* ==========================================
+   MILITARY ADMIN NOTIFICATION
+========================================== */
+
+.wheel8-admin-notice {
+  position: fixed;
+
+  top: calc(20px + env(safe-area-inset-top));
+  left: 50%;
+
+  width: min(390px, calc(100% - 28px));
+  min-height: 90px;
+
+  padding: 17px 40px 17px 15px;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  gap: 13px;
+
+  background:
+    linear-gradient(
+      140deg,
+      #354932 0%,
+      #1a2c1c 45%,
+      #0b160e 100%
+    );
+
+  border: 1px solid #b79b5d;
+  border-left: 4px solid #e7c37a;
+  border-radius: 9px;
+
+  box-shadow:
+    0 15px 40px rgba(0,0,0,.75),
+    inset 0 1px 0 rgba(255,255,255,.13);
+
+  z-index: 1000005;
+
+  opacity: 0;
+  visibility: hidden;
+
+  transform: translate(-50%, -25px) scale(.96);
+
+  transition:
+    opacity .25s ease,
+    transform .3s ease,
+    visibility .25s ease;
+}
+
+.wheel8-admin-notice[hidden] {
+  display: none !important;
+}
+
+.wheel8-admin-notice.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0) scale(1);
+}
+
+/* ICON CẢNH BÁO */
+
+.wheel8-notice-icon {
+  flex-shrink: 0;
+
+  width: 46px;
+  height: 46px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    linear-gradient(145deg, #655334, #302b1b);
+
+  border: 1px solid #c5a360;
+  border-radius: 9px;
+
+  color: #ffdc91;
+  font-size: 26px;
+  font-weight: 900;
+
+  text-shadow: 0 0 10px #ffcc6688;
+  box-shadow: inset 0 0 12px #0006;
+}
+
+/* NỘI DUNG */
+
+.wheel8-notice-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.wheel8-notice-title {
+  color: #e8c77d;
+
+  font-size: 12px;
+  font-weight: 1000;
+  letter-spacing: 1.4px;
+
+  margin-bottom: 6px;
+}
+
+.wheel8-notice-message {
+  color: #f3f5eb;
+
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+
+  overflow-wrap: anywhere;
+}
+
+.wheel8-notice-sub {
+  margin-top: 5px;
+
+  color: #a6b8a0;
+  font-size: 10px;
+}
+
+/* NÚT ĐÓNG */
+
+.wheel8-notice-close {
+  position: absolute;
+
+  top: 10px;
+  right: 10px;
+
+  width: 25px;
+  height: 25px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(255,255,255,.06);
+  border: 1px solid #596c4d;
+  border-radius: 5px;
+
+  color: #e4d6b6;
+  font-size: 12px;
+
+  cursor: pointer;
+}
+
+/* THANH ĐẾM THỜI GIAN */
+
+.wheel8-notice-progress {
+  position: absolute;
+
+  bottom: 0;
+  left: 0;
+
+  width: 100%;
+  height: 3px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #806335,
+      #efce81,
+      #b18a45
+    );
+
+  border-radius: 0 0 7px 7px;
+
+  transform-origin: left;
+}
+
+.wheel8-admin-notice.is-visible
+.wheel8-notice-progress {
+  animation: wheel8NoticeTimer 3.5s linear forwards;
+}
+
+@keyframes wheel8NoticeTimer {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+
+
+
+/* ==========================================
+   WHEEL8 ADMIN - MILITARY / FRUIT THEME
+   KEEP LAYOUT + ALL EXISTING FUNCTIONS
+========================================== */
+
+/* HEADER ACTIONS */
+
+.admin-header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* THEME SWITCH */
+
+#w8AdminThemeSwitcher {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    padding: 4px;
+
+    background: #17241b;
+    border: 1px solid #4b5c47;
+    border-radius: 9px;
+}
+
+#w8AdminThemeSwitcher button {
+    min-height: 34px;
+    min-width: 82px;
+    padding: 7px 12px;
+
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+
+    color: #aab8a2;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .4px;
+
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+#w8AdminThemeSwitcher button.is-current {
+    background: linear-gradient(
+        145deg,
+        #40553b,
+        #263a2b
+    );
+
+    border-color: #bda16a;
+    color: #f3dfb3;
+}
+
+/* ==========================================
+   FRUIT COLOR SYSTEM
+========================================== */
+
+body.w8-theme-titanium {
+    --tc-bg: #fff2de;
+    --tc-panel: #fff8ec;
+    --tc-panel-deep: #ffe7ca;
+    --tc-border: #e1b28c;
+    --tc-gold: #b96743;
+    --tc-gold-dark: #d79b72;
+    --tc-green: #699a4c;
+    --tc-text: #79482f;
+    --tc-muted: #a57556;
+
+    color: var(--tc-text);
+
+    background:
+        radial-gradient(
+            ellipse at 50% 0%,
+            #fffdf5 0%,
+            transparent 60%
+        ),
+        linear-gradient(
+            180deg,
+            #fff1db,
+            #ffe1c0 55%,
+            #f4c3a4
+        );
+}
+
+/* ==========================================
+   FRUIT HEADER
+========================================== */
+
+body.w8-theme-titanium .tactical-header {
+    border-bottom: 1px solid #ddb18e;
+}
+
+body.w8-theme-titanium .brand-emblem {
+    background: linear-gradient(
+        145deg,
+        #fff3df,
+        #f5c69e
+    );
+
+    border: 1px solid #d99d70;
+    color: #b84c38;
+}
+
+body.w8-theme-titanium .brand-eyebrow {
+    color: #a85c3d;
+}
+
+body.w8-theme-titanium .brand-copy h1 {
+    color: #8e4732;
+}
+
+body.w8-theme-titanium .brand-copy p {
+    color: #a87557;
+}
+
+body.w8-theme-titanium .system-indicator {
+    background: #fff7e8;
+    border-color: #dcb18f;
+    color: #956246;
+}
+
+body.w8-theme-titanium .system-dot,
+body.w8-theme-titanium .result-live-dot {
+    background: #89b65e;
+    box-shadow: 0 0 7px #8bb96570;
+}
+
+/* FRUIT THEME SWITCH */
+
+body.w8-theme-titanium #w8AdminThemeSwitcher {
+    background: #fff6e7;
+    border-color: #dfb38f;
+}
+
+body.w8-theme-titanium
+#w8AdminThemeSwitcher button {
+    color: #a2775a;
+}
+
+body.w8-theme-titanium
+#w8AdminThemeSwitcher button.is-current {
+    background: linear-gradient(
+        135deg,
+        #ffe1c5,
+        #f5c0a0
+    );
+
+    border-color: #d38466;
+    color: #9f4433;
+}
+
+/* ==========================================
+   FRUIT DASHBOARD CARDS
+========================================== */
+
+body.w8-theme-titanium .tactical-card {
+    background: linear-gradient(
+        145deg,
+        #fffdf5,
+        #ffefd9 65%,
+        #f8d8bb
+    );
+
+    border: 1px solid #e0b08b;
+    border-bottom: 3px solid #d1956b;
+    border-radius: 15px;
+
+    box-shadow:
+        0 8px 25px #a7693823,
+        inset 0 1px 0 #ffffffdd;
+}
+
+body.w8-theme-titanium
+.tactical-card::before {
+    background: linear-gradient(
+        90deg,
+        transparent,
+        #e4ad87,
+        transparent
+    );
+}
+
+body.w8-theme-titanium .head-index {
+    color: #b66645;
+}
+
+body.w8-theme-titanium .head-text h2 {
+    color: #874932;
+}
+
+body.w8-theme-titanium .head-text p {
+    color: #aa7c5d;
+}
+
+body.w8-theme-titanium .head-symbol {
+    background: #fff5e6;
+    border-color: #e1b592;
+    color: #b85f43;
+}
+
+/* ==========================================
+   SESSION MONITOR
+========================================== */
+
+body.w8-theme-titanium .stat-block {
+    background: linear-gradient(
+        150deg,
+        #fffdf6,
+        #ffead2
+    );
+
+    border: 1px solid #dfb793;
+}
+
+body.w8-theme-titanium .stat-label {
+    color: #a37353;
+}
+
+body.w8-theme-titanium .stat-round {
+    color: #b24c37;
+}
+
+body.w8-theme-titanium .stat-block .timer {
+    color: #ab4d39;
+    text-shadow: none;
+}
+
+body.w8-theme-titanium
+.stat-block .timer.danger {
+    color: #d93632;
+}
+
+/* RESULT DISPLAY */
+
+body.w8-theme-titanium .result-display {
+    background: linear-gradient(
+        160deg,
+        #fff8e8,
+        #f8d3ae
+    );
+
+    border: 1px solid #dfad85;
+}
+
+body.w8-theme-titanium .result-topline {
+    color: #a16e51;
+}
+
+body.w8-theme-titanium .result-corner {
+    color: #b05e40;
+}
+
+body.w8-theme-titanium .slot-image-stage {
+    background: radial-gradient(
+        circle,
+        #fffdf4,
+        #ffe6c6 68%,
+        #f2c6a6
+    );
+
+    border: 1px solid #e0b38d;
+
+    box-shadow:
+        inset 0 0 20px #b5793920;
+}
+
+body.w8-theme-titanium .result-display
+.slot-img-admin {
+    filter: drop-shadow(0 5px 7px #a16a463b);
+}
+
+/* MULTIPLIER */
+
+body.w8-theme-titanium .result-multiplier {
+    background: #fff7ea;
+    border-color: #e3b994;
+}
+
+body.w8-theme-titanium
+.result-multiplier > span {
+    color: #a57859;
+}
+
+body.w8-theme-titanium
+.result-multiplier .multi {
+    color: #b54d35;
+}
+
+body.w8-theme-titanium .panel-footnote {
+    color: #ab7f60;
+}
+
+body.w8-theme-titanium .footnote-mark {
+    color: #8cb761;
+}
+
+/* ==========================================
+   CONTROL PANEL
+========================================== */
+
+body.w8-theme-titanium
+.control-section-label {
+    color: #995b3e;
+}
+
+body.w8-theme-titanium
+.control-section-label span:last-child {
+    color: #aa8262;
+}
+
+body.w8-theme-titanium
+.control-panel .override-grid-img img {
+    background: linear-gradient(
+        145deg,
+        #fffdf6,
+        #ffe8cc
+    );
+
+    border: 1px solid #e2b793;
+    border-radius: 11px;
+
+    box-shadow: inset 0 1px 0 #ffffffcc;
+    filter: none;
+}
+
+body.w8-theme-titanium
+.control-panel .override-grid-img img:hover {
+    border-color: #d17e5b;
+    background: #ffe4c5;
+}
+
+body.w8-theme-titanium
+.control-panel .override-grid-img img.active {
+    background: linear-gradient(
+        145deg,
+        #ffe2c7,
+        #f6c6ab
+    );
+
+    border: 2px solid #ce7256;
+
+    box-shadow:
+        0 0 0 3px #d88a6330,
+        inset 0 1px 0 #fff;
+
+    filter: none;
+}
+
+/* SPECIAL EVENTS */
+
+body.w8-theme-titanium .special-label,
+body.w8-theme-titanium .control-note {
+    border-top-color: #e5b994;
+}
+
+body.w8-theme-titanium .event-option {
+    background: linear-gradient(
+        150deg,
+        #fff9ed,
+        #f8ddbf
+    );
+
+    border: 1px solid #dfb28a;
+}
+
+body.w8-theme-titanium .event-tag {
+    color: #aa7050;
+}
+
+body.w8-theme-titanium .event-name {
+    color: #a45136;
+}
+
+body.w8-theme-titanium .event-option img.active {
+    border-color: #d37455;
+    background: #ffe1ca;
+
+    box-shadow: 0 0 0 3px #d8896330;
+}
+
+body.w8-theme-titanium .control-note {
+    color: #a97d5e;
+}
+
+/* ==========================================
+   SLOT POOL
+========================================== */
+
+body.w8-theme-titanium .pool-panel .pool-slot {
+    background: linear-gradient(
+        145deg,
+        #fffdf6,
+        #ffead2
+    );
+
+    border: 1px solid #dfb590;
+}
+
+body.w8-theme-titanium .pool-panel .pool-slot.hot {
+    border-color: #d48b61;
+    box-shadow: inset 0 0 10px #db926222;
+}
+
+body.w8-theme-titanium .pool-panel .pool-value {
+    background: #fff1ddec;
+    border-top: 1px solid #e3bd9b;
+    color: #9d5337;
+}
+
+body.w8-theme-titanium .pool-panel .pool-slot::after {
+    background: linear-gradient(
+        90deg,
+        #ebc489,
+        #de8e6d,
+        #bb5540
+    );
+}
+
+/* ==========================================
+   PLAYER BETS
+========================================== */
+
+body.w8-theme-titanium .players-table-head {
+    border-bottom: 1px solid #e1b391;
+    color: #a57252;
+}
+
+body.w8-theme-titanium
+.players-panel .bet-card {
+    background: linear-gradient(
+        145deg,
+        #fffdf5,
+        #ffead5
+    );
+
+    border: 1px solid #e3bd9b;
+    box-shadow: none;
+}
+
+body.w8-theme-titanium
+.players-panel .bet-card[style*="box-shadow"] {
+    box-shadow:
+        0 0 0 1px #dc9770,
+        0 4px 12px #b8793c25 !important;
+}
+
+body.w8-theme-titanium
+.players-panel .bet-name {
+    color: #874a32;
+}
+
+body.w8-theme-titanium
+.players-panel .bet-coins {
+    color: #709748;
+}
+
+body.w8-theme-titanium
+.players-panel .bet-slot span {
+    background: #fff2e0;
+    border-color: #d6a17a;
+    color: #a3543b;
+}
+
+body.w8-theme-titanium
+.players-panel .bet-total {
+    background: #fbe0bb;
+    border-color: #dfaa82;
+    color: #a44f35;
+}
+
+/* ==========================================
+   ADMIN FOOTER
+========================================== */
+
+body.w8-theme-titanium .tactical-footer {
+    color: #a97958;
+}
+
+body.w8-theme-titanium .tactical-footer span {
+    color: #bc7753;
+}
+
+/* ==========================================
+   LOGIN SCREEN - FRUIT THEME
+========================================== */
+
+body.w8-theme-titanium .wheel8-login-screen {
+    background:
+        radial-gradient(
+            ellipse at 50% 15%,
+            #fffdf2,
+            transparent 65%
+        ),
+        linear-gradient(
+            180deg,
+            #ffe9cc,
+            #f5c9a7
+        );
+
+    color: #865038;
+}
+
+body.w8-theme-titanium
+.wheel8-login-screen .wheel8-login-box {
+    background: linear-gradient(
+        155deg,
+        #fffdf5,
+        #ffe7ca
+    );
+
+    border: 1px solid #d9a580;
+    box-shadow: 0 20px 55px #88523345;
+}
+
+body.w8-theme-titanium .login-topbar {
+    background: #fff3e1;
+    border-bottom-color: #e2b896;
+}
+
+body.w8-theme-titanium
+:is(.login-topbar-left,
+    .login-emblem-caption,
+    .login-field-heading label,
+    .login-security-info,
+    .wheel8-login-footer) {
+    color: #a17556;
+}
+
+body.w8-theme-titanium
+:is(.login-topbar-right,
+    .login-eyebrow,
+    .login-section-divider,
+    .wheel8-login-title span) {
+    color: #b25a3c;
+}
+
+body.w8-theme-titanium
+.wheel8-login-screen .wheel8-login-title {
+    color: #874a34;
+}
+
+body.w8-theme-titanium
+.wheel8-login-screen #wheel8AdminPassword {
+    background: #fff9f0;
+    border-color: #dfb494;
+    color: #824832;
+}
+
+body.w8-theme-titanium
+.wheel8-login-screen #wheel8AdminPassword::placeholder {
+    color: #b08d71;
+}
+
+body.w8-theme-titanium
+.wheel8-login-screen #wheel8LoginBtn.login-submit {
+    background: linear-gradient(
+        145deg,
+        #f6c6a4,
+        #e7a079
+    );
+
+    border-color: #cd855f;
+    color: #793d2d;
+}
+
+body.w8-theme-titanium #wheel8LoginMessage {
+    color: #c64c40;
+}
+
+/* ==========================================
+   ADMIN NOTIFICATION - FRUIT
+========================================== */
+
+body.w8-theme-titanium .wheel8-admin-notice {
+    background: linear-gradient(
+        145deg,
+        #fff8e9,
+        #f8d9b9
+    );
+
+    border-color: #d8a27a;
+    border-left-color: #d36c52;
+
+    box-shadow: 0 12px 30px #8b523c45;
+}
+
+body.w8-theme-titanium .wheel8-notice-icon {
+    background: #ffe4c6;
+    border-color: #db9b72;
+    color: #bc5941;
+}
+
+body.w8-theme-titanium .wheel8-notice-title {
+    color: #ac4f36;
+}
+
+body.w8-theme-titanium .wheel8-notice-message {
+    color: #824a34;
+}
+
+body.w8-theme-titanium .wheel8-notice-sub {
+    color: #aa7859;
+}
+
+body.w8-theme-titanium .wheel8-notice-close {
+    background: #fff3e3;
+    border-color: #dbad89;
+    color: #a6533a;
+}
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media (max-width: 600px) {
+
+    .tactical-header {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .admin-header-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    #w8AdminThemeSwitcher button {
+        min-width: 70px;
+        font-size: 10px;
+        padding: 7px 8px;
+    }
+
+    .admin-header-actions .system-indicator {
+        padding: 9px 10px;
+        font-size: 10px;
+    }
+
+}
+
+
+
+
+
+</style>
+</head>
+
+
+<body>
+
+
+<!-- =========================================
+     TACTICAL ADMIN ACCESS V3
+========================================= -->
+
+<div id="wheel8LoginScreen" class="wheel8-login-screen">
+
+  <div class="login-atmosphere"></div>
+  <div class="login-grid-pattern"></div>
+
+  <form id="wheel8LoginForm" class="wheel8-login-box">
+
+    <!-- TOP STATUS -->
+    <div class="login-topbar">
+      <div class="login-topbar-left">
+        <span class="login-status-dot"></span>
+        <span>SECURITY GATEWAY</span>
+      </div>
+
+      <span class="login-topbar-right">ADMIN</span>
+    </div>
+
+
+<!-- EMBLEM LOGO -->
+<div class="login-emblem-area">
+
+  <div class="login-emblem">
+    <img
+      src="/assets/police/wheel8-admin-logo.png"
+      alt="Wheel8 Command Center"
+      class="login-emblem-img"
+      draggable="false"
+    >
+  </div>
+
+  <span class="login-emblem-caption">
+    AUTHORIZED PERSONNEL ONLY
+  </span>
+
+</div>
+
+
+    <!-- HEADING -->
+    <div class="login-heading">
+      <span class="login-eyebrow">MILITARY CONTROL SYSTEM</span>
+
+      <h1 class="wheel8-login-title">
+        COMMAND <span>CENTER</span>
+      </h1>
+
+ 
+    </div>
+
+    <div class="login-section-divider">
+      <span></span>
+      <i>ACCESS VERIFICATION</i>
+      <span></span>
+    </div>
+
+    <!-- PASSWORD -->
+    <div class="login-field">
+      <div class="login-field-heading">
+        <label for="wheel8AdminPassword">
+          ADMIN PASSWORD
+        </label>
+
+        <span class="login-field-number">01 / 01</span>
+      </div>
+
+      <div class="login-input-wrap">
+        <svg viewBox="0 0 24 24"
+             class="login-input-icon"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="1.8">
+          <rect x="5" y="10" width="14" height="11" rx="2"/>
+          <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+        </svg>
+
+        <input
+          id="wheel8AdminPassword"
+          type="password"
+          placeholder="Input password"
+          autocomplete="current-password"
+          maxlength="256"
+          required
+        >
+
+        <button
+          id="toggleWheel8Password"
+          type="button"
+          class="login-password-toggle"
+          aria-label="Hiện mật khẩu"
+          aria-pressed="false"
+        >
+          <svg viewBox="0 0 24 24"
+               width="20"
+               height="20"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="1.7"
+               stroke-linecap="round"
+               stroke-linejoin="round">
+            <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- LOGIN BUTTON -->
+    <button
+      id="wheel8LoginBtn"
+      class="login-submit"
+      type="submit"
+    >
+      <span class="login-btn-symbol">⌁</span>
+      <span>LOGIN</span>
+      <span class="login-btn-arrow">→</span>
+    </button>
+
+    <!-- MESSAGE -->
+    <div
+      id="wheel8LoginMessage"
+      role="status"
+      aria-live="polite"
+    ></div>
+
+    <!-- SECURITY INFO -->
+    <div class="login-security-info">
+      <div class="login-security-mark">
+        <span class="security-small-dot"></span>
+        SECURE AUTHENTICATION
+      </div>
+
+      <span>ENCRYPTED CONNECTION REQUIRED</span>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="wheel8-login-footer">
+      <div class="login-footer-rule"></div>
+
+      <span>WHEEL8 COMMAND SYSTEM</span>
+      <span class="login-footer-separator">•</span>
+      <span>RESTRICTED ACCESS</span>
+    </div>
+
+  </form>
+
+  <div class="login-background-label">
+    TACTICAL OPERATIONS · ADMINISTRATION TERMINAL
+  </div>
+
+</div>
+
+
+
+<!-- =====================================
+     TACTICAL COMMAND CENTER
+===================================== -->
+
+<header class="tactical-header">
+  <div class="tactical-brand">
+    <div class="brand-emblem">✦</div>
+
+    <div class="brand-copy">
+      <div class="brand-eyebrow">MILITARY CONTROL SYSTEM</div>
+      <h1>COMMAND CENTER</h1>
+      <p>MILITARY · OPERATIONS DASHBOARD</p>
+    </div>
+  </div>
+
+
+
+<div class="admin-header-actions">
+
+  <!-- THEME SWITCHER -->
+  <div id="w8AdminThemeSwitcher">
+
+    <button
+      type="button"
+      data-theme="military"
+      onclick="w8AdminSetTheme('military')">
+      MILITARY
+    </button>
+
+    <button
+      type="button"
+      data-theme="titanium"
+      onclick="w8AdminSetTheme('titanium')">
+      FRUIT
+    </button>
+
+  </div>
+
+  <!-- SERVER INDICATOR -->
+  <div class="system-indicator">
+    <span class="system-dot"></span>
+    <span>ADMIN CONSOLE</span>
+  </div>
+
+</div>
+
+
+
+</header>
+
+<main class="tactical-layout">
+
+  <!-- THÔNG TIN PHIÊN -->
+  <section class="tactical-card session-panel">
+
+    <div class="tactical-card-head">
+      <div class="head-text">
+        <span class="head-index">01 / OVERVIEW</span>
+        <h2>Giám sát phiên</h2>
+        <p>Thông tin thời gian thực</p>
+      </div>
+
+      <span class="head-symbol">◈</span>
+    </div>
+
+    <div class="session-stats">
+
+      <div class="stat-block">
+        <span class="stat-label">CURRENT ROUND</span>
+        <strong id="round" class="stat-round">--</strong>
+      </div>
+
+      <div class="stat-block stat-timer">
+        <span class="stat-label">TIME REMAINING</span>
+        <strong id="time" class="timer">0s</strong>
+      </div>
+
+    </div>
+
+    <div class="result-display">
+      <div class="result-topline">
+        <span class="result-live-dot"></span>
+        <span>ROUND RESULT MONITOR</span>
+        <span class="result-corner">W8</span>
+      </div>
+
+      <div class="slot-box">
+        <div class="slot-image-stage">
+          <img
+            id="slotImg"
+            class="slot-img-admin"
+            alt="Wheel8 result"
+          >
+        </div>
+      </div>
+
+      <div class="result-multiplier">
+        <span>MULTIPLIER</span>
+        <strong class="multi">x<span id="multi">0</span></strong>
+      </div>
+
+    </div>
+
+    <div class="panel-footnote">
+      <span class="footnote-mark">●</span>
+      REAL-TIME MONITORING
+    </div>
+
+  </section>
+
+  <!-- KHU VỰC ĐIỀU KHIỂN -->
+  <section class="tactical-card control-panel">
+
+    <div class="tactical-card-head">
+      <div class="head-text">
+        <span class="head-index">02 / CONTROL PANEL</span>
+        <h2>Điều khiển kết quả</h2>
+        <p>Chọn mục tiêu điều khiển</p>
+      </div>
+
+      <span class="head-symbol">⌖</span>
+    </div>
+
+    <div class="control-section-label">
+      <span>STANDARD SLOTS</span>
+      <span>01 — 08</span>
+    </div>
+
+    <div class="override-grid-img">
+
+      <img src="/assets/police/slot1.png"
+           onclick="setSlot(1)" data-slot="1" alt="Slot 1">
+
+      <img src="/assets/police/slot8.png"
+           onclick="setSlot(8)" data-slot="8" alt="Slot 8">
+
+      <img src="/assets/police/slot7.png"
+           onclick="setSlot(7)" data-slot="7" alt="Slot 7">
+
+      <img src="/assets/police/slot6.png"
+           onclick="setSlot(6)" data-slot="6" alt="Slot 6">
+
+      <img src="/assets/police/slot2.png"
+           onclick="setSlot(2)" data-slot="2" alt="Slot 2">
+
+      <img src="/assets/police/slot3.png"
+           onclick="setSlot(3)" data-slot="3" alt="Slot 3">
+
+      <img src="/assets/police/slot4.png"
+           onclick="setSlot(4)" data-slot="4" alt="Slot 4">
+
+      <img src="/assets/police/slot5.png"
+           onclick="setSlot(5)" data-slot="5" alt="Slot 5">
+
+    </div>
+
+    <div class="control-section-label special-label">
+      <span>SPECIAL EVENTS</span>
+      <span>02 MODES</span>
+    </div>
+
+    <div class="event-grid">
+      <div class="event-option">
+        <span class="event-tag">EVENT A</span>
+        <img
+          src="/assets/police/event-x5-all.png"
+          onclick="setEvent('x5-all')"
+          data-event="x5-all"
+          alt="Event All x5"
+        >
+        <span class="event-name">ALL x5</span>
+      </div>
+
+      <div class="event-option">
+        <span class="event-tag">EVENT B</span>
+        <img
+          src="/assets/police/event-x45-all.png"
+          onclick="setEvent('x45-all')"
+          data-event="x45-all"
+          alt="Event All x45"
+        >
+        <span class="event-name">ALL x45</span>
+      </div>
+    </div>
+
+    <div class="control-note">
+      <span>SECURE CONTROL</span>
+      <span>AUTHENTICATED SESSION</span>
+    </div>
+
+  </section>
+
+  <!-- SLOT POOL -->
+  <section class="tactical-card pool-panel">
+
+    <div class="tactical-card-head">
+      <div class="head-text">
+        <span class="head-index">03 / LIVE ANALYTICS</span>
+        <h2>Thống kê Slot Pool</h2>
+        <p>Phân bổ giá trị theo từng slot</p>
+      </div>
+
+      <span class="head-symbol">▥</span>
+    </div>
+
+    <div id="poolList" class="pool-grid"></div>
+
+    <div class="panel-footnote">
+      <span class="footnote-mark">●</span>
+      LIVE POOL DATA
+    </div>
+
+  </section>
+
+  <!-- PLAYER BETS -->
+  <section class="tactical-card players-panel">
+
+    <div class="tactical-card-head">
+      <div class="head-text">
+        <span class="head-index">04 / PLAYER ACTIVITY</span>
+        <h2>Danh sách người chơi</h2>
+        <p>Theo dõi hoạt động theo phiên</p>
+      </div>
+
+      <span class="head-symbol">◎</span>
+    </div>
+
+    <div class="players-table-head">
+      <span>PLAYER / POSITION</span>
+      <span>TOTAL</span>
+    </div>
+
+    <div id="betList" class="bet-list"></div>
+
+  </section>
+
+</main>
+
+
+
+<!-- ==========================================
+     MILITARY ADMIN NOTIFICATION
+========================================== -->
+
+<div
+  id="wheel8AdminNotice"
+  class="wheel8-admin-notice"
+  role="alert"
+  aria-live="assertive"
+  hidden>
+
+  <div class="wheel8-notice-icon">
+    ⚠
+  </div>
+
+  <div class="wheel8-notice-content">
+
+    <div class="wheel8-notice-title">
+      COMMAND WARNING
+    </div>
+
+    <div
+      id="wheel8NoticeMessage"
+      class="wheel8-notice-message">
+    </div>
+
+    <div class="wheel8-notice-sub">
+      Thao tác không được thực hiện
+    </div>
+
+  </div>
+
+  <button
+    class="wheel8-notice-close"
+    type="button"
+    onclick="hideWheel8Notice()"
+    aria-label="Đóng thông báo">
+    ✕
+  </button>
+
+  <div class="wheel8-notice-progress"></div>
+
+</div>
+
+
+
+<footer class="tactical-footer">
+  MILITIRY COMMAND SYSTEM
+  <span>·</span>
+  MILITARY OPERATIONS INTERFACE
+</footer>
+
+
+<script>
+const me = JSON.parse(localStorage.getItem("user_profile") || "{}")
+
+const socket = io({
+  auth:{
+    uid: me.uid,
+    deviceId: me.deviceId || null
+  }
+})
+
+
+
+// ==========================================
+// 🔐 WHEEL8 ADMIN LOGIN CONTROLLER
+// ==========================================
+
+let wheel8AdminUnlocked = false;
+
+const wheel8LoginScreen =
+  document.getElementById("wheel8LoginScreen");
+
+const wheel8LoginForm =
+  document.getElementById("wheel8LoginForm");
+
+const wheel8LoginInput =
+  document.getElementById("wheel8AdminPassword");
+
+const wheel8LoginBtn =
+  document.getElementById("wheel8LoginBtn");
+
+const wheel8LoginMessage =
+  document.getElementById("wheel8LoginMessage");
+
+function lockWheel8Admin(message = "") {
+  wheel8AdminUnlocked = false;
+
+  document.body.classList.remove(
+    "wheel8-admin-unlocked"
+  );
+
+  wheel8LoginScreen.classList.remove("hidden");
+  wheel8LoginInput.value = "";
+  wheel8LoginBtn.disabled = false;
+  wheel8LoginMessage.textContent = message;
+}
+
+function unlockWheel8Admin() {
+  wheel8AdminUnlocked = true;
+
+  document.body.classList.add(
+    "wheel8-admin-unlocked"
+  );
+
+  wheel8LoginScreen.classList.add("hidden");
+  wheel8LoginInput.value = "";
+  wheel8LoginMessage.textContent = "";
+  wheel8LoginBtn.disabled = false;
+}
+
+socket.on("connect", () => {
+  console.log("✅ WHEEL8 SOCKET CONNECTED");
+  lockWheel8Admin();
+});
+
+socket.on("disconnect", () => {
+  lockWheel8Admin("Mất kết nối đến máy chủ.");
+});
+
+wheel8LoginForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+
+  const password = wheel8LoginInput.value;
+
+  if (!password) {
+    wheel8LoginMessage.textContent =
+      "Vui lòng nhập mật khẩu quản trị.";
+    return;
+  }
+
+  if (!socket.connected) {
+    wheel8LoginMessage.textContent =
+      "Chưa kết nối được máy chủ.";
+    return;
+  }
+
+  wheel8LoginBtn.disabled = true;
+  wheel8LoginMessage.textContent = "Đang xác thực...";
+
+  socket.timeout(10000).emit(
+    "wheel8-admin-login",
+    { password },
+    (err, result) => {
+
+      wheel8LoginBtn.disabled = false;
+
+      if (err) {
+        wheel8LoginMessage.textContent =
+          "Không nhận được phản hồi từ server.";
+        return;
+      }
+
+      if (!result?.ok) {
+        wheel8LoginMessage.textContent =
+          result?.message || "Xác thực thất bại.";
+
+        wheel8LoginInput.value = "";
+        wheel8LoginInput.focus();
+        return;
+      }
+
+      unlockWheel8Admin();
+    }
+  );
+});
+
+
+socket.on("connect_error",(err)=>{
+  console.log("❌ CONNECT ERROR:", err.message)
+})
+
+socket.on("admin-wheel8-secret", (data) => {
+
+    document.getElementById("round").textContent =
+        data.roundId ?? "--";
+
+    const img = document.getElementById("slotImg");
+
+    // Ưu tiên hình EVENT nếu server gửi sự kiện
+    if (data.event === "x5-all") {
+
+        img.src = "/assets/police/event-x5-all.png";
+
+    } else if (data.event === "x45-all") {
+
+        img.src = "/assets/police/event-x45-all.png";
+
+    } else if (
+        Number.isInteger(data.slot) &&
+        data.slot >= 1 &&
+        data.slot <= 8
+    ) {
+
+        img.src = `/assets/police/slot${data.slot}.png`;
+
+    } else {
+
+        // Không tạo đường dẫn slotnull.png
+        img.removeAttribute("src");
+        console.warn("Invalid Wheel8 slot:", data);
+    }
+
+    // Hiệu ứng khi cập nhật
+    img.classList.remove("flash");
+    void img.offsetWidth;
+    img.classList.add("flash");
+
+    setTimeout(() => {
+        img.classList.remove("flash");
+    }, 200);
+
+    document.getElementById("multi").textContent =
+        data.multiplier ?? 0;
+
+});
+
+socket.on("wheel8-timer",(remain)=>{
+
+  const el = document.getElementById("time")
+
+  el.textContent = remain + "s"
+
+  if(remain <= 5){
+    el.classList.add("danger")
+  }else{
+    el.classList.remove("danger")
+  }
+
+})
+
+
+
+function highlightOverride(selector) {
+  document.querySelectorAll(
+    ".override-grid-img img, .event-grid img"
+  ).forEach(img => {
+    img.classList.remove("active");
+  });
+
+  const target = document.querySelector(selector);
+
+  if (target) {
+    target.classList.add("active");
+  }
+}
+
+
+
+// ==========================================
+// 🛠 OVERRIDE WHEEL8 - AUTH REQUIRED
+// ==========================================
+
+
+
+/* ==========================================
+   MILITARY NOTIFICATION SYSTEM
+========================================== */
+
+let wheel8NoticeTimer = null;
+let wheel8NoticeHideTimer = null;
+
+function showWheel8Notice(message) {
+
+  const notice =
+    document.getElementById("wheel8AdminNotice");
+
+  const text =
+    document.getElementById("wheel8NoticeMessage");
+
+  if (!notice || !text) return;
+
+  clearTimeout(wheel8NoticeTimer);
+  clearTimeout(wheel8NoticeHideTimer);
+
+  text.textContent = String(
+    message || "Có lỗi xảy ra."
+  );
+
+  // Khởi động lại hiệu ứng nếu thông báo liên tục
+  notice.classList.remove("is-visible");
+  notice.hidden = false;
+
+  void notice.offsetWidth;
+
+  requestAnimationFrame(() => {
+    notice.classList.add("is-visible");
+  });
+
+  // Tự động đóng sau 3.5 giây
+  wheel8NoticeTimer = setTimeout(() => {
+    hideWheel8Notice();
+  }, 3500);
+
+}
+
+function hideWheel8Notice() {
+
+  const notice =
+    document.getElementById("wheel8AdminNotice");
+
+  if (!notice) return;
+
+  clearTimeout(wheel8NoticeTimer);
+  clearTimeout(wheel8NoticeHideTimer);
+
+  notice.classList.remove("is-visible");
+
+  wheel8NoticeHideTimer = setTimeout(() => {
+    notice.hidden = true;
+  }, 300);
+
+}
+
+
+
+function sendWheel8Override(data, selector) {
+
+  if (!wheel8AdminUnlocked || !socket.connected) {
+    lockWheel8Admin("Vui lòng xác thực mật khẩu.");
+    return;
+  }
+
+  socket.timeout(10000).emit(
+    "admin-wheel8-override",
+    data,
+    (err, result) => {
+
+if (err) {
+  showWheel8Notice("Không nhận được phản hồi từ server.");
+  return;
+}
+if (!result?.ok) {
+
+  showWheel8Notice(
+    result?.message || "Không thể cập nhật."
+  );
+
+  if (result?.message?.includes("chưa xác thực")) {
+    lockWheel8Admin("Vui lòng đăng nhập lại.");
+  }
+
+  return;
+}
+
+      highlightOverride(selector);
+    }
+  );
+}
+
+
+function setSlot(slot) {
+  const n = Number(slot);
+
+  if (!Number.isInteger(n) || n < 1 || n > 8) {
+    return;
+  }
+
+  sendWheel8Override(
+    { slot: n },
+    `[data-slot="${n}"]`
+  );
+}
+
+function setEvent(event) {
+
+  if (!["x5-all", "x45-all"].includes(event)) {
+    return;
+  }
+
+  sendWheel8Override(
+    { event },
+    `[data-event="${event}"]`
+  );
+}
+
+
+
+socket.on("admin-wheel8-bets-update",(data)=>{
+
+  // ======================
+  // 💰 SLOT POOL
+  // ======================
+  const poolBox = document.getElementById("poolList")
+  poolBox.innerHTML = ""
+
+  const max = Math.max(...data.pool,1)
+
+  // 🔥 thứ tự slot mới
+  const order = [1,8,7,6,2,3,4,5]
+
+  order.forEach(slot=>{
+
+    const i = slot - 1
+    const v = data.pool[i]
+
+    const div = document.createElement("div")
+    div.className = "pool-slot"
+
+    // 🔥 phân loại
+    if(v > max * 0.6){
+      div.classList.add("hot")
+    }else if(v < max * 0.2){
+      div.classList.add("low")
+    }
+
+    // 📊 % bar
+    const percent = (v / max) * 100
+    div.style.setProperty("--percent", percent + "%")
+
+    div.innerHTML = `
+      <img src="/assets/police/slot${slot}.png">
+      <div class="pool-value">${v}</div>
+    `
+
+    poolBox.appendChild(div)
+
+  })
+
+
+  // ======================
+  // 👤 PLAYER BETS
+  // ======================
+  const betBox = document.getElementById("betList")
+  betBox.innerHTML = ""
+
+  if(!data.players || !data.players.length){
+    betBox.innerHTML = "<div>NO BETS</div>"
+    return
+  }
+
+  const players = data.players.sort((a,b)=>b.total - a.total)
+
+  players.forEach((p,index)=>{
+
+    const div = document.createElement("div")
+    div.className = "bet-card"
+
+    if(index === 0){
+      div.style.boxShadow = "0 0 10px #00ff88"
+    }
+
+let row1 = ""
+let row2 = ""
+
+const row1Slots = [1,8,7,6]
+const row2Slots = [2,3,4,5]
+
+row1Slots.forEach(s=>{
+
+  const v = p.slots[s-1]
+  const active = v > 0 ? "active" : ""
+
+  row1 += `
+    <div class="bet-slot ${active}">
+      <img src="/assets/police/slot${s}.png">
+      ${v > 0 ? `<span>${v}</span>` : ``}
+    </div>
+  `
+})
+
+row2Slots.forEach(s=>{
+
+  const v = p.slots[s-1]
+  const active = v > 0 ? "active" : ""
+
+  row2 += `
+    <div class="bet-slot ${active}">
+      <img src="/assets/police/slot${s}.png">
+      ${v > 0 ? `<span>${v}</span>` : ``}
+    </div>
+  `
+})
+
+const slotsHTML = `
+  <div class="bet-row">${row1}</div>
+  <div class="bet-row">${row2}</div>
+`
+
+div.innerHTML = `
+  <div class="bet-left">
+
+    <div>
+
+      <div class="bet-name">${p.name}</div>
+
+<div class="bet-coins">
+💰 ${p.coins}
+</div>
+
+      <div class="bet-slots">
+        ${slotsHTML}
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bet-total">
+    ${p.total}
+  </div>
+`
+
+    betBox.appendChild(div)
+
+  })
+
+})
+
+
+
+// ==========================================
+// SHOW / HIDE WHEEL8 ADMIN PASSWORD
+// ==========================================
+
+const toggleWheel8Password =
+  document.getElementById("toggleWheel8Password");
+
+if (toggleWheel8Password && wheel8LoginInput) {
+
+  toggleWheel8Password.addEventListener("click", () => {
+
+    const isHidden =
+      wheel8LoginInput.type === "password";
+
+    wheel8LoginInput.type = isHidden
+      ? "text"
+      : "password";
+
+    toggleWheel8Password.setAttribute(
+      "aria-pressed",
+      String(isHidden)
+    );
+
+    toggleWheel8Password.setAttribute(
+      "aria-label",
+      isHidden ? "Ẩn mật khẩu" : "Hiện mật khẩu"
+    );
+
+    toggleWheel8Password.style.color =
+      isHidden ? "#e5c88b" : "";
+
+    wheel8LoginInput.focus();
+  });
+}
+
+
+
+</script>
+
+
+
+<script>
+/* ==========================================
+   WHEEL8 ADMIN - THEME SYNCHRONIZATION
+   MILITARY / FRUIT
+========================================== */
+
+const W8_ADMIN_THEME_STORE = "w8_image_theme";
+
+const W8_ADMIN_ASSET_BASE =
+    "/assets/police/";
+
+const W8_ADMIN_FRUIT_BASE =
+    "/assets/police/theme-titanium/";
+
+let w8AdminCurrentTheme = "military";
+
+// Các ảnh slot/event có phiên bản FRUIT
+const W8_ADMIN_THEME_ASSETS =
+    /^(slot[1-8]|event-x5-all|event-x45-all)\.png$/;
+
+// Ghi nhớ ảnh FRUIT không tồn tại
+const w8AdminMissingFruit = new Set();
+
+/* ==========================================
+   GET ORIGINAL MILITARY IMAGE PATH
+========================================== */
+
+function w8AdminGetBasePath(src) {
+
+    if (!src) return null;
+
+    let url;
+
+    try {
+        url = new URL(src, location.href);
+    } catch (_) {
+        return null;
+    }
+
+    // Chỉ xử lý ảnh cùng website
+    if (url.origin !== location.origin) {
+        return null;
+    }
+
+    const path = url.pathname;
+
+    let filename = "";
+
+    if (path.startsWith(W8_ADMIN_FRUIT_BASE)) {
+
+        filename = path.slice(
+            W8_ADMIN_FRUIT_BASE.length
+        );
+
+    } else if (
+        path.startsWith(W8_ADMIN_ASSET_BASE)
+    ) {
+
+        filename = path.slice(
+            W8_ADMIN_ASSET_BASE.length
+        );
+
+    } else {
+        return null;
+    }
+
+    if (!W8_ADMIN_THEME_ASSETS.test(filename)) {
+        return null;
+    }
+
+    return W8_ADMIN_ASSET_BASE + filename;
+}
+
+/* ==========================================
+   SYNC INDIVIDUAL IMAGE
+========================================== */
+
+function w8AdminSyncImage(img) {
+
+    if (!(img instanceof HTMLImageElement)) {
+        return;
+    }
+
+    const raw = img.getAttribute("src");
+
+    if (!raw) return;
+
+    const base = w8AdminGetBasePath(raw);
+
+    if (!base) return;
+
+    // Khi server cập nhật sang slot khác,
+    // cập nhật thông tin ảnh gốc.
+    if (img.dataset.w8AdminBase !== base) {
+
+        img.dataset.w8AdminBase = base;
+
+        delete img.dataset.w8AdminMissing;
+    }
+
+    const fruit =
+        W8_ADMIN_FRUIT_BASE +
+        base.slice(W8_ADMIN_ASSET_BASE.length);
+
+    const useFruit =
+        w8AdminCurrentTheme === "titanium" &&
+        img.dataset.w8AdminMissing !== "1" &&
+        !w8AdminMissingFruit.has(fruit);
+
+    const target = useFruit
+        ? fruit
+        : base;
+
+    let currentPath;
+
+    try {
+        currentPath = new URL(
+            raw,
+            location.href
+        ).pathname;
+    } catch (_) {
+        return;
+    }
+
+    if (currentPath !== target) {
+        img.setAttribute("src", target);
+    }
+}
+
+/* ==========================================
+   SYNC ALL SLOT AND EVENT IMAGES
+========================================== */
+
+function w8AdminSyncAllImages() {
+
+    document.querySelectorAll("img").forEach(
+        w8AdminSyncImage
+    );
+}
+
+/* ==========================================
+   FRUIT IMAGE FALLBACK
+========================================== */
+
+document.addEventListener(
+    "error",
+    function(event) {
+
+        const img = event.target;
+
+        if (!(img instanceof HTMLImageElement)) {
+            return;
+        }
+
+        const raw = img.getAttribute("src");
+
+        if (!raw) return;
+
+        let path;
+
+        try {
+            path = new URL(
+                raw,
+                location.href
+            ).pathname;
+        } catch (_) {
+            return;
+        }
+
+        if (!path.startsWith(W8_ADMIN_FRUIT_BASE)) {
+            return;
+        }
+
+        const base = w8AdminGetBasePath(raw);
+
+        if (!base) return;
+
+        // Không thử lại ảnh FRUIT bị thiếu
+        w8AdminMissingFruit.add(path);
+
+        img.dataset.w8AdminMissing = "1";
+
+        // Hiển thị ảnh MILITARY thay thế
+        img.setAttribute("src", base);
+
+    },
+    true
+);
+
+/* ==========================================
+   WATCH SOCKET-GENERATED IMAGES
+========================================== */
+
+const w8AdminImageObserver =
+    new MutationObserver(function(records) {
+
+        for (const record of records) {
+
+            // Ảnh hiện tại được thay đổi src
+            if (
+                record.type === "attributes" &&
+                record.target instanceof HTMLImageElement
+            ) {
+
+                w8AdminSyncImage(record.target);
+                continue;
+            }
+
+            // Ảnh mới được tạo trong Slot Pool
+            // hoặc danh sách người chơi
+            if (record.type === "childList") {
+
+                for (const node of record.addedNodes) {
+
+                    if (node instanceof HTMLImageElement) {
+
+                        w8AdminSyncImage(node);
+
+                    } else if (node instanceof Element) {
+
+                        node.querySelectorAll("img").forEach(
+                            w8AdminSyncImage
+                        );
+
+                    }
+                }
+            }
+        }
+
+    });
+
+w8AdminImageObserver.observe(
+    document.body,
+    {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["src"]
+    }
+);
+
+/* ==========================================
+   UPDATE VISIBLE TEXT
+========================================== */
+
+function w8AdminThemeText(selector, text) {
+
+    const element =
+        document.querySelector(selector);
+
+    if (element) {
+        element.textContent = text;
+    }
+}
+
+/* ==========================================
+   APPLY THEME
+========================================== */
+
+function w8AdminSetTheme(theme, save = true) {
+
+    w8AdminCurrentTheme =
+        theme === "titanium"
+            ? "titanium"
+            : "military";
+
+    const isFruit =
+        w8AdminCurrentTheme === "titanium";
+
+    // 1. CSS THEME
+    document.body.classList.toggle(
+        "w8-theme-titanium",
+        isFruit
+    );
+
+    // 2. DOCUMENT TITLE
+    document.title = isFruit
+        ? "FRUIT | CONTROL CENTER"
+        : "MILITARY | COMMAND CENTER";
+
+    // 3. DASHBOARD BRANDING
+    w8AdminThemeText(
+        ".tactical-brand .brand-eyebrow",
+        isFruit
+            ? "FRUIT CONTROL SYSTEM"
+            : "MILITARY CONTROL SYSTEM"
+    );
+
+    w8AdminThemeText(
+        ".tactical-brand .brand-copy h1",
+        isFruit
+            ? "FRUIT CONTROL CENTER"
+            : "COMMAND CENTER"
+    );
+
+    w8AdminThemeText(
+        ".tactical-brand .brand-copy p",
+        isFruit
+            ? "FRUIT · OPERATIONS DASHBOARD"
+            : "MILITARY · OPERATIONS DASHBOARD"
+    );
+
+    w8AdminThemeText(
+        ".tactical-brand .brand-emblem",
+        isFruit ? "🍓" : "✦"
+    );
+
+    // 4. LOGIN SCREEN
+    w8AdminThemeText(
+        ".login-eyebrow",
+        isFruit
+            ? "FRUIT CONTROL SYSTEM"
+            : "MILITARY CONTROL SYSTEM"
+    );
+
+    const loginTitle =
+        document.querySelector(
+            ".wheel8-login-title"
+        );
+
+    if (loginTitle) {
+        loginTitle.innerHTML = isFruit
+            ? "FRUIT <span>CENTER</span>"
+            : "COMMAND <span>CENTER</span>";
+    }
+
+    w8AdminThemeText(
+        ".login-background-label",
+        isFruit
+            ? "FRUIT OPERATIONS · ADMINISTRATION TERMINAL"
+            : "TACTICAL OPERATIONS · ADMINISTRATION TERMINAL"
+    );
+
+    // 5. NOTIFICATION TITLE
+    w8AdminThemeText(
+        ".wheel8-notice-title",
+        isFruit
+            ? "FRUIT CONTROL NOTICE"
+            : "COMMAND WARNING"
+    );
+
+    // 6. FOOTER
+    const footer =
+        document.querySelector(".tactical-footer");
+
+    if (footer) {
+
+        footer.innerHTML = isFruit
+            ? "FRUIT CONTROL SYSTEM <span>·</span> FRUIT OPERATIONS INTERFACE"
+            : "MILITARY COMMAND SYSTEM <span>·</span> MILITARY OPERATIONS INTERFACE";
+
+    }
+
+    // 7. THEME BUTTON STATES
+    document.querySelectorAll(
+        "#w8AdminThemeSwitcher [data-theme]"
+    ).forEach(function(button) {
+
+        const active =
+            button.dataset.theme ===
+            w8AdminCurrentTheme;
+
+        button.classList.toggle(
+            "is-current",
+            active
+        );
+
+        button.setAttribute(
+            "aria-pressed",
+            String(active)
+        );
+
+    });
+
+    // 8. SYNC ALL IMAGES
+    w8AdminSyncAllImages();
+
+    // 9. SAVE THEME
+    if (save) {
+
+        try {
+
+            localStorage.setItem(
+                W8_ADMIN_THEME_STORE,
+                w8AdminCurrentTheme
+            );
+
+        } catch (_) {}
+
+    }
+}
+
+/* ==========================================
+   RESTORE GAME THEME
+========================================== */
+
+let w8AdminSavedTheme = "military";
+
+try {
+
+    w8AdminSavedTheme =
+        localStorage.getItem(
+            W8_ADMIN_THEME_STORE
+        ) || "military";
+
+} catch (_) {}
+
+w8AdminSetTheme(w8AdminSavedTheme, false);
+
+/* ==========================================
+   SYNC WITH OTHER TABS
+========================================== */
+
+window.addEventListener(
+    "storage",
+    function(event) {
+
+        if (
+            event.key === W8_ADMIN_THEME_STORE
+        ) {
+
+            w8AdminSetTheme(
+                event.newValue || "military",
+                false
+            );
+        }
+
+    }
+);
+
+</script>
+
+
+
+</body>
+</html>

@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>RPS Control</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{
+  margin:0;
+  background:#000;
+  color:#fff;
+  font-family:system-ui;
+}
+
+.admin-wrap{
+  padding:20px;
+}
+
+.card{
+  padding:20px;
+  border-radius:16px;
+  background:rgba(0,255,180,.1);
+  border:1px solid rgba(0,255,180,.4);
+  box-shadow:0 0 30px rgba(0,255,180,.3);
+}
+
+.title{
+  font-size:22px;
+  font-weight:900;
+  color:#00ffb0;
+  margin-bottom:15px;
+}
+
+.secret{
+  font-size:30px;
+  font-weight:900;
+  text-align:center;
+  margin-top:15px;
+  text-shadow:0 0 20px rgba(0,255,180,.8);
+}
+
+.refresh{
+  margin-top:15px;
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  font-weight:800;
+  cursor:pointer;
+  background:#00ffb0;
+  color:#001a12;
+}
+
+
+
+.override-wrap{
+  margin-top:25px;
+  display:flex;
+  justify-content:center;
+  gap:25px;
+}
+
+.override-hand{
+  width:90px;
+  height:90px;
+  cursor:pointer;
+  transition: all .25s ease;
+  filter: drop-shadow(0 0 15px rgba(0,255,180,.6));
+}
+
+.override-hand:hover{
+  transform: scale(1.15);
+  filter: drop-shadow(0 0 25px #00ffb0);
+}
+
+.override-hand:active{
+  transform: scale(.95);
+}
+
+
+
+.bet-row{
+  padding:8px;
+  border-bottom:1px solid rgba(0,255,180,.2);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.bet-name{
+  flex:1;
+}
+
+.bet-amount{
+  color:#00ffb0;
+  font-weight:700;
+}
+
+.bet-hand-img{
+  width:40px;
+  height:40px;
+  filter: drop-shadow(0 0 8px rgba(0,255,180,.7));
+}
+
+
+.admin-modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+
+.admin-modal.hidden{
+  display:none;
+}
+
+.admin-modal-box{
+  width:320px;
+  padding:20px;
+  border-radius:16px;
+  background:#001a12;
+  border:1px solid rgba(0,255,180,.4);
+  box-shadow:0 0 30px rgba(0,255,180,.4);
+  text-align:center;
+}
+
+.admin-modal-title{
+  font-weight:900;
+  font-size:18px;
+  color:#00ffb0;
+  margin-bottom:10px;
+}
+
+.admin-modal-content{
+  margin-bottom:20px;
+}
+
+.admin-modal-actions{
+  display:flex;
+  justify-content:center;
+  gap:15px;
+}
+
+.modal-btn{
+  padding:8px 16px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:700;
+}
+
+.modal-btn.ok{
+  background:#00ffb0;
+  color:#001a12;
+}
+
+.modal-btn.cancel{
+  background:#222;
+  color:#fff;
+}
+
+
+</style>
+</head>
+
+<body>
+
+<div class="admin-wrap">
+
+  <div class="card">
+    <div class="title">✊ RPS Round Control</div>
+
+    <div>Round: <b id="roundId">--</b></div>
+    <div>Kết thúc lúc: <b id="endAt">--</b></div>
+    <div>Thời gian chốt phiên: <b id="countdown">--</b></div>
+
+<div class="secret" id="secretHand">
+  <img id="secretImg" src="/assets/rps/unknown.png" 
+       style="width:100px;height:100px;">
+</div>
+
+
+
+<div style="margin-top:20px">
+  <div style="font-weight:800;color:#00ffb0">
+    👥 Người đã cược (<span id="betCount">0</span>)
+  </div>
+
+  <div id="betList" style="
+    margin-top:10px;
+    max-height:200px;
+    overflow:auto;
+    font-size:14px;
+  ">
+  </div>
+</div>
+
+
+
+<div class="override-wrap">
+
+  <img src="/assets/rps/rock.png"
+       class="override-hand"
+       onclick="override('rock')">
+
+  <img src="/assets/rps/paper.png"
+       class="override-hand"
+       onclick="override('paper')">
+
+  <img src="/assets/rps/scissors.png"
+       class="override-hand"
+       onclick="override('scissors')">
+
+</div>
+
+
+  </div>
+
+</div>
+
+
+
+<!-- 🔥 ADMIN MODAL -->
+<div id="adminModal" class="admin-modal hidden">
+  <div class="admin-modal-box">
+
+    <div class="admin-modal-title" id="adminModalTitle">
+      Thông báo
+    </div>
+
+    <div class="admin-modal-content" id="adminModalContent">
+      Nội dung
+    </div>
+
+    <div class="admin-modal-actions">
+      <button id="adminModalCancel" class="modal-btn cancel hidden">
+        Hủy
+      </button>
+
+      <button id="adminModalOk" class="modal-btn ok">
+        OK
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+
+
+
+let countdownInterval = null;
+let currentEndAt = 0;
+let currentRoundId = null;
+let betList = [];
+
+
+
+  const socket = io({
+  auth:{
+    uid: JSON.parse(localStorage.getItem("user_profile"))?.uid
+  }
+});
+
+
+const imgMap = {
+  rock: "/assets/rps/rock.png",
+  paper: "/assets/rps/paper.png",
+  scissors: "/assets/rps/scissors.png"
+};
+
+
+
+socket.on("admin-rps-bet-new", data => {
+
+ if(currentRoundId && data.roundId !== currentRoundId) return;
+
+
+  betList.push(data);
+
+  renderBetList();
+});
+
+
+socket.on("admin-rps-bet-reset", data => {
+  betList = [];
+  renderBetList();
+});
+
+
+// 🔥 REALTIME UPDATE SECRET
+socket.on("admin-rps-secret-update", data => {
+
+  currentRoundId = data.roundId;
+
+  document.getElementById("roundId").textContent =
+    "#" + data.roundId;
+
+  document.getElementById("endAt").textContent =
+    new Date(data.endAt).toLocaleTimeString();
+
+const imgEl = document.getElementById("secretImg");
+
+imgEl.src =
+  imgMap[data.secretHand] || "/assets/rps/unknown.png";
+
+
+  if(data.overridden){
+    document.getElementById("secretHand").style.color = "#ff4444";
+  } else {
+    document.getElementById("secretHand").style.color = "#00ffb0";
+  }
+
+  // 🔥 RESET DANH SÁCH KHI ROUND MỚI
+  betList = [];
+  renderBetList();
+
+  startCountdown(data.endAt);
+
+  // 🔥 LOAD DANH SÁCH CƯỢC HIỆN TẠI
+  loadCurrentBets();
+});
+
+let nextReloadTimer = null;
+
+async function loadSecret(){
+
+
+  const profile = JSON.parse(
+    localStorage.getItem("user_profile")
+  );
+
+  if(!profile?.uid){
+   showModal({
+  title:"Lỗi",
+  content:"Chưa đăng nhập"
+});
+
+    return;
+  }
+
+  const res = await fetch("/api/admin/rps/secret",{
+    headers:{ "x-uid": profile.uid }
+  });
+
+  const data = await res.json();
+  if(!data.ok) return;
+
+  document.getElementById("roundId").textContent = "#" + data.roundId;
+  document.getElementById("endAt").textContent =
+    new Date(data.endAt).toLocaleTimeString();
+
+const imgEl = document.getElementById("secretImg");
+
+imgEl.src =
+  imgMap[data.secretHand] || "/assets/rps/unknown.png";
+
+  // ===============================
+  // 🔥 SYNC THEO endAt
+  // ===============================
+  if(nextReloadTimer){
+    clearTimeout(nextReloadTimer);
+  }
+
+  const now = Date.now();
+  const remain = data.endAt - now;
+
+  if(remain > 0){
+    nextReloadTimer = setTimeout(() => {
+      loadSecret();
+    }, remain + 100); // +100ms tránh lệch
+  }
+
+   startCountdown(data.endAt);
+ await loadCurrentBets(); 
+}
+
+loadSecret();
+
+
+
+async function override(hand){
+
+showModal({
+  title:"Xác nhận override",
+  content:"Override thành <b>" + hand.toUpperCase() + "</b> ?",
+  showCancel:true,
+  onOk: async () => {
+
+    const profile = JSON.parse(
+      localStorage.getItem("user_profile")
+    );
+
+    const res = await fetch("/api/admin/rps/override",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "x-uid": profile.uid
+      },
+      body: JSON.stringify({ hand })
+    });
+
+    const data = await res.json();
+
+    if(!data.ok){
+      showModal({
+        title:"Lỗi",
+        content:data.message || "Không thành công"
+      });
+      return;
+    }
+
+    showModal({
+      title:"Thành công",
+      content:"Đã override thành <b>" + data.secretHand.toUpperCase() + "</b>"
+    });
+
+    loadSecret();
+  }
+});
+
+return;
+
+
+  const profile = JSON.parse(
+    localStorage.getItem("user_profile")
+  );
+
+  const res = await fetch("/api/admin/rps/override",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "x-uid": profile.uid
+    },
+    body: JSON.stringify({ hand })
+  });
+
+  const data = await res.json();
+
+  if(!data.ok){
+    alert("Lỗi: " + (data.message || "Không thành công"));
+    return;
+  }
+
+  alert("Đã override thành " + data.secretHand.toUpperCase());
+  loadSecret();
+}
+
+
+
+function startCountdown(endAt){
+
+  currentEndAt = endAt;
+
+  if(countdownInterval){
+    clearInterval(countdownInterval);
+  }
+
+  function update(){
+    const remain = Math.max(
+      0,
+      Math.ceil((currentEndAt - Date.now()) / 1000)
+    );
+
+    document.getElementById("countdown").textContent =
+      remain + "s";
+
+    // 🔴 flash khi còn 5s
+    if(remain <= 5){
+      document.getElementById("countdown").style.color = "#ff4444";
+    }else{
+      document.getElementById("countdown").style.color = "#00ffb0";
+    }
+
+    if(remain <= 0){
+      clearInterval(countdownInterval);
+    }
+  }
+
+  update();
+  countdownInterval = setInterval(update, 1000);
+}
+
+
+
+
+function renderBetList(){
+
+  const box = document.getElementById("betList");
+  const count = document.getElementById("betCount");
+
+  count.textContent = betList.length;
+
+  const imgMap = {
+    rock: "/assets/rps/rock.png",
+    paper: "/assets/rps/paper.png",
+    scissors: "/assets/rps/scissors.png"
+  };
+
+  box.innerHTML = betList.map(o => `
+    <div class="bet-row">
+      <span class="bet-name">${o.name}</span>
+
+      <span class="bet-amount">
+        ${o.bet} 💎
+      </span>
+
+      <img 
+        src="${imgMap[o.hand] || '/assets/rps/unknown.png'}"
+        class="bet-hand-img"
+      >
+    </div>
+  `).join("");
+}
+
+
+async function loadCurrentBets(){
+
+  const profile = JSON.parse(
+    localStorage.getItem("user_profile")
+  );
+
+  if(!profile?.uid) return;
+
+  const res = await fetch("/api/admin/rps/bets",{
+    headers:{ "x-uid": profile.uid }
+  });
+
+  const data = await res.json();
+  if(!data.ok) return;
+
+  currentRoundId = data.roundId;
+
+  betList = data.list || [];
+
+  renderBetList();
+}
+
+
+
+
+function showModal({
+  title = "Thông báo",
+  content = "",
+  showCancel = false,
+  onOk = null
+}){
+
+  const modal = document.getElementById("adminModal");
+  const titleEl = document.getElementById("adminModalTitle");
+  const contentEl = document.getElementById("adminModalContent");
+  const okBtn = document.getElementById("adminModalOk");
+  const cancelBtn = document.getElementById("adminModalCancel");
+
+  titleEl.textContent = title;
+  contentEl.innerHTML = content;
+
+  cancelBtn.classList.toggle("hidden", !showCancel);
+
+  modal.classList.remove("hidden");
+
+  okBtn.onclick = () => {
+    modal.classList.add("hidden");
+    if(onOk) onOk();
+  };
+
+  cancelBtn.onclick = () => {
+    modal.classList.add("hidden");
+  };
+}
+
+
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,2674 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>Phân tích đầu tư</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/style.css">
+
+
+
+
+
+
+
+<style>
+
+html, body {
+  margin: 0;              /* 🔥 cái này thường bị quên */
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+
+.page-invest-detail {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;              /* 🔥 kéo nội dung sang trái */
+  padding: 0;
+  overflow-x: hidden;
+  background: #000;
+}
+
+
+.page-invest-detail section,
+.page-invest-detail .card {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+
+.detail-header {
+  padding-left: 12px;
+  padding-right: 12px;
+  box-sizing: border-box;
+}
+
+
+.chart-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+#priceChart {
+  display: block;
+  width: 100% !important;
+  max-width: 100%;
+}
+
+
+.history-table-wrap {
+  width: 100%;
+  overflow-x: auto;   /* chỉ table được scroll ngang */
+  -webkit-overflow-scrolling: touch;
+}
+
+.history-table {
+  width: 100%;
+  min-width: 100%;
+  border-collapse: collapse;
+}
+
+
+.page-invest-detail {
+  overscroll-behavior-x: none;
+  touch-action: pan-y;
+}
+
+
+.detail-header,
+.overlay-timer,
+.live-badge-fixed,
+.trend-overlay,
+.pnl-overlay {
+  max-width: 100vw;
+}
+
+
+
+/* ===== CHART CARD XỊN ===== */
+.detail-chart.chart-wrap {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding: 0;
+  overflow: hidden;
+
+  /* ✨ bo góc */
+ border-radius: 0 !important;
+
+  /* ✨ nền tối nhẹ */
+  background: linear-gradient(
+    180deg,
+    rgba(20,20,20,.95),
+    rgba(10,10,10,1)
+  );
+
+  /* ✨ shadow nhẹ, không bệt */
+  box-shadow:
+    0 8px 24px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+.detail-chart .overlay-timer {
+  left: 14px;
+  top: 14px;
+}
+
+.detail-chart .live-badge-fixed {
+  right: 14px;
+  top: 14px;
+}
+
+.detail-chart .trend-overlay {
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 50px;
+}
+
+
+.detail-chart .pnl-overlay {
+  right: 14px;
+  bottom: 6px;
+}
+
+
+
+/* ===== GRADIENT THEO XU HƯỚNG ===== */
+.detail-chart.chart-wrap {
+  transition: background 0.6s ease; /* mượt khi đổi màu */
+}
+
+/* 🟢 TĂNG */
+.detail-chart.trend-up {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 255, 153, 0.18),
+    rgba(10, 10, 10, 1)
+  );
+}
+
+/* 🔴 GIẢM */
+.detail-chart.trend-down {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 92, 92, 0.18),
+    rgba(10, 10, 10, 1)
+  );
+}
+
+/* ➖ SIDEWAY */
+.detail-chart.trend-neutral {
+  background: linear-gradient(
+    180deg,
+    rgba(120, 120, 120, 0.12),
+    rgba(10, 10, 10, 1)
+  );
+}
+
+
+/* ===== CINEMATIC HEIGHT ===== */
+.detail-chart.chart-wrap {
+  min-height: 55vh;      /* mobile & laptop */
+  max-height: 680px;     /* desktop to */
+  display: flex;
+  align-items: stretch;
+}
+
+@media (min-width: 1024px) {
+  .detail-chart.chart-wrap {
+    min-height: 60vh;
+    max-height: 720px;
+  }
+}
+
+
+/* canvas chiếm toàn bộ chiều cao chart */
+.detail-chart #priceChart {
+  height: 100% !important;
+}
+
+/* cinematic feel: vignette nhẹ */
+.detail-chart::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(0,0,0,0) 60%,
+      rgba(0,0,0,.35) 100%
+    );
+}
+
+
+
+.detail-chart .overlay-timer,
+.detail-chart .live-badge-fixed {
+  top: 18px;
+}
+
+
+
+
+
+/* đảm bảo overlay bám theo chart */
+.detail-chart { position: relative; }
+
+/* ===== HISTORY FLOATING BUTTON ===== */
+.history-fab{
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  z-index: 6;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 14px;
+  cursor: pointer;
+
+  display: grid;
+  place-items: center;
+
+  background: rgba(15,15,15,.75);
+  box-shadow: 0 10px 26px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  color: #fff;
+  font-size: 18px;
+  transform: translateZ(0);
+}
+.history-fab:active{ transform: scale(.96); }
+
+
+/* ===== BOTTOM SHEET MODAL ===== */
+.sheet.hidden{ display:none; }
+.sheet{
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+}
+.sheet-backdrop{
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+}
+.sheet-box{
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 0;
+  background: rgba(12,12,12,.98);
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
+  box-shadow: 0 -18px 60px rgba(0,0,0,.6);
+  max-height: 72vh;
+  overflow: hidden;
+  animation: sheetUp .18s ease-out;
+}
+@keyframes sheetUp{
+  from{ transform: translateY(18px); opacity: .7; }
+  to{ transform: translateY(0); opacity: 1; }
+}
+
+.sheet-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.sheet-title{
+  font-weight: 700;
+}
+.sheet-close{
+  border:0;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.06);
+  color:#fff;
+  cursor:pointer;
+}
+.sheet-body{
+  padding: 10px 12px 14px;
+}
+
+/* table trong sheet: scroll ngang riêng */
+.sheet-table{ overflow-x: auto; }
+
+
+
+/* ===== ORDERS FLOATING BUTTON ===== */
+.orders-fab{
+  position: absolute;
+  left: 64px;
+  bottom: 14px;              /* nằm trên icon lịch sử */
+  z-index: 6;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 14px;
+  cursor: pointer;
+
+  display: grid;
+  place-items: center;
+
+  background: rgba(15,15,15,.75);
+  box-shadow: 0 10px 26px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  color: #fff;
+  font-size: 18px;
+}
+.orders-fab:active{ transform: scale(.96); }
+
+
+#assetTitle{
+  display: flex;
+  align-items: center;      /* căn dọc */
+  justify-content: center;  /* căn ngang */
+  gap: 6px;                 /* khoảng cách icon – chữ */
+  text-align: center;
+}
+
+
+.asset-icon{
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  display: inline-block;
+}
+
+.header-center{
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  pointer-events: none; /* tránh đè click nút back */
+}
+
+.pnl-history-fab{
+  position:absolute;
+  left:114px;
+  bottom:14px;
+  z-index:7;
+  width:44px;
+  height:44px;
+  border-radius:14px;
+  border:0;
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+  background:rgba(15,15,15,.75);
+  color:#fff;
+  font-size:18px;
+  box-shadow:0 10px 26px rgba(0,0,0,.45);
+}
+.pnl-history-fab:active{ transform:scale(.96); }
+
+
+.trade-result {
+  font-family: system-ui, sans-serif;
+  padding: 6px;
+}
+
+.tr-header {
+  text-align: center;
+  padding: 14px 10px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
+  margin-bottom: 14px;
+}
+
+.trade-result.win .tr-header {
+  box-shadow: 0 0 20px rgba(0,255,153,.25);
+}
+
+.trade-result.loss .tr-header {
+  box-shadow: 0 0 20px rgba(255,92,92,.25);
+}
+
+.tr-status {
+  font-size: 13px;
+  opacity: .85;
+  letter-spacing: .5px;
+}
+
+.tr-pnl {
+  font-size: 34px;
+  font-weight: 800;
+  margin: 6px 0;
+}
+
+.tr-coin {
+  font-size: 15px;
+  opacity: .9;
+}
+
+.tr-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.tr-grid div {
+  background: rgba(255,255,255,.04);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 13px;
+}
+
+.tr-grid span {
+  display: block;
+  opacity: .6;
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
+.tr-grid b {
+  font-size: 14px;
+}
+
+.tr-note {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 11px;
+  opacity: .5;
+}
+
+
+/* ===== RESULT FULLSCREEN MODAL ===== */
+.result-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: #000;
+}
+
+.result-modal.hidden { display: none; }
+
+.rm-box {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER */
+.rm-header {
+  padding: 24px 16px 20px;
+  text-align: center;
+  position: relative;
+}
+
+.result-modal.win .rm-header {
+  background: linear-gradient(180deg, rgba(0,255,153,.35), #000);
+}
+.result-modal.loss .rm-header {
+  background: linear-gradient(180deg, rgba(255,92,92,.35), #000);
+}
+
+.rm-close{
+  position: absolute;
+  top: 14px;
+  right: 14px;
+
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 0;
+
+  background: rgba(255,255,255,.12);
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  backdrop-filter: blur(6px);
+  box-shadow:
+    0 4px 14px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.15);
+}
+
+/* SVG icon */
+.rm-close-icon{
+  width: 18px;
+  height: 18px;
+
+  stroke: #fff;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+
+  opacity: .9;
+  transform: translate(0.5px, 0.5px); /* 🔥 FIX LỆCH THỊ GIÁC */
+
+}
+
+/* hover / active cho đã tay */
+.rm-close:hover .rm-close-icon{
+  stroke: #00ff99;
+}
+
+.rm-close:active{
+  transform: scale(.95);
+}
+
+
+
+.rm-status {
+  font-size: 14px;
+  opacity: .85;
+  letter-spacing: 1px;
+}
+
+.rm-percent {
+  font-size: 48px;
+  font-weight: 900;
+  margin-top: 8px;
+}
+
+.rm-coin {
+  margin-top: 6px;
+  font-size: 16px;
+  opacity: .9;
+}
+
+/* BODY */
+.rm-body {
+  flex: 1;
+  padding: 16px;
+}
+
+.rm-card {
+  background: rgba(255,255,255,.05);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.rm-card span {
+  font-size: 11px;
+  opacity: .6;
+}
+.rm-card b {
+  font-size: 15px;
+}
+
+/* FOOTER */
+.rm-footer {
+  padding: 14px;
+}
+.rm-footer button {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: 0;
+  font-size: 16px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #00ff99, #00cc88);
+  color: #000;
+}
+
+.direction-box{
+  display:flex;
+  gap:10px;
+  margin:12px 0;
+}
+
+/* base */
+.dir{
+  flex:1;
+  padding:12px 0;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.08);
+  font-weight:800;
+  font-size:15px;
+  letter-spacing:.3px;
+  cursor:pointer;
+
+  background: linear-gradient(180deg,#1f1f1f,#141414);
+  color:#ddd;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 6px 14px rgba(0,0,0,.45);
+
+  transition:
+    transform .08s ease,
+    box-shadow .15s ease,
+    background .25s ease,
+    color .2s ease;
+}
+
+/* hover (desktop) */
+.dir:hover{
+  background: linear-gradient(180deg,#262626,#181818);
+}
+
+/* press */
+.dir:active{
+  transform: scale(.97);
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,.6);
+}
+
+/* ACTIVE – LÊN */
+#btnUp.active{
+background: linear-gradient(135deg,#ff5c5c,#ff2f2f);
+  color:#000;
+  border-color: rgba(255,92,92,.6);
+
+  box-shadow:
+    0 0 0 2px rgba(255,92,92,.25),
+    0 10px 28px rgba(255,92,92,.45);
+}
+
+/* ACTIVE – XUỐNG */
+#btnDown.active{
+  background: linear-gradient(135deg,#ff5c5c,#ff2f2f);
+  color:#000;
+  border-color: rgba(255,92,92,.6);
+
+  box-shadow:
+    0 0 0 2px rgba(255,92,92,.25),
+    0 10px 28px rgba(255,92,92,.45);
+}
+
+
+.hidden{
+  display:none !important;
+}
+
+
+.detail-header{
+  position: relative;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  height: 56px; /* ổn định chiều cao */
+}
+
+
+
+.header-coin b{
+  color:#ffd700; /* 💎 vàng nhẹ */
+}
+
+.header-coin{
+  position: absolute;     /* 🔑 NEO VỊ TRÍ */
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+
+  z-index: 3;
+
+  display:flex;
+  align-items:center;
+  gap:6px;
+
+  padding:6px 10px;
+  border-radius:999px;
+
+  font-size:13px;
+  font-weight:700;
+
+  background:rgba(255,255,255,.06);
+  color:#fff;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 4px 12px rgba(0,0,0,.4);
+
+  white-space:nowrap;
+}
+
+
+
+.history-table{
+  min-width: 720px;
+}
+
+.asset-th img{
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+
+
+/* ===== RELOAD LOCK OVERLAY ===== */
+.reload-lock {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: rgba(0,0,0,.85);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reload-lock.hidden {
+  display: none;
+}
+
+.rl-box {
+  text-align: center;
+  padding: 28px 24px;
+  border-radius: 20px;
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,.08),
+    rgba(255,255,255,.02)
+  );
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.7),
+    inset 0 1px 0 rgba(255,255,255,.08);
+
+  animation: lockPop .18s ease-out;
+}
+
+@keyframes lockPop {
+  from {
+    transform: scale(.92);
+    opacity: .6;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.rl-icon {
+  font-size: 42px;
+  margin-bottom: 10px;
+}
+
+.rl-title {
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #ffcc00;
+}
+
+.rl-desc {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #fff;
+}
+
+.rl-sub {
+  margin-top: 12px;
+  font-size: 12px;
+  opacity: .7;
+}
+
+
+
+
+.coin-display{
+  text-align:center;
+  margin-bottom:12px;
+}
+.coin-label{
+  font-size:12px;
+  opacity:.6;
+}
+.coin-value{
+  margin-top:6px;
+  font-size:34px;
+  font-weight:900;
+  color:#00ff99;
+  letter-spacing:1px;
+}
+
+.coin-keypad{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin:12px 0;
+}
+.coin-keypad button{
+  height:48px;
+  border-radius:14px;
+  border:0;
+  font-size:18px;
+  font-weight:800;
+  background:linear-gradient(180deg,#1f1f1f,#141414);
+  color:#fff;
+  box-shadow:0 6px 16px rgba(0,0,0,.45);
+}
+.coin-keypad button:active{
+  transform:scale(.96);
+}
+
+.key-clear{ color:#ff5c5c; }
+.key-del{ color:#ffd700; }
+
+.coin-quick{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:12px;
+}
+.coin-quick button{
+  flex:1 1 calc(33.33% - 6px);
+  height:38px;
+  border-radius:999px;
+  border:0;
+  font-weight:800;
+  font-size:14px;
+  background:rgba(255,255,255,.06);
+  color:#fff;
+}
+
+.btn-invest-main{
+  width:100%;
+  height:52px;
+  border-radius:18px;
+  border:0;
+  font-size:16px;
+  font-weight:900;
+  background:linear-gradient(135deg,#00ff99,#00cc88);
+  color:#000;
+  box-shadow:0 12px 28px rgba(0,255,153,.45);
+}
+.btn-invest-main:active{
+  transform:scale(.97);
+}
+
+
+
+.coin-reset-only{
+  display:flex;
+  justify-content:center;
+  margin:10px 0;
+}
+
+.coin-reset-only .key-clear{
+  width:100%;
+  height:40px;
+  border-radius:999px;
+  border:0;
+  font-weight:800;
+  font-size:14px;
+  background:linear-gradient(135deg,#ff5c5c,#ff2f2f);
+  color:#000;
+  box-shadow:0 8px 20px rgba(255,92,92,.45);
+}
+.coin-reset-only .key-clear:active{
+  transform:scale(.97);
+}
+
+
+
+.coin-ratio{
+  display:flex;
+  gap:8px;
+  margin-bottom:10px;
+}
+
+.coin-ratio button{
+  flex:1;
+  height:36px;
+  border-radius:999px;
+  border:0;
+  font-weight:900;
+  font-size:13px;
+  letter-spacing:.3px;
+  background:linear-gradient(135deg,#ffd700,#ffb800);
+  color:#000;
+  box-shadow:0 6px 16px rgba(255,215,0,.45);
+}
+
+.coin-ratio button:active{
+  transform:scale(.96);
+}
+
+
+
+/* ===== ACTION SPACING ===== */
+.invest-action{
+  padding:14px 12px 16px;
+}
+
+/* ===== RATIO ===== */
+.coin-ratio{
+  display:flex;
+  gap:8px;
+  margin:10px 0;
+}
+.coin-ratio button{
+  flex:1;
+  height:34px;
+  border-radius:999px;
+  border:0;
+  font-weight:800;
+  font-size:13px;
+  background:rgba(255,255,255,.08);
+  color:#fff;
+}
+.coin-ratio .all-in{
+  background:linear-gradient(135deg,#ffd700,#ffb800);
+  color:#000;
+}
+
+/* ===== QUICK ADD ===== */
+.coin-quick{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-bottom:6px;
+}
+.coin-quick button{
+  height:36px;
+  border-radius:12px;
+  font-size:13px;
+  font-weight:800;
+}
+
+/* ===== RESET ===== */
+.coin-reset{
+  display:flex;
+  justify-content:flex-end;
+  margin-bottom:10px;
+}
+.coin-reset .key-clear{
+  background:none;
+  border:0;
+  color:#ff5c5c;
+  font-size:13px;
+  font-weight:700;
+}
+
+/* ===== COIN DISPLAY GỌN HƠN ===== */
+.coin-value{
+  font-size:30px;
+}
+
+
+.fab{
+  position:absolute;
+  bottom:14px;
+  width:44px;
+  height:44px;
+  border-radius:14px;
+  border:0;
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+  z-index:7;
+}
+
+/* vị trí */
+#btnOpenHistory{ left:14px; }
+#btnOpenOrders{ left:64px; }
+#btnOpenPnlHistory{ left:114px; }
+
+.glass{
+  background: rgba(20,20,20,.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow:
+    0 10px 26px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+/* SVG icon */
+.fab-icon{
+  width:20px;
+  height:20px;
+  stroke:#fff;
+  stroke-width:2;
+  fill:none;
+  opacity:.9;
+}
+
+/* interaction */
+.fab:active{
+  transform: scale(.95);
+}
+.fab:hover .fab-icon{
+  stroke:#00ff99;
+}
+
+
+
+/* ===== FLOATING FAB GROUP ===== */
+.fab-group{
+  position:absolute;
+  left:14px;
+  bottom:6px;
+  z-index:8;
+
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+
+  padding:10px;
+  border-radius:18px;
+
+  background: rgba(15,15,15,.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  box-shadow:
+    0 14px 40px rgba(0,0,0,.55),
+    inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+/* ===== FAB ITEM ===== */
+.fab-item{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  border:0;
+  cursor:pointer;
+
+  display:grid;
+  place-items:center;
+
+  background: rgba(255,255,255,.06);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 6px 18px rgba(0,0,0,.45);
+
+  transition:
+    transform .08s ease,
+    background .2s ease;
+}
+
+.fab-item:active{
+  transform: scale(.95);
+}
+
+.fab-item:hover{
+  background: rgba(0,255,153,.15);
+}
+
+/* ===== SVG ICON ===== */
+.fab-item svg{
+  width:20px;
+  height:20px;
+  stroke:#fff;
+  stroke-width:2;
+  fill:none;
+  opacity:.9;
+}
+
+.fab-item:hover svg{
+  stroke:#00ff99;
+}
+
+
+
+/* ===== FAB WRAP ===== */
+.fab-wrap{
+  position:absolute;
+  left:14px;
+  bottom:14px;
+  z-index:9;
+}
+
+/* ===== TOGGLE BADGE ===== */
+.fab-toggle{
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  border:0;
+  cursor:pointer;
+
+  display:grid;
+  place-items:center;
+
+  font-size:22px;
+  font-weight:900;
+  color:#fff;
+
+  background:rgba(20,20,20,.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  box-shadow:
+    0 10px 26px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+.fab-toggle:active{
+  transform:scale(.94);
+}
+
+/* ===== GROUP ===== */
+.fab-group{
+  margin-top:10px;
+
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+
+  padding:10px;
+  border-radius:18px;
+
+  background: rgba(15,15,15,.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  box-shadow:
+    0 14px 40px rgba(0,0,0,.55),
+    inset 0 1px 0 rgba(255,255,255,.06);
+
+  animation: fabIn .15s ease-out;
+}
+
+@keyframes fabIn{
+  from{
+    opacity:0;
+    transform: translateY(6px) scale(.96);
+  }
+  to{
+    opacity:1;
+    transform:none;
+  }
+}
+
+
+/* ===== CHART ACTION OVERLAY ===== */
+.chart-action{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:12px;
+  z-index:6;
+
+  padding:0 12px;
+
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+
+  pointer-events:auto;
+}
+
+/* làm nền mờ nhẹ để đọc rõ */
+.chart-action::before{
+  content:"";
+  position:absolute;
+  left:0; right:0; bottom:-12px;
+  height:120px;
+  pointer-events:none;
+  background:linear-gradient(
+    to top,
+    rgba(0,0,0,.55),
+    rgba(0,0,0,0)
+  );
+}
+
+/* đảm bảo nút nằm trên nền mờ */
+.chart-action > *{
+  position:relative;
+  z-index:1;
+}
+
+/* direction gọn hơn */
+.chart-action .direction-box{
+  margin:0;
+}
+
+/* nút vào lệnh full width, không quá to */
+.chart-action .btn-invest-main{
+  height:48px;
+  border-radius:16px;
+  font-size:15px;
+}
+
+/* chốt sớm nhỏ hơn, phụ */
+.chart-action .btn-close-early{
+  height:42px;
+  border-radius:14px;
+  font-size:14px;
+}
+
+
+/* ===== ULTRA COMPACT CHART ACTION ===== */
+.chart-action{
+  bottom: 6px;
+  padding: 0 8px;
+  gap: 4px;
+}
+
+/* nền mờ mỏng hơn nữa */
+.chart-action::before{
+  height: 68px;
+}
+
+/* ===== DIRECTION SIÊU GỌN ===== */
+.chart-action .direction-box{
+  gap: 4px;
+}
+
+.chart-action .dir{
+  padding: 6px 0;
+  font-size: 12px;
+  border-radius: 10px;
+}
+
+/* ===== VÀO LỆNH SIÊU GỌN ===== */
+.chart-action .btn-invest-main{
+  height: 36px;
+  font-size: 13px;
+  border-radius: 12px;
+  box-shadow: 0 6px 14px rgba(0,255,153,.3);
+}
+
+/* ===== CHỐT SỚM MINI ===== */
+.chart-action .btn-close-early{
+  height: 30px;
+  font-size: 12px;
+  border-radius: 10px;
+}
+
+
+@media (max-width: 360px){
+  .chart-action .dir{
+    font-size: 11px;
+  }
+}
+
+
+/* ===== CHART ACTION THON GỌN ===== */
+.chart-action{
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+
+  width: 65%;
+  max-width: 250px;
+
+  padding: 0 6px;
+}
+
+.chart-action .direction-box{
+  gap: 4px;
+}
+
+.chart-action .dir{
+  flex: 1;
+  min-width: 0;
+}
+
+.chart-action .btn-invest-main{
+  width: 100%;
+}
+
+
+@media (max-width: 360px){
+  .chart-action{
+    width: 85%;
+    max-width: 260px;
+  }
+}
+
+
+/* ===== PNL REALTIME (ULTRA COMPACT) ===== */
+.pnl-overlay{
+  position:absolute;
+  right: 14px;
+  bottom: 6px;
+  z-index: 6;
+
+  display:flex;
+  align-items:center;
+  gap:6px;
+
+  padding:6px 10px;
+  border-radius:999px;
+
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.2px;
+
+  background: rgba(15,15,15,.75);
+  color:#fff;
+
+  box-shadow:
+    0 8px 22px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.06);
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* mũi tên */
+.pnl-arrow{
+  font-size:11px;
+  line-height:1;
+}
+
+/* ===== STATE ===== */
+/* lời */
+.pnl-overlay.up{
+  color:#00ff99;
+  background: linear-gradient(
+    135deg,
+    rgba(0,255,153,.25),
+    rgba(15,15,15,.75)
+  );
+}
+
+/* lỗ */
+.pnl-overlay.down{
+  color:#ff5c5c;
+  background: linear-gradient(
+    135deg,
+    rgba(255,92,92,.25),
+    rgba(15,15,15,.75)
+  );
+}
+
+/* sideway */
+.pnl-overlay.neutral{
+  color:#ccc;
+}
+
+
+
+/* ===== CLOSE EARLY – BEAUTIFUL MINI ===== */
+.btn-close-early{
+  width:100%;
+  height:30px;
+
+  border-radius:999px;
+  border:1px solid rgba(255,170,0,.35);
+
+  background: linear-gradient(
+    180deg,
+    rgba(255,170,0,.18),
+    rgba(20,20,20,.85)
+  );
+
+  color:#ffcc66;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.4px;
+
+  box-shadow:
+    0 4px 12px rgba(0,0,0,.4),
+    inset 0 1px 0 rgba(255,255,255,.08);
+
+  transition:
+    transform .08s ease,
+    box-shadow .15s ease,
+    background .2s ease,
+    color .2s ease;
+}
+
+/* hover (desktop) */
+.btn-close-early:hover{
+  background: linear-gradient(
+    180deg,
+    rgba(255,170,0,.28),
+    rgba(20,20,20,.85)
+  );
+}
+
+/* active */
+.btn-close-early:active{
+  transform: scale(.96);
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,.6);
+}
+
+
+/* FIX căn giữa chữ cho nút Chốt lệnh */
+.btn-close-early{
+  display: flex;
+  align-items: center;     /* căn giữa dọc */
+  justify-content: center; /* căn giữa ngang */
+
+  line-height: 1;          /* tránh lệch do font */
+  padding: 0;              /* tránh đẩy chữ */
+}
+
+
+.rm-chart-wrap{
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.04);
+}
+
+.rm-chart-title{
+  font-size: 12px;
+  font-weight: 700;
+  opacity: .75;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+#rmChart{
+  width: 100%;
+  display: block;
+}
+
+
+
+/* ===== PNL HISTORY – CLEAN UI ===== */
+#pnlHistoryList{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.pnl-empty{
+  text-align:center;
+  padding:24px;
+  opacity:.6;
+  font-size:13px;
+}
+
+/* card */
+.pnl-item{
+  padding:12px 14px;
+  border-radius:14px;
+  background: rgba(255,255,255,.04);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 6px 18px rgba(0,0,0,.4);
+  contain: content;
+}
+
+/* thắng / thua */
+.pnl-item.win{
+  background: linear-gradient(
+    135deg,
+    rgba(0,255,153,.18),
+    rgba(255,255,255,.03)
+  );
+}
+.pnl-item.loss{
+  background: linear-gradient(
+    135deg,
+    rgba(255,92,92,.18),
+    rgba(255,255,255,.03)
+  );
+}
+
+/* hàng trên */
+.pnl-main{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+/* trái */
+.pnl-left{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.pnl-asset{
+  font-weight:900;
+  letter-spacing:.5px;
+}
+.pnl-dir{
+  font-size:12px;
+  opacity:.75;
+}
+
+/* phải */
+.pnl-percent{
+  font-size:22px;
+  font-weight:900;
+}
+.pnl-item.win .pnl-percent{ color:#00ff99; }
+.pnl-item.loss .pnl-percent{ color:#ff5c5c; }
+
+/* hàng dưới */
+.pnl-sub{
+  display:flex;
+  justify-content:space-between;
+  margin-top:6px;
+  font-size:12px;
+  opacity:.8;
+}
+.pnl-time{
+  opacity:.6;
+}
+
+
+
+/* ===== TRADE CONFIRM MODAL ===== */
+.trade-confirm{
+  text-align:center;
+  padding:6px 4px 2px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont;
+}
+
+/* icon trên cùng */
+.tc-icon{
+  font-size:36px;
+  margin-bottom:8px;
+}
+
+/* hướng vào lệnh */
+.tc-dir{
+  font-size:18px;
+  font-weight:900;
+  letter-spacing:.5px;
+  margin-bottom:12px;
+}
+
+/* card thông tin */
+.tc-card{
+  background: rgba(255,255,255,.05);
+  border-radius:14px;
+  padding:12px 14px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 6px 18px rgba(0,0,0,.45);
+}
+
+/* từng dòng */
+.tc-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:14px;
+}
+.tc-row span{
+  opacity:.65;
+}
+.tc-row b{
+  font-size:15px;
+}
+
+/* dòng phụ */
+.tc-row.sub{
+  margin-top:6px;
+  font-size:13px;
+}
+
+/* text chờ */
+.tc-wait{
+  margin-top:12px;
+  font-size:13px;
+  opacity:.7;
+}
+
+
+/* ===== ENTER TRADE FULL WIDTH SHEET ===== */
+.enter-sheet{
+  position: fixed;
+  inset: 0;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  z-index: 100000;
+  animation: esUp .18s ease-out;
+}
+
+@keyframes esUp{
+  from{
+    transform: translateY(20px);
+    opacity:.7;
+  }
+  to{
+    transform:none;
+    opacity:1;
+  }
+}
+
+/* HEADER */
+.es-header{
+  padding: 28px 18px 22px;
+  text-align: center;
+  background: linear-gradient(
+    180deg,
+    rgba(0,255,153,.28),
+    #000
+  );
+}
+
+.es-status{
+  font-size: 13px;
+  letter-spacing: 2px;
+  opacity: .9;
+}
+
+.es-dir{
+  margin-top: 10px;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+/* BODY */
+.es-body{
+  flex: 1;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+}
+
+.es-card{
+  background: rgba(255,255,255,.06);
+  border-radius: 16px;
+  padding: 18px;
+  text-align: center;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 12px 32px rgba(0,0,0,.6);
+}
+
+.es-card span{
+  display:block;
+  font-size:13px;
+  opacity:.65;
+}
+.es-card b{
+  display:block;
+  margin-top:6px;
+  font-size:32px;
+  font-weight:900;
+  color:#00ff99;
+}
+
+/* NOTE */
+.es-note{
+  text-align:center;
+  font-size:14px;
+  opacity:.85;
+}
+.es-note small{
+  display:block;
+  margin-top:4px;
+  font-size:12px;
+  opacity:.6;
+}
+
+/* FOOTER */
+.es-footer{
+  padding: 16px;
+}
+.es-footer button{
+  width:100%;
+  height:52px;
+  border-radius:18px;
+  border:0;
+  font-size:16px;
+  font-weight:900;
+  background: linear-gradient(135deg,#00ff99,#00cc88);
+  color:#000;
+  box-shadow:0 12px 28px rgba(0,255,153,.45);
+}
+.es-footer button:active{
+  transform:scale(.97);
+}
+
+/* ===== DESKTOP FALLBACK ===== */
+@media (min-width: 768px){
+  .enter-sheet{
+    position: relative;
+    inset: auto;
+    border-radius: 18px;
+    max-width: 420px;
+    margin: auto;
+  }
+}
+
+
+/* ===== ENTRY PRICE BOX ===== */
+.es-entry{
+  text-align:center;
+  padding:14px 16px;
+  border-radius:16px;
+
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,.06),
+    rgba(255,255,255,.02)
+  );
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 10px 28px rgba(0,0,0,.55);
+}
+
+.es-entry span{
+  display:block;
+  font-size:12px;
+  letter-spacing:1.2px;
+  opacity:.65;
+}
+
+.es-entry b{
+  display:block;
+  margin-top:6px;
+  font-size:26px;
+  font-weight:900;
+  letter-spacing:.5px;
+  color:#ffd700; /* vàng trading */
+}
+
+
+
+.enter-sheet{
+  padding: 6px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont;
+}
+
+/* HEADER */
+.es-header{
+  text-align:center;
+  padding: 14px 10px 10px;
+}
+.es-status{
+  font-size:12px;
+  letter-spacing:1px;
+  opacity:.7;
+}
+.es-dir{
+  margin-top:4px;
+  font-size:20px;
+  font-weight:900;
+}
+
+/* META (ROUND + TIME) */
+.es-meta{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+  margin: 8px 0 14px;
+}
+.es-meta-item{
+  background: rgba(255,255,255,.05);
+  border-radius: 12px;
+  padding: 10px;
+  text-align:center;
+}
+.es-meta-item span{
+  display:block;
+  font-size:11px;
+  opacity:.6;
+}
+.es-meta-item b{
+  font-size:14px;
+  font-weight:800;
+}
+
+/* ENTRY */
+.es-entry{
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+  border-radius: 14px;
+  padding: 12px;
+  text-align:center;
+  margin-bottom:10px;
+}
+.es-entry span{
+  display:block;
+  font-size:11px;
+  opacity:.6;
+}
+.es-entry b{
+  font-size:18px;
+  font-weight:900;
+}
+
+/* CARD */
+.es-card{
+  background: rgba(255,255,255,.05);
+  border-radius: 12px;
+  padding: 12px;
+  text-align:center;
+}
+
+/* NOTE */
+.es-note{
+  margin-top:12px;
+  text-align:center;
+  font-size:13px;
+  opacity:.8;
+}
+.es-note small{
+  display:block;
+  font-size:11px;
+  opacity:.6;
+}
+
+/* FOOTER */
+.es-footer{
+  margin-top:14px;
+}
+.es-footer button{
+  width:100%;
+  padding:14px;
+  border-radius:14px;
+  border:0;
+  font-size:16px;
+  font-weight:800;
+  background: linear-gradient(135deg,#00ff99,#00cc88);
+  color:#000;
+}
+
+
+.pnl-price-row{
+  display:flex;
+  justify-content:space-between;
+  margin-top:8px;
+  padding:8px 10px;
+  border-radius:10px;
+
+  background: rgba(255,255,255,.04);
+  font-size:12px;
+}
+
+.pnl-price-row span{
+  display:block;
+  opacity:.6;
+  font-size:10px;
+}
+
+.pnl-price-row b{
+  font-size:13px;
+  font-weight:800;
+}
+
+
+.pnl-round{
+  margin-left:6px;
+  padding:2px 6px;
+  font-size:10px;
+  border-radius:6px;
+  background:rgba(255,255,255,.08);
+  opacity:.75;
+}
+
+
+
+.pnl-round{
+  margin-left:6px;
+  padding:2px 6px;
+  font-size:10px;
+  border-radius:6px;
+  background:rgba(255,255,255,.08);
+  opacity:.75;
+  cursor:pointer;
+}
+
+.pnl-round:hover{
+  opacity:1;
+  background:rgba(0,255,153,.18);
+}
+
+
+.snapshot-fs{
+  position:fixed;
+  inset:0;
+  z-index: 200000; /* 🔥 CAO HƠN TẤT CẢ */
+  background:#000;
+}
+
+
+.snapshot-fs.hidden{
+  display:none;
+}
+
+#snapshotFSCanvas{
+  width:100vw;
+  height:100vh;
+}
+
+.fs-close{
+  position:fixed;
+  top:12px;
+  right:12px;
+  z-index:10000;
+  background:rgba(0,0,0,.6);
+  color:#fff;
+  border:none;
+  border-radius:999px;
+  width:36px;
+  height:36px;
+  font-size:18px;
+}
+
+
+/* ===== PNL HISTORY FULLSCREEN ===== */
+#pnlHistoryModal{
+  z-index: 100000; /* cao hơn chart */
+}
+
+/* backdrop mờ nhẹ */
+#pnlHistoryModal .sheet-backdrop{
+  background: rgba(0,0,0,.75);
+}
+
+/* BOX → FULLSCREEN */
+#pnlHistoryModal .sheet-box{
+  position: absolute;
+  inset: 0;
+
+  max-height: none;
+  border-radius: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  background: #000;
+  animation: none; /* bỏ slide-up */
+}
+
+/* HEADER CỐ ĐỊNH */
+#pnlHistoryModal .sheet-head{
+  flex: 0 0 auto;
+  padding: 14px 16px;
+
+  background: linear-gradient(
+    180deg,
+    rgba(20,20,20,.98),
+    rgba(10,10,10,.98)
+  );
+
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+/* BODY SCROLL */
+#pnlHistoryModal .sheet-body{
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 12px 12px 20px;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+/* LIST GIÃN DÒNG CHO FULLSCREEN */
+#pnlHistoryList{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ===== APP MODAL MUST BE TOP ===== */
+#appModal{
+  position: fixed;
+  inset: 0;
+  z-index: 300000 !important; /* 🔥 cao hơn result/pnl/reload/snapshot */
+}
+
+#appModal .app-modal-backdrop{
+  position: absolute;
+  inset: 0;
+}
+
+#appModal .app-modal-box{
+  position: relative;
+  z-index: 300001 !important;
+}
+
+
+.pnl-range-badge{
+  margin-left:8px;
+  padding:2px 8px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.5px;
+
+  background:rgba(255,255,255,.08);
+  color:#ffd700;
+}
+
+
+
+/* ===== FULL SCREEN MODAL ===== */
+.fs-modal{
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER */
+.fs-header{
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 12px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+
+  background: rgba(15,15,15,.9);
+  backdrop-filter: blur(10px);
+}
+
+.fs-title{
+  font-size: 15px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.fs-close{
+  width:36px;
+  height:36px;
+  border-radius:12px;
+  border:0;
+  background:rgba(255,255,255,.08);
+  display:grid;
+  place-items:center;
+}
+
+.fs-close-icon{
+  width:18px;
+  height:18px;
+  stroke:#fff;
+  stroke-width:2.4;
+  stroke-linecap:round;
+}
+
+
+.fs-close:active{
+  transform: scale(.95);
+}
+.fs-close:hover{
+  background: rgba(0,255,153,.15);
+}
+
+
+
+.fs-spacer{
+  width: 36px;
+}
+
+/* BODY */
+.fs-body{
+  flex: 1;
+  overflow: hidden;
+}
+
+/* TABLE WRAP */
+.history-table-wrap{
+  height: 100%;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* TABLE */
+.history-table{
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+}
+
+.history-table th,
+.history-table td{
+  padding: 10px 8px;
+  text-align: center;
+  font-size: 13px;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+
+.history-table thead th{
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #0e0e0e;
+}
+
+.history-table th img{
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.history-table td.up{ color:#00ff99; font-weight:700; }
+.history-table td.down{ color:#ff5c5c; font-weight:700; }
+.history-table td.neutral{ color:#aaa; }
+
+.history-table .empty{
+  padding: 40px;
+  opacity: .6;
+}
+
+
+/* ===== FIX INVEST ACTION FULL WIDTH – DÍNH SÁT CHART ===== */
+.detail-invest.invest-action{
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+
+  margin-top: 0 !important;
+  padding: 12px 12px 14px;
+
+  background: rgba(12,12,12,.98);
+  border-radius: 0 0 18px 18px;
+
+  box-shadow:
+    0 -8px 24px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+/* ===== INVEST ACTION FULL WIDTH – DÍNH SÁT CHART ===== */
+.detail-invest.invest-action {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+
+  /* ❌ bỏ khoảng hở */
+  margin-top: 0;
+  margin-bottom: 0;
+
+  /* padding gọn */
+  padding: 12px 12px 14px;
+
+  border-radius: 0 0 18px 18px;
+
+  background: linear-gradient(
+    180deg,
+    rgba(15,15,15,.95),
+    rgba(5,5,5,1)
+  );
+
+  box-shadow:
+    0 -8px 24px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+
+.detail-chart.chart-wrap {
+  margin-bottom: 0;
+}
+
+
+/* ===== CHART DÍNH SÁT HEADER ===== */
+.detail-chart.chart-wrap {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.page-invest-detail > .detail-chart:first-of-type {
+  margin-top: 0 !important;
+}
+
+
+.detail-chart.chart-wrap {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* 🔥 FORCE CHART NO RADIUS – FINAL */
+.detail-chart.chart-wrap,
+.detail-chart.chart-wrap::before,
+.detail-chart.chart-wrap::after,
+.detail-chart canvas {
+  border-radius: 0 !important;
+}
+
+
+.detail-chart {
+  overflow: hidden !important;
+  border-radius: 0 !important;
+}
+
+.detail-chart::after,
+.detail-chart canvas {
+  border-radius: 0 !important;
+}
+
+
+
+.round-timer {
+  min-width: 48px;
+  padding: 6px 10px;
+  border-radius: 999px;
+
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .3px;
+
+  background: rgba(15,15,15,.75);
+  color: #fff;
+
+  text-align: center;
+}
+.round-timer.locked {
+  color: #ffcc66;
+}
+
+
+
+/* ❌ BỎ ĐƯỜNG BORDER / VIỀN Ở ĐÁY INVEST ACTION */
+.detail-invest.invest-action{
+  border-bottom: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  box-shadow: none !important;
+}
+
+
+
+.detail-invest.invest-action{
+  background: linear-gradient(
+    180deg,
+    rgba(12,12,12,.98),
+    rgba(0,0,0,1)
+  );
+}
+
+
+#historyModal .history-table{
+  min-width: unset;
+  width: 100%;
+}
+
+
+/* 🔥 FIX LỆCH THỊ GIÁC ICON ✕ (GIỐNG RM-CLOSE) */
+.fs-close-icon{
+  width:18px;
+  height:18px;
+
+  stroke:#fff;
+  stroke-width:2.4;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  fill:none;
+
+  /* ✅ FIX CĂN GIỮA TUYỆT ĐỐI */
+  transform: translate(0.5px, 0.5px);
+}
+
+
+.fs-close{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  line-height:1;
+  padding:0;
+}
+
+
+
+</style>
+
+
+</head>
+
+<body class="page-invest-detail">
+
+<header class="detail-header">
+  <button class="back-btn" id="btnBack">←</button>
+
+
+  <div class="header-center">
+    <h1 id="assetTitle">📊 Phân tích</h1>
+    <div class="header-sub">Realtime • 60s / trade</div>
+  </div>
+
+  
+ <div class="header-coin">
+  💎<b id="myCoin">0</b>
+</div>
+
+
+
+
+</header>
+
+
+<!-- 📈 CHART -->
+<section class="detail-chart card chart-wrap">
+  <canvas id="priceChart"></canvas>
+
+
+  <!-- ⏳ TIMER (GÓC TRÁI) -->
+  <div id="roundTimer" class="round-timer overlay-timer">
+  <span class="timer-text">60s</span>
+</div>
+
+
+  <!-- 🔴 LIVE BADGE (GÓC PHẢI) -->
+  <div id="liveBadge" class="live-badge-fixed">
+    LIVE
+  </div>
+
+ <!-- 📊 TREND -->
+  <div id="trendText" class="trend-overlay neutral" style="display: none;">
+    ➖ Sideway
+  </div>
+
+
+<!-- 📌 FLOATING ACTION GROUP (BINANCE STYLE) -->
+<div class="fab-wrap">
+
+  <!-- 🔘 TOGGLE BADGE -->
+  <button id="fabToggle" class="fab-toggle" title="Mở công cụ">
+    ⋮
+  </button>
+
+  <!-- 🔽 GROUP -->
+  <div id="fabGroup" class="fab-group hidden">
+
+    <button id="btnOpenHistory" class="fab-item" title="Lịch sử phiên">
+      <svg viewBox="0 0 24 24">
+        <path d="M4 4v16h16" />
+        <path d="M7 15l3-3 3 2 4-5" />
+      </svg>
+    </button>
+
+    <button id="btnOpenOrders" class="fab-item" title="Lệnh trong phiên">
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="8" r="4"/>
+        <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+      </svg>
+    </button>
+
+    <button id="btnOpenPnlHistory" class="fab-item" title="Lịch sử lãi / lỗ">
+      <svg viewBox="0 0 24 24">
+        <path d="M4 14l4-4 4 3 6-6"/>
+        <path d="M20 20H4"/>
+      </svg>
+    </button>
+
+  </div>
+</div>
+
+
+
+
+
+  <!-- 💰 PnL realtime -->
+<div id="pnlRealtime" class="pnl-overlay hidden">
+  <span class="pnl-arrow">▲</span>
+  <span class="pnl-value">0%</span>
+</div>
+
+
+
+
+<!-- 🎮 CHART ACTION OVERLAY -->
+<div class="chart-action">
+
+  <!-- 🔼🔽 DIRECTION -->
+  <div class="direction-box" id="directionBox">
+    <button id="btnUp" class="dir active">UP</button>
+    <button id="btnDown" class="dir">DOWN</button>
+  </div>
+
+  <!-- 🚀 SUBMIT -->
+  <button class="btn-invest-main" onclick="confirmInvest()">
+    START
+  </button>
+
+  <!-- ⏱ CLOSE EARLY -->
+  <button id="btnCloseEarly" class="btn-close-early hidden">
+    STOP
+  </button>
+
+</div>
+
+
+
+
+</section>
+
+
+
+
+<!-- 🧠 INFO BAR -->
+<section class="detail-info card info-bar" style="display: none;">
+
+  <ul id="analysisText" class="analysis-list"></ul>
+</section>
+
+
+<!--
+-- 🧾 LỆNH --
+<section class="detail-orders card">
+  <h3>🧾 Lệnh trong phiên</h3>
+  <ul id="orderList" class="order-list">
+    <li class="empty">Chưa có lệnh nào</li>
+  </ul>
+</section>
+-->
+
+<!--
+ -- LỊCH SỬ --
+<section class="detail-history card">
+  <h3>📊 Lịch sử các phiên</h3>
+
+  <div class="history-table-wrap">
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>🕒</th>
+          
+          <th class="asset-th">
+  <img src="/assets/silver.png" alt="Bạc">
+</th>
+<th class="asset-th">
+  <img src="/assets/gold.png" alt="Vàng">
+</th>
+<th class="asset-th">
+  <img src="/assets/diamond.png" alt="Kim cương">
+</th>
+
+        </tr>
+      </thead>
+      <tbody id="roundHistory">
+        <tr>
+          <td colspan="4" class="empty">Chưa có dữ liệu</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+-->
+
+
+
+<!-- 🚀 ACTION -->
+<section class="detail-invest card invest-action">
+
+  <!-- 💎 COIN DISPLAY -->
+  <div class="coin-display">
+    <span class="coin-label">Vốn đầu tư</span>
+    <div class="coin-value">
+      <span id="coinDisplay">0</span><small>💎</small>
+    </div>
+  </div>
+
+  <!-- ⚡ QUICK RATIO -->
+  <div class="coin-ratio">
+    <button data-ratio="0.25">25%</button>
+    <button data-ratio="0.5">50%</button>
+    <button class="all-in" data-ratio="1">ALL IN</button>
+  </div>
+
+  <!-- ⚡ QUICK ADD -->
+  <div class="coin-quick">
+    <button data-add="10">+10</button>
+    <button data-add="20">+20</button>
+    <button data-add="50">+50</button>
+    <button data-add="100">+100</button>
+    <button data-add="500">+500</button>
+    <button data-add="1000">+1K</button>
+    <button data-add="5000">+5K</button>
+    <button data-add="10000">+10K</button>
+    <button data-add="50000">+50K</button>
+  </div>
+
+  <!-- 🔘 RESET -->
+  <div class="coin-reset">
+    <button class="key-clear">⌫ Xóa</button>
+  </div>
+</section>
+
+
+
+<!-- 🔔 MODAL -->
+<div id="appModal" class="app-modal hidden">
+  <div class="app-modal-backdrop" onclick="closeAppModal()"></div>
+  <div class="app-modal-box">
+    <h3 id="appModalTitle">Thông báo</h3>
+    <div id="appModalContent"></div>
+    <button class="app-modal-btn" onclick="closeAppModal()">OK</button>
+  </div>
+</div>
+
+
+
+
+
+<!-- 📊 HISTORY MODAL – FULL SCREEN -->
+<div id="historyModal" class="fs-modal hidden" aria-hidden="true">
+
+  <!-- HEADER -->
+  <div class="fs-header">
+
+  <button class="fs-close" id="btnCloseHistory" aria-label="Close">
+  <svg viewBox="0 0 24 24" class="fs-close-icon">
+    <line x1="6" y1="6" x2="18" y2="18"/>
+    <line x1="18" y1="6" x2="6" y2="18"/>
+  </svg>
+</button>
+
+
+    <div class="fs-title">Lịch sử các phiên</div>
+    <div class="fs-spacer"></div>
+  </div>
+
+  <!-- BODY -->
+  <div class="fs-body">
+    <div class="history-table-wrap">
+      <table class="history-table">
+
+<thead id="historyHead"></thead>
+
+
+        <tbody id="roundHistoryModal">
+          <tr>
+            <td colspan="2" class="empty">Chưa có dữ liệu</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+
+
+<!-- 🧾 ORDERS MODAL -->
+<div id="ordersModal" class="sheet hidden" aria-hidden="true">
+  <div class="sheet-backdrop" id="ordersBackdrop"></div>
+
+  <div class="sheet-box">
+    <div class="sheet-head">
+      <div class="sheet-title">Lệnh trong phiên</div>
+      <button class="sheet-close" id="btnCloseOrders">✕</button>
+    </div>
+
+    <div class="sheet-body">
+      <ul id="orderListModal" class="order-list">
+        <li class="empty">Chưa có lệnh nào</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+
+<div id="pnlHistoryModal" class="sheet hidden">
+  <div class="sheet-backdrop" id="pnlHistoryBackdrop"></div>
+
+  <div class="sheet-box">
+
+ <div class="sheet-head">
+  <div class="sheet-title">
+    Lịch sử lãi / lỗ
+    <span class="pnl-range-badge">24H</span>
+  </div>
+  <button class="sheet-close" id="btnClosePnlHistory">✕</button>
+</div>
+
+
+
+    <div class="sheet-body">
+      <ul id="pnlHistoryList" class="order-list">
+
+<li class="pnl-empty">
+  <div style="font-size:28px">🕒</div>
+  <div>Không có lịch sử trong 24 giờ</div>
+  <small>Dữ liệu cũ hơn sẽ tự động xoá</small>
+</li>
+
+
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- 📸 FULLSCREEN RESULT MODAL (BINANCE STYLE) -->
+<div id="resultModal" class="result-modal hidden">
+  <div class="rm-box">
+
+    <!-- HEADER -->
+    <div class="rm-header">
+      <button class="rm-close" onclick="closeResultModal()" aria-label="Close">
+  <svg class="rm-close-icon" viewBox="0 0 24 24" aria-hidden="true">
+    <line x1="6" y1="6" x2="18" y2="18"/>
+    <line x1="18" y1="6" x2="6" y2="18"/>
+  </svg>
+</button>
+
+      <div class="rm-status" id="rmStatus">LỆNH THẮNG</div>
+      <div class="rm-percent" id="rmPercent">+12%</div>
+      <div class="rm-coin" id="rmCoin">+120 💎</div>
+    </div>
+
+    <!-- BODY -->
+    <div class="rm-body">
+      <div class="rm-card">
+        <div><span>Loại hình đầu tư: </span><b id="rmAsset">GOLD</b></div>
+        <div><span>Hướng: </span><b id="rmDir">UP</b></div>
+      </div>
+
+      <div class="rm-card">
+        <div><span>Vốn đầu tư: </span><b id="rmCapital">1000</b></div>
+        <div><span>Giá vào: </span><b id="rmEntry">82.15</b></div>
+        <div><span>Giá chốt: </span><b id="rmEnd">84.20</b></div>
+      </div>
+    </div>
+
+    <!-- 📊 ROUND CHART SNAPSHOT -->
+<div class="rm-chart-wrap">
+  <div class="rm-chart-title">📈 Diễn biến phiên vừa chơi</div>
+  <canvas id="rmChart" height="160"></canvas>
+</div>
+
+
+    <!-- FOOTER -->
+    <div class="rm-footer">
+      <button onclick="closeResultModal()">Giao dịch tiếp</button>
+    </div>
+
+
+  </div>
+</div>
+
+
+
+<!-- 🔒 LOCKED OVERLAY -->
+<div id="reloadLock" class="reload-lock hidden">
+  <div class="rl-box">
+    <div class="rl-icon">🔒</div>
+    <div class="rl-title">PHIÊN ĐANG DIỄN RA</div>
+    <div class="rl-desc">
+      Bạn đã vào lệnh.<br>
+      Không thể reload trong khi phiên chưa kết thúc.
+    </div>
+    <div class="rl-sub">
+      ⏳ Vui lòng chờ kết thúc phiên
+    </div>
+  </div>
+</div>
+
+
+<div id="snapshotFS" class="snapshot-fs hidden">
+  <button class="fs-close" onclick="closeSnapshotFS()">✕</button>
+  <canvas id="snapshotFSCanvas"></canvas>
+</div>
+
+
+
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/invest-detail.js"></script>
+</body>
+</html>

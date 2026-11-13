@@ -1,0 +1,992 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1">
+
+<title>MILITARY - LIVE SCREEN</title>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #050a06;
+  color: #fff;
+  font-family: system-ui, sans-serif;
+  min-height: 100dvh;
+}
+
+header {
+  min-height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(
+    135deg, #31442b, #0b160e
+  );
+
+  border-bottom: 2px solid #b99d61;
+}
+
+.logo {
+  color: #e8cc88;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+main {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+#status {
+  color: #b7e8a2;
+  font-size: 13px;
+  text-align: center;
+}
+
+.video-wrap {
+  width: 100%;
+  max-width: 450px;
+  aspect-ratio: 430 / 870;
+
+  background: #000;
+  border: 2px solid #a88d51;
+  border-radius: 10px;
+  overflow: hidden;
+
+  box-shadow: 0 8px 30px #000b;
+}
+
+video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.fullscreen-btn {
+  padding: 12px 25px;
+
+  background: #304932;
+  color: #f7df9c;
+
+  border: 1px solid #c6a764;
+  border-radius: 7px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.note {
+  max-width: 350px;
+  color: #81927e;
+  text-align: center;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+
+.video-wrap {
+  position: relative;
+}
+
+#screenFrame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+#screenFrame[hidden] {
+  display: none !important;
+}
+
+
+
+/* ==================================
+   WHEEL8 VIEWER LIVE CHAT
+================================== */
+
+.w8-viewer-chat {
+  position: fixed;
+  bottom: max(8px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+
+  width: min(450px, calc(100% - 20px));
+  padding: 12px;
+  box-sizing: border-box;
+
+  z-index: 100;
+
+  background: rgba(10, 24, 14, .94);
+  border: 1px solid #a78c4e;
+  border-radius: 12px;
+
+  box-shadow: 0 6px 25px #000b;
+  backdrop-filter: blur(12px);
+}
+
+.w8-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 8px;
+
+  font-size: 12px;
+  font-weight: 900;
+  color: #e8d08c;
+}
+
+.w8-chat-live {
+  color: #ff6666;
+  font-size: 11px;
+}
+
+.w8-comment-list {
+  max-height: 115px;
+  min-height: 24px;
+
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+
+  padding: 4px 0 9px;
+}
+
+.w8-viewer-comment {
+  padding: 5px 7px;
+
+  background: rgba(60, 83, 54, .35);
+  border-radius: 6px;
+
+  font-size: 12px;
+  line-height: 1.4;
+
+  overflow-wrap: anywhere;
+}
+
+.w8-viewer-comment-name {
+  color: #edd18a;
+  font-weight: 900;
+}
+
+.w8-viewer-comment-text {
+  color: #edf6e9;
+  margin-left: 5px;
+}
+
+#w8CommentForm {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+#w8CommentName,
+#w8CommentInput {
+  min-width: 0;
+  width: 100%;
+  height: 39px;
+  box-sizing: border-box;
+
+  padding: 0 12px;
+
+  background: #101f13;
+  color: #fff;
+
+  border: 1px solid #59734f;
+  border-radius: 7px;
+
+  font-size: 16px;
+
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.w8-comment-send-row {
+  display: flex;
+  gap: 7px;
+}
+
+.w8-comment-send-row button {
+  flex-shrink: 0;
+  padding: 0 16px;
+
+  background: linear-gradient(
+    145deg, #577b43, #294a2c
+  );
+
+  border: 1px solid #d1b26b;
+  border-radius: 7px;
+
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.w8-comment-send-row button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+#w8CommentStatus {
+  color: #d6b980;
+  font-size: 11px;
+  margin-top: 6px;
+  min-height: 12px;
+}
+
+
+
+/* =====================================
+   MILITARY FLOATING CHAT BUTTON
+===================================== */
+
+.w8-chat-toggle {
+  position: fixed;
+
+  right: 18px;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+
+  width: 56px;
+  height: 56px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(
+    145deg,
+    #60794a 0%,
+    #304c32 45%,
+    #102419 100%
+  );
+
+  border: 2px solid #d0b16b;
+  border-radius: 50%;
+
+  color: #ffffff;
+  font-size: 25px;
+
+  box-shadow:
+    0 5px 18px #000b,
+    0 0 12px #9ecb6940,
+    inset 0 2px 3px #ffffff30;
+
+  z-index: 200;
+  cursor: pointer;
+
+  transition: transform .2s, background .2s;
+}
+
+.w8-chat-toggle:active {
+  transform: scale(.92);
+}
+
+/* When the comment panel is open */
+
+.w8-chat-toggle.active {
+  background: linear-gradient(
+    145deg,
+    #a35b3b,
+    #6b2626 65%,
+    #341313
+  );
+
+  border-color: #e2ad73;
+}
+
+/* Unread comment count */
+
+.w8-chat-unread {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+
+  min-width: 21px;
+  height: 21px;
+
+  padding: 0 4px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #e53535;
+  border: 2px solid #101d13;
+  border-radius: 20px;
+
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.w8-chat-unread[hidden] {
+  display: none !important;
+}
+
+/* =====================================
+   CHAT PANEL OPEN / CLOSE
+===================================== */
+
+.w8-viewer-chat {
+  bottom: calc(86px + env(safe-area-inset-bottom));
+
+  width: min(430px, calc(100% - 24px));
+  max-height: calc(100dvh - 110px);
+
+  overflow-y: auto;
+
+  animation: w8ChatOpen .22s ease-out;
+}
+
+.w8-viewer-chat[hidden] {
+  display: none !important;
+}
+
+@keyframes w8ChatOpen {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 15px) scale(.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">★ MILITARY LIVE ★</div>
+</header>
+
+<main>
+
+<div id="status">
+  Connecting...
+</div>
+
+  <div class="video-wrap">
+    <video
+      id="screen"
+      autoplay
+      muted
+      playsinline
+      controls>
+    </video>
+
+<img
+  id="screenFrame"
+  alt="Shared game screen"
+  hidden>
+
+
+  </div>
+
+<button class="fullscreen-btn"
+        onclick="fullScreen()">
+  ⛶ FULL SCREEN
+</button>
+
+<div class="note">
+  You are watching a live screen share.
+  View-only mode. You cannot control the game.
+</div>
+
+
+
+</main>
+
+
+
+<!-- ==================================
+     LIVE VIEWER CHAT
+================================== -->
+
+
+<!-- OPEN / CLOSE COMMENTS -->
+<button
+  id="w8ChatToggle"
+  class="w8-chat-toggle"
+  type="button"
+  onclick="w8ToggleChat()"
+  aria-controls="w8ViewerChat"
+  aria-expanded="false"
+  aria-label="Open comments">
+
+  <span id="w8ChatIcon">💬</span>
+
+  <span
+    id="w8ChatUnread"
+    class="w8-chat-unread"
+    hidden>0</span>
+
+</button>
+
+<!-- COMMENT PANEL HIDDEN BY DEFAULT -->
+<div
+  id="w8ViewerChat"
+  class="w8-viewer-chat"
+  hidden>
+
+  <div class="w8-chat-header">
+    <span>💬 LIVE COMMENTS</span>
+    <span class="w8-chat-live">● LIVE</span>
+  </div>
+
+  <div
+    id="w8CommentList"
+    class="w8-comment-list">
+  </div>
+
+  <form id="w8CommentForm" autocomplete="off">
+
+<input
+  id="w8CommentName"
+  type="text"
+  maxlength="20"
+  placeholder="Display name"
+  aria-label="Display name">
+
+<div class="w8-comment-send-row">
+
+  <input
+    id="w8CommentInput"
+    type="text"
+    maxlength="120"
+    placeholder="Write a comment..."
+    aria-label="Comment"
+    required>
+
+  <button
+    id="w8CommentSend"
+    type="submit">
+    ➤ SEND
+  </button>
+
+    </div>
+
+  </form>
+
+  <div id="w8CommentStatus" aria-live="polite"></div>
+
+</div>
+
+
+
+<script>
+const params = new URLSearchParams(location.search);
+const token = params.get("room") || "";
+
+const video = document.getElementById("screen");
+const status = document.getElementById("status");
+
+const socket = io();
+
+let pc = null;
+let pendingIce = [];
+
+let iceServers = [
+  { urls: "stun:stun.l.google.com:19302" }
+];
+
+function setStatus(message) {
+  status.textContent = message;
+}
+
+function closePeer() {
+
+  if (pc) pc.close();
+
+  pc = null;
+  pendingIce = [];
+  video.srcObject = null;
+
+const frame = document.getElementById("screenFrame");
+
+frame.hidden = true;
+frame.removeAttribute("src");
+
+video.style.display = "block";
+
+
+}
+
+async function getIce() {
+
+  try {
+
+    const res = await fetch("/ice");
+
+    if (res.ok) {
+      const data = await res.json();
+
+      if (
+        Array.isArray(data.iceServers) &&
+        data.iceServers.length
+      ) {
+        return data.iceServers;
+      }
+    }
+
+  } catch (err) {
+    console.warn(err);
+  }
+
+  return [
+    { urls: "stun:stun.l.google.com:19302" }
+  ];
+}
+
+// Connect to the server and join the viewing session
+socket.on("connect", async () => {
+
+  closePeer();
+
+  if (!/^[a-f0-9]{36}$/.test(token)) {
+    setStatus("Invalid sharing link.");
+    return;
+  }
+
+  setStatus("Connecting to the broadcaster...");
+
+  iceServers = await getIce();
+
+  if (!socket.connected) return;
+
+  socket.timeout(10000).emit(
+    "w8share:join",
+    { token },
+    (err, reply) => {
+
+if (err || !reply?.ok) {
+  setStatus(
+    reply?.error || "Unable to join the viewing room."
+  );
+} else {
+  setStatus(
+    "Connected. Waiting for the video stream..."
+  );
+}
+
+    }
+  );
+
+});
+
+	// Receive WebRTC video and signaling
+socket.on("w8share:signal", async ({ from, packet }) => {
+
+  try {
+
+    if (packet.type === "offer") {
+
+     	// Preserve ICE candidates received before the offer
+      const earlyIce = pendingIce.slice();
+
+      closePeer();
+      pendingIce = earlyIce;
+
+      pc = new RTCPeerConnection({ iceServers });
+
+      const current = pc;
+
+      current.ontrack = event => {
+
+        video.srcObject =
+          event.streams[0] ||
+          new MediaStream([event.track]);
+
+video.play().catch(() => {
+  setStatus("Tap the video to play.");
+});
+
+      };
+
+      current.onicecandidate = event => {
+
+        if (event.candidate) {
+
+          socket.emit("w8share:signal", {
+            token,
+            to: from,
+            packet: {
+              type: "candidate",
+              candidate: event.candidate
+            }
+          });
+
+        }
+
+      };
+
+current.onconnectionstatechange = () => {
+
+  if (current.connectionState === "connected") {
+    setStatus("🔴 WATCHING LIVE");
+  }
+
+  if (current.connectionState === "failed") {
+    setStatus(
+      "Video connection lost. Please reload the page."
+    );
+  }
+
+};
+
+      await current.setRemoteDescription(
+        packet.description
+      );
+
+    	// Process early ICE candidates
+      const buffered = pendingIce.splice(0);
+
+      for (const candidate of buffered) {
+        await current.addIceCandidate(candidate);
+      }
+
+      const answer = await current.createAnswer();
+      await current.setLocalDescription(answer);
+
+      socket.emit("w8share:signal", {
+        token,
+        to: from,
+        packet: {
+          type: "answer",
+          description: current.localDescription
+        }
+      });
+
+    } else if (
+      packet.type === "candidate" &&
+      packet.candidate
+    ) {
+
+      if (pc && pc.remoteDescription) {
+
+        await pc.addIceCandidate(
+          packet.candidate
+        );
+
+      } else {
+
+        pendingIce.push(packet.candidate);
+
+      }
+
+    }
+
+} catch (err) {
+
+  console.error(err);
+  setStatus("Unable to establish the video connection.");
+
+}
+
+});
+
+// Broadcaster stopped screen sharing
+socket.on("w8share:ended", () => {
+
+  closePeer();
+  setStatus("The broadcaster has stopped screen sharing.");
+
+});
+
+// Socket disconnected
+socket.on("disconnect", () => {
+
+  closePeer();
+  setStatus("Connection lost. Reconnecting...");
+
+});
+
+// Fullscreen
+function fullScreen() {
+
+  const frame = document.getElementById("screenFrame");
+  const video = document.getElementById("screen");
+
+  const target = frame.hidden
+    ? video
+    : document.querySelector(".video-wrap");
+
+  if (target.requestFullscreen) {
+    target.requestFullscreen();
+  } else if (target.webkitEnterFullscreen) {
+    target.webkitEnterFullscreen();
+  }
+
+}
+
+
+// Receive game screen frames from mobile devices
+socket.on("w8share:frame", (data) => {
+
+  if (
+    typeof data?.image !== "string" ||
+    !data.image.startsWith("data:image/jpeg;base64,")
+  ) return;
+
+  const frame = document.getElementById("screenFrame");
+  const video = document.getElementById("screen");
+
+  frame.src = data.image;
+  frame.hidden = false;
+
+  	// Hide WebRTC video when displaying screen frames
+  video.style.display = "none";
+
+document.getElementById("status").textContent =
+  "🔴 WATCHING LIVE";
+
+});
+
+
+
+
+/* ======================================
+   WHEEL8 VIEWER COMMENT SYSTEM
+====================================== */
+
+const w8ChatForm =
+  document.getElementById("w8CommentForm");
+
+const w8ChatInput =
+  document.getElementById("w8CommentInput");
+
+const w8ChatName =
+  document.getElementById("w8CommentName");
+
+const w8ChatSend =
+  document.getElementById("w8CommentSend");
+
+const w8ChatStatus =
+  document.getElementById("w8CommentStatus");
+
+const w8ChatList =
+  document.getElementById("w8CommentList");
+
+
+  
+/* =====================================
+   TOGGLE LIVE COMMENT PANEL
+===================================== */
+
+let w8UnreadCount = 0;
+
+function w8ToggleChat() {
+
+  const panel =
+    document.getElementById("w8ViewerChat");
+
+  const button =
+    document.getElementById("w8ChatToggle");
+
+  const icon =
+    document.getElementById("w8ChatIcon");
+
+  const unread =
+    document.getElementById("w8ChatUnread");
+
+  const opening = panel.hidden;
+
+  panel.hidden = !opening;
+
+  button.classList.toggle("active", opening);
+
+  button.setAttribute(
+    "aria-expanded",
+    String(opening)
+  );
+
+button.setAttribute(
+  "aria-label",
+  opening ? "Close comments" : "Open comments"
+);
+
+  icon.textContent = opening ? "✕" : "💬";
+
+  	// Mark comments as read when opening the chat
+  if (opening) {
+
+    w8UnreadCount = 0;
+    unread.hidden = true;
+
+    const list =
+      document.getElementById("w8CommentList");
+
+    list.scrollTop = list.scrollHeight;
+
+  }
+
+}
+
+
+
+// Send comment
+w8ChatForm.addEventListener("submit", (event) => {
+
+  event.preventDefault();
+
+const content = w8ChatInput.value.trim();
+const name = w8ChatName.value.trim() || "Viewer";
+
+  if (!content) return;
+
+if (!socket.connected) {
+  w8ChatStatus.textContent =
+    "Not connected to the server.";
+  return;
+}
+
+  w8ChatSend.disabled = true;
+  w8ChatStatus.textContent = "";
+
+  socket.timeout(8000).emit(
+    "w8share:comment",
+    {
+      token,
+      name,
+      text: content
+    },
+    (error, reply) => {
+
+      w8ChatSend.disabled = false;
+
+if (error || !reply?.ok) {
+
+  w8ChatStatus.textContent =
+    reply?.error || "Unable to send your comment.";
+
+  return;
+}
+
+      w8ChatInput.value = "";
+      w8ChatStatus.textContent = "";
+
+    }
+  );
+
+});
+
+// Receive comments from the server
+socket.on("w8share:comment", (data) => {
+
+  if (data?.token !== token) return;
+
+  const item = document.createElement("div");
+  item.className = "w8-viewer-comment";
+
+const username = document.createElement("span");
+username.className = "w8-viewer-comment-name";
+username.textContent =
+  String(data.name || "Viewer") + ":";
+
+  const content = document.createElement("span");
+  content.className = "w8-viewer-comment-text";
+  content.textContent = String(data.text || "");
+
+  item.appendChild(username);
+  item.appendChild(content);
+
+  w8ChatList.appendChild(item);
+
+  
+// =====================================
+// UNREAD COMMENT BADGE
+// =====================================
+
+const chatPanel =
+  document.getElementById("w8ViewerChat");
+
+const unreadBadge =
+  document.getElementById("w8ChatUnread");
+
+// Increment the counter only when the panel is closed
+if (chatPanel.hidden) {
+
+  w8UnreadCount++;
+
+  unreadBadge.textContent =
+    w8UnreadCount > 99
+      ? "99+"
+      : String(w8UnreadCount);
+
+  unreadBadge.hidden = false;
+
+}
+
+
+  	// Keep only the latest 30 comments
+  while (w8ChatList.children.length > 30) {
+    w8ChatList.firstElementChild.remove();
+  }
+
+  // Automatically scroll to the newest comment
+  w8ChatList.scrollTop = w8ChatList.scrollHeight;
+
+});
+
+// Broadcaster ended the LIVE session
+socket.on("w8share:ended", () => {
+
+  w8ChatInput.disabled = true;
+  w8ChatSend.disabled = true;
+
+  w8ChatStatus.textContent =
+    "The LIVE session has ended.";
+
+});
+
+// Disable commenting when disconnected
+socket.on("disconnect", () => {
+
+  w8ChatSend.disabled = true;
+  w8ChatStatus.textContent =
+    "Reconnecting...";
+
+});
+
+// Re-enable commenting after reconnecting
+// The server still validates LIVE session access
+socket.on("connect", () => {
+
+  w8ChatInput.disabled = false;
+  w8ChatSend.disabled = false;
+  w8ChatStatus.textContent = "";
+
+});
+
+
+
+
+</script>
+
+</body>
+</html>

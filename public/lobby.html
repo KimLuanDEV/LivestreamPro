@@ -1,0 +1,5952 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <!-- PWA iOS -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Livestream Pro">
+
+<!-- Android / Chrome -->
+<meta name="mobile-web-app-capable" content="yes">
+
+
+
+  <title>Lobby - Livestream Pro</title>
+
+<meta name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover">
+
+<link rel="manifest" href="/manifest.json">
+
+<!-- icon cho iOS -->
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+  <link rel="stylesheet" href="./style.css">
+
+  <!-- LIVESTREAM PRO - PAGE TRANSITION -->
+<script src="/lsp-page-transition.js"></script>
+
+<style>
+
+
+  /* ===== DARK MODE: TOÀN TRANG ===== */
+html, body{
+  background: #000;
+}
+
+body.lobby-page{
+  background: radial-gradient(
+    120% 120% at 50% 0%,
+    #0b0b0b 0%,
+    #000 60%
+  );
+  color: #fff;
+}
+
+
+.player-search{
+  padding:10px;
+  border-bottom:1px solid rgba(255,255,255,.1);
+}
+
+.player-search input{
+  width:100%;
+  padding:8px 10px;
+  border-radius:8px;
+  border:none;
+  background:#111;
+  color:#fff;
+  outline:none;
+  font-size:14px;
+}
+
+.player-search input::placeholder{
+  opacity:.6;
+}
+
+
+
+/* =============================================
+   LIVESTREAM PRO - LUXURY LOBBY
+   BLACK & CHAMPAGNE GOLD
+============================================= */
+
+:root {
+  --lb-bg: #08090d;
+  --lb-panel: #17191e;
+  --lb-gold: #d9b97d;
+  --lb-light: #f4dfb6;
+  --lb-muted: #a7a09a;
+  --lb-line: rgba(219,184,117,.31);
+}
+
+html,
+body.lobby-page {
+  margin: 0;
+  min-height: 100%;
+  background: var(--lb-bg);
+}
+
+body.lobby-page {
+  color: #f6eee0;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  background:
+    radial-gradient(
+      ellipse at 50% 0,
+      rgba(173,121,51,.12),
+      transparent 48%
+    ),
+    linear-gradient(180deg,#101116,#08090d);
+}
+
+body.lobby-page *,
+body.lobby-page *::before,
+body.lobby-page *::after {
+  box-sizing: border-box;
+}
+
+body.lobby-page .hidden {
+  display: none !important;
+}
+
+/* SVG ICON */
+
+body.lobby-page .lb-icon {
+  display: block;
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+/* =============================================
+   HEADER
+============================================= */
+
+body.lobby-page .lobby-header-full {
+  position: sticky;
+  top: 0;
+  z-index: 1100;
+  width: 100%;
+  margin: 0;
+
+  border-bottom: 1px solid var(--lb-line);
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0,
+      rgba(196,149,74,.12),
+      transparent 65%
+    ),
+    rgba(12,13,17,.97);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+body.lobby-page .lobby-header-inner {
+  width: 100%;
+  max-width: 1120px;
+  min-height: 74px;
+  margin: 0 auto;
+
+  padding:
+    calc(9px + env(safe-area-inset-top,0px))
+    15px
+    10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* BRAND */
+
+body.lobby-page .lobby-brand {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 11px;
+}
+
+body.lobby-page .lobby-brand-mark {
+  width: 43px;
+  height: 43px;
+  flex: 0 0 43px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid rgba(225,184,107,.47);
+  border-radius: 13px;
+
+  background: linear-gradient(
+    145deg,#382b1c,#171719
+  );
+
+  color: #f0d29a;
+
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.06),
+    0 5px 15px rgba(0,0,0,.26);
+}
+
+body.lobby-page .lobby-brand-mark .lb-icon {
+  width: 25px;
+  height: 25px;
+}
+
+body.lobby-page .lobby-brand-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+body.lobby-page .lobby-title {
+  color: var(--lb-light);
+  font-size: 16px;
+  font-weight: 850;
+  line-height: 1.25;
+  letter-spacing: .6px;
+  white-space: nowrap;
+}
+
+body.lobby-page .lobby-subtitle {
+  margin-top: 5px;
+
+  color: #b89b6b;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  white-space: nowrap;
+}
+
+/* ACTIONS */
+
+body.lobby-page .lobby-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+body.lobby-page .lobby-iconBtn {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+
+  padding: 0;
+  display: grid;
+  place-items: center;
+
+  border: 1px solid var(--lb-line);
+  border-radius: 12px;
+
+  background: linear-gradient(
+    145deg,#2c261e,#15171c
+  );
+
+  color: var(--lb-gold);
+  font-size: inherit;
+
+  cursor: pointer;
+  box-shadow: none;
+}
+
+body.lobby-page .lobby-iconBtn:active {
+  transform: scale(.95);
+}
+
+body.lobby-page .lobby-create-desktop {
+  border-color: #ebcd92;
+
+  background: linear-gradient(
+    135deg,#f0dab0,#bb9256
+  );
+
+  color: #261c10;
+}
+
+body.lobby-page .lobby-header-actions #userBar {
+  display: none;
+}
+
+/* SEARCH */
+
+body.lobby-page .lobby-header-search {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: 0 14px 14px;
+
+  background: transparent;
+  border: 0;
+}
+
+body.lobby-page .lobby-searchWrap {
+  width: 100%;
+  max-width: 1092px;
+  min-height: 47px;
+  margin: 0 auto;
+
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  padding: 0 12px;
+
+  border: 1px solid var(--lb-line);
+  border-radius: 13px;
+
+  background: linear-gradient(
+    120deg,#28241f,#13151a
+  );
+
+  color: var(--lb-gold);
+}
+
+body.lobby-page #q.lobby-search {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+
+  border: none;
+  outline: none;
+  margin: 0;
+  padding: 0;
+
+  background: transparent;
+  color: #fff;
+  font-size: 16px;
+  box-shadow: none;
+}
+
+body.lobby-page #q::placeholder {
+  color: #aaa098;
+}
+
+body.lobby-page #clearQ {
+  width: 29px;
+  height: 29px;
+  flex: 0 0 29px;
+
+  padding: 0;
+
+  display: grid;
+  place-items: center;
+
+  border: none;
+  border-radius: 8px;
+
+  background: rgba(218,181,113,.11);
+  color: #e4c48a;
+}
+
+/* =============================================
+   FILTER BAR
+============================================= */
+
+body.lobby-page .lobby-filter-bar {
+  position: relative;
+  top: auto;
+  z-index: 20;
+
+  width: 100%;
+  margin: 0;
+  padding: 12px 0;
+
+  border-bottom: 1px solid rgba(220,180,107,.16);
+
+  background: rgba(16,17,21,.94);
+}
+
+body.lobby-page .lobby-filter-scroll {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  padding: 0 14px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+body.lobby-page .lobby-filter-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+body.lobby-page .lobby-chipBtn {
+  flex: 0 0 auto;
+  min-height: 39px;
+
+  padding: 9px 15px;
+
+  border: 1px solid rgba(217,182,114,.25);
+  border-radius: 999px;
+
+  background: linear-gradient(
+    145deg,#29251f,#17191d
+  );
+
+  color: #c6b8a4;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+
+  box-shadow: none;
+  cursor: pointer;
+}
+
+body.lobby-page .lobby-chipBtn.is-active {
+  border-color: #daba80;
+
+  background: linear-gradient(
+    135deg,#5a4529,#332719
+  );
+
+  color: #f5dfb7;
+
+  box-shadow: inset 0 1px rgba(255,255,255,.08);
+}
+
+body.lobby-page #sort {
+  flex: 0 0 auto;
+  min-height: 39px;
+  max-width: 155px;
+
+  padding: 0 9px;
+  border: 1px solid var(--lb-line);
+  border-radius: 11px;
+
+  background: #28241f;
+  color: #ead5ad;
+  font-size: 12px;
+  outline: none;
+}
+
+/* =============================================
+   SECTION HEADING
+============================================= */
+
+body.lobby-page .lobby-section-heading {
+  width: calc(100% - 28px);
+  max-width: 1092px;
+  margin: 12px auto 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+body.lobby-page .lobby-section-kicker {
+  color: #bea06c;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+body.lobby-page .lobby-section-heading h2 {
+  margin: 7px 0 5px;
+
+  font: 700 24px Georgia,serif;
+  color: var(--lb-light);
+}
+
+body.lobby-page .lobby-section-heading p {
+  margin: 0;
+  color: var(--lb-muted);
+  font-size: 12px;
+}
+
+body.lobby-page .lobby-section-ornament {
+  width: 45px;
+  height: 45px;
+  flex: 0 0 45px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid var(--lb-line);
+  border-radius: 13px;
+
+  background: #29241e;
+  color: var(--lb-gold);
+}
+
+/* =============================================
+   LIVE ROOM GRID
+============================================= */
+
+body.lobby-page #grid.lobby-grid,
+body.lobby-page #skeleton.lobby-grid {
+  width: 100%;
+  max-width: 1120px;
+
+  margin: 0 auto;
+  padding:
+    16px
+    14px
+    calc(105px + env(safe-area-inset-bottom,0px));
+
+  display: grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  align-items: start;
+  gap: 15px;
+}
+
+/* ROOM CARD */
+
+body.lobby-page .lobby-card {
+  position: relative;
+
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 240px;
+  aspect-ratio: .84;
+
+  margin: 0;
+  padding: 0;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(225,185,113,.37);
+  border-radius: 19px;
+
+  background: #191b21;
+  color: #fff;
+  text-decoration: none;
+
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.04),
+    0 12px 25px rgba(0,0,0,.34);
+
+  isolation: isolate;
+
+  transition:
+    transform .2s ease,
+    border-color .2s ease,
+    box-shadow .2s ease;
+}
+
+body.lobby-page .lobby-card:hover {
+  transform: translateY(-3px);
+  border-color: #dfbc7d;
+
+  box-shadow: 0 18px 35px rgba(0,0,0,.4);
+}
+
+body.lobby-page .lobby-card:active {
+  transform: scale(.98);
+}
+
+body.lobby-page .lobby-cardBg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+
+body.lobby-page .lobby-cardBg img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+body.lobby-page .lobby-cardShade {
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    180deg,
+    rgba(5,6,9,.62) 0%,
+    rgba(5,6,9,.05) 35%,
+    rgba(5,6,9,.22) 48%,
+    rgba(5,6,9,.94) 100%
+  );
+}
+
+/* TOP OVERLAY */
+
+body.lobby-page .lobby-cardOverlay.top {
+  position: absolute;
+  top: 11px;
+  left: 10px;
+  right: 10px;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 5px;
+}
+
+body.lobby-page .lobby-room {
+  min-width: 0;
+  max-width: 68%;
+
+  padding: 6px 8px;
+
+  border: 1px solid rgba(247,222,178,.21);
+  border-radius: 8px;
+
+  background: rgba(10,11,15,.67);
+  backdrop-filter: blur(7px);
+
+  color: #f5e2ba;
+  font-size: 10px;
+  font-weight: 750;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.lobby-page .lobby-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+body.lobby-page .lobby-livePill,
+body.lobby-page .badge--virtual {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 6px 9px;
+
+  border: 1px solid rgba(255,143,143,.43);
+  border-radius: 8px;
+
+  background: rgba(120,27,36,.89);
+
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  white-space: nowrap;
+}
+
+body.lobby-page .lobby-liveDot {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+  background: #ffc9c9;
+}
+
+body.lobby-page .badge--info {
+  border-radius: 8px;
+  background: rgba(66,49,28,.86);
+  border: 1px solid rgba(218,177,106,.5);
+  color: #ffe0a6;
+}
+
+/* BOTTOM OVERLAY */
+
+body.lobby-page .lobby-cardOverlay.bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  padding: 14px 11px 13px;
+  background: linear-gradient(
+    180deg,transparent,rgba(4,5,8,.62)
+  );
+}
+
+body.lobby-page .lobby-hostRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+body.lobby-page .lobby-ava.mini {
+  width: 33px;
+  height: 33px;
+  flex: 0 0 33px;
+
+  border-radius: 50%;
+  border: 1.5px solid var(--lb-gold);
+  object-fit: cover;
+
+  background: #15161b;
+}
+
+body.lobby-page .lobby-hostMeta {
+  flex: 1;
+  min-width: 0;
+}
+
+body.lobby-page .lobby-hostname {
+  color: #fff1d7;
+
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.4;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.lobby-page .tick-blue {
+  color: #82c5ff;
+}
+
+body.lobby-page .lobby-statsRow {
+  margin-top: 12px;
+  padding-top: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+
+  border-top: 1px solid rgba(229,200,150,.22);
+}
+
+body.lobby-page .lobby-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  min-width: 0;
+  padding: 0;
+
+  border: 0;
+  background: transparent;
+
+  color: #d8c8ac;
+  font-size: 11px;
+}
+
+body.lobby-page .lobby-chip b {
+  color: #f3ddae;
+  font-weight: 800;
+}
+
+body.lobby-page .lobby-cta {
+  color: #f0cd8e;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* EMPTY & LOADING */
+
+body.lobby-page #empty.log {
+  max-width: 600px;
+  margin: 28px auto;
+
+  padding: 28px 18px;
+  text-align: center;
+
+  border: 1px dashed var(--lb-line);
+  border-radius: 16px;
+
+  background: #1b1b20;
+  color: var(--lb-muted);
+}
+
+body.lobby-page .lobby-skel {
+  border: 1px solid var(--lb-line);
+  border-radius: 18px;
+  background: #1b1c21;
+
+  padding: 15px;
+  overflow: hidden;
+}
+
+/* =============================================
+   BOTTOM NAVIGATION
+============================================= */
+
+body.lobby-page .mobile-tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+
+  width: 100%;
+  max-width: 720px;
+  height: calc(72px + env(safe-area-inset-bottom,0px));
+
+  margin: 0 auto;
+  padding:
+    9px
+    7px
+    calc(8px + env(safe-area-inset-bottom,0px));
+
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 3px;
+
+  border: 1px solid var(--lb-line);
+  border-bottom: none;
+  border-radius: 19px 19px 0 0;
+
+  background: rgba(17,18,22,.97);
+
+  backdrop-filter: blur(19px);
+  -webkit-backdrop-filter: blur(19px);
+
+  box-shadow: 0 -12px 35px rgba(0,0,0,.48);
+}
+
+body.lobby-page .mobile-tabbar .tab-item {
+  position: relative;
+
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+
+  padding: 5px 2px;
+
+  border: 1px solid transparent;
+  border-radius: 11px;
+
+  background: transparent;
+
+  color: #a6a09a;
+  font-size: 10px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+body.lobby-page .mobile-tabbar .tab-icon {
+  display: grid;
+  place-items: center;
+  width: 23px;
+  height: 23px;
+}
+
+body.lobby-page .mobile-tabbar .tab-item.active {
+  border-color: rgba(226,182,109,.36);
+
+  background: linear-gradient(
+    145deg,#392b1e,#221e1b
+  );
+
+  color: #f4ddb1;
+}
+
+body.lobby-page .tab-item.active .tab-icon {
+  color: #f1cd8e;
+}
+
+body.lobby-page .mobile-tabbar .tab-main {
+  flex: 1.1;
+  overflow: visible;
+}
+
+body.lobby-page .tab-main .tab-plus {
+  width: 47px;
+  height: 47px;
+
+  display: grid;
+  place-items: center;
+
+  margin-top: -15px;
+
+  border: 2px solid #edcc8e;
+  border-radius: 15px;
+
+  background: linear-gradient(
+    135deg,#f6e2b8,#bf9454
+  );
+
+  color: #271d10;
+  box-shadow: 0 4px 18px rgba(200,151,74,.3);
+}
+
+body.lobby-page .tab-main .tab-plus .lb-icon {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2.4;
+}
+
+body.lobby-page .tab-main-label {
+  margin-top: -2px;
+
+  color: #e2c38c;
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+body.lobby-page .mobile-tabbar.hide {
+  transform: translateY(110%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* =============================================
+   CREATE ROOM / NOTIFICATION MODALS
+============================================= */
+
+body.lobby-page .modal.hidden {
+  display: none !important;
+}
+
+body.lobby-page #createRoomModal .modal-card,
+body.lobby-page #msgModal .modal-card,
+body.lobby-page #inboxModal .modal-card {
+  width: min(100%,420px);
+  max-width: 420px;
+
+  padding: 24px 19px;
+
+  border: 1px solid rgba(231,189,111,.43);
+  border-radius: 20px;
+
+  background:
+    radial-gradient(
+      ellipse at top,
+      rgba(190,137,57,.14),
+      transparent 60%
+    ),
+    #191b20;
+
+  color: #f5e4c4;
+
+  box-shadow: 0 25px 65px rgba(0,0,0,.65);
+}
+
+body.lobby-page #createRoomModal h3,
+body.lobby-page #msgModal h3,
+body.lobby-page #inboxModal h3 {
+  margin: 0 0 17px;
+  color: var(--lb-light);
+  font: 700 21px Georgia,serif;
+}
+
+body.lobby-page #createRoomModal label {
+  display: block;
+  margin: 15px 0 8px;
+
+  font-size: 12px;
+  color: #c8b18a;
+}
+
+body.lobby-page #roomInput,
+body.lobby-page #hostNameInput {
+  width: 100%;
+  min-height: 47px;
+
+  padding: 11px 13px;
+
+  border: 1px solid var(--lb-line);
+  border-radius: 12px;
+  outline: none;
+
+  background: #24252b;
+  color: #fff;
+  font-size: 16px;
+}
+
+body.lobby-page #roomInput:focus {
+  border-color: #e4bf7a;
+}
+
+body.lobby-page #createRoomModal .modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 11px;
+  margin-top: 22px;
+}
+
+body.lobby-page #btnCancelRoom,
+body.lobby-page #msgCancel {
+  min-height: 45px;
+  border: 1px solid var(--lb-line);
+  border-radius: 11px;
+
+  background: #302d2a;
+  color: #e2d8c8;
+}
+
+body.lobby-page #btnConfirmRoom,
+body.lobby-page #msgOk {
+  min-height: 45px;
+  border: 1px solid #efcf92;
+  border-radius: 11px;
+
+  background: linear-gradient(
+    135deg,#f3dfb2,#c39a59
+  );
+
+  color: #251a0e;
+  font-weight: 800;
+}
+
+/* WELCOME & ERROR */
+
+body.lobby-page .neon-modal {
+  max-width: 420px;
+
+  border: 1px solid rgba(222,182,107,.45);
+  border-radius: 20px;
+
+  background: linear-gradient(
+    145deg,#2b241d,#14161c
+  );
+
+  color: #f5e3c1;
+
+  box-shadow: 0 28px 75px rgba(0,0,0,.65);
+}
+
+body.lobby-page .welcome-title,
+body.lobby-page .neon-modal h3 {
+  color: var(--lb-light);
+}
+
+body.lobby-page .neon-frame,
+body.lobby-page .neon-scan {
+  pointer-events: none;
+  opacity: .15;
+}
+
+body.lobby-page .neon-btn--main {
+  border: 1px solid #ebc98e;
+  background: linear-gradient(
+    135deg,#f3dfb3,#bb9255
+  );
+  color: #211a10;
+}
+
+body.lobby-page .neon-btn--ghost {
+  border: 1px solid var(--lb-line);
+  background: #29282a;
+  color: #eadcc2;
+}
+
+body.lobby-page #countdownOverlay .cd-panel {
+  border: 1px solid var(--lb-line);
+  border-radius: 20px;
+  background: #1d1c20;
+}
+
+body.lobby-page .cd-number {
+  color: var(--lb-light);
+}
+
+
+/* ==========================================
+   PREMIUM MEMBER LOBBY
+   MINIMAL BLACK & CHAMPAGNE GOLD
+========================================== */
+
+/* OVERLAY */
+
+body.lobby-page #playerLobby {
+  position: fixed;
+  inset: 0;
+  z-index: 15000;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  margin: 0;
+  padding: 0;
+}
+
+body.lobby-page #playerLobby.hidden {
+  display: none !important;
+}
+
+body.lobby-page #playerLobby .player-lobby-backdrop {
+  position: absolute;
+  inset: 0;
+
+  background: rgba(0, 0, 0, .84);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* PANEL */
+
+body.lobby-page #playerLobby .player-lobby-panel {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+  max-width: 540px;
+
+  height: min(86dvh, 800px);
+  max-height: calc(
+    100dvh - env(safe-area-inset-top, 0px)
+  );
+
+  margin: 0;
+  padding: 0;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(220, 183, 112, .35);
+  border-bottom: none;
+  border-radius: 24px 24px 0 0;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(195, 142, 64, .12),
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      #202025 0%,
+      #111216 100%
+    );
+
+  box-shadow: 0 -25px 70px rgba(0, 0, 0, .6);
+}
+
+body.lobby-page #playerLobby .player-lobby-panel::before {
+  content: "";
+
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+
+  height: 2px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #e1bd7c,
+    transparent
+  );
+}
+
+/* HEADER */
+
+body.lobby-page #playerLobby .player-lobby-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+
+  flex-shrink: 0;
+
+  padding: 25px 19px 18px;
+
+  border-bottom: 1px solid rgba(215, 179, 110, .16);
+}
+
+body.lobby-page #playerLobby .player-lobby-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+body.lobby-page #playerLobby .player-lobby-kicker {
+  color: #c2a271;
+
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 1.6px;
+  line-height: 1.5;
+}
+
+body.lobby-page #playerLobby .player-lobby-header .title {
+  margin: 7px 0 5px;
+  padding: 0;
+
+  color: #f4dfb6;
+
+  font: 700 25px Georgia, "Times New Roman", serif;
+  line-height: 1.25;
+}
+
+body.lobby-page #playerLobby .player-lobby-description {
+  margin: 0;
+
+  color: #a8a3a1;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* CLOSE */
+
+body.lobby-page #playerLobby #closePlayerLobby {
+  flex: 0 0 38px;
+
+  width: 38px;
+  height: 38px;
+
+  display: grid;
+  place-items: center;
+
+  margin: 0;
+  padding: 0;
+
+  border: 1px solid rgba(217, 184, 123, .35);
+  border-radius: 11px;
+
+  background: linear-gradient(
+    145deg,
+    #332b23,
+    #1d1d20
+  );
+
+  color: #e6c78e;
+
+  font-size: 25px;
+  font-weight: 300;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+body.lobby-page #playerLobby #closePlayerLobby:active {
+  transform: scale(.95);
+}
+
+/* SEARCH */
+
+body.lobby-page #playerLobby .player-search {
+  flex-shrink: 0;
+
+  margin: 0;
+  padding: 17px 17px 13px;
+
+  border: none;
+  background: transparent;
+}
+
+body.lobby-page #playerLobby #playerSearch {
+  display: block;
+
+  width: 100%;
+  height: 47px;
+  min-height: 47px;
+
+  margin: 0;
+  padding: 0 15px;
+
+  border: 1px solid rgba(217, 184, 123, .3);
+  border-radius: 13px;
+  outline: none;
+
+  background: #17181d;
+
+  color: #f6e9cd;
+  font-size: 16px;
+
+  box-shadow: inset 0 1px 4px rgba(0,0,0,.12);
+}
+
+body.lobby-page #playerLobby #playerSearch::placeholder {
+  color: #929096;
+  opacity: 1;
+}
+
+body.lobby-page #playerLobby #playerSearch:focus {
+  border-color: #d9b77a;
+  box-shadow: 0 0 0 3px rgba(217, 183, 122, .08);
+}
+
+/* LIST HEADING */
+
+body.lobby-page #playerLobby .player-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  flex-shrink: 0;
+
+  padding: 5px 19px 13px;
+
+  color: #ebd9b6;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+body.lobby-page #playerLobby #playerResultCount {
+  color: #b39d76;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* SCROLL LIST */
+
+body.lobby-page #playerLobby .player-lobby-list {
+  flex: 1;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  margin: 0;
+  padding: 0 13px 18px;
+
+  scrollbar-width: thin;
+  scrollbar-color: #6c573b transparent;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+/* USER CARD */
+
+body.lobby-page #playerLobby .player-row {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+
+  flex: 0 0 auto;
+
+  width: 100%;
+  min-width: 0;
+
+  margin: 0;
+  padding: 14px;
+
+  border: 1px solid rgba(216, 180, 113, .24);
+  border-radius: 15px;
+
+  background:
+    linear-gradient(
+      125deg,
+      #28241f,
+      #191a20 70%
+    );
+
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.03),
+    0 6px 18px rgba(0,0,0,.15);
+}
+
+/* AVATAR + INFO */
+
+body.lobby-page #playerLobby .player-row-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  min-width: 0;
+}
+
+body.lobby-page #playerLobby .pava {
+  position: relative;
+
+  flex: 0 0 49px;
+  width: 49px;
+  height: 49px;
+
+  display: grid;
+  place-items: center;
+
+  overflow: visible;
+
+  border: 2px solid #cfae75;
+  border-radius: 50%;
+
+  background: #29231c;
+}
+
+body.lobby-page #playerLobby .pava-initial {
+  color: #f3deb5;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+body.lobby-page #playerLobby .pava img {
+  position: absolute;
+  inset: 0;
+
+  display: block;
+  width: 100%;
+  height: 100%;
+
+  border: 2px solid #17181c;
+  border-radius: 50%;
+
+  object-fit: cover;
+  background: #25262b;
+}
+
+/* ONLINE DOT */
+
+body.lobby-page #playerLobby .pava .dot {
+  position: absolute;
+  z-index: 2;
+
+  right: -2px;
+  bottom: 0;
+
+  width: 11px;
+  height: 11px;
+
+  border: 2px solid #18191d;
+  border-radius: 50%;
+}
+
+body.lobby-page #playerLobby .pava .dot.on {
+  background: #79ca9a;
+  box-shadow: 0 0 8px rgba(121,202,154,.3);
+}
+
+body.lobby-page #playerLobby .pava .dot.off {
+  background: #797982;
+  box-shadow: none;
+}
+
+/* USER INFO */
+
+body.lobby-page #playerLobby .pinfo {
+  flex: 1;
+  min-width: 0;
+}
+
+body.lobby-page #playerLobby .pname {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  min-width: 0;
+
+  color: #f5e3bf;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.4;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* TÍCH XANH ADMIN */
+
+body.lobby-page #playerLobby .player-verified {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 17px;
+  height: 17px;
+
+  flex: 0 0 17px;
+
+  margin-left: 2px;
+  vertical-align: middle;
+}
+
+body.lobby-page #playerLobby .player-verified svg {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  filter: drop-shadow(
+    0 1px 3px rgba(22,139,235,.3)
+  );
+}
+
+/* LEVEL AND STATUS */
+
+body.lobby-page #playerLobby .player-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  margin-top: 7px;
+}
+
+body.lobby-page #playerLobby .plevel {
+  margin: 0;
+
+  color: #c8ab7b;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+body.lobby-page #playerLobby .player-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  color: #909098;
+  font-size: 11px;
+}
+
+body.lobby-page #playerLobby .player-status::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+  background: currentColor;
+}
+
+body.lobby-page #playerLobby .player-status.on {
+  color: #89cda2;
+}
+
+/* ACTION BUTTONS */
+
+body.lobby-page #playerLobby .pactions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 7px;
+
+  width: 100%;
+  margin: 0;
+  padding: 12px 0 0;
+
+  border-top: 1px solid rgba(217,184,123,.14);
+}
+
+body.lobby-page #playerLobby .pactions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 0;
+  min-height: 39px;
+
+  margin: 0;
+  padding: 8px 5px;
+
+  border: 1px solid rgba(218,183,115,.35);
+  border-radius: 10px;
+
+  background: linear-gradient(
+    145deg,
+    #3b3022,
+    #28241f
+  );
+
+  color: #ebd09c;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.3;
+  white-space: nowrap;
+
+  cursor: pointer;
+}
+
+body.lobby-page #playerLobby .pactions button:active:not(:disabled) {
+  transform: scale(.97);
+}
+
+body.lobby-page #playerLobby .pactions button:disabled {
+  opacity: .52;
+  cursor: default;
+}
+
+/* BLOCK BUTTON */
+
+body.lobby-page #playerLobby .pactions .btn-block {
+  border-color: rgba(221,133,131,.28);
+
+  background: linear-gradient(
+    145deg,
+    #332528,
+    #231d22
+  );
+
+  color: #e2a09a;
+}
+
+/* OWN ACCOUNT */
+
+body.lobby-page #playerLobby .pme {
+  align-self: flex-start;
+
+  margin: 0;
+
+  padding: 7px 11px;
+
+  border: 1px solid rgba(217,184,123,.32);
+  border-radius: 8px;
+
+  background: rgba(217,184,123,.08);
+  color: #e3c48d;
+
+  font-size: 11px;
+  font-weight: 750;
+}
+
+/* EMPTY STATE */
+
+body.lobby-page #playerLobby .player-lobby-empty {
+  padding: 38px 20px;
+
+  border: 1px dashed rgba(218,183,115,.25);
+  border-radius: 14px;
+
+  background: rgba(28,29,34,.55);
+
+  color: #aaa4a0;
+  font-size: 12px;
+  line-height: 1.7;
+  text-align: center;
+}
+
+/* FOOTER */
+
+body.lobby-page #playerLobby .player-lobby-footer {
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding:
+    13px 12px
+    calc(13px + env(safe-area-inset-bottom,0px));
+
+  border-top: 1px solid rgba(218,183,115,.18);
+
+  color: #927d5c;
+  background: #15161b;
+
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 1.4px;
+}
+
+body.lobby-page #playerLobby .player-footer-separator {
+  width: 3px;
+  height: 3px;
+
+  border-radius: 50%;
+  background: #b5945e;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 360px) {
+  body.lobby-page #playerLobby .player-lobby-header {
+    padding: 20px 14px 15px;
+  }
+
+  body.lobby-page #playerLobby .player-lobby-header .title {
+    font-size: 22px;
+  }
+
+  body.lobby-page #playerLobby .player-row {
+    padding: 11px;
+  }
+
+  body.lobby-page #playerLobby .pactions {
+    gap: 5px;
+  }
+
+  body.lobby-page #playerLobby .pactions button {
+    font-size: 10px;
+    padding: 8px 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.lobby-page #playerLobby *,
+  body.lobby-page #playerLobby *::before,
+  body.lobby-page #playerLobby *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}
+
+/* =============================================
+   RESPONSIVE
+============================================= */
+
+@media (max-width: 900px) {
+  body.lobby-page #grid.lobby-grid,
+  body.lobby-page #skeleton.lobby-grid {
+    grid-template-columns: repeat(3,minmax(0,1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  body.lobby-page #grid.lobby-grid,
+  body.lobby-page #skeleton.lobby-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 10px;
+
+    padding: 12px 9px
+      calc(102px + env(safe-area-inset-bottom,0px));
+  }
+
+  body.lobby-page .lobby-card {
+    min-height: 205px;
+    border-radius: 15px;
+  }
+
+  body.lobby-page .lobby-section-heading {
+    margin-top: 19px;
+  }
+
+  body.lobby-page .lobby-section-heading h2 {
+    font-size: 21px;
+  }
+
+  body.lobby-page .lobby-create-desktop {
+    display: none;
+  }
+}
+
+@media (max-width: 380px) {
+  body.lobby-page .lobby-header-inner {
+    gap: 7px;
+    padding-left: 11px;
+    padding-right: 11px;
+  }
+
+  body.lobby-page .lobby-brand {
+    gap: 7px;
+  }
+
+  body.lobby-page .lobby-brand-mark {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+
+  body.lobby-page .lobby-title {
+    font-size: 13px;
+    letter-spacing: .2px;
+  }
+
+  body.lobby-page .lobby-subtitle {
+    font-size: 7.5px;
+    letter-spacing: .9px;
+  }
+
+  body.lobby-page .lobby-iconBtn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+  }
+
+  body.lobby-page .lobby-header-actions {
+    gap: 5px;
+  }
+
+  body.lobby-page .lobby-room {
+    max-width: 60%;
+    font-size: 9px;
+  }
+
+  body.lobby-page .lobby-livePill,
+  body.lobby-page .badge--virtual {
+    font-size: 9px;
+    padding: 5px 6px;
+  }
+
+  body.lobby-page .lobby-hostname {
+    font-size: 12px;
+  }
+
+  body.lobby-page .lobby-cta {
+    font-size: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.lobby-page *,
+  body.lobby-page *::before,
+  body.lobby-page *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+
+
+
+/* ==========================================
+   COMPACT LUXURY LOBBY HEADER
+   FIX HEADER QUÁ CAO
+========================================== */
+
+/* KHÔNG ĐẨY BODY XUỐNG */
+
+html,
+body.lobby-page {
+  margin: 0 !important;
+}
+
+body.lobby-page {
+  padding-top: 0 !important;
+}
+
+/* HEADER SÁT PHÍA TRÊN */
+
+body.lobby-page .lobby-header-full {
+  position: sticky !important;
+
+  top: 0 !important;
+  left: auto !important;
+  right: auto !important;
+
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  transform: none !important;
+}
+
+/* HEADER THU GỌN */
+
+body.lobby-page .lobby-header-inner {
+  display: grid !important;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    max-content !important;
+
+  align-items: center !important;
+  gap: 8px !important;
+
+  width: 100% !important;
+  max-width: 1120px !important;
+
+  height: auto !important;
+  min-height: 54px !important;
+
+  margin: 0 auto !important;
+
+  padding:
+    max(4px, env(safe-area-inset-top, 0px))
+    12px
+    5px !important;
+}
+
+/* THƯƠNG HIỆU */
+
+body.lobby-page .lobby-brand {
+  grid-column: 1;
+
+  display: flex !important;
+  align-items: center !important;
+
+  gap: 8px !important;
+
+  width: 100% !important;
+  min-width: 0 !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  position: static !important;
+}
+
+/* LOGO NHỎ GỌN */
+
+body.lobby-page .lobby-brand-mark {
+  width: 36px !important;
+  height: 36px !important;
+
+  flex: 0 0 36px !important;
+  border-radius: 10px !important;
+}
+
+body.lobby-page .lobby-brand-mark .lb-icon {
+  width: 21px !important;
+  height: 21px !important;
+}
+
+/* NỘI DUNG THƯƠNG HIỆU */
+
+body.lobby-page .lobby-brand-copy {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+
+  overflow: hidden !important;
+}
+
+body.lobby-page .lobby-title {
+  font-size: 14px !important;
+  line-height: 1.2 !important;
+  letter-spacing: .3px !important;
+}
+
+body.lobby-page .lobby-subtitle {
+  margin-top: 3px !important;
+
+  font-size: 8px !important;
+  line-height: 1.2 !important;
+  letter-spacing: .9px !important;
+}
+
+body.lobby-page .lobby-title,
+body.lobby-page .lobby-subtitle {
+  display: block !important;
+
+  width: 100% !important;
+
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+
+  position: static !important;
+}
+
+/* NHÓM NÚT BÊN PHẢI */
+
+body.lobby-page .lobby-header-actions {
+  grid-column: 2;
+
+  position: static !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+
+  flex: none !important;
+  width: auto !important;
+
+  gap: 6px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  transform: none !important;
+}
+
+/* NÚT NHỎ GỌN */
+
+body.lobby-page
+.lobby-header-actions .lobby-iconBtn {
+  position: relative !important;
+
+  flex: 0 0 36px !important;
+
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border-radius: 10px !important;
+}
+
+body.lobby-page
+.lobby-header-actions .lobby-iconBtn .lb-icon {
+  width: 19px !important;
+  height: 19px !important;
+}
+
+/* GIỮ USERBAR CHO JS */
+
+body.lobby-page
+.lobby-header-actions #userBar {
+  display: none !important;
+}
+
+/* THANH TÌM KIẾM */
+
+body.lobby-page .lobby-header-search {
+  position: static !important;
+  width: 100% !important;
+
+  margin: 0 !important;
+  transform: none !important;
+
+  padding: 0 12px 9px !important;
+}
+
+/* THU GỌN KHOẢNG CÁCH DƯỚI HEADER */
+
+body.lobby-page .lobby-filter-bar {
+  position: relative !important;
+  top: auto !important;
+
+  margin: 0 !important;
+  padding: 7px 0 !important;
+  transform: none !important;
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+
+  /* ĐÃ CÓ NÚT TẠO LIVE Ở THANH DƯỚI */
+
+  body.lobby-page #btnCreateRoomDesktop {
+    display: none !important;
+  }
+
+}
+
+@media (max-width: 360px) {
+
+  body.lobby-page .lobby-header-inner {
+    gap: 6px !important;
+    padding-left: 9px !important;
+    padding-right: 9px !important;
+  }
+
+  body.lobby-page .lobby-title {
+    font-size: 12px !important;
+  }
+
+  body.lobby-page .lobby-subtitle {
+    display: none !important;
+  }
+
+  body.lobby-page .lobby-header-actions {
+    gap: 5px !important;
+  }
+
+  body.lobby-page
+  .lobby-header-actions .lobby-iconBtn {
+    flex-basis: 34px !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+  }
+
+}
+
+
+
+/* ==========================================
+   LUXURY LIVE COUNTDOWN
+   BLACK & CHAMPAGNE GOLD
+========================================== */
+
+/* OVERLAY */
+
+body.lobby-page #countdownOverlay {
+  position: fixed !important;
+  inset: 0 !important;
+
+  z-index: 30000 !important;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100dvh;
+
+  margin: 0;
+  padding:
+    calc(16px + env(safe-area-inset-top, 0px))
+    16px
+    calc(16px + env(safe-area-inset-bottom, 0px));
+
+  isolation: isolate;
+}
+
+body.lobby-page #countdownOverlay.hidden {
+  display: none !important;
+}
+
+/* DARK BACKDROP */
+
+body.lobby-page #countdownOverlay .cd-bg {
+  position: absolute;
+  inset: 0;
+
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(131, 90, 38, .13),
+      transparent 60%
+    ),
+    rgba(0, 0, 0, .93);
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* MAIN PANEL */
+
+body.lobby-page #countdownOverlay .cd-panel {
+  position: relative !important;
+  z-index: 1;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  width: 100%;
+  max-width: 380px;
+
+  height: auto;
+  max-height: 100%;
+  overflow-y: auto;
+
+  margin: 0;
+  padding: 27px 22px 25px;
+
+  transform: none !important;
+
+  border: 1px solid rgba(224, 185, 113, .5);
+  border-radius: 24px;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(211, 163, 88, .14),
+      transparent 65%
+    ),
+    linear-gradient(
+      150deg,
+      #25211d,
+      #13151a 72%
+    );
+
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, .75),
+    inset 0 1px rgba(255, 255, 255, .06);
+
+  text-align: center;
+}
+
+/* GOLD ACCENT TOP */
+
+body.lobby-page #countdownOverlay .cd-panel::before {
+  content: "";
+
+  position: absolute;
+  top: 0;
+  left: 18%;
+  right: 18%;
+
+  height: 2px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #f2d49b,
+    transparent
+  );
+}
+
+/* BRAND */
+
+body.lobby-page #countdownOverlay .cd-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  color: #c8a673;
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  white-space: nowrap;
+}
+
+body.lobby-page #countdownOverlay .cd-live-dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #d8aa70;
+
+  box-shadow: 0 0 10px rgba(219, 170, 98, .6);
+
+  animation: cdLivePulse 1.1s ease-in-out infinite;
+}
+
+body.lobby-page #countdownOverlay .cd-brand-separator {
+  width: 1px;
+  height: 12px;
+
+  background: rgba(217, 184, 123, .35);
+}
+
+/* HEADING */
+
+body.lobby-page #countdownOverlay .cd-heading {
+  width: 100%;
+  margin-top: 24px;
+}
+
+body.lobby-page #countdownOverlay .cd-title {
+  position: static;
+  transform: none;
+
+  margin: 0;
+  padding: 0;
+
+  color: #f5e0b7;
+
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+body.lobby-page #countdownOverlay .cd-description {
+  margin: 9px 0 0;
+
+  color: #aca49d;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* ROOM ID */
+
+body.lobby-page #countdownOverlay .cd-room-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+
+  width: 100%;
+  margin-top: 22px;
+}
+
+body.lobby-page #countdownOverlay .cd-room-label {
+  color: #ac956f;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.7px;
+}
+
+body.lobby-page #countdownOverlay .cd-sub {
+  display: block;
+
+  max-width: 100%;
+
+  margin: 0;
+  padding: 8px 16px;
+
+  border: 1px solid rgba(219, 181, 107, .3);
+  border-radius: 30px;
+
+  background: rgba(205, 161, 91, .08);
+
+  color: #e4c999;
+
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+
+  overflow-wrap: anywhere;
+}
+
+/* ==========================================
+   COUNTDOWN DIAL
+========================================== */
+
+body.lobby-page #countdownOverlay .cd-dial {
+  position: relative;
+
+  display: grid;
+  place-items: center;
+
+  width: 190px;
+  height: 190px;
+  flex-shrink: 0;
+
+  margin: 22px auto 16px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(160, 112, 51, .1) 0%,
+      transparent 70%
+    );
+}
+
+/* GOLD GLOW */
+
+body.lobby-page #countdownOverlay .cd-dial::before {
+  content: "";
+
+  position: absolute;
+  inset: 22px;
+
+  border-radius: 50%;
+
+  box-shadow:
+    0 0 45px rgba(210, 155, 75, .08),
+    inset 0 0 40px rgba(178, 122, 50, .07);
+
+  pointer-events: none;
+}
+
+/* SVG RINGS */
+
+body.lobby-page #countdownOverlay .cd-gauge {
+  position: absolute;
+  inset: 0;
+
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: visible;
+}
+
+/* TRACK */
+
+body.lobby-page #countdownOverlay .cd-track {
+  fill: none;
+
+  stroke: rgba(217, 184, 123, .15);
+  stroke-width: 6;
+}
+
+/* PROGRESS RING */
+
+body.lobby-page #countdownOverlay .cd-progress {
+  fill: none;
+
+  stroke: #e9c88b;
+  stroke-width: 6;
+  stroke-linecap: round;
+
+  stroke-dasharray: 477.6;
+  stroke-dashoffset: 0;
+
+  transform: rotate(-90deg);
+  transform-origin: center;
+
+  filter: drop-shadow(
+    0 0 5px rgba(230, 185, 105, .48)
+  );
+}
+
+/* ANIMATE WHEN OPEN */
+
+body.lobby-page
+#countdownOverlay:not(.hidden) .cd-progress {
+  animation: cdProgressDrain 1.95s linear forwards;
+}
+
+/* INNER RING */
+
+body.lobby-page #countdownOverlay .cd-inner-ring {
+  fill: none;
+
+  stroke: rgba(214, 174, 103, .16);
+  stroke-width: 1.4;
+
+  stroke-dasharray: 2 7;
+}
+
+/* NUMBER CONTENT */
+
+body.lobby-page #countdownOverlay .cd-dial-content {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100%;
+}
+
+/* BIG NUMBER */
+
+body.lobby-page #countdownOverlay .cd-number {
+  position: static;
+  transform: none;
+
+  display: block;
+
+  width: auto;
+  height: auto;
+
+  margin: 0;
+  padding: 0;
+
+  border: none;
+  background: transparent;
+  box-shadow: none;
+
+  color: #f7dfad;
+
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 92px;
+  font-weight: 700;
+  line-height: 1;
+
+  font-variant-numeric: tabular-nums;
+
+  text-shadow:
+    0 4px 23px rgba(214, 154, 67, .28);
+}
+
+body.lobby-page #countdownOverlay .cd-unit {
+  margin-top: 2px;
+
+  color: #bca274;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 4px;
+}
+
+/* ==========================================
+   STATUS
+========================================== */
+
+body.lobby-page #countdownOverlay .cd-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  max-width: 100%;
+  margin-top: 1px;
+}
+
+body.lobby-page #countdownOverlay .cd-status-dot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+
+  border-radius: 50%;
+  background: #d7b47a;
+}
+
+body.lobby-page #countdownOverlay .cd-hint {
+  margin: 0;
+  padding: 0;
+
+  color: #e3cda6;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* LOADING DOTS */
+
+body.lobby-page #countdownOverlay .cd-loading-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  margin-top: 15px;
+}
+
+body.lobby-page
+#countdownOverlay .cd-loading-dots span {
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+  background: #c4a26a;
+
+  opacity: .35;
+
+  animation: cdDots 1s ease-in-out infinite;
+}
+
+body.lobby-page
+#countdownOverlay .cd-loading-dots span:nth-child(2) {
+  animation-delay: .18s;
+}
+
+body.lobby-page
+#countdownOverlay .cd-loading-dots span:nth-child(3) {
+  animation-delay: .36s;
+}
+
+/* FOOTER */
+
+body.lobby-page #countdownOverlay .cd-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 9px;
+
+  width: 100%;
+
+  margin-top: 23px;
+  padding-top: 16px;
+
+  border-top: 1px solid rgba(219, 184, 117, .18);
+
+  color: #978873;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+body.lobby-page
+#countdownOverlay .cd-footer > span {
+  width: 3px;
+  height: 3px;
+
+  border-radius: 50%;
+  background: #a78c60;
+}
+
+/* ==========================================
+   ANIMATIONS
+========================================== */
+
+@keyframes cdProgressDrain {
+  from {
+    stroke-dashoffset: 0;
+  }
+
+  to {
+    stroke-dashoffset: 477.6;
+  }
+}
+
+@keyframes cdLivePulse {
+  0%, 100% {
+    opacity: .45;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes cdDots {
+  0%, 80%, 100% {
+    opacity: .25;
+    transform: scale(.8);
+  }
+
+  40% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+/* ==========================================
+   SMALL MOBILE SCREENS
+========================================== */
+
+@media (max-width: 375px), (max-height: 690px) {
+
+  body.lobby-page #countdownOverlay .cd-panel {
+    padding: 20px 16px;
+  }
+
+  body.lobby-page #countdownOverlay .cd-heading {
+    margin-top: 16px;
+  }
+
+  body.lobby-page #countdownOverlay .cd-title {
+    font-size: 23px;
+  }
+
+  body.lobby-page #countdownOverlay .cd-room-wrap {
+    margin-top: 15px;
+  }
+
+  body.lobby-page #countdownOverlay .cd-dial {
+    width: 165px;
+    height: 165px;
+    margin: 15px auto 10px;
+  }
+
+  body.lobby-page #countdownOverlay .cd-number {
+    font-size: 78px;
+  }
+
+  body.lobby-page #countdownOverlay .cd-footer {
+    margin-top: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.lobby-page #countdownOverlay .cd-progress,
+  body.lobby-page #countdownOverlay .cd-live-dot,
+  body.lobby-page #countdownOverlay .cd-loading-dots span {
+    animation: none !important;
+  }
+}
+
+
+
+
+</style>
+
+
+</head>
+<body class="lobby-page">
+  
+<script src="/guard.js"></script>
+
+    
+
+
+
+
+<!-- ===== SVG ICONS - LUXURY LOBBY ===== -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="0" height="0"
+     aria-hidden="true"
+     style="position:absolute;overflow:hidden">
+
+  <symbol id="lb-crown" viewBox="0 0 24 24">
+    <path d="m2 8 5 4 5-8 5 8 5-4-2 11H4L2 8Z"/>
+    <path d="M4 22h16"/>
+  </symbol>
+
+  <symbol id="lb-search" viewBox="0 0 24 24">
+    <circle cx="10.5" cy="10.5" r="7"/>
+    <path d="m16 16 5 5"/>
+  </symbol>
+
+  <symbol id="lb-users" viewBox="0 0 24 24">
+    <circle cx="9" cy="8" r="3"/>
+    <path d="M3 20v-2a6 6 0 0 1 12 0v2"/>
+    <path d="M17 5a3 3 0 0 1 0 6"/>
+    <path d="M18 14a5 5 0 0 1 3 5v1"/>
+  </symbol>
+
+  <symbol id="lb-video" viewBox="0 0 24 24">
+    <rect x="3" y="5" width="13" height="14" rx="3"/>
+    <path d="m16 10 5-3v10l-5-3"/>
+  </symbol>
+
+  <symbol id="lb-home" viewBox="0 0 24 24">
+    <path d="m3 11 9-8 9 8v10H3V11Z"/>
+    <path d="M9 21v-7h6v7"/>
+  </symbol>
+
+  <symbol id="lb-globe" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9"/>
+    <path d="M3 12h18"/>
+    <path d="M12 3c-5 5-5 13 0 18"/>
+    <path d="M12 3c5 5 5 13 0 18"/>
+  </symbol>
+
+  <symbol id="lb-chat" viewBox="0 0 24 24">
+    <path d="M20 11a8 8 0 0 1-8 8 9 9 0 0 1-3.5-.8L4 20l1.2-4.6A8 8 0 1 1 20 11Z"/>
+  </symbol>
+
+  <symbol id="lb-user" viewBox="0 0 24 24">
+    <circle cx="12" cy="8" r="4"/>
+    <path d="M4 21a8 8 0 0 1 16 0"/>
+  </symbol>
+
+  <symbol id="lb-plus" viewBox="0 0 24 24">
+    <path d="M12 5v14M5 12h14"/>
+  </symbol>
+
+  <symbol id="lb-close" viewBox="0 0 24 24">
+    <path d="M18 6 6 18M6 6l12 12"/>
+  </symbol>
+
+</svg>
+
+<!-- ===== LUXURY LOBBY HEADER ===== -->
+
+<header class="lobby-header-full">
+
+  <div class="lobby-header-inner">
+
+    <!-- BRAND -->
+    <div class="lobby-brand">
+
+      <div class="lobby-brand-mark">
+        <svg class="lb-icon">
+          <use href="#lb-crown"></use>
+        </svg>
+      </div>
+
+      <div class="lobby-brand-copy">
+        <div class="lobby-title">LIVESTREAM PRO</div>
+        <div class="lobby-subtitle">PREMIUM LIVE LOUNGE</div>
+      </div>
+
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="lobby-header-actions">
+
+      <button
+        type="button"
+        class="lobby-iconBtn"
+        id="btnToggleSearch"
+        title="Tìm kiếm phòng"
+        aria-label="Tìm kiếm phòng"
+      >
+        <svg class="lb-icon">
+          <use href="#lb-search"></use>
+        </svg>
+      </button>
+
+      <button
+        type="button"
+        class="lobby-iconBtn"
+        id="btnPlayerLobby"
+        title="Sảnh người dùng"
+        aria-label="Sảnh người dùng"
+      >
+        <svg class="lb-icon">
+          <use href="#lb-users"></use>
+        </svg>
+      </button>
+
+      <button
+        type="button"
+        class="lobby-iconBtn lobby-create-desktop"
+        id="btnCreateRoomDesktop"
+        title="Tạo phòng LIVE"
+        aria-label="Tạo phòng LIVE"
+      >
+        <svg class="lb-icon">
+          <use href="#lb-video"></use>
+        </svg>
+      </button>
+
+      <!-- GIỮ NGUYÊN ID userBar -->
+      <div class="lobby-actions" id="userBar">
+
+        <div class="user-chip"
+             style="display:none"
+             onclick="location.href='/profile.html'">
+
+          <img id="userAva" alt="Avatar">
+
+          <div class="user-info">
+            <div id="userName"></div>
+            <div class="user-level" id="userLevel"></div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SEARCH BAR -->
+  <div class="lobby-header-search hidden" id="headerSearch">
+
+    <div class="lobby-searchWrap">
+
+      <svg class="lb-icon">
+        <use href="#lb-search"></use>
+      </svg>
+
+      <input
+        id="q"
+        class="lobby-search"
+        placeholder="Tìm Room ID hoặc tên Host..."
+        autocomplete="off"
+        aria-label="Tìm kiếm phòng LIVE"
+      >
+
+      <button
+        type="button"
+        id="clearQ"
+        class="lobby-clear"
+        title="Xóa tìm kiếm"
+      >
+        <svg class="lb-icon">
+          <use href="#lb-close"></use>
+        </svg>
+      </button>
+
+    </div>
+
+  </div>
+
+</header>
+
+
+
+
+<!-- SLIDE FILTER BAR -->
+<div class="lobby-filter-bar">
+  <div class="lobby-filter-scroll">
+
+    <button class="lobby-chipBtn is-active" data-filter="all">
+    Tất cả
+    </button>
+
+    <button class="lobby-chipBtn" data-filter="cohost">
+    PK
+    </button>
+
+    <button class="lobby-chipBtn" data-filter="hot">
+    Hot
+    </button>
+
+    <button class="lobby-chipBtn" data-filter="new">
+    Mới live
+    </button>
+
+    <button class="lobby-chipBtn" data-filter="long">
+    Live lâu
+    </button>
+
+    <!-- SORT nằm chung trong thanh trượt -->
+    <select id="sort" class="lobby-select lobby-select-inline">
+      <option value="viewers">Đông người xem</option>
+      <option value="new">Mới live</option>
+      <option value="old">Live lâu</option>
+    </select>
+
+  </div>
+</div>
+
+
+
+<!-- GUEST NOTICE FULL WIDTH -->
+<div id="guestNotice" class="guest-notice-bar hidden">
+  <div class="guest-notice-inner"></div>
+</div>
+
+
+
+
+<!-- ===== LIVE SECTION HEADING ===== -->
+<div class="lobby-section-heading">
+
+  <div>
+    <div class="lobby-section-kicker">
+      EXPLORE LIVE
+    </div>
+
+    <h2>Khám phá phòng LIVE</h2>
+
+    <p>Chọn phòng để xem và tham gia trò chuyện.</p>
+  </div>
+
+  <span class="lobby-section-ornament" aria-hidden="true">
+    <svg class="lb-icon">
+      <use href="#lb-video"></use>
+    </svg>
+  </span>
+
+</div>
+
+
+
+  <div id="grid" class="lobby-grid"></div>
+
+  <div id="empty" class="log">Chưa có phòng nào đang live.</div>
+
+      <!-- skeleton loading -->
+  <div id="skeleton" class="lobby-grid" style="display:none"></div>
+
+  <div class="container lobby-shell">
+
+
+   <div class="card lobby-hero lobby-hero--v2" style="display: none">
+  <!-- HERO TOP -->
+  <div class="hero-top">
+    <div class="hero-right">
+      <div class="hero-stat">
+        <div class="hero-statVal" id="statRooms">0</div>
+        <div class="hero-statLabel">Phòng live</div>
+      </div>
+
+      <div class="hero-stat">
+        <div class="hero-statVal" id="statViewers">0</div>
+        <div class="hero-statLabel">Viewers</div>
+      </div>
+
+      <div class="hero-stat hero-stat--time">
+        <div class="hero-statVal" id="statTs">--:--:--</div>
+        <div class="hero-statLabel">Cập nhật</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+
+ 
+
+<!-- CREATE ROOM MODAL -->
+<div id="createRoomModal" class="modal hidden">
+  <div class="modal-backdrop"></div>
+
+  <div class="modal-card">
+    <h3> Tạo phòng livestream</h3>
+
+    <label>Room ID (viết liền không dấu)</label>
+    <input id="roomInput" placeholder="vd: abc123" />
+
+    <label>Tên Host</label>
+    <input id="hostNameInput" placeholder="Tên hiển thị" />
+
+    <div class="modal-actions">
+      <button id="btnCancelRoom" type="button">Hủy</button>
+      <button id="btnConfirmRoom" type="button">Vào phòng</button>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- ERROR MODAL (NEON) -->
+<div id="errModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-backdrop modal-backdrop--neon"></div>
+
+  <div class="neon-modal" tabindex="-1" style="max-width:520px">
+    <div class="neon-frame"></div>
+    <div class="neon-scan"></div>
+
+    <div class="neon-top">
+      <div class="neon-livePill">
+        <span class="neon-dot"></span>
+        <span>LỖI TẠO PHÒNG</span>
+      </div>
+      <button id="errX" class="neon-x" type="button" aria-label="Đóng">✕</button>
+    </div>
+
+    <div style="padding:14px 2px 6px">
+      <h3 style="margin:0 0 6px">⚠️ Không tạo được</h3>
+      <div id="errText" style="opacity:.9; line-height:1.4"></div>
+    </div>
+
+    <div class="neon-actions" style="border-top:0; padding-top:6px">
+      <div></div>
+      <div class="neon-btns">
+        <button id="errOk" class="neon-btn neon-btn--main" type="button">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WELCOME MODAL (NEON v2) -->
+<div id="welcomeModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+  <div class="modal-backdrop modal-backdrop--neon"></div>
+
+  <div class="neon-modal neon-modal--welcome" tabindex="-1">
+    <div class="neon-frame"></div>
+    <div class="neon-scan"></div>
+
+    <!-- HERO -->
+    <div class="welcome-hero">
+      <div class="welcome-logo">🎥</div>
+
+      <h3 id="welcomeTitle" class="welcome-title">
+        Chào mừng đến <span>Livestream Pro</span>
+      </h3>
+
+      <div class="welcome-sub">
+        Nơi host lên LIVE chỉ trong vài giây<br>
+        Viewer vào xem realtime – chat – reaction
+      </div>
+
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="neon-actions welcome-actions">
+      <label class="neon-check">
+        <input type="checkbox" id="welcomeDontShow" />
+        <span>Không hiện lại</span>
+      </label>
+
+      <div class="neon-btns">
+        <button id="btnWelcomeClose" class="neon-btn neon-btn--ghost" type="button">
+          Để sau
+        </button>
+        <button id="btnWelcomeCreate" class="neon-btn neon-btn--main" type="button">
+          ➕ Tạo phòng LIVE
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+
+<!-- ==========================================
+     LUXURY LIVE COUNTDOWN OVERLAY
+========================================== -->
+
+<div id="countdownOverlay"
+     class="cd-overlay hidden"
+     aria-hidden="true"
+     role="status">
+
+  <!-- NỀN TỐI -->
+  <div class="cd-bg"></div>
+
+  <!-- COUNTDOWN PANEL -->
+  <div class="cd-panel">
+
+    <!-- TOP BRAND -->
+    <div class="cd-brand">
+      <span class="cd-live-dot"></span>
+      <span>LIVESTREAM PRO</span>
+      <span class="cd-brand-separator"></span>
+      <span>LIVE STUDIO</span>
+    </div>
+
+    <!-- TITLE -->
+    <div class="cd-heading">
+      <h2 class="cd-title">
+        Chuẩn bị lên LIVE
+      </h2>
+
+      <p class="cd-description">
+        Phòng phát sóng đang được khởi tạo
+      </p>
+    </div>
+
+    <!-- ROOM ID -->
+    <div class="cd-room-wrap">
+      <div class="cd-room-label">
+        PHÒNG PHÁT SÓNG
+      </div>
+
+      <div class="cd-sub" id="cdRoomText">
+        Room: -
+      </div>
+    </div>
+
+    <!-- COUNTDOWN CIRCLE -->
+    <div class="cd-dial">
+
+      <svg class="cd-gauge"
+           viewBox="0 0 180 180"
+           aria-hidden="true">
+
+        <!-- VÒNG NỀN -->
+        <circle
+          class="cd-track"
+          cx="90"
+          cy="90"
+          r="76"
+        />
+
+        <!-- VÒNG TIẾN TRÌNH -->
+        <circle
+          class="cd-progress"
+          cx="90"
+          cy="90"
+          r="76"
+        />
+
+        <!-- VÒNG TRANG TRÍ BÊN TRONG -->
+        <circle
+          class="cd-inner-ring"
+          cx="90"
+          cy="90"
+          r="65"
+        />
+
+      </svg>
+
+      <!-- SỐ ĐẾM NGƯỢC -->
+      <div class="cd-dial-content">
+
+        <div
+          class="cd-number"
+          id="cdNumber"
+          aria-live="off"
+        >3</div>
+
+        <div class="cd-unit">
+          GIÂY
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- STATUS -->
+    <div class="cd-status">
+
+      <span class="cd-status-dot"></span>
+
+      <span class="cd-hint">
+        Đang kết nối tới phòng phát sóng
+      </span>
+
+    </div>
+
+    <!-- LOADING DOTS -->
+    <div class="cd-loading-dots"
+         aria-hidden="true">
+
+      <span></span>
+      <span></span>
+      <span></span>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="cd-footer">
+      Thiết lập phòng
+      <span></span>
+      Kết nối
+      <span></span>
+      Phát sóng
+    </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+
+
+
+<!-- ===== LUXURY BOTTOM NAVIGATION ===== -->
+
+<nav class="mobile-tabbar" aria-label="Điều hướng chính">
+
+  <!-- LOBBY -->
+  <button type="button"
+          class="tab-item active"
+          data-tab="lobby">
+
+    <span class="tab-icon">
+      <svg class="lb-icon">
+        <use href="#lb-home"></use>
+      </svg>
+    </span>
+
+    <span class="tab-text">Lobby</span>
+  </button>
+
+  <!-- SOCIAL: GIỮ data-tab="hot" -->
+  <button type="button"
+          class="tab-item"
+          data-tab="hot">
+
+    <span class="tab-icon">
+      <svg class="lb-icon">
+        <use href="#lb-globe"></use>
+      </svg>
+    </span>
+
+    <span class="tab-text">Social</span>
+  </button>
+
+  <!-- TẠO PHÒNG -->
+  <button type="button"
+          class="tab-item tab-main"
+          id="tabCreate"
+          aria-label="Tạo phòng LIVE">
+
+    <span class="tab-plus">
+      <svg class="lb-icon">
+        <use href="#lb-plus"></use>
+      </svg>
+    </span>
+
+    <span class="tab-main-label">Tạo LIVE</span>
+  </button>
+
+  <!-- CHAT -->
+  <button type="button"
+          class="tab-item"
+          data-tab="chat">
+
+    <span class="tab-icon">
+      <svg class="lb-icon">
+        <use href="#lb-chat"></use>
+      </svg>
+    </span>
+
+    <span class="tab-text">Chat</span>
+  </button>
+
+  <!-- PROFILE -->
+  <button type="button"
+          class="tab-item"
+          data-tab="profile">
+
+    <span class="tab-icon">
+      <svg class="lb-icon">
+        <use href="#lb-user"></use>
+      </svg>
+    </span>
+
+    <span class="tab-text">Profile</span>
+  </button>
+
+</nav>
+
+
+
+<!-- 📩 INBOX MODAL -->
+<div id="inboxModal" class="modal hidden">
+  <div class="modal-backdrop"></div>
+
+  <div class="modal-card inbox-card">
+    <h3>📩 Thông báo</h3>
+    <div id="inboxList" class="inbox-list"></div>
+  </div>
+</div>
+
+
+
+
+<div id="msgModal" class="modal hidden">
+  <div class="modal-backdrop" onclick="closeMsg()"></div>
+  <div class="modal-card">
+    <h3 id="msgTitle">Thông báo</h3>
+    <div id="msgText"></div>
+
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <button id="msgCancel" onclick="closeMsg()">Hủy</button>
+      <button id="msgOk">OK</button>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- ===== LUXURY MEMBER LOBBY ===== -->
+
+<div id="playerLobby"
+     class="player-lobby hidden"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="playerLobbyTitle">
+
+  <div class="player-lobby-backdrop"></div>
+
+  <section class="player-lobby-panel">
+
+    <!-- HEADER -->
+    <header class="player-lobby-header">
+
+      <div class="player-lobby-heading">
+
+        <div class="player-lobby-kicker">
+          LIVESTREAM PRO · COMMUNITY
+        </div>
+
+        <h2 id="playerLobbyTitle" class="title">
+          Sảnh thành viên
+        </h2>
+
+        <p class="player-lobby-description">
+          Khám phá và kết nối cộng đồng
+        </p>
+
+      </div>
+
+      <button
+        type="button"
+        id="closePlayerLobby"
+        class="player-lobby-close"
+        aria-label="Đóng sảnh thành viên"
+      >
+        &times;
+      </button>
+
+    </header>
+
+    <!-- SEARCH -->
+    <div class="player-search">
+
+      <input
+        id="playerSearch"
+        type="search"
+        placeholder="Tìm theo tên hoặc UID..."
+        autocomplete="off"
+        aria-label="Tìm thành viên"
+      >
+
+    </div>
+
+    <!-- LIST HEADING -->
+
+<div class="player-list-heading">
+  <span>Danh sách thành viên</span>
+</div>
+
+
+    <!-- USER LIST - GIỮ NGUYÊN ID -->
+    <div
+      id="playerList"
+      class="player-lobby-list"
+    >
+      <div class="player-lobby-empty">
+        Đang tải danh sách thành viên...
+      </div>
+    </div>
+
+    <!-- BOTTOM DECORATION -->
+    <div class="player-lobby-footer">
+      LIVESTREAM PRO
+      <span class="player-footer-separator"></span>
+      PRIVATE COMMUNITY
+    </div>
+
+  </section>
+
+</div>
+
+
+
+
+
+<div id="toast-container"></div>
+
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/chat-global.js"></script>
+<script src="/push-init.js"></script>
+<script src="/app-entry-guard.js"></script>
+
+<script>
+const socket = io();
+
+
+const R2_PUBLIC_URL = "https://pub-a6a541cf3a9c4d0aa06613e3d1dc1c60.r2.dev";
+
+function fixAvatar(url){
+  if (!url) return "";
+  if (url.startsWith("/avatars/")) {
+    return R2_PUBLIC_URL + url;
+  }
+  return url;
+}
+
+
+let ALL_USERS = [];
+let ONLINE_UIDS = [];
+
+let MY_FRIENDS = [];
+let MY_REQUESTS = [];
+let MY_BLOCKED = [];
+
+
+
+// 🔥 SORT USER CHO PLAYER LOBBY
+function sortUsersForLobby(list) {
+  return list.slice().sort((a, b) => {
+    // 1️⃣ ADMIN LUÔN LÊN ĐẦU
+    if (a.role === "admin" && b.role !== "admin") return -1;
+    if (a.role !== "admin" && b.role === "admin") return 1;
+
+    // 2️⃣ ONLINE TRƯỚC OFFLINE
+    const aOnline = ONLINE_UIDS.includes(a.uid);
+    const bOnline = ONLINE_UIDS.includes(b.uid);
+    if (aOnline && !bOnline) return -1;
+    if (!aOnline && bOnline) return 1;
+
+    // 3️⃣ LEVEL CAO TRƯỚC
+    return (b.level || 0) - (a.level || 0);
+  });
+}
+
+
+
+function lobbyVerifiedBadge(uid){
+  const u = ALL_USERS.find(x => x.uid === uid);
+  if (u && u.role === "admin") {
+    return `<span class="lp-verified" title="Admin Livestream Pro">✔︎</span>`;
+  }
+  return "";
+}
+
+
+// load tất cả tài khoản
+fetch("/api/all-users")
+  .then(r=>r.json())
+  .then(list=>{
+    ALL_USERS = list || [];
+    renderPlayerLobbyAll();
+  });
+
+// nhận realtime online
+socket.on("active-users", ({ users, online })=>{
+
+  socket.on("all-users", list=>{
+  ALL_USERS = list || [];
+  renderPlayerLobbyAll();
+});
+
+  // server cũ có thể gửi {users} hoặc {online}
+  if(Array.isArray(online)){
+    ONLINE_UIDS = online;
+  } else if(Array.isArray(users)){
+    // fallback: nếu server gửi full users online, map về uid
+    ONLINE_UIDS = users.map(u=>u.uid);
+  }
+  renderPlayerLobbyAll();
+});
+
+
+
+const profile = JSON.parse(localStorage.getItem("user_profile") || "{}");
+
+const isGuest = localStorage.getItem("isGuest") === "1";
+
+
+
+
+
+
+if(profile.uid){
+  socket.emit("auth-login", { uid: profile.uid });
+}
+
+if (profile.uid) {
+  fetch("/api/friends/" + profile.uid)
+    .then(r => r.json())
+    .then(data => {
+      MY_FRIENDS = data.friends.map(f => f.uid);
+      MY_REQUESTS = data.requests.map(r => r.uid);
+      MY_BLOCKED = data.blocked || [];   // 🚫 BLOCK
+      renderPlayerLobbyAll();
+    });
+}
+
+
+
+
+const VIRTUAL_ROOMS = [
+  
+  {
+    roomId: "KimDogCat",
+    title: "LiveGame",
+    viewers: 0,
+    avatar: "https://i.ibb.co/GfwZdM61/107.jpg",
+    link: "https://us06web.zoom.us/j/8190972376?pwd=mWvhhpx5atN0iMXo92BobJpLQSnbf2.1"
+  },
+
+   
+  {
+    roomId: "emmbe68",
+    title: "👸🏻Xuka 🍀",
+    viewers: 281,
+    avatar: "/assets/live-avatar/Xuka.jpg",
+    link: "https://www.bigo.tv/826800235"
+  },
+
+ 
+  {
+    roomId: "Ngoccute1204",
+    title: "Ngọc đang suyy🥺",
+    viewers: 172,
+    avatar: "/assets/live-avatar/Ngoc.jpg",
+    link: "https://www.bigo.tv/1040706459"
+  },
+
+   
+  {
+    roomId: "Kim1612",
+    title: "Kimm🐷",
+    viewers: 147,
+    avatar: "/assets/live-avatar/Kim.jpg",
+    link: "https://www.bigo.tv/146414661"
+  },
+
+  
+  {
+    roomId: "mymy0611",
+    title: "🐯Babi",
+    viewers: 450,
+    avatar: "/assets/live-avatar/Babi.jpg",
+    link: "https://www.bigo.tv/793578649"
+  },
+
+  
+  {
+    roomId: "Tramie6868",
+    title: "Tramie🐯",
+    viewers: 162,
+    avatar: "/assets/live-avatar/Tramie.jpg",
+    link: "https://www.bigo.tv/1061752214"
+  },
+ 
+  {
+    roomId: "ngan1402",
+    title: "NgânBLR",
+    viewers: 537,
+    avatar: "/assets/live-avatar/Ngan.jpg",
+    link: "https://www.bigo.tv/158702950"
+  },
+
+    
+
+  {
+    roomId: "995013285",
+    title: "🏆ʷⁱⁿQuỳnh hương",
+    viewers: 534,
+    avatar: "/assets/live-avatar/Quynh.jpg",
+    link: "https://www.bigo.tv/995013285"
+  },
+
+  
+  {
+    roomId: "Meo688",
+    title: "тỉтỉ",
+    viewers: 151,
+    avatar: "/assets/live-avatar/Meo.jpg",
+    link: "https://www.bigo.tv/845614239"
+  },
+  
+  {
+    roomId: "yenchibi2k4",
+    title: "꧁🌸Yến♕ ChiBi🌸꧂",
+    viewers: 261,
+    avatar: "/assets/live-avatar/Yen.jpg",
+    link: "https://www.bigo.tv/153992601"
+  },
+  
+  {
+    roomId: "pu6699",
+    title: "HG❤️Pu 🌷",
+    viewers: 211,
+    avatar: "/assets/live-avatar/Pu.jpg",
+    link: "https://www.bigo.tv/826833956"
+  },
+
+  {
+    roomId: "yumi2121",
+    title: "[🌻]Yumi🌭",
+    viewers: 289,
+    avatar: "/assets/live-avatar/Yumi.jpg",
+    link: "https://www.bigo.tv/779206698"
+  },
+
+  {
+    roomId: "Ngochoai97",
+    title: "↷ϻ↶Ngọc Hoài🦋✨",
+    viewers: 458,
+    avatar: "/assets/live-avatar/Hoai.jpg",
+    link: "https://www.bigo.tv/917212596"
+  },
+
+  {
+    roomId: "Hin2903",
+    title: "🍀 Hin 🍀💎💸",
+    viewers: 439,
+    avatar: "/assets/live-avatar/Hin.jpg",
+    link: "https://www.bigo.tv/1038768757"
+  },
+
+  {
+    roomId: "love_cherry",
+    title: "🎀𝓒𝓱𝓮𝓻𝓻𝔂🎀",
+    viewers: 92,
+    avatar: "/assets/live-avatar/Cherry.jpg",
+    link: "https://www.bigo.tv/430464348"
+  },
+
+  {
+    roomId: "Girlmonhon6688",
+    title: "🎼💋Miu Miu💋🎼",
+    viewers: 431,
+    avatar: "/assets/live-avatar/Miu.jpg",
+    link: "https://www.bigo.tv/14437670"
+  },
+
+  {
+    roomId: "maybaybe",
+    title: "⚔️𝓜𝓪̂𝔂 𝓜ỡ ☁️",
+    viewers: 242,
+    avatar: "/assets/live-avatar/May.jpg",
+    link: "https://www.bigo.tv/874298940"
+  },
+
+  {
+    roomId: "maimai1208",
+    title: "𝓝𝓪̆́𝓷𝓰 🍀",
+    viewers: 490,
+    avatar: "/assets/live-avatar/Mai.jpg",
+    link: "https://www.bigo.tv/994398165"
+  },
+
+  {
+    roomId: "min270622",
+    title: "🍀 SuMin🕷️Ngơ💋",
+    viewers: 423,
+    avatar: "/assets/live-avatar/SuMin.jpg",
+    link: "https://www.bigo.tv/987650913"
+  },
+
+
+  {
+    roomId: "YEUNYNHAT",
+    title: "🐉Bé Nỳ 💖💎",
+    viewers: 152,
+    avatar: "/assets/live-avatar/BeNy.jpg",
+    link: "https://www.bigo.tv/896740408"
+  },
+
+  {
+    roomId: "mie55555",
+    title: "𝑀𝑖𝑒🎀",
+    viewers: 324,
+    avatar: "/assets/live-avatar/Mie.jpg",
+    link: "https://www.bigo.tv/968413158"
+  },
+
+  {
+    roomId: "_Vy2oo5_",
+    title: "𝚃𝚉𝚈☘️",
+    viewers: 346,
+    avatar: "/assets/live-avatar/Vy.jpg",
+    link: "https://www.bigo.tv/1078960260"
+  },
+
+
+  {
+    roomId: "Lananh0206",
+    title: "Lan Anh🍒",
+    viewers: 462,
+    avatar: "/assets/live-avatar/LanAnh.jpg",
+    link: "https://www.bigo.tv/848092014"
+  },
+
+  {
+    roomId: "Oanh05",
+    title: "Ori🌷",
+    viewers: 440,
+    avatar: "/assets/live-avatar/Oanh.jpg",
+    link: "https://www.bigo.tv/797563929"
+  },
+
+  {
+    roomId: "loanmeo68",
+    title: "LUCIE ♥️",
+    viewers: 261,
+    avatar: "/assets/live-avatar/Lucie.jpg",
+    link: "https://www.bigo.tv/774200609"
+  },
+
+  {
+    roomId: "thienhuong7979",
+    title: "Thiên Hương",
+    viewers: 170,
+    avatar: "/assets/live-avatar/ThienHuong.jpg",
+    link: "https://www.bigo.tv/1078407754"
+  },
+
+  {
+    roomId: "IAMHUY",
+    title: "iamhuy",
+    viewers: 502,
+    avatar: "/assets/live-avatar/Huy.jpg",
+    link: "https://www.bigo.tv/1058007819"
+  },
+
+  {
+    roomId: "1081598732",
+    title: "Nhã Thiên",
+    viewers: 224,
+    avatar: "/assets/live-avatar/NhaThien.jpg",
+    link: "https://www.bigo.tv/1081598732"
+  },
+
+  {
+    roomId: "siuiu9999",
+    title: "Quýt 🍊may mắn",
+    viewers: 510,
+    avatar: "/assets/live-avatar/Quyt.jpg",
+    link: "https://www.bigo.tv/1002773382"
+  },
+
+  {
+    roomId: "C_1998",
+    title: "Thỏ con🐰",
+    viewers: 424,
+    avatar: "/assets/live-avatar/Tho.jpg",
+    link: "https://www.bigo.tv/1062915284"
+  },
+
+  {
+    roomId: "nhune3939",
+    title: "𝑵𝒉𝒖̛ 𝒏𝒆̀🕊️",
+    viewers: 325,
+    avatar: "/assets/live-avatar/Nhu.jpg",
+    link: "https://www.bigo.tv/1057457368"
+  },
+
+  {
+    roomId: "Niunnie",
+    title: "Nini mặt buồn 🦋",
+    viewers: 187,
+    avatar: "/assets/live-avatar/NiNi.jpg",
+    link: "https://www.bigo.tv/1017555744"
+  },
+
+  {
+    roomId: "Be.Ka",
+    title: "Bé Ka🍀",
+    viewers: 3378,
+    avatar: "/assets/live-avatar/BeKa.jpg",
+    link: "https://www.bigo.tv/1099071156"
+  },
+
+  {
+    roomId: "Hellokitty9x",
+    title: "𝓒𝓱𝓸𝓾 ♥️",
+    viewers: 123,
+    avatar: "/assets/live-avatar/Chou.jpg",
+    link: "https://www.bigo.tv/1115721348"
+  },
+
+  {
+    roomId: "Thao1704",
+    title: "Thảo❤️",
+    viewers: 110,
+    avatar: "/assets/live-avatar/Thao.jpg",
+    link: "https://www.bigo.tv/1101944284"
+  },
+
+  {
+    roomId: "Chauau",
+    title: "HaChu ☀️",
+    viewers: 151,
+    avatar: "/assets/live-avatar/HaChu.jpg",
+    link: "https://www.bigo.tv/1104062685"
+  },
+
+  {
+    roomId: "julie1405",
+    title: "Bắp iu🌽",
+    viewers: 128,
+    avatar: "/assets/live-avatar/Bap.jpg",
+    link: "https://www.bigo.tv/1034249405"
+  },
+
+  {
+    roomId: "chu203",
+    title: "𝑪𝒉𝒖𝒄𝒉𝒖🐑",
+    viewers: 173,
+    avatar: "/assets/live-avatar/ChuChu.jpg",
+    link: "https://www.bigo.tv/1072675851"
+  },
+
+  {
+    roomId: "Bun280504",
+    title: "Bún💋",
+    viewers: 139,
+    avatar: "/assets/live-avatar/Bun.jpg",
+    link: "https://www.bigo.tv/1024554594"
+  },
+  
+  {
+    roomId: "Chemmne",
+    title: "✿‿ Chemm~🌸🐝",
+    viewers: 183,
+    avatar: "/assets/live-avatar/Chem.jpg",
+    link: "https://www.bigo.tv/337072416"
+  },
+  
+  {
+    roomId: "WNhi123",
+    title: "Ryn🤍",
+    viewers: 113,
+    avatar: "/assets/live-avatar/Ryn.jpg",
+    link: "https://www.bigo.tv/221781714"
+  },
+ 
+  {
+    roomId: "mianhdd",
+    title: "Mimi🌸",
+    viewers: 89,
+    avatar: "/assets/live-avatar/Mimi.jpg",
+    link: "https://www.bigo.tv/1097989495"
+  },  
+  
+  {
+    roomId: "Quyentho2k",
+    title: "Quyên thỏ 😘",
+    viewers: 133,
+    avatar: "/assets/live-avatar/Quyen.jpg",
+    link: "https://www.bigo.tv/1098260495"
+  },  
+
+  {
+    roomId: "Annyeuoi",
+    title: "Ann ⛅️",
+    viewers: 100,
+    avatar: "/assets/live-avatar/Ann.jpg",
+    link: "https://www.bigo.tv/1082208506"
+  }, 
+
+  {
+    roomId: "meoyeu02",
+    title: "🍀𝐌𝐞𝐨iu🎀☘️",
+    viewers: 150,
+    avatar: "/assets/live-avatar/Meoiu.jpg",
+    link: "https://www.bigo.tv/673688798"
+  }, 
+
+  {
+    roomId: "220699M",
+    title: "𝐌𝐨𝐧 𝐁𝐀𝐄 💋",
+    viewers: 141,
+    avatar: "/assets/live-avatar/MonBAE.jpg",
+    link: "https://www.bigo.tv/1069867881"
+  }, 
+
+
+  {
+    roomId: "Meokoxinh.",
+    title: "LUXY ✨",
+    viewers: 143,
+    avatar: "/assets/live-avatar/Luxy.jpg",
+    link: "https://www.bigo.tv/1052684797"
+  }, 
+
+  {
+    roomId: "mie39793979",
+    title: "Mie❤️",
+    viewers: 167,
+    avatar: "/assets/live-avatar/Mie1.jpg",
+    link: "https://www.bigo.tv/976215228"
+  }, 
+
+  {
+    roomId: "vatchatbangythuc",
+    title: "Lingmeo",
+    viewers: 553,
+    avatar: "/assets/live-avatar/Ling.jpg",
+    link: "https://www.bigo.tv/1082018558"
+  }, 
+
+  {
+    roomId: "callmebong_",
+    title: "Bông ơi🕊️",
+    viewers: 267,
+    avatar: "/assets/live-avatar/Bong.jpg",
+    link: "https://www.bigo.tv/1099061482"
+  }, 
+
+  {
+    roomId: "cobebanhmi21",
+    title: "Linn Mi ✨",
+    viewers: 95,
+    avatar: "/assets/live-avatar/LinMi.jpg",
+    link: "https://www.bigo.tv/1115522897"
+  }, 
+
+  {
+    roomId: "Tiiu.69",
+    title: "TÍ69☘️",
+    viewers: 333,
+    avatar: "/assets/live-avatar/Tiu.jpg",
+    link: "https://www.bigo.tv/74535872"
+  }, 
+
+  {
+    roomId: "celinethu2",
+    title: "Celine🌸",
+    viewers: 767,
+    avatar: "/assets/live-avatar/Celine.jpg",
+    link: "https://www.bigo.tv/1020215575"
+  }, 
+
+  {
+    roomId: "YiYi1608",
+    title: "𝒀𝒊 𝒀𝒊🍉",
+    viewers: 470,
+    avatar: "/assets/live-avatar/Yiyi.jpg",
+    link: "https://www.bigo.tv/692057933"
+  }, 
+  
+  {
+    roomId: "1103719962",
+    title: "Linh Mít（妙玲）🍀",
+    viewers: 442,
+    avatar: "/assets/live-avatar/LinhMit.jpg",
+    link: "https://www.bigo.tv/1103719962"
+  }, 
+  
+  {
+    roomId: "baby_nu.",
+    title: "Embé_Nu",
+    viewers: 212,
+    avatar: "/assets/live-avatar/Baby.jpg",
+    link: "https://www.bigo.tv/1030312793"
+  }, 
+  
+ 
+  {
+    roomId: "hongngoc3204",
+    title: "𝑹𝒖𝑩𝒊𝒆 ᴮᵃᵉ",
+    viewers: 288,
+    avatar: "/assets/live-avatar/Rubie.jpg",
+    link: "https://www.bigo.tv/913338504"
+  }, 
+  
+ 
+  {
+    roomId: "embee98",
+    title: "Hường candy 🍭",
+    viewers: 108,
+    avatar: "/assets/live-avatar/HuongCandy.jpg",
+    link: "https://www.bigo.tv/1068963990"
+  }, 
+  
+  
+];
+
+
+
+function getVirtualRooms(){
+  // map về format giống room thật để tái dùng render()
+  return VIRTUAL_ROOMS.map(v => ({
+    roomId: v.roomId,
+    viewers: v.viewers || 0,
+    liveStartTs: Date.now() - 5 * 60 * 1000, // giả lập "đang live"
+    hasGuest: false,
+    host: { name: v.title || "Virtual Room", avatar: v.avatar || "" },
+    __virtual: true,
+    __link: v.link
+  }));
+}
+
+// ===== WELCOME MODAL (NEON) =====
+const welcomeModal = document.getElementById("welcomeModal");
+const btnWelcomeClose = document.getElementById("btnWelcomeClose");
+const btnWelcomeCreate = document.getElementById("btnWelcomeCreate");
+const welcomeDontShow = document.getElementById("welcomeDontShow");
+
+function openWelcome(){ welcomeModal?.classList.remove("hidden"); }
+function closeWelcome(){ welcomeModal?.classList.add("hidden"); }
+
+(function showWelcomeOnce(){
+  const off = localStorage.getItem("lobby_welcome_off") === "1";
+  if (!off) openWelcome();
+})();
+
+function rememberIfChecked(){
+  if (welcomeDontShow?.checked) localStorage.setItem("lobby_welcome_off","1");
+}
+
+welcomeModal?.querySelector(".modal-backdrop")?.addEventListener("click", ()=>{
+  rememberIfChecked();
+  closeWelcome();
+});
+
+btnWelcomeClose?.addEventListener("click", ()=>{
+  rememberIfChecked();
+  closeWelcome();
+});
+
+
+btnWelcomeCreate?.addEventListener("click", ()=>{
+  rememberIfChecked();
+  closeWelcome();
+  openCreateRoom();
+});
+
+
+document.addEventListener("keydown", (e)=>{
+  if (!welcomeModal || welcomeModal.classList.contains("hidden")) return;
+  if (e.key === "Escape") { rememberIfChecked(); closeWelcome(); }
+});
+
+
+
+// ===== CREATE ROOM MODAL =====
+const modal = document.getElementById("createRoomModal");
+const btnCancelRoom = document.getElementById("btnCancelRoom");
+const btnConfirmRoom = document.getElementById("btnConfirmRoom");
+
+const roomInput = document.getElementById("roomInput");
+const hostNameInput = document.getElementById("hostNameInput");
+
+function openCreateRoom(){
+  if(isGuest){
+    openErr("🔒 Chỉ tài khoản đăng nhập mới được tạo phòng livestream.");
+    return;
+  }
+
+  modal.classList.remove("hidden");
+  roomInput.value = "";
+  hostNameInput.value = profile?.name || "";
+  hostNameInput.disabled = true;
+  setTimeout(()=>roomInput.focus(), 0);
+}
+
+
+function closeModal(){
+  modal.classList.add("hidden");
+}
+
+btnCancelRoom?.addEventListener("click", closeModal);
+
+// click nền để tắt
+modal?.querySelector(".modal-backdrop")?.addEventListener("click", closeModal);
+
+// Enter để xác nhận
+modal?.addEventListener("keydown", (e)=>{
+  if (e.key === "Escape") closeModal();
+  if (e.key === "Enter") btnConfirmRoom.click();
+});
+
+
+// ===== ERROR MODAL (NEON) =====
+const errModal = document.getElementById("errModal");
+const errText = document.getElementById("errText");
+const errOk = document.getElementById("errOk");
+const errX = document.getElementById("errX");
+
+function openErr(msg){
+  if (errText) errText.textContent = String(msg || "Có lỗi xảy ra.");
+  errModal?.classList.remove("hidden");
+  setTimeout(()=> errOk?.focus?.(), 0);
+}
+function closeErr(){
+  errModal?.classList.add("hidden");
+}
+errOk?.addEventListener("click", closeErr);
+errX?.addEventListener("click", closeErr);
+errModal?.querySelector(".modal-backdrop")?.addEventListener("click", closeErr);
+document.addEventListener("keydown", (e)=>{
+  if (!errModal || errModal.classList.contains("hidden")) return;
+  if (e.key === "Escape") closeErr();
+});
+
+
+
+// ===== COUNTDOWN OVERLAY HELPERS =====
+const countdownOverlay = document.getElementById("countdownOverlay");
+const cdNumber = document.getElementById("cdNumber");
+const cdRoomText = document.getElementById("cdRoomText");
+
+function showCountdownOverlay(room){
+  if (!countdownOverlay) return;
+  cdRoomText && (cdRoomText.textContent = `Room: ${room}`);
+  cdNumber && (cdNumber.textContent = "3");
+  countdownOverlay.classList.remove("hidden");
+  countdownOverlay.setAttribute("aria-hidden","false");
+}
+
+function hideCountdownOverlay(){
+  if (!countdownOverlay) return;
+  countdownOverlay.classList.add("hidden");
+  countdownOverlay.setAttribute("aria-hidden","true");
+}
+
+// ===== REPLACE confirm handler =====
+btnConfirmRoom?.addEventListener("click", ()=>{
+  const roomRaw = (roomInput.value || "").trim();
+  const name = (hostNameInput.value || "").trim();
+
+  if(!roomRaw){
+    openErr("Vui lòng nhập Room ID.");
+    roomInput.focus();
+    return;
+  }
+
+  // chuẩn hoá client-side luôn (để hoa/thường coi như 1)
+  const room = roomRaw.toLowerCase();
+
+  // khóa UI modal tạo phòng
+  btnConfirmRoom.classList.add("is-loading");
+  if (btnCancelRoom) btnCancelRoom.disabled = true;
+  roomInput.disabled = true;
+  hostNameInput.disabled = true;
+
+  // hỏi server xem room có bị chiếm không
+  socket.emit("room-check", { roomId: room }, (res)=>{
+    const ok = !!res?.ok;
+
+    if (!ok){
+      // mở khoá UI
+      btnConfirmRoom.classList.remove("is-loading");
+      if (btnCancelRoom) btnCancelRoom.disabled = false;
+      roomInput.disabled = false;
+      hostNameInput.disabled = false;
+
+      // lý do
+      if (res?.reason === "taken"){
+        openErr(`Room ID "${room}" đang có host sử dụng. Vui lòng chọn ID khác.`);
+      } else {
+        openErr("Không kiểm tra được Room ID. Thử lại nhé.");
+      }
+      roomInput.focus();
+      return;
+    }
+
+    // OK => bật overlay + countdown rồi chuyển trang
+    const url = `/broadcast.html?room=${encodeURIComponent(room)}&name=${encodeURIComponent(name || "Host")}`;
+
+    showCountdownOverlay(room);
+
+    let n = 3;
+    cdNumber && (cdNumber.textContent = String(n));
+
+    const timer = setInterval(()=>{
+      n--;
+      cdNumber && (cdNumber.textContent = String(n));
+      if (n <= 0){
+        clearInterval(timer);
+        window.location.href = url;
+      }
+    }, 650);
+  });
+});
+
+
+
+
+
+const grid = document.getElementById("grid");
+const empty = document.getElementById("empty");
+const skeleton = document.getElementById("skeleton");
+
+const qEl = document.getElementById("q");
+const clearQ = document.getElementById("clearQ");
+const sortEl = document.getElementById("sort");
+
+const statRooms = document.getElementById("statRooms");
+const statViewers = document.getElementById("statViewers");
+const statTs = document.getElementById("statTs");
+
+let __rooms = [];
+let __filter = "all";
+let __q = "";
+let __ts = null;
+
+function pad(n){ return String(n).padStart(2,"0"); }
+function hms(ms){
+  const s = Math.floor(ms/1000);
+  return `${pad(s/3600|0)}:${pad((s%3600)/60|0)}:${pad(s%60)}`;
+}
+function fmtTime(ts){
+  const d = new Date(ts);
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+function setActiveFilter(btn){
+  document.querySelectorAll(".lobby-chipBtn").forEach(b=>b.classList.remove("is-active"));
+  btn.classList.add("is-active");
+}
+
+function roomMatches(r, q){
+  if (!q) return true;
+  q = q.trim().toLowerCase();
+  const roomId = String(r.roomId || "").toLowerCase();
+  const hostName = String(r.host?.name || "").toLowerCase();
+  return roomId.includes(q) || hostName.includes(q);
+}
+
+function applyFilterSort(list){
+  let out = list.slice();
+
+  // filter
+  if (__filter === "cohost") out = out.filter(r => !!r.hasGuest);
+
+  // search
+  if (__q) out = out.filter(r => roomMatches(r, __q));
+
+  // sort
+  const mode = sortEl.value;
+  if (mode === "viewers") {
+    out.sort((a,b)=> (b.viewers - a.viewers) || (b.liveStartTs - a.liveStartTs));
+  } else if (mode === "new") {
+    out.sort((a,b)=> (b.liveStartTs - a.liveStartTs) || (b.viewers - a.viewers));
+  } else if (mode === "old") {
+    out.sort((a,b)=> (a.liveStartTs - b.liveStartTs) || (b.viewers - a.viewers));
+  }
+  return out;
+}
+
+function renderStats(list){
+  const totalRooms = list.length;
+  const totalViewers = list.reduce((s,r)=> s + (Number(r.viewers)||0), 0);
+
+  statRooms.textContent = totalRooms;
+  statViewers.textContent = totalViewers;
+  statTs.textContent = __ts ? fmtTime(__ts) : "--:--:--";
+}
+
+
+function confirmLogout(){
+  showMsg("Bạn có chắc muốn đăng xuất?", "Xác nhận");
+  document.getElementById("msgModal").onclick = () => {
+    localStorage.removeItem("user_profile");
+    location.href = "/login.html";
+  };
+}
+
+
+function renderSkeleton(){
+  skeleton.style.display = "grid";
+  grid.style.display = "none";
+  empty.style.display = "none";
+
+  skeleton.innerHTML = "";
+  for (let i=0;i<8;i++){
+    const d = document.createElement("div");
+    d.className = "lobby-skel";
+    d.innerHTML = `
+      <div class="lobby-skelHead">
+        <div class="lobby-skelAva"></div>
+        <div style="flex:1">
+          <div class="lobby-skelLine w60"></div>
+          <div class="lobby-skelLine w40" style="margin-top:8px"></div>
+        </div>
+        <div class="lobby-skelPill"></div>
+      </div>
+      <div class="lobby-skelRow">
+        <div class="lobby-skelChip"></div>
+        <div class="lobby-skelChip"></div>
+      </div>
+      <div class="lobby-skelLine w35" style="margin-top:12px"></div>
+    `;
+    skeleton.appendChild(d);
+  }
+}
+
+function hideSkeleton(){
+  skeleton.style.display = "none";
+  grid.style.display = "";
+}
+
+function render(list){
+  // 1) room thật (server)
+  const showReal = applyFilterSort(list);
+
+  // 2) room ảo (frontend)
+  const showVirtual = applyFilterSort(getVirtualRooms());
+
+  // Room ảo luôn đứng đầu
+  const show = [...showVirtual, ...showReal];
+
+  // Stats: chỉ tính room thật để khỏi “ảo số”
+  renderStats(list);
+
+  grid.innerHTML = "";
+  empty.style.display = show.length ? "none" : "block";
+  hideSkeleton();
+
+  show.forEach(r => {
+    const a = document.createElement("a");
+    a.className = "lobby-card" + (r.__virtual ? " lobby-card--virtual" : "");
+
+    // ✅ room ảo đi theo link cố định, room thật đi theo viewer.html?room=
+    a.href = r.__virtual
+      ? (r.__link || `/viewer.html?room=${encodeURIComponent(r.roomId)}`)
+      : `/viewer.html?room=${encodeURIComponent(r.roomId)}`;
+
+    const hostName   = r.host?.name   || (r.__virtual ? "Virtual Room" : "Host");
+    const verified = r.host?.verified;
+
+    const hostAvatar = fixAvatar(r.host?.avatar) || `https://i.ibb.co/ZR2yR7dJ/Chat-GPT-Image-Jan-12-2026-02-44-07-AM.jpg`;
+
+    const liveFor = (typeof r.liveStartTs === "number") ? (Date.now() - r.liveStartTs) : 0;
+
+   a.innerHTML = `
+  <div class="lobby-cardBg">
+    <img src="${hostAvatar}" alt="avatar" loading="lazy">
+    <div class="lobby-cardShade"></div>
+  </div>
+
+  <!-- TOP OVERLAY -->
+  <div class="lobby-cardOverlay top">
+    <div class="lobby-room">
+     ${escapeHtml(r.roomId)}
+    </div>
+
+    <div class="lobby-badges">
+      ${
+        r.__virtual
+          ? `<span class="badge badge--virtual">Live</span>`
+          : `<span class="lobby-livePill"><span class="lobby-liveDot"></span>LIVE</span>`
+      }
+      ${(!r.__virtual && r.hasGuest) ? `<span class="badge badge--info">Co-host</span>` : ``}
+    </div>
+  </div>
+
+  <!-- BOTTOM OVERLAY -->
+  <div class="lobby-cardOverlay bottom">
+    <div class="lobby-hostRow">
+      <img class="lobby-ava mini" src="${hostAvatar}">
+      <div class="lobby-hostMeta">
+        <div class="lobby-hostname">
+          ${escapeHtml(hostName)}
+          ${verified ? `<span class="tick-blue">✔</span>` : ``}
+        </div>
+      </div>
+    </div>
+
+    <div class="lobby-statsRow">
+      <span class="lobby-chip">
+  <svg class="lb-icon" style="width:14px;height:14px">
+    <use href="#lb-users"></use>
+  </svg>
+  <b>${Number(r.viewers)||0}</b>
+</span>
+      <span class="lobby-cta">Vào xem ➜</span>
+    </div>
+  </div>
+`;
+
+
+    grid.appendChild(a);
+  });
+}
+
+
+function escapeHtml(s){
+  return String(s ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+/* ===== events ===== */
+document.querySelectorAll(".lobby-chipBtn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    __filter = btn.dataset.filter || "all";
+    setActiveFilter(btn);
+    render(__rooms);
+  });
+});
+
+sortEl.addEventListener("change", ()=> render(__rooms));
+
+let __qTimer = null;
+qEl.addEventListener("input", ()=>{
+  clearTimeout(__qTimer);
+  __qTimer = setTimeout(()=>{
+    __q = qEl.value || "";
+    clearQ.style.opacity = __q.trim() ? "1" : ".45";
+    render(__rooms);
+  }, 80);
+});
+
+clearQ.addEventListener("click", ()=>{
+  qEl.value = "";
+  __q = "";
+  clearQ.style.opacity = ".45";
+  render(__rooms);
+  qEl.focus();
+});
+
+/* ===== socket ===== */
+function requestLobby(){
+  renderSkeleton();
+  socket.emit("lobby-get");
+}
+
+socket.on("lobby-update", d => {
+  __rooms = (d && d.rooms) ? d.rooms : [];
+  __ts = d && d.ts ? d.ts : Date.now();
+  render(__rooms);
+});
+
+
+// load
+requestLobby();
+setInterval(() => socket.emit("lobby-get"), 3000);
+
+
+
+
+
+  // Chặn pinch zoom (iOS)
+  document.addEventListener("gesturestart", e => e.preventDefault());
+  document.addEventListener("gesturechange", e => e.preventDefault());
+  document.addEventListener("gestureend", e => e.preventDefault());
+
+  // Chặn Ctrl + scroll zoom (PC)
+  document.addEventListener("wheel", e => {
+    if (e.ctrlKey) e.preventDefault();
+  }, { passive: false });
+
+
+
+
+  function getUserProfile(){
+  const p = localStorage.getItem("user_profile");
+  if (!p) return null;
+  try { return JSON.parse(p); }
+  catch { return null; }
+}
+
+
+if (profile){
+  hostNameInput.value = profile.name;
+  hostNameInput.disabled = true;
+}
+
+
+
+if(profile.name){
+  document.getElementById("userName").textContent = profile.name;
+  document.getElementById("userLevel").textContent = "Lv " + (profile.level || 1);
+
+  document.getElementById("userAva").src =
+  fixAvatar(profile.avatar) ||
+  "https://i.ibb.co/ZR2yR7dJ/Chat-GPT-Image-Jan-12-2026-02-44-07-AM.jpg";
+
+}
+
+
+
+
+
+
+
+
+
+// Mobile Tab Logic
+
+/* ==========================================
+   MOBILE TAB - SMOOTH TRANSITION
+   GIỮ NGUYÊN KIỂM TRA TÀI KHOẢN KHÁCH
+========================================== */
+
+document.querySelectorAll(".tab-item").forEach(tab => {
+
+  tab.onclick = () => {
+
+    const type = tab.dataset.tab;
+
+    // Trang hiện tại
+    if (type === "lobby") {
+      return;
+    }
+
+    // Profile
+    if (type === "profile") {
+
+      if (isGuest) {
+        showMsg("🔒 Đăng nhập để xem hồ sơ");
+        return;
+      }
+
+      LSPTransition.go("/profile.html", {
+        label: "Opening your profile..."
+      });
+
+      return;
+    }
+
+    // Chat
+    if (type === "chat") {
+
+      if (isGuest) {
+        showMsg("🔒 Đăng nhập để sử dụng");
+        return;
+      }
+
+      document.querySelector(
+        '[data-tab="chat"]'
+      )?.classList.remove("has-new");
+
+      LSPTransition.go("/messages.html", {
+        label: "Opening Messages..."
+      });
+
+      return;
+    }
+
+    // Social
+    if (type === "hot") {
+
+      if (isGuest) {
+        showMsg("🔒 Đăng nhập để sử dụng");
+        return;
+      }
+
+      LSPTransition.go("/social.html", {
+        label: "Opening News Feed..."
+      });
+
+      return;
+    }
+
+  };
+
+});
+
+
+
+document.getElementById("tabCreate").onclick = ()=>{
+  if(isGuest){
+     showMsg("🔒 Đăng nhập để tạo phòng livestream");
+    return;
+  }
+  openCreateRoom();
+};
+
+// ===== PC: Nút "➕ Tạo phòng LIVE" =====
+document.getElementById("btnCreateRoomDesktop")
+  ?.addEventListener("click", () => {
+    if(isGuest){
+      showMsg("🔒 Đăng nhập để tạo phòng livestream");
+      return;
+    }
+    openCreateRoom();
+  });
+
+
+
+// ===== INBOX =====
+const inboxModal = document.getElementById("inboxModal");
+const inboxList = document.getElementById("inboxList");
+
+function openInbox(){
+  if(isGuest){
+     showMsg("🔒 Đăng nhập để xem thông báo");
+    return;
+  }
+  inboxModal.classList.remove("hidden");
+  socket.emit("get-inbox");
+}
+
+
+inboxModal?.querySelector(".modal-backdrop")?.addEventListener("click", ()=>{
+  inboxModal.classList.add("hidden");
+});
+
+
+
+
+// Nhận dữ liệu inbox
+socket.on("inbox-data", list=>{
+  inboxList.innerHTML = "";
+
+  if(!list || !list.length){
+    inboxList.innerHTML = "<div style='padding:14px;opacity:.6'>Chưa có thông báo</div>";
+    return;
+  }
+
+  list.forEach(n=>{
+    const div = document.createElement("div");
+    div.className = "inbox-item" + (n.read ? "" : " new");
+    div.innerHTML = `
+      <div>${n.text}</div>
+      <small>${new Date(n.ts).toLocaleString("en-US")}</small>
+    `;
+    inboxList.appendChild(div);
+  });
+
+  // clear badge
+  document.querySelector('[data-tab="chat"]')?.classList.remove("has-new");
+});
+
+
+
+// Có notify mới
+socket.on("inbox-new", ()=>{
+  document.querySelector('[data-tab="chat"]')?.classList.add("has-new");
+});
+
+socket.on("inbox-clear", ()=>{
+  document.querySelector('[data-tab="chat"]')?.classList.remove("has-new");
+});
+
+
+const guestNotice = document.getElementById("guestNotice");
+
+if (isGuest && guestNotice) {
+  guestNotice.querySelector(".guest-notice-inner").innerHTML = `
+    <div class="badge badge--info">
+      👀 Đang xem với tư cách Guest
+    </div>
+
+    <button class="lobby-btn" id="btnLogin">
+  🔐 Đăng nhập
+</button>
+  `;
+  guestNotice.classList.remove("hidden");
+}
+
+
+
+let __msgOkAction = null;
+
+function showMsg(text, title="Thông báo", onOk=null){
+  document.getElementById("msgTitle").textContent = title;
+  document.getElementById("msgText").textContent = text;
+  document.getElementById("msgModal").classList.remove("hidden");
+
+  const btnCancel = document.getElementById("msgCancel");
+
+  // 🔥 chỉ hiện HỦY khi có callback (logout)
+  if(onOk){
+    btnCancel.style.display = "";
+  }else{
+    btnCancel.style.display = "none";
+  }
+
+  __msgOkAction = onOk;
+}
+
+document.getElementById("msgOk").onclick = ()=>{
+  if(__msgOkAction) __msgOkAction();
+  closeMsg();
+};
+
+function closeMsg(){
+  document.getElementById("msgModal").classList.add("hidden");
+  __msgOkAction = null;
+}
+
+
+const btnPlayerLobby = document.getElementById("btnPlayerLobby");
+const playerLobby = document.getElementById("playerLobby");
+const closePlayerLobby = document.getElementById("closePlayerLobby");
+
+btnPlayerLobby.onclick = () => {
+  playerLobby.classList.remove("hidden");
+};
+
+closePlayerLobby.onclick = () => {
+  playerLobby.classList.add("hidden");
+};
+
+playerLobby.querySelector(".player-lobby-backdrop").onclick = () => {
+  playerLobby.classList.add("hidden");
+};
+
+
+/* ==========================================
+   RENDER PREMIUM MEMBER LOBBY
+========================================== */
+
+function renderPlayerLobbyAll() {
+
+  const box = document.getElementById("playerList");
+ 
+
+  if (!box) return;
+
+  if (!ALL_USERS.length) {
+  
+
+    box.innerHTML = `
+      <div class="player-lobby-empty">
+        Chưa có người dùng nào.
+      </div>
+    `;
+    return;
+  }
+
+  // Giữ nguyên cách sắp xếp cũ
+  let list = sortUsersForLobby(ALL_USERS);
+
+  // Ẩn các tài khoản đã chặn
+  list = list.filter(
+    u => !MY_BLOCKED.includes(u.uid)
+  );
+
+  // Lọc theo tên hoặc UID
+  if (PLAYER_SEARCH) {
+    list = list.filter(u => {
+      const name = String(u.name || "").toLowerCase();
+      const uid = String(u.uid || "").toLowerCase();
+
+      return name.includes(PLAYER_SEARCH) ||
+             uid.includes(PLAYER_SEARCH);
+    });
+  }
+
+
+  if (!list.length) {
+    box.innerHTML = `
+      <div class="player-lobby-empty">
+        Không tìm thấy thành viên phù hợp.
+      </div>
+    `;
+    return;
+  }
+
+  box.innerHTML = list.map(u => {
+
+    const uid = String(u.uid || "");
+    const name = String(u.name || uid || "Người dùng");
+
+    const isOn = ONLINE_UIDS.includes(u.uid);
+    const isMe = u.uid === profile.uid;
+
+    const isFriend = MY_FRIENDS.includes(u.uid);
+    const isPending = MY_REQUESTS.includes(u.uid);
+
+    const avatar = fixAvatar(u.avatar || "");
+    const initial = Array.from(name.trim())[0] || "U";
+
+    return `
+      <div class="player-row ${isOn ? "online" : "offline"}">
+
+        <!-- AVATAR + INFORMATION -->
+        <div class="player-row-main">
+
+          <div
+            class="pava"
+            ${!isMe ? `
+              data-action="profile"
+              data-uid="${escapeHtml(uid)}"
+              style="cursor:pointer"
+            ` : ""}
+          >
+
+            <span class="pava-initial">
+              ${escapeHtml(initial.toUpperCase())}
+            </span>
+
+            ${avatar ? `
+              <img
+                src="${escapeHtml(avatar)}"
+                alt=""
+                loading="lazy"
+                onerror="this.remove()"
+              >
+            ` : ""}
+
+            <span class="dot ${isOn ? "on" : "off"}"></span>
+
+          </div>
+
+          <div class="pinfo">
+
+            <div
+              class="pname"
+              ${!isMe ? `
+                data-action="profile"
+                data-uid="${escapeHtml(uid)}"
+                style="cursor:pointer"
+              ` : ""}
+            >
+
+              <span>${escapeHtml(name)}</span>
+
+
+${u.role === "admin" ? `
+  <span class="player-verified" title="Tài khoản Admin" aria-label="Tài khoản Admin">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="11" fill="#168BEB"/>
+      <path
+        d="M7 12.3L10.3 15.5L17 8.8"
+        fill="none"
+        stroke="#FFFFFF"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+  </span>
+` : ""}
+
+            </div>
+
+            <div class="player-meta">
+
+              <span class="plevel">
+                Lv ${Number(u.level) || 1}
+              </span>
+
+              <span class="player-status ${isOn ? "on" : ""}">
+                ${isOn ? "Online" : "Offline"}
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        ${!isMe ? `
+
+          <div class="pactions">
+
+            ${isFriend ? `
+              <button
+                type="button"
+                class="btn-friend ok"
+                disabled
+              >
+                Bạn bè
+              </button>
+
+            ` : isPending ? `
+
+              <button
+                type="button"
+                class="btn-friend pending"
+                disabled
+              >
+                Đã gửi
+              </button>
+
+            ` : `
+
+              <button
+                type="button"
+                class="btn-friend add"
+                data-action="friend"
+                data-uid="${escapeHtml(uid)}"
+              >
+                Kết bạn
+              </button>
+
+            `}
+
+            ${isFriend ? `
+
+              <button
+                type="button"
+                class="btn-chat"
+                data-action="chat"
+                data-uid="${escapeHtml(uid)}"
+              >
+                Nhắn tin
+              </button>
+
+            ` : `
+
+              <button
+                type="button"
+                class="btn-chat"
+                disabled
+                title="Chỉ nhắn tin với bạn bè"
+              >
+                Nhắn tin
+              </button>
+
+            `}
+
+            <button
+              type="button"
+              class="btn-block"
+              data-action="block"
+              data-uid="${escapeHtml(uid)}"
+            >
+              Chặn
+            </button>
+
+          </div>
+
+        ` : `
+
+          <div class="pme">
+            Tài khoản của bạn
+          </div>
+
+        `}
+
+      </div>
+    `;
+
+  }).join("");
+}
+
+
+/* ==========================================
+   CLICK ACTIONS - EVENT DELEGATION
+========================================== */
+
+document.getElementById("playerList")
+  ?.addEventListener("click", function(event) {
+
+    const target = event.target.closest(
+      "[data-action][data-uid]"
+    );
+
+    if (!target || target.disabled) return;
+
+    const action = target.dataset.action;
+    const uid = target.dataset.uid;
+
+    const user = ALL_USERS.find(
+      u => String(u.uid) === uid
+    );
+
+    if (!user) return;
+
+    const name = String(user.name || uid);
+
+    if (action === "profile") {
+      openUserProfile(uid);
+    }
+
+    else if (action === "friend") {
+      addFriend(uid);
+    }
+
+    else if (action === "chat") {
+      openPrivateChat(uid, name);
+    }
+
+    else if (action === "block") {
+      blockUser(uid, name);
+    }
+
+  });
+
+
+
+function addFriend(uid){
+  if(isGuest){
+    showMsg("🔒 Vui lòng đăng nhập để kết bạn");
+    return;
+  }
+
+  socket.emit("friend-request", { to: uid });
+
+  if(!MY_REQUESTS.includes(uid)){
+    MY_REQUESTS.push(uid);
+  }
+
+  renderPlayerLobbyAll(); // 🔥 đổi nút ngay
+  showMsg("📨 Đã gửi lời mời kết bạn");
+}
+
+
+
+
+socket.on("friend-request", ({ from, name }) => {
+  showMsg(
+    `👤 ${name} muốn kết bạn`,
+    "Lời mời kết bạn",
+    () => {
+      socket.emit("friend-respond", {
+        from,
+        accept: true
+      });
+    }
+  );
+});
+
+
+socket.on("friend-removed", ({ uid }) => {
+  MY_FRIENDS = MY_FRIENDS.filter(x => x !== uid);
+  renderPlayerLobbyAll();
+});
+
+
+function openPrivateChat(uid, name){
+  if(isGuest){
+    showMsg("🔒 Vui lòng đăng nhập để nhắn tin");
+    return;
+  }
+
+  localStorage.setItem("chat_to_uid", uid);
+  localStorage.setItem("chat_to_name", name);
+
+  LSPTransition.go("/messages.html", {
+  label: "Opening conversation..."
+});
+}
+
+
+
+let lastScroll = 0;
+
+const tabbar =
+  document.querySelector(".mobile-tabbar") ||
+  document.querySelector(".lp-tabbar");
+
+function isNearBottom(){
+  const scrollY = window.scrollY;
+  const winH = window.innerHeight;
+  const docH = document.body.scrollHeight;
+
+  return scrollY + winH >= docH - 120; // cách đáy 120px
+}
+
+window.addEventListener("scroll", ()=>{
+  if(!tabbar) return;
+
+  const cur = window.scrollY;
+
+  // 🔽 Vuốt xuống → ẩn
+  if(cur > lastScroll + 10){
+    tabbar.classList.add("hide");
+  }
+  // 🔼 Vuốt lên → hiện
+  else if(cur < lastScroll - 10){
+    tabbar.classList.remove("hide");
+  }
+
+  // 🧲 Gần đáy → ép hiện lại
+  if(isNearBottom()){
+    tabbar.classList.remove("hide");
+  }
+
+  lastScroll = cur;
+},{ passive:true });
+
+
+
+
+const btnToggleSearch = document.getElementById("btnToggleSearch");
+const headerSearch = document.getElementById("headerSearch");
+const searchInput = document.getElementById("q");
+
+btnToggleSearch?.addEventListener("click", () => {
+  headerSearch.classList.toggle("hidden");
+
+  if (!headerSearch.classList.contains("hidden")) {
+    setTimeout(() => searchInput?.focus(), 50);
+  }
+});
+
+clearQ?.addEventListener("click", () => {
+  searchInput.value = "";
+  searchInput.focus();
+});
+
+// Ẩn search khi blur (tuỳ chọn – giống app)
+searchInput?.addEventListener("blur", () => {
+  setTimeout(() => {
+    headerSearch.classList.add("hidden");
+  }, 150);
+});
+
+
+/* ===== HEADER COMPACT ON SCROLL ===== */
+(function(){
+  let lastY = 0;
+  let ticking = false;
+
+  function onScroll(){
+    const y = window.scrollY;
+
+    // scroll xuống đủ xa → compact
+    if (y > 40) {
+      document.body.classList.add("header-compact");
+    } else {
+      document.body.classList.remove("header-compact");
+    }
+
+    lastY = y;
+    ticking = false;
+  }
+
+  window.addEventListener("scroll", () => {
+    if (!ticking) {
+      window.requestAnimationFrame(onScroll);
+      ticking = true;
+    }
+  }, { passive: true });
+})();
+
+
+
+/* ===== MERGED BAR ON SCROLL ===== */
+(function(){
+  let ticking = false;
+
+  function onScroll(){
+    const y = window.scrollY;
+
+    if (y > 120) {
+      document.body.classList.add("bar-merged");
+    } else {
+      document.body.classList.remove("bar-merged");
+    }
+
+    ticking = false;
+  }
+
+  window.addEventListener("scroll", () => {
+    if (!ticking) {
+      requestAnimationFrame(onScroll);
+      ticking = true;
+    }
+  }, { passive: true });
+})();
+
+
+
+
+btnToggleSearch.onclick = () => {
+  const s = document.getElementById("headerSearch");
+  s.classList.toggle("hidden");
+
+  if (!s.classList.contains("hidden")) {
+    setTimeout(() => {
+      document.getElementById("q")?.focus();
+    }, 60);
+  }
+};
+
+
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("btnToggleSearch");
+  const box = document.getElementById("headerSearch");
+  const input = document.getElementById("q");
+
+  if (!btn || !box) {
+    console.warn("❌ Search elements missing");
+    return;
+  }
+
+  btn.addEventListener("click", () => {
+    box.classList.toggle("hidden");
+
+    if (!box.classList.contains("hidden")) {
+      setTimeout(() => input?.focus(), 60);
+    }
+  });
+
+  document.getElementById("clearQ")?.addEventListener("click", () => {
+    input.value = "";
+    input.focus();
+  });
+});
+
+
+
+
+document.getElementById("btnLogin")?.addEventListener("click", () => {
+  window.location.href = "/login.html";
+});
+
+
+
+function blockUser(uid, name){
+  showMsg(
+    `Bạn có chắc muốn chặn ${name}?\nNgười này sẽ không thể nhắn tin hay kết bạn với bạn.`,
+    "Chặn user",
+    () => {
+      socket.emit("user-block", { uid });
+
+      if(!MY_BLOCKED.includes(uid)){
+        MY_BLOCKED.push(uid);
+      }
+
+      // xoá khỏi bạn bè nếu có
+      MY_FRIENDS = MY_FRIENDS.filter(x => x !== uid);
+      MY_REQUESTS = MY_REQUESTS.filter(x => x !== uid);
+
+      renderPlayerLobbyAll();
+      showMsg(`🚫 Đã chặn ${name}`);
+    }
+  );
+}
+
+
+
+socket.on("user-blocked", ({ uid }) => {
+  if(!MY_BLOCKED.includes(uid)){
+    MY_BLOCKED.push(uid);
+  }
+  renderPlayerLobbyAll();
+});
+
+socket.on("user-unblocked", ({ uid }) => {
+  MY_BLOCKED = MY_BLOCKED.filter(x => x !== uid);
+  renderPlayerLobbyAll();
+});
+
+
+
+function openUserProfile(uid) {
+
+  if (!uid) return;
+
+  LSPTransition.go(
+    "/profile.html?uid=" + encodeURIComponent(uid),
+    {
+      label: "Opening member profile..."
+    }
+  );
+
+}
+
+
+
+(function(){
+  const notice = document.getElementById("rotateNotice");
+  if(!notice) return;
+
+  function isMobile(){
+    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  }
+
+  function checkOrientation(){
+    if(!isMobile()){
+      notice.classList.add("hidden");
+      return;
+    }
+
+    const isPortrait = window.innerHeight > window.innerWidth;
+
+    if(isPortrait){
+      notice.classList.remove("hidden");
+    }else{
+      notice.classList.add("hidden");
+    }
+  }
+
+  // initial
+  checkOrientation();
+
+  // listen
+  window.addEventListener("resize", checkOrientation);
+  window.addEventListener("orientationchange", checkOrientation);
+})();
+
+
+socket.on("system-notify", data => {
+  if (!data) return;
+
+  // 💰 NẠP COIN
+  if (data.type === "topup") {
+    showToast(data.text || "💰 Bạn vừa được nạp coin", "success");
+    return;
+  }
+
+    // ➖ TRỪ COIN
+  if (data.type === "withdraw") {
+    showWithdrawNotify(data);
+  }
+
+  // 🚫 KHOÁ TÀI KHOẢN
+  if (data.type === "lock") {
+    showToast(
+      data.reason || "🚫 Tài khoản của bạn đã bị khoá",
+      "error"
+    );
+
+    localStorage.removeItem("user_profile");
+    localStorage.removeItem("login_uid");
+    localStorage.removeItem("isGuest");
+
+    setTimeout(() => {
+      location.href = "/login.html";
+    }, 2000);
+  }
+});
+
+
+function showToast(text, type = "info", timeout = 3500){
+  const box = document.getElementById("toast-container");
+  if(!box) return;
+
+  const icons = {
+    info:"ℹ️",
+    success:"✅",
+    error:"❌",
+    warn:"⚠️"
+  };
+
+  const div = document.createElement("div");
+  div.className = `toast ${type}`;
+  div.innerHTML = `
+    <span class="icon">${icons[type] || "🔔"}</span>
+    <span class="msg">${text}</span>
+  `;
+
+  box.appendChild(div);
+
+  setTimeout(()=>div.remove(), timeout);
+}
+
+
+function showWithdrawNotify(data){
+  const text =
+    data.text ||
+    "Tài khoản của bạn vừa bị trừ coin";
+
+  openSysModal(text);
+}
+
+
+
+function showForceLogoutModal(message){
+  let modal = document.getElementById("forceLogoutModal");
+  if(!modal){
+    modal = document.createElement("div");
+    modal.id = "forceLogoutModal";
+    modal.innerHTML = `
+      <div class="fl-backdrop"></div>
+      <div class="fl-box">
+        <div class="fl-icon">🚫</div>
+        <div class="fl-title">Phiên đăng nhập kết thúc</div>
+        <div class="fl-msg"></div>
+        <div class="fl-sub">Bạn sẽ được chuyển về trang đăng nhập…</div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  modal.querySelector(".fl-msg").textContent = message;
+  modal.classList.add("show");
+}
+
+
+/*
+socket.on("force-logout", (data) => {
+  const msg = data?.message || "Tài khoản của bạn đã bị đăng xuất";
+
+  showForceLogoutModal(msg);
+
+  // clear auth
+  localStorage.removeItem("user_profile");
+  localStorage.removeItem("login_uid");
+  localStorage.removeItem("isGuest");
+
+  // redirect sau 2s
+  setTimeout(()=>{
+    location.href = "/login.html";
+  }, 3000);
+});
+*/
+
+
+
+let PLAYER_SEARCH = ""
+
+const playerSearch = document.getElementById("playerSearch")
+
+playerSearch?.addEventListener("input", e=>{
+  PLAYER_SEARCH = e.target.value.toLowerCase()
+  renderPlayerLobbyAll()
+})
+
+
+
+</script>
+
+
+
+
+
+<script>
+/* =====================================================
+   LIVESTREAM PRO - LOBBY ENGLISH LANGUAGE
+   Translate UI only - preserve existing functionality
+===================================================== */
+
+(function () {
+  "use strict";
+
+  const EN = new Map(Object.entries({
+
+    // =====================================
+    // HEADER & SEARCH
+    // =====================================
+
+    "Tìm kiếm phòng": "Search Rooms",
+    "Sảnh người dùng": "Member Lounge",
+    "Tạo phòng LIVE": "Create LIVE Room",
+    "Tìm Room ID hoặc tên Host...": "Search Room ID or Host...",
+    "Tìm kiếm phòng LIVE": "Search LIVE Rooms",
+    "Xóa tìm kiếm": "Clear Search",
+
+    // =====================================
+    // FILTER & SORT
+    // =====================================
+
+    "Tất cả": "All",
+    "Mới live": "Newly Live",
+    "Live lâu": "Longest Live",
+    "Đông người xem": "Most Viewers",
+
+    // =====================================
+    // LIVE ROOM SECTION
+    // =====================================
+
+    "Khám phá phòng LIVE": "Explore LIVE Rooms",
+    "Chọn phòng để xem và tham gia trò chuyện.":
+      "Choose a LIVE room to watch and join the conversation.",
+
+    "Chưa có phòng nào đang live.":
+      "No LIVE rooms are available right now.",
+
+    "Phòng live": "LIVE Rooms",
+    "Cập nhật": "Updated",
+    "Vào xem ➜": "Watch LIVE ➜",
+    "Room Ảo": "Virtual Room",
+
+    // =====================================
+    // CREATE LIVE ROOM
+    // =====================================
+
+    "Tạo phòng livestream": "Create LIVE Room",
+    "Room ID (viết liền không dấu)":
+      "Room ID (no spaces or special characters)",
+
+    "vd: abc123": "e.g. abc123",
+    "Tên Host": "Host Name",
+    "Tên hiển thị": "Display Name",
+    "Hủy": "Cancel",
+    "Huỷ": "Cancel",
+    "Vào phòng": "Enter Room",
+
+    // =====================================
+    // CREATE ROOM ERRORS
+    // =====================================
+
+    "LỖI TẠO PHÒNG": "ROOM CREATION ERROR",
+    "Không tạo được": "Unable to Create Room",
+    "Đóng": "Close",
+    "Có lỗi xảy ra.": "An error occurred.",
+
+    "Vui lòng nhập Room ID.":
+      "Please enter a Room ID.",
+
+    "Không kiểm tra được Room ID. Thử lại nhé.":
+      "Unable to verify the Room ID. Please try again.",
+
+    "🔒 Chỉ tài khoản đăng nhập mới được tạo phòng livestream.":
+      "🔒 Please log in to create a LIVE room.",
+
+    // =====================================
+    // WELCOME MODAL
+    // =====================================
+
+    "Chào mừng đến": "Welcome to",
+
+    "Nơi host lên LIVE chỉ trong vài giây":
+      "Start broadcasting LIVE in seconds",
+
+    "Viewer vào xem realtime – chat – reaction":
+      "Watch in real time · Chat · React",
+
+    "Không hiện lại": "Don't Show Again",
+    "Để sau": "Maybe Later",
+    "➕ Tạo phòng LIVE": "➕ Create LIVE Room",
+
+    // =====================================
+    // COUNTDOWN OVERLAY
+    // =====================================
+
+    "Chuẩn bị lên LIVE": "Preparing Your LIVE",
+
+    "Phòng phát sóng đang được khởi tạo":
+      "Your LIVE room is being prepared",
+
+    "PHÒNG PHÁT SÓNG": "BROADCAST ROOM",
+    "GIÂY": "SECONDS",
+
+    "Đang kết nối tới phòng phát sóng":
+      "Connecting to your LIVE room...",
+
+    "Thiết lập phòng": "Setting Up",
+    "Kết nối": "Connecting",
+    "Phát sóng": "Go LIVE",
+
+    // =====================================
+    // BOTTOM NAVIGATION
+    // =====================================
+
+    "Điều hướng chính": "Main Navigation",
+    "Tạo LIVE": "Go LIVE",
+
+    // =====================================
+    // NOTIFICATIONS
+    // =====================================
+
+    "📩 Thông báo": "📩 Notifications",
+    "Thông báo": "Notification",
+    "Chưa có thông báo": "No notifications yet.",
+
+    "Bạn có chắc muốn đăng xuất?":
+      "Are you sure you want to log out?",
+
+    "Xác nhận": "Confirmation",
+
+    // =====================================
+    // MEMBER LOUNGE
+    // =====================================
+
+    "Sảnh thành viên": "Member Lounge",
+
+    "Khám phá và kết nối cộng đồng":
+      "Discover and connect with the community",
+
+    "Đóng sảnh thành viên": "Close Member Lounge",
+
+    "Tìm theo tên hoặc UID...":
+      "Search by name or UID...",
+
+    "Tìm thành viên": "Search Members",
+
+    "Danh sách thành viên": "Member Directory",
+
+    "Đang tải danh sách thành viên...":
+      "Loading members...",
+
+    "Chưa có người dùng nào.":
+      "No members available.",
+
+    "Không tìm thấy thành viên phù hợp.":
+      "No matching members found.",
+
+    "Người dùng": "User",
+
+    // =====================================
+    // MEMBER ACCOUNT
+    // =====================================
+
+    "Tài khoản Admin": "Verified Admin",
+
+    "Bạn bè": "Friends",
+    "Đã gửi": "Request Sent",
+    "Kết bạn": "Add Friend",
+    "Nhắn tin": "Message",
+
+    "Chỉ nhắn tin với bạn bè":
+      "You can only message friends",
+
+    "Chặn": "Block",
+    "Tài khoản của bạn": "Your Account",
+
+    // =====================================
+    // FRIEND REQUESTS
+    // =====================================
+
+    "🔒 Vui lòng đăng nhập để kết bạn":
+      "🔒 Please log in to add friends.",
+
+    "📨 Đã gửi lời mời kết bạn":
+      "📨 Friend request sent successfully.",
+
+    "Lời mời kết bạn": "Friend Request",
+
+    "🔒 Vui lòng đăng nhập để nhắn tin":
+      "🔒 Please log in to send messages.",
+
+    // =====================================
+    // GUEST ACCOUNT
+    // =====================================
+
+    "👀 Đang xem với tư cách Guest":
+      "👀 You are browsing as a Guest",
+
+    "🔐 Đăng nhập": "🔐 Log In",
+
+    "🔒 Đăng nhập để xem hồ sơ":
+      "🔒 Please log in to view profiles.",
+
+    "🔒 Đăng nhập để sử dụng":
+      "🔒 Please log in to use this feature.",
+
+    "🔒 Đăng nhập để tạo phòng livestream":
+      "🔒 Please log in to create a LIVE room.",
+
+    "🔒 Đăng nhập để xem thông báo":
+      "🔒 Please log in to view notifications.",
+
+    // =====================================
+    // PAGE TRANSITIONS
+    // =====================================
+
+    "Đang mở Hồ sơ cá nhân...":
+      "Opening your profile...",
+
+    "Đang mở Tin nhắn...":
+      "Opening Messages...",
+
+    "Đang mở Bảng tin...":
+      "Opening News Feed...",
+
+    "Đang mở cuộc trò chuyện...":
+      "Opening conversation...",
+
+    "Đang mở hồ sơ người chơi...":
+      "Opening member profile...",
+
+    // =====================================
+    // BLOCK USER
+    // =====================================
+
+    "Chặn user": "Block User",
+
+    // =====================================
+    // COIN NOTIFICATIONS
+    // =====================================
+
+    "💰 Bạn vừa được nạp coin":
+      "💰 Coins have been added to your account.",
+
+    "🚫 Tài khoản của bạn đã bị khoá":
+      "🚫 Your account has been locked.",
+
+    "Tài khoản của bạn vừa bị trừ coin":
+      "Coins have been deducted from your account.",
+
+    // =====================================
+    // LOGOUT
+    // =====================================
+
+    "Phiên đăng nhập kết thúc":
+      "Session Ended",
+
+    "Bạn sẽ được chuyển về trang đăng nhập…":
+      "You will be redirected to the login page...",
+
+    "Tài khoản của bạn đã bị đăng xuất":
+      "You have been signed out."
+
+  }));
+
+
+  /* =====================================
+     TRANSLATE TEXT
+  ===================================== */
+
+  function translateLobbyText(value) {
+
+    if (typeof value !== "string") {
+      return value;
+    }
+
+    const original = value;
+
+    const clean = original
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (!clean) return original;
+
+    let translated = EN.get(clean);
+
+
+    // ROOM ID ALREADY TAKEN
+    if (!translated) {
+
+      const match = clean.match(
+        /^Room ID "(.+)" đang có host sử dụng\. Vui lòng chọn ID khác\.$/
+      );
+
+      if (match) {
+        translated =
+          `Room ID "${match[1]}" is already in use. ` +
+          "Please choose another ID.";
+      }
+
+    }
+
+
+    // INCOMING FRIEND REQUEST
+    if (!translated) {
+
+      const match = clean.match(
+        /^👤 (.+) muốn kết bạn$/
+      );
+
+      if (match) {
+        translated =
+          `👤 ${match[1]} sent you a friend request.`;
+      }
+
+    }
+
+
+    // BLOCK USER CONFIRMATION
+    if (!translated) {
+
+      const match = clean.match(
+        /^Bạn có chắc muốn chặn (.+)\? Người này sẽ không thể nhắn tin hay kết bạn với bạn\.$/
+      );
+
+      if (match) {
+        translated =
+          `Are you sure you want to block ${match[1]}? ` +
+          "This user will no longer be able to message you " +
+          "or send you friend requests.";
+      }
+
+    }
+
+
+    // USER BLOCKED
+    if (!translated) {
+
+      const match = clean.match(
+        /^🚫 Đã chặn (.+)$/
+      );
+
+      if (match) {
+        translated = `🚫 Blocked ${match[1]}`;
+      }
+
+    }
+
+
+    if (!translated) {
+      return original;
+    }
+
+    const leading =
+      original.match(/^\s*/)?.[0] || "";
+
+    const trailing =
+      original.match(/\s*$/)?.[0] || "";
+
+    return leading + translated + trailing;
+
+  }
+
+
+  /* =====================================
+     PROTECT USER CONTENT
+  ===================================== */
+
+  function isUserContent(element) {
+
+    if (!(element instanceof Element)) {
+      return false;
+    }
+
+    return !!element.closest([
+      "script",
+      "style",
+      "noscript",
+      "textarea",
+      "[contenteditable]",
+      ".lobby-hostname",
+      ".lobby-room",
+      ".pname",
+      ".inbox-item",
+      ".chat-bubble"
+    ].join(","));
+
+  }
+
+
+  /* =====================================
+     TRANSLATE ELEMENT ATTRIBUTES
+  ===================================== */
+
+  function translateLobbyAttributes(element) {
+
+    if (!(element instanceof Element)) {
+      return;
+    }
+
+    if (isUserContent(element)) {
+      return;
+    }
+
+    const attributes = [
+      "placeholder",
+      "title",
+      "aria-label",
+      "alt",
+      "data-lsp-label"
+    ];
+
+    for (const attr of attributes) {
+
+      if (!element.hasAttribute(attr)) continue;
+
+      const oldValue =
+        element.getAttribute(attr);
+
+      const newValue =
+        translateLobbyText(oldValue);
+
+      if (oldValue !== newValue) {
+        element.setAttribute(attr, newValue);
+      }
+
+    }
+
+  }
+
+
+  /* =====================================
+     TRANSLATE TEXT NODES
+  ===================================== */
+
+  function translateLobbyNode(node) {
+
+    if (!node || node.nodeType !== Node.TEXT_NODE) {
+      return;
+    }
+
+    const parent = node.parentElement;
+
+    if (!parent || isUserContent(parent)) {
+      return;
+    }
+
+    const oldValue = node.nodeValue;
+    const newValue = translateLobbyText(oldValue);
+
+    if (oldValue !== newValue) {
+      node.nodeValue = newValue;
+    }
+
+  }
+
+
+  /* =====================================
+     TRANSLATE A DOM TREE
+  ===================================== */
+
+  function translateLobbyTree(root) {
+
+    if (!root) return;
+
+    if (root.nodeType === Node.TEXT_NODE) {
+      translateLobbyNode(root);
+      return;
+    }
+
+    if (root.nodeType !== Node.ELEMENT_NODE) {
+      return;
+    }
+
+    if (isUserContent(root)) {
+      return;
+    }
+
+    translateLobbyAttributes(root);
+
+    root.querySelectorAll("*").forEach(element => {
+      translateLobbyAttributes(element);
+    });
+
+    const walker = document.createTreeWalker(
+      root,
+      NodeFilter.SHOW_TEXT
+    );
+
+    let node;
+
+    while ((node = walker.nextNode())) {
+      translateLobbyNode(node);
+    }
+
+  }
+
+
+  /* =====================================
+     INITIALIZE ENGLISH INTERFACE
+  ===================================== */
+
+  function initializeLobbyEnglish() {
+
+    document.documentElement.lang = "en";
+
+    translateLobbyTree(document.body);
+
+
+    // Watch new content from Socket.IO,
+    // member list, modals and notifications.
+
+    const observer = new MutationObserver(records => {
+
+      for (const record of records) {
+
+        if (record.type === "characterData") {
+
+          translateLobbyNode(record.target);
+          continue;
+
+        }
+
+        if (record.type === "attributes") {
+
+          translateLobbyAttributes(record.target);
+          continue;
+
+        }
+
+        if (record.type === "childList") {
+
+          record.addedNodes.forEach(node => {
+            translateLobbyTree(node);
+          });
+
+        }
+
+      }
+
+    });
+
+
+    observer.observe(document.body, {
+
+      subtree: true,
+
+      childList: true,
+
+      characterData: true,
+
+      attributes: true,
+
+      attributeFilter: [
+        "placeholder",
+        "title",
+        "aria-label",
+        "alt",
+        "data-lsp-label"
+      ]
+
+    });
+
+  }
+
+
+  if (document.readyState === "loading") {
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      initializeLobbyEnglish,
+      { once: true }
+    );
+
+  } else {
+
+    initializeLobbyEnglish();
+
+  }
+
+})();
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,1995 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Friends | Livestream Pro</title>
+
+
+<script src="/lsp-page-transition.js"></script>
+
+
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #08090b;
+  --panel: #181715;
+  --gold: #d5b675;
+  --light: #f5e2b3;
+  --line: rgba(217,185,121,.37);
+  --muted: #a9a6a0;
+  --red: #e87575;
+  --green: #98c996;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+}
+
+body {
+  color: #f7f1e7;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  overflow-x: hidden;
+}
+
+button, input { font: inherit; }
+button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button:disabled { opacity: .55; cursor: default; }
+[hidden] { display: none !important; }
+svg { display: block; }
+
+.fi {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+}
+
+/* ===== KHUNG CHÍNH ===== */
+
+.friends-app {
+  width: 100%;
+  max-width: 600px;
+  min-height: 100dvh;
+  margin: auto;
+  position: relative;
+  padding-bottom: 115px;
+  background:
+    radial-gradient(ellipse at 0 0, rgba(193,147,64,.10), transparent 55%),
+    radial-gradient(ellipse at 100% 100%, rgba(147,95,29,.08), transparent 50%);
+}
+
+
+/* ==========================================
+   LIVESTREAM PRO - LUXURY FRIENDS HEADER
+   ========================================== */
+
+/* ===== HEADER CONTAINER ===== */
+
+.friends-top {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+
+  width: 100%;
+
+  /* Tránh tai thỏ iPhone */
+  padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(210, 166, 91, .12),
+      transparent 70%
+    ),
+    linear-gradient(
+      180deg,
+      #15130f 0%,
+      #090a0c 100%
+    );
+
+  border-bottom: 1px solid rgba(216, 178, 107, .3);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* GOLDEN BOTTOM LINE */
+
+.friends-top::after {
+  content: "";
+
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: -1px;
+
+  height: 1px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(235, 193, 111, .85),
+    transparent
+  );
+
+  pointer-events: none;
+}
+
+/* ===== HEADER ROW ===== */
+
+
+.friend-header {
+  width: 100%;
+  height: 77px;
+
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+}
+
+.friend-heading {
+  grid-column: 2;
+
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 3px;
+  text-align: center;
+}
+
+/* Nút quay lại nằm bên trái */
+.header-back {
+  grid-column: 1;
+}
+
+
+/* ===== BUTTONS ===== */
+
+.header-btn {
+  width: 44px;
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid rgba(220, 179, 104, .42);
+  border-radius: 13px;
+
+  background: linear-gradient(
+    145deg,
+    #29241b,
+    #101114 75%
+  );
+
+  color: #ebcd92;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 240, 200, .08),
+    0 5px 14px rgba(0, 0, 0, .35);
+
+  cursor: pointer;
+
+  -webkit-tap-highlight-color: transparent;
+
+  transition:
+    border-color .2s,
+    background .2s,
+    transform .15s;
+}
+
+.header-btn .fi {
+  width: 22px;
+  height: 22px;
+
+  stroke-width: 1.9;
+}
+
+.header-btn:active {
+  transform: scale(.94);
+}
+
+.header-btn:hover {
+  border-color: rgba(235, 195, 115, .75);
+}
+
+/* ===== CENTER HEADING ===== */
+
+.friend-heading {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 3px;
+
+  text-align: center;
+}
+
+/* BRAND */
+
+.friend-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  color: #d4af72;
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.9px;
+  white-space: nowrap;
+}
+
+.friend-brand .fi {
+  width: 15px;
+  height: 15px;
+
+  color: #e5c586;
+  stroke-width: 1.6;
+}
+
+/* MAIN TITLE */
+
+.friend-heading h1 {
+  margin: 0;
+  padding: 0;
+
+  color: #f4dfb6;
+
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 27px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: .3px;
+
+  text-shadow:
+    0 2px 12px rgba(203, 158, 74, .16);
+}
+
+/* LINE BELOW TITLE */
+
+.friend-heading-line {
+  width: 44px;
+  height: 1px;
+
+  margin-top: 3px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #d8b471,
+    transparent
+  );
+}
+
+/* ===== SEARCH AREA ===== */
+
+.friend-search {
+  width: 100%;
+
+  padding: 2px 16px 14px;
+}
+
+/* SEARCH BOX */
+
+.search-inner {
+  width: 100%;
+  height: 48px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 0 14px;
+
+  border: 1px solid rgba(218, 181, 113, .35);
+  border-radius: 14px;
+
+  background: linear-gradient(
+    110deg,
+    rgba(40, 37, 32, .96),
+    rgba(15, 17, 21, .98)
+  );
+
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, .04),
+    0 5px 16px rgba(0, 0, 0, .22);
+
+  transition:
+    border-color .2s,
+    box-shadow .2s;
+}
+
+.search-inner:focus-within {
+  border-color: rgba(238, 195, 114, .8);
+
+  box-shadow:
+    0 0 0 3px rgba(219, 179, 103, .07),
+    0 5px 16px rgba(0, 0, 0, .25);
+}
+
+/* SEARCH ICON */
+
+.search-inner .search-icon {
+  width: 20px;
+  height: 20px;
+
+  color: #d9bb80;
+  stroke-width: 1.8;
+}
+
+/* INPUT */
+
+.search-inner input {
+  flex: 1;
+
+  width: 100%;
+  min-width: 0;
+
+  height: 100%;
+
+  margin: 0;
+  padding: 0;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+  box-shadow: none;
+
+  color: #f5f0e5;
+
+  font-size: 16px;
+  font-weight: 400;
+
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.search-inner input::placeholder {
+  color: #99948b;
+  opacity: 1;
+}
+
+.search-inner input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+/* RIGHT DECORATIVE ICON */
+
+.search-end-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding-left: 11px;
+
+  border-left: 1px solid rgba(217, 185, 121, .17);
+
+  pointer-events: none;
+}
+
+.search-end-icon .fi {
+  width: 18px;
+  height: 18px;
+
+  color: #9d8559;
+  opacity: .85;
+}
+
+/* ===== SMALL MOBILE ===== */
+
+@media (max-width: 375px) {
+  .friend-header {
+    height: 70px;
+    grid-template-columns: 40px minmax(0, 1fr) 40px;
+    padding: 0 12px;
+    gap: 7px;
+  }
+
+  .header-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .friend-heading h1 {
+    font-size: 24px;
+  }
+
+  .friend-brand {
+    font-size: 8px;
+    letter-spacing: 1.3px;
+  }
+
+  .friend-search {
+    padding: 2px 12px 12px;
+  }
+
+  .search-inner {
+    height: 46px;
+  }
+}
+
+
+/* ===== DANH SÁCH ===== */
+
+.friend-section {
+  padding: 3px 14px 18px;
+}
+
+.section-heading {
+  margin: 24px 0 12px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(212,170,92,.2);
+  border-bottom-color: var(--line);
+  border-radius: 11px;
+  background: linear-gradient(100deg, #272117, #171512 70%, #272015);
+}
+
+.section-heading .fi {
+  color: var(--gold);
+  width: 23px;
+  height: 23px;
+}
+
+.section-heading h2 {
+  font-size: 17px;
+  line-height: 1.3;
+  font-weight: 750;
+  color: var(--light);
+  margin: 0;
+}
+
+.section-count {
+  margin-left: auto;
+  font-size: 11px;
+  color: #e2c992;
+  background: rgba(210,170,93,.1);
+  border: 1px solid rgba(210,170,93,.25);
+  padding: 4px 9px;
+  border-radius: 99px;
+}
+
+/* ===== THẺ BẠN BÈ ===== */
+
+.friend-row {
+  display: grid;
+  grid-template-columns: 57px minmax(0,1fr) auto;
+  align-items: center;
+  column-gap: 11px;
+  min-height: 92px;
+  margin-bottom: 10px;
+  padding: 13px 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: linear-gradient(
+    125deg,
+    rgba(52,43,30,.76),
+    rgba(17,17,17,.95) 48%,
+    rgba(34,28,22,.85)
+  );
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.05),
+    0 8px 22px #0006;
+}
+
+.friend-avatar {
+  height: 57px;
+  width: 57px;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  padding: 2px;
+  background: #161616;
+  box-shadow:
+    0 0 0 2px rgba(255,230,160,.07),
+    0 0 16px rgba(205,166,88,.17);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.friend-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+.friend-avatar .fi {
+  color: var(--gold);
+  width: 28px;
+  height: 28px;
+}
+
+.friend-info {
+  min-width: 0;
+  cursor: pointer;
+}
+
+.friend-name {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.friend-name .verified {
+  color: #73bdff;
+  flex: none;
+}
+
+.friend-name .verified .fi {
+  width: 16px;
+  height: 16px;
+}
+
+.friend-level {
+  margin-top: 8px;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 3px 10px;
+  border: 1px solid rgba(212,174,100,.54);
+  border-radius: 99px;
+  color: #e8cf92;
+  font-size: 11px;
+  background: #1d1a14;
+  font-weight: 700;
+}
+
+.friend-level .fi {
+  width: 13px;
+  height: 13px;
+}
+
+/* ===== NÚT THAO TÁC ===== */
+
+.friend-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 54px;
+  width: 58px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  color: #f5e5c3;
+  background: linear-gradient(140deg, #24201a, #121315);
+  box-shadow: inset 0 1px rgba(255,255,255,.06);
+}
+
+.action-btn .fi {
+  width: 19px;
+  height: 19px;
+  color: var(--gold);
+}
+
+.action-btn .action-label {
+  font-size: 10px;
+  line-height: 1.05;
+  white-space: nowrap;
+}
+
+.action-btn.accept {
+  width: 69px;
+  border-color: rgba(143,204,131,.65);
+  color: #d3f7d1;
+  background: linear-gradient(145deg, #294027, #10231a);
+}
+
+.action-btn.accept .fi { color: #a6e49b; }
+
+.action-btn.reject {
+  width: 69px;
+  border-color: rgba(231,110,110,.57);
+  background: linear-gradient(145deg, #472323, #231214);
+  color: #ffe0db;
+}
+
+.action-btn.reject .fi,
+.action-btn.block .fi {
+  color: var(--red);
+}
+
+.action-btn.block {
+  border-color: rgba(228,120,109,.40);
+  background: linear-gradient(130deg, #381d1a, #201414);
+}
+
+.action-btn:active,
+.header-btn:active {
+  transform: scale(.97);
+}
+
+/* ===== TRẠNG THÁI TRỐNG ===== */
+
+.empty-state {
+  padding: 25px 16px;
+  text-align: center;
+  border: 1px dashed rgba(214,179,115,.23);
+  border-radius: 13px;
+  color: var(--muted);
+  font-size: 13px;
+  background: #141311;
+}
+
+.empty-state .fi {
+  color: #c6a468;
+  margin: 0 auto 8px;
+  width: 25px;
+  height: 25px;
+}
+
+/* ===== NÚT DANH SÁCH CHẶN ===== */
+
+.bottom-wrap {
+  position: fixed;
+  z-index: 45;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px max(14px,env(safe-area-inset-right))
+    calc(14px + env(safe-area-inset-bottom));
+  background: linear-gradient(transparent, rgba(5,5,6,.95) 24%);
+  pointer-events: none;
+}
+
+.btn-blocked-fixed {
+  pointer-events: auto;
+  width: 100%;
+  max-width: 570px;
+  margin: auto;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  border-radius: 16px;
+  border: 1px solid rgba(230,174,100,.75);
+  background: linear-gradient(115deg, #260d10, #50151b 55%, #230b0f);
+  color: #f0d19b;
+  font-size: 16px;
+  font-weight: 800;
+  box-shadow:
+    0 10px 32px #000b,
+    inset 0 1px rgba(255,230,177,.13);
+}
+
+.btn-blocked-fixed .fi {
+  color: #ef8787;
+  width: 23px;
+  height: 23px;
+}
+
+/* ===== THÔNG BÁO ===== */
+
+#toast-container {
+  position: fixed;
+  z-index: 1001;
+  top: calc(env(safe-area-inset-top, 0px) + 18px);
+  left: 12px;
+  right: 12px;
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  max-width: 500px;
+  width: 100%;
+  padding: 13px 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 12px;
+  background: #202024;
+  border: 1px solid var(--line);
+  box-shadow: 0 14px 35px #000a;
+  color: #f6ebd7;
+  font-size: 13px;
+}
+
+.toast .fi { color: var(--gold); }
+.toast.success .fi { color: var(--green); }
+.toast.error .fi { color: var(--red); }
+
+/* ===== MODAL ĐĂNG XUẤT ===== */
+
+#forceLogoutModal {
+  position: fixed;
+  z-index: 1100;
+  inset: 0;
+  display: none;
+  place-items: center;
+  padding: 18px;
+}
+
+#forceLogoutModal.show { display: grid; }
+
+.fl-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.85);
+  backdrop-filter: blur(7px);
+}
+
+.fl-box {
+  position: relative;
+  text-align: center;
+  max-width: 350px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 19px;
+  background: linear-gradient(150deg, #262019, #101116);
+  padding: 30px 20px;
+  box-shadow: 0 28px 65px #000b;
+}
+
+.fl-icon {
+  display: grid;
+  place-items: center;
+  color: var(--red);
+  margin-bottom: 12px;
+}
+
+.fl-icon .fi {
+  width: 38px;
+  height: 38px;
+}
+
+.fl-title {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--light);
+  margin-bottom: 10px;
+}
+
+.fl-msg, .fl-sub {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #bdb3a2;
+}
+
+.fl-sub {
+  margin-top: 12px;
+  font-size: 12px;
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 410px) {
+  .friend-row {
+    grid-template-columns: 50px minmax(0,1fr);
+    padding: 12px 11px;
+    gap: 9px;
+  }
+
+  .friend-avatar {
+    width: 50px;
+    height: 50px;
+  }
+
+  .friend-actions {
+    grid-column: 1/-1;
+    display: grid;
+    grid-template-columns: repeat(3,minmax(0,1fr));
+    margin-top: 3px;
+  }
+
+  .friend-actions .action-btn {
+    width: 100%;
+    min-height: 45px;
+    flex-direction: row;
+    gap: 6px;
+  }
+
+  .friend-actions .action-btn .fi {
+    width: 17px;
+    height: 17px;
+  }
+
+  .action-btn .action-label { font-size: 11px; }
+
+  .friend-row.request .friend-actions {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+}
+
+@media (min-width: 520px) {
+  .friend-row {
+    grid-template-columns: 62px minmax(0,1fr) auto;
+    padding: 15px;
+  }
+
+  .friend-avatar {
+    height: 62px;
+    width: 62px;
+  }
+
+  .friend-name { font-size: 17px; }
+  .action-btn { width: 75px; }
+  .action-btn.accept, .action-btn.reject { width: 92px; }
+  .action-btn .action-label { font-size: 11px; }
+}
+
+
+
+/* ==========================================
+   LUXURY CONFIRM MODAL - LIVESTREAM PRO
+========================================== */
+
+.friend-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+  padding-top: calc(20px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+}
+
+/* BACKDROP */
+
+.friend-confirm-backdrop {
+  position: absolute;
+  inset: 0;
+
+  background: rgba(0, 0, 0, .82);
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* POPUP BOX */
+
+.friend-confirm-box {
+  position: relative;
+  z-index: 1;
+
+  width: 100%;
+  max-width: 360px;
+
+  padding: 28px 22px 22px;
+
+  border-radius: 22px;
+  border: 1px solid rgba(226, 185, 110, .5);
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(214, 166, 83, .15),
+      transparent 65%
+    ),
+    linear-gradient(
+      145deg,
+      #29241e,
+      #14151a 75%
+    );
+
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, .75),
+    inset 0 1px rgba(255, 255, 255, .06);
+
+  text-align: center;
+
+  animation: friendModalIn .22s ease-out;
+}
+
+/* ICON */
+
+.friend-confirm-icon {
+  width: 66px;
+  height: 66px;
+
+  margin: 0 auto 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 20px;
+
+  border: 1px solid rgba(222, 179, 110, .4);
+
+  background: linear-gradient(
+    145deg,
+    #3d3023,
+    #1f1b1a
+  );
+
+  color: #e8c58c;
+
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .3);
+}
+
+.friend-confirm-icon .fi {
+  width: 31px;
+  height: 31px;
+  stroke-width: 1.5;
+}
+
+/* BLOCK VARIANT */
+
+.friend-confirm-overlay.is-block .friend-confirm-icon {
+  border-color: rgba(230, 114, 114, .45);
+
+  background: linear-gradient(
+    145deg,
+    #502628,
+    #23171b
+  );
+
+  color: #ee9999;
+}
+
+/* TITLE */
+
+#friendConfirmTitle {
+  margin: 0;
+
+  color: #f6dfb2;
+
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+/* MESSAGE */
+
+#friendConfirmMessage {
+  margin: 12px 0 0;
+
+  color: #bcb5aa;
+
+  font-size: 13px;
+  line-height: 1.75;
+
+  overflow-wrap: anywhere;
+}
+
+/* GOLD DIVIDER */
+
+.friend-confirm-divider {
+  width: 100%;
+  height: 1px;
+
+  margin: 23px 0 19px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(225, 186, 114, .5),
+    transparent
+  );
+}
+
+/* BUTTONS */
+
+.friend-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 11px;
+}
+
+.friend-confirm-actions button {
+  min-height: 47px;
+
+  border-radius: 12px;
+
+  font-size: 13px;
+  font-weight: 750;
+
+  transition:
+    transform .15s ease,
+    filter .2s ease;
+}
+
+.friend-confirm-actions button:active {
+  transform: scale(.97);
+}
+
+/* CANCEL */
+
+.friend-confirm-cancel {
+  border: 1px solid rgba(217, 185, 121, .3);
+
+  background: linear-gradient(
+    145deg,
+    #34302c,
+    #202126
+  );
+
+  color: #d9d0c2;
+}
+
+/* CONFIRM */
+
+.friend-confirm-submit {
+  border: 1px solid #f2d6a1;
+
+  background: linear-gradient(
+    135deg,
+    #f7e3b7,
+    #c89d59
+  );
+
+  color: #221910;
+
+  box-shadow: 0 5px 18px rgba(203, 152, 72, .18);
+}
+
+/* BLOCK CONFIRM */
+
+.friend-confirm-overlay.is-block .friend-confirm-submit {
+  border-color: #e69a89;
+
+  background: linear-gradient(
+    135deg,
+    #edb3a0,
+    #b95355
+  );
+
+  color: #260e12;
+}
+
+/* ANIMATION */
+
+@keyframes friendModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ACCESSIBILITY */
+
+@media (prefers-reduced-motion: reduce) {
+  .friend-confirm-box {
+    animation: none;
+  }
+}
+
+
+
+</style>
+</head>
+
+<body>
+
+<!-- ICON SVG RIÊNG - KHÔNG CẦN THƯ VIỆN NGOÀI -->
+<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
+     width="0" height="0"
+     style="position:absolute;overflow:hidden">
+  <symbol id="f-back" viewBox="0 0 24 24">
+    <path d="m15 18-6-6 6-6"/>
+  </symbol>
+  <symbol id="f-search" viewBox="0 0 24 24">
+    <circle cx="10.5" cy="10.5" r="7"/>
+    <path d="m16 16 5 5"/>
+  </symbol>
+  <symbol id="f-play" viewBox="0 0 24 24">
+    <path d="M8 5.5 19 12 8 18.5Z"/>
+  </symbol>
+  <symbol id="f-users" viewBox="0 0 24 24">
+    <circle cx="9" cy="8" r="3"/>
+    <path d="M3 20v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6m1 3a5 5 0 0 1 3 5v1"/>
+  </symbol>
+  <symbol id="f-user-plus" viewBox="0 0 24 24">
+    <circle cx="9" cy="8" r="3"/>
+    <path d="M3 20v-2a6 6 0 0 1 12 0v2M19 9v8m-4-4h8"/>
+  </symbol>
+  <symbol id="f-user-minus" viewBox="0 0 24 24">
+    <circle cx="9" cy="8" r="3"/>
+    <path d="M3 20v-2a6 6 0 0 1 12 0v2M15 13h8"/>
+  </symbol>
+  <symbol id="f-user" viewBox="0 0 24 24">
+    <circle cx="12" cy="8" r="4"/>
+    <path d="M4 21a8 8 0 0 1 16 0"/>
+  </symbol>
+  <symbol id="f-crown" viewBox="0 0 24 24">
+    <path d="m2 8 5 4 5-8 5 8 5-4-2 11H4L2 8ZM4 22h16"/>
+  </symbol>
+  <symbol id="f-chat" viewBox="0 0 24 24">
+    <path d="M20 11a8 8 0 0 1-8 8 9 9 0 0 1-3.5-.8L4 20l1.2-4.6A8 8 0 1 1 20 11Z"/>
+  </symbol>
+  <symbol id="f-ban" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9"/>
+    <path d="m5.6 5.6 12.8 12.8"/>
+  </symbol>
+  <symbol id="f-check" viewBox="0 0 24 24">
+    <path d="m5 12 4 4L19 6"/>
+  </symbol>
+  <symbol id="f-x" viewBox="0 0 24 24">
+    <path d="M18 6 6 18M6 6l12 12"/>
+  </symbol>
+  <symbol id="f-verified" viewBox="0 0 24 24">
+    <path d="m12 2 2.6 1.8 3.1-.1 1.2 2.9 2.6 1.8-.8 3 .8 3-2.6 1.8-1.2 2.9-3.1-.1L12 22l-2.6-1.8-3.1.1-1.2-2.9-2.6-1.8.8-3-.8-3 2.6-1.8 1.2-2.9 3.1.1L12 2Z"/>
+    <path d="m8.4 12 2.5 2.5 4.8-5"/>
+  </symbol>
+  <symbol id="f-info" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9"/>
+    <path d="M12 11v5M12 7h.01"/>
+  </symbol>
+</svg>
+
+<div class="friends-app">
+
+
+<!-- ===== PREMIUM FRIENDS HEADER ===== -->
+
+<div class="friends-top">
+
+  <header class="friend-header">
+
+    <!-- BACK -->
+    <button
+      type="button"
+      class="header-btn header-back"
+      onclick="goBack()"
+      aria-label="Back to Profile"
+    >
+      <svg class="fi">
+        <use href="#f-back"></use>
+      </svg>
+    </button>
+
+    <!-- BRAND + TITLE -->
+    <div class="friend-heading">
+
+      <div class="friend-brand">
+        <svg class="fi">
+          <use href="#f-crown"></use>
+        </svg>
+
+        <span>LIVESTREAM PRO</span>
+      </div>
+
+      <h1>Friends</h1>
+
+      <div class="friend-heading-line"></div>
+
+    </div>
+
+
+
+  </header>
+
+  <!-- SEARCH BAR -->
+  <div class="friend-search" id="friendSearch">
+
+    <label class="search-inner">
+
+      <svg class="fi search-icon">
+        <use href="#f-search"></use>
+      </svg>
+
+      <input
+        id="friendSearchInput"
+        type="search"
+        placeholder="Search friends by name..."
+        oninput="applySearch()"
+        autocomplete="off"
+        aria-label="Search Friends"
+      >
+
+      <span class="search-end-icon">
+        <svg class="fi">
+          <use href="#f-users"></use>
+        </svg>
+      </span>
+
+    </label>
+
+  </div>
+
+</div>
+<!-- ===== END HEADER ===== -->
+
+
+  <main class="friend-section">
+    <div class="section-heading">
+      <svg class="fi"><use href="#f-user-plus"/></svg>
+      	<h2>Friend Requests</h2>
+      <span class="section-count" id="requestCount">0</span>
+    </div>
+    <div id="reqList"></div>
+
+    <div class="section-heading">
+      <svg class="fi"><use href="#f-users"/></svg>
+      <h2>My Friends</h2>
+      <span class="section-count" id="friendCount">0</span>
+    </div>
+    <div id="friendList"></div>
+  </main>
+</div>
+
+
+<!-- ==========================================
+     BLOCKED USERS BUTTON
+     ENGLISH INTERFACE
+========================================== -->
+
+<div class="bottom-wrap">
+
+  <button
+    type="button"
+    class="btn-blocked-fixed"
+    data-lsp-href="/blocked.html"
+    data-lsp-label="Opening Blocked Users..."
+    aria-label="View Blocked Users"
+  >
+
+    <svg class="fi">
+      <use href="#f-ban"></use>
+    </svg>
+
+    Blocked Users
+
+  </button>
+
+</div>
+
+
+
+<!-- ===== LUXURY CONFIRM MODAL ===== -->
+
+<div
+  id="friendConfirmModal"
+  class="friend-confirm-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="friendConfirmTitle"
+  aria-describedby="friendConfirmMessage"
+  hidden
+>
+
+  <div class="friend-confirm-backdrop"
+       onclick="closeFriendConfirm()"></div>
+
+  <div class="friend-confirm-box">
+
+    <!-- ICON -->
+    <div class="friend-confirm-icon" id="friendConfirmIcon">
+      <svg class="fi">
+        <use href="#f-user-minus"></use>
+      </svg>
+    </div>
+
+    <!-- TITLE -->
+<h3 id="friendConfirmTitle">
+  Confirm Action
+</h3>
+
+    <!-- MESSAGE -->
+    <p id="friendConfirmMessage"></p>
+
+    <!-- GOLD DIVIDER -->
+    <div class="friend-confirm-divider"></div>
+
+    <!-- ACTIONS -->
+    <div class="friend-confirm-actions">
+
+<button
+  type="button"
+  class="friend-confirm-cancel"
+  onclick="closeFriendConfirm()"
+>
+  Cancel
+</button>
+
+<button
+  type="button"
+  class="friend-confirm-submit"
+  id="friendConfirmSubmit"
+  onclick="confirmFriendAction()"
+>
+  Confirm
+</button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+<div id="toast-container" aria-live="polite"></div>
+
+<script src="/push-init.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/app-entry-guard.js"></script>
+
+<script>
+const socket = io();
+const profile = JSON.parse(localStorage.getItem("user_profile") || "{}");
+
+
+
+/* ==========================================
+   FRIENDS - SMOOTH PAGE NAVIGATION
+========================================== */
+
+function navigateFriends(url, label = "Loading Page...") {
+
+  if (window.LSPTransition?.go) {
+
+    LSPTransition.go(url, {
+      label: label
+    });
+
+  } else {
+
+    window.location.href = url;
+
+  }
+
+}
+
+
+
+let __searchOpen = true;
+let __lastData = { requests: [], friends: [] };
+
+if (!profile.uid) location.href = "/login.html";
+
+socket.on("connect", () => {
+  if (profile.uid) socket.emit("auth-login", { uid: profile.uid });
+});
+
+const icon = name =>
+  `<svg class="fi" aria-hidden="true"><use href="#f-${name}"></use></svg>`;
+
+/* ===== TẢI DANH SÁCH ===== */
+
+async function loadFriends() {
+  if (!profile.uid) return;
+
+  try {
+    const res = await fetch("/api/friends/" + encodeURIComponent(profile.uid));
+   if (!res.ok) {
+  throw new Error("Unable to load your friends list.");
+}
+
+    const data = await res.json();
+    __lastData = {
+      requests: Array.isArray(data.requests) ? data.requests : [],
+      friends: Array.isArray(data.friends) ? data.friends : []
+    };
+
+    applySearch();
+  } catch (err) {
+    showToast(
+  err.message || "Failed to load data. Please try again.",
+  "error"
+);
+  }
+}
+
+/* ===== AVATAR ===== */
+
+function avatarUrl(value) {
+  if (typeof value !== "string" || !value.trim()) return "";
+
+  try {
+    const url = new URL(value, location.origin);
+    return ["https:", "http:"].includes(url.protocol) ? url.href : "";
+  } catch {
+    return "";
+  }
+}
+
+/* ===== TẠO CARD ===== */
+
+function createFriendRow(u, isRequest) {
+  const row = document.createElement("div");
+  row.className = "friend-row" + (isRequest ? " request" : "");
+
+  row.innerHTML = `
+    <div class="friend-avatar" role="button" tabindex="0" aria-label="View Profile">
+      ${icon("user")}
+    </div>
+    <div class="friend-info" role="button" tabindex="0">
+      <div class="friend-name">
+        <span class="name-text"></span>
+      </div>
+      <span class="friend-level">
+        ${icon("crown")}
+        <span class="level-text"></span>
+      </span>
+    </div>
+    <div class="friend-actions"></div>
+  `;
+
+  const name = String(u.name || "User");
+  const uid = String(u.uid || "");
+
+  row.querySelector(".name-text").textContent = name;
+  row.querySelector(".level-text").textContent = "Lv " + (Number(u.level) || 1);
+
+  const av = row.querySelector(".friend-avatar");
+  const src = avatarUrl(u.avatar);
+
+  if (src) {
+    const image = document.createElement("img");
+    image.src = src;
+    image.alt = "Profile picture of " + name;
+    image.loading = "lazy";
+    image.onerror = () => { image.remove(); };
+    av.replaceChildren(image);
+  }
+
+  const show = () => openProfile(uid);
+
+  [av, row.querySelector(".friend-info")].forEach(el => {
+    el.addEventListener("click", show);
+    el.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        show();
+      }
+    });
+  });
+
+  if (u.verified) {
+    const verified = document.createElement("span");
+    verified.className = "verified";
+    verified.title = "Verified Account";
+    verified.innerHTML = icon("verified");
+    row.querySelector(".friend-name").append(verified);
+  }
+
+  const actions = row.querySelector(".friend-actions");
+
+  function addAction(label, symbol, css, cb) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "action-btn " + css;
+    btn.innerHTML = icon(symbol) + `<span class="action-label"></span>`;
+    btn.querySelector(".action-label").textContent = label;
+    btn.setAttribute("aria-label", label + " " + name);
+    btn.onclick = cb;
+    actions.append(btn);
+  }
+
+/* ==========================================
+   FRIEND ACTION BUTTONS
+   ENGLISH INTERFACE
+========================================== */
+
+if (isRequest) {
+
+  addAction(
+    "Accept",
+    "check",
+    "accept",
+    () => respond(uid, true)
+  );
+
+  addAction(
+    "Decline",
+    "x",
+    "reject",
+    () => respond(uid, false)
+  );
+
+} else {
+
+  addAction(
+    "Message",
+    "chat",
+    "",
+    () => chat(uid, name)
+  );
+
+  addAction(
+    "Unfriend",
+    "user-minus",
+    "",
+    () => removeFriend(uid, name)
+  );
+
+  addAction(
+    "Block",
+    "ban",
+    "block",
+    () => blockUser(uid, name)
+  );
+
+}
+
+  return row;
+}
+
+/* ===== HIỂN THỊ DỮ LIỆU ===== */
+
+function renderFriends(data) {
+  const requests = Array.isArray(data.requests) ? data.requests : [];
+  const friends = Array.isArray(data.friends) ? data.friends : [];
+
+  document.getElementById("requestCount").textContent = requests.length;
+  document.getElementById("friendCount").textContent = friends.length;
+
+for (const [id, list, request, empty] of [
+
+  [
+    "reqList",
+    requests,
+    true,
+    "No pending friend requests."
+  ],
+
+  [
+    "friendList",
+    friends,
+    false,
+    "You haven't added any friends yet."
+  ]
+
+]) {
+    const box = document.getElementById(id);
+    box.replaceChildren();
+
+    if (!list.length) {
+      const el = document.createElement("div");
+      el.className = "empty-state";
+      el.innerHTML = icon("info") + `<div></div>`;
+      el.querySelector("div").textContent = empty;
+      box.append(el);
+    } else {
+      list.forEach(u => box.append(createFriendRow(u, request)));
+    }
+  }
+}
+
+/* ===== TÌM KIẾM ===== */
+
+function toggleSearch() {
+  __searchOpen = !__searchOpen;
+  const box = document.getElementById("friendSearch");
+  const input = document.getElementById("friendSearchInput");
+
+  box.hidden = !__searchOpen;
+
+  if (__searchOpen) {
+    input.focus();
+  } else {
+    input.value = "";
+    renderFriends(__lastData);
+  }
+}
+
+function applySearch() {
+  const query = document.getElementById("friendSearchInput")
+    .value.trim().toLocaleLowerCase("vi-VN");
+
+  if (!query) return renderFriends(__lastData);
+
+  const matches = u =>
+    String(u.name || "").toLocaleLowerCase("vi-VN").includes(query);
+
+  renderFriends({
+    requests: __lastData.requests.filter(matches),
+    friends: __lastData.friends.filter(matches)
+  });
+}
+
+/* ===== CÁC CHỨC NĂNG CŨ ===== */
+
+/* ==========================================
+   FRIENDS NAVIGATION
+   LIVESTREAM PRO PAGE TRANSITION
+========================================== */
+
+// QUAY LẠI PROFILE
+function goBack() {
+
+  navigateFriends(
+    "/profile.html",
+    "Opening Your Profile..."
+  );
+
+}
+
+
+// XEM HỒ SƠ NGƯỜI CHƠI
+function openProfile(uid) {
+
+  if (!uid) return;
+
+  const url =
+    "/profile.html?uid=" + encodeURIComponent(uid);
+
+  navigateFriends(
+    url,
+    "Opening Member Profile..."
+  );
+
+}
+
+
+// PHẢN HỒI LỜI MỜI KẾT BẠN
+// GIỮ NGUYÊN CHỨC NĂNG CŨ
+function respond(uid, accept) {
+
+  socket.emit("friend-respond", {
+    from: uid,
+    accept
+  });
+
+  setTimeout(loadFriends, 400);
+
+}
+
+
+// MỞ CUỘC TRÒ CHUYỆN
+function chat(uid, name) {
+
+  if (!uid) return;
+
+  // Giữ nguyên dữ liệu người nhận
+  localStorage.setItem("chat_to_uid", uid);
+  localStorage.setItem("chat_to_name", name);
+
+  navigateFriends(
+    "/messages.html",
+    "Opening Conversation..."
+  );
+
+}
+
+
+
+/* ==========================================
+   LUXURY CONFIRM - FRIEND ACTIONS
+========================================== */
+
+let pendingFriendAction = null;
+let friendConfirmPreviousFocus = null;
+
+/* ===== MỞ POPUP ===== */
+
+/* ==========================================
+   FRIEND CONFIRMATION MODAL
+   ENGLISH INTERFACE
+========================================== */
+
+function openFriendConfirm(type, uid, name) {
+
+  const modal = document.getElementById(
+    "friendConfirmModal"
+  );
+
+  const title = document.getElementById(
+    "friendConfirmTitle"
+  );
+
+  const message = document.getElementById(
+    "friendConfirmMessage"
+  );
+
+  const submit = document.getElementById(
+    "friendConfirmSubmit"
+  );
+
+  const iconUse = document.querySelector(
+    "#friendConfirmIcon use"
+  );
+
+  const isBlock = type === "block";
+
+
+  // SAVE PENDING ACTION
+  pendingFriendAction = {
+    type,
+    uid,
+    name
+  };
+
+
+  // REMEMBER CURRENT FOCUS
+  friendConfirmPreviousFocus = document.activeElement;
+
+
+  // BLOCK ACCOUNT
+  if (isBlock) {
+
+    title.textContent = "Block This User?";
+
+    message.textContent =
+      `Are you sure you want to block ${name}? ` +
+      `This person will no longer be able to contact you.`;
+
+    submit.textContent = "Block User";
+
+    iconUse.setAttribute(
+      "href",
+      "#f-ban"
+    );
+
+  }
+
+  // REMOVE FRIEND
+  else {
+
+    title.textContent = "Remove Friend?";
+
+    message.textContent =
+      `Are you sure you want to remove ${name} from your friends list?`;
+
+    submit.textContent = "Unfriend";
+
+    iconUse.setAttribute(
+      "href",
+      "#f-user-minus"
+    );
+
+  }
+
+
+  // APPLY MODAL STYLE
+  modal.classList.toggle(
+    "is-block",
+    isBlock
+  );
+
+
+  // SHOW MODAL
+  modal.hidden = false;
+
+
+  // FOCUS CONFIRM BUTTON
+  submit.focus();
+
+}
+/* ===== ĐÓNG POPUP ===== */
+
+function closeFriendConfirm() {
+  const modal = document.getElementById("friendConfirmModal");
+
+  modal.hidden = true;
+  pendingFriendAction = null;
+
+  if (
+    friendConfirmPreviousFocus &&
+    friendConfirmPreviousFocus.isConnected
+  ) {
+    friendConfirmPreviousFocus.focus();
+  }
+
+  friendConfirmPreviousFocus = null;
+}
+
+/* ===== XÁC NHẬN THAO TÁC ===== */
+
+function confirmFriendAction() {
+  if (!pendingFriendAction) return;
+
+  if (!socket.connected) {
+showToast(
+  "Connection lost. Please try again.",
+  "error"
+);
+    return;
+  }
+
+  const { type, uid } = pendingFriendAction;
+
+  closeFriendConfirm();
+
+  if (type === "remove") {
+
+    // GIỮ NGUYÊN EVENT CŨ
+    socket.emit("friend-remove", { uid });
+
+showToast(
+  "Friend removal request sent.",
+  "info"
+);
+
+  } else if (type === "block") {
+
+    // GIỮ NGUYÊN EVENT CŨ
+    socket.emit("user-block", { uid });
+
+showToast(
+  "User block request sent.",
+  "info"
+);
+  }
+
+  // TẢI LẠI DANH SÁCH TỪ SERVER
+  setTimeout(loadFriends, 400);
+}
+
+/* ===== HỦY KẾT BẠN ===== */
+
+function removeFriend(uid, name) {
+  openFriendConfirm("remove", uid, name);
+}
+
+/* ===== CHẶN TÀI KHOẢN ===== */
+
+function blockUser(uid, name) {
+  openFriendConfirm("block", uid, name);
+}
+
+/* ===== ESC ĐỂ ĐÓNG ===== */
+
+document.addEventListener("keydown", event => {
+  const modal = document.getElementById("friendConfirmModal");
+
+  if (!modal || modal.hidden) return;
+
+  if (event.key === "Escape") {
+    closeFriendConfirm();
+  }
+
+  // Giữ thao tác Tab trong hộp thoại
+  if (event.key === "Tab") {
+    const buttons = Array.from(
+      modal.querySelectorAll("button:not(:disabled)")
+    );
+
+    const first = buttons[0];
+    const last = buttons[buttons.length - 1];
+
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+});
+
+
+/* ===== THÔNG BÁO ===== */
+
+function showToast(message, type = "info", timeout = 3500) {
+  const box = document.getElementById("toast-container");
+  const toast = document.createElement("div");
+
+  toast.className = "toast " +
+    (["info","success","error","warn"].includes(type) ? type : "info");
+
+  const symbol = type === "success" ? "check"
+    : type === "error" ? "ban" : "info";
+
+  toast.innerHTML = icon(symbol) + `<span class="msg"></span>`;
+  toast.querySelector(".msg").textContent =
+  String(message || "Notification");
+
+  box.append(toast);
+  setTimeout(() => toast.remove(), timeout);
+}
+
+function notifyWithdraw(data) {
+  const text =
+  data?.text || "Coins have been deducted from your account.";
+
+  if (typeof openSysModal === "function") openSysModal(text);
+  else showToast(text, "error", 5000);
+}
+
+function showWithdrawNotify(data) {
+  notifyWithdraw(data);
+}
+
+/* ===== FORCE LOGOUT ===== */
+
+function showForceLogoutModal(message) {
+  let modal = document.getElementById("forceLogoutModal");
+
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "forceLogoutModal";
+    modal.innerHTML = `
+      <div class="fl-backdrop"></div>
+      <div class="fl-box">
+        <div class="fl-icon">${icon("ban")}</div>
+        <div class="fl-title">Session Ended</div>
+        <div class="fl-msg"></div>
+        <div class="fl-sub">
+  You will be redirected to the login page...
+</div>
+      </div>
+    `;
+    document.body.append(modal);
+  }
+
+  modal.querySelector(".fl-msg").textContent = message;
+  modal.classList.add("show");
+}
+
+function clearLogin() {
+  ["user_profile","login_uid","isGuest"]
+    .forEach(key => localStorage.removeItem(key));
+}
+
+socket.on("system-notify", data => {
+  if (!data) return;
+
+  if (data.type === "topup")
+    showToast(
+  data.text || "Coins have been added to your account.",
+  "success"
+);
+
+  if (data.type === "withdraw")
+    notifyWithdraw(data);
+
+  if (data.type === "lock") {
+    showToast(
+  data.reason || "Your account has been locked.",
+  "error"
+);
+    clearLogin();
+    setTimeout(() => location.href = "/login.html", 2000);
+  }
+});
+
+socket.on("force-logout", data => {
+  showForceLogoutModal(
+  data?.message || "You have been signed out."
+);
+  clearLogin();
+  setTimeout(() => location.href = "/login.html", 3000);
+});
+
+loadFriends();
+</script>
+</body>
+</html>

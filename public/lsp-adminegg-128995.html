@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Admin - Egg Round</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{
+  background:#111;
+  color:#fff;
+  font-family:sans-serif;
+  padding:20px;
+}
+.box{
+  background:#1c1c1c;
+  padding:20px;
+  border-radius:16px;
+  box-shadow:0 0 30px rgba(0,255,150,.2);
+}
+h2{
+  margin-top:0;
+}
+.secret{
+  font-size:24px;
+  font-weight:bold;
+  color:#00ff99;
+}
+.hash{
+  font-size:12px;
+  opacity:.6;
+  word-break:break-all;
+}
+.timer{
+  font-size:18px;
+  margin-top:10px;
+}
+</style>
+</head>
+<body>
+
+<div class="box">
+  <h2>🥚 Current Egg Round</h2>
+  <div>Round ID: <span id="roundId">-</span></div>
+  <div>Egg Type: <span id="eggType">-</span></div>
+  <div class="secret">
+    Multiplier: x <span id="multi">?</span>
+  </div>
+
+
+  <hr style="margin:20px 0;border-color:#333">
+
+<div>
+  <h3>⚠ Override Multiplier</h3>
+
+  <input type="number"
+         id="overrideInput"
+         placeholder="Enter multiplier"
+         style="padding:8px;border-radius:8px;border:none;width:150px">
+
+  <button onclick="overrideEgg()"
+          style="padding:8px 16px;
+                 border:none;
+                 border-radius:8px;
+                 background:#ff3b3b;
+                 color:#fff;
+                 cursor:pointer">
+    OVERRIDE
+  </button>
+
+  <div id="overrideStatus"
+       style="margin-top:10px;font-size:14px;color:#ff8888">
+  </div>
+</div>
+
+
+
+
+  <div class="hash">
+    Hash: <span id="hash">-</span>
+  </div>
+  <div class="timer">
+    Ends in: <span id="timer">--</span>s
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    
+const socket = io({
+  auth:{ uid:"KimDogCat" } // 🔥 thay bằng uid admin
+});
+
+let endAt = 0;
+
+socket.on("admin-egg-secret-update", data=>{
+
+  document.getElementById("roundId").textContent = data.roundId;
+  document.getElementById("eggType").textContent = data.eggType;
+  document.getElementById("multi").textContent = data.multiplier;
+  document.getElementById("hash").textContent = data.hash;
+
+  if(data.overridden){
+    document.getElementById("multi").style.color = "#ff3b3b";
+  }else{
+    document.getElementById("multi").style.color = "#00ff99";
+  }
+
+  endAt = data.endAt;
+});
+
+
+setInterval(()=>{
+  if(!endAt) return;
+  const left = Math.max(0,
+    Math.floor((endAt - Date.now())/1000)
+  );
+  document.getElementById("timer").textContent = left;
+},1000);
+
+
+async function overrideEgg(){
+
+  const value = Number(
+    document.getElementById("overrideInput").value
+  );
+
+  if(isNaN(value)){
+    alert("Invalid multiplier");
+    return;
+  }
+
+  const res = await fetch(
+    "/api/admin/egg/override",
+    {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "x-uid":"KimDogCat" // 🔥 thay UID admin
+      },
+      body: JSON.stringify({
+        multiplier:value
+      })
+    }
+  );
+
+  const data = await res.json();
+
+  const status = document.getElementById("overrideStatus");
+
+  if(data.ok){
+    status.style.color="#00ff99";
+    status.innerText="✅ Override success!";
+  }else{
+    status.style.color="#ff6666";
+    status.innerText="❌ " + (data.message || "Failed");
+  }
+}
+
+
+
+</script>
+
+</body>
+</html>
