@@ -8566,11 +8566,9 @@ async function w8CaptureMobileFrame() {
   const canvas = await html2canvas(app, {
 
     backgroundColor: "#000",
-  
-width: 430,
-height: 870,
-scale: 1,
-
+    width: 430,
+    height: 870,
+    scale: 0.7,
 
     useCORS: true,
     allowTaint: false,
@@ -8612,11 +8610,7 @@ scale: 1,
 
   });
 
-  
-
-const image = canvas.toDataURL("image/jpeg", 0.92);
-
-
+  const image = canvas.toDataURL("image/jpeg", 0.48);
 
   // Giải phóng bitmap sau khi mã hóa
   canvas.width = 1;
@@ -8679,11 +8673,7 @@ function w8StartMobileBroadcast() {
       seq === w8MobileLoopSeq
     ) {
 
-      
-
-w8MobileTimer = setTimeout(loop, 3000);
-
-
+      w8MobileTimer = setTimeout(loop, 1000);
 
     }
 
@@ -8783,17 +8773,11 @@ if (w8IsMobile) {
 
 } else {
 
-
-w8Capture = await navigator.mediaDevices.getDisplayMedia({
-  video: {
-    frameRate: {
-      ideal: 20,
-      max: 24
-    }
-  },
-  audio: false
-});
-
+  // Máy tính: giữ chức năng WebRTC cũ
+  w8Capture = await navigator.mediaDevices.getDisplayMedia({
+    video: { frameRate: 12 },
+    audio: false
+  });
 
   const track = w8Capture.getVideoTracks()[0];
 
