@@ -3269,13 +3269,13 @@ body.lobby-page
           LIVESTREAM PRO · COMMUNITY
         </div>
 
-        <h2 id="playerLobbyTitle" class="title">
-          Sảnh thành viên
-        </h2>
+<h2 id="playerLobbyTitle" class="title">
+  Member Directory
+</h2>
 
-        <p class="player-lobby-description">
-          Khám phá và kết nối cộng đồng
-        </p>
+<p class="player-lobby-description">
+  Connect with your friends
+</p>
 
       </div>
 
@@ -3306,7 +3306,8 @@ body.lobby-page
     <!-- LIST HEADING -->
 
 <div class="player-list-heading">
-  <span>Danh sách thành viên</span>
+  <span>My Friends</span>
+  <span id="playerResultCount"></span>
 </div>
 
 
@@ -4645,9 +4646,75 @@ const btnPlayerLobby = document.getElementById("btnPlayerLobby");
 const playerLobby = document.getElementById("playerLobby");
 const closePlayerLobby = document.getElementById("closePlayerLobby");
 
-btnPlayerLobby.onclick = () => {
+
+btnPlayerLobby.onclick = async () => {
+
   playerLobby.classList.remove("hidden");
+
+  const box = document.getElementById("playerList");
+
+  if (!profile.uid || isGuest) {
+    MY_FRIENDS = [];
+    renderPlayerLobbyAll();
+    return;
+  }
+
+  if (box) {
+    box.innerHTML = `
+      <div class="player-lobby-empty">
+        Loading your friends...
+      </div>
+    `;
+  }
+
+  try {
+
+    const response = await fetch(
+      "/api/friends/" + encodeURIComponent(profile.uid),
+      {
+        cache: "no-store",
+        credentials: "same-origin"
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to load friends");
+    }
+
+    const data = await response.json();
+
+    MY_FRIENDS = Array.isArray(data.friends)
+      ? data.friends
+          .map(f => String(f.uid || ""))
+          .filter(Boolean)
+      : [];
+
+    MY_REQUESTS = Array.isArray(data.requests)
+      ? data.requests.map(r => String(r.uid || ""))
+      : [];
+
+    MY_BLOCKED = Array.isArray(data.blocked)
+      ? data.blocked
+      : [];
+
+    renderPlayerLobbyAll();
+
+  } catch (error) {
+
+    console.error("Member Directory:", error);
+
+    if (box) {
+      box.innerHTML = `
+        <div class="player-lobby-empty">
+          Unable to load friends. Please try again.
+        </div>
+      `;
+    }
+
+  }
+
 };
+
 
 closePlayerLobby.onclick = () => {
   playerLobby.classList.add("hidden");
@@ -4669,24 +4736,35 @@ function renderPlayerLobbyAll() {
 
   if (!box) return;
 
-  if (!ALL_USERS.length) {
-  
 
-    box.innerHTML = `
-      <div class="player-lobby-empty">
-        Chưa có người dùng nào.
-      </div>
-    `;
-    return;
-  }
+  // Chỉ hiển thị những tài khoản đã là bạn bè
+  const myUid = String(profile.uid || "");
 
-  // Giữ nguyên cách sắp xếp cũ
-  let list = sortUsersForLobby(ALL_USERS);
-
-  // Ẩn các tài khoản đã chặn
-  list = list.filter(
-    u => !MY_BLOCKED.includes(u.uid)
+  const friendSet = new Set(
+    MY_FRIENDS.map(uid => String(uid))
   );
+
+  const blockedSet = new Set(
+    MY_BLOCKED.map(uid => String(uid))
+  );
+
+  let list = ALL_USERS.filter(u => {
+
+    const uid = String(u.uid || "");
+
+    return (
+      uid !== "" &&
+      uid !== myUid &&
+      friendSet.has(uid) &&
+      !blockedSet.has(uid)
+    );
+
+  });
+
+  // Giữ nguyên thứ tự ưu tiên:
+  // Admin → Online → Level
+  list = sortUsersForLobby(list);
+
 
   // Lọc theo tên hoặc UID
   if (PLAYER_SEARCH) {
@@ -4700,14 +4778,19 @@ function renderPlayerLobbyAll() {
   }
 
 
-  if (!list.length) {
-    box.innerHTML = `
-      <div class="player-lobby-empty">
-        Không tìm thấy thành viên phù hợp.
-      </div>
-    `;
-    return;
-  }
+
+if (!list.length) {
+  box.innerHTML = `
+    <div class="player-lobby-empty">
+      ${
+        PLAYER_SEARCH
+          ? "No matching friends found."
+          : "You haven't added any friends yet."
+      }
+    </div>
+  `;
+  return;
+}
 
   box.innerHTML = list.map(u => {
 
