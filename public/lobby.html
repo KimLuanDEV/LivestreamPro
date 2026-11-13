@@ -4283,10 +4283,16 @@ function render(list){
     const liveFor = (typeof r.liveStartTs === "number") ? (Date.now() - r.liveStartTs) : 0;
 
    a.innerHTML = `
-  <div class="lobby-cardBg">
-    <img src="${hostAvatar}" alt="avatar" loading="lazy">
-    <div class="lobby-cardShade"></div>
-  </div>
+   
+<div class="lobby-cardBg">
+  <img
+    src="${hostAvatar}"
+    alt="Room cover"
+    loading="eager"
+    decoding="async"
+  >
+  <div class="lobby-cardShade"></div>
+</div>
 
   <!-- TOP OVERLAY -->
   <div class="lobby-cardOverlay top">
@@ -4737,12 +4743,13 @@ function renderPlayerLobbyAll() {
             </span>
 
             ${avatar ? `
-              <img
-                src="${escapeHtml(avatar)}"
-                alt=""
-                loading="lazy"
-                onerror="this.remove()"
-              >
+<img
+  src="${escapeHtml(avatar)}"
+  alt="Player avatar"
+  loading="eager"
+  decoding="async"
+  onerror="this.remove()"
+>
             ` : ""}
 
             <span class="dot ${isOn ? "on" : "off"}"></span>
