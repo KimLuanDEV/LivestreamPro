@@ -8775,13 +8775,23 @@ function w8RenderShareDirectory() {
 
     watch.disabled = isMine;
 
-    watch.addEventListener("click", () => {
-      window.open(
-        url,
-        "_blank",
-        "noopener,noreferrer"
-      );
-    });
+
+watch.addEventListener("click", () => {
+
+  const watchUrl = new URL(url);
+
+  
+  watchUrl.searchParams.set("entry", "settings");
+
+
+  window.open(
+    watchUrl.href,
+    "_blank",
+    "noopener,noreferrer"
+  );
+
+});
+
 
     card.append(user, link, watch);
     box.appendChild(card);

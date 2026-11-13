@@ -1232,6 +1232,59 @@ header,
   }
 }
 
+
+
+/* ==================================
+   MILITARY LIVE - EXIT BUTTON
+================================== */
+
+#w8ExitViewer[hidden] {
+  display: none !important;
+}
+
+#w8ExitViewer {
+  position: fixed;
+
+  top: calc(14px + env(safe-area-inset-top, 0px));
+  left: calc(14px + env(safe-area-inset-left, 0px));
+
+  z-index: 300;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 74px;
+  height: 40px;
+
+  padding: 0 17px;
+
+  border: 1px solid rgba(216, 188, 126, .55);
+  border-radius: 11px;
+
+  background: rgba(18, 26, 19, .92);
+
+  color: #f0ddad;
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 1.1px;
+
+  box-shadow: 0 5px 18px rgba(0, 0, 0, .35);
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+#w8ExitViewer:active {
+  transform: scale(.96);
+  background: rgba(58, 71, 49, .95);
+}
+
+
+
 </style>
 </head>
 
@@ -1267,6 +1320,21 @@ header,
   <div id="status" role="status" aria-live="polite">
     Connecting...
   </div>
+
+
+
+<!-- RETURN TO GAME -->
+<button
+  id="w8ExitViewer"
+  class="w8-exit-viewer"
+  type="button"
+  onclick="w8ExitToGame()"
+  aria-label="Exit and return to game"
+  hidden>
+  <span>EXIT</span>
+</button>
+
+
 
   <!-- OPTIONAL NATIVE FULLSCREEN -->
   <button
@@ -1412,6 +1480,51 @@ header,
 <script>
 const params = new URLSearchParams(location.search);
 const token = params.get("room") || "";
+
+
+
+/* =====================================
+   EXIT VIEWER - RETURN TO GAME
+===================================== */
+
+const w8FromSettings =
+  params.get("entry") === "settings";
+
+const w8ExitButton =
+  document.getElementById("w8ExitViewer");
+
+// Chỉ hiển thị khi vào từ Settings
+if (w8ExitButton) {
+  w8ExitButton.hidden = !w8FromSettings;
+}
+
+function w8ExitToGame() {
+
+  // Thoát chế độ fullscreen nếu đang bật
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch(() => {});
+  }
+
+  // Giải phóng kết nối xem
+  closePeer();
+
+  if (socket.connected) {
+    socket.disconnect();
+  }
+
+  // Đóng tab xem để quay lại tab game gốc
+  window.close();
+
+  // Dự phòng nếu trình duyệt không cho đóng tab
+  setTimeout(() => {
+    if (!window.closed) {
+      window.location.replace("/game-military.html");
+    }
+  }, 350);
+
+}
+
+
 
 const video = document.getElementById("screen");
 const status = document.getElementById("status");
