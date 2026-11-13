@@ -14102,6 +14102,52 @@ app.get("/lobby", (_, res) => {
 const wheel8ScreenShares = new Map();
 const W8_SHARE_LIMIT = 8;
 
+
+/* ==========================================
+   WHEEL8 ACTIVE SCREEN SHARE DIRECTORY
+========================================== */
+
+const W8_SHARE_DIRECTORY_ROOM = "w8share:directory";
+
+function getW8ActiveShareList() {
+  const users = loadUsers();
+  const result = [];
+
+  for (const [token, session] of wheel8ScreenShares) {
+
+    // Chỉ công bố phiên có người phát đang kết nối
+    if (
+      !session.hostId ||
+      !io.sockets.sockets.has(session.hostId)
+    ) continue;
+
+    const user = users[session.hostUid];
+    if (!user?.profile) continue;
+
+    result.push({
+      token,
+      uid: String(session.hostUid),
+      name: String(
+        user.profile.name || "Player"
+      ).slice(0, 60),
+      viewers: session.viewers.size
+    });
+  }
+
+  return result;
+}
+
+function emitW8ShareDirectory() {
+
+  io.to(W8_SHARE_DIRECTORY_ROOM).emit(
+    "w8share:directory:update",
+    getW8ActiveShareList()
+  );
+
+}
+
+
+
 // Keep disconnected broadcasters' sessions for 5 minutes.
 const W8_SHARE_GRACE_MS = 5 * 60 * 1000;
 
@@ -14124,9 +14170,47 @@ function closeWheel8ScreenShare(token) {
 
   const host = io.sockets.sockets.get(session.hostId);
   if (host) host.data.w8Hosting = null;
+
+emitW8ShareDirectory();
+
+
 }
 
 io.on("connection", (socket) => {
+
+
+
+// ======================================
+// ACTIVE SCREEN SHARE DIRECTORY
+// ======================================
+
+socket.on("w8share:directory:join", (ack) => {
+
+  if (typeof ack !== "function") return;
+
+  const uid = socket.data.uid;
+
+  if (!uid || !loadUsers()[uid]?.profile) {
+    return ack({
+      ok: false,
+      error: "Login required."
+    });
+  }
+
+  socket.join(W8_SHARE_DIRECTORY_ROOM);
+
+  ack({
+    ok: true,
+    shares: getW8ActiveShareList()
+  });
+
+});
+
+socket.on("w8share:directory:leave", () => {
+  socket.leave(W8_SHARE_DIRECTORY_ROOM);
+});
+
+
 
   // Người chơi bắt đầu chia sẻ
   socket.on("w8share:start", (_data, ack) => {
@@ -14156,7 +14240,11 @@ io.on("connection", (socket) => {
 
     socket.data.w8Hosting = token;
 
-    ack({ ok: true, token });
+    
+ack({ ok: true, token });
+
+emitW8ShareDirectory();
+
   });
 
 
@@ -14206,7 +14294,7 @@ socket.on("w8share:resume", (data, ack) => {
 
   session.hostId = socket.id;
   socket.data.w8Hosting = token;
-
+  emitW8ShareDirectory();
   ack({
     ok: true,
     count: session.viewers.size
@@ -14511,6 +14599,8 @@ socket.on("disconnect", () => {
     if (session && session.hostId === socket.id) {
 
       session.hostId = null;
+
+emitW8ShareDirectory();
 
       clearTimeout(session.releaseTimer);
 
