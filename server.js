@@ -14102,12 +14102,18 @@ app.get("/lobby", (_, res) => {
 const wheel8ScreenShares = new Map();
 const W8_SHARE_LIMIT = 8;
 
+// Keep disconnected broadcasters' sessions for 5 minutes.
+const W8_SHARE_GRACE_MS = 5 * 60 * 1000;
+
 function closeWheel8ScreenShare(token) {
   const session = wheel8ScreenShares.get(token);
   if (!session) return;
 
+  clearTimeout(session.releaseTimer);
+
   wheel8ScreenShares.delete(token);
 
+  
   for (const viewerId of session.viewers) {
     const viewer = io.sockets.sockets.get(viewerId);
 
@@ -14141,17 +14147,96 @@ io.on("connection", (socket) => {
 
     const token = crypto.randomBytes(18).toString("hex");
 
-    wheel8ScreenShares.set(token, {
-      hostId: socket.id,
-      viewers: new Set()
-    });
+ wheel8ScreenShares.set(token, {
+  hostId: socket.id,
+  hostUid: uid,
+  viewers: new Set(),
+  releaseTimer: null
+});
 
     socket.data.w8Hosting = token;
 
     ack({ ok: true, token });
   });
 
-  // Người xem mở link
+
+
+// Restore an existing LIVE session after reconnecting.
+socket.on("w8share:resume", (data, ack) => {
+
+  if (typeof ack !== "function") return;
+
+  const token = String(data?.token || "");
+  const session = wheel8ScreenShares.get(token);
+  const uid = socket.data.uid;
+
+  if (!session) {
+    return ack({
+      ok: false,
+      expired: true,
+      error: "LIVE session has expired."
+    });
+  }
+
+  // Only the authenticated owner can restore the session.
+  if (
+    !uid ||
+    session.hostUid !== uid ||
+    !loadUsers()[uid]?.profile
+  ) {
+    return ack({
+      ok: false,
+      error: "Not authorized to restore this LIVE session."
+    });
+  }
+
+  if (
+    session.hostId &&
+    session.hostId !== socket.id &&
+    io.sockets.sockets.has(session.hostId)
+  ) {
+    return ack({
+      ok: false,
+      error: "This LIVE session is active on another connection."
+    });
+  }
+
+  clearTimeout(session.releaseTimer);
+  session.releaseTimer = null;
+
+  session.hostId = socket.id;
+  socket.data.w8Hosting = token;
+
+  ack({
+    ok: true,
+    count: session.viewers.size
+  });
+
+  // Tell existing viewers that the broadcaster is back.
+  for (const viewerId of session.viewers) {
+
+    const viewer = io.sockets.sockets.get(viewerId);
+
+    if (
+      !viewer ||
+      viewer.data.w8Watching !== token
+    ) continue;
+
+    io.to(viewerId).emit("w8share:resumed");
+
+    // Ask the broadcaster to establish WebRTC again.
+    socket.emit("w8share:viewer", {
+      viewerId,
+      count: session.viewers.size
+    });
+
+  }
+
+});
+
+
+
+  // Viewer open link
   socket.on("w8share:join", (data, ack) => {
     if (typeof ack !== "function") return;
 
@@ -14166,13 +14251,12 @@ io.on("connection", (socket) => {
 
     const session = wheel8ScreenShares.get(token);
 
-    if (!session ||
-        !io.sockets.sockets.has(session.hostId)) {
-      return ack({
-        ok: false,
-        error: "This sharing session has ended."
-      });
-    }
+if (!session) {
+  return ack({
+    ok: false,
+    error: "This LIVE session has ended."
+  });
+}
 
     if (
       session.viewers.size >= W8_SHARE_LIMIT &&
@@ -14203,13 +14287,24 @@ io.on("connection", (socket) => {
     session.viewers.add(socket.id);
     socket.data.w8Watching = token;
 
-    ack({ ok: true });
+const hostOnline = Boolean(
+  session.hostId &&
+  io.sockets.sockets.has(session.hostId)
+);
 
-    // Yêu cầu máy chủ chia sẻ gửi video
-    io.to(session.hostId).emit("w8share:viewer", {
-      viewerId: socket.id,
-      count: session.viewers.size
-    });
+ack({
+  ok: true,
+  paused: !hostOnline
+});
+
+if (hostOnline) {
+  io.to(session.hostId).emit("w8share:viewer", {
+    viewerId: socket.id,
+    count: session.viewers.size
+  });
+}
+
+
   });
 
 
@@ -14403,11 +14498,43 @@ socket.on("w8share:frame", (data) => {
     }
   });
 
-  // Dọn dẹp khi mất kết nối
-  socket.on("disconnect", () => {
-    if (socket.data.w8Hosting) {
-      closeWheel8ScreenShare(socket.data.w8Hosting);
+
+// Keep the session temporarily when the broadcaster disconnects.
+socket.on("disconnect", () => {
+
+  const token = socket.data.w8Hosting;
+
+  if (token) {
+
+    const session = wheel8ScreenShares.get(token);
+
+    if (session && session.hostId === socket.id) {
+
+      session.hostId = null;
+
+      clearTimeout(session.releaseTimer);
+
+      // The sharing link remains valid during this period.
+      session.releaseTimer = setTimeout(() => {
+
+        if (
+          wheel8ScreenShares.get(token) === session &&
+          !session.hostId
+        ) {
+          closeWheel8ScreenShare(token);
+        }
+
+      }, W8_SHARE_GRACE_MS);
+
+      // Tell viewers the broadcast is temporarily offline.
+      for (const viewerId of session.viewers) {
+        io.to(viewerId).emit("w8share:paused");
+      }
+
     }
+
+  }
+
 
     if (socket.data.w8Watching) {
       const session = wheel8ScreenShares.get(
