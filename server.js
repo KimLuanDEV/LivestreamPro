@@ -7060,7 +7060,7 @@ app.use("/data", express.static(path.join(__dirname, "data")));
 
 
 
-app.post("/api/deposit",(req,res)=>{
+app.post("/api/admin/deposit",(req,res)=>{
 
 const { username, amount } = req.body
 
@@ -7525,6 +7525,68 @@ app.get("/api/deposit-history",(req,res)=>{
 
   res.json({
     history: user.profile.depositLogs || []
+  });
+
+});
+
+
+
+
+
+/* ==========================================
+   ADMIN - MEMBER ACCOUNT OVERVIEW
+   Trả dữ liệu nhân vật cho phiên Admin
+========================================== */
+
+app.get("/api/admin/deposit-user-info", (req, res) => {
+
+  res.set("Cache-Control", "no-store");
+
+  const uid = String(req.query.uid || "").trim();
+
+  if (!uid || uid.length > 100) {
+    return res.status(400).json({
+      ok: false,
+      error: "INVALID_UID"
+    });
+  }
+
+  const users = loadUsers();
+
+  // Tra cứu đúng UID trong users.json.
+  const account = users[uid];
+
+  if (!account || !account.profile) {
+    return res.status(404).json({
+      ok: false,
+      error: "MEMBER_NOT_FOUND"
+    });
+  }
+
+  const p = account.profile;
+
+  const safeNumber = (value, fallback = 0) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+  };
+
+  return res.json({
+    ok: true,
+
+    user: {
+      uid: uid,
+      name: p.name || uid,
+      avatar: p.avatar || "/avatar-default.png",
+
+      level: safeNumber(p.level, 1),
+      exp: safeNumber(p.exp),
+
+      coinDeposit: safeNumber(p.coinDeposit),
+      coinSent: safeNumber(p.coinSent),
+      coinReceived: safeNumber(p.coinReceived),
+
+      coins: safeNumber(p.coins)
+    }
   });
 
 });
