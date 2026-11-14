@@ -987,6 +987,540 @@ button {
     transition: none;
   }
 }
+
+
+
+
+/* ==========================================
+   PREMIUM LANDING PAGE - IMAGE UPGRADE
+========================================== */
+
+/* HERO BACKGROUND */
+
+.hero {
+  position: relative;
+  min-height: min(830px, 94svh);
+  display: flex;
+  align-items: center;
+
+  padding: 120px 0 110px;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(8,10,13,.93) 0%,
+      rgba(8,10,13,.76) 42%,
+      rgba(8,10,13,.40) 100%
+    ),
+    linear-gradient(
+      0deg,
+      #0b0c10 0%,
+      transparent 32%
+    ),
+    url("/assets/landing/hero-live.jpg")
+      center center / cover no-repeat;
+}
+
+.hero::before {
+  display: none;
+}
+
+.hero-inner {
+  text-align: left;
+}
+
+.hero h1 {
+  max-width: 800px;
+  margin-left: 0;
+  margin-right: 0;
+
+  font-size: clamp(48px, 6.7vw, 86px);
+  text-shadow: 0 8px 30px rgba(0,0,0,.45);
+}
+
+.hero-description {
+  max-width: 590px;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.hero-actions {
+  justify-content: flex-start;
+}
+
+.hero-bottom {
+  justify-content: flex-start;
+  margin-top: 75px;
+}
+
+/* PREMIUM FEATURE CARDS */
+
+.feature-card {
+  background:
+    linear-gradient(155deg,#22211f,#131519);
+
+  border-color: rgba(224,187,128,.18);
+  box-shadow: 0 15px 45px rgba(0,0,0,.12);
+}
+
+.feature-card:hover {
+  border-color: rgba(224,187,128,.46);
+}
+
+/* MOBILE */
+
+@media (max-width: 620px) {
+  .hero {
+    min-height: 730px;
+    min-height: 88svh;
+
+    padding: 94px 0 70px;
+
+    background:
+      linear-gradient(
+        180deg,
+        rgba(8,10,13,.50) 0%,
+        rgba(8,10,13,.80) 48%,
+        #0b0c10 100%
+      ),
+      url("/assets/landing/hero-live.jpg")
+        62% center / cover no-repeat;
+  }
+
+  .hero-inner {
+    text-align: center;
+  }
+
+  .hero h1 {
+    margin-left: auto;
+    margin-right: auto;
+    font-size: clamp(41px, 10vw, 58px);
+  }
+
+  .hero-description {
+    margin-inline: auto;
+  }
+
+  .hero-actions,
+  .hero-bottom {
+    justify-content: center;
+  }
+
+  .hero-bottom {
+    margin-top: 52px;
+  }
+}
+
+
+
+.premium-about-image {
+  position: relative;
+  min-height: 480px;
+
+  display: block;
+  overflow: hidden;
+  padding: 0;
+
+  border-radius: 20px;
+  background: #15161a;
+}
+
+.premium-about-image > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+
+  position: absolute;
+  inset: 0;
+
+  object-fit: cover;
+  object-position: center;
+}
+
+.premium-about-image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    180deg,
+    transparent 15%,
+    rgba(8,9,12,.4) 48%,
+    rgba(8,9,12,.96) 100%
+  );
+}
+
+.premium-about-overlay {
+  position: absolute;
+  z-index: 2;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  padding: 35px;
+}
+
+.premium-about-overlay span {
+  color: #dfbd86;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.premium-about-overlay h3 {
+  margin: 13px 0;
+
+  color: #f4e5ca;
+  font: 700 34px/1.2 Georgia,serif;
+}
+
+.premium-about-overlay p {
+  max-width: 340px;
+  margin: 0;
+
+  color: #c4b9a8;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+
+
+
+.visual-experience-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+
+  min-height: 390px;
+  padding: 0;
+
+  display: flex;
+  align-items: flex-end;
+
+  background: #18191d;
+}
+
+.visual-experience-card > img {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  transition: transform .5s ease;
+}
+
+.visual-experience-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+
+  background: linear-gradient(
+    180deg,
+    rgba(8,9,12,.05) 0%,
+    rgba(8,9,12,.38) 42%,
+    rgba(8,9,12,.96) 100%
+  );
+}
+
+.visual-experience-card:hover > img {
+  transform: scale(1.045);
+}
+
+.visual-experience-copy {
+  width: 100%;
+  padding: 30px;
+}
+
+.visual-experience-copy small {
+  display: block;
+  color: #e4bf87;
+}
+
+.visual-experience-copy h3 {
+  margin: 12px 0;
+  color: #fff0d7;
+  font: 700 clamp(24px,3vw,31px)/1.2 Georgia,serif;
+}
+
+.visual-experience-copy p {
+  max-width: 420px;
+  margin: 0;
+  color: #d1c6b6;
+  line-height: 1.75;
+  font-size: 13px;
+}
+
+@media (max-width:620px) {
+  .premium-about-image {
+    min-height: 390px;
+  }
+
+  .premium-about-overlay {
+    padding: 24px;
+  }
+
+  .premium-about-overlay h3 {
+    font-size: 28px;
+  }
+
+  .visual-experience-card {
+    min-height: 330px;
+  }
+
+  .visual-experience-copy {
+    padding: 24px;
+  }
+}
+
+
+
+/* ==========================================
+   SOCIAL EXPERIENCE CARD
+   LUXURY BLACK & CHAMPAGNE GOLD
+========================================== */
+
+.social-experience-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 25px;
+
+  min-height: 390px;
+  padding: 24px;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 70% 0%,
+      rgba(184,137,73,.13),
+      transparent 70%
+    ),
+    linear-gradient(145deg,#24211d,#131519);
+
+  border: 1px solid rgba(218,178,114,.32);
+}
+
+/* SOCIAL MOCKUP */
+
+.social-preview {
+  width: 100%;
+  padding: 15px;
+
+  border: 1px solid rgba(213,172,107,.26);
+  border-radius: 14px;
+
+  background: #121418;
+  box-shadow: 0 14px 35px rgba(0,0,0,.23);
+}
+
+/* HEADER */
+
+.social-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  padding-bottom: 13px;
+  border-bottom: 1px solid rgba(219,180,117,.16);
+}
+
+.social-preview-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.social-preview-mark {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+
+  width: 34px;
+  height: 34px;
+
+  border: 1px solid #917449;
+  border-radius: 9px;
+
+  background: #332a20;
+  color: #f0d6a9;
+
+  font: 800 12px Georgia,serif;
+}
+
+.social-preview-brand strong {
+  display: block;
+  color: #f0dfc1;
+  font-size: 12px;
+}
+
+.social-preview-brand small {
+  display: block;
+  margin-top: 4px;
+
+  color: #b79a72;
+  font-size: 8px;
+  letter-spacing: .6px;
+}
+
+.social-online {
+  color: #abd7b4;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  white-space: nowrap;
+}
+
+/* MESSAGES */
+
+.social-preview-messages {
+  display: grid;
+  gap: 11px;
+  padding: 17px 0;
+}
+
+.social-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+
+.social-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+
+  width: 34px;
+  height: 34px;
+
+  border-radius: 50%;
+  color: #f3e4d5;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.avatar-one {
+  background: #55445f;
+}
+
+.avatar-two {
+  background: #5f453e;
+}
+
+.avatar-three {
+  background: #394e62;
+}
+
+.social-message-bubble {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+
+  border: 1px solid rgba(255,255,255,.045);
+  border-radius: 10px;
+
+  background: #26272b;
+}
+
+.social-message-bubble strong {
+  display: block;
+
+  color: #e5c99d;
+  font-size: 10px;
+}
+
+.social-message-bubble p {
+  margin: 5px 0 0;
+
+  color: #e2d7c8;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* DECORATIVE INPUT */
+
+.social-preview-input {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  padding: 11px 12px;
+
+  border: 1px solid rgba(209,173,119,.23);
+  border-radius: 9px;
+
+  background: #211f1d;
+
+  color: #a99c8a;
+  font-size: 11px;
+}
+
+.social-send {
+  color: #eacb98;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+/* BOTTOM CONTENT */
+
+.social-experience-copy {
+  padding: 5px 2px 0;
+}
+
+.social-experience-copy small {
+  color: #ddba83;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.social-experience-copy h3 {
+  margin: 13px 0;
+
+  color: #f0ddbc;
+  font: 700 clamp(25px,3vw,32px)/1.2 Georgia,serif;
+}
+
+.social-experience-copy p {
+  max-width: 420px;
+  margin: 0;
+
+  color: #b6a897;
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+/* MOBILE */
+
+@media(max-width:620px) {
+  .social-experience-card {
+    min-height: 390px;
+    padding: 16px;
+    gap: 22px;
+  }
+
+  .social-preview {
+    padding: 12px;
+  }
+
+  .social-experience-copy h3 {
+    font-size: 26px;
+  }
+}
+
+
+
+
+
 </style>
 </head>
 
@@ -1126,31 +1660,35 @@ button {
 
     </div>
 
-    <div class="about-showcase">
 
-      <div class="showcase-inner">
+<div class="about-showcase premium-about-image">
 
-        <div class="showcase-mark">LP</div>
+  <img
+    src="/assets/landing/platform-live.jpg"
+    alt="Professional live streaming experience"
+    loading="lazy"
+    decoding="async"
+  >
 
-        <h3>One Platform.<br>More Possibilities.</h3>
+  <div class="premium-about-overlay">
 
-        <p>
-          A unified space for communication,
-          entertainment, and interaction.
-        </p>
+    <span>THE LIVESTREAM PRO EXPERIENCE</span>
 
-        <div class="showcase-divider"></div>
+    <h3>
+      One Platform.<br>
+      Endless Connections.
+    </h3>
 
-        <div class="showcase-tags">
-          <span>LIVE</span>
-          <span>COMMUNITY</span>
-          <span>GAMES</span>
-          <span>CONNECT</span>
-        </div>
+    <p>
+      Connect, share, discover and experience
+      entertainment together.
+    </p>
 
-      </div>
+  </div>
 
-    </div>
+</div>
+
+
 
   </div>
 
@@ -1274,33 +1812,126 @@ button {
 
     <div class="experience-grid">
 
-      <article class="experience-card">
 
-        <small>LIVE & SOCIAL</small>
+<!-- LIVE COMMUNITY -->
 
-        <h3>Connect in the Moment</h3>
+<article class="experience-card visual-experience-card">
 
-        <p>
-          Join live conversations, share experiences,
-          and discover a community where interaction
-          happens as events unfold.
-        </p>
+  <img
+    src="/assets/landing/community.jpg"
+    alt="People connecting through live community"
+    loading="lazy"
+    decoding="async"
+  >
 
-      </article>
+  <div class="visual-experience-copy">
 
-      <article class="experience-card">
+    <small>LIVE & COMMUNITY</small>
 
-        <small>GAMES & ACTIVITIES</small>
+    <h3>Connect Beyond Boundaries.</h3>
 
-        <h3>Explore Interactive Worlds</h3>
+    <p>
+      Share moments, join conversations and discover
+      new connections through live experiences.
+    </p>
 
-        <p>
-          Experience a collection of interactive
-          game rooms and entertainment activities,
-          all accessible through one platform.
-        </p>
+  </div>
 
-      </article>
+</article>
+
+
+<!-- INTERACTIVE GAMES -->
+
+
+<!-- =====================================
+     SOCIAL & MESSAGING EXPERIENCE
+===================================== -->
+
+<article class="experience-card social-experience-card">
+
+  <div class="social-preview">
+
+    <!-- HEADER -->
+    <div class="social-preview-header">
+
+      <div class="social-preview-brand">
+        <span class="social-preview-mark">LP</span>
+
+        <div>
+          <strong>Community Hub</strong>
+          <small>LIVE SOCIAL EXPERIENCE</small>
+        </div>
+      </div>
+
+      <span class="social-online">
+        CONNECTED
+      </span>
+
+    </div>
+
+    <!-- MESSAGES -->
+    <div class="social-preview-messages">
+
+      <div class="social-message">
+
+        <div class="social-avatar avatar-one">AM</div>
+
+        <div class="social-message-bubble">
+          <strong>Alex Morgan</strong>
+          <p>Welcome to Livestream Pro!</p>
+        </div>
+
+      </div>
+
+      <div class="social-message">
+
+        <div class="social-avatar avatar-two">SK</div>
+
+        <div class="social-message-bubble">
+          <strong>Sarah Kim</strong>
+          <p>Great to connect with everyone.</p>
+        </div>
+
+      </div>
+
+      <div class="social-message">
+
+        <div class="social-avatar avatar-three">JD</div>
+
+        <div class="social-message-bubble">
+          <strong>Jordan Davis</strong>
+          <p>Let's discover something new today.</p>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- DECORATIVE MESSAGE INPUT -->
+    <div class="social-preview-input" aria-hidden="true">
+      <span>Join the conversation...</span>
+      <span class="social-send">SEND</span>
+    </div>
+
+  </div>
+
+  <div class="social-experience-copy">
+
+    <small>SOCIAL & MESSAGING</small>
+
+    <h3>Connect Beyond the Stream.</h3>
+
+    <p>
+      Discover new people, start conversations,
+      and build meaningful connections
+      within the Livestream Pro community.
+    </p>
+
+  </div>
+
+</article>
+
+
 
     </div>
 
