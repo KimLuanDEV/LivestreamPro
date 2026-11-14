@@ -4278,7 +4278,7 @@ function render(list){
     const hostName   = r.host?.name   || (r.__virtual ? "Virtual Room" : "Host");
     const verified = r.host?.verified;
 
-    const hostAvatar = fixAvatar(r.host?.avatar) || `https://i.ibb.co/ZR2yR7dJ/Chat-GPT-Image-Jan-12-2026-02-44-07-AM.jpg`;
+    const hostAvatar = fixAvatar(r.host?.avatar) || `https://i.ibb.co/GvJWn19q/icon-192.png`;
 
     const liveFor = (typeof r.liveStartTs === "number") ? (Date.now() - r.liveStartTs) : 0;
 
