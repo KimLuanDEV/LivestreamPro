@@ -1,70 +1,1470 @@
-<!doctype html>
-<html lang="vi">
+
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Livestream Web</title>
-  <link rel="stylesheet" href="/style.css" />
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<meta name="theme-color" content="#0b0c10">
+
+<meta name="description"
+      content="Livestream Pro brings live streaming, real-time interaction, community and entertainment together in one experience.">
+
+<title>Livestream Pro | Experience More. Live Together.</title>
+
+<style>
+/* ==========================================
+   LIVESTREAM PRO
+   OFFICIAL LANDING PAGE
+   BLACK OBSIDIAN & CHAMPAGNE GOLD
+========================================== */
+
+:root {
+  color-scheme: dark;
+  --bg: #0b0c10;
+  --panel: #17181c;
+  --panel2: #202023;
+  --gold: #d8b47b;
+  --gold-light: #f1ddba;
+  --text: #f4eadb;
+  --muted: #aaa195;
+  --line: rgba(215,177,114,.22);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 100px;
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+
+  background:
+    radial-gradient(
+      ellipse 80% 560px at 50% 0%,
+      rgba(159,112,52,.14),
+      transparent 80%
+    ),
+    #0b0c10;
+
+  color: var(--text);
+
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+}
+
+.container {
+  width: min(1160px, calc(100% - 40px));
+  margin-inline: auto;
+}
+
+.section {
+  padding: 94px 0;
+}
+
+.section-label {
+  display: block;
+  margin-bottom: 15px;
+
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 2.1px;
+}
+
+.section-title {
+  margin: 0;
+
+  color: var(--gold-light);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(31px, 4vw, 48px);
+  font-weight: 700;
+  line-height: 1.17;
+}
+
+.section-description {
+  max-width: 610px;
+  margin: 20px auto 0;
+
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.85;
+}
+
+.section-heading {
+  margin-bottom: 46px;
+  text-align: center;
+}
+
+.gold-text {
+  color: var(--gold);
+}
+
+/* ==========================================
+   HEADER
+========================================== */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  border-bottom: 1px solid var(--line);
+
+  background: rgba(12,13,16,.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.header-inner {
+  min-height: 76px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.brand-icon {
+  width: 43px;
+  height: 43px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid #a78a60;
+  border-radius: 11px;
+
+  background:
+    linear-gradient(145deg,#33291e,#16171a);
+
+  color: #f4ddba;
+  font-family: Georgia,serif;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.brand-name strong {
+  display: block;
+
+  color: #f2e4ce;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.brand-name small {
+  display: block;
+  margin-top: 4px;
+
+  color: #af946e;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.nav-links a {
+  color: #b4ab9e;
+  font-size: 13px;
+  font-weight: 650;
+  transition: color .2s;
+}
+
+.nav-links a:hover {
+  color: var(--gold-light);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  min-height: 45px;
+  padding: 12px 20px;
+
+  border: 1px solid transparent;
+  border-radius: 9px;
+
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .5px;
+
+  transition:
+    transform .2s,
+    background .2s,
+    border-color .2s;
+}
+
+.btn:active {
+  transform: scale(.97);
+}
+
+.btn-primary {
+  color: #281d10;
+  border-color: #e8c995;
+
+  background: linear-gradient(
+    125deg,
+    #f5e1be,
+    #c79d63
+  );
+}
+
+.btn-secondary {
+  color: #ead5b3;
+  border-color: rgba(219,178,110,.4);
+  background: rgba(215,174,112,.06);
+}
+
+.btn-secondary:hover {
+  background: rgba(215,174,112,.13);
+}
+
+.btn-small {
+  min-height: 39px;
+  padding: 10px 16px;
+}
+
+/* ==========================================
+   HERO
+========================================== */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+
+  padding: 114px 0 105px;
+  text-align: center;
+}
+
+.hero::before {
+  content: "";
+
+  position: absolute;
+  left: 50%;
+  top: 6%;
+  transform: translateX(-50%);
+
+  width: min(760px, 110vw);
+  height: 420px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      ellipse,
+      rgba(172,124,60,.16),
+      transparent 70%
+    );
+
+  pointer-events: none;
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+
+  padding: 10px 16px;
+
+  border: 1px solid rgba(219,181,119,.24);
+  border-radius: 999px;
+
+  background: rgba(217,174,110,.045);
+  color: #d5b580;
+
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1.5px;
+}
+
+.hero h1 {
+  max-width: 900px;
+  margin: 34px auto 23px;
+
+  color: #f3e3c9;
+  font-family: Georgia,"Times New Roman",serif;
+
+  font-size: clamp(43px, 7vw, 88px);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -.8px;
+}
+
+.hero h1 span {
+  color: var(--gold);
+}
+
+.hero-description {
+  max-width: 630px;
+  margin: 0 auto;
+
+  color: #b5aa9d;
+  font-size: clamp(14px, 2vw, 17px);
+  line-height: 1.9;
+}
+
+.hero-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 13px;
+
+  margin-top: 36px;
+}
+
+.hero-actions .btn {
+  min-width: 170px;
+  min-height: 51px;
+}
+
+.hero-bottom {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 18px 32px;
+
+  margin-top: 70px;
+
+  color: #a59681;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1.4px;
+}
+
+.hero-bottom span {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.hero-bottom span::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #c5a26f;
+}
+
+/* ==========================================
+   ABOUT
+========================================== */
+
+.about-section {
+  border-top: 1px solid var(--line);
+  background: #0e1013;
+}
+
+.about-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 65px;
+}
+
+.about-copy .section-description {
+  margin: 23px 0 0;
+}
+
+.about-points {
+  margin-top: 30px;
+  display: grid;
+  gap: 14px;
+}
+
+.about-point {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+
+  color: #cbbba7;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.about-point::before {
+  content: "";
+  flex-shrink: 0;
+
+  width: 18px;
+  height: 1px;
+
+  margin-top: 10px;
+  background: #d0ac76;
+}
+
+.about-showcase {
+  position: relative;
+
+  min-height: 440px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 35px;
+
+  border: 1px solid var(--line);
+  border-radius: 22px;
+
+  background:
+    radial-gradient(
+      circle at 50% 35%,
+      rgba(209,157,84,.17),
+      transparent 60%
+    ),
+    linear-gradient(145deg,#24211e,#131418);
+}
+
+.showcase-inner {
+  width: 100%;
+  max-width: 390px;
+
+  padding: 37px 27px;
+
+  border: 1px solid rgba(225,185,117,.32);
+  border-radius: 18px;
+
+  background: rgba(12,13,15,.78);
+  text-align: center;
+}
+
+.showcase-mark {
+  width: 90px;
+  height: 90px;
+
+  display: grid;
+  place-items: center;
+
+  margin: 0 auto 27px;
+
+  border: 1px solid #ac8955;
+  border-radius: 22px;
+
+  background: linear-gradient(
+    145deg,#453420,#17181a
+  );
+
+  color: #f3ddb5;
+  font: 800 31px Georgia,serif;
+}
+
+.showcase-inner h3 {
+  margin: 0 0 12px;
+
+  font: 700 27px Georgia,serif;
+  color: var(--gold-light);
+}
+
+.showcase-inner p {
+  margin: 0;
+
+  color: #a99c8b;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.showcase-divider {
+  height: 1px;
+  margin: 30px 0;
+
+  background: var(--line);
+}
+
+.showcase-tags {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.showcase-tags span {
+  padding: 8px 10px;
+
+  border: 1px solid rgba(215,177,114,.25);
+  border-radius: 7px;
+
+  color: #d1b184;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .5px;
+}
+
+/* ==========================================
+   FEATURES
+========================================== */
+
+.features-section {
+  background: #0b0c10;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 16px;
+}
+
+.feature-card {
+  position: relative;
+  min-height: 238px;
+
+  padding: 28px 25px;
+
+  border: 1px solid var(--line);
+  border-radius: 15px;
+
+  background:
+    linear-gradient(150deg,#211f1e,#15161a);
+
+  transition:
+    transform .25s,
+    border-color .25s;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(217,176,111,.52);
+}
+
+.feature-number {
+  display: block;
+  margin-bottom: 36px;
+
+  color: #b99768;
+  font-family: Georgia,serif;
+  font-size: 25px;
+}
+
+.feature-card h3 {
+  margin: 0 0 12px;
+
+  color: #eed7b2;
+  font-size: 17px;
+  font-weight: 750;
+}
+
+.feature-card p {
+  margin: 0;
+
+  color: #a79d91;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+/* ==========================================
+   EXPERIENCE
+========================================== */
+
+.experience-section {
+  border-block: 1px solid var(--line);
+  background: #101114;
+}
+
+.experience-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.experience-card {
+  min-height: 280px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+
+  padding: 35px;
+
+  border: 1px solid rgba(216,178,117,.3);
+  border-radius: 18px;
+
+  background:
+    radial-gradient(
+      circle at 85% 0%,
+      rgba(186,137,69,.16),
+      transparent 65%
+    ),
+    linear-gradient(145deg,#25221e,#17181c);
+}
+
+.experience-card small {
+  margin-bottom: 14px;
+
+  color: #d0ac77;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1.5px;
+}
+
+.experience-card h3 {
+  margin: 0 0 12px;
+
+  color: #f0dbb8;
+  font: 700 28px Georgia,serif;
+}
+
+.experience-card p {
+  max-width: 440px;
+  margin: 0;
+
+  color: #b1a598;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+/* ==========================================
+   HOW IT WORKS
+========================================== */
+
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 25px;
+}
+
+.step {
+  padding: 16px;
+  text-align: center;
+}
+
+.step-number {
+  display: grid;
+  place-items: center;
+
+  width: 56px;
+  height: 56px;
+
+  margin: 0 auto 24px;
+
+  border: 1px solid rgba(224,183,113,.4);
+  border-radius: 50%;
+
+  background: #262119;
+
+  color: #e1bd86;
+  font: 700 21px Georgia,serif;
+}
+
+.step h3 {
+  margin: 0 0 12px;
+
+  color: #ecdbc1;
+  font-size: 17px;
+}
+
+.step p {
+  max-width: 300px;
+  margin: 0 auto;
+
+  color: #a89d90;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+/* ==========================================
+   FINAL CTA
+========================================== */
+
+.cta-section {
+  padding: 90px 0;
+  background: #101114;
+}
+
+.cta-box {
+  padding: 76px 25px;
+
+  border: 1px solid rgba(224,183,113,.34);
+  border-radius: 23px;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(198,142,69,.16),
+      transparent 70%
+    ),
+    linear-gradient(145deg,#24211e,#141519);
+
+  text-align: center;
+}
+
+.cta-box h2 {
+  max-width: 680px;
+  margin: 0 auto;
+
+  color: #f2dfbd;
+  font: 700 clamp(33px, 5vw, 57px)/1.16 Georgia,serif;
+}
+
+.cta-box p {
+  max-width: 510px;
+  margin: 22px auto 30px;
+
+  color: #b1a699;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+/* ==========================================
+   FOOTER
+========================================== */
+
+.footer {
+  border-top: 1px solid var(--line);
+  background: #090a0c;
+}
+
+.footer-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 30px;
+
+  padding: 45px 0;
+}
+
+.footer-tagline {
+  margin: 13px 0 0;
+
+  color: #a39686;
+  font-size: 12px;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+}
+
+.footer-links a {
+  color: #ac9f8d;
+  font-size: 12px;
+}
+
+.footer-links a:hover {
+  color: #e8c995;
+}
+
+.footer-bottom {
+  padding: 20px 0
+    calc(20px + env(safe-area-inset-bottom,0px));
+
+  border-top: 1px solid rgba(217,180,120,.12);
+
+  color: #8e806d;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: .35px;
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media (max-width: 900px) {
+  .nav-links {
+    display: none;
+  }
+
+  .about-layout {
+    grid-template-columns: 1fr;
+    gap: 35px;
+  }
+
+  .about-showcase {
+    min-height: 360px;
+  }
+
+  .feature-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .container {
+    width: calc(100% - 30px);
+  }
+
+  .section {
+    padding: 65px 0;
+  }
+
+  .header-inner {
+    min-height: 67px;
+    gap: 10px;
+  }
+
+  .brand {
+    gap: 9px;
+  }
+
+  .brand-icon {
+    width: 37px;
+    height: 37px;
+  }
+
+  .brand-name strong {
+    font-size: 11px;
+    letter-spacing: .7px;
+  }
+
+  .brand-name small {
+    font-size: 8px;
+    letter-spacing: .8px;
+  }
+
+  .header-actions {
+    gap: 7px;
+  }
+
+  .header-actions .btn {
+    min-height: 35px;
+    padding: 9px 11px;
+    font-size: 10px;
+  }
+
+  .header-actions .btn-secondary {
+    display: none;
+  }
+
+  .hero {
+    padding: 87px 0 66px;
+  }
+
+  .hero h1 {
+    margin-top: 27px;
+    font-size: clamp(43px, 11vw, 63px);
+  }
+
+  .hero-description {
+    font-size: 14px;
+  }
+
+  .hero-actions {
+    gap: 10px;
+  }
+
+  .hero-actions .btn {
+    min-width: 140px;
+  }
+
+  .hero-bottom {
+    gap: 14px 20px;
+    margin-top: 58px;
+    font-size: 9px;
+  }
+
+  .section-heading {
+    margin-bottom: 32px;
+  }
+
+  .section-title {
+    font-size: 32px;
+  }
+
+  .section-description {
+    font-size: 13px;
+  }
+
+  .about-showcase {
+    min-height: 340px;
+    padding: 20px;
+  }
+
+  .feature-grid,
+  .experience-grid,
+  .steps-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .feature-card {
+    min-height: unset;
+    padding: 24px;
+  }
+
+  .feature-number {
+    margin-bottom: 22px;
+  }
+
+  .experience-card {
+    min-height: 235px;
+    padding: 25px;
+  }
+
+  .experience-card h3 {
+    font-size: 26px;
+  }
+
+  .cta-section {
+    padding: 60px 0;
+  }
+
+  .cta-box {
+    padding: 52px 20px;
+  }
+
+  .cta-box h2 {
+    font-size: 36px;
+  }
+
+  .footer-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 25px;
+  }
+}
+
+@media (max-width: 360px) {
+  .hero h1 {
+    font-size: 40px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+  }
+
+  .hero-actions .btn {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .feature-card,
+  .btn {
+    transition: none;
+  }
+}
+</style>
 </head>
+
 <body>
-  <script src="/guard.js"></script>
-  
-  <div class="container">
-    <div class="card">
-      <h1>Livestream Pro</h1>
-      <small>Nhập Room ID để tạo link Livestream</small>
-      <hr />
-      <div class="row">
-        <div class="card">
-          <div class="kv">
-            <label>Room ID (viết liền không dấu)</label>
-            <input id="room" placeholder="ví dụ: abc123..." value="" />
-            <button id="make">Tạo link</button>
-          </div>
-          <hr />
-          <div class="kv">
-            <div class="badge">📱 Link phát (Host)</div>
-            <code id="broadLink">-</code>
-            <button id="copyBroad">Copy link phát</button>
 
-            <div class="badge">👀 Link xem (Viewer)</div>
-            <code id="viewLink">-</code>
-            <button id="copyView">Copy link xem</button>
-          </div>
-        </div>
+<!-- ==========================================
+     HEADER
+========================================== -->
 
-        <div class="card">
-          <div class="badge">⚠️ Tính năng</div>
-          <div class="log" style="margin-top:10px">
-- Livestream không bị delay thời gian.
-- Người livestream và người xem có thể giao lưu trò chuyện.
-- Chat live trực tiếp.
-          </div>
-        </div>
+<header class="site-header">
+
+  <div class="container header-inner">
+
+    <a href="/" class="brand" aria-label="Livestream Pro home">
+
+      <div class="brand-icon">LP</div>
+
+      <div class="brand-name">
+        <strong>LIVESTREAM PRO</strong>
+        <small>LIVE · CONNECT · EXPLORE</small>
       </div>
+
+    </a>
+
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="#about">About</a>
+      <a href="#features">Features</a>
+      <a href="#experience">Experience</a>
+      <a href="#how-it-works">How It Works</a>
+    </nav>
+
+    <div class="header-actions">
+      <a href="/login.html" class="btn btn-secondary btn-small">
+        SIGN IN
+      </a>
+
+      <a href="/register.html" class="btn btn-primary btn-small">
+        JOIN NOW
+      </a>
     </div>
+
   </div>
 
-<script>
-  const roomEl = document.getElementById('room');
-  const broadEl = document.getElementById('broadLink');
-  const viewEl = document.getElementById('viewLink');
+</header>
 
-  function gen() {
-    const room = encodeURIComponent(roomEl.value.trim() || "abc123");
-    const base = location.origin;
-    broadEl.textContent = `${base}/broadcast.html?room=${room}`;
-    viewEl.textContent  = `${base}/viewer.html?room=${room}`;
-  }
-  document.getElementById('make').onclick = gen;
-  gen();
+<!-- ==========================================
+     HERO
+========================================== -->
 
-  async function copyText(text) {
-    try { await navigator.clipboard.writeText(text); alert("Đã copy!"); }
-    catch { prompt("Copy thủ công:", text); }
-  }
-  document.getElementById('copyBroad').onclick = () => copyText(broadEl.textContent);
-  document.getElementById('copyView').onclick = () => copyText(viewEl.textContent);
-</script>
+<section class="hero">
+
+  <div class="container hero-inner">
+
+    <div class="hero-eyebrow">
+      A NEW WORLD OF LIVE CONNECTION
+    </div>
+
+    <h1>
+      Experience More.<br>
+      <span>Live Together.</span>
+    </h1>
+
+    <p class="hero-description">
+      Welcome to Livestream Pro — a connected world
+      where live entertainment, real-time conversations,
+      interactive games, and communities come together.
+      Discover new experiences and make every moment count.
+    </p>
+
+    <div class="hero-actions">
+
+      <a href="/register.html" class="btn btn-primary">
+        GET STARTED
+      </a>
+
+      <a href="#about" class="btn btn-secondary">
+        EXPLORE PLATFORM
+      </a>
+
+    </div>
+
+    <div class="hero-bottom">
+      <span>LIVE ENTERTAINMENT</span>
+      <span>INTERACTIVE EXPERIENCES</span>
+      <span>CONNECTED COMMUNITY</span>
+    </div>
+
+  </div>
+
+</section>
+
+<!-- ==========================================
+     ABOUT
+========================================== -->
+
+<section class="section about-section" id="about">
+
+  <div class="container about-layout">
+
+    <div class="about-copy">
+
+      <span class="section-label">
+        ABOUT LIVESTREAM PRO
+      </span>
+
+      <h2 class="section-title">
+        More Than Streaming.<br>
+        <span class="gold-text">A Connected Experience.</span>
+      </h2>
+
+      <p class="section-description">
+        Livestream Pro brings people closer through
+        live interactions, social discovery, and
+        entertainment experiences in one unified platform.
+      </p>
+
+      <p class="section-description">
+        Whether you want to share a live moment,
+        communicate with others, discover new communities,
+        or participate in interactive games,
+        Livestream Pro offers a space to connect.
+      </p>
+
+      <div class="about-points">
+        <div class="about-point">
+          Connect with people through live experiences.
+        </div>
+
+        <div class="about-point">
+          Communicate and interact in real time.
+        </div>
+
+        <div class="about-point">
+          Discover games, communities, and new activities.
+        </div>
+      </div>
+
+    </div>
+
+    <div class="about-showcase">
+
+      <div class="showcase-inner">
+
+        <div class="showcase-mark">LP</div>
+
+        <h3>One Platform.<br>More Possibilities.</h3>
+
+        <p>
+          A unified space for communication,
+          entertainment, and interaction.
+        </p>
+
+        <div class="showcase-divider"></div>
+
+        <div class="showcase-tags">
+          <span>LIVE</span>
+          <span>COMMUNITY</span>
+          <span>GAMES</span>
+          <span>CONNECT</span>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+<!-- ==========================================
+     FEATURES
+========================================== -->
+
+<section class="section features-section" id="features">
+
+  <div class="container">
+
+    <div class="section-heading">
+
+      <span class="section-label">
+        DISCOVER THE PLATFORM
+      </span>
+
+      <h2 class="section-title">
+        Everything You Need.<br>
+        <span class="gold-text">All in One Place.</span>
+      </h2>
+
+      <p class="section-description">
+        Explore the features that make
+        Livestream Pro an interactive entertainment
+        and community platform.
+      </p>
+
+    </div>
+
+    <div class="feature-grid">
+
+      <article class="feature-card">
+        <span class="feature-number">01</span>
+        <h3>Live Streaming</h3>
+        <p>
+          Share live moments, watch broadcasts,
+          and connect with audiences through
+          live video experiences.
+        </p>
+      </article>
+
+      <article class="feature-card">
+        <span class="feature-number">02</span>
+        <h3>Real-Time Chat</h3>
+        <p>
+          Communicate with hosts, viewers,
+          and community members through
+          live conversations.
+        </p>
+      </article>
+
+      <article class="feature-card">
+        <span class="feature-number">03</span>
+        <h3>Interactive Games</h3>
+        <p>
+          Explore game experiences,
+          participate in activities,
+          and enjoy moments of entertainment.
+        </p>
+      </article>
+
+      <article class="feature-card">
+        <span class="feature-number">04</span>
+        <h3>Social Community</h3>
+        <p>
+          Discover members, make connections,
+          and build relationships within
+          the Livestream Pro community.
+        </p>
+      </article>
+
+      <article class="feature-card">
+        <span class="feature-number">05</span>
+        <h3>Personal Profiles</h3>
+        <p>
+          Create your member identity,
+          personalize your profile,
+          and enjoy a connected experience.
+        </p>
+      </article>
+
+      <article class="feature-card">
+        <span class="feature-number">06</span>
+        <h3>Virtual Diamonds</h3>
+        <p>
+          Explore supported in-platform
+          experiences using the virtual
+          credit system.
+        </p>
+      </article>
+
+    </div>
+
+  </div>
+
+</section>
+
+<!-- ==========================================
+     EXPERIENCE
+========================================== -->
+
+<section class="section experience-section" id="experience">
+
+  <div class="container">
+
+    <div class="section-heading">
+
+      <span class="section-label">
+        THE LIVESTREAM PRO EXPERIENCE
+      </span>
+
+      <h2 class="section-title">
+        Designed for Connection.<br>
+        <span class="gold-text">Built for Entertainment.</span>
+      </h2>
+
+    </div>
+
+    <div class="experience-grid">
+
+      <article class="experience-card">
+
+        <small>LIVE & SOCIAL</small>
+
+        <h3>Connect in the Moment</h3>
+
+        <p>
+          Join live conversations, share experiences,
+          and discover a community where interaction
+          happens as events unfold.
+        </p>
+
+      </article>
+
+      <article class="experience-card">
+
+        <small>GAMES & ACTIVITIES</small>
+
+        <h3>Explore Interactive Worlds</h3>
+
+        <p>
+          Experience a collection of interactive
+          game rooms and entertainment activities,
+          all accessible through one platform.
+        </p>
+
+      </article>
+
+    </div>
+
+  </div>
+
+</section>
+
+<!-- ==========================================
+     HOW IT WORKS
+========================================== -->
+
+<section class="section" id="how-it-works">
+
+  <div class="container">
+
+    <div class="section-heading">
+
+      <span class="section-label">
+        GETTING STARTED
+      </span>
+
+      <h2 class="section-title">
+        Your Journey <span class="gold-text">Starts Here.</span>
+      </h2>
+
+      <p class="section-description">
+        Discover the Livestream Pro experience
+        in three simple steps.
+      </p>
+
+    </div>
+
+    <div class="steps-grid">
+
+      <div class="step">
+
+        <div class="step-number">01</div>
+
+        <h3>Create Your Account</h3>
+
+        <p>
+          Register and set up your profile
+          to begin your Livestream Pro journey.
+        </p>
+
+      </div>
+
+      <div class="step">
+
+        <div class="step-number">02</div>
+
+        <h3>Explore the Platform</h3>
+
+        <p>
+          Discover community features,
+          live experiences, and interactive games.
+        </p>
+
+      </div>
+
+      <div class="step">
+
+        <div class="step-number">03</div>
+
+        <h3>Connect & Participate</h3>
+
+        <p>
+          Engage with other members,
+          join activities, and enjoy
+          the Livestream Pro experience.
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+<!-- ==========================================
+     CALL TO ACTION
+========================================== -->
+
+<section class="cta-section">
+
+  <div class="container">
+
+    <div class="cta-box">
+
+      <span class="section-label">
+        JOIN THE EXPERIENCE
+      </span>
+
+      <h2>
+        Your World.<br>
+        Your Community. Your Moment.
+      </h2>
+
+      <p>
+        Become part of Livestream Pro.
+        Discover entertainment, connect with others,
+        and explore what the platform has to offer.
+      </p>
+
+      <div class="hero-actions">
+
+        <a href="/register.html" class="btn btn-primary">
+          CREATE AN ACCOUNT
+        </a>
+
+        <a href="/login.html" class="btn btn-secondary">
+          SIGN IN
+        </a>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+<!-- ==========================================
+     FOOTER
+========================================== -->
+
+<footer class="footer">
+
+  <div class="container footer-main">
+
+    <div>
+
+      <a href="/" class="brand">
+
+        <div class="brand-icon">LP</div>
+
+        <div class="brand-name">
+          <strong>LIVESTREAM PRO</strong>
+          <small>LIVE · CONNECT · EXPLORE</small>
+        </div>
+
+      </a>
+
+      <p class="footer-tagline">
+        Experience More. Live Together.
+      </p>
+
+    </div>
+
+    <nav class="footer-links" aria-label="Footer navigation">
+      <a href="#about">About</a>
+      <a href="#features">Features</a>
+      <a href="/register.html">Register</a>
+      <a href="/login.html">Sign In</a>
+    </nav>
+
+  </div>
+
+  <div class="footer-bottom">
+    © 2026 LIVESTREAM PRO. ALL RIGHTS RESERVED.
+  </div>
+
+</footer>
+
 </body>
 </html>
