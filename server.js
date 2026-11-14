@@ -6865,7 +6865,7 @@ function setLspAdminCookie(req, res, token, maxAge) {
     `${LSP_ADMIN_COOKIE}=${token}`,
     "HttpOnly",
     "SameSite=Strict",
-    "Path=/",
+    "Path=/api/admin",
     `Max-Age=${maxAge}`,
     ...(https ? ["Secure"] : [])
   ].join("; ");
@@ -7049,52 +7049,6 @@ app.use("/api/admin", (req, res, next) => {
 
   next();
 });
-
-
-
-
-/* ==========================================
-   PROTECT ADMIN GAME HTML PAGES
-========================================== */
-
-const PROTECTED_ADMIN_GAME_PAGES = new Set([
-  "/lsp-adminegg-128995.html",
-  "/lsp-adminwheel-128995.html",
-  "/lsp-adminrps-128995.html",
-  "/lsp-adminboom-128995.html",
-  "/lsp-admindtp-128995.html",
-  "/lsp-adminwheel8-128995.html"
-]);
-
-app.use((req, res, next) => {
-
-  const pathname = req.path.toLowerCase();
-
-  if (!PROTECTED_ADMIN_GAME_PAGES.has(pathname)) {
-    return next();
-  }
-
-  res.set("Cache-Control", "no-store");
-
-  const auth = getLspAdminSession(req);
-  const actorUid = getLspAdminActorUid();
-
-  const authorized = Boolean(
-    auth &&
-    actorUid &&
-    auth.session.actorUid === actorUid
-  );
-
-  if (!authorized) {
-    return res.status(403).send(
-      "Administrator authentication required."
-    );
-  }
-
-  next();
-
-});
-
 
 
 

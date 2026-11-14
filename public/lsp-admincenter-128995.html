@@ -672,328 +672,13 @@ button {
   }
 }
 
-
-
-/* ===========================================
-   SECURE ADMIN ACCESS
-   BLACK OBSIDIAN & CHAMPAGNE GOLD
-=========================================== */
-
-body.admin-locked {
-  overflow: hidden;
-}
-
-body.admin-locked .admin-app {
-  display: none !important;
-}
-
-.admin-auth-screen {
-  position: fixed;
-  inset: 0;
-  z-index: 100000;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding:
-    calc(20px + env(safe-area-inset-top,0px))
-    18px
-    calc(20px + env(safe-area-inset-bottom,0px));
-
-  overflow-y: auto;
-
-  background:
-    radial-gradient(
-      ellipse 75% 40% at 50% 0%,
-      rgba(176,126,65,.17),
-      transparent 80%
-    ),
-    #090b0e;
-}
-
-.admin-auth-screen[hidden] {
-  display: none !important;
-}
-
-.admin-auth-card {
-  width: 100%;
-  max-width: 390px;
-  padding: 32px 23px 25px;
-
-  border: 1px solid rgba(224,185,119,.39);
-  border-radius: 20px;
-
-  background: linear-gradient(
-    150deg,
-    #28241f,
-    #17191c 60%,
-    #111216
-  );
-
-  box-shadow:
-    0 28px 75px rgba(0,0,0,.6),
-    inset 0 1px rgba(255,255,255,.04);
-
-  text-align: center;
-}
-
-.admin-auth-logo {
-  display: grid;
-  place-items: center;
-
-  width: 68px;
-  height: 68px;
-  margin: 0 auto 24px;
-
-  border: 1px solid #bd985f;
-  border-radius: 18px;
-
-  background: linear-gradient(
-    145deg,#3b3022,#191b1d
-  );
-
-  color: #f2d9ae;
-  font: 800 23px Georgia,serif;
-  letter-spacing: 1px;
-}
-
-.admin-auth-kicker {
-  color: #c7a676;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 1.3px;
-}
-
-.admin-auth-card h1 {
-  margin: 13px 0 10px;
-
-  color: #f1ddba;
-  font: 700 29px Georgia,serif;
-  line-height: 1.2;
-}
-
-.admin-auth-card > p {
-  max-width: 300px;
-  margin: 0 auto 26px;
-
-  color: #ada296;
-  font-size: 12px;
-  line-height: 1.7;
-}
-
-#adminAuthForm {
-  text-align: left;
-}
-
-#adminAuthForm label {
-  display: block;
-  margin-bottom: 9px;
-
-  color: #d1ae7c;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: .8px;
-}
-
-.admin-password-field {
-  position: relative;
-  width: 100%;
-}
-
-#adminPassword {
-  display: block;
-  width: 100%;
-  height: 51px;
-
-  margin: 0;
-  padding: 0 76px 0 14px;
-
-  border: 1px solid rgba(218,181,122,.33);
-  border-radius: 11px;
-  outline: 0;
-
-  background: #101216;
-  color: #f3e3c8;
-  font-size: 16px;
-}
-
-#adminPassword::placeholder {
-  color: #817c74;
-}
-
-#adminPassword:focus {
-  border-color: #e1bc81;
-  box-shadow: 0 0 0 3px rgba(225,188,129,.1);
-}
-
-#adminPasswordToggle {
-  position: absolute;
-  top: 50%;
-  right: 8px;
-
-  transform: translateY(-50%);
-
-  width: 62px;
-  height: 35px;
-
-  padding: 0;
-
-  border: 1px solid #51412f;
-  border-radius: 7px;
-
-  background: #2b2620;
-  color: #e4c28d;
-
-  font-size: 10px;
-  font-weight: 800;
-}
-
-.admin-auth-error {
-  margin-top: 12px;
-  padding: 11px 12px;
-
-  border: 1px solid rgba(214,115,115,.3);
-  border-radius: 9px;
-
-  background: rgba(120,49,49,.12);
-  color: #e5a4a0;
-
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.admin-auth-error[hidden] {
-  display: none !important;
-}
-
-.admin-auth-submit {
-  display: block;
-  width: 100%;
-  min-height: 49px;
-
-  margin-top: 17px;
-  padding: 12px;
-
-  border: 1px solid #efd09d;
-  border-radius: 10px;
-
-  background: linear-gradient(
-    125deg,#f4dfb8,#c59a5d
-  );
-
-  color: #2b1d0d;
-  font-size: 12px;
-  font-weight: 850;
-  letter-spacing: .7px;
-}
-
-.admin-auth-submit:disabled {
-  opacity: .55;
-  cursor: not-allowed;
-}
-
-.admin-auth-foot {
-  margin-top: 25px;
-  padding-top: 16px;
-
-  border-top: 1px solid rgba(217,180,115,.18);
-
-  color: #9f8b70;
-  font-size: 9px;
-  font-weight: 750;
-  letter-spacing: 1px;
-}
-
-@media(max-width:370px) {
-  .admin-auth-card {
-    padding: 27px 16px 21px;
-  }
-
-  .admin-auth-card h1 {
-    font-size: 25px;
-  }
-}
-
 </style>
 
 </head>
 
-
-<body class="admin-locked">
-
-<!-- =====================================
-     EXECUTIVE ADMIN AUTHENTICATION
-===================================== -->
-
-<section id="adminAuthScreen" class="admin-auth-screen">
-
-  <div class="admin-auth-card">
-
-    <div class="admin-auth-logo">LP</div>
-
-    <div class="admin-auth-kicker">
-      LIVESTREAM PRO · RESTRICTED AREA
-    </div>
-
-    <h1>Secure Admin Access</h1>
-
-    <p>
-      Enter your administrator password to access
-      the Game Control Center.
-    </p>
-
-    <form id="adminAuthForm">
-
-      <label for="adminPassword">
-        ADMINISTRATOR PASSWORD
-      </label>
-
-      <div class="admin-password-field">
-
-        <input
-          id="adminPassword"
-          type="password"
-          autocomplete="current-password"
-          placeholder="Enter your password"
-          maxlength="256"
-          required
-        >
-
-        <button
-          id="adminPasswordToggle"
-          type="button"
-          aria-label="Show password">
-          SHOW
-        </button>
-
-      </div>
-
-      <div id="adminAuthError"
-           class="admin-auth-error"
-           role="alert"
-           hidden></div>
-
-      <button id="adminAuthSubmit"
-              class="admin-auth-submit"
-              type="submit">
-        UNLOCK CONTROL CENTER
-      </button>
-
-    </form>
-
-    <div class="admin-auth-foot">
-      AUTHORIZED ADMINISTRATORS ONLY
-    </div>
-
-  </div>
-
-</section>
-
-<!-- EXISTING ADMIN CENTER -->
+<body>
 
 <div class="admin-app">
-
 
   <!-- ==================================
        HEADER
@@ -1171,13 +856,11 @@ body.admin-locked .admin-app {
 
       </div>
 
-
-<iframe
-  id="frame"
-  title="Game administration workspace"
-  src="about:blank">
-</iframe>
-
+      <iframe
+        id="frame"
+        title="Game administration workspace"
+        src="/lsp-adminegg-128995.html">
+      </iframe>
 
     </div>
 
@@ -1195,18 +878,25 @@ body.admin-locked .admin-app {
 </div>
 
 
-
 <script>
+
+/* ==========================================
+   EXECUTIVE ADMIN CENTER
+   MODULE NAVIGATION
+========================================== */
+
 "use strict";
 
-/* =========================================
-   EXECUTIVE ADMIN CENTER
-   SERVER PASSWORD AUTHENTICATION
-========================================= */
+/* DOM ELEMENTS */
 
-const tabs = document.querySelectorAll(".tabs .tab");
-const frame = document.getElementById("frame");
-const frameLoader = document.getElementById("frameLoader");
+const tabs =
+  document.querySelectorAll(".tabs .tab");
+
+const frame =
+  document.getElementById("frame");
+
+const frameLoader =
+  document.getElementById("frameLoader");
 
 const activeModuleTitle =
   document.getElementById("activeModuleTitle");
@@ -1214,264 +904,123 @@ const activeModuleTitle =
 const activeModuleSubtitle =
   document.getElementById("activeModuleSubtitle");
 
-const authScreen =
-  document.getElementById("adminAuthScreen");
-
-const authForm =
-  document.getElementById("adminAuthForm");
-
-const authPassword =
-  document.getElementById("adminPassword");
-
-const authSubmit =
-  document.getElementById("adminAuthSubmit");
-
-const authError =
-  document.getElementById("adminAuthError");
-
-const authToggle =
-  document.getElementById("adminPasswordToggle");
+/* MODULE CONFIG */
 
 const ADMIN_MODULES = {
+
   egg: {
     title: "Egg Management",
     url: "/lsp-adminegg-128995.html"
   },
+
   wheel: {
     title: "Wheel Management",
     url: "/lsp-adminwheel-128995.html"
   },
+
   rps: {
     title: "RPS Management",
     url: "/lsp-adminrps-128995.html"
   },
+
   boom: {
     title: "Boom Management",
     url: "/lsp-adminboom-128995.html"
   },
+
   dtp: {
     title: "DTP Management",
     url: "/lsp-admindtp-128995.html"
   },
+
   wheel8: {
     title: "Wheel8 Management",
     url: "/lsp-adminwheel8-128995.html"
   }
+
 };
 
-let adminAccessGranted = false;
-let adminAuthBusy = false;
+/* DISPLAY CURRENT UID */
+
+let profile = {};
+
+try {
+  profile = JSON.parse(
+    localStorage.getItem("user_profile") || "{}"
+  ) || {};
+} catch (error) {
+  profile = {};
+}
+
+document.getElementById("adminUid").textContent =
+  profile.uid || "UNKNOWN";
+
+/* MODULE SELECTION */
+
 let activeModule = "egg";
 
-/* =========================================
-   UI AUTH HELPERS
-========================================= */
-
-function showAdminAuthError(message = "") {
-  authError.textContent = message;
-  authError.hidden = !message;
-}
-
-function lockAdminCenter(message = "") {
-  adminAccessGranted = false;
-
-  document.body.classList.add("admin-locked");
-  authScreen.hidden = false;
-
-  frame.src = "about:blank";
-  frameLoader.classList.add("hidden");
-
-  authPassword.value = "";
-  showAdminAuthError(message);
-}
-
-function unlockAdminCenter(actorUid) {
-  adminAccessGranted = true;
-
-  document.getElementById("adminUid").textContent =
-    actorUid || "ADMIN";
-
-  authPassword.value = "";
-  showAdminAuthError("");
-
-  authScreen.hidden = true;
-  document.body.classList.remove("admin-locked");
-
-  // Load EGG only after successful authentication.
-  activeModule = "";
-
-  loadTab("egg");
-}
-
-/* =========================================
-   CHECK SESSION WITH SERVER
-========================================= */
-
-async function verifyAdminSession() {
-  const response = await fetch(
-    "/api/admin/auth/status",
-    {
-      credentials: "same-origin",
-      cache: "no-store"
-    }
-  );
-
-  const data = await response.json();
-
-  if (
-    !response.ok ||
-    !data.ok ||
-    !data.authenticated
-  ) {
-    return null;
-  }
-
-  return data.actorUid || "ADMIN";
-}
-
-/* =========================================
-   PASSWORD LOGIN
-========================================= */
-
-authForm.addEventListener("submit", async event => {
-  event.preventDefault();
-
-  if (adminAuthBusy) return;
-
-  const password = authPassword.value;
-
-  if (!password) {
-    showAdminAuthError(
-      "Please enter your administrator password."
-    );
-    return;
-  }
-
-  adminAuthBusy = true;
-  authSubmit.disabled = true;
-  authSubmit.textContent = "AUTHENTICATING...";
-
-  showAdminAuthError("");
-
-  try {
-    const response = await fetch(
-      "/api/admin/auth/login",
-      {
-        method: "POST",
-        credentials: "same-origin",
-        cache: "no-store",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ password })
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok || !data.ok) {
-      showAdminAuthError(
-        response.status === 429
-          ? "Too many attempts. Please try again later."
-          : data.message || "Incorrect administrator password."
-      );
-
-      authPassword.value = "";
-      return;
-    }
-
-    const actorUid = await verifyAdminSession();
-
-    if (!actorUid) {
-      showAdminAuthError(
-        "Administrator session could not be verified."
-      );
-      return;
-    }
-
-    unlockAdminCenter(actorUid);
-
-  } catch (error) {
-    showAdminAuthError(
-      "Unable to connect to the authentication server."
-    );
-  } finally {
-    adminAuthBusy = false;
-    authSubmit.disabled = false;
-    authSubmit.textContent = "UNLOCK CONTROL CENTER";
-  }
-});
-
-/* =========================================
-   SHOW / HIDE PASSWORD
-========================================= */
-
-authToggle.addEventListener("click", () => {
-  const visible = authPassword.type === "password";
-
-  authPassword.type = visible ? "text" : "password";
-  authToggle.textContent = visible ? "HIDE" : "SHOW";
-  authToggle.setAttribute(
-    "aria-label",
-    visible ? "Hide password" : "Show password"
-  );
-});
-
-/* =========================================
-   MODULE NAVIGATION
-========================================= */
-
 function loadTab(type) {
-  if (!adminAccessGranted) return;
 
-  const selectedModule = ADMIN_MODULES[type];
-  if (!selectedModule) return;
+  const module = ADMIN_MODULES[type];
+
+  if (!module) return;
 
   if (activeModule === type) return;
 
   activeModule = type;
 
   tabs.forEach(tab => {
-    const selected = tab.dataset.type === type;
 
-    tab.classList.toggle("active", selected);
-    tab.setAttribute("aria-pressed", String(selected));
+    const selected =
+      tab.dataset.type === type;
+
+    tab.classList.toggle(
+      "active",
+      selected
+    );
+
+    tab.setAttribute(
+      "aria-pressed",
+      String(selected)
+    );
+
   });
 
-  activeModuleTitle.textContent = selectedModule.title;
+  activeModuleTitle.textContent =
+    module.title;
+
   activeModuleSubtitle.textContent =
     "Administration workspace";
 
   frameLoader.classList.remove("hidden");
-  frame.src = selectedModule.url;
+
+  frame.src = module.url;
+
 }
 
+/* MODULE BUTTON EVENTS */
+
 tabs.forEach(tab => {
+
   tab.addEventListener("click", () => {
     loadTab(tab.dataset.type);
   });
+
 });
+
+/* IFRAME LOAD EVENT */
 
 frame.addEventListener("load", () => {
   frameLoader.classList.add("hidden");
 });
 
-/* =========================================
-   RETURN TO PROFILE
-========================================= */
+/* RETURN TO PROFILE */
 
 function goBackProfile() {
   location.href = "/profile.html";
 }
 
-/* =========================================
-   REQUIRE PASSWORD ON EACH PAGE OPEN
-========================================= */
-
-lockAdminCenter();
-
 </script>
-
 
 </body>
 </html>
