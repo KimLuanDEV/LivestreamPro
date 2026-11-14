@@ -913,14 +913,377 @@ button {
 
 
 
+
+/* ==========================================
+   EXECUTIVE DEPOSIT AUTHENTICATION
+   BLACK & CHAMPAGNE GOLD
+========================================== */
+
+/* Khóa nội dung trước khi xác thực */
+
+body.deposit-locked {
+  overflow: hidden;
+}
+
+body.deposit-locked .executive-app,
+body.deposit-locked #confirmModal {
+  display: none !important;
+}
+
+/* AUTH SCREEN */
+
+.deposit-auth-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding:
+    calc(20px + env(safe-area-inset-top,0px))
+    18px
+    calc(20px + env(safe-area-inset-bottom,0px));
+
+  overflow-y: auto;
+
+  background:
+    radial-gradient(
+      ellipse 80% 40% at 50% 0%,
+      rgba(180,130,63,.17),
+      transparent 80%
+    ),
+    #0b0c10;
+
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+}
+
+.deposit-auth-screen[hidden] {
+  display: none !important;
+}
+
+/* AUTH CARD */
+
+.deposit-auth-card {
+  width: 100%;
+  max-width: 390px;
+
+  padding: 31px 23px 24px;
+
+  border: 1px solid rgba(224,184,118,.37);
+  border-radius: 21px;
+
+  background: linear-gradient(
+    155deg,
+    #28241f 0%,
+    #18191d 52%,
+    #111216 100%
+  );
+
+  box-shadow:
+    0 24px 80px rgba(0,0,0,.62),
+    inset 0 1px rgba(255,255,255,.05);
+
+  text-align: center;
+}
+
+/* BRAND MARK */
+
+.deposit-auth-mark {
+  display: grid;
+  place-items: center;
+
+  width: 68px;
+  height: 68px;
+
+  margin: 0 auto 23px;
+
+  border: 1px solid #c7a16a;
+  border-radius: 18px;
+
+  background: linear-gradient(
+    145deg,
+    #3b3022,
+    #17181a
+  );
+
+  box-shadow: 0 0 0 5px rgba(205,164,102,.06);
+}
+
+.deposit-auth-mark span {
+  color: #f0d8b1;
+
+  font-family: Georgia,serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.deposit-auth-kicker {
+  color: #c7a777;
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.45px;
+}
+
+.deposit-auth-card h1 {
+  margin: 12px 0;
+
+  color: #f0dcb9;
+
+  font-family: Georgia,"Times New Roman",serif;
+  font-size: clamp(25px, 6vw, 30px);
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.deposit-auth-description {
+  max-width: 310px;
+  margin: 0 auto 25px;
+
+  color: #aaa095;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+/* FORM */
+
+#depositAuthForm {
+  text-align: left;
+}
+
+#depositAuthForm label {
+  display: block;
+  margin-bottom: 9px;
+
+  color: #d3b486;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1px;
+}
+
+.deposit-auth-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+#depositAdminPassword {
+  display: block;
+
+  width: 100%;
+  height: 51px;
+
+  margin: 0;
+  padding: 0 76px 0 15px;
+
+  border: 1px solid rgba(216,176,113,.36);
+  border-radius: 11px;
+  outline: none;
+
+  background: #101216;
+  color: #f4e7cf;
+
+  font-size: 16px;
+}
+
+#depositAdminPassword::placeholder {
+  color: #807b75;
+}
+
+#depositAdminPassword:focus {
+  border-color: #e2bd83;
+  box-shadow: 0 0 0 3px rgba(224,185,123,.10);
+}
+
+.deposit-password-toggle {
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 62px;
+  height: 35px;
+
+  padding: 0;
+
+  border: 1px solid rgba(224,185,123,.23);
+  border-radius: 7px;
+
+  background: #2c2822;
+  color: #e3c28d;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+/* ERROR MESSAGE */
+
+.deposit-auth-error {
+  margin: 11px 0 0;
+  padding: 10px 12px;
+
+  border: 1px solid rgba(209,113,113,.32);
+  border-radius: 9px;
+
+  background: rgba(133,51,51,.10);
+  color: #eca9a3;
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.deposit-auth-error[hidden] {
+  display: none !important;
+}
+
+/* SUBMIT */
+
+.deposit-auth-submit {
+  width: 100%;
+  min-height: 49px;
+
+  margin-top: 17px;
+  padding: 12px 15px;
+
+  border: 1px solid #e9c996;
+  border-radius: 11px;
+
+  background: linear-gradient(
+    125deg,
+    #f4dfb8,
+    #c39a60
+  );
+
+  color: #281d10;
+
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: .7px;
+}
+
+.deposit-auth-submit:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+/* FOOTER */
+
+.deposit-auth-footer {
+  margin-top: 23px;
+  padding-top: 17px;
+
+  border-top: 1px solid rgba(218,177,114,.18);
+
+  color: #978366;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 1.2px;
+}
+
+/* SMALL MOBILE */
+
+@media (max-width: 360px) {
+  .deposit-auth-card {
+    padding: 25px 17px 20px;
+  }
+
+  .deposit-auth-description {
+    font-size: 11px;
+  }
+}
+
+
 </style>
 
 </head>
 
 
-<body>
+
+<body class="deposit-locked">
+
+<!-- ==========================================
+     EXECUTIVE ADMIN PASSWORD SCREEN
+========================================== -->
+
+<div id="depositAuthScreen" class="deposit-auth-screen">
+
+  <div class="deposit-auth-card">
+
+    <div class="deposit-auth-mark">
+      <span>LP</span>
+    </div>
+
+    <div class="deposit-auth-kicker">
+      LIVESTREAM PRO · SECURE ACCESS
+    </div>
+
+    <h1>Admin Authentication</h1>
+
+    <p class="deposit-auth-description">
+      Enter your administrator password to unlock
+      the Diamond Deposit console.
+    </p>
+
+    <form id="depositAuthForm" autocomplete="on">
+
+      <label for="depositAdminPassword">
+        ADMIN PASSWORD
+      </label>
+
+      <div class="deposit-auth-input-wrap">
+
+        <input
+          id="depositAdminPassword"
+          type="password"
+          placeholder="Enter administrator password"
+          autocomplete="current-password"
+          required
+          maxlength="256"
+        >
+
+        <button
+          type="button"
+          id="depositPasswordToggle"
+          class="deposit-password-toggle"
+          aria-label="Show password"
+          aria-pressed="false">
+          SHOW
+        </button>
+
+      </div>
+
+      <p id="depositAuthError"
+         class="deposit-auth-error"
+         role="alert"
+         hidden></p>
+
+      <button
+        type="submit"
+        id="depositAuthSubmit"
+        class="deposit-auth-submit">
+        LOGIN
+      </button>
+
+    </form>
+
+    <div class="deposit-auth-footer">
+      AUTHORIZED ADMINISTRATORS ONLY
+    </div>
+
+  </div>
+
+</div>
+
+<!-- EXISTING DEPOSIT INTERFACE -->
 
 <main class="executive-app">
+
 
   <!-- HEADER -->
   <header class="executive-header">
@@ -1216,6 +1579,200 @@ button {
 
 const $ = id => document.getElementById(id);
 
+
+/* ==========================================
+   DEPOSIT ADMIN PASSWORD AUTHENTICATION
+========================================== */
+
+let depositAccessGranted = false;
+let depositAuthBusy = false;
+
+const depositAuthScreen =
+  document.getElementById("depositAuthScreen");
+
+const depositAuthForm =
+  document.getElementById("depositAuthForm");
+
+const depositAdminPassword =
+  document.getElementById("depositAdminPassword");
+
+const depositAuthSubmit =
+  document.getElementById("depositAuthSubmit");
+
+const depositAuthError =
+  document.getElementById("depositAuthError");
+
+const depositPasswordToggle =
+  document.getElementById("depositPasswordToggle");
+
+/* DISPLAY ERROR */
+
+function showDepositAuthError(message) {
+  depositAuthError.textContent = message;
+  depositAuthError.hidden = !message;
+}
+
+/* LOCK PAGE */
+
+function lockDepositPage(message = "") {
+  depositAccessGranted = false;
+
+  document.body.classList.add("deposit-locked");
+  depositAuthScreen.hidden = false;
+
+  depositAdminPassword.value = "";
+  showDepositAuthError(message);
+
+  // Close any unfinished confirmation.
+  const modal = document.getElementById("confirmModal");
+  if (modal) modal.style.display = "none";
+}
+
+/* UNLOCK PAGE */
+
+function unlockDepositPage() {
+  depositAccessGranted = true;
+
+  depositAdminPassword.value = "";
+
+  depositAuthScreen.hidden = true;
+  document.body.classList.remove("deposit-locked");
+
+  showDepositAuthError("");
+}
+
+/* CHECK SERVER SESSION */
+
+async function checkDepositAdminSession() {
+  try {
+    const response = await fetch(
+      "/api/admin/auth/status",
+      {
+        credentials: "same-origin",
+        cache: "no-store"
+      }
+    );
+
+    const data = await response.json();
+
+    return Boolean(
+      response.ok &&
+      data.ok &&
+      data.authenticated
+    );
+
+  } catch (error) {
+    return false;
+  }
+}
+
+/* PASSWORD SUBMISSION */
+
+depositAuthForm.addEventListener("submit", async event => {
+  event.preventDefault();
+
+  if (depositAuthBusy) return;
+
+  const password = depositAdminPassword.value;
+
+  if (!password) {
+    showDepositAuthError(
+      "Please enter your administrator password."
+    );
+    return;
+  }
+
+  depositAuthBusy = true;
+  depositAuthSubmit.disabled = true;
+  depositAuthSubmit.textContent = "AUTHENTICATING...";
+
+  showDepositAuthError("");
+
+  try {
+    const response = await fetch(
+      "/api/admin/auth/login",
+      {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ password })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+      let message =
+        data.message || "Incorrect administrator password.";
+
+      if (response.status === 429) {
+        message =
+          "Too many attempts. Please try again later.";
+      }
+
+      showDepositAuthError(message);
+      depositAdminPassword.value = "";
+      return;
+    }
+
+    // Verify that the server actually issued
+    // an authenticated admin session.
+    const authenticated =
+      await checkDepositAdminSession();
+
+    if (!authenticated) {
+      showDepositAuthError(
+        "Admin session could not be established."
+      );
+      return;
+    }
+
+    unlockDepositPage();
+
+  } catch (error) {
+    showDepositAuthError(
+      "Unable to connect to the authentication server."
+    );
+
+  } finally {
+    depositAuthBusy = false;
+    depositAuthSubmit.disabled = false;
+    depositAuthSubmit.textContent = "UNLOCK CONSOLE";
+  }
+});
+
+/* SHOW / HIDE PASSWORD */
+
+depositPasswordToggle.addEventListener("click", () => {
+  const show =
+    depositAdminPassword.type === "password";
+
+  depositAdminPassword.type =
+    show ? "text" : "password";
+
+  depositPasswordToggle.textContent =
+    show ? "HIDE" : "SHOW";
+
+  depositPasswordToggle.setAttribute(
+    "aria-pressed",
+    String(show)
+  );
+
+  depositPasswordToggle.setAttribute(
+    "aria-label",
+    show ? "Hide password" : "Show password"
+  );
+});
+
+/* REQUIRE PASSWORD ON EVERY PAGE LOAD */
+
+lockDepositPage();
+
+
+
 let verifiedUid = null;
 let verificationVersion = 0;
 let depositPending = false;
@@ -1321,7 +1878,14 @@ function resetMemberVerification() {
 
 async function checkUser() {
 
+  if (!depositAccessGranted) {
+    lockDepositPage("Admin authentication required.");
+    return;
+  }
+
   if (depositPending) return;
+
+ 
 
   const username = $("username").value.trim();
 
@@ -1474,7 +2038,15 @@ async function checkUser() {
 /* REVIEW DEPOSIT */
 
 function deposit() {
+
+  if (!depositAccessGranted) {
+    lockDepositPage("Admin authentication required.");
+    return;
+  }
+
   if (depositPending) return;
+
+ 
 
   const username = $("username").value.trim();
   const amount = getAmount();
@@ -1517,7 +2089,15 @@ function closeConfirm() {
 /* SUBMIT DEPOSIT */
 
 async function confirmDeposit() {
+
+  if (!depositAccessGranted) {
+    lockDepositPage("Admin authentication required.");
+    return;
+  }
+
   if (depositPending || !pendingDeposit) return;
+
+ 
 
   const { username, amount } = pendingDeposit;
 

@@ -7062,14 +7062,23 @@ app.use("/data", express.static(path.join(__dirname, "data")));
 
 app.post("/api/admin/deposit",(req,res)=>{
 
-const { username, amount } = req.body
 
-if(!username || !amount || amount <= 0){
-return res.json({
-success:false,
-message:"Invalid request"
-})
+const { username, amount } = req.body;
+
+const uid = String(username || "").trim();
+const add = Number(amount);
+
+if (
+  !uid ||
+  !Number.isSafeInteger(add) ||
+  add <= 0
+) {
+  return res.status(400).json({
+    success: false,
+    message: "Invalid member UID or deposit amount."
+  });
 }
+
 
 const users = loadUsers()
 
@@ -7082,8 +7091,7 @@ message:"User not found"
 })
 }
 
-// 🔒 chuẩn hóa số nạp
-const add = Math.floor(Number(amount))
+
 
 if(add <= 0){
 return res.json({
