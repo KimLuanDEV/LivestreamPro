@@ -13280,7 +13280,7 @@ if(isGuest(socket)){
   profile = {
     uid: socket.data.uid,
     name: "Guest",
-    avatar: "https://i.ibb.co/GvJWn19q/icon-192.png",
+    avatar: "https://api.dicebear.com/7.x/thumbs/svg?seed=guest",
     level: 1,
     coins: 0
   };
