@@ -111,100 +111,6 @@ body{
 
 /* HEADER PRO */
 
-/* ================= GLASS NEON HEADER LEVEL 2 ================= */
-
-.tr-header{
-  position:absolute;
-  top:-95px;
-  left:-35px;
-  right:0;
-  height:184px;
-  width:500px;
-  background:
-    url("/assets/time-race/header-panel.png")
-    center top / cover no-repeat;
-
-  z-index:300;
-}
-
-
-
-.tr-back{
-  position:absolute;
-  left:47px;
-  top:117px;
-
-  width:27px;
-  height:35px;
-
-  background:transparent;
-  border:none;
-  cursor:pointer;
-}
-
-.tr-head-center{
-  position:absolute;
-  left:50%;
-  top:42px;
-  transform:translateX(-50%);
-  text-align:center;
-}
-
-.tr-title{
-  font-size:20px;
-  font-weight:900;
-}
-
-.tr-sub{
-  font-size:13px;
-  opacity:.9;
-
-  display:flex;
-  gap:6px;
-  align-items:center;
-  justify-content:center;
-}
-
-
-.round-label{
-  position: absolute;
-  opacity:.7;
-  top: 112px;
-  left:-47px;
-}
-
-
-.tr-right{
-  position:absolute;
-  right:18px;
-  top:38px;
-}
-
-/* COIN BALANCE */
-.tr-coins{
-  position:absolute;
-
-  top:88px;
-  right:30px;
-
-  display:flex;
-  align-items:center;
-  gap:0px;
-
-  font-size:14px;
-  font-weight:900;
-
-  color:#00f0ff;
-}
-
-.coin-icon{
-  position: absolute;
-  width:44px;
-  height:36px;
-  right:36px;
-  filter:
-    drop-shadow(0 0 6px #00f0ff);
-}
 
 .tr-timer-badge{
   background:#007bff;
@@ -527,136 +433,9 @@ body{
   font-weight:800;
 }
 
-/* ROUND TODAY */
-#roundToday{
-  position:absolute;
-
-  top:110px;     /* chỉnh lên xuống */
-  left:28px;   /* chỉnh trái phải */
-
-  transform:translateX(-50%);
-
-  font-size:17px;
-  font-weight:800;
-
-  color:#00f0ff;
-  text-shadow:0 0 10px #00f0ff;
-  
-}
 
 
 
-
-/* ================= CYBER ROUND HISTORY ================= */
-
-.tr-history-wrap{
-  position:absolute;
-
-  top:75px;
-  left:-54px;
-  right:0;
-  height:112px;
-  width: 542px;
-
-  padding:13px 16px 10px;
-
-  background:
-    url("/assets/time-race/history-panel.png")
-    center / cover no-repeat;
-
-  z-index:290;
-}
-
-/* title */
-.history-title{
-  position:absolute;
-
-  top:14px;
-  left:50%;
-  transform:translateX(-50%);
-
-  font-size:12px;
-  font-weight:800;
-
-  letter-spacing:2px;
-
-  color:#00f0ff;
-
-  text-shadow:
-    0 0 10px #00f0ff,
-    0 0 20px rgba(0,255,255,.6);
-}
-
-/* bar */
-.tr-history-bar{
-  position:absolute;
-
-  bottom:31px;
-  left:92px;
-  right:16px;
-  width: 358px;
-  display:flex;
-  gap:2px;
-
-  overflow-x:auto;
-}
-
-.tr-history-bar::-webkit-scrollbar{
-  display:none;
-}
-
-/* item */
-.tr-history-item{
-  min-width:58px;
-  padding:8px 0;
-  border-radius:22px;
-
-  font-size:13px;
-  font-weight:800;
-  text-align:center;
-
-  backdrop-filter:blur(10px);
-
-  border:1px solid rgba(255,255,255,.08);
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255,255,255,.05),
-      rgba(0,0,0,.4)
-    );
-
-  box-shadow:
-    inset 0 0 12px rgba(0,255,255,.05);
-
-  transition:.2s;
-}
-
-/* LOW (<2x) */
-.tr-history-item.low{
-  color:#ff2d2d;
-
-}
-
-/* MID (2-5x) */
-.tr-history-item.mid{
-  color:#ff9900;
-
-}
-
-/* HIGH (>5x) */
-.tr-history-item.high{
-  color:#00f0ff;
-}
-
-
-
-/* hover effect */
-.tr-history-item:hover{
-  transform:translateY(-2px);
-  box-shadow:
-    0 0 25px rgba(0,255,255,.8);
-}
 
 
 /* STOP dưới bomb */
@@ -1457,6 +1236,409 @@ body.crash-dark{
 
 
 
+/* ==========================================
+   TIME RACE - CYBER TITANIUM HEADER
+   BASE SCREEN: 430 x 870
+========================================== */
+
+.tr-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  width: 430px;
+  height: 88px;
+  box-sizing: border-box;
+
+  z-index: 300;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(5,19,33,.99),
+      rgba(8,35,52,.97) 75%,
+      rgba(4,22,36,.94)
+    );
+
+  border-bottom: 1px solid rgba(77,207,244,.35);
+
+  box-shadow:
+    0 8px 25px rgba(0,0,0,.35),
+    0 1px 12px rgba(0,225,255,.14);
+}
+
+.tr-header::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 38%;
+  height: 2px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #38dfff,
+    transparent
+  );
+
+  pointer-events: none;
+}
+
+/* BACK BUTTON */
+
+.tr-back {
+  position: absolute;
+  left: 14px;
+  top: 25px;
+
+  width: 42px;
+  height: 42px;
+
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #b8f6ff;
+
+  background: linear-gradient(
+    145deg,
+    #17384e,
+    #071a2a
+  );
+
+  border: 1px solid rgba(105,218,248,.45);
+  border-radius: 12px;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.09),
+    0 3px 10px rgba(0,0,0,.35);
+
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.tr-back svg {
+  width: 21px;
+  height: 21px;
+}
+
+.tr-back:active {
+  transform: scale(.94);
+}
+
+/* CENTER TITLE */
+
+.tr-head-center {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  width: 165px;
+  text-align: center;
+}
+
+.tr-title {
+  font-family: "Orbitron", sans-serif;
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: 1.1px;
+
+  color: #e9fbff;
+
+  text-shadow:
+    0 0 12px rgba(0,220,255,.35);
+}
+
+.tr-head-caption {
+  margin-top: 5px;
+
+  font-family: "Orbitron", sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 2px;
+
+  color: #60dff0;
+}
+
+/* RIGHT WALLET */
+
+.tr-right {
+  position: absolute;
+  right: 13px;
+  top: 29px;
+}
+
+.tr-coins {
+  position: relative;
+  top: auto;
+  right: auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 106px;
+  max-width: 136px;
+  height: 36px;
+
+  box-sizing: border-box;
+  padding: 0 10px;
+
+  background: linear-gradient(
+    135deg,
+    rgba(14,57,76,.98),
+    rgba(5,22,38,.98)
+  );
+
+  border: 1px solid rgba(84,224,255,.4);
+  border-radius: 11px;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 3px 14px rgba(0,0,0,.3);
+
+  color: #e9fdff;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.coin-icon {
+  position: static;
+  flex-shrink: 0;
+
+  width: 25px;
+  height: 25px;
+  object-fit: contain;
+
+  margin-right: 5px;
+
+  filter:
+    drop-shadow(0 0 5px rgba(46,215,255,.5));
+}
+
+#coinBalance {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* ==========================================
+   PREMIUM ROUND HISTORY PANEL
+========================================== */
+
+.tr-history-wrap {
+  position: absolute;
+
+  top: 100px;
+  left: 12px;
+  right: auto;
+
+  width: 406px;
+  height: 121px;
+
+  padding: 13px 14px;
+  box-sizing: border-box;
+
+  z-index: 290;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(10,36,55,.97),
+      rgba(4,17,30,.98)
+    );
+
+  border: 1px solid rgba(80,194,226,.36);
+  border-radius: 17px;
+
+  box-shadow:
+    0 8px 24px rgba(0,0,0,.4),
+    inset 0 1px 0 rgba(255,255,255,.07);
+}
+
+/* TOP INFORMATION */
+
+.tr-history-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  height: 35px;
+  gap: 12px;
+
+  border-bottom: 1px solid rgba(94,194,225,.16);
+}
+
+/* CURRENT ROUND */
+
+.tr-sub {
+  position: static;
+
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  opacity: 1;
+}
+
+.round-label {
+  position: static;
+  top: auto;
+  left: auto;
+
+  font-family: system-ui, sans-serif;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .5px;
+
+  color: #8eafc1;
+  opacity: 1;
+}
+
+#roundToday {
+  position: static;
+  top: auto;
+  left: auto;
+  transform: none;
+
+  font-family: "Orbitron", sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+
+  color: #69eaff;
+  text-shadow: 0 0 10px rgba(0,220,255,.3);
+}
+
+/* HISTORY TITLE */
+
+.tr-history-wrap .history-title {
+  position: static;
+  top: auto;
+  left: auto;
+  transform: none;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  margin: 0;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .5px;
+
+  color: #bce5f1;
+  white-space: nowrap;
+  text-shadow: none;
+}
+
+.history-live-dot {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+  background: #48e1f2;
+
+  box-shadow: 0 0 9px rgba(0,240,255,.7);
+}
+
+/* HISTORY LIST */
+
+.tr-history-bar {
+  position: static;
+
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  width: 100%;
+  height: 62px;
+
+  padding: 0 0 1px;
+  box-sizing: border-box;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tr-history-bar::-webkit-scrollbar {
+  display: none;
+}
+
+/* RESULT ITEM */
+
+.tr-history-item {
+  flex: 0 0 65px;
+  min-width: 65px;
+  box-sizing: border-box;
+
+  padding: 11px 3px;
+
+  font-family: "Orbitron", sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+
+  border-radius: 10px;
+  border: 1px solid rgba(80,148,177,.26);
+
+  background: linear-gradient(
+    160deg,
+    rgba(27,67,88,.55),
+    rgba(4,18,31,.9)
+  );
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.05);
+
+  transition:
+    transform .2s ease,
+    border-color .2s ease;
+
+  white-space: nowrap;
+}
+
+/* LOW: BELOW 2X */
+
+.tr-history-item.low {
+  color: #ff677b;
+  border-color: rgba(255,85,105,.23);
+}
+
+/* MID: 2X TO BELOW 5X */
+
+.tr-history-item.mid {
+  color: #ffbf69;
+  border-color: rgba(255,175,74,.24);
+}
+
+/* HIGH: 5X AND ABOVE */
+
+.tr-history-item.high {
+  color: #72f5f5;
+  border-color: rgba(51,230,241,.35);
+}
+
+/* RESULT INTERACTION */
+
+.tr-history-item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(95,225,248,.7);
+  box-shadow: 0 0 12px rgba(0,220,255,.15);
+}
+
+
+
 
 
 </style>
@@ -1509,40 +1691,94 @@ body.crash-dark{
 
 
 
+
+<!-- ==========================================
+     TIME RACE - PREMIUM CYBER HEADER
+========================================== -->
+
 <div class="tr-header">
 
-  <button class="tr-back" onclick="location.href='/invest.html'"></button>
+  <!-- BACK BUTTON -->
+  <button
+    class="tr-back"
+    type="button"
+    onclick="location.href='/invest.html'"
+    aria-label="Exit Time Race">
 
+    <svg viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2.5"
+         stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15 18l-6-6 6-6"/>
+    </svg>
+
+  </button>
+
+  <!-- GAME TITLE -->
   <div class="tr-head-center">
-    <div class="tr-title"></div>
 
-<div class="tr-sub">
-  <span class="round-label">Round</span>
-  <span id="roundToday"></span>
-</div>
+    <div class="tr-title">
+      TIME RACE
+    </div>
+
+    <div class="tr-head-caption">
+      CRASH ARENA
+    </div>
 
   </div>
 
+  <!-- DIAMOND BALANCE -->
   <div class="tr-right">
 
-<div class="tr-coins">
-  <img src="/assets/time-race/diamond-icon.png" class="coin-icon">
-  <span id="coinBalance"></span>
-</div>
+    <div class="tr-coins">
+
+      <img
+        src="/assets/time-race/diamond-icon.png"
+        class="coin-icon"
+        alt="Diamond">
+
+      <span id="coinBalance">0</span>
+
+    </div>
 
   </div>
 
 </div>
+
+
+<!-- ==========================================
+     ROUND + HISTORY PANEL
+========================================== -->
 
 <div class="tr-history-wrap">
-  <div class="history-title">
+
+  <!-- INFORMATION ROW -->
+  <div class="tr-history-top">
+
+    <div class="tr-sub">
+
+      <span class="round-label">
+        CURRENT ROUND
+      </span>
+
+      <span id="roundToday">--</span>
+
+    </div>
+
+    <div class="history-title">
+      <span class="history-live-dot"></span>
+      ROUND HISTORY
+    </div>
+
   </div>
 
-  <div class="tr-history-bar"
-       id="timeRaceHistoryBar">
+  <!-- HISTORY ITEMS -->
+  <div
+    class="tr-history-bar"
+    id="timeRaceHistoryBar">
   </div>
-  
+
 </div>
+
 
 
 
