@@ -3145,6 +3145,50 @@ body.crash-dark{
 
 
 
+/* ==========================================
+   INSTANT BET V2 - TOUCH OPTIMIZATION
+========================================== */
+
+.tr-bottom .tr-quick-grid .hit,
+.tr-bottom .tr-amount-grid .hit,
+.tr-bottom #betBtn {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  cursor: pointer;
+}
+
+.tr-bottom .tr-quick-grid .hit,
+.tr-bottom .tr-amount-grid .hit {
+  transition:
+    background-color .1s ease,
+    border-color .1s ease;
+}
+
+.tr-bottom .hit.tr-fast-tap {
+  animation: trInstantTap .12s ease-out;
+}
+
+@keyframes trInstantTap {
+  0% {
+    filter: brightness(1.5);
+  }
+
+  100% {
+    filter: brightness(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tr-bottom .hit.tr-fast-tap {
+    animation: none;
+  }
+}
+
+
+
 
 </style>
 </head>
@@ -3835,83 +3879,143 @@ function serverTime(){
 
 
 
-function updateSelectedBetDisplay(){
-  selectedBetEl.textContent = selectedBet.toLocaleString();
 
-  if(selectedBet > 0){
-    selectedBetBar.classList.add("active");
-  }else{
-    selectedBetBar.classList.remove("active");
+/* ==========================================
+   TIME RACE - INSTANT BET CONTROL V2
+========================================== */
+
+const trAmountButtons = [
+  ...document.querySelectorAll("[data-bet]")
+];
+
+const trQuickButtons = [
+  ...document.querySelectorAll("[data-type]")
+];
+
+let trLastSoundAt = 0;
+
+function playFastBetSound() {
+  const now = performance.now();
+
+  // Avoid restarting audio excessively
+  if (now - trLastSoundAt < 65) return;
+
+  trLastSoundAt = now;
+
+  if (!betSound) return;
+
+  if (!betSound.paused) {
+    betSound.pause();
   }
+
+  betSound.currentTime = 0;
+  betSound.play().catch(() => {});
 }
 
+function updateSelectedBetDisplay() {
+  selectedBetEl.textContent =
+    selectedBet.toLocaleString("en-US");
 
-document.querySelectorAll("[data-type]").forEach(btn=>{
-  btn.onclick = ()=>{
+  selectedBetBar.classList.toggle(
+    "active",
+    selectedBet > 0
+  );
+}
 
-    betSound.currentTime = 0;
-    betSound.play().catch(()=>{})
+function trFlashButton(btn) {
+  btn.classList.remove("tr-fast-tap");
 
-    if(!currentCoins) return;
+  // Restart lightweight CSS animation
+  void btn.offsetWidth;
 
-    const type = btn.dataset.type;
-    let bet = 0;
+  btn.classList.add("tr-fast-tap");
+}
 
-    if(type === "25"){
-      bet = Math.floor(currentCoins * 0.25);
-    }
-    else if(type === "50"){
-      bet = Math.floor(currentCoins * 0.5);
-    }
-    else if(type === "all"){
-      bet = currentCoins;
-    }
+function trSetSelectedBet(amount) {
+  const balance = Math.max(
+    0,
+    Math.floor(Number(currentCoins) || 0)
+  );
 
-    // highlight chip tương ứng nếu trùng
-   document.querySelectorAll("[data-bet]")
-      .forEach(b=>b.classList.remove("active"));
+  selectedBet = Math.min(
+    balance,
+    Math.max(0, Math.floor(Number(amount) || 0))
+  );
 
-    selectedBet = bet;
-    updateSelectedBetDisplay();
+  updateSelectedBetDisplay();
+}
 
-    // hiệu ứng nháy nhẹ
-    btn.animate([
-      { transform:"scale(1)" },
-      { transform:"scale(1.08)" },
-      { transform:"scale(1)" }
-    ],{ duration:200 });
-
-  };
-});
-
-
-
-document.querySelectorAll("[data-bet]").forEach(btn=>{
-  btn.onclick = ()=>{
+trAmountButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    if (
+      hasBet ||
+      betBtn.disabled ||
+      document.querySelector(".tr-bottom")
+        ?.classList.contains("locked")
+    ) return;
 
     const value = Number(btn.dataset.bet);
 
-    // 🔥 cộng dồn chip
-    selectedBet += value;
-
-    // 🔒 không cho cược quá số coin
-    if(selectedBet > currentCoins){
-      selectedBet = currentCoins;
+    if (!Number.isFinite(value) || value <= 0) {
+      return;
     }
 
-    updateSelectedBetDisplay();
+    trSetSelectedBet(selectedBet + value);
 
-    // hiệu ứng chip
-    btn.animate([
-      {transform:"scale(1)"},
-      {transform:"scale(1.15)"},
-      {transform:"scale(1)"}
-    ],{duration:150});
+    // Highlight last selected denomination
+    trAmountButtons.forEach(b => {
+      b.classList.toggle("active", b === btn);
+    });
 
-    betSound.currentTime = 0;
-    betSound.play().catch(()=>{})
-  };
+    trFlashButton(btn);
+    playFastBetSound();
+  });
 });
+
+trQuickButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    if (
+      hasBet ||
+      betBtn.disabled ||
+      document.querySelector(".tr-bottom")
+        ?.classList.contains("locked")
+    ) return;
+
+    const balance = Math.max(
+      0,
+      Math.floor(Number(currentCoins) || 0)
+    );
+
+    let amount = 0;
+
+    switch (btn.dataset.type) {
+      case "25":
+        amount = Math.floor(balance * 0.25);
+        break;
+
+      case "50":
+        amount = Math.floor(balance * 0.5);
+        break;
+
+      case "all":
+        amount = balance;
+        break;
+
+      default:
+        return;
+    }
+
+    trSetSelectedBet(amount);
+
+    trAmountButtons.forEach(b => {
+      b.classList.remove("active");
+    });
+
+    trFlashButton(btn);
+    playFastBetSound();
+  });
+});
+
 
 
 document.addEventListener("click",(e)=>{
@@ -3987,7 +4091,14 @@ if(msLeft > 0){
     betTimer.style.textShadow = "0 0 15px red";
   }else{
     betPanel?.classList.remove("locked");
-    betBtn.disabled = false;
+
+
+if (!trBetPending && socket.connected) {
+  betBtn.disabled = false;
+} else {
+  betBtn.disabled = true;
+}
+
 
     betTimer.style.color = "";
     betTimer.style.textShadow = "";
@@ -3999,7 +4110,7 @@ if(msLeft > 0){
   }
 }
 
-setInterval(updateTimer,16);
+setInterval(updateTimer, 50);
 
 
 
@@ -4303,6 +4414,9 @@ socket.on("time-race-state",data=>{
 
 socket.on("time-race-new", data => {
 
+trBetPending = false;
+betBtn.textContent = "CONFIRM BET";
+  
   // 🔥 Hiện lại bomb nếu vừa crash
   const bombWrap = document.querySelector(".bomb-wrap");
   const bomb = document.querySelector(".bomb-img");
@@ -4528,20 +4642,60 @@ setTimeout(()=>{
 
 /* BET */
 
-betBtn.onclick=()=>{
 
-  const bet = selectedBet;
-  if(!bet || bet<=0) return;
+/* ==========================================
+   BET CONFIRM - SINGLE REQUEST GUARD
+========================================== */
+
+let trBetPending = false;
+
+betBtn.onclick = () => {
+  if (trBetPending || hasBet || betBtn.disabled) {
+    return;
+  }
+
+  const bet = Math.floor(Number(selectedBet));
+
+  if (!Number.isFinite(bet) || bet <= 0) {
+    return;
+  }
+
+  if (bet > currentCoins) {
+    return;
+  }
+
+  // Prevent betting during final 3 seconds
+  if (
+    !betEndAt ||
+    raceStarted ||
+    crashed ||
+    betEndAt - serverTime() <= 3000
+  ) {
+    return;
+  }
+
+  if (!socket.connected) {
+    console.warn("Time Race connection unavailable");
+    return;
+  }
+
+  // Lock immediately
+  trBetPending = true;
+  betBtn.disabled = true;
+  betBtn.textContent = "PROCESSING...";
 
   confirmSound.currentTime = 0;
-  confirmSound.play().catch(()=>{});
+  confirmSound.play().catch(() => {});
 
-  socket.emit("time-race-bet",{bet});
+  socket.emit("time-race-bet", { bet });
 };
 
 
 
 socket.on("time-race-bet-ok",()=>{
+  trBetPending = false;
+betBtn.textContent = "CONFIRM BET";
+
   hasBet = true;
 
   const betPanel = document.querySelector(".tr-bottom");
@@ -4557,6 +4711,65 @@ stopBtn.style.opacity = ".6";
 
 });
 /* STOP */
+
+
+
+/* SERVER BET REJECTION */
+
+
+socket.on("time-race-error", data => {
+
+  trBetPending = false;
+
+  const reason = data?.message || "BET_FAILED";
+
+  betBtn.textContent = "CONFIRM BET";
+
+  if (reason === "ALREADY_BET") {
+    hasBet = true;
+
+    document.querySelector(".tr-bottom")
+      ?.classList.add("locked");
+
+    betBtn.disabled = true;
+    return;
+  }
+
+  const remaining = betEndAt - serverTime();
+
+  const canBet =
+    socket.connected &&
+    !hasBet &&
+    !crashed &&
+    !raceStarted &&
+    remaining > 3000;
+
+  betBtn.disabled = !canBet;
+
+  if (!canBet) {
+    document.querySelector(".tr-bottom")
+      ?.classList.add("locked");
+  }
+
+  console.warn("[TIME RACE]", reason);
+
+});
+
+
+/* RESTORE BUTTON AFTER DISCONNECTION */
+
+socket.on("disconnect", () => {
+  betBtn.disabled = true;
+});
+
+socket.on("connect", () => {
+  // A previous request may have reached the server.
+  // Do not automatically retry the same bet.
+  if (trBetPending) {
+    betBtn.textContent = "SYNCING...";
+  }
+});
+
 
 stopBtn.addEventListener("click", ()=>{
 
@@ -4621,11 +4834,15 @@ socket.on("time-race-history-update",
 
 socket.on("time-race-restore", data=>{
 
+  trBetPending = false;
+betBtn.textContent = "CONFIRM BET";
+
   serverOffset = data.serverNow - Date.now();
   betEndAt = data.betEndAt;
   crashed = data.crashed;
   hasBet = data.hasBet;
-
+raceStarted =
+  !crashed && Number(data.multiplier) > 1;
   const currentMultiplier = Number(data.multiplier);
   multiplierEl.textContent =
     "x" + currentMultiplier.toFixed(2);
@@ -4668,38 +4885,36 @@ else{
       stopBtn.style.display = "none";
     }
 
-  }else{
 
-    document
-      .querySelector(".tr-bottom")
-      .classList.remove("locked");
+}else{
 
-    betBtn.disabled = false;
-    stopBtn.style.display = "none";
-  }
+  const betPanel =
+    document.querySelector(".tr-bottom");
+
+  const remaining = betEndAt - serverTime();
+
+  const canBet =
+    socket.connected &&
+    !crashed &&
+    !data.stopped &&
+    Number(data.multiplier) <= 1 &&
+    remaining > 3000;
+
+  betPanel.classList.toggle(
+    "locked",
+    !canBet
+  );
+
+  betBtn.disabled = !canBet;
+
+  stopBtn.style.display = "none";
+
+}
+
 
 });
 
 
-
-// 🔒 Prevent double tap zoom
-let lastTouchEnd = 0;
-
-document.addEventListener("touchend", function (event) {
-
-  const now = Date.now();
-
-  if (now - lastTouchEnd <= 300) {
-
-    if (event.cancelable) {
-      event.preventDefault();
-    }
-
-  }
-
-  lastTouchEnd = now;
-
-}, false);
 
 
 // 🔒 Lock portrait orientation
