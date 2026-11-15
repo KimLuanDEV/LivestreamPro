@@ -3653,47 +3653,92 @@ function saveTimeRaceRoundCount(data){
 }
 
 
-function startFakeBotFlow(){
+/* ==========================================
+   TIME RACE - RANDOM 20 TO 30 BOTS PER ROUND
+========================================== */
 
-  if(!timeRaceRound) return
+function startFakeBotFlow() {
 
-  const roundId = timeRaceRound.id
-  const betList = [50,100,150,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,3000,3500,4000,4500,5000,6000,7000,8000,9000,10000,11000,12000,13000,14000,15000,16000,17000,18000,19000,20000,50,100,150,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,3000,3500,4000,4500,5000,6000,7000,8000,9000,10000,11000,12000,13000,14000,15000,16000,17000,18000,19000,20000]
+  if (!timeRaceRound) return;
 
-  let botIndex = 0
+  const round = timeRaceRound;
+  const roundId = round.id;
 
-  function spawnOne(){
+  // Mỗi phiên chọn ngẫu nhiên từ 20 đến 30 bot
+  const botCount =
+    Math.floor(Math.random() * 11) + 20;
 
-    // ⛔ nếu đã sang round khác thì dừng
-    if(!timeRaceRound || timeRaceRound.id !== roundId){
-      return
-    }
+  const betList = [
+    50, 100, 150, 200, 300, 400, 500,
+    600, 700, 800, 900, 1000,
+    1100, 1200, 1300, 1400, 1500,
+    1600, 1700, 1800, 1900, 2000,
+    3000, 3500, 4000, 4500, 5000,
+    6000, 7000, 8000, 9000, 10000,
+    11000, 12000, 13000, 14000,
+    15000, 16000, 17000, 18000,
+    19000, 20000
+  ];
 
-    // ⛔ dừng khi còn <= 3s là khóa cược
-    if(timeRaceRound.betEndAt - Date.now() <= 3000){
-      return
+  round.bots = [];
+
+  // Phân bố đều trong 11 giây đầu của 15 giây cược
+  const availableTime = Math.max(
+    1000,
+    TIME_RACE_BET - 4000
+  );
+
+  const spawnDelay = Math.floor(
+    availableTime / botCount
+  );
+
+  let botIndex = 0;
+
+  function spawnOne() {
+
+    // Không tạo bot cho phiên đã kết thúc
+    if (timeRaceRound !== round) return;
+    if (timeRaceRound.id !== roundId) return;
+
+    // Dừng khi đã đủ số lượng
+    if (botIndex >= botCount) return;
+
+    // Không tạo bot sau khi đóng cược
+    if (Date.now() >= round.betEndAt - 3000) {
+      return;
     }
 
     const bot = {
       uid: "bot_" + roundId + "_" + botIndex,
       name: "???",
-      total: betList[Math.floor(Math.random() * betList.length)]
+      total: betList[
+        Math.floor(Math.random() * betList.length)
+      ]
+    };
+
+    round.bots.push(bot);
+    botIndex++;
+
+    // Gửi danh sách mới cho tất cả người xem
+    io.emit(
+      "time-race-bet-list",
+      getTimeRaceBetList()
+    );
+
+    if (botIndex < botCount) {
+      setTimeout(spawnOne, spawnDelay);
     }
-
-    timeRaceRound.bots.push(bot)
-    botIndex++
-
-    io.emit("time-race-bet-list", getTimeRaceBetList())
-
-    // delay ngẫu nhiên rồi tự gọi tiếp
-    const delay = Math.floor(800 + Math.random()*1200)
-    setTimeout(spawnOne, delay)
   }
 
-  // bắt đầu
-  spawnOne()
-}
+  console.log(
+    "[TIME RACE] Round",
+    roundId,
+    "- Simulated bots:",
+    botCount
+  );
 
+  spawnOne();
+}
 
 
 
@@ -3795,6 +3840,8 @@ function createTimeRaceRound(){
 
 let timeRaceRound = createTimeRaceRound();
 
+// Tạo bot ngay cho vòng đầu tiên khi server khởi động
+startFakeBotFlow();
 
 function emitTimeRacePlayers(){
 
@@ -3943,10 +3990,14 @@ io.emit("time-race-crash",{
       count: timeRaceRoundCount
     });
 
-    timeRaceRound = createTimeRaceRound();
+    
 
-    startFakeBotFlow()
-    io.emit("time-race-bet-list", [])
+timeRaceRound = createTimeRaceRound();
+
+// Xóa danh sách cũ trước khi tạo bot mới
+io.emit("time-race-bet-list", []);
+
+// Phát thông tin vòng mới như logic phía dưới
 
 
     emitTimeRacePlayers();
@@ -3968,6 +4019,9 @@ io.emit("time-race-crash",{
       betEndAt: timeRaceRound.betEndAt,
       serverNow: Date.now()
     });
+
+    // Tạo 20-30 bot cho phiên vừa bắt đầu
+startFakeBotFlow();
 
     io.emit("time-race-tick",{
       multiplier:1
@@ -6271,16 +6325,7 @@ socket.on("time-race-bet", data=>{
   // =========================
   // 📊 DANH SÁCH NGƯỜI CƯỢC
   // =========================
-  const betList = timeRaceRound.bets.map(b => ({
-    name: users[b.uid]?.profile?.name || "Player",
-    bet: b.bet
-  }));
 
-  // 🔥 sort lớn → nhỏ
-  betList.sort((a,b)=>b.bet - a.bet);
-
-  // 🔔 emit realtime cho ALL
-  io.emit("time-race-bet-list", betList);
 
   // (giữ lại nếu bạn đang dùng UI cũ)
   emitTimeRacePlayers();

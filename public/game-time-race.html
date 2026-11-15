@@ -2297,11 +2297,11 @@ body.crash-dark{
   position: absolute;
 
   left: -73px;
-  top: -39px;
+  top: 204px;
   right: auto;
 
-  width: 125px;
-  height: 150px;
+  width: 122px;
+  height: 152px;
   max-height: none;
 
   box-sizing: border-box;
@@ -3509,7 +3509,13 @@ socket.on("time-race-bet-list", (list) => {
 
   if (!box || !count) return;
 
-  const visiblePlayers = players.slice(0, 10);
+  // Đủ chỗ cho 20-30 bot và người chơi thật
+const visiblePlayers = [...players]
+  .sort((a, b) =>
+    Number(b.total ?? b.bet ?? 0) -
+    Number(a.total ?? a.bet ?? 0)
+  )
+  .slice(0, 100);
 
   count.textContent = visiblePlayers.length;
 
