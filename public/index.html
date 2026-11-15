@@ -1520,6 +1520,729 @@ button {
 
 
 
+/* ==========================================
+   LIVESTREAM PRO
+   SIGNATURE EDITION ENHANCEMENTS
+========================================== */
+
+/* GLOBAL REFINEMENTS */
+
+:root {
+  --signature-gold: #d9b681;
+  --signature-soft: #f4e5cd;
+  --signature-line: rgba(218,180,119,.20);
+}
+
+body {
+  overflow-x: clip;
+}
+
+::selection {
+  background: #b78c52;
+  color: #101114;
+}
+
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible {
+  outline: 2px solid #f1d39f;
+  outline-offset: 4px;
+}
+
+.section-title {
+  letter-spacing: -.8px;
+}
+
+.section-description {
+  text-wrap: pretty;
+}
+
+/* PREMIUM HEADER */
+
+.site-header {
+  background: rgba(9,11,15,.94);
+  box-shadow: 0 8px 35px rgba(0,0,0,.12);
+}
+
+.header-inner {
+  position: relative;
+}
+
+.brand-icon {
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.08),
+    0 0 22px rgba(205,159,91,.06);
+}
+
+/* ==========================================
+   MOBILE NAVIGATION
+========================================== */
+
+.lsp-mobile-nav {
+  display: none;
+  flex-shrink: 0;
+}
+
+.lsp-mobile-nav > summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+
+  width: 43px;
+  height: 43px;
+  list-style: none;
+
+  background: #201e1c;
+  border: 1px solid rgba(217,177,115,.35);
+  border-radius: 10px;
+
+  cursor: pointer;
+  color: #e1c291;
+
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .8px;
+}
+
+.lsp-mobile-nav > summary::-webkit-details-marker {
+  display: none;
+}
+
+.lsp-menu-bars {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+.lsp-menu-bars i {
+  display: block;
+  width: 17px;
+  height: 1.5px;
+
+  border-radius: 99px;
+  background: #e4c591;
+}
+
+.lsp-mobile-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 9px);
+  z-index: 200;
+
+  width: min(345px, calc(100vw - 30px));
+
+  padding: 10px;
+
+  border: 1px solid rgba(216,175,110,.4);
+  border-radius: 15px;
+
+  background: #18191c;
+
+  box-shadow: 0 25px 65px rgba(0,0,0,.65);
+}
+
+.lsp-mobile-dropdown > a {
+  display: block;
+  padding: 13px 12px;
+
+  border-radius: 7px;
+
+  color: #e0d2bc;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.lsp-mobile-dropdown > a:hover {
+  background: #29251f;
+  color: #f2d7a8;
+}
+
+.lsp-mobile-nav-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 8px;
+
+  margin-top: 9px;
+  padding-top: 13px;
+
+  border-top: 1px solid var(--signature-line);
+}
+
+.lsp-mobile-nav-actions a {
+  display: grid;
+  place-items: center;
+
+  min-height: 42px;
+  padding: 9px 6px;
+
+  border: 1px solid #645039;
+  border-radius: 8px;
+
+  color: #e9d1a7;
+  background: #25211c;
+
+  text-align: center;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.lsp-mobile-nav-actions a:last-child {
+  color: #251c10;
+  border-color: #e7c58d;
+  background: linear-gradient(125deg,#f4dfb9,#c69a61);
+}
+
+/* ==========================================
+   SIGNATURE SHOWCASE SECTION
+========================================== */
+
+.lsp-signature-section {
+  padding: 105px 0;
+
+  border-top: 1px solid var(--signature-line);
+
+  background:
+    radial-gradient(
+      ellipse at 85% 5%,
+      rgba(183,136,72,.09),
+      transparent 45%
+    ),
+    #0c0e12;
+}
+
+.lsp-signature-heading {
+  display: grid;
+  grid-template-columns: 1.35fr .65fr;
+  align-items: end;
+  gap: 40px;
+
+  margin-bottom: 38px;
+}
+
+.lsp-signature-heading p {
+  max-width: 380px;
+  margin: 0 0 6px;
+
+  color: #aca294;
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+.lsp-signature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 18px;
+}
+
+/* FEATURED PANEL */
+
+.lsp-signature-featured {
+  grid-column: 1 / -1;
+
+  display: grid;
+  grid-template-columns: 1.16fr .84fr;
+
+  min-height: 395px;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(221,183,119,.28);
+  border-radius: 18px;
+
+  background: linear-gradient(
+    140deg,#24211e,#16181b
+  );
+}
+
+.lsp-signature-image {
+  position: relative;
+  min-height: 350px;
+  overflow: hidden;
+
+  background: #18191c;
+}
+
+.lsp-signature-image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    90deg,
+    transparent 45%,
+    rgba(15,16,19,.42) 100%
+  );
+
+  pointer-events: none;
+}
+
+.lsp-signature-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+
+  position: absolute;
+  inset: 0;
+
+  object-fit: cover;
+  object-position: center 28%;
+}
+
+.lsp-image-label {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  z-index: 2;
+
+  padding: 9px 11px;
+
+  border: 1px solid rgba(238,209,162,.32);
+  border-radius: 7px;
+
+  color: #f3e3c8;
+  background: rgba(10,11,13,.67);
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.lsp-signature-featured-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+
+  padding: clamp(25px,5vw,55px);
+}
+
+.lsp-signature-featured-copy > span {
+  color: #c6a16e;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+}
+
+.lsp-signature-featured-copy h3 {
+  margin: 22px 0 14px;
+
+  color: #f2dfc1;
+  font: 700 clamp(30px,3.6vw,45px)/1.18 Georgia,serif;
+}
+
+.lsp-signature-featured-copy p {
+  margin: 0;
+
+  color: #aba093;
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+.lsp-signature-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+
+  margin-top: 28px;
+  padding-bottom: 9px;
+
+  border-bottom: 1px solid rgba(224,186,125,.6);
+
+  color: #f0d19e;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .8px;
+}
+
+.lsp-signature-link span {
+  font-size: 17px;
+}
+
+/* MINI PANELS */
+
+.lsp-signature-mini {
+  min-width: 0;
+  min-height: 370px;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 28px;
+
+  overflow: hidden;
+
+  border: 1px solid var(--signature-line);
+  border-radius: 16px;
+
+  background:
+    linear-gradient(145deg,#211f1d,#14161a);
+}
+
+.lsp-signature-number {
+  color: #bc9d75;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1.1px;
+}
+
+.lsp-signature-mini h3 {
+  margin: 4px 0 10px;
+
+  color: #f1dfc0;
+  font: 700 clamp(24px,3vw,30px)/1.2 Georgia,serif;
+}
+
+.lsp-signature-mini p {
+  max-width: 400px;
+  margin: 0;
+
+  color: #ada194;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+/* SOCIAL ORBIT ART */
+
+.lsp-signature-mini-art {
+  position: relative;
+
+  flex: 1;
+  min-height: 170px;
+
+  display: grid;
+  place-items: center;
+
+  overflow: hidden;
+}
+
+.lsp-orbit {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+
+  border: 1px solid rgba(218,176,111,.20);
+  border-radius: 50%;
+}
+
+.lsp-orbit-one {
+  transform: rotate(-24deg) scaleX(.62);
+}
+
+.lsp-orbit-two {
+  transform: rotate(35deg) scaleX(.62);
+}
+
+.lsp-orbit-core {
+  position: relative;
+  z-index: 2;
+
+  width: 100px;
+  height: 100px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid #977343;
+  border-radius: 50%;
+
+  background:
+    radial-gradient(circle at 30% 25%,#584329,#201d19);
+
+  box-shadow: 0 0 60px rgba(203,151,74,.12);
+
+  color: #edd3a9;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+/* PROFILE ILLUSTRATION */
+
+.lsp-profile-preview {
+  flex: 1;
+  min-height: 165px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  width: min(255px,100%);
+  margin: 14px auto 19px;
+  padding: 18px;
+
+  border: 1px solid #4d4032;
+  border-radius: 14px;
+
+  background: #17191d;
+}
+
+.lsp-profile-avatar {
+  display: grid;
+  place-items: center;
+
+  width: 52px;
+  height: 52px;
+
+  border: 1px solid #b18b55;
+  border-radius: 50%;
+
+  background: #3b3024;
+  color: #ebd3aa;
+
+  font: 800 16px Georgia,serif;
+}
+
+.lsp-profile-lines {
+  display: grid;
+  gap: 7px;
+
+  justify-items: center;
+  margin-top: 14px;
+}
+
+.lsp-profile-lines span {
+  width: 100px;
+  height: 6px;
+
+  border-radius: 10px;
+  background: #73624b;
+}
+
+.lsp-profile-lines span:last-child {
+  width: 65px;
+  background: #45403b;
+}
+
+.lsp-profile-divider {
+  width: 100%;
+  height: 1px;
+  margin: 17px 0;
+
+  background: #39342d;
+}
+
+.lsp-profile-data {
+  width: 100%;
+
+  display: flex;
+  justify-content: space-around;
+  gap: 5px;
+
+  color: #c6ab84;
+  font-size: 8px;
+  font-weight: 750;
+}
+
+/* ==========================================
+   FAQ SECTION
+========================================== */
+
+.lsp-faq-section {
+  padding: 100px 0;
+
+  border-top: 1px solid var(--signature-line);
+  background: #101115;
+}
+
+.lsp-faq-layout {
+  display: grid;
+  grid-template-columns: .85fr 1.15fr;
+  align-items: start;
+  gap: clamp(35px,6vw,90px);
+}
+
+.lsp-faq-intro p {
+  max-width: 370px;
+  margin: 20px 0;
+
+  color: #afa394;
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.lsp-faq-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 13px;
+
+  margin-top: 16px;
+  padding-bottom: 9px;
+
+  border-bottom: 1px solid #b89360;
+
+  color: #e8c997;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .6px;
+}
+
+.lsp-faq-action span {
+  font-size: 16px;
+}
+
+.lsp-faq-list {
+  border-top: 1px solid var(--signature-line);
+}
+
+.lsp-faq-item {
+  border-bottom: 1px solid var(--signature-line);
+}
+
+.lsp-faq-item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+
+  padding: 22px 0;
+
+  list-style: none;
+  cursor: pointer;
+
+  color: #eadac1;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.lsp-faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.lsp-faq-item summary span {
+  position: relative;
+  flex: 0 0 26px;
+
+  width: 26px;
+  height: 26px;
+
+  border: 1px solid #766044;
+  border-radius: 50%;
+}
+
+.lsp-faq-item summary span::before,
+.lsp-faq-item summary span::after {
+  content: "";
+
+  position: absolute;
+  left: 50%;
+  top: 50%;
+
+  background: #dcb986;
+  transform: translate(-50%,-50%);
+}
+
+.lsp-faq-item summary span::before {
+  width: 10px;
+  height: 1px;
+}
+
+.lsp-faq-item summary span::after {
+  width: 1px;
+  height: 10px;
+}
+
+.lsp-faq-item[open] summary span::after {
+  display: none;
+}
+
+.lsp-faq-item p {
+  margin: -5px 35px 23px 0;
+
+  color: #aea294;
+  font-size: 13px;
+  line-height: 1.85;
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media (max-width: 900px) {
+  .lsp-mobile-nav {
+    display: block;
+  }
+
+  .lsp-signature-heading {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .lsp-faq-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .site-header {
+    padding-top: env(safe-area-inset-top,0px);
+  }
+
+  .header-inner {
+    gap: 8px;
+  }
+
+  .lsp-mobile-nav > summary {
+    width: 38px;
+    height: 38px;
+  }
+
+  .lsp-signature-section,
+  .lsp-faq-section {
+    padding: 65px 0;
+  }
+
+  .lsp-signature-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .lsp-signature-featured {
+    grid-template-columns: 1fr;
+  }
+
+  .lsp-signature-image {
+    min-height: 270px;
+  }
+
+  .lsp-signature-featured-copy {
+    padding: 24px;
+  }
+
+  .lsp-signature-featured-copy h3 {
+    font-size: 31px;
+  }
+
+  .lsp-signature-mini {
+    min-height: 310px;
+    padding: 23px;
+  }
+
+  .lsp-faq-item summary {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 360px) {
+  .brand-name strong {
+    font-size: 10px;
+  }
+
+  .header-actions .btn {
+    padding-inline: 8px;
+    font-size: 9px;
+  }
+
+  .lsp-profile-data {
+    font-size: 7px;
+  }
+}
+
+
 
 </style>
 </head>
@@ -1561,6 +2284,41 @@ button {
         JOIN NOW
       </a>
     </div>
+
+
+
+<!-- MOBILE NAVIGATION -->
+
+<details class="lsp-mobile-nav">
+
+  <summary aria-label="Open navigation menu">
+    <span class="lsp-menu-bars" aria-hidden="true">
+      <i></i><i></i><i></i>
+    </span>
+    <span>MENU</span>
+  </summary>
+
+  <nav class="lsp-mobile-dropdown"
+       aria-label="Mobile navigation">
+
+    <a href="#about">About Livestream Pro</a>
+    <a href="#features">Platform Features</a>
+    <a href="#experience">Our Experience</a>
+    <a href="#platform-showcase">Explore Platform</a>
+    <a href="#how-it-works">How It Works</a>
+    <a href="#faq">Frequently Asked Questions</a>
+
+    <div class="lsp-mobile-nav-actions">
+      <a href="/login.html">SIGN IN</a>
+      <a href="/register.html">CREATE ACCOUNT</a>
+    </div>
+
+  </nav>
+
+</details>
+
+
+
 
   </div>
 
@@ -1840,7 +2598,6 @@ button {
 </article>
 
 
-<!-- INTERACTIVE GAMES -->
 
 
 <!-- =====================================
@@ -1939,6 +2696,153 @@ button {
 
 </section>
 
+
+
+<!-- ==========================================
+     PREMIUM PLATFORM SHOWCASE
+========================================== -->
+
+<section class="lsp-signature-section"
+         id="platform-showcase">
+
+  <div class="container">
+
+    <div class="lsp-signature-heading">
+
+      <div>
+        <span class="section-label">
+          A CLOSER LOOK AT LIVESTREAM PRO
+        </span>
+
+        <h2 class="section-title">
+          A Platform Designed<br>
+          <span class="gold-text">Around Your Experience.</span>
+        </h2>
+      </div>
+
+      <p>
+        From live broadcasts to personal connections,
+        explore the experiences that bring
+        Livestream Pro together.
+      </p>
+
+    </div>
+
+    <div class="lsp-signature-grid">
+
+      <!-- FEATURED EXPERIENCE -->
+
+      <article class="lsp-signature-featured">
+
+        <div class="lsp-signature-image">
+
+          <img
+            src="/assets/landing/platform-live.jpg"
+            alt="Livestream production studio"
+            loading="lazy"
+            decoding="async"
+          >
+
+          <span class="lsp-image-label">
+            LIVE EXPERIENCES
+          </span>
+
+        </div>
+
+        <div class="lsp-signature-featured-copy">
+
+          <span>01 / LIVE STREAMING</span>
+
+          <h3>Be Part of Every Moment.</h3>
+
+          <p>
+            Discover live broadcasts, connect
+            with audiences and share experiences
+            as they happen.
+          </p>
+
+          <a href="/register.html"
+             class="lsp-signature-link">
+            DISCOVER LIVESTREAM PRO
+            <span aria-hidden="true">↗</span>
+          </a>
+
+        </div>
+
+      </article>
+
+      <!-- SOCIAL DISCOVERY -->
+
+      <article class="lsp-signature-mini">
+
+        <span class="lsp-signature-number">
+          02 / SOCIAL CONNECTIONS
+        </span>
+
+        <div class="lsp-signature-mini-art">
+          <span class="lsp-orbit lsp-orbit-one"></span>
+          <span class="lsp-orbit lsp-orbit-two"></span>
+
+          <div class="lsp-orbit-core">
+            CONNECT
+          </div>
+        </div>
+
+        <h3>Discover Your Community.</h3>
+
+        <p>
+          Meet other members, explore conversations
+          and discover new connections.
+        </p>
+
+      </article>
+
+      <!-- MEMBER IDENTITY -->
+
+      <article class="lsp-signature-mini">
+
+        <span class="lsp-signature-number">
+          03 / PERSONAL EXPERIENCE
+        </span>
+
+        <div class="lsp-profile-preview">
+
+          <div class="lsp-profile-avatar">
+            LP
+          </div>
+
+          <div class="lsp-profile-lines">
+            <span></span>
+            <span></span>
+          </div>
+
+          <div class="lsp-profile-divider"></div>
+
+          <div class="lsp-profile-data">
+            <span>PROFILE</span>
+            <span>COMMUNITY</span>
+            <span>ACTIVITY</span>
+          </div>
+
+        </div>
+
+        <h3>Make It Your Own.</h3>
+
+        <p>
+          Build your member profile and enjoy
+          a personalized space within the platform.
+        </p>
+
+      </article>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
 <!-- ==========================================
      HOW IT WORKS
 ========================================== -->
@@ -2012,6 +2916,122 @@ button {
 
 </section>
 
+
+
+<!-- ==========================================
+     FREQUENTLY ASKED QUESTIONS
+========================================== -->
+
+<section class="lsp-faq-section" id="faq">
+
+  <div class="container lsp-faq-layout">
+
+    <div class="lsp-faq-intro">
+
+      <span class="section-label">
+        GOOD TO KNOW
+      </span>
+
+      <h2 class="section-title">
+        Your Questions.<br>
+        <span class="gold-text">Answered.</span>
+      </h2>
+
+      <p>
+        Learn more about Livestream Pro
+        and how to get started with
+        the platform.
+      </p>
+
+      <a href="/register.html"
+         class="lsp-faq-action">
+        START YOUR EXPERIENCE
+        <span aria-hidden="true">↗</span>
+      </a>
+
+    </div>
+
+    <div class="lsp-faq-list">
+
+      <details class="lsp-faq-item">
+        <summary>
+          What is Livestream Pro?
+          <span aria-hidden="true"></span>
+        </summary>
+
+        <p>
+          Livestream Pro is a platform that
+          brings together live streaming,
+          social interaction, messaging
+          and interactive entertainment.
+        </p>
+      </details>
+
+      <details class="lsp-faq-item">
+        <summary>
+          How do I get started?
+          <span aria-hidden="true"></span>
+        </summary>
+
+        <p>
+          Create an account, sign in
+          and explore the available
+          features from your member account.
+        </p>
+      </details>
+
+      <details class="lsp-faq-item">
+        <summary>
+          Can I connect with other members?
+          <span aria-hidden="true"></span>
+        </summary>
+
+        <p>
+          Yes. The platform includes
+          community features and messaging
+          tools designed to help members
+          interact with one another.
+        </p>
+      </details>
+
+      <details class="lsp-faq-item">
+        <summary>
+          What are virtual Diamonds?
+          <span aria-hidden="true"></span>
+        </summary>
+
+        <p>
+          Diamonds are virtual credits used
+          in supported platform experiences.
+          They are not physical currency.
+          Availability and applicable rules
+          depend on the feature being used.
+        </p>
+      </details>
+
+      <details class="lsp-faq-item">
+        <summary>
+          Can I access Livestream Pro on mobile?
+          <span aria-hidden="true"></span>
+        </summary>
+
+        <p>
+          Livestream Pro includes
+          mobile-friendly web pages.
+          Some features, such as screen
+          sharing, depend on device and
+          browser compatibility.
+        </p>
+      </details>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
 <!-- ==========================================
      CALL TO ACTION
 ========================================== -->
@@ -2082,12 +3102,16 @@ button {
 
     </div>
 
-    <nav class="footer-links" aria-label="Footer navigation">
-      <a href="#about">About</a>
-      <a href="#features">Features</a>
-      <a href="/register.html">Register</a>
-      <a href="/login.html">Sign In</a>
-    </nav>
+
+<nav class="footer-links" aria-label="Footer navigation">
+  <a href="#about">About</a>
+  <a href="#features">Features</a>
+  <a href="#platform-showcase">Explore</a>
+  <a href="#faq">FAQs</a>
+  <a href="/register.html">Register</a>
+  <a href="/login.html">Sign In</a>
+</nav>
+
 
   </div>
 
