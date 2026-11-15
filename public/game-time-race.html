@@ -725,89 +725,427 @@ body.crash-dark{
 
 
 
+/* ==========================================
+   TIME RACE - PREMIUM HISTORY SHEET
+   CYBER TITANIUM EDITION
+========================================== */
 
-.tr-sheet{
-  position:fixed;
-  inset:0;
-  z-index:500;
+/* FULL SCREEN OVERLAY */
+
+.tr-sheet {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 900;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  overflow: hidden;
+  font-family: system-ui, sans-serif;
 }
 
-.tr-sheet.hidden{
-  display:none;
+.tr-sheet.hidden {
+  display: none !important;
 }
 
-.tr-sheet-backdrop{
-  position:absolute;
-  inset:0;
-  background:rgba(0,0,0,.6);
+/* BACKDROP */
+
+.tr-sheet-backdrop {
+  position: absolute;
+  inset: 0;
+
+  background: rgba(1, 8, 17, .82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  animation: trBackdropIn .25s ease both;
 }
 
-.tr-sheet-panel{
-  position:absolute;
-  bottom:0;
-  left:0;
-  right:0;
+@keyframes trBackdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
-  max-height:75%;
-  overflow-y:auto;
+/* MAIN PANEL */
 
-  padding:20px 16px calc(20px + env(safe-area-inset-bottom));
+.tr-sheet-panel {
+  position: relative;
 
-  background:linear-gradient(
-    180deg,
-    rgba(10,10,25,.98),
-    rgba(0,0,0,1)
-  );
+  width: 100%;
+  height: auto;
+  max-height: 79%;
 
-  border-top-left-radius:20px;
-  border-top-right-radius:20px;
+  box-sizing: border-box;
+  padding: 14px 17px 22px;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(15, 89, 123, .20),
+      transparent 48%
+    ),
+    linear-gradient(
+      180deg,
+      #0c2234 0%,
+      #071827 42%,
+      #040e19 100%
+    );
+
+  border: 1px solid rgba(93, 211, 243, .32);
+  border-bottom: none;
+
+  border-radius: 24px 24px 0 0;
 
   box-shadow:
-    0 -10px 40px rgba(0,255,255,.2);
+    0 -16px 50px rgba(0, 0, 0, .55),
+    0 -2px 25px rgba(0, 211, 255, .12),
+    inset 0 1px 0 rgba(255,255,255,.08);
 
-  animation:slideUp .25s ease;
+  animation: trHistorySlideUp .35s
+    cubic-bezier(.22,1,.36,1) both;
 }
 
-@keyframes slideUp{
-  from{ transform:translateY(100%); }
-  to{ transform:translateY(0); }
+@keyframes trHistorySlideUp {
+  from {
+    transform: translateY(100%);
+    opacity: .6;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
-.tr-sheet-handle{
-  width:50px;
-  height:5px;
-  background:rgba(255,255,255,.3);
-  border-radius:5px;
-  margin:0 auto 16px;
+/* HANDLE */
+
+.tr-sheet-handle {
+  width: 45px;
+  height: 4px;
+
+  flex-shrink: 0;
+  margin: 0 auto 19px;
+
+  border-radius: 10px;
+
+  background: linear-gradient(
+    90deg,
+    #34566b,
+    #7faec3,
+    #34566b
+  );
 }
 
-.tr-sheet-title{
-  font-size:16px;
-  font-weight:800;
-  text-align:center;
-  margin-bottom:16px;
+/* HEADER */
+
+.tr-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+
+  margin-bottom: 19px;
 }
 
-.tr-history-list{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
+.tr-sheet-heading {
+  min-width: 0;
 }
 
+.tr-sheet-eyebrow {
+  margin-bottom: 7px;
 
-
-.tr-history-item-card{
-  padding:12px;
-  border-radius:14px;
-
-  background:rgba(255,255,255,.04);
-  border:1px solid rgba(0,255,255,.2);
-
-  font-size:13px;
-
-  display:flex;
-  justify-content:space-between;
+  color: #55d7ed;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 2px;
 }
+
+.tr-sheet-title {
+  margin: 0 0 6px;
+
+  font-family: "Orbitron", sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  line-height: 1.2;
+  text-align: left;
+
+  color: #f3fbff;
+  text-shadow: 0 0 16px rgba(0,220,255,.2);
+}
+
+.tr-sheet-subtitle {
+  color: #89aabc;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* CLOSE BUTTON */
+
+.tr-sheet-close {
+  width: 38px;
+  height: 38px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 1px solid rgba(98,183,219,.35);
+  border-radius: 11px;
+
+  background: linear-gradient(
+    145deg,
+    #173449,
+    #0a1d2d
+  );
+
+  color: #c0e8f4;
+  font-size: 26px;
+  font-weight: 300;
+  line-height: 1;
+
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.tr-sheet-close:active {
+  transform: scale(.92);
+}
+
+/* SUMMARY */
+
+.tr-history-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+
+  flex-shrink: 0;
+  margin-bottom: 20px;
+
+  padding: 15px 6px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(22,60,83,.70),
+    rgba(8,28,44,.90)
+  );
+
+  border: 1px solid rgba(75,157,189,.23);
+  border-radius: 15px;
+}
+
+.tr-summary-item {
+  min-width: 0;
+  text-align: center;
+}
+
+.tr-summary-item + .tr-summary-item {
+  border-left: 1px solid rgba(98,151,175,.24);
+}
+
+.tr-summary-label {
+  margin-bottom: 8px;
+
+  color: #8baabf;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .6px;
+}
+
+.tr-summary-value {
+  font-family: "Orbitron", sans-serif;
+  font-size: 21px;
+  font-weight: 900;
+  color: #f1fbff;
+  font-variant-numeric: tabular-nums;
+}
+
+.tr-summary-value.win {
+  color: #73f0cf;
+}
+
+.tr-summary-value.loss {
+  color: #ff8e9c;
+}
+
+/* SHARED TABLE GRID */
+
+.tr-history-table-head,
+.tr-history-item-card {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.12fr)
+    minmax(0, .95fr)
+    minmax(0, .90fr)
+    minmax(0, 1.12fr);
+  align-items: center;
+  column-gap: 5px;
+}
+
+/* TABLE HEAD */
+
+.tr-history-table-head {
+  flex-shrink: 0;
+  padding: 0 5px 12px;
+
+  border-bottom: 1px solid rgba(82,169,198,.25);
+
+  color: #84a5b8;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .3px;
+  text-align: center;
+}
+
+/* RECORDS SCROLL */
+
+.tr-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  flex: 1 1 auto;
+  min-height: 110px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  padding: 12px 0 7px;
+
+  scrollbar-width: thin;
+  scrollbar-color: #32647c transparent;
+
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tr-history-list::-webkit-scrollbar {
+  width: 3px;
+}
+
+.tr-history-list::-webkit-scrollbar-thumb {
+  background: #32647c;
+  border-radius: 10px;
+}
+
+/* HISTORY RECORD */
+
+.tr-history-item-card {
+  flex-shrink: 0;
+  min-height: 51px;
+  box-sizing: border-box;
+
+  padding: 8px 5px;
+
+  background: linear-gradient(
+    140deg,
+    rgba(20,56,77,.74),
+    rgba(7,24,39,.96)
+  );
+
+  border: 1px solid rgba(76,144,172,.25);
+  border-radius: 11px;
+
+  color: #dfedf6;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.tr-history-item-card > div {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tr-history-item-card > div:nth-child(3) {
+  color: #75dff5;
+}
+
+.tr-history-item-card.is-win {
+  border-left: 2px solid #59ddba;
+}
+
+.tr-history-item-card.is-loss {
+  border-left: 2px solid #e57486;
+}
+
+/* RESULT STATUS */
+
+.tr-record-result {
+  padding: 8px 2px;
+  border-radius: 7px;
+
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.tr-record-result.win {
+  color: #74ebca;
+  background: rgba(30,140,110,.15);
+}
+
+.tr-record-result.loss {
+  color: #ff97a3;
+  background: rgba(194,55,77,.15);
+}
+
+/* EMPTY STATE */
+
+.tr-history-empty {
+  padding: 55px 12px;
+  text-align: center;
+
+  color: #91acbb;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+/* FOOTER */
+
+.tr-sheet-footer {
+  flex-shrink: 0;
+
+  padding-top: 15px;
+  margin-top: 5px;
+
+  border-top: 1px solid rgba(83,149,176,.19);
+
+  text-align: center;
+  color: #547a90;
+
+  font-family: "Orbitron", sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+}
+
+/* ACCESSIBILITY */
+
+.tr-sheet-close:focus-visible {
+  outline: 2px solid #79eaff;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tr-sheet-panel,
+  .tr-sheet-backdrop {
+    animation: none;
+  }
+}
+
 
 
 .bet-history-floating{
@@ -1868,22 +2206,110 @@ body.crash-dark{
 
 
 
-<!-- ================= TIME RACE HISTORY SHEET ================= -->
-<div id="timeRaceHistorySheet" class="tr-sheet hidden">
 
+<!-- ==========================================
+     TIME RACE - PREMIUM BET HISTORY
+========================================== -->
+
+<div id="timeRaceHistorySheet"
+     class="tr-sheet hidden"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="trHistoryTitle">
+
+  <!-- BACKDROP -->
   <div class="tr-sheet-backdrop"
-       onclick="closeTimeRaceHistory()"></div>
+       onclick="closeTimeRaceHistory()">
+  </div>
 
+  <!-- HISTORY PANEL -->
   <div class="tr-sheet-panel">
 
     <div class="tr-sheet-handle"></div>
 
-    <div class="tr-sheet-title">
-      Bet History
+    <!-- HEADER -->
+    <div class="tr-sheet-header">
+
+      <div class="tr-sheet-heading">
+
+        <div class="tr-sheet-eyebrow">
+          TIME RACE / RECORDS
+        </div>
+
+        <div class="tr-sheet-title"
+             id="trHistoryTitle">
+          BET HISTORY
+        </div>
+
+        <div class="tr-sheet-subtitle">
+          Your recent game transactions
+        </div>
+
+      </div>
+
+      <button class="tr-sheet-close"
+              type="button"
+              onclick="closeTimeRaceHistory()"
+              aria-label="Close history">
+        &times;
+      </button>
+
     </div>
 
+    <!-- SUMMARY -->
+    <div class="tr-history-summary">
+
+      <div class="tr-summary-item">
+        <div class="tr-summary-label">
+          RECENT BETS
+        </div>
+        <div id="trTotalBets"
+             class="tr-summary-value">
+          0
+        </div>
+      </div>
+
+      <div class="tr-summary-item">
+        <div class="tr-summary-label">
+          WINS
+        </div>
+        <div id="trTotalWins"
+             class="tr-summary-value win">
+          0
+        </div>
+      </div>
+
+      <div class="tr-summary-item">
+        <div class="tr-summary-label">
+          LOSSES
+        </div>
+        <div id="trTotalLosses"
+             class="tr-summary-value loss">
+          0
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TABLE HEADER -->
+    <div class="tr-history-table-head">
+      <span>ROUND</span>
+      <span>BET</span>
+      <span>MULTI</span>
+      <span>RESULT</span>
+    </div>
+
+    <!-- REAL-TIME RECORDS -->
     <div id="timeRaceHistoryList"
          class="tr-history-list">
+      <div class="tr-history-empty">
+        Loading history...
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="tr-sheet-footer">
+      TIME RACE · BET RECORDS
     </div>
 
   </div>
@@ -2282,39 +2708,116 @@ socket.on("time-race-my-history", list=>{
   renderMyHistory(list);
 });
 
-function renderMyHistory(list){
 
-  const wrap =
-    document.getElementById("timeRaceHistoryList");
+/* ==========================================
+   TIME RACE - PREMIUM HISTORY RENDER
+========================================== */
 
-  if(!wrap) return;
+function renderMyHistory(list) {
 
-  wrap.innerHTML = "";
+  const wrap = document.getElementById("timeRaceHistoryList");
 
-  if(!list.length){
-    wrap.innerHTML =
-      "<div style='opacity:.6;text-align:center'>No history yet</div>";
+  if (!wrap) return;
+
+  const records = Array.isArray(list) ? list : [];
+
+  // SUMMARY
+  const total = records.length;
+
+  const wins = records.filter(
+    h => h.result === "win"
+  ).length;
+
+  const losses = records.filter(
+    h => h.result !== "win"
+  ).length;
+
+  document.getElementById("trTotalBets").textContent =
+    total.toLocaleString();
+
+  document.getElementById("trTotalWins").textContent =
+    wins.toLocaleString();
+
+  document.getElementById("trTotalLosses").textContent =
+    losses.toLocaleString();
+
+  wrap.replaceChildren();
+
+  // EMPTY HISTORY
+  if (!total) {
+    const empty = document.createElement("div");
+    empty.className = "tr-history-empty";
+    empty.textContent = "No betting history available.";
+    wrap.appendChild(empty);
     return;
   }
 
-  list.forEach(h=>{
+  // HELPERS
+  const formatNumber = value => {
+    const n = Number(value);
+    return Number.isFinite(n)
+      ? n.toLocaleString("en-US", {
+          maximumFractionDigits: 2
+        })
+      : "0";
+  };
+
+  const makeCell = (value, className = "") => {
+    const cell = document.createElement("div");
+    if (className) cell.className = className;
+    cell.textContent = value;
+    return cell;
+  };
+
+  const fragment = document.createDocumentFragment();
+
+  records.forEach(h => {
+
+    const won = h.result === "win";
 
     const item = document.createElement("div");
-    item.className = "tr-history-item-card";
 
-item.innerHTML = `
-  <div>#${h.roundId}</div>
-  <div>${h.bet} 💎</div>
-  <div>x${Number(h.stopMultiplier).toFixed(2)}</div>
-<div style="color:${h.result === 'win' ? '#00f0ff' : '#ff2d2d'};font-weight:700">
-  ${h.result === 'win' ? '✔ +' + h.win : '✖ LOSE'}
-</div>
-`;
+    item.className =
+      "tr-history-item-card " +
+      (won ? "is-win" : "is-loss");
 
-    wrap.appendChild(item);
+    // ROUND
+    item.appendChild(
+      makeCell("#" + String(h.roundId ?? "--"))
+    );
+
+    // BET AMOUNT
+    item.appendChild(
+      makeCell(formatNumber(h.bet))
+    );
+
+    // STOP MULTIPLIER
+    const multiplier = Number(h.stopMultiplier);
+
+    item.appendChild(
+      makeCell(
+        Number.isFinite(multiplier)
+          ? "x" + multiplier.toFixed(2)
+          : "--"
+      )
+    );
+
+    // RESULT
+    const result = makeCell(
+      won
+        ? "+" + formatNumber(h.win)
+        : "LOSE",
+      "tr-record-result " + (won ? "win" : "loss")
+    );
+
+    item.appendChild(result);
+
+    fragment.appendChild(item);
+
   });
-}
 
+  wrap.appendChild(fragment);
+}
 
 let lastBetList = ""
 
