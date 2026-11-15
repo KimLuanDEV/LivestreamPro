@@ -1,23 +1,23 @@
 
 /* ==========================================
    LIVESTREAM PRO
-   APP ENTRY GUARD
-   INDEX FIRST ON NEW SESSION
+   APP ENTRY GUARD - STABLE VERSION
+
+   - Index is the app launch page
+   - No redirect to Index during navigation
+   - Keep authenticated pages accessible
 ========================================== */
 
 (function () {
   "use strict";
 
-  const INDEX = "/index.html";
   const LOGIN = "/login.html";
 
-  const ENTRY_KEY = "lsp_app_entry_seen";
+  const path = window.location.pathname.toLowerCase();
 
-  const path = location.pathname.toLowerCase();
-
-  const isIndex =
-    path === "/" ||
-    path === "/index.html";
+  /* ======================================
+     PUBLIC PAGES
+  ====================================== */
 
   const PUBLIC_PAGES = new Set([
     "/",
@@ -26,40 +26,13 @@
     "/register.html"
   ]);
 
-  /* ======================================
-     FIRST ENTRY IN CURRENT SESSION
-  ====================================== */
-
-  let hasEntered = false;
-
-  try {
-    hasEntered =
-      sessionStorage.getItem(ENTRY_KEY) === "1";
-
-    if (!hasEntered) {
-      sessionStorage.setItem(ENTRY_KEY, "1");
-    }
-  } catch (error) {
-    // Storage may be unavailable in some contexts.
-  }
-
-  // Lần đầu vào phiên mới:
-  // buộc mở trang giới thiệu trước.
-  if (!hasEntered && !isIndex) {
-    location.replace(INDEX);
-    return;
-  }
-
-  /* ======================================
-     PUBLIC PAGES
-  ====================================== */
-
+  // Public pages are always accessible.
   if (PUBLIC_PAGES.has(path)) {
     return;
   }
 
   /* ======================================
-     LOGIN CHECK
+     AUTHENTICATION STATE
   ====================================== */
 
   let profile = null;
@@ -75,15 +48,28 @@
   const uid = String(profile?.uid || "").trim();
 
   const hasLocalProfile =
-    Boolean(uid) &&
+    uid.length > 0 &&
     !uid.toLowerCase().startsWith("guest");
 
-  // Chưa có hồ sơ đăng nhập.
+  /* ======================================
+     NOT LOGGED IN
+  ====================================== */
+
   if (!hasLocalProfile) {
-    location.replace(LOGIN);
+
+    // Prevent redirect loops on Login.
+    if (path !== LOGIN) {
+      window.location.replace(LOGIN);
+    }
+
     return;
   }
 
-  // Đã vào ứng dụng và có hồ sơ:
-  // giữ nguyên trang đang truy cập.
+  /* ======================================
+     ALREADY LOGGED IN
+  ====================================== */
+
+  // Keep the current page.
+  // Do not redirect to Index or Social.
+
 })();
