@@ -2941,6 +2941,212 @@ body.crash-dark{
 
 
 
+/* ==========================================
+   TIME RACE - PREMIUM BOMB CONTROLS
+   BASE CANVAS: 430 x 870
+========================================== */
+
+/* BOMB AREA */
+
+.tr-center .bomb-wrap {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  margin: 0 auto;
+  isolation: isolate;
+}
+
+.tr-center .bomb-img {
+  width: 260px;
+  height: auto;
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  z-index: 2;
+
+  filter:
+    drop-shadow(0 12px 18px rgba(0,0,0,.48))
+    drop-shadow(0 0 15px rgba(29,199,241,.19));
+}
+
+/* SOFT REACTOR GLOW */
+
+.tr-center .bomb-core-glow {
+  position: absolute;
+  inset: -15px;
+  z-index: 0;
+
+  border-radius: 50%;
+
+  background: radial-gradient(
+    circle,
+    rgba(24,178,214,.22),
+    rgba(8,77,111,.10) 45%,
+    transparent 72%
+  );
+
+  filter: blur(20px);
+  pointer-events: none;
+
+  animation: trBombGlow 3s ease-in-out infinite;
+}
+
+@keyframes trBombGlow {
+  0%, 100% {
+    opacity: .55;
+    transform: scale(.96);
+  }
+
+  50% {
+    opacity: .9;
+    transform: scale(1.04);
+  }
+}
+
+/* TIMER - OVER ORIGINAL BOMB */
+
+.tr-center .bomb-timer {
+  position: absolute;
+
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -60%);
+  z-index: 5;
+
+  font-family: "Orbitron", sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 1px;
+
+  color: #f1fbff;
+
+  text-shadow:
+    0 2px 5px rgba(0,0,0,.85),
+    0 0 12px rgba(85,231,255,.55);
+
+  font-variant-numeric: tabular-nums;
+}
+
+/* MULTIPLIER */
+
+.tr-center .bomb-multi {
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: 1px;
+
+  text-shadow: 0 0 18px rgba(0,220,255,.45);
+}
+
+/* Preserve crash styling */
+
+.tr-center .bomb-multi.crash-red {
+  font-size: 19px;
+}
+
+/* ==========================================
+   STOP BUTTON POSITION
+========================================== */
+
+.tr-center .stop-wrap {
+  position: absolute;
+
+  top: 286px;
+  left: 50%;
+  bottom: auto;
+
+  width: 150px;
+  height: 100px;
+
+  transform: translateX(-50%);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 25;
+  pointer-events: none;
+}
+
+.tr-center .stop-btn-img {
+  width: 140px;
+  height: auto;
+
+  max-width: 100%;
+
+  cursor: pointer;
+  pointer-events: auto;
+
+  object-fit: contain;
+
+  filter: drop-shadow(
+    0 7px 14px rgba(0,0,0,.45)
+  );
+
+  transition:
+    transform .15s ease,
+    filter .15s ease,
+    opacity .15s ease;
+}
+
+.tr-center .stop-btn-img:active {
+  transform: scale(.94);
+}
+
+.tr-center .stop-btn-img.disabled {
+  filter: grayscale(.55);
+}
+
+/* ==========================================
+   HISTORY BUTTON
+========================================== */
+
+.bet-history-floating {
+  position: absolute;
+
+  top: 236px;
+  left: 12px;
+
+  right: auto;
+  bottom: auto;
+
+  z-index: 310;
+}
+
+.bet-history-floating .history-btn-img {
+  display: block;
+
+  width: 88px;
+  height: auto;
+
+  object-fit: contain;
+  cursor: pointer;
+
+  filter:
+    drop-shadow(0 6px 12px rgba(0,0,0,.45));
+
+  transition:
+    transform .15s ease,
+    filter .15s ease;
+}
+
+.bet-history-floating .history-btn-img:active {
+  transform: scale(.94);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tr-center .bomb-core-glow {
+    animation: none;
+  }
+}
+
+
+
+
 </style>
 </head>
 <body>
