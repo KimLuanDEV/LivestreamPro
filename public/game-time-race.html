@@ -1858,25 +1858,24 @@ body.crash-dark{
 
 
 
-.history-btn-img{
 
-  width:100px;
-  height:auto;
-
-  cursor:pointer;
-
-  transition:.15s;
-
+.history-btn-img {
+  display: block;
+  width: 100px;
+  height: auto;
+  object-fit: contain;
+  cursor: pointer;
+  transition: transform .2s ease, filter .2s ease;
+  filter: drop-shadow(0 0 8px rgba(0, 220, 255, .3));
 }
 
-/* hover */
-.history-btn-img:hover{
-  transform:scale(1.08);
+.history-btn-img:hover {
+  transform: scale(1.06);
+  filter: drop-shadow(0 0 14px rgba(0, 220, 255, .65));
 }
 
-/* click */
-.history-btn-img:active{
-  transform:scale(.9);
+.history-btn-img:active {
+  transform: scale(.94);
 }
 
 
