@@ -871,6 +871,27 @@ socket.on("connect", () => {
 
 
 
+/* ==========================================
+   DAILY SOCIAL MISSION NOTIFICATION
+========================================== */
+
+socket.on("daily-social-reward", data => {
+
+  const amount = Number(data?.amount || 0);
+
+  if (amount !== 100) return;
+
+  showToast(
+    "Daily mission completed! +100 Diamonds",
+    "success",
+    4500
+  );
+
+});
+
+
+
+
 socket.on("lp-post", post=>{
   renderPost(post,true);
 });

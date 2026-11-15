@@ -1491,13 +1491,21 @@ function loadSocial(){
   }
 }
 
-function saveSocial(){
-  try{
-    fs.writeFileSync(SOCIAL_FILE, JSON.stringify(lpPosts,null,2));
-  }catch(e){
-    console.error("Save social failed",e);
+
+function saveSocial() {
+  try {
+    fs.writeFileSync(
+      SOCIAL_FILE,
+      JSON.stringify(lpPosts, null, 2)
+    );
+    return true;
+
+  } catch (error) {
+    console.error("Save social failed", error);
+    return false;
   }
 }
+
 
 
 // ================================
@@ -10645,6 +10653,92 @@ const USERS_FILE = path.join("/opt/render/project/data", "users.json");
 
 
 
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   DAILY SOCIAL POST REWARD
+   1 POST / DAY = 100 DIAMONDS
+========================================== */
+
+const DAILY_SOCIAL_REWARD = 100;
+
+function getSocialMissionDay() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(new Date());
+}
+
+function rewardDailySocialPost(user, postId) {
+
+  if (!user?.profile || !postId) {
+    return {
+      rewarded: false,
+      reason: "INVALID_ACCOUNT"
+    };
+  }
+
+  const profile = user.profile;
+  const day = getSocialMissionDay();
+
+  const existing =
+    profile.dailyMissions?.socialPost;
+
+  // Đã nhận thưởng hôm nay.
+  if (existing?.day === day) {
+    return {
+      rewarded: false,
+      reason: "ALREADY_COMPLETED"
+    };
+  }
+
+  const balance = Number(profile.coins ?? 0);
+
+  if (
+    !Number.isSafeInteger(balance) ||
+    balance < 0 ||
+    !Number.isSafeInteger(
+      balance + DAILY_SOCIAL_REWARD
+    )
+  ) {
+    return {
+      rewarded: false,
+      reason: "INVALID_BALANCE"
+    };
+  }
+
+  if (
+    !profile.dailyMissions ||
+    typeof profile.dailyMissions !== "object"
+  ) {
+    profile.dailyMissions = {};
+  }
+
+  // Cộng Diamonds vào ví hiện tại.
+  profile.coins =
+    balance + DAILY_SOCIAL_REWARD;
+
+  // Ghi nhận đã hoàn thành trong ngày.
+  profile.dailyMissions.socialPost = {
+    day,
+    postId: String(postId),
+    reward: DAILY_SOCIAL_REWARD,
+    completedAt: new Date().toISOString()
+  };
+
+  return {
+    rewarded: true,
+    amount: DAILY_SOCIAL_REWARD,
+    balance: profile.coins,
+    day
+  };
+}
+
+
+
 function loadUsers(){
   if(!fs.existsSync(USERS_FILE)) return {};
   return JSON.parse(fs.readFileSync(USERS_FILE,"utf8"));
@@ -12783,14 +12877,83 @@ socket.on("lp-post", post => {
     lpPosts.length = 200;
   }
 
-  saveSocial();
 
-  // Chỉ phát bài mới tới người có quyền xem
-  emitSocialPostToAllowedUsers(
-    "lp-post",
-    clean,
-    clean
+
+// Chỉ tiếp tục nếu bài viết đã được lưu.
+if (!saveSocial()) {
+
+  const index = lpPosts.findIndex(
+    item => item.id === clean.id
   );
+
+  if (index !== -1) {
+    lpPosts.splice(index, 1);
+  }
+
+  socket.emit("lp-post-save-error", {
+    message: "Unable to save your post."
+  });
+
+  return;
+}
+
+
+// Chỉ phát bài mới tới người có quyền xem.
+emitSocialPostToAllowedUsers(
+  "lp-post",
+  clean,
+  clean
+);
+
+/* =====================================
+   DAILY SOCIAL POST REWARD
+===================================== */
+
+try {
+
+  const reward = rewardDailySocialPost(
+    user,
+    clean.id
+  );
+
+  if (reward.rewarded) {
+
+    // Lưu số dư và nhiệm vụ vào users.json.
+    saveUsers(db);
+
+    // Đồng bộ số dư tới các thiết bị.
+    emitCoinUpdate(uid);
+
+    // Chỉ thông báo tới người vừa đăng bài.
+    socket.emit("daily-social-reward", {
+      amount: reward.amount,
+      balance: reward.balance,
+      day: reward.day,
+
+      message:
+        "Daily mission completed! " +
+        "+100 Diamonds have been added to your wallet."
+    });
+
+    console.log(
+      "[DAILY SOCIAL REWARD]",
+      uid,
+      reward.day,
+      reward.amount
+    );
+
+  }
+
+} catch (error) {
+
+  console.error(
+    "[DAILY SOCIAL REWARD ERROR]",
+    error
+  );
+
+}
+
+
 });
 
 

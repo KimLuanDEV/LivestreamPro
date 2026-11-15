@@ -2244,6 +2244,96 @@ summary:focus-visible {
 
 
 
+
+/* =====================================
+   DAILY SOCIAL MISSION NOTICE
+===================================== */
+
+.daily-mission-notice {
+  padding: 24px 0;
+  background: #0b0c10;
+}
+
+.daily-notice-box {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+
+  padding: 19px 23px;
+
+  background: linear-gradient(
+    120deg,
+    #25211c,
+    #16181c
+  );
+
+  border: 1px solid rgba(219,178,112,.38);
+  border-radius: 13px;
+}
+
+.daily-notice-icon {
+  flex-shrink: 0;
+
+  display: grid;
+  place-items: center;
+
+  width: 46px;
+  height: 46px;
+
+  border-radius: 11px;
+  background: #352b1e;
+
+  color: #e6c18a;
+  font-size: 24px;
+}
+
+.daily-notice-content {
+  min-width: 0;
+}
+
+.daily-notice-content strong {
+  display: block;
+
+  color: #f1dcba;
+  font-size: 15px;
+  font-weight: 750;
+}
+
+.daily-notice-content p {
+  margin: 6px 0 0;
+
+  color: #b8ac9c;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+@media(max-width:620px) {
+  .daily-mission-notice {
+    padding: 17px 0;
+  }
+
+  .daily-notice-box {
+    gap: 11px;
+    padding: 14px;
+  }
+
+  .daily-notice-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .daily-notice-content strong {
+    font-size: 13px;
+  }
+
+  .daily-notice-content p {
+    font-size: 11px;
+  }
+}
+
+
+
+
 </style>
 </head>
 
@@ -3029,6 +3119,34 @@ summary:focus-visible {
   </div>
 
 </section>
+
+
+
+<!-- DAILY SOCIAL MISSION NOTICE -->
+
+<section class="daily-mission-notice">
+  <div class="container">
+
+    <div class="daily-notice-box">
+
+      <div class="daily-notice-icon">
+        ◆
+      </div>
+
+      <div class="daily-notice-content">
+        <strong>Daily Social Mission</strong>
+
+        <p>
+          Publish one post on Social every day
+          and earn 100 Diamonds.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
 
 
 
