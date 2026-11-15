@@ -1165,142 +1165,113 @@ body.crash-dark{
 
 
 
-/* ================= TIME RACE LOADING ================= */
+/* =====================================
+   TIME RACE - FULL IMAGE LOADING
+   Design resolution: 430 x 870
+===================================== */
 
-.tr-loading{
-  position:fixed;
-  inset:0;
-  z-index:9999;
+.tr-loading {
+  position: absolute;
+  inset: 0;
 
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  width: 430px;
+  height: 870px;
 
-  background:#000;
-}
-
-.tr-loading-bg{
-  position:absolute;
-  inset:0;
+  z-index: 9999;
+  overflow: hidden;
 
   background:
-    radial-gradient(circle at 50% 40%,
-      rgba(0,255,255,.2),
-      rgba(0,0,0,.95) 70%
-    );
+    #031324
+    url("/assets/time-race/time-race-loading-full.png")
+    center center / 100% 100% no-repeat;
 
-  animation:loadingBgMove 10s linear infinite;
+  opacity: 1;
+  transition: opacity .6s ease;
 }
 
-@keyframes loadingBgMove{
-  0%{ transform:scale(1); }
-  50%{ transform:scale(1.1); }
-  100%{ transform:scale(1); }
+/* =====================================
+   PROGRESS BAR HITBOX
+   Positioned over background track
+===================================== */
+
+.tr-loading-bar {
+  position: absolute;
+
+  left: 50%;
+  top: 64.1%;
+
+  transform: translateX(-50%);
+
+  width: 70%;
+  height: 2.2%;
+
+  padding: 3px;
+  box-sizing: border-box;
+
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+
+  overflow: hidden;
 }
 
-.tr-loading-center{
-  position:relative;
-  text-align:center;
-  z-index:2;
-}
+/* DYNAMIC PROGRESS FILL */
 
-.tr-loading-logo{
-  font-size:26px;
-  font-weight:900;
-  letter-spacing:2px;
+.tr-loading-progress {
+  width: 0%;
+  height: 100%;
 
-  background:linear-gradient(
+  border-radius: 5px;
+
+  background: linear-gradient(
     90deg,
-    #00f0ff,
-    #ffffff,
-    #00f0ff
+    #007bff 0%,
+    #00dfff 60%,
+    #b5ffff 100%
   );
 
-  background-size:200%;
-  background-clip:text;
-  -webkit-background-clip:text;
+  box-shadow:
+    0 0 10px rgba(0,240,255,.8),
+    0 0 22px rgba(0,240,255,.5);
 
-  color:transparent;
-
-  animation:logoShine 3s linear infinite;
+  transition: width .3s ease;
 }
 
-@keyframes logoShine{
-  from{ background-position:0%; }
-  to{ background-position:200%; }
+/* =====================================
+   DYNAMIC STATUS TEXT
+===================================== */
+
+.tr-loading-text {
+  position: absolute;
+
+  left: 50%;
+  top: 69%;
+
+  transform: translateX(-50%);
+
+  width: 85%;
+  margin: 0;
+
+  text-align: center;
+
+  font-family: "Orbitron", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+
+  color: #c6f9ff;
+
+  text-shadow:
+    0 0 10px rgba(0,240,255,.7);
 }
 
-.tr-loading-bomb{
-  font-size:70px;
-  margin:20px 0;
+/* FADE OUT */
 
-  animation:bombPulse 1.2s ease-in-out infinite;
+.tr-loading.tr-loading-hide {
+  opacity: 0;
+  pointer-events: none;
 }
 
-@keyframes bombPulse{
-  0%,100%{
-    transform:scale(1);
-    filter:drop-shadow(0 0 10px #00f0ff);
-  }
-  50%{
-    transform:scale(1.15);
-    filter:drop-shadow(0 0 25px #00f0ff);
-  }
-}
-
-.tr-loading-bar{
-  width:220px;
-  height:6px;
-  background:#111;
-  border-radius:6px;
-  overflow:hidden;
-  margin:0 auto;
-}
-
-.tr-loading-progress{
-  height:100%;
-  width:0%;
-
-  background:linear-gradient(
-    90deg,
-    #007bff,
-    #00f0ff
-  );
-
-  box-shadow:0 0 15px #00f0ff;
-
-  transition:width .3s;
-}
-
-.tr-loading-text{
-  margin-top:14px;
-  font-size:13px;
-  opacity:.8;
-}
-
-
-.tr-loading-bomb img{
-  width:90px;
-  height:auto;
-
-  filter:
-    drop-shadow(0 0 10px #00f0ff)
-    drop-shadow(0 0 30px #00f0ff);
-
-  animation:bombPulse 1.2s ease-in-out infinite;
-}
-
-@keyframes bombPulse{
-
-  0%,100%{
-    transform:scale(1);
-  }
-
-  50%{
-    transform:scale(1.12);
-  }
-
-}
 
 
 
@@ -1514,29 +1485,24 @@ body.crash-dark{
 
 
 
+
 <!-- ================= TIME RACE LOADING ================= -->
+
 <div id="loadingOverlay" class="tr-loading">
 
-  <div class="tr-loading-bg"></div>
-
-  <div class="tr-loading-center">
-
-    <div class="tr-loading-logo">
-      CRASH
+  <!-- THANH TIẾN TRÌNH KHỚP VỚI ẢNH NỀN -->
+  <div class="tr-loading-bar">
+    <div
+      id="loadingProgress"
+      class="tr-loading-progress">
     </div>
+  </div>
 
-<div class="tr-loading-bomb">
-  <img src="/assets/time-race/bomb-icon.png">
-</div>
-
-    <div class="tr-loading-bar">
-      <div id="loadingProgress" class="tr-loading-progress"></div>
-    </div>
-
-    <div id="loadingText" class="tr-loading-text">
-      Connecting to server...
-    </div>
-
+  <!-- TRẠNG THÁI LOAD ĐỘNG -->
+  <div
+    id="loadingText"
+    class="tr-loading-text">
+    Initializing engine...
   </div>
 
 </div>
@@ -2575,12 +2541,14 @@ if (screen.orientation && screen.orientation.lock) {
 
 
 
-/* ================= LOADER ================= */
+/* ================= TIME RACE LOADER ================= */
 
 const progress = document.getElementById("loadingProgress");
-const text = document.getElementById("loadingText");
+const loadingText = document.getElementById("loadingText");
+const loadingOverlay = document.getElementById("loadingOverlay");
 
 let load = 0;
+let loadingFinished = false;
 
 const loadingSteps = [
   "Initializing engine...",
@@ -2590,33 +2558,62 @@ const loadingSteps = [
   "Preparing bomb..."
 ];
 
-const interval = setInterval(()=>{
+function finishTimeRaceLoading() {
+  if (loadingFinished) return;
+  loadingFinished = true;
 
-  load += Math.random()*15;
+  progress.style.width = "100%";
+  loadingText.textContent = "Ready";
 
-  if(load >= 100){
-    load = 100;
-    clearInterval(interval);
+  setTimeout(() => {
+    loadingOverlay.classList.add("tr-loading-hide");
 
-    text.innerText = "Ready";
+    setTimeout(() => {
+      loadingOverlay.remove();
+    }, 600);
 
-    setTimeout(()=>{
-      const overlay = document.getElementById("loadingOverlay");
-      overlay.style.opacity = "0";
+  }, 500);
+}
 
-      setTimeout(()=>{
-        overlay.remove();
-      },600);
+// Đảm bảo ảnh background tải xong
+// trước khi bắt đầu hiệu ứng loading.
 
-    },500);
-  }
+const loadingImage = new Image();
 
-  progress.style.width = load + "%";
+loadingImage.onload = startTimeRaceLoading;
+loadingImage.onerror = startTimeRaceLoading;
 
-  const stepIndex = Math.floor(load / 25);
-  text.innerText = loadingSteps[Math.min(stepIndex, loadingSteps.length-1)];
+loadingImage.src =
+  "/assets/time-race/time-race-loading-full.png";
 
-},400);
+function startTimeRaceLoading() {
+
+  const interval = setInterval(() => {
+
+    if (loadingFinished) {
+      clearInterval(interval);
+      return;
+    }
+
+    load = Math.min(100, load + Math.random() * 15);
+
+    progress.style.width = load + "%";
+
+    if (load >= 100) {
+      clearInterval(interval);
+      finishTimeRaceLoading();
+      return;
+    }
+
+    const stepIndex = Math.min(
+      Math.floor(load / 25),
+      loadingSteps.length - 1
+    );
+
+    loadingText.textContent = loadingSteps[stepIndex];
+
+  }, 400);
+}
 
 
 
