@@ -2751,11 +2751,6 @@ const PROFILE_ENGLISH = new Map(Object.entries({
 
 function profileEnglishText(value) {
 
-  // Do not force English when Vietnamese is selected.
-  if (getLspLanguage() === "vi") {
-    return value;
-  }
-
   if (typeof value !== "string") return value;
 
   const original = value;
@@ -2955,203 +2950,17 @@ function initializeProfileEnglish() {
 }
 
 
-
-/* ==========================================
-   LIVESTREAM PRO
-   APPLICATION LANGUAGE PREFERENCE
-========================================== */
-
-const LSP_LANGUAGE_KEY = "lsp_app_language";
-
-
-function getLspLanguage() {
-
-  return window.LSPLanguage?.get() ||
-    localStorage.getItem("lsp_app_language") ||
-    "en";
-
-}
-
-
-function openProfileLanguage() {
-  const modal = document.getElementById(
-    "psLanguageModal"
-  );
-
-  if (!modal) return;
-
-  modal.classList.remove("hidden");
-  modal.setAttribute("aria-hidden", "false");
-
-  updateProfileLanguageUI();
-
-  modal.querySelector(".ps-language-close")?.focus();
-}
-
-function closeProfileLanguage() {
-  const modal = document.getElementById(
-    "psLanguageModal"
-  );
-
-  if (!modal) return;
-
-  modal.classList.add("hidden");
-  modal.setAttribute("aria-hidden", "true");
-
-  document.querySelector(
-    '[onclick="openProfileLanguage()"]'
-  )?.focus();
-}
-
-
-function setProfileLanguage(language) {
-
-  if (!["en", "vi"].includes(language)) {
-    return;
-  }
-
-  if (window.LSPLanguage) {
-
-    window.LSPLanguage.set(language);
-
-    updateProfileLanguageUI();
-    closeProfileLanguage();
-
-  } else {
-
-    console.error(
-      "Global language system is not loaded."
-    );
-
-  }
-
-}
-
-
-
-function updateProfileLanguageUI() {
-  const language = getLspLanguage();
-
-  document.documentElement.lang = language;
-
-  const current = document.getElementById(
-    "psCurrentLanguage"
-  );
-
-  if (current) {
-    current.textContent =
-      language === "vi" ? "Tiếng Việt" : "English";
-  }
-
-  document.querySelectorAll(
-    ".ps-language-option"
-  ).forEach(button => {
-
-    const active =
-      button.dataset.language === language;
-
-    button.classList.toggle("active", active);
-
-    button.setAttribute(
-      "aria-pressed",
-      String(active)
-    );
-
-  });
-
-  const isVi = language === "vi";
-
-  const translations = [
-    [
-      "#psLanguageGroup .ps-group-title",
-      isVi ? "TÙY CHỌN ỨNG DỤNG" : "APP PREFERENCES"
-    ],
-    [
-      "#psLanguageGroup .ps-item-text strong",
-      isVi ? "Ngôn ngữ ứng dụng" : "App Language"
-    ],
-    [
-      "#psLanguageGroup .ps-item-text small",
-      isVi
-        ? "Chọn ngôn ngữ bạn muốn sử dụng"
-        : "Choose your preferred language"
-    ],
-    [
-      "#psLanguageTitle",
-      isVi ? "Chọn ngôn ngữ" : "Choose Language"
-    ],
-    [
-      ".ps-language-header > div > small",
-      isVi ? "TÙY CHỌN ỨNG DỤNG" : "APP PREFERENCES"
-    ]
-  ];
-
-  for (const [selector, value] of translations) {
-    const element = document.querySelector(selector);
-    if (element) element.textContent = value;
-  }
-
-  const closeButton = document.querySelector(
-    ".ps-language-close"
-  );
-
-  if (closeButton) {
-    closeButton.setAttribute(
-      "aria-label",
-      isVi ? "Đóng chọn ngôn ngữ" : "Close language selector"
-    );
-  }
-}
-
-document.addEventListener("keydown", event => {
-  if (event.key !== "Escape") return;
-
-  const modal = document.getElementById(
-    "psLanguageModal"
-  );
-
-  if (modal && !modal.classList.contains("hidden")) {
-    closeProfileLanguage();
-  }
-});
-
-
-
-
-
-
-/* ==========================================
-   PROFILE GLOBAL LANGUAGE INITIALIZATION
-========================================== */
-
-function initializeProfileLanguage() {
-
-  updateProfileLanguageUI();
-
-  const language = getLspLanguage();
-
-  document.documentElement.lang = language;
-
-  if (language === "vi") {
-    document.title = "Hồ sơ | Livestream Pro";
-  } else {
-    document.title = "Profile | Livestream Pro";
-  }
-
-  window.LSPLanguage?.refresh();
-}
-
+// Start after DOM is available
 if (document.readyState === "loading") {
 
   document.addEventListener(
     "DOMContentLoaded",
-    initializeProfileLanguage,
+    initializeProfileEnglish,
     { once: true }
   );
 
 } else {
 
-  initializeProfileLanguage();
+  initializeProfileEnglish();
 
 }
-
