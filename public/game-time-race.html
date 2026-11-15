@@ -124,7 +124,7 @@ body{
 /* CENTER */
 .tr-center{
   position:absolute;
-  top:45%;
+  top:42%;
   left:50%;
   transform:translate(-50%,-50%);
   text-align:center;
@@ -2297,7 +2297,7 @@ body.crash-dark{
   position: absolute;
 
   left: -73px;
-  top: 204px;
+  top: 161px;
   right: auto;
 
   width: 122px;
@@ -2540,6 +2540,407 @@ body.crash-dark{
 }
 
 
+
+
+/* ==========================================
+   TIME RACE - CYBER TITANIUM BET PANEL
+   BASE SCREEN: 430 x 870
+========================================== */
+
+.tr-bottom {
+  position: absolute;
+  left: 0;
+  right: auto;
+  bottom: 0;
+
+  width: 430px;
+  height: 292px;
+
+  padding: 17px 16px 16px;
+  box-sizing: border-box;
+
+  z-index: 200;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(19, 119, 150, .21),
+      transparent 65%
+    ),
+    linear-gradient(
+      180deg,
+      #102f43 0%,
+      #081c2c 40%,
+      #04111e 100%
+    );
+
+  border-top: 1px solid rgba(97, 224, 246, .52);
+  border-radius: 21px 21px 0 0;
+
+  box-shadow:
+    0 -15px 38px rgba(0, 0, 0, .46),
+    0 -2px 18px rgba(24, 197, 233, .12),
+    inset 0 1px 0 rgba(255, 255, 255, .07);
+
+  font-family: system-ui, sans-serif;
+  color: #f1fbff;
+  overflow: hidden;
+}
+
+.tr-bottom::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  right: auto;
+  bottom: auto;
+
+  width: 55%;
+  height: 2px;
+
+  transform: translateX(-50%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #78ecff,
+    transparent
+  );
+
+  pointer-events: none;
+}
+
+/* ==========================================
+   PANEL HEADER
+========================================== */
+
+.tr-bet-header {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+  height: 48px;
+  margin-bottom: 11px;
+}
+
+.tr-bet-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.tr-bet-caption {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 1.25px;
+  color: #6acadb;
+}
+
+.tr-bet-heading-title {
+  font-family: "Orbitron", sans-serif;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: .4px;
+
+  color: #e9fbff;
+  white-space: nowrap;
+}
+
+/* SELECTED BET */
+
+.tr-bottom .selected-bet-bar {
+  position: static;
+  top: auto;
+  left: auto;
+  transform: none;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+
+  flex: 0 0 auto;
+  min-width: 107px;
+  max-width: 174px;
+  height: 45px;
+
+  box-sizing: border-box;
+  padding: 5px 10px;
+
+  border: 1px solid rgba(75, 168, 201, .35);
+  border-radius: 10px;
+
+  background: linear-gradient(
+    145deg,
+    #12344b,
+    #081d2e
+  );
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+.tr-selected-label {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #86aabb;
+}
+
+.tr-selected-amount {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+
+  width: 100%;
+  min-width: 0;
+  margin-top: 3px;
+
+  color: #edfaff;
+  font-family: "Orbitron", sans-serif;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.tr-selected-diamond {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+#selectedBetValue {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.tr-bottom .selected-bet-bar.active {
+  border-color: rgba(105, 238, 249, .8);
+
+  box-shadow:
+    0 0 13px rgba(0, 224, 255, .13),
+    inset 0 1px 0 rgba(255,255,255,.09);
+}
+
+/* ==========================================
+   HITBOX CONTAINER
+========================================== */
+
+.tr-bottom .bet-panel-hitbox {
+  position: relative;
+  width: 100%;
+  height: auto;
+  box-sizing: border-box;
+}
+
+/* SECTION LABELS */
+
+.tr-bet-section-label {
+  margin: 0 0 6px 2px;
+
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 1.05px;
+
+  color: #7ea8ba;
+}
+
+/* ==========================================
+   QUICK SELECT BUTTONS
+========================================== */
+
+.tr-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+
+  margin-bottom: 10px;
+}
+
+.tr-bottom .tr-quick-grid .hit {
+  position: static;
+
+  width: 100%;
+  height: 32px;
+
+  padding: 0 4px;
+  box-sizing: border-box;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border: 1px solid rgba(78, 159, 193, .36);
+  border-radius: 8px;
+
+  background: linear-gradient(
+    145deg,
+    #173e56,
+    #0c283b
+  );
+
+  color: #bdeef6;
+
+  font-family: "Orbitron", sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+
+  cursor: pointer;
+  touch-action: manipulation;
+
+  transition:
+    background .16s ease,
+    border-color .16s ease;
+}
+
+.tr-bottom .tr-quick-grid .quickAll {
+  background: linear-gradient(
+    135deg,
+    #145b6e,
+    #0b3e53
+  );
+
+  border-color: rgba(91, 225, 235, .49);
+  color: #b6faff;
+}
+
+/* ==========================================
+   BET AMOUNT BUTTONS
+========================================== */
+
+.tr-amount-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+
+  margin-bottom: 11px;
+}
+
+.tr-bottom .tr-amount-grid .hit {
+  position: static;
+
+  width: 100%;
+  height: 39px;
+
+  box-sizing: border-box;
+  padding: 0 4px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(
+    150deg,
+    #133247,
+    #0a2133
+  );
+
+  border: 1px solid rgba(68, 142, 174, .34);
+  border-radius: 9px;
+
+  color: #eafaff;
+
+  font-family: "Orbitron", sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.tr-bottom .tr-amount-grid .hit.active {
+  background: linear-gradient(
+    135deg,
+    #145d76,
+    #0c4257
+  );
+
+  border-color: #70eaff;
+
+  color: #ffffff;
+
+  box-shadow:
+    0 0 10px rgba(24, 219, 246, .16);
+}
+
+/* ==========================================
+   CONFIRM BUTTON
+========================================== */
+
+.tr-bottom .bet-panel-hitbox #betBtn {
+  position: static;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 40px;
+
+  box-sizing: border-box;
+  padding: 0;
+
+  transform: none;
+  margin: 0;
+
+  border: 1px solid rgba(140, 246, 255, .65);
+  border-radius: 10px;
+
+  background: linear-gradient(
+    120deg,
+    #115a78,
+    #1598ad 50%,
+    #116680
+  );
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.2),
+    0 5px 15px rgba(0, 178, 219, .17);
+
+  color: #ffffff;
+
+  font-family: "Orbitron", sans-serif;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1.4px;
+
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+.tr-bottom .bet-panel-hitbox #betBtn:active {
+  filter: brightness(.85);
+}
+
+.tr-bottom .bet-panel-hitbox #betBtn:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+.tr-bottom .hit:focus-visible {
+  outline: 2px solid #89efff;
+  outline-offset: 2px;
+}
+
+/* Preserve old locked behavior */
+
+.tr-bottom.locked {
+  opacity: 0;
+  pointer-events: none;
+}
+
+
+
+
 </style>
 </head>
 <body>
@@ -2762,36 +3163,124 @@ body.crash-dark{
 
 
 
+
+<!-- ==========================================
+     TIME RACE - PREMIUM BET CONTROL
+========================================== -->
+
 <div class="tr-bottom">
 
-  <div class="selected-bet-bar">
-    BET: 
-  <span id="selectedBetValue">0</span> 💎
+  <!-- TOP INFORMATION -->
+  <div class="tr-bet-header">
+
+    <div class="tr-bet-heading">
+      <span class="tr-bet-caption">
+        TIME RACE / BET CONTROL
+      </span>
+
+      <span class="tr-bet-heading-title">
+        PLACE YOUR BET
+      </span>
+    </div>
+
+    <!-- SELECTED AMOUNT -->
+    <div class="selected-bet-bar">
+
+      <span class="tr-selected-label">
+        SELECTED
+      </span>
+
+      <div class="tr-selected-amount">
+        <img
+          src="/assets/time-race/diamond-icon.png"
+          alt=""
+          class="tr-selected-diamond">
+
+        <span id="selectedBetValue">0</span>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- BET BUTTONS -->
+  <div class="bet-panel-hitbox">
+
+    <!-- QUICK SELECT -->
+    <div class="tr-bet-section-label">
+      QUICK SELECT
+    </div>
+
+    <div class="tr-quick-grid">
+
+      <button
+        type="button"
+        class="hit quick25"
+        data-type="25">
+        25%
+      </button>
+
+      <button
+        type="button"
+        class="hit quick50"
+        data-type="50">
+        50%
+      </button>
+
+      <button
+        type="button"
+        class="hit quickAll"
+        data-type="all">
+        ALL IN
+      </button>
+
+    </div>
+
+    <!-- BET AMOUNTS -->
+    <div class="tr-bet-section-label">
+      BET AMOUNT
+    </div>
+
+    <div class="tr-amount-grid">
+
+      <button type="button"
+              class="hit bet10"
+              data-bet="10">10</button>
+
+      <button type="button"
+              class="hit bet50"
+              data-bet="50">50</button>
+
+      <button type="button"
+              class="hit bet100"
+              data-bet="100">100</button>
+
+      <button type="button"
+              class="hit bet500"
+              data-bet="500">500</button>
+
+      <button type="button"
+              class="hit bet1000"
+              data-bet="1000">1,000</button>
+
+      <button type="button"
+              class="hit bet5000"
+              data-bet="5000">5,000</button>
+
+    </div>
+
+    <!-- CONFIRM -->
+    <button
+      id="betBtn"
+      type="button"
+      class="hit confirm">
+      CONFIRM BET
+    </button>
+
+  </div>
+
 </div>
 
-<div class="bet-panel-hitbox">
-
-  <!-- QUICK -->
-  <button class="hit quick25" data-type="25"></button>
-  <button class="hit quick50" data-type="50"></button>
-  <button class="hit quickAll" data-type="all"></button>
-
-  <!-- BET -->
-  <button class="hit bet10" data-bet="10"></button>
-  <button class="hit bet50" data-bet="50"></button>
-  <button class="hit bet100" data-bet="100"></button>
-
-  <button class="hit bet500" data-bet="500"></button>
-  <button class="hit bet1000" data-bet="1000"></button>
-  <button class="hit bet5000" data-bet="5000"></button>
-
-  <!-- CONFIRM -->
-  <button id="betBtn" class="hit confirm"></button>
-
-</div>
-
-
-</div>
 
 
 
