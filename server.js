@@ -6757,6 +6757,80 @@ kickOldSessions(uid, socket); // kick sau
 
 
 
+/* ==========================================
+   LIVESTREAM PRO - MAINTENANCE SYSTEM
+========================================== */
+
+const LSP_MAINTENANCE =
+  process.env.LSP_MAINTENANCE === "true";
+
+const LSP_MAINTENANCE_PAGE =
+  path.join(__dirname, "public", "maintenance.html");
+
+// Health endpoint for browser recovery checks
+app.get("/api/lsp-status", (req, res) => {
+  res.set("Cache-Control", "no-store");
+
+  if (LSP_MAINTENANCE) {
+    return res.status(503).json({
+      ready: false,
+      maintenance: true
+    });
+  }
+
+  return res.status(200).json({
+    ready: true,
+    maintenance: false
+  });
+});
+
+// Render HTTP health check
+// Only reports success when maintenance is disabled
+app.get("/healthz", (req, res) => {
+  res.set("Cache-Control", "no-store");
+
+  if (LSP_MAINTENANCE) {
+    return res.status(503).send("MAINTENANCE");
+  }
+
+  return res.status(200).send("OK");
+});
+
+// Block HTTP requests during manual maintenance
+app.use((req, res, next) => {
+  if (!LSP_MAINTENANCE) return next();
+
+  if (
+    req.path === "/maintenance.html" &&
+    (req.method === "GET" || req.method === "HEAD")
+  ) {
+    return res.sendFile(LSP_MAINTENANCE_PAGE);
+  }
+
+  res.set("Cache-Control", "no-store");
+  res.set("Retry-After", "30");
+
+  const isPageRequest =
+    req.method === "GET" &&
+    (
+      req.accepts(["html", "json"]) === "html" ||
+      req.headers["sec-fetch-mode"] === "navigate"
+    );
+
+  if (isPageRequest) {
+    return res.status(503).sendFile(LSP_MAINTENANCE_PAGE);
+  }
+
+  return res.status(503).json({
+    ok: false,
+    error: "SYSTEM_MAINTENANCE",
+    message: "Livestream Pro is temporarily unavailable."
+  });
+});
+
+
+
+
 // 🔧 Parse JSON body (BẮT BUỘC cho admin API)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
