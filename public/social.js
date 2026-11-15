@@ -2742,3 +2742,41 @@ socket.on("force-logout", (data) => {
 });
 
 
+
+
+/* ==========================================
+   SOCIAL LANGUAGE TRANSLATIONS
+========================================== */
+
+function registerSocialTranslations() {
+
+  window.LSPLanguage?.addTranslations({
+
+    "Create a post": "Tạo bài viết",
+    "What's on your mind?":
+      "Bạn đang nghĩ gì?",
+    "Publish Post": "Đăng bài viết",
+    "Delete Post": "Xóa bài viết",
+    "Edit Post": "Chỉnh sửa bài viết",
+    "Write a comment":
+      "Viết bình luận",
+    "Send Message": "Gửi tin nhắn",
+    "View Profile": "Xem hồ sơ",
+    "No posts yet": "Chưa có bài viết",
+    "Post successfully published":
+      "Đăng bài thành công"
+
+  });
+
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener(
+    "DOMContentLoaded",
+    registerSocialTranslations
+  );
+} else {
+  registerSocialTranslations();
+}
+
+
