@@ -155,7 +155,7 @@ function getAdminWheel8Data(){
 
 function getTimeRaceBetList(){
 
-  const users = loadUsers()
+ 
   const list = {}
 
   // 👤 PLAYER
