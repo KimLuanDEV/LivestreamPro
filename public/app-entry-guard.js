@@ -1,18 +1,24 @@
 
 /* ==========================================
    LIVESTREAM PRO
-   APP ENTRY GUARD - FIX REDIRECT
+   APP ENTRY GUARD
+   INDEX FIRST ON NEW SESSION
 ========================================== */
 
 (function () {
   "use strict";
 
-  const HOME = "/social.html";
+  const INDEX = "/index.html";
   const LOGIN = "/login.html";
+
+  const ENTRY_KEY = "lsp_app_entry_seen";
 
   const path = location.pathname.toLowerCase();
 
-  // Các trang có thể truy cập trước đăng nhập.
+  const isIndex =
+    path === "/" ||
+    path === "/index.html";
+
   const PUBLIC_PAGES = new Set([
     "/",
     "/index.html",
@@ -20,40 +26,64 @@
     "/register.html"
   ]);
 
-  // Đánh dấu ứng dụng đang hoạt động.
-  sessionStorage.setItem("app_alive", "1");
+  /* ======================================
+     FIRST ENTRY IN CURRENT SESSION
+  ====================================== */
 
-  // Không ép trang hiện tại về Social.
-  // Mỗi trang được điều hướng theo đúng chức năng.
+  let hasEntered = false;
+
+  try {
+    hasEntered =
+      sessionStorage.getItem(ENTRY_KEY) === "1";
+
+    if (!hasEntered) {
+      sessionStorage.setItem(ENTRY_KEY, "1");
+    }
+  } catch (error) {
+    // Storage may be unavailable in some contexts.
+  }
+
+  // Lần đầu vào phiên mới:
+  // buộc mở trang giới thiệu trước.
+  if (!hasEntered && !isIndex) {
+    location.replace(INDEX);
+    return;
+  }
+
+  /* ======================================
+     PUBLIC PAGES
+  ====================================== */
 
   if (PUBLIC_PAGES.has(path)) {
     return;
   }
 
-  // Kiểm tra dữ liệu đăng nhập hiện có.
-  let auth = null;
+  /* ======================================
+     LOGIN CHECK
+  ====================================== */
+
+  let profile = null;
 
   try {
-    auth = JSON.parse(
+    profile = JSON.parse(
       localStorage.getItem("user_profile") || "null"
     );
   } catch (error) {
-    auth = null;
+    profile = null;
   }
 
-  const isLoggedIn =
-    auth &&
-    typeof auth.uid === "string" &&
-    auth.uid.trim() !== "" &&
-    !auth.uid.toLowerCase().startsWith("guest");
+  const uid = String(profile?.uid || "").trim();
 
-  // Chưa đăng nhập: chuyển về trang Login.
-  if (!isLoggedIn) {
+  const hasLocalProfile =
+    Boolean(uid) &&
+    !uid.toLowerCase().startsWith("guest");
+
+  // Chưa có hồ sơ đăng nhập.
+  if (!hasLocalProfile) {
     location.replace(LOGIN);
     return;
   }
 
-  // Đã đăng nhập: giữ nguyên trang hiện tại.
-  // Không tự động đưa về /social.html.
-
+  // Đã vào ứng dụng và có hồ sơ:
+  // giữ nguyên trang đang truy cập.
 })();
