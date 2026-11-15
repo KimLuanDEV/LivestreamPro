@@ -1164,101 +1164,443 @@ body.crash-dark{
 
 /* ================= WIN MODAL ================= */
 
-.tr-win-modal{
-  position:fixed;
-  inset:0;
-  z-index:999;
+
+
+/* ==========================================
+   TIME RACE - CYBER TITANIUM VICTORY
+   GAME CANVAS: 430 x 870
+========================================== */
+
+/* FULL SCREEN MODAL */
+
+.tr-win-modal {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1500;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  overflow: hidden;
+  isolation: isolate;
 }
 
-.tr-win-modal.hidden{
-  display:none;
+.tr-win-modal.hidden {
+  display: none !important;
 }
 
-.tr-win-backdrop{
-  position:absolute;
-  inset:0;
-  background:rgba(0,0,0,.7);
-  backdrop-filter:blur(8px);
+/* DARK BLURRED BACKDROP */
+
+.tr-win-backdrop {
+  position: absolute;
+  inset: 0;
+
+  background: rgba(1, 9, 19, .86);
+
+  backdrop-filter: blur(9px);
+  -webkit-backdrop-filter: blur(9px);
+
+  animation: trWinBackdrop .3s ease both;
 }
 
-.tr-win-box{
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%) scale(.8);
-
-  width:320px;
-  text-align:center;
+@keyframes trWinBackdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
+/* ==========================================
+   MAIN VICTORY PANEL
+========================================== */
 
+.tr-win-box {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
 
+  width: 356px;
+  max-width: calc(100% - 36px);
+  max-height: calc(100% - 32px);
 
-/* frame image */
+  box-sizing: border-box;
+  padding: 28px 22px 22px;
 
-.tr-win-frame{
-  width:100%;
-  height:auto;
-  display:block;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  text-align: center;
+  border-radius: 23px;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(34, 151, 175, .20),
+      transparent 57%
+    ),
+    linear-gradient(
+      160deg,
+      #10334a 0%,
+      #091d30 42%,
+      #040f1c 100%
+    );
+
+  border: 1px solid rgba(92, 217, 246, .44);
+
+  box-shadow:
+    0 20px 80px rgba(0, 0, 0, .7),
+    0 0 45px rgba(0, 204, 255, .14),
+    inset 0 1px 0 rgba(255,255,255,.10);
+
+  animation: trVictoryEntrance .5s
+    cubic-bezier(.2,1,.3,1) both;
 }
 
-/* content overlay */
+@keyframes trVictoryEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(.88);
+  }
 
-.tr-win-content{
-  position:absolute;
-  inset:0;
-
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-
-  gap:10px;
-  pointer-events:none;
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-/* title */
+/* TOP CYAN DETAIL */
 
-.tr-win-title{
-  font-size:20px;
-  font-weight:900;
+.tr-win-topline {
+  position: absolute;
+  top: 0;
+  left: 50%;
 
-  color:#00f0ff;
+  width: 64%;
+  height: 3px;
+
+  transform: translateX(-50%);
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #72f5ff,
+    transparent
+  );
+
+  box-shadow: 0 0 17px rgba(0,235,255,.65);
+}
+
+/* CLOSE BUTTON */
+
+.tr-win-close {
+  position: absolute;
+  top: 13px;
+  right: 13px;
+
+  width: 32px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  cursor: pointer;
+
+  background: rgba(20,58,78,.75);
+  border: 1px solid rgba(105,185,213,.35);
+  border-radius: 9px;
+
+  color: #bce9f3;
+  font-size: 24px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.tr-win-close:active {
+  transform: scale(.94);
+}
+
+/* ==========================================
+   VICTORY EMBLEM
+========================================== */
+
+.tr-win-emblem {
+  position: relative;
+
+  width: 76px;
+  height: 76px;
+
+  margin: 7px auto 21px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  color: #a0fff0;
+
+  background:
+    radial-gradient(
+      circle at 50% 35%,
+      #246d80,
+      #0c3447 65%,
+      #071d30
+    );
+
+  border: 1px solid rgba(94,245,223,.6);
+
+  box-shadow:
+    0 0 26px rgba(55,234,224,.22),
+    inset 0 0 20px rgba(18,158,174,.2);
+
+  animation: trEmblemGlow 2.5s ease-in-out infinite;
+}
+
+.tr-win-emblem svg {
+  width: 43px;
+  height: 43px;
+  filter: drop-shadow(0 0 7px rgba(101,245,230,.35));
+}
+
+@keyframes trEmblemGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 20px rgba(55,234,224,.14),
+      inset 0 0 20px rgba(18,158,174,.2);
+  }
+
+  50% {
+    box-shadow:
+      0 0 38px rgba(55,234,224,.35),
+      inset 0 0 25px rgba(18,158,174,.3);
+  }
+}
+
+/* ==========================================
+   TITLES
+========================================== */
+
+.tr-win-caption {
+  margin-bottom: 8px;
+
+  font-family: "Orbitron", sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+
+  color: #62d9e9;
+}
+
+.tr-win-title {
+  margin: 0;
+
+  font-family: "Orbitron", sans-serif;
+  font-size: 29px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  line-height: 1.3;
+
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #b3fbff 55%,
+    #57d5ef 100%
+  );
+
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  filter: drop-shadow(0 0 12px rgba(46,205,243,.25));
+}
+
+.tr-win-subtitle {
+  margin-top: 6px;
+  margin-bottom: 25px;
+
+  color: #91b6c7;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ==========================================
+   REWARD INFORMATION PANEL
+========================================== */
+
+.tr-win-reward {
+  padding: 20px 14px 22px;
+
+  background: linear-gradient(
+    150deg,
+    rgba(18,60,82,.85),
+    rgba(7,27,44,.95)
+  );
+
+  border: 1px solid rgba(84,177,205,.32);
+  border-radius: 16px;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+.tr-win-label {
+  font-family: system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.1px;
+
+  color: #91b2c2;
+}
+
+/* MULTIPLIER */
+
+.tr-win-multiplier {
+  margin-top: 11px;
+
+  font-family: "Orbitron", sans-serif;
+  font-size: 44px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  line-height: 1.25;
+
+  color: #78efff;
 
   text-shadow:
-    0 0 15px #00f0ff,
-    0 0 35px rgba(0,255,255,.7);
+    0 0 16px rgba(0,235,255,.45);
 }
 
-/* multiplier */
+/* DIVIDER */
 
-.tr-win-multiplier{
-  font-size:38px;
-  font-weight:900;
+.tr-win-divider {
+  width: 100%;
+  height: 1px;
+
+  margin: 20px 0;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(91,195,225,.4),
+    transparent
+  );
 }
 
-/* amount */
+/* WINNING AMOUNT */
 
-.tr-win-amount{
-  font-size:24px;
-  font-weight:900;
-  color:#00f0ff;
+.tr-win-amount {
+  margin-top: 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  color: #a1f8dc;
+
+  font-family: "Orbitron", sans-serif;
+  font-size: 27px;
+  font-weight: 900;
+  line-height: 1.35;
+
+  text-shadow: 0 0 17px rgba(85,237,185,.24);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
-/* OK button */
+.tr-win-diamond {
+  width: 30px;
+  height: 30px;
 
-.tr-win-btn{
-  margin-top:6px;
-  padding:6px 22px;
+  flex-shrink: 0;
+  object-fit: contain;
 
+  filter: drop-shadow(0 0 8px rgba(0,235,255,.45));
+}
 
-  pointer-events:auto;
-  cursor:pointer;
+/* ==========================================
+   CONTINUE BUTTON
+========================================== */
 
-  position: absolute;
-  bottom:49px;
-  color:#fff;
-  font-weight: bold;
+.tr-win-btn {
+  position: relative;
+  bottom: auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 51px;
+
+  box-sizing: border-box;
+  margin-top: 22px;
+  padding: 0 15px;
+
+  border: 1px solid rgba(125,245,255,.6);
+  border-radius: 12px;
+
+  background: linear-gradient(
+    135deg,
+    #116783,
+    #1599aa 50%,
+    #106d83
+  );
+
+  box-shadow:
+    0 5px 18px rgba(0,152,196,.22),
+    inset 0 1px 0 rgba(255,255,255,.2);
+
+  color: #f2ffff;
+
+  font-family: "Orbitron", sans-serif;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+
+  cursor: pointer;
+  pointer-events: auto;
+  transition: filter .2s ease, transform .2s ease;
+}
+
+.tr-win-btn:hover {
+  filter: brightness(1.12);
+}
+
+.tr-win-btn:active {
+  transform: scale(.97);
+}
+
+.tr-win-btn:focus-visible,
+.tr-win-close:focus-visible {
+  outline: 2px solid #9efbff;
+  outline-offset: 3px;
+}
+
+/* FOOTER */
+
+.tr-win-footer {
+  margin-top: 18px;
+
+  color: #5d8397;
+
+  font-family: "Orbitron", sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.1px;
+}
+
+/* REDUCED MOTION */
+
+@media (prefers-reduced-motion: reduce) {
+  .tr-win-backdrop,
+  .tr-win-box,
+  .tr-win-emblem {
+    animation: none;
+  }
 }
 
 
@@ -2319,35 +2661,113 @@ body.crash-dark{
 
 
 
-<!-- ================= WIN MODAL ================= -->
-<div id="timeRaceWinModal" class="tr-win-modal hidden">
 
+<!-- ==========================================
+     TIME RACE - CYBER TITANIUM VICTORY
+========================================== -->
+
+<div id="timeRaceWinModal"
+     class="tr-win-modal hidden"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="trWinTitle">
+
+  <!-- DARK BACKDROP -->
   <div class="tr-win-backdrop"
-       onclick="closeTimeRaceWinModal()"></div>
+       onclick="closeTimeRaceWinModal()">
+  </div>
 
-<div class="tr-win-box">
+  <!-- VICTORY BOX -->
+  <div class="tr-win-box">
 
-  <img 
-    src="/assets/time-race/win-frame.png"
-    class="tr-win-frame">
+    <div class="tr-win-topline"></div>
 
-  <div class="tr-win-content">
+    <!-- CLOSE -->
+    <button
+      class="tr-win-close"
+      type="button"
+      onclick="closeTimeRaceWinModal()"
+      aria-label="Close victory window">
+      &times;
+    </button>
 
-    <div class="tr-win-title">
+    <!-- VICTORY ICON -->
+    <div class="tr-win-emblem">
+
+      <svg viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="1.5"
+           stroke-linecap="round"
+           stroke-linejoin="round"
+           aria-hidden="true">
+
+        <path d="M8 21h8"/>
+        <path d="M12 17v4"/>
+        <path d="M7 4h10v6a5 5 0 0 1-10 0V4Z"/>
+        <path d="M7 6H4v2a4 4 0 0 0 4 4"/>
+        <path d="M17 6h3v2a4 4 0 0 1-4 4"/>
+        <path d="m12 6 .7 1.5 1.6.2-1.2 1.1.3 1.6-1.4-.8-1.4.8.3-1.6-1.2-1.1 1.6-.2L12 6Z"/>
+
+      </svg>
+
+    </div>
+
+    <!-- TITLE -->
+    <div class="tr-win-caption">
+      TIME RACE · VICTORY
+    </div>
+
+    <div id="trWinTitle" class="tr-win-title">
       YOU WON!
     </div>
 
-    <div class="tr-win-multiplier">
-      x<span id="winMultiplier">1.00</span>
+    <div class="tr-win-subtitle">
+      Successful cash out
     </div>
 
-    <div class="tr-win-amount">
-      +<span id="winAmount">0</span> 💎
+    <!-- REWARD PANEL -->
+    <div class="tr-win-reward">
+
+      <div class="tr-win-label">
+        CASH OUT MULTIPLIER
+      </div>
+
+      <div class="tr-win-multiplier">
+        x<span id="winMultiplier">1.00</span>
+      </div>
+
+      <div class="tr-win-divider"></div>
+
+      <div class="tr-win-label">
+        TOTAL WINNINGS
+      </div>
+
+      <div class="tr-win-amount">
+
+        <img
+          src="/assets/time-race/diamond-icon.png"
+          alt=""
+          class="tr-win-diamond">
+
+        <span>
+          +<span id="winAmount">0</span>
+        </span>
+
+      </div>
+
     </div>
 
-    <div class="tr-win-btn"
-         onclick="closeTimeRaceWinModal()">
-      OK
+    <!-- CONTINUE BUTTON -->
+    <button
+      class="tr-win-btn"
+      type="button"
+      onclick="closeTimeRaceWinModal()">
+      CONTINUE
+    </button>
+
+    <div class="tr-win-footer">
+      TIME RACE · CRASH ARENA
     </div>
 
   </div>
