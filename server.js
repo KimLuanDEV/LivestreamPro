@@ -3682,11 +3682,13 @@ function startFakeBotFlow() {
 
   round.bots = [];
 
-  // Phân bố đều trong 11 giây đầu của 15 giây cược
-  const availableTime = Math.max(
-    1000,
-    TIME_RACE_BET - 4000
-  );
+// Chờ 3 giây đầu phiên.
+// Tạo đủ bot trước khi đóng cược 3 giây.
+// Dự phòng 500ms cho bộ hẹn giờ.
+const availableTime = Math.max(
+  1000,
+  round.betEndAt - Date.now() - 6500
+);
 
   const spawnDelay = Math.floor(
     availableTime / botCount
@@ -3737,7 +3739,15 @@ function startFakeBotFlow() {
     botCount
   );
 
+  // Bắt đầu tạo bot sau 3 giây kể từ đầu phiên
+setTimeout(() => {
+
+  // Chỉ chạy nếu vẫn đúng phiên hiện tại
+  if (timeRaceRound !== round) return;
+
   spawnOne();
+
+}, 3000);
 }
 
 
