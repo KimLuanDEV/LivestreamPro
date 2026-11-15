@@ -3668,17 +3668,27 @@ function startFakeBotFlow() {
   const botCount =
     Math.floor(Math.random() * 11) + 20;
 
+
+  // Mệnh giá phổ biến xuất hiện nhiều lần hơn
   const betList = [
-    50, 100, 150, 200, 300, 400, 500,
-    600, 700, 800, 900, 1000,
-    1100, 1200, 1300, 1400, 1500,
-    1600, 1700, 1800, 1900, 2000,
-    3000, 3500, 4000, 4500, 5000,
-    6000, 7000, 8000, 9000, 10000,
-    11000, 12000, 13000, 14000,
-    15000, 16000, 17000, 18000,
-    19000, 20000
+    50, 50, 50,
+    100, 100, 100, 100,
+    200, 200, 200,
+    500, 500, 500, 500,
+    1000, 1000, 1000, 1000,
+    2000, 2000,
+    3000, 3000,
+    4000, 4000,
+    5000, 5000,
+    6000, 6000,
+    10000, 15000, 20000
   ];
+
+  // Mệnh giá dùng chung cho một nhóm bot trong phiên
+  const sharedBet = betList[
+    Math.floor(Math.random() * betList.length)
+  ];
+
 
   round.bots = [];
 
@@ -3710,13 +3720,22 @@ const availableTime = Math.max(
       return;
     }
 
-    const bot = {
-      uid: "bot_" + roundId + "_" + botIndex,
-      name: "???",
-      total: betList[
-        Math.floor(Math.random() * betList.length)
-      ]
-    };
+
+const isSharedBet = botIndex % 4 === 0;
+
+const botAmount = isSharedBet
+  ? sharedBet
+  : betList[
+      Math.floor(Math.random() * betList.length)
+    ];
+
+const bot = {
+  uid: "bot_" + roundId + "_" + botIndex,
+  name: "???",
+  total: botAmount,
+  simulated: true
+};
+
 
     round.bots.push(bot);
     botIndex++;
