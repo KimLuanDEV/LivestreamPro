@@ -1,0 +1,751 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Monster Hunter | LivestreamPro</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --gold:#f1cc83;
+  --muted:#a4a4b4;
+  --line:rgba(241,204,131,.18);
+}
+html,body{
+  margin:0;
+  min-height:100%;
+  background:#080a10;
+  color:#f7f3eb;
+  font-family:Arial,Helvetica,sans-serif;
+}
+button{font:inherit;cursor:pointer}
+button:disabled{opacity:.4;cursor:not-allowed}
+.arena{
+  width:100%;
+  max-width:430px;
+  min-height:100dvh;
+  margin:auto;
+  position:relative;
+  overflow:hidden;
+  background:
+    radial-gradient(ellipse at 50% 31%,#572b28 0%,transparent 45%),
+    linear-gradient(160deg,#1c1a24,#080a10 65%);
+  padding:calc(14px + env(safe-area-inset-top)) 15px
+          calc(22px + env(safe-area-inset-bottom));
+}
+.arena:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:repeating-linear-gradient(
+    90deg,transparent 0 52px,
+    rgba(255,255,255,.014) 53px 54px);
+  pointer-events:none;
+}
+.top,.stat-row,.between,.choice,
+.reward,.status-line{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.top{position:relative;z-index:2}
+.exit{
+  background:#20212a;
+  border:1px solid #42404a;
+  border-radius:10px;
+  color:#e7e1d8;
+  padding:10px 13px;
+}
+.brand{text-align:center}
+.brand small{
+  display:block;
+  color:var(--gold);
+  font-size:10px;
+  letter-spacing:3px;
+  margin-bottom:5px;
+}
+.brand strong{
+  font-size:18px;
+  letter-spacing:1.5px;
+}
+.demo{
+  color:#f1cc83;
+  border:1px solid #725b37;
+  padding:6px 8px;
+  border-radius:6px;
+  font-size:10px;
+}
+.session{
+  text-align:center;
+  margin:20px 0 9px;
+  color:var(--muted);
+  font-size:11px;
+  letter-spacing:2px;
+}
+.boss-name{
+  text-align:center;
+  color:var(--gold);
+  font-size:21px;
+  font-weight:900;
+  letter-spacing:2px;
+  text-shadow:0 0 25px #a23c20;
+}
+.scene{
+  height:clamp(205px,31dvh,305px);
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  isolation:isolate;
+}
+.scene:before{
+  content:"";
+  position:absolute;
+  width:78%;
+  aspect-ratio:1;
+  border:1px solid rgba(255,133,70,.27);
+  box-shadow:0 0 75px #962b2640,inset 0 0 80px #ac3d1b30;
+  border-radius:50%;
+}
+.scene:after{
+  content:"";
+  position:absolute;
+  bottom:12px;
+  width:75%;
+  height:25px;
+  border-radius:50%;
+  background:#ef603545;
+  filter:blur(18px);
+  z-index:-1;
+}
+.monster{
+  width:min(69%,260px);
+  height:90%;
+  filter:drop-shadow(0 15px 18px #000);
+  animation:float 3.5s ease-in-out infinite;
+  transform-origin:center bottom;
+}
+@keyframes float{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-9px)}
+}
+.monster svg{width:100%;height:100%}
+.scene.hit .monster{
+  animation:impact .28s ease both;
+}
+@keyframes impact{
+  0%{transform:translateX(0)}
+  25%{transform:translateX(-12px) rotate(-3deg);filter:brightness(2)}
+  65%{transform:translateX(10px) rotate(3deg)}
+  100%{transform:translateX(0)}
+}
+.scene.dead .monster{
+  animation:death 1s forwards;
+}
+@keyframes death{
+  to{opacity:.18;transform:translateY(42px) scale(.86)}
+}
+.damage{
+  position:absolute;
+  top:22%;
+  font-size:30px;
+  font-weight:900;
+  color:#ffde96;
+  text-shadow:0 3px 12px #000;
+  pointer-events:none;
+  opacity:0;
+}
+.damage.pop{animation:damagePop .7s ease}
+@keyframes damagePop{
+  0%{opacity:0;transform:translateY(15px) scale(.6)}
+  30%{opacity:1;transform:scale(1.2)}
+  100%{opacity:0;transform:translateY(-45px)}
+}
+.hp-line{margin-top:2px}
+.status-line{
+  font-size:11px;
+  color:#d8c9ae;
+  margin-bottom:8px;
+}
+.track{
+  height:12px;
+  background:#2e2024;
+  border:1px solid #674337;
+  border-radius:20px;
+  overflow:hidden;
+}
+.fill{
+  width:100%;
+  height:100%;
+  background:linear-gradient(90deg,#a32127,#f4663e,#ffc274);
+  transition:width .35s;
+}
+.stat-row{gap:7px;margin:13px 0}
+.stat{
+  min-width:0;
+  flex:1;
+  text-align:center;
+  background:linear-gradient(#26252c,#14151d);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:10px 3px;
+}
+.stat small{
+  display:block;
+  color:var(--muted);
+  font-size:9px;
+  letter-spacing:.5px;
+  margin-bottom:7px;
+}
+.stat strong{
+  font-size:17px;
+  color:var(--gold);
+  font-variant-numeric:tabular-nums;
+}
+.panel{
+  position:relative;
+  background:linear-gradient(155deg,#252127,#12141d);
+  border:1px solid var(--line);
+  border-radius:15px;
+  padding:13px;
+  box-shadow:0 10px 30px #0005;
+}
+.panel h3{
+  margin:0 0 12px;
+  font-size:12px;
+  letter-spacing:2px;
+  color:var(--gold);
+}
+.choices{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+.choice{
+  min-width:0;
+  flex-direction:column;
+  gap:6px;
+  padding:11px 2px;
+  border-radius:9px;
+  background:#171920;
+  border:1px solid #45404a;
+  color:#ddd;
+}
+.choice.active{
+  background:linear-gradient(#6c4b2d,#34251f);
+  border-color:#f6ce84;
+  box-shadow:inset 0 0 13px #d69d3640;
+}
+.choice .symbol{font-size:20px;color:#e9b765}
+.choice small{font-size:9px}
+.choice b{font-size:12px;color:var(--gold)}
+.reward{
+  margin-top:12px;
+  padding:12px;
+  background:#0c0e15;
+  border:1px solid #383039;
+  border-radius:10px;
+  gap:8px;
+}
+.reward span{color:var(--muted);font-size:11px}
+.reward strong{color:var(--gold);font-size:19px}
+.attack{
+  display:block;
+  width:100%;
+  margin-top:12px;
+  padding:15px 12px;
+  border:1px solid #fbd992;
+  border-radius:10px;
+  color:#29160d;
+  background:linear-gradient(180deg,#ffe0a2,#ba793b);
+  font-weight:900;
+  letter-spacing:1.8px;
+  box-shadow:0 5px 20px #bd703942;
+}
+.attack:active{transform:scale(.985)}
+.wallet{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:13px 3px 0;
+  font-size:12px;
+  color:var(--muted);
+}
+.wallet strong{color:#fff;font-size:16px}
+.log{
+  margin-top:16px;
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:#101118;
+}
+.log h3{
+  margin:0 0 9px;
+  color:var(--gold);
+  font-size:12px;
+  letter-spacing:1.5px;
+}
+.entry{
+  padding:9px 0;
+  border-top:1px solid #ffffff12;
+  font-size:12px;
+  color:#c4c2ca;
+  line-height:1.5;
+}
+.entry b{color:#f6d397}
+.notice{
+  position:fixed;
+  z-index:30;
+  left:50%;
+  bottom:calc(24px + env(safe-area-inset-bottom));
+  transform:translateX(-50%);
+  width:min(90vw,390px);
+  padding:13px;
+  border:1px solid #b18c55;
+  border-radius:10px;
+  background:#272127;
+  text-align:center;
+  box-shadow:0 9px 30px #000b;
+  display:none;
+}
+.notice.show{display:block}
+</style>
+</head>
+<body>
+<main class="arena">
+  <header class="top">
+    <button class="exit" onclick="location.href='/invest.html'">EXIT</button>
+    <div class="brand">
+      <small>LIVESTREAM PRO</small>
+      <strong>MONSTER HUNTER</strong>
+    </div>
+    <span class="demo">LIVE</span>
+  </header>
+
+  <div class="session">GLOBAL RAID · <span id="round">----</span></div>
+  <div class="boss-name">INFERNO DRAGON</div>
+
+  <div id="scene" class="scene">
+    <div id="monster" class="monster">
+      <svg viewBox="0 0 300 330" xmlns="http://www.w3.org/2000/svg"
+           role="img" aria-label="Inferno Dragon Boss">
+        <defs>
+          <linearGradient id="armor" x2="1" y2="1">
+            <stop stop-color="#a74a32"/>
+            <stop offset=".45" stop-color="#39252f"/>
+            <stop offset="1" stop-color="#130f1b"/>
+          </linearGradient>
+          <linearGradient id="fire" x2="0" y2="1">
+            <stop stop-color="#ffdc88"/>
+            <stop offset="1" stop-color="#d53c24"/>
+          </linearGradient>
+        </defs>
+        <path d="M112 132 Q42 43 8 112 Q38 114 18 211 Q82 178 122 202Z"
+              fill="#4b2630" stroke="#a3573d" stroke-width="4"/>
+        <path d="M188 132 Q258 43 292 112 Q262 114 282 211 Q218 178 178 202Z"
+              fill="#4b2630" stroke="#a3573d" stroke-width="4"/>
+        <path d="M113 252 L79 309 L123 291 L150 322 L177 291 L221 309 L187 252Z"
+              fill="#281b26" stroke="#ae6643" stroke-width="5"/>
+        <path d="M100 164 Q150 127 200 164 L224 259 Q150 305 76 259Z"
+              fill="url(#armor)" stroke="#ac6951" stroke-width="6"/>
+        <path d="M148 171 L122 222 L150 267 L178 222Z"
+              fill="#e76a32" opacity=".85"/>
+        <path d="M88 84 L52 14 L126 57 L150 28 L174 57 L248 14 L212 84Z"
+              fill="#321f28" stroke="#c5764c" stroke-width="7"/>
+        <path d="M82 91 Q150 50 218 91 L209 160 L177 191
+                 L150 175 L123 191 L91 160Z"
+              fill="url(#armor)" stroke="#bd744d" stroke-width="6"/>
+        <path d="M94 124 L136 135 L124 151 L101 146Z" fill="url(#fire)"/>
+        <path d="M206 124 L164 135 L176 151 L199 146Z" fill="url(#fire)"/>
+        <path d="M126 164 L150 152 L174 164 L150 208Z"
+              fill="#9d4335" stroke="#d68c4d" stroke-width="4"/>
+        <path d="M124 200 L150 225 L176 200 L166 234 L150 254 L134 234Z"
+              fill="#26131a" stroke="#e99354" stroke-width="3"/>
+        <path d="M97 183 L51 250 L91 235 L112 204 M203 183
+                 L249 250 L209 235 L188 204"
+              fill="#321e27" stroke="#a85b40" stroke-width="7"/>
+      </svg>
+    </div>
+    <div id="damage" class="damage">HIT!</div>
+  </div>
+
+  <section class="hp-line">
+    <div class="status-line">
+      <span>DRAGON STABILITY</span>
+      <span id="hpLabel">100%</span>
+    </div>
+    <div class="track"><div id="hpFill" class="fill"></div></div>
+  </section>
+
+  <section class="stat-row">
+    <div class="stat"><small>TIME LEFT</small><strong id="timer">--:--</strong></div>
+    <div class="stat"><small>TOTAL HITS</small><strong id="hits">0</strong></div>
+    <div class="stat"><small>KILL CHANCE</small><strong id="chance">0.50%</strong></div>
+  </section>
+
+  <section class="panel">
+    <h3>SELECT YOUR STRIKE</h3>
+    <div id="choices" class="choices"></div>
+    <div class="reward">
+      <span>STRIKE REWARD <small id="mult">x10</small></span>
+      <strong id="reward">1,000 💎</strong>
+    </div>
+    <button id="attackBtn" class="attack" disabled>CONNECTING...</button>
+    <div class="wallet">
+<span>MY DIAMONDS</span>
+<strong id="balance">-- 💎</strong>
+    </div>
+  </section>
+
+  <section class="log">
+    <h3>RAID ACTIVITY</h3>
+    <div id="activity">Connecting to raid server...</div>
+  </section>
+</main>
+
+<div id="notice" class="notice" role="status" aria-live="polite"></div>
+<script src="/socket.io/socket.io.js"></script>
+
+
+<script>
+(() => {
+  "use strict";
+
+  const $ = id => document.getElementById(id);
+  const fmt = n =>
+    Number(n || 0).toLocaleString("en-US");
+
+  const strikes = [
+    {cost:10,   mult:2,  name:"BASIC"},
+    {cost:50,   mult:5,  name:"POWER"},
+    {cost:100,  mult:10, name:"FURY"},
+    {cost:500,  mult:20, name:"LEGEND"},
+    {cost:1000, mult:50, name:"GOD"}
+  ];
+
+  const socket = io({
+    withCredentials: true
+  });
+
+  let selected = 2;
+  let state = null;
+  let balance = 0;
+  let offset = 0;
+  let pending = false;
+  let authorized = false;
+  let notifyTimer = null;
+
+  function notice(message) {
+    const el = $("notice");
+    el.textContent = message;
+    el.classList.add("show");
+
+    clearTimeout(notifyTimer);
+    notifyTimer = setTimeout(
+      () => el.classList.remove("show"),
+      3500
+    );
+  }
+
+  function addLog(message) {
+    const list = $("activity");
+
+    if (list.textContent ===
+        "Connecting to raid server...") {
+      list.textContent = "";
+    }
+
+    const row = document.createElement("div");
+    row.className = "entry";
+    row.textContent = message;
+    list.prepend(row);
+
+    while (list.children.length > 5) {
+      list.lastElementChild.remove();
+    }
+  }
+
+  function updateBalance(value) {
+    if (!Number.isSafeInteger(Number(value))) return;
+
+    balance = Number(value);
+    $("balance").textContent =
+      fmt(balance) + " 💎";
+    updateButton();
+  }
+
+  function updateButton() {
+    const cost = strikes[selected].cost;
+
+    const allowed =
+      authorized &&
+      socket.connected &&
+      state?.phase === "active" &&
+      !pending &&
+      balance >= cost;
+
+    const btn = $("attackBtn");
+    btn.disabled = !allowed;
+
+    if (pending) {
+      btn.textContent = "PROCESSING STRIKE...";
+    } else if (!authorized) {
+      btn.textContent = "LOGIN REQUIRED";
+    } else if (!socket.connected) {
+      btn.textContent = "RECONNECTING...";
+    } else if (state?.phase !== "active") {
+      btn.textContent = "WAITING FOR NEXT BOSS";
+    } else if (balance < cost) {
+      btn.textContent = "INSUFFICIENT DIAMONDS";
+    } else {
+      btn.textContent =
+        "ATTACK BOSS · " + fmt(cost) + " 💎";
+    }
+  }
+
+  function renderChoices() {
+    const container = $("choices");
+    container.replaceChildren();
+
+    strikes.forEach((s, i) => {
+      const button = document.createElement("button");
+
+      button.type = "button";
+      button.className =
+        "choice" + (selected === i ? " active" : "");
+
+      const symbol = document.createElement("span");
+      symbol.className = "symbol";
+      symbol.textContent = "⚔";
+
+      const name = document.createElement("small");
+      name.textContent = s.name;
+
+      const price = document.createElement("b");
+      price.textContent = fmt(s.cost);
+
+      button.append(symbol, name, price);
+
+      button.onclick = () => {
+        if (pending) return;
+        selected = i;
+        renderChoices();
+      };
+
+      container.appendChild(button);
+    });
+
+    const strike = strikes[selected];
+
+    $("mult").textContent = "x" + strike.mult;
+    $("reward").textContent =
+      fmt(strike.cost * strike.mult) + " 💎";
+
+    updateButton();
+  }
+
+  function paint() {
+    if (!state) return;
+
+    $("round").textContent =
+      "#" + String(state.id);
+
+    $("hits").textContent = fmt(state.hits);
+
+    $("chance").textContent =
+      Number(state.chance).toFixed(2) + "%";
+
+    // Visual stability, not a fixed HP threshold.
+    const hp = Math.max(
+      0,
+      100 - Number(state.hits || 0) / 5
+    );
+
+    const active = state.phase === "active";
+
+    $("hpLabel").textContent =
+      active ? Math.round(hp) + "%" : "0%";
+
+    $("hpFill").style.width =
+      (active ? hp : 0) + "%";
+
+    $("scene").classList.toggle(
+      "dead", !active
+    );
+
+    updateButton();
+  }
+
+  function tick() {
+    if (!state) return;
+
+    const seconds = Math.max(
+      0,
+      Math.ceil(
+        (state.endAt - Date.now() - offset) / 1000
+      )
+    );
+
+    $("timer").textContent =
+      String(Math.floor(seconds / 60))
+        .padStart(2, "0") +
+      ":" +
+      String(seconds % 60).padStart(2, "0");
+  }
+
+  function flash() {
+    const scene = $("scene");
+    const damage = $("damage");
+
+    scene.classList.remove("hit");
+    damage.classList.remove("pop");
+
+    void scene.offsetWidth;
+
+    scene.classList.add("hit");
+    damage.classList.add("pop");
+  }
+
+  function joinRaid() {
+    socket.timeout(5000).emit(
+      "mh:join",
+      {},
+      (error, result) => {
+        if (error || !result?.ok) {
+          authorized = false;
+          notice(
+            result?.error ||
+            "Unable to join. Please sign in again."
+          );
+          updateButton();
+          return;
+        }
+
+        authorized = true;
+        state = result.state;
+        offset = result.serverNow - Date.now();
+
+        updateBalance(result.balance);
+        paint();
+        tick();
+        addLog("Connected to Global Boss Raid");
+      }
+    );
+  }
+
+  socket.on("connect", joinRaid);
+
+  socket.on("disconnect", () => {
+    authorized = false;
+    pending = false;
+    updateButton();
+    notice("Connection lost. Reconnecting...");
+  });
+
+  socket.on("mh:state", data => {
+    state = data;
+    paint();
+    tick();
+  });
+
+  socket.on("mh:hit", data => {
+    flash();
+
+    addLog(
+      (data.name || "Hunter") +
+      " attacked · " +
+      fmt(data.cost) +
+      " 💎 · Hit #" +
+      fmt(data.hits)
+    );
+  });
+
+  socket.on("mh:end", data => {
+    if (data.winner) {
+      const message =
+        "BOSS DEFEATED! " +
+        data.winner +
+        " won " +
+        fmt(data.reward) +
+        " 💎";
+
+      addLog(message);
+      notice(message);
+    } else {
+      addLog("Boss escaped. No winner.");
+      notice("Raid ended. Boss escaped.");
+    }
+  });
+
+  socket.on("mh:maintenance", data => {
+    authorized = false;
+    pending = false;
+    updateButton();
+    notice(data?.message || "Raid unavailable");
+  });
+
+  socket.on("coin-update", data => {
+    if (Number.isSafeInteger(Number(data?.coins))) {
+      updateBalance(data.coins);
+    }
+  });
+
+  $("attackBtn").onclick = () => {
+    if (
+      !authorized ||
+      !state ||
+      state.phase !== "active" ||
+      pending
+    ) return;
+
+    const requestId = crypto.randomUUID();
+    const roundId = state.id;
+    const tier = selected;
+
+    pending = true;
+    updateButton();
+
+    socket.timeout(8000).emit(
+      "mh:attack",
+      {
+        requestId,
+        roundId,
+        tier
+      },
+      (error, result) => {
+        pending = false;
+
+        if (error) {
+          notice(
+            "Transaction response timed out. " +
+            "Synchronizing your balance."
+          );
+          joinRaid();
+          return;
+        }
+
+        if (!result?.ok) {
+          notice(result?.error || "Attack rejected");
+          joinRaid();
+          return;
+        }
+
+        updateBalance(result.balance);
+
+        if (result.killed) {
+          notice(
+            "FINAL STRIKE! YOU WON " +
+            fmt(result.reward) + " 💎"
+          );
+        }
+
+        updateButton();
+      }
+    );
+  };
+
+  renderChoices();
+  setInterval(tick, 250);
+})();
+</script>
+
+
+</body>
+</html>

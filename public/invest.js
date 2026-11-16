@@ -252,6 +252,14 @@ function openTimeRaceGame(){
 }
 
 
+// ==========================================
+// MONSTER HUNTER - OPEN GAME
+// ==========================================
+function openMonsterHunterGame() {
+  location.href = "/game-monster-hunter.html";
+}
+
+
 function openDiamondFactoryGame(){
   location.href = "/game-starwar.html";
 }
