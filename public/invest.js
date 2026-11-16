@@ -272,3 +272,7 @@ function openTimeStopGame(){
 function openWheel8Game(){
   location.href = "/game-military.html";
 }
+
+function openSpiritBeastGame() {
+  window.location.href = "/game-spirit-beast.html";
+}

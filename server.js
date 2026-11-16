@@ -6920,6 +6920,92 @@ app.use(express.urlencoded({ extended: true }));
 
 
 
+/* ==========================================
+   SPIRIT BEAST - SIGNED SESSION
+========================================== */
+
+const SPIRIT_SECRET = process.env.SPIRIT_SESSION_SECRET;
+
+function spiritSign(value) {
+  return crypto.createHmac("sha256", SPIRIT_SECRET)
+    .update(value).digest("base64url");
+}
+
+function spiritCreateSession(uid) {
+  if (!SPIRIT_SECRET || SPIRIT_SECRET.length < 32) {
+    throw new Error("SPIRIT_SESSION_SECRET is missing");
+  }
+
+  const payload = Buffer.from(JSON.stringify({
+    uid: String(uid),
+    exp: Date.now() + 7 * 86400000,
+    nonce: crypto.randomBytes(16).toString("hex")
+  })).toString("base64url");
+
+  return payload + "." + spiritSign(payload);
+}
+
+function spiritAuth(req, res, next) {
+  if (!SPIRIT_SECRET || SPIRIT_SECRET.length < 32) {
+    return res.status(503).json({
+      ok: false, error: "GAME_NOT_CONFIGURED"
+    });
+  }
+
+  try {
+    const raw = (req.headers.cookie || "")
+      .split(";")
+      .map(s => s.trim())
+      .find(s => s.startsWith("lsp_spirit_sid="));
+
+    if (!raw) throw Error("Missing session");
+
+    const token = raw.slice("lsp_spirit_sid=".length);
+    const parts = token.split(".");
+    if (parts.length !== 2) throw Error("Invalid token");
+
+    const [payload, signature] = parts;
+    const expected = spiritSign(payload);
+
+    const a = Buffer.from(signature);
+    const b = Buffer.from(expected);
+
+    if (a.length !== b.length ||
+        !crypto.timingSafeEqual(a, b)) {
+      throw Error("Invalid signature");
+    }
+
+    const session = JSON.parse(
+      Buffer.from(payload, "base64url").toString()
+    );
+
+    if (session.exp <= Date.now()) {
+      throw Error("Expired session");
+    }
+
+    const db = loadUsers();
+    const user = db[session.uid];
+
+    if (!user?.profile || user.profile.accountBlocked) {
+      throw Error("Account unavailable");
+    }
+
+    req.spiritUid = session.uid;
+    next();
+
+  } catch {
+    res.status(401).json({
+      ok: false,
+      error: "SESSION_EXPIRED",
+      message: "Please sign in again."
+    });
+  }
+}
+
+
+
+
+
 /* ============================================
    LSP MAIN ADMIN - PASSWORD SESSION
    Không yêu cầu người truy cập đăng nhập UID
@@ -11274,6 +11360,96 @@ app.post("/api/prelogin", async (req,res)=>{
 
 
 
+
+
+/* ==========================================
+   MONSTER HUNTER - VERIFIED LOGIN SESSION
+========================================== */
+
+const MH_SESSION_SECRET =
+  process.env.MH_SESSION_SECRET || "";
+
+const MH_SESSION_COOKIE = "mh_session";
+
+function mhSessionSign(value) {
+  return crypto
+    .createHmac("sha256", MH_SESSION_SECRET)
+    .update(value)
+    .digest("hex");
+}
+
+function mhIssueSession(res, uid) {
+  if (MH_SESSION_SECRET.length < 32) return;
+
+  const payload = Buffer.from(
+    JSON.stringify({
+      uid: String(uid),
+      exp: Date.now() + 7 * 86400000
+    })
+  ).toString("base64url");
+
+  const token = payload + "." + mhSessionSign(payload);
+
+  res.cookie(MH_SESSION_COOKIE, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 7 * 86400000
+  });
+}
+
+function mhVerifiedUid(cookieHeader) {
+  if (MH_SESSION_SECRET.length < 32) return null;
+
+  try {
+    const cookies = String(cookieHeader || "")
+      .split(";")
+      .map(x => x.trim());
+
+    const entry = cookies.find(x =>
+      x.startsWith(MH_SESSION_COOKIE + "=")
+    );
+
+    if (!entry) return null;
+
+    const token = entry.slice(
+      MH_SESSION_COOKIE.length + 1
+    );
+
+    const dot = token.lastIndexOf(".");
+    if (dot < 0) return null;
+
+    const payload = token.slice(0, dot);
+    const signature = token.slice(dot + 1);
+    const expected = mhSessionSign(payload);
+
+    const a = Buffer.from(signature, "hex");
+    const b = Buffer.from(expected, "hex");
+
+    if (a.length !== b.length ||
+        !crypto.timingSafeEqual(a, b)) {
+      return null;
+    }
+
+    const data = JSON.parse(
+      Buffer.from(payload, "base64url")
+        .toString("utf8")
+    );
+
+    if (!data.uid || Date.now() >= data.exp) {
+      return null;
+    }
+
+    return String(data.uid);
+  } catch {
+    return null;
+  }
+}
+
+
+
+
 app.post("/api/login", async (req,res)=>{
   const { username, password, securityCode } = req.body;
   const db = loadUsers();
@@ -11312,6 +11488,20 @@ acc.trusted = acc.trusted || {};
 acc.trusted[trusted] = Date.now() + 30*24*60*60*1000; // 30 ngày
 
 saveUsers(db);
+
+
+
+if (SPIRIT_SECRET && SPIRIT_SECRET.length >= 32) {
+  const spiritSession = spiritCreateSession(username);
+
+  res.setHeader("Set-Cookie",
+    `lsp_spirit_sid=${spiritSession}; ` +
+    "HttpOnly; Secure; SameSite=Lax; Path=/; " +
+    "Max-Age=604800"
+  );
+}
+
+
 
 res.json({
   ok:true,
@@ -15408,6 +15598,314 @@ emitW8ShareDirectory();
   });
 
 });
+
+
+
+
+/* ==========================================
+   SPIRIT BEAST V1 - SERVER ENGINE
+========================================== */
+
+const SPIRIT_DAY = 86400000;
+const SPIRIT_DEATH = 36 * 3600000;
+const SPIRIT_MAX = 4;
+const SPIRIT_MAX_REWARDS = 30;
+
+const SPIRIT_TYPES = Object.freeze({
+  dragon: {
+    name: "Thanh Long",
+    price: 1000,
+    reward: 10
+  },
+  fox: {
+    name: "Cửu Vĩ Hồ",
+    price: 5000,
+    reward: 55
+  },
+  phoenix: {
+    name: "Hỏa Phượng Hoàng",
+    price: 15000,
+    reward: 180
+  },
+  qilin: {
+    name: "Kỳ Lân",
+    price: 50000,
+    reward: 650
+  }
+});
+
+// Đồng bộ chu kỳ thưởng và trạng thái tử vong.
+// Trả thưởng tại các mốc 24 giờ nếu được
+// cho ăn và vệ sinh đúng hạn.
+
+function spiritTickUser(user, now) {
+  if (!Array.isArray(user.spiritBeasts)) {
+    user.spiritBeasts = [];
+  }
+
+  let changed = false;
+  let earned = 0;
+
+  for (const pet of user.spiritBeasts) {
+    if (pet.dead) continue;
+
+    const kind = SPIRIT_TYPES[pet.type];
+    if (!kind) continue;
+
+    const deathAt = pet.lastFedAt + SPIRIT_DEATH;
+
+    // Không trả thưởng sau thời điểm lẽ ra đã chết.
+    const maxTime = Math.min(now, deathAt);
+
+    while (
+      pet.rewardCycles < SPIRIT_MAX_REWARDS &&
+      pet.nextRewardAt <= maxTime
+    ) {
+      const due = pet.nextRewardAt;
+
+      // Phải cho ăn và vệ sinh trong 24 giờ
+      // tính tới thời điểm trả thưởng.
+      const fed =
+        pet.lastFedAt <= due &&
+        due - pet.lastFedAt <= SPIRIT_DAY;
+
+      const clean =
+        pet.lastCleanAt <= due &&
+        due - pet.lastCleanAt <= SPIRIT_DAY;
+
+      if (fed && clean) {
+        earned += kind.reward;
+        pet.totalEarned =
+          (pet.totalEarned || 0) + kind.reward;
+      }
+
+      pet.rewardCycles++;
+      pet.nextRewardAt += SPIRIT_DAY;
+      changed = true;
+    }
+
+    if (now >= deathAt) {
+      pet.dead = true;
+      pet.diedAt = deathAt;
+      changed = true;
+    }
+  }
+
+  if (earned > 0) {
+    user.profile.coins =
+      Number(user.profile.coins || 0) + earned;
+  }
+
+  return { changed, earned };
+}
+
+function spiritPublicState(user) {
+  return {
+    balance: Math.floor(Number(user.profile.coins || 0)),
+    pets: user.spiritBeasts || [],
+    types: SPIRIT_TYPES,
+    serverTime: Date.now()
+  };
+}
+
+app.get("/api/spirit/state", spiritAuth, (req, res) => {
+  try {
+    const db = loadUsers();
+    const user = db[req.spiritUid];
+
+    const result = spiritTickUser(user, Date.now());
+
+    if (result.changed) {
+      saveUsers(db);
+      if (result.earned) emitCoinUpdate(req.spiritUid);
+    }
+
+    res.json({
+      ok: true,
+      ...spiritPublicState(user)
+    });
+
+  } catch (error) {
+    console.error("[SPIRIT STATE]", error);
+    res.status(500).json({
+      ok: false,
+      message: "Unable to load spirit beasts."
+    });
+  }
+});
+
+app.post("/api/spirit/buy", spiritAuth, (req, res) => {
+  try {
+    const type = String(req.body?.type || "");
+    const kind = SPIRIT_TYPES[type];
+
+    if (!kind) {
+      return res.status(400).json({
+        ok: false, message: "Invalid beast type."
+      });
+    }
+
+    const db = loadUsers();
+    const user = db[req.spiritUid];
+    const now = Date.now();
+
+    spiritTickUser(user, now);
+
+    const pets = user.spiritBeasts;
+
+    if (pets.length >= SPIRIT_MAX) {
+      return res.status(400).json({
+        ok: false, message: "Your habitat is full."
+      });
+    }
+
+    const balance = Number(user.profile.coins || 0);
+
+    if (!Number.isSafeInteger(balance) ||
+        balance < kind.price) {
+      return res.status(400).json({
+        ok: false, message: "Not enough diamonds."
+      });
+    }
+
+    user.profile.coins = balance - kind.price;
+
+    pets.push({
+      id: crypto.randomUUID(),
+      type,
+      name: kind.name,
+      level: 1,
+      createdAt: now,
+      lastFedAt: now,
+      lastCleanAt: now,
+      lastRestAt: now,
+      nextRewardAt: now + SPIRIT_DAY,
+      rewardCycles: 0,
+      totalEarned: 0,
+      dead: false,
+      diedAt: null
+    });
+
+    saveUsers(db);
+    emitCoinUpdate(req.spiritUid);
+
+    res.json({
+      ok: true,
+      message: "Beast purchased successfully.",
+      ...spiritPublicState(user)
+    });
+
+  } catch (error) {
+    console.error("[SPIRIT BUY]", error);
+    res.status(500).json({
+      ok: false, message: "Purchase failed."
+    });
+  }
+});
+
+app.post("/api/spirit/care", spiritAuth, (req, res) => {
+  try {
+    const id = String(req.body?.id || "");
+    const action = String(req.body?.action || "");
+
+    if (!["feed", "clean", "rest"].includes(action)) {
+      return res.status(400).json({
+        ok: false, message: "Invalid care action."
+      });
+    }
+
+    const db = loadUsers();
+    const user = db[req.spiritUid];
+    const now = Date.now();
+
+    const result = spiritTickUser(user, now);
+    const pet = user.spiritBeasts.find(p => p.id === id);
+
+    if (!pet) {
+      if (result.changed) saveUsers(db);
+      if (result.earned) emitCoinUpdate(req.spiritUid);
+      return res.status(404).json({
+        ok: false, message: "Beast not found."
+      });
+    }
+
+    if (pet.dead) {
+      if (result.changed) saveUsers(db);
+      if (result.earned) emitCoinUpdate(req.spiritUid);
+      return res.status(400).json({
+        ok: false,
+        message: "This spirit beast has died."
+      });
+    }
+
+    const field = {
+      feed: "lastFedAt",
+      clean: "lastCleanAt",
+      rest: "lastRestAt"
+    }[action];
+
+    // Chống spam: một hành động mỗi 1 giờ.
+    if (now - pet[field] < 3600000) {
+      if (result.changed) saveUsers(db);
+      if (result.earned) emitCoinUpdate(req.spiritUid);
+      return res.status(400).json({
+        ok: false,
+        message: "Please wait before caring again."
+      });
+    }
+
+    pet[field] = now;
+
+    saveUsers(db);
+    if (result.earned) emitCoinUpdate(req.spiritUid);
+
+    res.json({
+      ok: true,
+      message: "Care completed.",
+      ...spiritPublicState(user)
+    });
+
+  } catch (error) {
+    console.error("[SPIRIT CARE]", error);
+    res.status(500).json({
+      ok: false, message: "Care action failed."
+    });
+  }
+});
+
+// Server kiểm tra thú offline mỗi 60 giây.
+// Khởi động lại server vẫn tính đúng theo timestamp.
+
+setInterval(() => {
+  try {
+    const db = loadUsers();
+    let changed = false;
+    const credited = [];
+
+    for (const [uid, user] of Object.entries(db)) {
+      if (!user?.profile ||
+          !Array.isArray(user.spiritBeasts)) continue;
+
+      const result = spiritTickUser(user, Date.now());
+
+      if (result.changed) changed = true;
+      if (result.earned) credited.push(uid);
+    }
+
+    if (changed) {
+      saveUsers(db);
+
+      for (const uid of credited) {
+        emitCoinUpdate(uid);
+      }
+    }
+
+  } catch (error) {
+    console.error("[SPIRIT ENGINE]", error);
+  }
+}, 60000);
+
+
 
 
 const PORT = process.env.PORT || 3000;

@@ -1,0 +1,805 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Spirit Beast - LivestreamPro</title>
+
+<style>
+:root {
+  --bg:#080f15;
+  --panel:#111e26;
+  --panel2:#192c30;
+  --gold:#e7cd8b;
+  --green:#7ee0ad;
+  --muted:#97adb3;
+  --border:rgba(235,213,158,.16);
+}
+* {box-sizing:border-box}
+html,body {margin:0;min-height:100%;background:#050a0e}
+body {
+  color:#f5f1e8;
+  font-family:Arial,Helvetica,sans-serif;
+}
+button {font:inherit;cursor:pointer}
+button:disabled {opacity:.4;cursor:not-allowed}
+.app {
+  width:100%;
+  max-width:430px;
+  min-height:100dvh;
+  margin:auto;
+  background:
+    radial-gradient(ellipse at 50% 18%,#1d4240,transparent 55%),
+    linear-gradient(180deg,#101d24,#070e14 80%);
+  padding:
+    calc(15px + env(safe-area-inset-top))
+    15px
+    calc(25px + env(safe-area-inset-bottom));
+}
+.top {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+}
+.sub {
+  font-size:10px;
+  color:var(--muted);
+  letter-spacing:2px;
+}
+h1 {
+  margin:5px 0 0;
+  font-size:21px;
+  color:var(--gold);
+  letter-spacing:1px;
+}
+.exit {
+  border:1px solid var(--border);
+  background:#1b2a30;
+  color:var(--gold);
+  padding:11px 15px;
+  border-radius:12px;
+}
+.wallet {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin:22px 0 16px;
+}
+.stat {
+  background:rgba(19,38,44,.95);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:14px;
+}
+.stat small {
+  color:var(--muted);
+  font-size:10px;
+  letter-spacing:1px;
+}
+.stat strong {
+  display:block;
+  margin-top:9px;
+  font-size:19px;
+  color:var(--gold);
+}
+.hero {
+  position:relative;
+  overflow:hidden;
+  text-align:center;
+  border-radius:22px;
+  border:1px solid var(--border);
+  background:
+    radial-gradient(circle at 50% 45%,#326860,transparent 54%),
+    linear-gradient(#183438,#0b171c);
+  padding:23px 12px;
+  min-height:290px;
+}
+.hero:before {
+  content:"";
+  position:absolute;
+  inset:18px;
+  border:1px solid rgba(230,209,148,.12);
+  border-radius:50%;
+  pointer-events:none;
+}
+.realm {color:var(--gold);font-size:12px;letter-spacing:3px}
+.beast {
+  position:relative;
+  z-index:1;
+  font-size:117px;
+  line-height:1.55;
+  filter:drop-shadow(0 12px 24px #0009);
+  animation:float 4s ease-in-out infinite;
+}
+@keyframes float {
+  50% {transform:translateY(-10px)}
+}
+.beast.dead {
+  filter:grayscale(1);
+  opacity:.5;
+  animation:none;
+}
+.hero h2 {font-size:21px;margin:0 0 8px}
+.hero p {font-size:12px;color:var(--muted);margin:0}
+.panel {
+  margin-top:14px;
+  padding:16px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:18px;
+}
+.section-title {
+  color:var(--gold);
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:1px;
+  margin-bottom:13px;
+}
+.line {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  font-size:12px;
+  margin:12px 0;
+}
+.muted {color:var(--muted)}
+.timer {
+  color:var(--green);
+  font-weight:700;
+  font-variant-numeric:tabular-nums;
+}
+.danger {color:#ff8f86!important}
+.progress {
+  height:7px;
+  border-radius:10px;
+  background:#30434a;
+  overflow:hidden;
+  margin:8px 0 17px;
+}
+.progress div {
+  width:0;
+  height:100%;
+  border-radius:10px;
+  background:linear-gradient(90deg,#348d76,#a0e4a2);
+  transition:width .3s;
+}
+.actions {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+}
+.action {
+  background:linear-gradient(#29433f,#1b302f);
+  border:1px solid #4a7565;
+  color:#f3e3b6;
+  border-radius:13px;
+  min-height:60px;
+  padding:8px 4px;
+  font-size:11px;
+  font-weight:700;
+}
+.action span {display:block;font-size:23px;margin-bottom:6px}
+.tabs {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin:18px 0 12px;
+}
+.tab {
+  padding:13px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  color:var(--muted);
+  background:#132229;
+  font-weight:700;
+}
+.tab.active {
+  border-color:var(--gold);
+  color:var(--gold);
+  background:#24352f;
+}
+.grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:11px;
+}
+.pet-card {
+  padding:12px;
+  text-align:center;
+  border:1px solid var(--border);
+  border-radius:17px;
+  background:linear-gradient(#1d3537,#101d25);
+  min-width:0;
+}
+.pet-card.selected {border-color:var(--gold)}
+.pet-art {
+  font-size:58px;
+  padding:12px 0;
+  line-height:1.4;
+}
+.pet-card h3 {font-size:14px;margin:4px 0}
+.pet-card p {
+  color:var(--muted);
+  font-size:11px;
+  margin:7px 0;
+}
+.price {
+  color:var(--gold);
+  font-weight:700;
+  font-size:13px;
+}
+.buy {
+  width:100%;
+  border:1px solid #bda66d;
+  background:linear-gradient(#ead6a0,#a48750);
+  color:#1c201d;
+  border-radius:10px;
+  padding:11px 8px;
+  margin-top:11px;
+  font-weight:800;
+  font-size:12px;
+}
+.empty {
+  grid-column:1/-1;
+  padding:27px 16px;
+  text-align:center;
+  color:var(--muted);
+  font-size:13px;
+  border:1px dashed #536360;
+  border-radius:15px;
+}
+.note {
+  font-size:11px;
+  line-height:1.7;
+  color:var(--muted);
+  margin:17px 0;
+}
+.hidden {display:none!important}
+.overlay {
+  position:fixed;
+  inset:0;
+  background:#000b;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:18px;
+  z-index:1000;
+}
+.modal {
+  width:100%;
+  max-width:370px;
+  background:#13242a;
+  border:1px solid #b8a474;
+  border-radius:20px;
+  padding:23px;
+  text-align:center;
+  box-shadow:0 20px 80px #0009;
+}
+.modal h3 {color:var(--gold)}
+.modal p {
+  color:#c1d0d0;
+  line-height:1.6;
+  font-size:13px;
+}
+.modal-buttons {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+  margin-top:20px;
+}
+.modal-buttons button {
+  border-radius:10px;
+  padding:12px;
+  border:1px solid var(--border);
+  background:#263a40;
+  color:white;
+}
+.modal-buttons .primary {
+  background:var(--gold);
+  color:#18221e;
+  font-weight:700;
+}
+@media(prefers-reduced-motion:reduce) {
+  * {animation:none!important;transition:none!important}
+}
+</style>
+</head>
+
+<body>
+
+<main class="app">
+
+  <header class="top">
+    <div>
+      <div class="sub">LIVESTREAMPRO · SPIRIT REALM</div>
+      <h1>LINH THÚ HUYỀN THOẠI</h1>
+    </div>
+    <button class="exit" id="exitBtn">EXIT</button>
+  </header>
+
+  <section class="wallet">
+    <div class="stat">
+      <small>MY DIAMONDS</small>
+      <strong id="balance">—</strong>
+    </div>
+    <div class="stat">
+      <small>DAILY REWARD</small>
+      <strong id="dailyReward">—</strong>
+    </div>
+  </section>
+
+  <section class="hero">
+    <div class="realm">SPIRIT SANCTUARY</div>
+    <div class="beast" id="mainBeast">🥚</div>
+    <h2 id="beastName">Đang kết nối...</h2>
+    <p id="beastDescription">
+      Đang tải dữ liệu linh thú
+    </p>
+  </section>
+
+  <section class="panel" id="carePanel">
+    <div class="section-title">TRẠNG THÁI LINH THÚ</div>
+
+    <div class="line">
+      <span class="muted">Phần thưởng tiếp theo</span>
+      <span class="timer" id="rewardTimer">--:--:--</span>
+    </div>
+    <div class="progress">
+      <div id="rewardProgress"></div>
+    </div>
+
+    <div class="line">
+      <span class="muted">Thời gian còn lại để cho ăn</span>
+      <span class="timer" id="feedTimer">--:--:--</span>
+    </div>
+
+    <div class="line">
+      <span class="muted">Nguy cơ chết vì đói</span>
+      <span class="timer" id="deathTimer">--:--:--</span>
+    </div>
+
+    <div class="line">
+      <span class="muted">Vệ sinh</span>
+      <span class="timer" id="cleanTimer">--:--:--</span>
+    </div>
+
+    <div class="line">
+      <span class="muted">Tổng kim cương đã nhận</span>
+      <span id="totalEarned">0 💎</span>
+    </div>
+
+    <div class="actions">
+      <button class="action" data-care="feed">
+        <span>🍖</span>CHO ĂN
+      </button>
+      <button class="action" data-care="clean">
+        <span>🫧</span>VỆ SINH
+      </button>
+      <button class="action" data-care="rest">
+        <span>🌙</span>NGHỈ NGƠI
+      </button>
+    </div>
+  </section>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="farm">
+      CHUỒNG NUÔI
+    </button>
+    <button class="tab" data-tab="shop">
+      CỬA HÀNG
+    </button>
+  </nav>
+
+  <section id="farmPanel" class="grid"></section>
+  <section id="shopPanel" class="grid hidden"></section>
+
+  <p class="note">
+    Cho ăn và vệ sinh mỗi 24 giờ để duy trì thưởng.
+    Nếu bỏ đói liên tục 36 giờ, linh thú sẽ chết.
+    Mỗi linh thú có tối đa 30 chu kỳ thưởng.
+  </p>
+
+</main>
+
+<div class="overlay hidden" id="dialog">
+  <div class="modal">
+    <h3 id="dialogTitle"></h3>
+    <p id="dialogMessage"></p>
+    <div class="modal-buttons">
+      <button id="dialogCancel">ĐÓNG</button>
+      <button class="primary" id="dialogConfirm">
+        XÁC NHẬN
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const DAY = 86400000;
+const HOUR = 3600000;
+
+const ICONS = {
+  dragon: "🐉",
+  fox: "🦊",
+  phoenix: "🔥",
+  qilin: "🦄"
+};
+
+let gameState = null;
+let selectedId = null;
+let currentTab = "farm";
+let pendingAction = null;
+let busy = false;
+let serverOffset = 0;
+
+const el = id => document.getElementById(id);
+const formatNum = n =>
+  Math.floor(Number(n) || 0).toLocaleString("vi-VN");
+
+function now() {
+  return Date.now() + serverOffset;
+}
+
+function countdown(ms) {
+  ms = Math.max(0, ms);
+  const seconds = Math.ceil(ms / 1000);
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+
+  return [h,m,s]
+    .map(n => String(n).padStart(2,"0"))
+    .join(":");
+}
+
+async function request(url, data) {
+  const options = {
+    credentials: "same-origin",
+    headers: {"Content-Type":"application/json"}
+  };
+
+  if (data !== undefined) {
+    options.method = "POST";
+    options.body = JSON.stringify(data);
+  }
+
+  const response = await fetch(url, options);
+  const result = await response.json();
+
+  if (!response.ok || !result.ok) {
+    throw new Error(result.message || "Request failed.");
+  }
+
+  return result;
+}
+
+function applyState(result) {
+  gameState = result;
+  serverOffset = result.serverTime - Date.now();
+
+  if (!gameState.pets.some(p => p.id === selectedId)) {
+    selectedId = gameState.pets[0]?.id || null;
+  }
+
+  render();
+}
+
+function selectedPet() {
+  return gameState?.pets.find(p => p.id === selectedId);
+}
+
+function openDialog(title, message, action) {
+  el("dialogTitle").textContent = title;
+  el("dialogMessage").textContent = message;
+  pendingAction = action || null;
+
+  el("dialogCancel").classList.toggle(
+    "hidden", !pendingAction
+  );
+  el("dialogConfirm").textContent =
+    pendingAction ? "XÁC NHẬN" : "ĐÓNG";
+
+  el("dialog").classList.remove("hidden");
+}
+
+function closeDialog() {
+  el("dialog").classList.add("hidden");
+  pendingAction = null;
+}
+
+el("dialogCancel").onclick = closeDialog;
+
+el("dialogConfirm").onclick = async () => {
+  const action = pendingAction;
+  closeDialog();
+
+  if (action) await action();
+};
+
+function showError(error) {
+  openDialog("THÔNG BÁO", error.message);
+}
+
+async function execute(url, data) {
+  if (busy) return;
+
+  busy = true;
+
+  try {
+    const result = await request(url, data);
+    applyState(result);
+  } catch (error) {
+    showError(error);
+  } finally {
+    busy = false;
+  }
+}
+
+function makeCard(pet) {
+  const kind = gameState.types[pet.type];
+  const card = document.createElement("div");
+
+  card.className = "pet-card" +
+    (pet.id === selectedId ? " selected" : "");
+
+  const art = document.createElement("div");
+  art.className = "pet-art";
+  art.textContent = ICONS[pet.type] || "🥚";
+  if (pet.dead) art.style.filter = "grayscale(1)";
+
+  const title = document.createElement("h3");
+  title.textContent = kind?.name || "Linh thú";
+
+  const detail = document.createElement("p");
+  detail.textContent = pet.dead
+    ? "ĐÃ CHẾT"
+    : pet.rewardCycles >= 30
+      ? "Đã hoàn thành thưởng"
+      : `+${kind?.reward || 0} 💎 / 24h`;
+
+  const button = document.createElement("button");
+  button.className = "buy";
+  button.textContent = "XEM LINH THÚ";
+  button.onclick = () => {
+    selectedId = pet.id;
+    render();
+    window.scrollTo({top:0,behavior:"smooth"});
+  };
+
+  card.append(art,title,detail,button);
+  return card;
+}
+
+function makeShopCard(type, kind) {
+  const card = document.createElement("div");
+  card.className = "pet-card";
+
+  const art = document.createElement("div");
+  art.className = "pet-art";
+  art.textContent = ICONS[type] || "🥚";
+
+  const title = document.createElement("h3");
+  title.textContent = kind.name;
+
+  const reward = document.createElement("p");
+  reward.textContent = `+${formatNum(kind.reward)} 💎 / 24h`;
+
+  const price = document.createElement("div");
+  price.className = "price";
+  price.textContent = formatNum(kind.price) + " 💎";
+
+  const button = document.createElement("button");
+  button.className = "buy";
+  button.textContent = "MUA LINH THÚ";
+
+  button.onclick = () => {
+    openDialog(
+      "XÁC NHẬN MUA",
+      `Mua ${kind.name} với giá ` +
+      `${formatNum(kind.price)} kim cương?`,
+      () => execute("/api/spirit/buy", {type})
+    );
+  };
+
+  card.append(art,title,reward,price,button);
+  return card;
+}
+
+function render() {
+  if (!gameState) return;
+
+  el("balance").textContent =
+    formatNum(gameState.balance) + " 💎";
+
+  let daily = 0;
+  for (const p of gameState.pets) {
+    if (!p.dead && p.rewardCycles < 30) {
+      daily += gameState.types[p.type]?.reward || 0;
+    }
+  }
+
+  el("dailyReward").textContent =
+    "+" + formatNum(daily) + " 💎";
+
+  const farm = el("farmPanel");
+  const shop = el("shopPanel");
+
+  farm.replaceChildren();
+  shop.replaceChildren();
+
+  for (const p of gameState.pets) {
+    farm.appendChild(makeCard(p));
+  }
+
+  if (!gameState.pets.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent =
+      "Bạn chưa sở hữu linh thú. Hãy mở cửa hàng.";
+    farm.appendChild(empty);
+  }
+
+  for (const [type,kind] of
+       Object.entries(gameState.types)) {
+    shop.appendChild(makeShopCard(type,kind));
+  }
+
+  const pet = selectedPet();
+
+  el("carePanel").classList.toggle("hidden",!pet);
+  el("mainBeast").classList.toggle("dead",!!pet?.dead);
+
+  if (!pet) {
+    el("mainBeast").textContent = "🥚";
+    el("beastName").textContent = "CHƯA CÓ LINH THÚ";
+    el("beastDescription").textContent =
+      "Mở cửa hàng để mua linh thú đầu tiên.";
+  } else {
+    el("mainBeast").textContent = ICONS[pet.type] || "🥚";
+    el("beastName").textContent =
+      gameState.types[pet.type]?.name || "Linh thú";
+
+    el("beastDescription").textContent = pet.dead
+      ? "Linh thú đã chết vì bị bỏ đói."
+      : `LEVEL ${pet.level} · ` +
+        `${pet.rewardCycles}/30 chu kỳ thưởng`;
+
+    el("totalEarned").textContent =
+      formatNum(pet.totalEarned) + " 💎";
+  }
+
+  for (const button of
+       document.querySelectorAll("[data-care]")) {
+    button.disabled = !pet || pet.dead;
+  }
+
+  updateTimers();
+}
+
+function updateTimers() {
+  const pet = selectedPet();
+  if (!pet) return;
+
+  const t = now();
+
+  if (pet.dead) {
+    for (const id of [
+      "rewardTimer","feedTimer","deathTimer","cleanTimer"
+    ]) el(id).textContent = "ĐÃ CHẾT";
+
+    el("rewardProgress").style.width = "0%";
+    return;
+  }
+
+  const fedRemaining = pet.lastFedAt + DAY - t;
+  const deathRemaining = pet.lastFedAt + 36*HOUR - t;
+  const cleanRemaining = pet.lastCleanAt + DAY - t;
+
+  const finished = pet.rewardCycles >= 30;
+
+  el("rewardTimer").textContent = finished
+    ? "HOÀN THÀNH"
+    : countdown(pet.nextRewardAt - t);
+
+  el("feedTimer").textContent =
+    fedRemaining > 0 ? countdown(fedRemaining) : "QUÁ HẠN";
+
+  el("deathTimer").textContent =
+    countdown(deathRemaining);
+
+  el("cleanTimer").textContent =
+    cleanRemaining > 0
+      ? countdown(cleanRemaining)
+      : "CẦN VỆ SINH";
+
+  const progress = finished ? 100 : Math.min(
+    100,
+    Math.max(0,
+      (1-(pet.nextRewardAt-t)/DAY)*100
+    )
+  );
+
+  el("rewardProgress").style.width = progress + "%";
+
+  el("deathTimer").classList.toggle(
+    "danger", deathRemaining < 12*HOUR
+  );
+  el("feedTimer").classList.toggle(
+    "danger", fedRemaining <= 0
+  );
+  el("cleanTimer").classList.toggle(
+    "danger", cleanRemaining <= 0
+  );
+}
+
+document.querySelectorAll("[data-care]")
+  .forEach(button => {
+    button.addEventListener("click", () => {
+      const pet = selectedPet();
+      if (!pet || pet.dead) return;
+
+      const action = button.dataset.care;
+
+      execute("/api/spirit/care",{
+        id:pet.id,
+        action
+      });
+    });
+  });
+
+document.querySelectorAll("[data-tab]")
+  .forEach(button => {
+    button.addEventListener("click", () => {
+      currentTab = button.dataset.tab;
+
+      document.querySelectorAll("[data-tab]")
+        .forEach(b => b.classList.toggle(
+          "active", b.dataset.tab === currentTab
+        ));
+
+      el("farmPanel").classList.toggle(
+        "hidden",currentTab !== "farm"
+      );
+
+      el("shopPanel").classList.toggle(
+        "hidden",currentTab !== "shop"
+      );
+    });
+  });
+
+el("exitBtn").onclick = () => {
+  location.href = "/invest.html";
+};
+
+async function refresh() {
+  try {
+    const result = await request("/api/spirit/state");
+    applyState(result);
+  } catch (error) {
+    showError(error);
+  }
+}
+
+refresh();
+
+setInterval(updateTimers,1000);
+
+// Đồng bộ lại khi chuyển về tab game.
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) refresh();
+});
+
+// Đồng bộ với server định kỳ.
+setInterval(() => {
+  if (!document.hidden) refresh();
+},60000);
+
+</script>
+</body>
+</html>
