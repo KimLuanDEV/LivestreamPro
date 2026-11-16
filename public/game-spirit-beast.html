@@ -2116,10 +2116,19 @@ button:disabled {
 
 
 
+
 /* ==========================================
    SPIRIT REALM V7
-   FULLSCREEN IMAGE + HITBOX ENGINE
+   FULLSCREEN IMAGE + HITBOX SYSTEM
+   DESIGN REFERENCE: 430 x 870
 ========================================== */
+
+:root {
+  --realm-gold: #f6dda0;
+  --realm-green: #a5f2c3;
+}
+
+/* FULLSCREEN BACKGROUND */
 
 html,
 body {
@@ -2128,37 +2137,42 @@ body {
   margin: 0;
 }
 
-body {
-  background:
-    linear-gradient(
-      rgba(0,8,12,.60),
-      rgba(0,8,12,.80)
-    ),
-    url("/assets/spirit-beast/spirit-realm-bg.jpg")
-    center center / cover no-repeat fixed,
-    #061519;
+html {
+  background: #061619;
 }
 
-/* RESPONSIVE GAME CANVAS */
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+
+  overflow: hidden;
+
+  background:
+    #061619
+    url("/assets/spirit-beast/spirit-realm-bg.jpg")
+    center center / cover no-repeat fixed;
+}
+
+/* FULL VIEWPORT CONTAINER */
 
 .app {
   position: relative;
 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   width: 100%;
   max-width: none;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
 
   margin: 0;
-  padding:
-    env(safe-area-inset-top)
-    0
-    env(safe-area-inset-bottom);
+  padding: 0;
 
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  overflow: hidden;
 
-  overflow: visible;
   background: transparent;
   box-shadow: none;
 }
@@ -2168,505 +2182,549 @@ body {
   display: none;
 }
 
-#spiritGameScreen {
+/* FIXED DESIGN RATIO WITHOUT STRETCHING */
+
+.realm-screen {
   position: relative;
   isolation: isolate;
 
-  width: min(100vw, 430px, 49.425dvh);
-  aspect-ratio: 430 / 870;
-
   flex: none;
+
+  width: min(
+    100vw,
+    49.4253dvh,
+    430px
+  );
+
+  aspect-ratio: 430 / 870;
 
   overflow: hidden;
 
-  background:
-    url("/assets/spirit-beast/spirit-realm-bg.jpg")
-    center center / 100% 100% no-repeat,
-    radial-gradient(
-      ellipse at 50% 40%,
-      #1b5a4b,
-      #071c24 75%
-    );
+  background-image:
+    url("/assets/spirit-beast/spirit-realm-bg.jpg");
 
-  box-shadow:
-    0 0 45px rgba(0,0,0,.55);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+
+  box-shadow: 0 0 60px rgba(0,0,0,.32);
 }
 
-/* ALL HITBOXES USE RELATIVE COORDINATES */
+/* DISABLE OLD DECORATIVE PANELS */
 
-#spiritGameScreen button {
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
+.realm-screen .spirit-header-minimal,
+.realm-screen .wallet,
+.realm-screen .hero,
+.realm-screen .panel,
+.realm-screen .actions,
+.realm-screen .stat {
+  margin: 0;
+  padding: 0;
+
+  border: 0;
+  border-radius: 0;
+
+  background: transparent;
+  box-shadow: none;
+}
+
+.realm-screen .hero::before,
+.realm-screen .hero::after,
+.realm-screen .panel::before,
+.realm-screen .stat::before,
+.realm-screen .spirit-care-btn::before {
+  display: none;
 }
 
 /* ==========================================
-   HEADER : Y 2% - 8%
+   HITBOX CORE
 ========================================== */
 
-.spirit-game-header {
+.realm-screen .realm-hitbox {
   position: absolute;
-  z-index: 20;
 
-  top: 2%;
-  left: 4%;
-  width: 92%;
-  height: 6%;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  margin: 0;
-  padding: 0;
-}
-
-.spirit-game-menu {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  height: 100%;
-}
-
-.spirit-game-hitbox,
-.spirit-game-exit {
   display: flex;
   align-items: center;
   justify-content: center;
 
-  width: clamp(30px, 8vw, 38px);
-  height: clamp(30px, 8vw, 38px);
+  min-width: 0;
+  min-height: 0;
 
+  margin: 0;
   padding: 0;
 
-  border: 1px solid rgba(239,203,127,.65);
-  border-radius: 10px;
+  border: 0;
+  border-radius: 8px;
 
-  background:
-    linear-gradient(
-      180deg,
-      rgba(40,87,73,.86),
-      rgba(9,38,43,.88)
-    );
+  background: transparent;
+  box-shadow: none;
 
-  color: #ffdfa0;
+  color: transparent;
 
-  font-size: 21px;
-  font-weight: 800;
+  cursor: pointer;
 
-  box-shadow:
-    inset 0 1px rgba(255,235,180,.22);
+  -webkit-tap-highlight-color: transparent;
+
+  touch-action: manipulation;
+
+  transition:
+    background .15s ease,
+    transform .15s ease;
 }
 
-.spirit-game-exit {
-  width: 68px;
-  font-size: 10px;
-  letter-spacing: .6px;
+.realm-screen .realm-hitbox:active:not(:disabled) {
+  transform: scale(.94);
+  background: rgba(255,235,169,.12);
 }
 
-.spirit-game-hitbox:active,
-.spirit-game-exit:active {
-  transform: scale(.95);
+.realm-screen .realm-hitbox:focus-visible {
+  outline: 2px solid #ffe4a2;
+  outline-offset: 1px;
 }
 
 /* ==========================================
-   WALLET : Y 10% - 19%
+   HEADER HITBOX POSITIONS
 ========================================== */
 
-#spiritGameScreen .spirit-game-wallet {
-  position: absolute;
-  z-index: 5;
+.realm-screen .spirit-header-minimal,
+.realm-screen .spirit-inventory-nav {
+  display: contents;
+}
 
-  top: 10%;
-  left: 6%;
-  width: 88%;
-  height: 9%;
+/* FARM */
+
+.realm-screen .hb-farm {
+  left: 3.0%;
+  top: 2.3%;
+
+  width: 19.5%;
+  height: 5.5%;
+}
+
+/* SHOP */
+
+.realm-screen .hb-shop {
+  left: 26%;
+  top: 2.3%;
+
+  width: 19.5%;
+  height: 5.5%;
+}
+
+/* GUIDE */
+
+.realm-screen .hb-guide {
+  left: 49%;
+  top: 2.3%;
+
+  width: 19.5%;
+  height: 5.5%;
+
+  flex: none;
+}
+
+/* EXIT */
+
+.realm-screen .hb-exit {
+  left: 76%;
+  top: 2.3%;
+
+  width: 20.5%;
+  height: 5.5%;
+}
+
+/* ==========================================
+   WALLET
+========================================== */
+
+.realm-screen .realm-wallet {
+  position: absolute;
+
+  left: 5%;
+  top: 9.6%;
 
   display: grid;
   grid-template-columns: 1fr 1fr;
 
-  align-items: center;
-  gap: 0;
+  width: 90%;
+  height: 8.7%;
 
-  margin: 0;
-  padding: 0;
+  gap: 4%;
 
-  background: transparent;
-  border: none;
-  box-shadow: none;
+  z-index: 3;
 }
 
-#spiritGameScreen .wallet .stat {
-  min-width: 0;
-  min-height: 0;
-  height: 100%;
-
+.realm-screen .realm-wallet .stat {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 
-  margin: 0;
-  padding: 3px;
+  min-width: 0;
+  min-height: 0;
 
+  text-align: center;
+}
+
+.realm-screen .realm-wallet .stat:first-child {
   border: 0;
-  background: transparent;
-  box-shadow: none;
 }
 
-#spiritGameScreen .wallet .stat:first-child {
-  border-right: 1px solid rgba(220,187,113,.2);
-}
+.realm-screen .realm-wallet small {
+  color: #e0c995;
 
-#spiritGameScreen .wallet .stat small {
-  font-size: clamp(8px, 2vw, 10px);
+  font-size: clamp(8px,2.25vw,10px);
   font-weight: 800;
-  letter-spacing: .5px;
+  letter-spacing: .8px;
 
-  color: #c0ddcc;
+  text-shadow: 0 2px 4px #000;
 }
 
-#spiritGameScreen .wallet .stat strong {
-  display: block;
+.realm-screen .realm-wallet strong {
+  margin-top: 4px;
 
-  max-width: 100%;
-  margin-top: 5px;
+  color: #ffe7ae;
 
-  color: #ffe4a6;
-  font-size: clamp(13px, 4vw, 20px);
+  font-size: clamp(13px,4vw,18px);
+  font-weight: 900;
 
-  white-space: nowrap;
   font-variant-numeric: tabular-nums;
-  overflow: hidden;
-  text-overflow: ellipsis;
+
+  text-shadow: 0 2px 6px #000;
 }
 
-#spiritGameScreen .wallet .stat:nth-child(2) strong {
-  color: #9af5bf;
+.realm-screen .realm-wallet .stat:nth-child(2) strong {
+  color: #b0ffd0;
 }
 
 /* ==========================================
-   MAIN BEAST : Y 21% - 60%
+   MAIN BEAST
 ========================================== */
 
-#spiritGameScreen .spirit-game-hero {
+.realm-screen .realm-hero {
   position: absolute;
-  z-index: 4;
 
-  top: 21%;
-  left: 4%;
-  width: 92%;
-  height: 39%;
+  left: 7%;
+  top: 18%;
+
+  width: 86%;
+  height: 38%;
+
   min-height: 0;
 
+  display: block;
+
+  overflow: visible;
+  text-align: center;
+}
+
+.realm-screen .beast {
+  position: absolute;
+
+  left: 0;
+  top: 0;
+
+  width: 100%;
+  height: 79%;
+
   margin: 0;
-  padding: 0;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  overflow: hidden;
-
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-#spiritGameScreen .spirit-game-hero::before,
-#spiritGameScreen .spirit-game-hero::after {
-  display: none;
-}
-
-#spiritGameScreen .beast {
-  position: relative;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  flex: 1 1 auto;
-  min-height: 0;
-
-  width: 100%;
-  height: auto;
-
-  margin: 0;
-  padding: 0;
-
-  background: none;
+  overflow: visible;
 }
 
-#spiritGameScreen .main-beast-image {
-  display: block;
-
+.realm-screen .main-beast-image {
   width: 100%;
   height: 100%;
 
   object-fit: contain;
-  object-position: center;
 
   filter:
-    drop-shadow(0 12px 14px rgba(0,0,0,.5));
+    drop-shadow(0 12px 19px rgba(0,0,0,.55));
+
+  animation: spiritFloat 5s ease-in-out infinite;
+}
+
+.realm-screen .beast.dead .main-beast-image {
+  filter: grayscale(1) brightness(.4);
+  animation: none;
 }
 
 /* BEAST NAME */
 
-#spiritGameScreen .spirit-beast-info {
-  position: relative;
-  z-index: 5;
-
-  flex: 0 0 auto;
-  width: 100%;
-
-  padding: 1% 0 3%;
-  text-align: center;
-}
-
-#spiritGameScreen .hero h2 {
-  margin: 0 0 5px;
-  padding: 0;
-
-  border: 0;
-  background: none;
-  box-shadow: none;
-
-  color: #ffe1a1;
-
-  font-family: Georgia, serif;
-  font-size: clamp(15px, 4.5vw, 23px);
-  line-height: 1.2;
-}
-
-#spiritGameScreen .hero p {
-  margin: 0;
-  padding: 0;
-
-  font-size: clamp(9px, 2.5vw, 11px);
-  line-height: 1.3;
-
-  color: #b3e5ce;
-}
-
-/* ==========================================
-   STATUS : Y 61% - 81%
-========================================== */
-
-#spiritGameScreen .spirit-game-status {
+.realm-screen .spirit-beast-info {
   position: absolute;
-  z-index: 6;
 
-  top: 61%;
-  left: 6%;
-  width: 88%;
-  height: 20%;
+  left: 0;
+  bottom: 0;
+
+  width: 100%;
+  height: 21%;
 
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  padding: 0 5px;
+}
+
+.realm-screen .spirit-beast-info h2 {
+  margin: 0;
+
+  color: #ffe4a3;
+
+  font-family: Georgia, serif;
+  font-size: clamp(16px,4.9vw,23px);
+  font-weight: 800;
+
+  line-height: 1.2;
+
+  text-shadow: 0 3px 7px #000;
+}
+
+.realm-screen .spirit-beast-info p {
+  margin: 0;
+
+  color: #c4f6d4;
+
+  font-size: clamp(9px,2.5vw,11px);
+  line-height: 1.3;
+
+  text-shadow: 0 2px 5px #000;
+}
+
+/* ==========================================
+   STATUS AREA
+========================================== */
+
+.realm-screen .realm-status {
+  position: absolute;
+
+  left: 8%;
+  top: 57%;
+
+  width: 84%;
+  height: 26%;
+
+  overflow: visible;
+
+  z-index: 4;
+}
+
+.realm-screen .realm-status .section-title {
+  height: 11%;
+
+  display: flex;
+  align-items: center;
   justify-content: center;
 
   margin: 0;
-  padding: 8px 13px;
 
-  overflow: hidden;
-
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-#spiritGameScreen .spirit-game-status::before {
-  display: none;
-}
-
-#spiritGameScreen .section-title {
-  margin: 0 0 5px;
+  color: var(--realm-gold);
 
   font-family: Georgia, serif;
-  font-size: clamp(10px, 3vw, 13px);
-  letter-spacing: .8px;
+  font-size: clamp(10px,3.1vw,14px);
+  letter-spacing: 1px;
 
-  color: #ffe1a3;
+  text-shadow: 0 2px 5px #000;
 }
 
-#spiritGameScreen .line {
+.realm-status-grid {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+
+  height: 89%;
+  padding: 1% 5%;
+}
+
+.realm-screen .realm-status .line {
   display: flex;
   align-items: center;
   justify-content: space-between;
 
-  flex: 1 1 auto;
+  gap: 6px;
+
   min-height: 0;
+  height: 17%;
 
-  gap: 7px;
-  padding: 1px 0;
+  padding: 0;
 
-  border-bottom: 1px solid rgba(230,201,139,.12);
+  border-bottom: 1px solid rgba(209,190,137,.2);
 
-  font-size: clamp(8px, 2.3vw, 10px);
+  font-size: clamp(9px,2.45vw,11px);
+  line-height: 1.2;
 }
 
-#spiritGameScreen .line > span:first-child {
-  min-width: 0;
-  flex: 1;
+.realm-screen .realm-status .line:last-child {
+  border-bottom: 0;
 }
 
-#spiritGameScreen .timer,
-#spiritGameScreen #totalEarned {
-  flex: 0 0 auto;
-  max-width: 52%;
+.realm-screen .realm-status .muted {
+  color: #d6e6d5;
 
-  color: #9ef2c0;
+  font-weight: 600;
 
-  font-size: clamp(9px, 2.4vw, 11px);
+  text-shadow: 0 2px 3px #000;
+}
+
+.realm-screen .realm-status .timer,
+.realm-screen #totalEarned {
+  max-width: 58%;
+
+  color: #a6ffc4;
+
+  font-size: clamp(9px,2.55vw,12px);
   font-weight: 800;
+
   text-align: right;
+  overflow-wrap: anywhere;
+
+  text-shadow: 0 2px 4px #000;
 }
 
-#spiritGameScreen #totalEarned {
-  color: #f7dda1;
+.realm-screen #totalEarned {
+  color: #ffe0a0;
 }
 
-#spiritGameScreen .progress {
-  flex: 0 0 auto;
+/* PROGRESS BAR */
 
-  width: 100%;
-  height: 5px;
+.realm-screen .progress {
+  height: 4%;
 
-  margin: 3px 0;
+  min-height: 4px;
 
-  background: #071c1d;
+  margin: 1% 0;
 
-  border: 0;
-  border-radius: 10px;
+  border: 1px solid #a18a58;
+  border-radius: 20px;
+
+  background: rgba(0,0,0,.75);
 }
 
-#spiritGameScreen .progress div {
+.realm-screen .progress > div {
   height: 100%;
-  border-radius: inherit;
 
-  background: linear-gradient(
-    90deg,
-    #248c72,
-    #9ef4be
-  );
+  background:
+    linear-gradient(90deg,#288f70,#9affb2);
+
+  box-shadow: 0 0 9px rgba(115,255,180,.55);
+
+  transition: width .35s ease;
 }
 
 /* ==========================================
-   CARE HITBOXES : Y 83% - 96%
+   CARE ACTION HITBOXES
 ========================================== */
 
-.spirit-game-care {
+.realm-screen .spirit-care-actions {
   position: absolute;
-  z-index: 10;
 
-  top: 83%;
-  left: 6%;
-  width: 88%;
-  height: 13%;
+  left: -4%;
+  top: 113%;
 
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0,1fr));
+  width: 108%;
+  height: 43%;
 
-  align-items: stretch;
-  gap: 9px;
-}
-
-#spiritGameScreen .spirit-care-hitbox {
-  position: relative;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  gap: 2px;
-
-  min-width: 0;
-  min-height: 0;
-
-  padding: 4px;
-
-  border: 1px solid rgba(224,185,110,.6);
-  border-radius: 12px;
-
-  background:
-    radial-gradient(
-      ellipse at 50% 15%,
-      rgba(67,144,115,.24),
-      transparent 75%
-    ),
-    linear-gradient(
-      180deg,
-      rgba(27,70,59,.84),
-      rgba(8,30,36,.9)
-    );
-
-  box-shadow:
-    inset 0 1px rgba(255,233,172,.18);
-}
-
-#spiritGameScreen .spirit-care-hitbox img {
   display: block;
 
-  width: min(70%, 67px);
-  height: 67%;
+  z-index: 8;
 
-  object-fit: contain;
+  overflow: visible;
+}
+
+/* FEED */
+
+.realm-screen .hb-feed {
+  left: 0;
+  top: 0;
+
+  width: 30%;
+  height: 100%;
+}
+
+/* CLEAN */
+
+.realm-screen .hb-clean {
+  left: 35%;
+  top: 0;
+
+  width: 30%;
+  height: 100%;
+}
+
+/* REST */
+
+.realm-screen .hb-rest {
+  left: 70%;
+  top: 0;
+
+  width: 30%;
+  height: 100%;
+}
+
+/* LABELS */
+
+.realm-screen .care-btn-label {
+  display: block;
+
+  color: #ffe0a0;
+
+  font-size: clamp(10px,3vw,13px) !important;
+  font-weight: 900;
+  letter-spacing: 1px;
+
+  text-shadow: 0 2px 5px #000;
 
   pointer-events: none;
 }
 
-#spiritGameScreen .spirit-care-hitbox span {
-  color: #ffe3a5;
+/* DISABLED BUTTONS */
 
-  font-size: clamp(9px, 2.3vw, 11px);
-  font-weight: 800;
-  line-height: 1;
-}
-
-#spiritGameScreen .spirit-care-hitbox:active:not(:disabled) {
-  transform: scale(.97);
-}
-
-#spiritGameScreen .spirit-care-hitbox:disabled {
-  opacity: .42;
+.realm-screen .spirit-care-btn:disabled {
+  opacity: .35;
   filter: grayscale(1);
+
+  cursor: not-allowed;
 }
 
 /* ==========================================
-   SMALL VIEWPORT
+   DEBUG MODE
+   CHANGE false --> true IN JS BELOW
 ========================================== */
 
-@media (max-width: 375px) {
-
-  #spiritGameScreen .spirit-game-status {
-    padding: 5px 9px;
-  }
-
-  .spirit-game-menu {
-    gap: 5px;
-  }
-
-  .spirit-game-care {
-    gap: 6px;
-  }
-
-  #spiritGameScreen .spirit-care-hitbox {
-    padding: 3px;
-    border-radius: 9px;
-  }
-
+.realm-screen.debug-hitboxes .realm-hitbox {
+  background: rgba(0,255,170,.15);
+  outline: 1px dashed #5effbd;
 }
+
+.realm-screen.debug-hitboxes .hb-feed,
+.realm-screen.debug-hitboxes .hb-clean,
+.realm-screen.debug-hitboxes .hb-rest {
+  background: rgba(255,185,0,.2);
+  outline: 1px dashed #ffd26e;
+}
+
+/* ==========================================
+   ACCESSIBILITY
+========================================== */
 
 @media (prefers-reduced-motion: reduce) {
-
-  #spiritGameScreen * {
-    animation: none !important;
-    transition: none !important;
+  .realm-screen .main-beast-image {
+    animation: none;
   }
 
+  .realm-screen .realm-hitbox {
+    transition: none;
+  }
 }
+
 
 
 </style>
@@ -2676,193 +2734,187 @@ body {
 <body>
 
 
-
+  
 
 <main class="app">
 
-<!-- ==========================================
-     SPIRIT REALM - FULLSCREEN GAME SCREEN
-     DESIGN REFERENCE: 430 x 870
-========================================== -->
+  <!-- FULLSCREEN REALM BACKGROUND -->
+  <div class="realm-screen">
 
-<div class="spirit-game-screen" id="spiritGameScreen">
+    <!-- TOP NAVIGATION HITBOXES -->
+    <header class="spirit-header-minimal">
 
-  <!-- HEADER HITBOXES -->
-  <header class="spirit-game-header">
+      <nav class="spirit-inventory-nav"
+           aria-label="Spirit Beast Menu">
 
-    <nav class="spirit-game-menu"
-         aria-label="Spirit Realm Menu">
+        <button
+          type="button"
+          class="spirit-inventory-btn realm-hitbox hb-farm"
+          data-tab="farm"
+          aria-label="My Beasts"
+          title="My Beasts"
+          aria-haspopup="dialog"
+          aria-controls="spiritInventoryModal">
+        </button>
+
+        <button
+          type="button"
+          class="spirit-inventory-btn realm-hitbox hb-shop"
+          data-tab="shop"
+          aria-label="Beast Shop"
+          title="Beast Shop"
+          aria-haspopup="dialog"
+          aria-controls="spiritInventoryModal">
+        </button>
+
+        <button
+          type="button"
+          class="spirit-inventory-btn spirit-guide-btn realm-hitbox hb-guide"
+          id="spiritGuideBtn"
+          aria-label="Game Guide"
+          title="Game Guide"
+          aria-haspopup="dialog"
+          aria-controls="spiritGuideModal">
+        </button>
+
+      </nav>
 
       <button
         type="button"
-        class="spirit-game-hitbox"
-        data-tab="farm"
-        aria-label="My Beasts"
-        aria-haspopup="dialog"
-        aria-controls="spiritInventoryModal">
-        <span aria-hidden="true">⌂</span>
+        class="spirit-exit-minimal realm-hitbox hb-exit"
+        id="exitBtn"
+        aria-label="Exit Game">
       </button>
 
-      <button
-        type="button"
-        class="spirit-game-hitbox"
-        data-tab="shop"
-        aria-label="Beast Shop"
-        aria-haspopup="dialog"
-        aria-controls="spiritInventoryModal">
-        <span aria-hidden="true">▣</span>
-      </button>
+    </header>
 
-      <button
-        type="button"
-        class="spirit-game-hitbox"
-        id="spiritGuideBtn"
-        aria-label="Game Guide"
-        aria-haspopup="dialog"
-        aria-controls="spiritGuideModal">
-        <span aria-hidden="true">?</span>
-      </button>
 
-    </nav>
+    <!-- DIAMOND WALLET -->
+    <section class="wallet realm-wallet">
 
-    <button
-      type="button"
-      class="spirit-game-exit"
-      id="exitBtn"
-      aria-label="Exit Game">
-      ✕ EXIT
-    </button>
+      <div class="stat">
+        <small>MY DIAMONDS</small>
+        <strong id="balance">—</strong>
+      </div>
 
-  </header>
+      <div class="stat">
+        <small>DAILY REWARD</small>
+        <strong id="dailyReward">—</strong>
+      </div>
 
-  <!-- DIAMOND WALLET -->
-  <section class="spirit-game-wallet wallet">
+    </section>
 
-    <div class="stat">
-      <small>MY DIAMONDS</small>
-      <strong id="balance">—</strong>
-    </div>
 
-    <div class="stat">
-      <small>DAILY REWARD</small>
-      <strong id="dailyReward">—</strong>
-    </div>
+    <!-- MAIN BEAST ARENA -->
+    <section class="hero realm-hero">
 
-  </section>
+      <div class="beast" id="mainBeast">
+        <img
+          id="mainBeastImg"
+          class="main-beast-image"
+          alt="Spirit Beast">
+      </div>
 
-  <!-- DYNAMIC SPIRIT BEAST -->
-  <section class="spirit-game-hero hero">
+      <div class="spirit-beast-info">
+        <h2 id="beastName">
+          Connecting...
+        </h2>
 
-    <div class="beast" id="mainBeast">
-      <img
-        id="mainBeastImg"
-        class="main-beast-image"
-        alt="Spirit Beast">
-    </div>
+        <p id="beastDescription">
+          Loading spirit beast data...
+        </p>
+      </div>
 
-    <div class="spirit-beast-info">
-      <h2 id="beastName">Connecting...</h2>
-      <p id="beastDescription">
-        Loading spirit beast data...
-      </p>
-    </div>
+    </section>
 
-  </section>
 
-  <!-- BEAST STATUS -->
-  <section class="spirit-game-status panel" id="carePanel">
+    <!-- BEAST STATUS -->
+    <section class="panel realm-status" id="carePanel">
 
-    <div class="section-title">
-      SPIRIT BEAST STATUS
-    </div>
+      <div class="section-title">
+        SPIRIT BEAST STATUS
+      </div>
 
-    <div class="line">
-      <span>Next Reward</span>
-      <span id="rewardTimer" class="timer">
-        --:--:--
-      </span>
-    </div>
+      <div class="realm-status-grid">
 
-    <div class="progress">
-      <div id="rewardProgress"></div>
-    </div>
+        <div class="line">
+          <span class="muted">Next Reward</span>
+          <span class="timer" id="rewardTimer">
+            --:--:--
+          </span>
+        </div>
 
-    <div class="line">
-      <span>Feeding</span>
-      <span id="feedTimer" class="timer">
-        --:--:--
-      </span>
-    </div>
+        <div class="progress">
+          <div id="rewardProgress"></div>
+        </div>
 
-    <div class="line">
-      <span>Starvation</span>
-      <span id="deathTimer" class="timer">
-        --:--:--
-      </span>
-    </div>
+        <div class="line">
+          <span class="muted">Next Feeding</span>
+          <span class="timer" id="feedTimer">
+            --:--:--
+          </span>
+        </div>
 
-    <div class="line">
-      <span>Cleaning</span>
-      <span id="cleanTimer" class="timer">
-        --:--:--
-      </span>
-    </div>
+        <div class="line">
+          <span class="muted">Starvation</span>
+          <span class="timer" id="deathTimer">
+            --:--:--
+          </span>
+        </div>
 
-    <div class="line">
-      <span>Total Earned</span>
-      <span id="totalEarned">0 💎</span>
-    </div>
+        <div class="line">
+          <span class="muted">Cleaning</span>
+          <span class="timer" id="cleanTimer">
+            --:--:--
+          </span>
+        </div>
 
-  </section>
+        <div class="line">
+          <span class="muted">Total Earned</span>
+          <span id="totalEarned">
+            0 💎
+          </span>
+        </div>
 
-  <!-- CARE HITBOXES -->
-  <div class="spirit-game-care">
+      </div>
 
-    <button
-      type="button"
-      class="spirit-care-hitbox"
-      data-care="feed"
-      aria-label="Feed Beast">
+      <!-- CARE HITBOXES -->
+      <div class="actions spirit-care-actions">
 
-      <img
-        src="/assets/spirit-beast/care-feed.png"
-        alt="">
+        <button
+          type="button"
+          class="action spirit-care-btn realm-hitbox hb-feed"
+          data-care="feed"
+          aria-label="Feed Beast"
+          title="Feed Beast">
+          <span class="care-btn-label">FEED</span>
+        </button>
 
-      <span>FEED</span>
-    </button>
+        <button
+          type="button"
+          class="action spirit-care-btn realm-hitbox hb-clean"
+          data-care="clean"
+          aria-label="Clean Beast"
+          title="Clean Beast">
+          <span class="care-btn-label">CLEAN</span>
+        </button>
 
-    <button
-      type="button"
-      class="spirit-care-hitbox"
-      data-care="clean"
-      aria-label="Clean Beast">
+        <button
+          type="button"
+          class="action spirit-care-btn realm-hitbox hb-rest"
+          data-care="rest"
+          aria-label="Let Beast Rest"
+          title="Let Beast Rest">
+          <span class="care-btn-label">REST</span>
+        </button>
 
-      <img
-        src="/assets/spirit-beast/care-clean.png"
-        alt="">
+      </div>
 
-      <span>CLEAN</span>
-    </button>
-
-    <button
-      type="button"
-      class="spirit-care-hitbox"
-      data-care="rest"
-      aria-label="Let Beast Rest">
-
-      <img
-        src="/assets/spirit-beast/care-rest.png"
-        alt="">
-
-      <span>REST</span>
-    </button>
+    </section>
 
   </div>
 
-</div>
-
-<!-- Keep existing Inventory and Guide modals below -->
-
+  <!-- KEEP EXISTING MODALS BELOW -->
 
 
 
@@ -3067,6 +3119,20 @@ body {
 
 <script>
 "use strict";
+
+
+
+/* SPIRIT REALM HITBOX DEBUG */
+
+const SPIRIT_DEBUG_HITBOXES = false;
+
+if (SPIRIT_DEBUG_HITBOXES) {
+  document
+    .querySelector(".realm-screen")
+    ?.classList.add("debug-hitboxes");
+}
+
+
 
 const DAY = 86400000;
 const HOUR = 3600000;
