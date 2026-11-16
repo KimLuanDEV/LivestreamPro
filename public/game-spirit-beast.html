@@ -229,47 +229,129 @@ button:disabled {
 }
 
 
+
+
 /* ==========================================
-   SPIRIT REALM - MINIMAL EXIT HEADER
+   SPIRIT REALM - COMPACT HEADER V6
+   FARM + SHOP + EXIT
 ========================================== */
+
+/* MAIN HEADER */
 
 .spirit-header-minimal {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
+
+  gap: 12px;
 
   width: 100%;
-  height: 48px;
+  height: 53px;
 
   margin: 0;
-  padding: 7px 11px 3px;
+  padding: 7px 12px;
 
   border: 0;
   background: transparent;
 }
 
-/* EXIT BUTTON */
+/* ==========================================
+   FARM + SHOP ICON NAVIGATION
+========================================== */
 
-.spirit-exit-minimal {
+.spirit-header-minimal .spirit-inventory-nav {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+
+  flex: 0 0 auto;
+
+  gap: 8px;
+  width: auto;
+
+  margin: 0;
+  padding: 0;
+}
+
+/* ICON BUTTONS */
+
+.spirit-header-minimal .spirit-inventory-btn {
+  position: relative;
+
   display: inline-flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
 
-  gap: 7px;
+  flex: 0 0 37px;
 
-  min-width: 70px;
-  min-height: 34px;
-  padding: 0 12px;
+  width: 37px;
+  height: 37px;
+  min-height: 37px;
 
-  border: 1px solid rgba(229,195,123,.55);
-  border-radius: 9px;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+
+  border: 1px solid rgba(226,190,116,.55);
+  border-radius: 10px;
+
+  color: #f3d69a;
 
   background:
     linear-gradient(
       180deg,
-      #29473f,
-      #10292c
+      #294b40 0%,
+      #10292c 100%
     );
+
+  box-shadow:
+    inset 0 1px rgba(255,239,184,.14),
+    0 3px 9px rgba(0,0,0,.2);
+
+  cursor: pointer;
+
+  transition:
+    transform .15s ease,
+    border-color .15s ease;
+}
+
+/* SVG */
+
+.spirit-header-minimal .spirit-inventory-btn svg {
+  display: block;
+
+  width: 21px;
+  height: 21px;
+
+  flex: 0 0 auto;
+
+  color: #f3d69a;
+}
+
+/* ==========================================
+   EXIT BUTTON
+========================================== */
+
+.spirit-header-minimal .spirit-exit-minimal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+
+  gap: 7px;
+
+  min-width: 70px;
+  height: 37px;
+  min-height: 37px;
+
+  margin: 0;
+  padding: 0 12px;
+
+  border: 1px solid rgba(226,190,116,.55);
+  border-radius: 10px;
 
   color: #f5dda4;
 
@@ -277,8 +359,16 @@ button:disabled {
   font-weight: 800;
   letter-spacing: .8px;
 
+  background:
+    linear-gradient(
+      180deg,
+      #294b40,
+      #10292c
+    );
+
   box-shadow:
-    inset 0 1px rgba(255,240,183,.16);
+    inset 0 1px rgba(255,239,184,.14),
+    0 3px 9px rgba(0,0,0,.2);
 
   cursor: pointer;
 
@@ -290,32 +380,65 @@ button:disabled {
   line-height: 1;
 }
 
-.spirit-exit-minimal:active {
-  transform: scale(.95);
+/* INTERACTIONS */
+
+.spirit-header-minimal .spirit-inventory-btn:active,
+.spirit-header-minimal .spirit-exit-minimal:active {
+  transform: scale(.94);
 }
 
-.spirit-exit-minimal:focus-visible {
-  outline: 2px solid #ffe0a1;
+.spirit-header-minimal .spirit-inventory-btn:focus-visible,
+.spirit-header-minimal .spirit-exit-minimal:focus-visible {
+  outline: 2px solid #ffe6aa;
   outline-offset: 2px;
 }
 
+/* ==========================================
+   SMALL MOBILE
+========================================== */
+
 @media (max-width: 375px) {
+
   .spirit-header-minimal {
-    height: 44px;
-    padding: 6px 9px 2px;
+    height: 49px;
+    padding: 6px 9px;
+    gap: 8px;
   }
 
-  .spirit-exit-minimal {
-    min-height: 32px;
-    min-width: 66px;
+  .spirit-header-minimal .spirit-inventory-nav {
+    gap: 6px;
   }
+
+  .spirit-header-minimal .spirit-inventory-btn {
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+    flex-basis: 34px;
+  }
+
+  .spirit-header-minimal .spirit-inventory-btn svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .spirit-header-minimal .spirit-exit-minimal {
+    height: 34px;
+    min-height: 34px;
+    min-width: 66px;
+    padding: 0 9px;
+  }
+
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .spirit-exit-minimal {
+
+  .spirit-header-minimal .spirit-inventory-btn,
+  .spirit-header-minimal .spirit-exit-minimal {
     transition: none;
   }
+
 }
+
 
 
 /* ==========================================
@@ -926,63 +1049,288 @@ button:disabled {
    FARM / SHOP TABS
 ============================================= */
 
-.tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
 
-  gap: 10px;
-  margin: 20px 0 14px;
+
+/* ==========================================
+   SPIRIT REALM - INVENTORY MODAL V1
+========================================== */
+
+/* ICON NAVIGATION */
+
+
+
+.spirit-inventory-btn:focus-visible,
+.spirit-inventory-close:focus-visible {
+  outline: 2px solid #ffe6a6;
+  outline-offset: 3px;
 }
 
-.tab {
-  position: relative;
+/* ==========================================
+   MODAL OVERLAY
+========================================== */
 
-  min-height: 49px;
+.spirit-inventory-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 950;
 
-  padding: 10px 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 
-  border: 1px solid #7d7458;
-  border-radius: 12px;
+  padding:
+    max(14px, env(safe-area-inset-top))
+    12px
+    max(14px, env(safe-area-inset-bottom));
 
-  color: #abc9bd;
+  background: rgba(0,7,11,.85);
+
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+.spirit-inventory-overlay.hidden {
+  display: none !important;
+}
+
+/* MODAL BODY */
+
+.spirit-inventory-modal {
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  max-height: 90dvh;
+
+  min-height: 0;
+  overflow: hidden;
+
+  border: 1px solid #cfac70;
+  border-radius: 19px;
+
+  color: #f6e7c8;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(39,115,93,.26),
+      transparent 65%
+    ),
+    linear-gradient(
+      180deg,
+      #153739,
+      #081b22 70%,
+      #061319
+    );
+
+  box-shadow:
+    inset 0 1px rgba(255,235,168,.22),
+    0 22px 65px rgba(0,0,0,.7);
+
+  animation: spiritModalEnter .2s ease-out;
+}
+
+@keyframes spiritModalEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* MODAL HEADER */
+
+.spirit-inventory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 18px 17px 15px;
+
+  flex-shrink: 0;
+
+  border-bottom:
+    1px solid rgba(221,185,109,.28);
+}
+
+.spirit-inventory-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.spirit-inventory-heading small {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #9ec4b1;
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+}
+
+.spirit-inventory-heading h2 {
+  margin: 0;
+
+  color: #f9dea2;
 
   font-family: Georgia, serif;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 19px;
+  font-weight: 800;
   letter-spacing: .5px;
+}
+
+.spirit-inventory-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+
+  flex-shrink: 0;
+
+  padding: 0;
+
+  border: 1px solid rgba(230,188,109,.42);
+  border-radius: 10px;
+
+  color: #f5dfa7;
+  font-size: 15px;
+
+  background: #193631;
+}
+
+.spirit-inventory-close:active {
+  transform: scale(.95);
+}
+
+/* SCROLLING AREA */
+
+.spirit-inventory-content {
+  flex: 1;
+  min-height: 0;
+
+  padding: 16px 13px 19px;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+
+  scrollbar-width: thin;
+  scrollbar-color: #967c4c #10262b;
+}
+
+/* INHERIT EXISTING PET GRID */
+
+.spirit-inventory-content .grid {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+
+  gap: 11px;
+  align-items: stretch;
+}
+
+.spirit-inventory-content .grid.hidden {
+  display: none !important;
+}
+
+/* MODAL PET CARDS */
+
+.spirit-inventory-content .pet-card {
+  min-width: 0;
+
+  border-color: rgba(202,165,98,.48);
 
   background:
+    radial-gradient(
+      ellipse at 50% 15%,
+      rgba(59,137,107,.18),
+      transparent 70%
+    ),
     linear-gradient(
       180deg,
-      #1b3938,
-      #071a1e
+      #193b3b,
+      #091a20
     );
-
-  box-shadow:
-    inset 0 1px rgba(255,255,255,.08);
 }
 
-.tab.active {
-  color: #302111;
-
-  border-color: #ffe1a0;
-
-  background:
-    linear-gradient(
-      180deg,
-      #fff0b9,
-      #e5be70 48%,
-      #b9883e
-    );
-
-  box-shadow:
-    inset 0 1px rgba(255,255,255,.6),
-    0 4px 17px rgba(218,177,90,.25);
+.spirit-inventory-content .pet-art {
+  aspect-ratio: 4 / 4.5;
 }
 
-.tab:active {
-  transform: scale(.98);
+.spirit-inventory-content .pet-card h3 {
+  font-size: 14px;
 }
+
+.spirit-inventory-content .pet-card p {
+  font-size: 10px;
+}
+
+.spirit-inventory-content .buy {
+  min-height: 39px;
+}
+
+/* MODAL FOOTER */
+
+.spirit-inventory-footer {
+  flex-shrink: 0;
+
+  padding: 12px;
+
+  border-top:
+    1px solid rgba(221,185,109,.2);
+
+  text-align: center;
+
+  color: #86a99d;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+}
+
+/* MOBILE */
+
+@media (max-width: 375px) {
+
+
+  .spirit-inventory-content {
+    padding: 12px 9px 16px;
+  }
+
+  .spirit-inventory-content .grid {
+    gap: 8px;
+  }
+
+  .spirit-inventory-content .pet-card {
+    padding: 7px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spirit-inventory-modal {
+    animation: none;
+  }
+
+  .spirit-inventory-btn {
+    transition: none;
+  }
+}
+
+
+
 
 /* =============================================
    PET COLLECTION GRID
@@ -1492,6 +1840,283 @@ button:disabled {
   }
 }
 
+
+
+
+/* ==========================================
+   SPIRIT REALM - GUIDE MODAL
+========================================== */
+
+/* GUIDE ICON: MATCH HEADER BUTTONS */
+
+.spirit-header-minimal .spirit-guide-btn {
+  flex: 0 0 37px;
+  width: 37px;
+  height: 37px;
+  min-height: 37px;
+  padding: 0;
+}
+
+.spirit-header-minimal .spirit-guide-btn svg {
+  width: 21px;
+  height: 21px;
+}
+
+/* MODAL OVERLAY */
+
+.spirit-guide-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 960;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding:
+    max(14px, env(safe-area-inset-top))
+    14px
+    max(14px, env(safe-area-inset-bottom));
+
+  background: rgba(0, 7, 11, .86);
+
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+.spirit-guide-overlay.hidden {
+  display: none !important;
+}
+
+/* GUIDE WINDOW */
+
+.spirit-guide-modal {
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+  max-width: 400px;
+  max-height: 88dvh;
+  min-height: 0;
+
+  overflow: hidden;
+
+  border: 1px solid #c9a66c;
+  border-radius: 18px;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(52, 131, 104, .24),
+      transparent 60%
+    ),
+    linear-gradient(
+      180deg,
+      #153738,
+      #071920
+    );
+
+  box-shadow:
+    inset 0 1px rgba(255, 232, 167, .2),
+    0 22px 65px rgba(0, 0, 0, .7);
+
+  animation: spiritGuideEnter .2s ease-out;
+}
+
+@keyframes spiritGuideEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* HEADER */
+
+.spirit-guide-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+  padding: 18px 16px 15px;
+
+  border-bottom:
+    1px solid rgba(222, 185, 109, .27);
+}
+
+.spirit-guide-header small {
+  display: block;
+  margin-bottom: 6px;
+
+  color: #9fc8b5;
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+}
+
+.spirit-guide-header h2 {
+  margin: 0;
+
+  color: #ffe0a0;
+
+  font-family: Georgia, serif;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.spirit-guide-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  width: 36px;
+  height: 36px;
+
+  padding: 0;
+
+  border: 1px solid rgba(228, 190, 116, .48);
+  border-radius: 9px;
+
+  color: #ffe1a7;
+  background: #193b35;
+}
+
+/* SCROLL CONTENT */
+
+.spirit-guide-content {
+  min-height: 0;
+  overflow-y: auto;
+
+  padding: 8px 17px 15px;
+
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* RULE ROW */
+
+.spirit-guide-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+
+  padding: 15px 0;
+
+  border-bottom:
+    1px solid rgba(198, 182, 133, .15);
+}
+
+.spirit-guide-item:last-child {
+  border-bottom: none;
+}
+
+.spirit-guide-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 31px;
+
+  width: 31px;
+  height: 31px;
+
+  border: 1px solid rgba(221, 183, 111, .47);
+  border-radius: 9px;
+
+  color: #f4d392;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  background: rgba(37, 83, 67, .55);
+}
+
+.spirit-guide-item h3 {
+  margin: 1px 0 7px;
+
+  color: #f6da9f;
+
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .5px;
+}
+
+.spirit-guide-item p {
+  margin: 0;
+
+  color: #b8d2c5;
+
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+/* FOOTER */
+
+.spirit-guide-footer {
+  flex-shrink: 0;
+
+  padding: 12px;
+
+  border-top:
+    1px solid rgba(222, 185, 109, .2);
+
+  text-align: center;
+
+  color: #8fb4a3;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+}
+
+/* FOCUS / TOUCH */
+
+.spirit-guide-close:active {
+  transform: scale(.95);
+}
+
+.spirit-guide-close:focus-visible {
+  outline: 2px solid #ffe4a3;
+  outline-offset: 2px;
+}
+
+/* SMALL MOBILE */
+
+@media (max-width: 375px) {
+  .spirit-header-minimal .spirit-guide-btn {
+    flex-basis: 34px;
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+  }
+
+  .spirit-header-minimal .spirit-guide-btn svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .spirit-guide-content {
+    padding: 6px 13px 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spirit-guide-modal {
+    animation: none;
+  }
+}
+
+
+
+
 </style>
 
 </head>
@@ -1514,8 +2139,108 @@ button:disabled {
      SPIRIT REALM - MINIMAL EXIT
 ========================================== -->
 
+
+<!-- ==========================================
+     SPIRIT REALM - COMPACT TOP HEADER
+========================================== -->
+
 <header class="spirit-header-minimal">
 
+  <nav class="spirit-inventory-nav"
+       aria-label="Spirit Beast Menu">
+
+    <!-- FARM -->
+    <button
+      type="button"
+      class="spirit-inventory-btn"
+      data-tab="farm"
+      aria-label="Chuồng nuôi"
+      title="Chuồng nuôi"
+      aria-haspopup="dialog"
+      aria-controls="spiritInventoryModal">
+
+      <svg viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="1.7"
+           stroke-linecap="round"
+           stroke-linejoin="round"
+           aria-hidden="true">
+        <path d="M3 10 12 3l9 7"/>
+        <path d="M5 9v11h14V9"/>
+        <path d="M9 20v-7h6v7"/>
+        <path d="M8 7h8"/>
+      </svg>
+
+    </button>
+
+    <!-- SHOP -->
+    <button
+      type="button"
+      class="spirit-inventory-btn"
+      data-tab="shop"
+      aria-label="Cửa hàng"
+      title="Cửa hàng"
+      aria-haspopup="dialog"
+      aria-controls="spiritInventoryModal">
+
+      <svg viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="1.7"
+           stroke-linecap="round"
+           stroke-linejoin="round"
+           aria-hidden="true">
+        <path d="M3 9 5 4h14l2 5"/>
+        <path d="M3 9v2a3 3 0 0 0 6 0
+                 3 3 0 0 0 6 0
+                 3 3 0 0 0 6 0V9"/>
+        <path d="M5 14v7h14v-7"/>
+        <path d="M10 21v-6h4v6"/>
+      </svg>
+
+    </button>
+
+
+
+<!-- ==========================================
+     SPIRIT REALM - GUIDE ICON
+========================================== -->
+
+<button
+  type="button"
+  class="spirit-inventory-btn spirit-guide-btn"
+  id="spiritGuideBtn"
+  aria-label="Hướng dẫn chơi"
+  title="Hướng dẫn chơi"
+  aria-haspopup="dialog"
+  aria-controls="spiritGuideModal">
+
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.7"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true">
+
+    <circle cx="12" cy="12" r="9"/>
+
+    <path
+      d="M9.5 9a2.5 2.5 0 1 1 4.2 1.8
+         c-1 .8-1.7 1.3-1.7 2.7"/>
+
+    <path d="M12 17h.01"/>
+
+  </svg>
+
+</button>
+
+
+  </nav>
+
+  <!-- EXIT -->
   <button
     type="button"
     class="spirit-exit-minimal"
@@ -1528,6 +2253,7 @@ button:disabled {
   </button>
 
 </header>
+
 
 
   <!-- DIAMOND WALLET -->
@@ -1660,26 +2386,180 @@ button:disabled {
 
   </section>
 
-  <nav class="tabs">
-    <button class="tab active" data-tab="farm">
-      CHUỒNG NUÔI
-    </button>
-    <button class="tab" data-tab="shop">
-      CỬA HÀNG
-    </button>
-  </nav>
 
-  <section id="farmPanel" class="grid"></section>
-  <section id="shopPanel" class="grid hidden"></section>
 
-<p class="note">
-  SURVIVAL RULES:
-  Cho ăn và vệ sinh tối thiểu mỗi 6 giờ.
-  Nếu bỏ đói liên tục 7 giờ, linh thú sẽ chết vĩnh viễn.
-  Phần thưởng được xét mỗi 8 giờ khi đáp ứng
-  điều kiện chăm sóc.
-  Tổng cộng 90 chu kỳ trong 30 ngày.
-</p>
+<!-- ==========================================
+     SPIRIT INVENTORY MODAL
+========================================== -->
+
+<div id="spiritInventoryModal"
+     class="spirit-inventory-overlay hidden"
+     aria-hidden="true">
+
+  <div class="spirit-inventory-modal"
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="spiritInventoryTitle"
+       tabindex="-1">
+
+    <!-- MODAL HEADER -->
+    <div class="spirit-inventory-header">
+
+      <div class="spirit-inventory-heading">
+        <small>SPIRIT REALM</small>
+
+        <h2 id="spiritInventoryTitle">
+          CHUỒNG NUÔI
+        </h2>
+      </div>
+
+      <button
+        type="button"
+        id="closeSpiritInventory"
+        class="spirit-inventory-close"
+        aria-label="Đóng cửa sổ">
+        ✕
+      </button>
+
+    </div>
+
+    <!-- MODAL CONTENT -->
+    <div class="spirit-inventory-content">
+
+      <section id="farmPanel"
+               class="grid"></section>
+
+      <section id="shopPanel"
+               class="grid hidden"></section>
+
+    </div>
+
+    <!-- MODAL FOOTER -->
+    <div class="spirit-inventory-footer">
+      LIVESTREAMPRO · SPIRIT REALM
+    </div>
+
+  </div>
+
+</div>
+
+
+
+
+<!-- ==========================================
+     SPIRIT REALM - GUIDE MODAL
+========================================== -->
+
+<div
+  id="spiritGuideModal"
+  class="spirit-guide-overlay hidden"
+  aria-hidden="true">
+
+  <section
+    class="spirit-guide-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="spiritGuideTitle"
+    tabindex="-1">
+
+    <!-- HEADER -->
+    <div class="spirit-guide-header">
+
+      <div>
+        <small>SPIRIT REALM</small>
+
+        <h2 id="spiritGuideTitle">
+          HƯỚNG DẪN CHƠI
+        </h2>
+      </div>
+
+      <button
+        type="button"
+        id="spiritGuideClose"
+        class="spirit-guide-close"
+        aria-label="Đóng hướng dẫn">
+        ✕
+      </button>
+
+    </div>
+
+    <!-- CONTENT -->
+    <div class="spirit-guide-content">
+
+      <div class="spirit-guide-item">
+        <span class="spirit-guide-number">01</span>
+
+        <div>
+          <h3>CHO LINH THÚ ĂN</h3>
+          <p>
+            Cho linh thú ăn tối thiểu mỗi 6 giờ
+            để duy trì sự sống và đủ điều kiện
+            nhận thưởng.
+          </p>
+        </div>
+      </div>
+
+      <div class="spirit-guide-item">
+        <span class="spirit-guide-number">02</span>
+
+        <div>
+          <h3>VỆ SINH LINH THÚ</h3>
+          <p>
+            Vệ sinh tối thiểu mỗi 6 giờ
+            để đáp ứng điều kiện chăm sóc.
+          </p>
+        </div>
+      </div>
+
+      <div class="spirit-guide-item">
+        <span class="spirit-guide-number">03</span>
+
+        <div>
+          <h3>NGUY CƠ TỬ VONG</h3>
+          <p>
+            Nếu bỏ đói liên tục 7 giờ,
+            linh thú sẽ chết vĩnh viễn.
+          </p>
+        </div>
+      </div>
+
+      <div class="spirit-guide-item">
+        <span class="spirit-guide-number">04</span>
+
+        <div>
+          <h3>PHẦN THƯỞNG</h3>
+          <p>
+            Phần thưởng được xét mỗi 8 giờ
+            khi đáp ứng đầy đủ điều kiện
+            chăm sóc.
+          </p>
+        </div>
+      </div>
+
+      <div class="spirit-guide-item">
+        <span class="spirit-guide-number">05</span>
+
+        <div>
+          <h3>CHU KỲ NUÔI</h3>
+          <p>
+            Mỗi linh thú có tối đa 90 chu kỳ
+            thưởng trong 30 ngày.
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="spirit-guide-footer">
+      LIVESTREAMPRO · SPIRIT REALM
+    </div>
+
+  </section>
+
+</div>
+
+
 
 </main>
 
@@ -1881,21 +2761,42 @@ if (pet.dead) {
   const title = document.createElement("h3");
   title.textContent = kind?.name || "Linh thú";
 
-  const detail = document.createElement("p");
-  detail.textContent = pet.dead
-    ? "ĐÃ CHẾT"
-    : pet.rewardCycles >= MAX_REWARD_CYCLES
-      ? "Đã hoàn thành thưởng"
-      : `+${Math.floor((kind?.reward || 0) / 3)}–${Math.ceil((kind?.reward || 0) / 3)} 💎 / 8h`;
+
+const detail = document.createElement("p");
+
+const rewardPer8h = Math.floor(
+  Number(kind?.reward || 0) / 3
+);
+
+detail.textContent = pet.dead
+  ? "ĐÃ CHẾT"
+  : pet.rewardCycles >= MAX_REWARD_CYCLES
+    ? "Đã hoàn thành thưởng"
+    : `+${formatNum(rewardPer8h)} 💎 / 8h`;
+
 
   const button = document.createElement("button");
   button.className = "buy";
   button.textContent = "XEM LINH THÚ";
-  button.onclick = () => {
-    selectedId = pet.id;
-    render();
-    window.scrollTo({top:0,behavior:"smooth"});
-  };
+
+
+button.onclick = () => {
+
+  selectedId = pet.id;
+
+  render();
+
+  // Đóng chuồng nuôi
+  closeSpiritInventory();
+
+  // Trở về khu vực linh thú chính
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+};
+
 
   card.append(art,title,detail,button);
   return card;
@@ -1919,11 +2820,15 @@ art.appendChild(img);
   const title = document.createElement("h3");
   title.textContent = kind.name;
 
-  const reward = document.createElement("p");
-  reward.textContent =
-  `+${formatNum(Math.floor(kind.reward / 3))}` +
-  `–${formatNum(Math.ceil(kind.reward / 3))} 💎 / 8h`;
 
+const reward = document.createElement("p");
+
+const rewardPer8h = Math.floor(kind.reward / 3);
+
+reward.textContent =
+  `+${formatNum(rewardPer8h)} 💎 / 8h`;
+
+  
   const price = document.createElement("div");
   price.className = "price";
   price.textContent = formatNum(kind.price) + " 💎";
@@ -2099,25 +3004,291 @@ document.querySelectorAll("[data-care]")
     });
   });
 
-document.querySelectorAll("[data-tab]")
-  .forEach(button => {
-    button.addEventListener("click", () => {
-      currentTab = button.dataset.tab;
 
-      document.querySelectorAll("[data-tab]")
-        .forEach(b => b.classList.toggle(
-          "active", b.dataset.tab === currentTab
-        ));
+/* ==========================================
+   SPIRIT REALM - INVENTORY MODAL ENGINE
+========================================== */
 
-      el("farmPanel").classList.toggle(
-        "hidden",currentTab !== "farm"
-      );
+const spiritInventoryOverlay =
+  el("spiritInventoryModal");
 
-      el("shopPanel").classList.toggle(
-        "hidden",currentTab !== "shop"
-      );
-    });
+const spiritInventoryWindow =
+  spiritInventoryOverlay.querySelector(
+    ".spirit-inventory-modal"
+  );
+
+const spiritInventoryTitle =
+  el("spiritInventoryTitle");
+
+const spiritInventoryClose =
+  el("closeSpiritInventory");
+
+let spiritInventoryLastFocus = null;
+let spiritPreviousBodyOverflow = "";
+
+/* OPEN MODAL */
+
+function openSpiritInventory(tab) {
+
+  if (tab !== "farm" && tab !== "shop") return;
+
+  currentTab = tab;
+
+  spiritInventoryLastFocus =
+    document.activeElement;
+
+  spiritPreviousBodyOverflow =
+    document.body.style.overflow;
+
+  spiritInventoryTitle.textContent =
+    tab === "farm"
+      ? "CHUỒNG NUÔI"
+      : "CỬA HÀNG";
+
+  el("farmPanel").classList.toggle(
+    "hidden",
+    tab !== "farm"
+  );
+
+  el("shopPanel").classList.toggle(
+    "hidden",
+    tab !== "shop"
+  );
+
+  spiritInventoryOverlay.classList.remove(
+    "hidden"
+  );
+
+  spiritInventoryOverlay.setAttribute(
+    "aria-hidden",
+    "false"
+  );
+
+  document.body.style.overflow = "hidden";
+
+  const scrollArea =
+    spiritInventoryOverlay.querySelector(
+      ".spirit-inventory-content"
+    );
+
+  scrollArea.scrollTop = 0;
+
+  spiritInventoryClose.focus();
+}
+
+/* CLOSE MODAL */
+
+function closeSpiritInventory() {
+
+  if (spiritInventoryOverlay.classList.contains(
+    "hidden"
+  )) return;
+
+  spiritInventoryOverlay.classList.add(
+    "hidden"
+  );
+
+  spiritInventoryOverlay.setAttribute(
+    "aria-hidden",
+    "true"
+  );
+
+  document.body.style.overflow =
+    spiritPreviousBodyOverflow;
+
+  if (
+    spiritInventoryLastFocus &&
+    spiritInventoryLastFocus.isConnected
+  ) {
+    spiritInventoryLastFocus.focus();
+  }
+}
+
+/* ICON BUTTON EVENTS */
+
+document.querySelectorAll(
+  ".spirit-inventory-btn[data-tab]"
+).forEach(button => {
+
+  button.addEventListener("click", () => {
+    openSpiritInventory(button.dataset.tab);
   });
+
+});
+
+/* CLOSE BUTTON */
+
+spiritInventoryClose.addEventListener(
+  "click",
+  closeSpiritInventory
+);
+
+/* CLICK OUTSIDE TO CLOSE */
+
+spiritInventoryOverlay.addEventListener(
+  "click",
+  event => {
+
+    if (event.target === spiritInventoryOverlay) {
+      closeSpiritInventory();
+    }
+
+  }
+);
+
+/* KEYBOARD SUPPORT */
+
+spiritInventoryOverlay.addEventListener(
+  "keydown",
+  event => {
+
+    if (
+      event.key === "Escape" &&
+      el("dialog").classList.contains("hidden")
+    ) {
+      event.preventDefault();
+      closeSpiritInventory();
+      return;
+    }
+
+    if (event.key !== "Tab") return;
+
+    const focusable = Array.from(
+      spiritInventoryWindow.querySelectorAll(
+        "button:not([disabled])," +
+        "a[href]," +
+        "[tabindex]:not([tabindex='-1'])"
+      )
+    ).filter(node =>
+      node.getClientRects().length > 0
+    );
+
+    if (!focusable.length) {
+      event.preventDefault();
+      spiritInventoryWindow.focus();
+      return;
+    }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (
+      event.shiftKey &&
+      document.activeElement === first
+    ) {
+      event.preventDefault();
+      last.focus();
+    } else if (
+      !event.shiftKey &&
+      document.activeElement === last
+    ) {
+      event.preventDefault();
+      first.focus();
+    }
+
+  }
+);
+
+
+
+
+/* ==========================================
+   SPIRIT REALM - GUIDE MODAL ENGINE
+========================================== */
+
+const spiritGuideOverlay =
+  document.getElementById("spiritGuideModal");
+
+const spiritGuideButton =
+  document.getElementById("spiritGuideBtn");
+
+const spiritGuideCloseButton =
+  document.getElementById("spiritGuideClose");
+
+let spiritGuidePreviousOverflow = "";
+
+/* OPEN */
+
+function openSpiritGuide() {
+  spiritGuidePreviousOverflow =
+    document.body.style.overflow;
+
+  spiritGuideOverlay.classList.remove("hidden");
+
+  spiritGuideOverlay.setAttribute(
+    "aria-hidden",
+    "false"
+  );
+
+  document.body.style.overflow = "hidden";
+
+  spiritGuideCloseButton.focus();
+}
+
+/* CLOSE */
+
+function closeSpiritGuide() {
+  if (spiritGuideOverlay.classList.contains("hidden")) {
+    return;
+  }
+
+  spiritGuideOverlay.classList.add("hidden");
+
+  spiritGuideOverlay.setAttribute(
+    "aria-hidden",
+    "true"
+  );
+
+  document.body.style.overflow =
+    spiritGuidePreviousOverflow;
+
+  spiritGuideButton.focus();
+}
+
+/* BUTTONS */
+
+spiritGuideButton.addEventListener(
+  "click",
+  openSpiritGuide
+);
+
+spiritGuideCloseButton.addEventListener(
+  "click",
+  closeSpiritGuide
+);
+
+/* CLICK BACKDROP */
+
+spiritGuideOverlay.addEventListener(
+  "click",
+  event => {
+    if (event.target === spiritGuideOverlay) {
+      closeSpiritGuide();
+    }
+  }
+);
+
+/* KEYBOARD */
+
+spiritGuideOverlay.addEventListener(
+  "keydown",
+  event => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeSpiritGuide();
+    }
+
+    if (event.key === "Tab") {
+      // Modal chỉ có một nút tương tác.
+      event.preventDefault();
+      spiritGuideCloseButton.focus();
+    }
+  }
+);
+
+
+
+
 
 el("exitBtn").onclick = () => {
   location.href = "/invest.html";
