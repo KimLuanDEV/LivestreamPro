@@ -11396,19 +11396,20 @@ app.post("/api/login", async (req,res)=>{
 
   const db = loadUsers();
 
-  const acc = db[username];
+const acc = db[username];
 
-  // 🚫 USER BỊ KHOÁ → KHÔNG CHO LOGIN
+// 🔒 KIỂM TRA TÀI KHOẢN CÓ TỒN TẠI
+if (!acc) {
+  return res.json({ error: "invalid" });
+}
+
+// 🚫 USER BỊ KHOÁ → KHÔNG CHO LOGIN
 if (acc.profile?.accountBlocked) {
-
   return res.status(403).json({
     error: "blocked",
     message: "Your account has been locked"
   });
 }
-
-
-  if(!acc) return res.json({ error:"invalid" });
 
  const okPass = await bcrypt.compare(String(password), acc.password);
 
