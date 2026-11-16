@@ -2116,6 +2116,558 @@ button:disabled {
 
 
 
+/* ==========================================
+   SPIRIT REALM V7
+   FULLSCREEN IMAGE + HITBOX ENGINE
+========================================== */
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background:
+    linear-gradient(
+      rgba(0,8,12,.60),
+      rgba(0,8,12,.80)
+    ),
+    url("/assets/spirit-beast/spirit-realm-bg.jpg")
+    center center / cover no-repeat fixed,
+    #061519;
+}
+
+/* RESPONSIVE GAME CANVAS */
+
+.app {
+  position: relative;
+
+  width: 100%;
+  max-width: none;
+  min-height: 100dvh;
+
+  margin: 0;
+  padding:
+    env(safe-area-inset-top)
+    0
+    env(safe-area-inset-bottom);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  overflow: visible;
+  background: transparent;
+  box-shadow: none;
+}
+
+.app::before,
+.app::after {
+  display: none;
+}
+
+#spiritGameScreen {
+  position: relative;
+  isolation: isolate;
+
+  width: min(100vw, 430px, 49.425dvh);
+  aspect-ratio: 430 / 870;
+
+  flex: none;
+
+  overflow: hidden;
+
+  background:
+    url("/assets/spirit-beast/spirit-realm-bg.jpg")
+    center center / 100% 100% no-repeat,
+    radial-gradient(
+      ellipse at 50% 40%,
+      #1b5a4b,
+      #071c24 75%
+    );
+
+  box-shadow:
+    0 0 45px rgba(0,0,0,.55);
+}
+
+/* ALL HITBOXES USE RELATIVE COORDINATES */
+
+#spiritGameScreen button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* ==========================================
+   HEADER : Y 2% - 8%
+========================================== */
+
+.spirit-game-header {
+  position: absolute;
+  z-index: 20;
+
+  top: 2%;
+  left: 4%;
+  width: 92%;
+  height: 6%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin: 0;
+  padding: 0;
+}
+
+.spirit-game-menu {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 100%;
+}
+
+.spirit-game-hitbox,
+.spirit-game-exit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: clamp(30px, 8vw, 38px);
+  height: clamp(30px, 8vw, 38px);
+
+  padding: 0;
+
+  border: 1px solid rgba(239,203,127,.65);
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(40,87,73,.86),
+      rgba(9,38,43,.88)
+    );
+
+  color: #ffdfa0;
+
+  font-size: 21px;
+  font-weight: 800;
+
+  box-shadow:
+    inset 0 1px rgba(255,235,180,.22);
+}
+
+.spirit-game-exit {
+  width: 68px;
+  font-size: 10px;
+  letter-spacing: .6px;
+}
+
+.spirit-game-hitbox:active,
+.spirit-game-exit:active {
+  transform: scale(.95);
+}
+
+/* ==========================================
+   WALLET : Y 10% - 19%
+========================================== */
+
+#spiritGameScreen .spirit-game-wallet {
+  position: absolute;
+  z-index: 5;
+
+  top: 10%;
+  left: 6%;
+  width: 88%;
+  height: 9%;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  align-items: center;
+  gap: 0;
+
+  margin: 0;
+  padding: 0;
+
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+#spiritGameScreen .wallet .stat {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  margin: 0;
+  padding: 3px;
+
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#spiritGameScreen .wallet .stat:first-child {
+  border-right: 1px solid rgba(220,187,113,.2);
+}
+
+#spiritGameScreen .wallet .stat small {
+  font-size: clamp(8px, 2vw, 10px);
+  font-weight: 800;
+  letter-spacing: .5px;
+
+  color: #c0ddcc;
+}
+
+#spiritGameScreen .wallet .stat strong {
+  display: block;
+
+  max-width: 100%;
+  margin-top: 5px;
+
+  color: #ffe4a6;
+  font-size: clamp(13px, 4vw, 20px);
+
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#spiritGameScreen .wallet .stat:nth-child(2) strong {
+  color: #9af5bf;
+}
+
+/* ==========================================
+   MAIN BEAST : Y 21% - 60%
+========================================== */
+
+#spiritGameScreen .spirit-game-hero {
+  position: absolute;
+  z-index: 4;
+
+  top: 21%;
+  left: 4%;
+  width: 92%;
+  height: 39%;
+  min-height: 0;
+
+  margin: 0;
+  padding: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  overflow: hidden;
+
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#spiritGameScreen .spirit-game-hero::before,
+#spiritGameScreen .spirit-game-hero::after {
+  display: none;
+}
+
+#spiritGameScreen .beast {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 1 1 auto;
+  min-height: 0;
+
+  width: 100%;
+  height: auto;
+
+  margin: 0;
+  padding: 0;
+
+  background: none;
+}
+
+#spiritGameScreen .main-beast-image {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+  object-position: center;
+
+  filter:
+    drop-shadow(0 12px 14px rgba(0,0,0,.5));
+}
+
+/* BEAST NAME */
+
+#spiritGameScreen .spirit-beast-info {
+  position: relative;
+  z-index: 5;
+
+  flex: 0 0 auto;
+  width: 100%;
+
+  padding: 1% 0 3%;
+  text-align: center;
+}
+
+#spiritGameScreen .hero h2 {
+  margin: 0 0 5px;
+  padding: 0;
+
+  border: 0;
+  background: none;
+  box-shadow: none;
+
+  color: #ffe1a1;
+
+  font-family: Georgia, serif;
+  font-size: clamp(15px, 4.5vw, 23px);
+  line-height: 1.2;
+}
+
+#spiritGameScreen .hero p {
+  margin: 0;
+  padding: 0;
+
+  font-size: clamp(9px, 2.5vw, 11px);
+  line-height: 1.3;
+
+  color: #b3e5ce;
+}
+
+/* ==========================================
+   STATUS : Y 61% - 81%
+========================================== */
+
+#spiritGameScreen .spirit-game-status {
+  position: absolute;
+  z-index: 6;
+
+  top: 61%;
+  left: 6%;
+  width: 88%;
+  height: 20%;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  margin: 0;
+  padding: 8px 13px;
+
+  overflow: hidden;
+
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#spiritGameScreen .spirit-game-status::before {
+  display: none;
+}
+
+#spiritGameScreen .section-title {
+  margin: 0 0 5px;
+
+  font-family: Georgia, serif;
+  font-size: clamp(10px, 3vw, 13px);
+  letter-spacing: .8px;
+
+  color: #ffe1a3;
+}
+
+#spiritGameScreen .line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  flex: 1 1 auto;
+  min-height: 0;
+
+  gap: 7px;
+  padding: 1px 0;
+
+  border-bottom: 1px solid rgba(230,201,139,.12);
+
+  font-size: clamp(8px, 2.3vw, 10px);
+}
+
+#spiritGameScreen .line > span:first-child {
+  min-width: 0;
+  flex: 1;
+}
+
+#spiritGameScreen .timer,
+#spiritGameScreen #totalEarned {
+  flex: 0 0 auto;
+  max-width: 52%;
+
+  color: #9ef2c0;
+
+  font-size: clamp(9px, 2.4vw, 11px);
+  font-weight: 800;
+  text-align: right;
+}
+
+#spiritGameScreen #totalEarned {
+  color: #f7dda1;
+}
+
+#spiritGameScreen .progress {
+  flex: 0 0 auto;
+
+  width: 100%;
+  height: 5px;
+
+  margin: 3px 0;
+
+  background: #071c1d;
+
+  border: 0;
+  border-radius: 10px;
+}
+
+#spiritGameScreen .progress div {
+  height: 100%;
+  border-radius: inherit;
+
+  background: linear-gradient(
+    90deg,
+    #248c72,
+    #9ef4be
+  );
+}
+
+/* ==========================================
+   CARE HITBOXES : Y 83% - 96%
+========================================== */
+
+.spirit-game-care {
+  position: absolute;
+  z-index: 10;
+
+  top: 83%;
+  left: 6%;
+  width: 88%;
+  height: 13%;
+
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+
+  align-items: stretch;
+  gap: 9px;
+}
+
+#spiritGameScreen .spirit-care-hitbox {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 2px;
+
+  min-width: 0;
+  min-height: 0;
+
+  padding: 4px;
+
+  border: 1px solid rgba(224,185,110,.6);
+  border-radius: 12px;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 15%,
+      rgba(67,144,115,.24),
+      transparent 75%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(27,70,59,.84),
+      rgba(8,30,36,.9)
+    );
+
+  box-shadow:
+    inset 0 1px rgba(255,233,172,.18);
+}
+
+#spiritGameScreen .spirit-care-hitbox img {
+  display: block;
+
+  width: min(70%, 67px);
+  height: 67%;
+
+  object-fit: contain;
+
+  pointer-events: none;
+}
+
+#spiritGameScreen .spirit-care-hitbox span {
+  color: #ffe3a5;
+
+  font-size: clamp(9px, 2.3vw, 11px);
+  font-weight: 800;
+  line-height: 1;
+}
+
+#spiritGameScreen .spirit-care-hitbox:active:not(:disabled) {
+  transform: scale(.97);
+}
+
+#spiritGameScreen .spirit-care-hitbox:disabled {
+  opacity: .42;
+  filter: grayscale(1);
+}
+
+/* ==========================================
+   SMALL VIEWPORT
+========================================== */
+
+@media (max-width: 375px) {
+
+  #spiritGameScreen .spirit-game-status {
+    padding: 5px 9px;
+  }
+
+  .spirit-game-menu {
+    gap: 5px;
+  }
+
+  .spirit-game-care {
+    gap: 6px;
+  }
+
+  #spiritGameScreen .spirit-care-hitbox {
+    padding: 3px;
+    border-radius: 9px;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  #spiritGameScreen * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+}
+
 
 </style>
 
@@ -2123,141 +2675,68 @@ button:disabled {
 
 <body>
 
+
+
+
 <main class="app">
 
-
-
 <!-- ==========================================
-     SPIRIT REALM V5
-     UNIFIED ROYAL SANCTUARY
+     SPIRIT REALM - FULLSCREEN GAME SCREEN
+     DESIGN REFERENCE: 430 x 870
 ========================================== -->
 
-<div class="spirit-stage">
+<div class="spirit-game-screen" id="spiritGameScreen">
 
+  <!-- HEADER HITBOXES -->
+  <header class="spirit-game-header">
 
-<!-- ==========================================
-     SPIRIT REALM - MINIMAL EXIT
-========================================== -->
+    <nav class="spirit-game-menu"
+         aria-label="Spirit Realm Menu">
 
+      <button
+        type="button"
+        class="spirit-game-hitbox"
+        data-tab="farm"
+        aria-label="My Beasts"
+        aria-haspopup="dialog"
+        aria-controls="spiritInventoryModal">
+        <span aria-hidden="true">⌂</span>
+      </button>
 
-<!-- ==========================================
-     SPIRIT REALM - COMPACT TOP HEADER
-========================================== -->
+      <button
+        type="button"
+        class="spirit-game-hitbox"
+        data-tab="shop"
+        aria-label="Beast Shop"
+        aria-haspopup="dialog"
+        aria-controls="spiritInventoryModal">
+        <span aria-hidden="true">▣</span>
+      </button>
 
-<header class="spirit-header-minimal">
+      <button
+        type="button"
+        class="spirit-game-hitbox"
+        id="spiritGuideBtn"
+        aria-label="Game Guide"
+        aria-haspopup="dialog"
+        aria-controls="spiritGuideModal">
+        <span aria-hidden="true">?</span>
+      </button>
 
-  <nav class="spirit-inventory-nav"
-       aria-label="Spirit Beast Menu">
+    </nav>
 
-    <!-- FARM -->
     <button
       type="button"
-      class="spirit-inventory-btn"
-      data-tab="farm"
-      aria-label="My Beasts"
-      title="My Beasts"
-      aria-haspopup="dialog"
-      aria-controls="spiritInventoryModal">
-
-      <svg viewBox="0 0 24 24"
-           fill="none"
-           stroke="currentColor"
-           stroke-width="1.7"
-           stroke-linecap="round"
-           stroke-linejoin="round"
-           aria-hidden="true">
-        <path d="M3 10 12 3l9 7"/>
-        <path d="M5 9v11h14V9"/>
-        <path d="M9 20v-7h6v7"/>
-        <path d="M8 7h8"/>
-      </svg>
-
+      class="spirit-game-exit"
+      id="exitBtn"
+      aria-label="Exit Game">
+      ✕ EXIT
     </button>
 
-    <!-- SHOP -->
-    <button
-      type="button"
-      class="spirit-inventory-btn"
-      data-tab="shop"
-      aria-label="Beast Shop"
-      title="Beast Shop"
-      aria-haspopup="dialog"
-      aria-controls="spiritInventoryModal">
-
-      <svg viewBox="0 0 24 24"
-           fill="none"
-           stroke="currentColor"
-           stroke-width="1.7"
-           stroke-linecap="round"
-           stroke-linejoin="round"
-           aria-hidden="true">
-        <path d="M3 9 5 4h14l2 5"/>
-        <path d="M3 9v2a3 3 0 0 0 6 0
-                 3 3 0 0 0 6 0
-                 3 3 0 0 0 6 0V9"/>
-        <path d="M5 14v7h14v-7"/>
-        <path d="M10 21v-6h4v6"/>
-      </svg>
-
-    </button>
-
-
-
-<!-- ==========================================
-     SPIRIT REALM - GUIDE ICON
-========================================== -->
-
-<button
-  type="button"
-  class="spirit-inventory-btn spirit-guide-btn"
-  id="spiritGuideBtn"
-  aria-label="Game Guide"
-  title="Game Guide"
-  aria-haspopup="dialog"
-  aria-controls="spiritGuideModal">
-
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.7"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    aria-hidden="true">
-
-    <circle cx="12" cy="12" r="9"/>
-
-    <path
-      d="M9.5 9a2.5 2.5 0 1 1 4.2 1.8
-         c-1 .8-1.7 1.3-1.7 2.7"/>
-
-    <path d="M12 17h.01"/>
-
-  </svg>
-
-</button>
-
-
-  </nav>
-
-  <!-- EXIT -->
-  <button
-    type="button"
-    class="spirit-exit-minimal"
-    id="exitBtn"
-    aria-label="Exit game">
-
-    <span aria-hidden="true">✕</span>
-    EXIT
-
-  </button>
-
-</header>
-
-
+  </header>
 
   <!-- DIAMOND WALLET -->
-  <section class="wallet">
+  <section class="spirit-game-wallet wallet">
 
     <div class="stat">
       <small>MY DIAMONDS</small>
@@ -2271,9 +2750,8 @@ button:disabled {
 
   </section>
 
-
-  <!-- MAIN BEAST -->
-  <section class="hero">
+  <!-- DYNAMIC SPIRIT BEAST -->
+  <section class="spirit-game-hero hero">
 
     <div class="beast" id="mainBeast">
       <img
@@ -2283,10 +2761,7 @@ button:disabled {
     </div>
 
     <div class="spirit-beast-info">
-      <h2 id="beastName">
-        Connecting...
-      </h2>
-
+      <h2 id="beastName">Connecting...</h2>
       <p id="beastDescription">
         Loading spirit beast data...
       </p>
@@ -2294,97 +2769,100 @@ button:disabled {
 
   </section>
 
-</div>
-<!-- END SPIRIT STAGE -->
+  <!-- BEAST STATUS -->
+  <section class="spirit-game-status panel" id="carePanel">
 
-
-  <section class="panel" id="carePanel">
-    <div class="section-title">SPIRIT BEAST STATUS</div>
+    <div class="section-title">
+      SPIRIT BEAST STATUS
+    </div>
 
     <div class="line">
-      <span class="muted">Next Reward</span>
-      <span class="timer" id="rewardTimer">--:--:--</span>
+      <span>Next Reward</span>
+      <span id="rewardTimer" class="timer">
+        --:--:--
+      </span>
     </div>
+
     <div class="progress">
       <div id="rewardProgress"></div>
     </div>
 
     <div class="line">
-      <span class="muted">Time Until Next Feeding</span>
-      <span class="timer" id="feedTimer">--:--:--</span>
+      <span>Feeding</span>
+      <span id="feedTimer" class="timer">
+        --:--:--
+      </span>
     </div>
 
     <div class="line">
-      <span class="muted">Starvation Countdown</span>
-      <span class="timer" id="deathTimer">--:--:--</span>
+      <span>Starvation</span>
+      <span id="deathTimer" class="timer">
+        --:--:--
+      </span>
     </div>
 
     <div class="line">
-      <span class="muted">Cleaning Countdown</span>
-      <span class="timer" id="cleanTimer">--:--:--</span>
+      <span>Cleaning</span>
+      <span id="cleanTimer" class="timer">
+        --:--:--
+      </span>
     </div>
 
     <div class="line">
-      <span class="muted">Total Diamonds Earned</span>
+      <span>Total Earned</span>
       <span id="totalEarned">0 💎</span>
     </div>
 
+  </section>
 
-<!-- ==========================================
-     SPIRIT BEAST - IMAGE CARE BUTTONS
-========================================== -->
+  <!-- CARE HITBOXES -->
+  <div class="spirit-game-care">
 
-<div class="actions spirit-care-actions">
+    <button
+      type="button"
+      class="spirit-care-hitbox"
+      data-care="feed"
+      aria-label="Feed Beast">
 
-  <button
-    type="button"
-    class="action spirit-care-btn"
-    data-care="feed"
-    aria-label="Feed Beast">
+      <img
+        src="/assets/spirit-beast/care-feed.png"
+        alt="">
 
-    <img
-      src="/assets/spirit-beast/care-feed.png"
-      alt=""
-      class="care-btn-image">
+      <span>FEED</span>
+    </button>
 
-    <span class="care-btn-label">FEED</span>
+    <button
+      type="button"
+      class="spirit-care-hitbox"
+      data-care="clean"
+      aria-label="Clean Beast">
 
-  </button>
+      <img
+        src="/assets/spirit-beast/care-clean.png"
+        alt="">
 
-  <button
-    type="button"
-    class="action spirit-care-btn"
-    data-care="clean"
-    aria-label="Clean Beast">
+      <span>CLEAN</span>
+    </button>
 
-    <img
-      src="/assets/spirit-beast/care-clean.png"
-      alt=""
-      class="care-btn-image">
+    <button
+      type="button"
+      class="spirit-care-hitbox"
+      data-care="rest"
+      aria-label="Let Beast Rest">
 
-    <span class="care-btn-label">CLEAN</span>
+      <img
+        src="/assets/spirit-beast/care-rest.png"
+        alt="">
 
-  </button>
+      <span>REST</span>
+    </button>
 
-  <button
-    type="button"
-    class="action spirit-care-btn"
-    data-care="rest"
-    aria-label="Let Beast Rest">
-
-    <img
-      src="/assets/spirit-beast/care-rest.png"
-      alt=""
-      class="care-btn-image">
-
-    <span class="care-btn-label">REST</span>
-
-  </button>
+  </div>
 
 </div>
 
+<!-- Keep existing Inventory and Guide modals below -->
 
-  </section>
 
 
 
