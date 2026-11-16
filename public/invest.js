@@ -82,121 +82,16 @@ function closePortfolio(){
 
 
 
-
-// ==========================================
-// GAME CENTER V2 - PAGE CONTROLLER
-// ==========================================
-
-let currentGameHubPage = 1;
-
-function getGameHubPages() {
-  const sheet = document.getElementById("gameHubSheet");
-  if (!sheet) return [];
-
-  return Array.from(
-    sheet.querySelectorAll(".game-showroom-page")
-  );
-}
-
-
-// ==========================================
-// SET ACTIVE PAGE
-// ==========================================
-
-function setGameHubPage(pageNumber) {
-  const pages = getGameHubPages();
-  const totalPages = pages.length;
-
-  if (!totalPages) return;
-
-  const nextPage = Math.max(
-    1,
-    Math.min(totalPages, pageNumber)
-  );
-
-  currentGameHubPage = nextPage;
-
-  pages.forEach((page, index) => {
-    const active = index + 1 === nextPage;
-
-    page.hidden = !active;
-    page.classList.toggle("is-active", active);
-
-    page.querySelectorAll("button").forEach(button => {
-      button.tabIndex = active ? 0 : -1;
-    });
-  });
-
-  // UPDATE COUNTER
-  const counter = document.getElementById("gamePageCounter");
-
-  if (counter) {
-    counter.textContent =
-      String(nextPage).padStart(2, "0") +
-      " / " +
-      String(totalPages).padStart(2, "0");
-  }
-
-  // UPDATE NAV BUTTONS
-  const prev = document.getElementById("gamePagePrev");
-  const next = document.getElementById("gamePageNext");
-
-  if (prev) prev.disabled = nextPage === 1;
-  if (next) next.disabled = nextPage === totalPages;
-
-  // UPDATE PAGE DOTS
-  const dots = document.getElementById("gamePageDots");
-
-  if (dots) {
-    dots.replaceChildren();
-
-    for (let i = 1; i <= totalPages; i++) {
-      const dot = document.createElement("span");
-
-      dot.className =
-        "game-page-dot" +
-        (i === nextPage ? " is-active" : "");
-
-      dots.appendChild(dot);
-    }
-  }
-}
-
-
-// ==========================================
-// PREVIOUS / NEXT
-// ==========================================
-
-function changeGameHubPage(direction) {
-  if (direction !== 1 && direction !== -1) return;
-
-  setGameHubPage(currentGameHubPage + direction);
-}
-
-
-// ==========================================
-// OPEN GAME CENTER
-// ==========================================
-
 function openGameHub() {
   const sheet = document.getElementById("gameHubSheet");
   if (!sheet) return;
-
-  // Always open page 1
-  setGameHubPage(1);
 
   sheet.classList.remove("hidden");
   document.body.classList.add("sheet-open");
 
   const box = sheet.querySelector(".game-showroom-box");
-
   if (box) box.scrollTop = 0;
 }
-
-
-// ==========================================
-// CLOSE GAME CENTER
-// ==========================================
 
 function closeGameHub() {
   const sheet = document.getElementById("gameHubSheet");
@@ -204,16 +99,11 @@ function closeGameHub() {
 
   sheet.classList.add("hidden");
 
-  const portfolio =
-    document.getElementById("portfolioSheet");
-
-  if (!portfolio ||
-      portfolio.classList.contains("hidden")) {
+  if (document.getElementById("portfolioSheet")
+      ?.classList.contains("hidden")) {
     document.body.classList.remove("sheet-open");
   }
 }
-
-
 
 
 function openWheelGame(){
@@ -249,14 +139,6 @@ function openKingSlaveGame(){
 
 function openTimeRaceGame(){
   location.href = "/game-time-race.html";
-}
-
-
-// ==========================================
-// MONSTER HUNTER - OPEN GAME
-// ==========================================
-function openMonsterHunterGame() {
-  location.href = "/game-monster-hunter.html";
 }
 
 
