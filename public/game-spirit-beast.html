@@ -8,152 +8,1009 @@ content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Spirit Beast - LivestreamPro</title>
 
 <style>
+
+/* =============================================
+   LIVESTREAMPRO - SPIRIT BEAST
+   FANTASY ROYAL EMERALD & GOLD V3
+   FULL CSS REPLACEMENT
+============================================= */
+
 :root {
-  --bg:#080f15;
-  --panel:#111e26;
-  --panel2:#192c30;
-  --gold:#e7cd8b;
-  --green:#7ee0ad;
-  --muted:#97adb3;
-  --border:rgba(235,213,158,.16);
+  color-scheme: dark;
+
+  --bg: #050d11;
+  --panel: #091b20;
+  --panel2: #102c30;
+
+  --gold: #e8cb83;
+  --gold-bright: #fff0bb;
+  --gold-dark: #936d36;
+
+  --green: #78eac2;
+  --muted: #91b4b5;
+
+  --border: rgba(228,188,105,.38);
+  --danger: #ff827f;
+
+  --radius: 18px;
 }
-* {box-sizing:border-box}
-html,body {margin:0;min-height:100%;background:#050a0e}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: #030a0e;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  color:#f5f1e8;
-  font-family:Arial,Helvetica,sans-serif;
+  margin: 0;
+  min-height: 100dvh;
+
+  font-family:
+    "Segoe UI",
+    Arial,
+    sans-serif;
+
+  color: #f6ecd3;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      #16443e 0%,
+      #061317 55%,
+      #02080b 100%
+    );
 }
-button {font:inherit;cursor:pointer}
-button:disabled {opacity:.4;cursor:not-allowed}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* =============================================
+   MAIN APP
+============================================= */
+
 .app {
-  width:100%;
-  max-width:430px;
-  min-height:100dvh;
-  margin:auto;
-  background:
-    radial-gradient(ellipse at 50% 18%,#1d4240,transparent 55%),
-    linear-gradient(180deg,#101d24,#070e14 80%);
-  padding:
-    calc(15px + env(safe-area-inset-top))
-    15px
-    calc(25px + env(safe-area-inset-bottom));
-}
-.top {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-}
-.sub {
-  font-size:10px;
-  color:var(--muted);
-  letter-spacing:2px;
-}
-h1 {
-  margin:5px 0 0;
-  font-size:21px;
-  color:var(--gold);
-  letter-spacing:1px;
-}
-.exit {
-  border:1px solid var(--border);
-  background:#1b2a30;
-  color:var(--gold);
-  padding:11px 15px;
-  border-radius:12px;
-}
-.wallet {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin:22px 0 16px;
-}
-.stat {
-  background:rgba(19,38,44,.95);
-  border:1px solid var(--border);
-  border-radius:16px;
-  padding:14px;
-}
-.stat small {
-  color:var(--muted);
-  font-size:10px;
-  letter-spacing:1px;
-}
-.stat strong {
-  display:block;
-  margin-top:9px;
-  font-size:19px;
-  color:var(--gold);
-}
-.hero {
-  position:relative;
-  overflow:hidden;
-  text-align:center;
-  border-radius:22px;
-  border:1px solid var(--border);
-  background:
-    radial-gradient(circle at 50% 45%,#326860,transparent 54%),
-    linear-gradient(#183438,#0b171c);
-  padding:23px 12px;
-  min-height:290px;
-}
-.hero:before {
-  content:"";
-  position:absolute;
-  inset:18px;
-  border:1px solid rgba(230,209,148,.12);
-  border-radius:50%;
-  pointer-events:none;
-}
-.realm {color:var(--gold);font-size:12px;letter-spacing:3px}
-
-@keyframes float {
-  50% {transform:translateY(-10px)}
-}
-
-
-
-
-/* ==========================================
-   SPIRIT BEAST - PREMIUM IMAGE SYSTEM
-========================================== */
-
-/* LINH THÚ CHÍNH */
-.beast {
   position: relative;
-  z-index: 1;
+  isolation: isolate;
 
   width: 100%;
-  height: 280px;
+  max-width: 430px;
+  min-height: 100dvh;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  margin: 0 auto;
+
+  padding:
+    calc(18px + env(safe-area-inset-top))
+    14px
+    calc(32px + env(safe-area-inset-bottom));
 
   overflow: hidden;
-  margin: 14px auto;
 
-  border-radius: 16px;
+  background:
+    radial-gradient(
+      ellipse at 50% 16%,
+      rgba(41,117,99,.32),
+      transparent 44%
+    ),
+    radial-gradient(
+      ellipse at 50% 65%,
+      rgba(15,76,72,.28),
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      #081c20 0%,
+      #061116 52%,
+      #030b10 100%
+    );
 
-  animation: none;
+  box-shadow:
+    0 0 90px rgba(0,0,0,.65);
+}
+
+.app::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+  z-index: -1;
+
+  background:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0,
+      transparent 24px,
+      rgba(179,220,187,.012) 25px,
+      transparent 26px
+    );
+}
+
+.app::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 3px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      #c59a4a,
+      #fff1b7,
+      #c59a4a,
+      transparent
+    );
+
+  box-shadow:
+    0 0 20px rgba(242,200,111,.3);
+}
+
+/* =============================================
+   HEADER
+============================================= */
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  margin-bottom: 18px;
+}
+
+.top > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.sub {
+  color: #9ebbb2;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  letter-spacing: 1.7px;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 7px 0 0;
+
+  font-family: Georgia, "Times New Roman", serif;
+
+  font-size: clamp(19px, 5.3vw, 25px);
+  line-height: 1.15;
+
+  font-weight: 700;
+
+  letter-spacing: .5px;
+
+  color: var(--gold-bright);
+
+  text-shadow:
+    0 2px 0 rgba(67,39,14,.9),
+    0 0 20px rgba(232,189,91,.25);
+}
+
+.exit {
+  flex: 0 0 auto;
+
+  min-height: 39px;
+  padding: 0 13px;
+
+  border: 1px solid #b68d4e;
+  border-radius: 9px;
+
+  color: #ffe7a5;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #36534a,
+      #0e2426 48%,
+      #08181d
+    );
+
+  box-shadow:
+    inset 0 1px rgba(255,237,176,.22),
+    0 4px 12px rgba(0,0,0,.4);
+}
+
+.exit:active {
+  transform: scale(.97);
+}
+
+/* =============================================
+   WALLET
+============================================= */
+
+.wallet {
+  display: grid;
+  grid-template-columns:
+    repeat(2,minmax(0,1fr));
+
+  gap: 10px;
+  margin: 0 0 15px;
+}
+
+.stat {
+  position: relative;
+  min-width: 0;
+  min-height: 89px;
+
+  padding: 14px 12px;
+
+  text-align: center;
+
+  border: 1px solid #ba9457;
+  border-radius: 13px;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 100%,
+      rgba(31,118,88,.34),
+      transparent 75%
+    ),
+    linear-gradient(
+      155deg,
+      #1b3635,
+      #07191e 70%
+    );
+
+  box-shadow:
+    inset 0 0 0 1px rgba(250,217,137,.08),
+    inset 0 1px rgba(255,242,190,.19),
+    0 7px 18px rgba(0,0,0,.28);
+}
+
+.stat::before {
+  content: "";
+  position: absolute;
+
+  top: 4px;
+  left: 12%;
+  right: 12%;
+
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,231,157,.8),
+      transparent
+    );
+}
+
+.stat small {
+  display: block;
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+
+  color: #d5c7a1;
+}
+
+.stat strong {
+  display: block;
+  margin-top: 10px;
+
+  color: #f9dfa0;
+
+  font-size: clamp(16px,4.5vw,21px);
+  font-weight: 800;
+
+  font-variant-numeric: tabular-nums;
+
+  text-shadow:
+    0 0 14px rgba(236,192,97,.27);
+
+  overflow-wrap: anywhere;
+}
+
+.stat:nth-child(2) {
+  border-color: #6baf93;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 100%,
+      rgba(29,153,107,.31),
+      transparent 75%
+    ),
+    linear-gradient(
+      155deg,
+      #173c35,
+      #071b21 70%
+    );
+}
+
+.stat:nth-child(2) strong {
+  color: #91f0bb;
+}
+
+/* =============================================
+   MAIN BEAST SANCTUARY
+============================================= */
+
+.hero {
+  position: relative;
+  isolation: isolate;
+
+  min-height: 350px;
+
+  overflow: hidden;
+  text-align: center;
+
+  padding: 16px 13px 22px;
+
+  border: 1px solid #bc9657;
+  border-radius: 22px;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 47%,
+      rgba(66,162,137,.34),
+      transparent 56%
+    ),
+    radial-gradient(
+      ellipse at 50% 90%,
+      rgba(205,165,93,.16),
+      transparent 50%
+    ),
+    linear-gradient(
+      180deg,
+      #14363a 0%,
+      #092027 64%,
+      #071316 100%
+    );
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,231,159,.09),
+    inset 0 1px rgba(255,240,170,.22),
+    0 12px 30px rgba(0,0,0,.35);
+}
+
+.hero::before {
+  content: "";
+
+  position: absolute;
+  z-index: 0;
+
+  width: 270px;
+  height: 270px;
+
+  top: 43px;
+  left: 50%;
+  inset: auto;
+
+  transform: translateX(-50%);
+
+  border: 1px solid rgba(235,207,131,.3);
+  border-radius: 50%;
+
+  box-shadow:
+    0 0 0 12px rgba(198,178,118,.035),
+    0 0 0 27px rgba(198,178,118,.025),
+    inset 0 0 40px rgba(58,214,171,.08);
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(47,185,151,.13),
+      transparent 65%
+    );
+
+  pointer-events: none;
+}
+
+.hero::after {
+  content: "";
+
+  position: absolute;
+  z-index: 0;
+
+  left: 12%;
+  right: 12%;
+  bottom: 76px;
+
+  height: 30px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      ellipse,
+      rgba(107,255,199,.28),
+      transparent 74%
+    );
+
+  filter: blur(8px);
+  pointer-events: none;
+}
+
+.realm {
+  position: relative;
+  z-index: 2;
+
+  display: inline-block;
+
+  padding: 5px 15px;
+
+  color: #ffe6aa;
+
+  font-family: Georgia, serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+
+  text-shadow:
+    0 0 12px rgba(255,215,123,.4);
+}
+
+/* =============================================
+   MAIN BEAST IMAGE
+============================================= */
+
+.beast {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+  height: 278px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  margin: 2px auto 0;
+
+  overflow: visible;
 }
 
 .main-beast-image {
+  display: block;
+
   width: 100%;
   height: 100%;
 
   object-fit: contain;
   object-position: center;
 
-  border-radius: 16px;
-
   filter:
-    drop-shadow(0 12px 25px rgba(0,0,0,.4));
+    drop-shadow(0 12px 20px rgba(0,0,0,.38));
 
-  animation: spiritFloat 4s ease-in-out infinite;
+  animation:
+    spiritFloat 5s ease-in-out infinite;
+
+  will-change: transform;
 }
 
-/* ẢNH TRONG SHOP VÀ CHUỒNG NUÔI */
+@keyframes spiritFloat {
+  0%,100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+.hero h2 {
+  position: relative;
+  z-index: 2;
+
+  display: table;
+
+  max-width: 100%;
+  margin: 0 auto 9px;
+
+  padding: 9px 23px;
+
+  border: 1px solid #c4a064;
+  border-radius: 10px;
+
+  color: #ffe5a0;
+
+  font-family:
+    Georgia, "Times New Roman", serif;
+
+  font-size: 22px;
+  font-weight: 700;
+
+  text-shadow:
+    0 2px 3px #000;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(51,75,61,.96),
+      rgba(7,28,31,.98)
+    );
+
+  box-shadow:
+    inset 0 1px rgba(255,239,164,.2),
+    0 5px 18px rgba(0,0,0,.35);
+}
+
+.hero p {
+  position: relative;
+  z-index: 2;
+
+  margin: 0;
+
+  color: #c6d8c5;
+
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .6px;
+}
+
+.beast.dead .main-beast-image {
+  filter:
+    grayscale(1)
+    brightness(.45);
+
+  animation: none;
+}
+
+.beast.dead {
+  opacity: .7;
+}
+
+/* =============================================
+   STATUS PANEL
+============================================= */
+
+.panel {
+  position: relative;
+
+  margin-top: 15px;
+  padding: 17px 15px;
+
+  border: 1px solid #a88b56;
+  border-radius: 17px;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(40,105,89,.19),
+      transparent 70%
+    ),
+    linear-gradient(
+      160deg,
+      #153138,
+      #071a20 80%
+    );
+
+  box-shadow:
+    inset 0 0 0 1px rgba(240,214,138,.05),
+    0 8px 23px rgba(0,0,0,.26);
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+
+  left: 20px;
+  right: 20px;
+  top: 0;
+
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      #ffe4a0,
+      transparent
+    );
+}
+
+.section-title {
+  margin-bottom: 16px;
+
+  text-align: center;
+
+  font-family: Georgia, serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+
+  color: var(--gold-bright);
+
+  text-shadow:
+    0 0 15px rgba(255,218,136,.25);
+}
+
+.line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  gap: 12px;
+
+  min-height: 34px;
+  margin: 0;
+
+  padding: 7px 2px;
+
+  border-bottom:
+    1px solid rgba(172,208,190,.12);
+
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.line:last-of-type {
+  border-bottom: 0;
+}
+
+.line > span:first-child {
+  min-width: 0;
+  flex: 1;
+}
+
+.muted {
+  color: #bbd2c7;
+}
+
+.timer,
+#totalEarned {
+  flex: 0 0 auto;
+
+  max-width: 48%;
+
+  text-align: right;
+
+  color: #9df5bb;
+  font-size: 12px;
+  font-weight: 800;
+
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+#totalEarned {
+  color: #ffe19d;
+}
+
+.danger {
+  color: #ff827f !important;
+
+  text-shadow:
+    0 0 12px rgba(255,61,61,.34);
+}
+
+/* =============================================
+   REWARD PROGRESS
+============================================= */
+
+.progress {
+  height: 9px;
+
+  margin: 9px 0 13px;
+
+  overflow: hidden;
+
+  border: 1px solid #6e866c;
+  border-radius: 20px;
+
+  background: #071417;
+
+  box-shadow:
+    inset 0 2px 5px rgba(0,0,0,.7);
+}
+
+.progress div {
+  height: 100%;
+
+  border-radius: inherit;
+
+  background:
+    linear-gradient(
+      90deg,
+      #14866d,
+      #5ce6b1,
+      #d7ffb5
+    );
+
+  box-shadow:
+    0 0 12px rgba(86,255,181,.65);
+
+  transition: width .35s ease;
+}
+
+/* =============================================
+   CARE ACTIONS
+============================================= */
+
+.actions,
+.spirit-care-actions {
+  display: grid;
+  grid-template-columns:
+    repeat(3,minmax(0,1fr));
+
+  width: 100%;
+
+  gap: 9px;
+  margin-top: 19px;
+}
+
+.action,
+.spirit-care-btn {
+  position: relative;
+
+  min-width: 0;
+  min-height: 120px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  padding: 9px 5px 11px;
+
+  overflow: hidden;
+
+  border: 1px solid #b89455;
+  border-radius: 13px;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 20%,
+      rgba(52,139,118,.3),
+      transparent 78%
+    ),
+    linear-gradient(
+      180deg,
+      #244a43,
+      #0b242b 70%
+    );
+
+  box-shadow:
+    inset 0 1px rgba(255,239,186,.18),
+    inset 0 0 0 1px rgba(255,211,125,.05),
+    0 6px 14px rgba(0,0,0,.3);
+
+  transition:
+    transform .15s ease,
+    border-color .15s ease,
+    box-shadow .15s ease;
+}
+
+.spirit-care-btn::before {
+  content: "";
+  position: absolute;
+
+  top: 0;
+  left: 18%;
+  right: 18%;
+
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      #fff0b8,
+      transparent
+    );
+}
+
+.care-btn-image {
+  display: block;
+
+  width: 76px;
+  height: 76px;
+
+  max-width: 100%;
+
+  object-fit: contain;
+
+  pointer-events: none;
+
+  filter:
+    drop-shadow(0 5px 9px rgba(0,0,0,.38));
+}
+
+.care-btn-label {
+  display: block;
+
+  font-size: 10px !important;
+  line-height: 1.2;
+
+  font-weight: 800;
+  letter-spacing: .6px;
+
+  text-align: center;
+
+  color: #ffe5aa;
+
+  text-shadow:
+    0 1px 3px rgba(0,0,0,.8);
+}
+
+.spirit-care-btn:active:not(:disabled) {
+  transform: scale(.96);
+
+  border-color: #ffe3a0;
+}
+
+.spirit-care-btn:disabled {
+  opacity: .38;
+  filter: grayscale(1);
+  cursor: not-allowed;
+}
+
+/* =============================================
+   FARM / SHOP TABS
+============================================= */
+
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  gap: 10px;
+  margin: 20px 0 14px;
+}
+
+.tab {
+  position: relative;
+
+  min-height: 49px;
+
+  padding: 10px 8px;
+
+  border: 1px solid #7d7458;
+  border-radius: 12px;
+
+  color: #abc9bd;
+
+  font-family: Georgia, serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .5px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #1b3938,
+      #071a1e
+    );
+
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.08);
+}
+
+.tab.active {
+  color: #302111;
+
+  border-color: #ffe1a0;
+
+  background:
+    linear-gradient(
+      180deg,
+      #fff0b9,
+      #e5be70 48%,
+      #b9883e
+    );
+
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.6),
+    0 4px 17px rgba(218,177,90,.25);
+}
+
+.tab:active {
+  transform: scale(.98);
+}
+
+/* =============================================
+   PET COLLECTION GRID
+============================================= */
+
+.grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2,minmax(0,1fr));
+
+  gap: 12px;
+
+  align-items: stretch;
+}
+
+.pet-card {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+
+  min-width: 0;
+
+  padding: 9px;
+
+  overflow: hidden;
+
+  text-align: center;
+
+  border: 1px solid #8d7850;
+  border-radius: 16px;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 18%,
+      rgba(56,132,109,.2),
+      transparent 68%
+    ),
+    linear-gradient(
+      180deg,
+      #173538,
+      #08181e 85%
+    );
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,226,144,.04),
+    0 6px 18px rgba(0,0,0,.28);
+}
+
+.pet-card::before {
+  content: "";
+  position: absolute;
+
+  top: 0;
+  left: 14%;
+  right: 14%;
+
+  height: 1px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,225,150,.7),
+      transparent
+    );
+}
+
+.pet-card.selected {
+  border-color: #e8c078;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,231,170,.15),
+    0 0 18px rgba(222,173,81,.18),
+    0 7px 22px rgba(0,0,0,.35);
+}
+
+/* =============================================
+   PET IMAGES
+============================================= */
+
 .pet-art {
   position: relative;
 
@@ -163,13 +1020,32 @@ h1 {
   overflow: hidden;
   padding: 0;
 
-  border-radius: 12px;
+  border-radius: 11px;
+
+  background:
+    radial-gradient(
+      circle at 50% 45%,
+      #245d55,
+      #0b262a 65%,
+      #07171b
+    );
+
+  border: 1px solid rgba(212,175,99,.25);
+}
+
+.pet-art::after {
+  content: "";
+  position: absolute;
+
+  inset: 0;
+
+  pointer-events: none;
 
   background:
     linear-gradient(
       180deg,
-      rgba(25,50,50,.5),
-      rgba(5,12,18,.8)
+      transparent 68%,
+      rgba(3,10,15,.52)
     );
 }
 
@@ -179,314 +1055,391 @@ h1 {
   width: 100%;
   height: 100%;
 
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
 
-  transition: transform .3s ease;
+  filter:
+    drop-shadow(0 7px 11px rgba(0,0,0,.4));
+
+  transition: transform .25s ease;
 }
 
 .pet-card:active .pet-image {
+  transform: scale(.98);
+}
+
+.pet-art.is-dead .pet-image {
+  filter: grayscale(1) brightness(.43);
+}
+
+/* =============================================
+   PET NAME AND REWARD
+============================================= */
+
+.pet-card h3 {
+  margin: 11px 0 6px;
+
+  min-height: 18px;
+
+  color: #ffe3a0;
+
+  font-family: Georgia, serif;
+  font-size: 15px;
+  font-weight: 700;
+
+  line-height: 1.25;
+
+  text-shadow: 0 2px 3px #000;
+}
+
+.pet-card p {
+  margin: 5px 0 9px;
+
+  color: #9ff0bf;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  line-height: 1.5;
+}
+
+.price {
+  margin-top: auto;
+
+  color: #f8d898;
+  font-size: 15px;
+  font-weight: 800;
+
+  text-shadow:
+    0 0 10px rgba(227,190,98,.2);
+}
+
+/* =============================================
+   BUY / VIEW BUTTON
+============================================= */
+
+.buy {
+  display: block;
+
+  width: 100%;
+  min-height: 39px;
+
+  margin-top: auto;
+  padding: 10px 5px;
+
+  border: 1px solid #ffe1a0;
+  border-radius: 10px;
+
+  color: #35250f;
+
+  font-size: 11px;
+  font-weight: 900;
+
+  letter-spacing: .4px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #fff0bc 0%,
+      #eccb84 43%,
+      #c3944c 100%
+    );
+
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.65),
+    0 4px 12px rgba(0,0,0,.28);
+
+  transition: transform .15s ease;
+}
+
+.buy:active {
   transform: scale(.97);
 }
 
-/* LINH THÚ ĐÃ CHẾT */
-.beast.dead .main-beast-image,
-.pet-art.is-dead .pet-image {
-  filter: grayscale(1) brightness(.45);
-  animation: none;
+/* =============================================
+   EMPTY FARM
+============================================= */
+
+.empty {
+  grid-column: 1 / -1;
+
+  padding: 30px 18px;
+
+  border: 1px dashed #8d7954;
+  border-radius: 15px;
+
+  color: #c7d4c2;
+
+  font-size: 12px;
+  line-height: 1.8;
+
+  text-align: center;
+
+  background: rgba(9,31,34,.75);
 }
 
-/* CHUYỂN ĐỘNG NHẸ */
-@keyframes spiritFloat {
-  0%, 100% {
-    transform: translateY(0);
-  }
+/* =============================================
+   SURVIVAL RULES
+============================================= */
 
-  50% {
-    transform: translateY(-7px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .main-beast-image {
-    animation: none;
-  }
-}
-
-
-
-.beast.dead {
-  filter:grayscale(1);
-  opacity:.5;
-  animation:none;
-}
-.hero h2 {font-size:21px;margin:0 0 8px}
-.hero p {font-size:12px;color:var(--muted);margin:0}
-.panel {
-  margin-top:14px;
-  padding:16px;
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:18px;
-}
-.section-title {
-  color:var(--gold);
-  font-size:13px;
-  font-weight:700;
-  letter-spacing:1px;
-  margin-bottom:13px;
-}
-.line {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  font-size:12px;
-  margin:12px 0;
-}
-.muted {color:var(--muted)}
-.timer {
-  color:var(--green);
-  font-weight:700;
-  font-variant-numeric:tabular-nums;
-}
-.danger {color:#ff8f86!important}
-.progress {
-  height:7px;
-  border-radius:10px;
-  background:#30434a;
-  overflow:hidden;
-  margin:8px 0 17px;
-}
-.progress div {
-  width:0;
-  height:100%;
-  border-radius:10px;
-  background:linear-gradient(90deg,#348d76,#a0e4a2);
-  transition:width .3s;
-}
-.actions {
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:8px;
-}
-
-
-
-/* ==========================================
-   SPIRIT BEAST - PREMIUM CARE BUTTONS
-========================================== */
-
-.spirit-care-actions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  width: 100%;
-}
-
-.spirit-care-btn {
+.note {
   position: relative;
-  min-width: 0;
-  min-height: 112px;
-  padding: 10px 5px 12px;
+
+  margin: 18px 0 0;
+  padding: 17px;
+
+  border: 1px solid #9e854e;
+  border-radius: 15px;
+
+  color: #cbd7c7;
+
+  font-size: 11px;
+  line-height: 1.9;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(28,71,58,.85),
+      rgba(5,21,26,.96)
+    );
+
+  box-shadow:
+    inset 0 1px rgba(255,234,172,.12);
+}
+
+.note::before {
+  content: "◆ SPIRIT SURVIVAL ◆";
+
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #f5d997;
+
+  font-family: Georgia, serif;
+  font-size: 12px;
+  font-weight: 700;
+
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+/* =============================================
+   MODAL OVERLAY
+============================================= */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 1000;
 
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  gap: 7px;
+  align-items: center;
+
+  padding:
+    max(18px,env(safe-area-inset-top))
+    18px
+    max(18px,env(safe-area-inset-bottom));
+
+  background: rgba(1,8,11,.83);
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.modal {
+  position: relative;
+
+  width: 100%;
+  max-width: 370px;
+  max-height: 85dvh;
+
+  overflow-y: auto;
+
+  padding: 26px 20px 22px;
+
+  border: 1px solid #dab771;
+  border-radius: 20px;
+
+  text-align: center;
 
   background:
     radial-gradient(
-      ellipse at 50% 20%,
-      rgba(59, 113, 100, .42),
+      ellipse at 50% 0%,
+      rgba(44,126,102,.27),
       transparent 75%
     ),
-    linear-gradient(180deg, #223c3c, #111d23);
-
-  border: 1px solid rgba(226, 193, 121, .45);
-  border-radius: 15px;
+    linear-gradient(
+      160deg,
+      #15383b,
+      #07191e 85%
+    );
 
   box-shadow:
-    inset 0 1px rgba(255, 236, 183, .14),
-    0 5px 14px rgba(0, 0, 0, .3);
-
-  color: #f2dba0;
-  transition: transform .15s ease;
-  -webkit-tap-highlight-color: transparent;
+    inset 0 1px rgba(255,238,176,.25),
+    0 25px 80px rgba(0,0,0,.7);
 }
 
-.care-btn-image {
-  display: block;
-  width: 62px;
-  height: 62px;
-  max-width: 100%;
+.modal::before {
+  content: "";
+  position: absolute;
 
-  object-fit: contain;
-  pointer-events: none;
+  left: 20%;
+  right: 20%;
+  top: 0;
 
-  filter: drop-shadow(
-    0 4px 8px rgba(0, 0, 0, .45)
-  );
+  height: 2px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      #ffe5a3,
+      transparent
+    );
 }
 
-.care-btn-label {
-  display: block;
-  font-size: 10px !important;
-  line-height: 1.3;
+.modal h3 {
+  margin: 0 0 12px;
+
+  font-family: Georgia, serif;
+  font-size: 19px;
+
+  color: #ffe2a0;
+}
+
+.modal p {
+  margin: 0;
+
+  color: #cfdfd4;
+
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.modal-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  gap: 9px;
+  margin-top: 23px;
+}
+
+.modal-buttons button {
+  min-height: 44px;
+
+  padding: 11px 8px;
+
+  border: 1px solid #7c8b76;
+  border-radius: 11px;
+
+  color: #e8ead9;
+  font-size: 12px;
   font-weight: 800;
-  letter-spacing: .7px;
-  color: #f2dda8;
-  text-align: center;
+
+  background:
+    linear-gradient(#29433e,#13292b);
 }
 
-.spirit-care-btn:active:not(:disabled) {
-  transform: scale(.95);
+.modal-buttons .primary {
+  color: #2e2111;
+
+  border-color: #ffe2a0;
+
+  background:
+    linear-gradient(
+      #fff0be,
+      #d6a85e
+    );
 }
 
-.spirit-care-btn:disabled {
-  opacity: .4;
-  filter: grayscale(1);
-  cursor: not-allowed;
+.modal-buttons button:active {
+  transform: scale(.97);
 }
 
-@media (max-width: 360px) {
-  .spirit-care-actions {
-    gap: 6px;
+/* =============================================
+   MOBILE RESPONSIVE
+============================================= */
+
+@media (max-width: 375px) {
+  .app {
+    padding-left: 11px;
+    padding-right: 11px;
   }
 
+  .top h1 {
+    font-size: 19px;
+  }
+
+  .sub {
+    font-size: 8px;
+    letter-spacing: 1.2px;
+  }
+
+  .wallet,
+  .grid {
+    gap: 8px;
+  }
+
+  .stat {
+    padding: 12px 8px;
+  }
+
+  .hero {
+    min-height: 325px;
+  }
+
+  .beast {
+    height: 245px;
+  }
+
+  .actions,
+  .spirit-care-actions {
+    gap: 7px;
+  }
+
+  .action,
   .spirit-care-btn {
-    min-height: 100px;
+    min-height: 105px;
+    padding: 7px 3px;
   }
 
   .care-btn-image {
-    width: 52px;
-    height: 52px;
+    width: 64px;
+    height: 64px;
+  }
+
+  .care-btn-label {
+    font-size: 9px !important;
+  }
+
+  .line {
+    font-size: 10px;
+  }
+
+  .pet-card h3 {
+    font-size: 13px;
   }
 }
 
+/* =============================================
+   REDUCED MOTION
+============================================= */
 
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
 
-
-.tabs {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-  margin:18px 0 12px;
-}
-.tab {
-  padding:13px;
-  border:1px solid var(--border);
-  border-radius:12px;
-  color:var(--muted);
-  background:#132229;
-  font-weight:700;
-}
-.tab.active {
-  border-color:var(--gold);
-  color:var(--gold);
-  background:#24352f;
-}
-.grid {
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:11px;
-}
-.pet-card {
-  padding:12px;
-  text-align:center;
-  border:1px solid var(--border);
-  border-radius:17px;
-  background:linear-gradient(#1d3537,#101d25);
-  min-width:0;
-}
-.pet-card.selected {border-color:var(--gold)}
-.pet-card h3 {font-size:14px;margin:4px 0}
-.pet-card p {
-  color:var(--muted);
-  font-size:11px;
-  margin:7px 0;
-}
-.price {
-  color:var(--gold);
-  font-weight:700;
-  font-size:13px;
-}
-.buy {
-  width:100%;
-  border:1px solid #bda66d;
-  background:linear-gradient(#ead6a0,#a48750);
-  color:#1c201d;
-  border-radius:10px;
-  padding:11px 8px;
-  margin-top:11px;
-  font-weight:800;
-  font-size:12px;
-}
-.empty {
-  grid-column:1/-1;
-  padding:27px 16px;
-  text-align:center;
-  color:var(--muted);
-  font-size:13px;
-  border:1px dashed #536360;
-  border-radius:15px;
-}
-.note {
-  font-size:11px;
-  line-height:1.7;
-  color:var(--muted);
-  margin:17px 0;
-}
-.hidden {display:none!important}
-.overlay {
-  position:fixed;
-  inset:0;
-  background:#000b;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  padding:18px;
-  z-index:1000;
-}
-.modal {
-  width:100%;
-  max-width:370px;
-  background:#13242a;
-  border:1px solid #b8a474;
-  border-radius:20px;
-  padding:23px;
-  text-align:center;
-  box-shadow:0 20px 80px #0009;
-}
-.modal h3 {color:var(--gold)}
-.modal p {
-  color:#c1d0d0;
-  line-height:1.6;
-  font-size:13px;
-}
-.modal-buttons {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:9px;
-  margin-top:20px;
-}
-.modal-buttons button {
-  border-radius:10px;
-  padding:12px;
-  border:1px solid var(--border);
-  background:#263a40;
-  color:white;
-}
-.modal-buttons .primary {
-  background:var(--gold);
-  color:#18221e;
-  font-weight:700;
-}
-@media(prefers-reduced-motion:reduce) {
-  * {animation:none!important;transition:none!important}
-}
 </style>
+
 </head>
 
 <body>
@@ -632,10 +1585,10 @@ h1 {
 <p class="note">
   SURVIVAL RULES:
   Cho ăn và vệ sinh tối thiểu mỗi 6 giờ.
-  Nếu bỏ đói liên tục 8 giờ, linh thú sẽ chết vĩnh viễn.
-  Phần thưởng được xét sau mỗi 24 giờ khi đáp ứng
-  đầy đủ điều kiện chăm sóc.
-  Mỗi linh thú có tối đa 30 chu kỳ thưởng.
+  Nếu bỏ đói liên tục 7 giờ, linh thú sẽ chết vĩnh viễn.
+  Phần thưởng được xét mỗi 8 giờ khi đáp ứng
+  điều kiện chăm sóc.
+  Tổng cộng 90 chu kỳ trong 30 ngày.
 </p>
 
 </main>
@@ -659,9 +1612,15 @@ h1 {
 const DAY = 86400000;
 const HOUR = 3600000;
 
+// Thưởng mỗi 8 giờ
+const REWARD_INTERVAL = 8 * HOUR;
+
+// Tổng 90 chu kỳ
+const MAX_REWARD_CYCLES = 90;
+
 const FEED_TIME = 6 * HOUR;
 const CLEAN_TIME = 6 * HOUR;
-const DEATH_TIME = 8 * HOUR;
+const DEATH_TIME = 7 * HOUR;
 
 
 const ICONS = {
@@ -835,9 +1794,9 @@ if (pet.dead) {
   const detail = document.createElement("p");
   detail.textContent = pet.dead
     ? "ĐÃ CHẾT"
-    : pet.rewardCycles >= 30
+    : pet.rewardCycles >= MAX_REWARD_CYCLES
       ? "Đã hoàn thành thưởng"
-      : `+${kind?.reward || 0} 💎 / 24h`;
+      : `+${Math.floor((kind?.reward || 0) / 3)}–${Math.ceil((kind?.reward || 0) / 3)} 💎 / 8h`;
 
   const button = document.createElement("button");
   button.className = "buy";
@@ -871,7 +1830,9 @@ art.appendChild(img);
   title.textContent = kind.name;
 
   const reward = document.createElement("p");
-  reward.textContent = `+${formatNum(kind.reward)} 💎 / 24h`;
+  reward.textContent =
+  `+${formatNum(Math.floor(kind.reward / 3))}` +
+  `–${formatNum(Math.ceil(kind.reward / 3))} 💎 / 8h`;
 
   const price = document.createElement("div");
   price.className = "price";
@@ -902,7 +1863,7 @@ function render() {
 
   let daily = 0;
   for (const p of gameState.pets) {
-    if (!p.dead && p.rewardCycles < 30) {
+    if (!p.dead && p.rewardCycles < MAX_REWARD_CYCLES) {
       daily += gameState.types[p.type]?.reward || 0;
     }
   }
@@ -955,7 +1916,7 @@ el("mainBeastImg").style.display = "none";
     el("beastDescription").textContent = pet.dead
       ? "Linh thú đã chết vì bị bỏ đói."
       : `LEVEL ${pet.level} · ` +
-        `${pet.rewardCycles}/30 chu kỳ thưởng`;
+        `${pet.rewardCycles}/${MAX_REWARD_CYCLES} chu kỳ thưởng`;
 
     el("totalEarned").textContent =
       formatNum(pet.totalEarned) + " 💎";
@@ -993,7 +1954,8 @@ const deathRemaining =
 const cleanRemaining =
   pet.lastCleanAt + CLEAN_TIME - t;
 
-  const finished = pet.rewardCycles >= 30;
+  const finished =
+  pet.rewardCycles >= MAX_REWARD_CYCLES;
 
   el("rewardTimer").textContent = finished
     ? "HOÀN THÀNH"
@@ -1013,7 +1975,7 @@ const cleanRemaining =
   const progress = finished ? 100 : Math.min(
     100,
     Math.max(0,
-      (1-(pet.nextRewardAt-t)/DAY)*100
+      (1-(pet.nextRewardAt-t)/REWARD_INTERVAL)*100
     )
   );
 

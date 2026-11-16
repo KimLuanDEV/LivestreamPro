@@ -15612,7 +15612,7 @@ emitW8ShareDirectory();
 ========================================== */
 
 // Chu kỳ phát thưởng: 24 giờ
-const SPIRIT_DAY = 24 * 60 * 60 * 1000;
+const SPIRIT_DAY = 8 * 60 * 60 * 1000;
 
 // Phải cho ăn mỗi 6 giờ
 const SPIRIT_FEED = 6 * 60 * 60 * 1000;
@@ -15620,35 +15620,50 @@ const SPIRIT_FEED = 6 * 60 * 60 * 1000;
 // Phải vệ sinh mỗi 6 giờ
 const SPIRIT_CLEAN = 6 * 60 * 60 * 1000;
 
-// Chết khi bỏ đói 8 giờ
-const SPIRIT_DEATH = 8 * 60 * 60 * 1000;
+// Chết khi bỏ đói 7 giờ
+const SPIRIT_DEATH = 7 * 60 * 60 * 1000;
 
 const SPIRIT_MAX = 4;
-const SPIRIT_MAX_REWARDS = 30;
 
+// 3 lần/ngày x 30 ngày = 90 chu kỳ
+const SPIRIT_MAX_REWARDS = 90;
+
+
+
+/* ==========================================
+   SPIRIT BEAST - REWARD V3
+   TARGET NET PROFIT: 10% - 20%
+   PERIOD: 30 DAYS
+========================================== */
 
 const SPIRIT_TYPES = Object.freeze({
+
   dragon: {
     name: "Thanh Long",
-    price: 1000,
-    reward: 10
+    price: 10000,
+    reward: 400
   },
+
   fox: {
     name: "Cửu Vĩ Hồ",
-    price: 5000,
-    reward: 55
+    price: 50000,
+    reward: 2000
   },
+
   phoenix: {
     name: "Hỏa Phượng Hoàng",
-    price: 15000,
-    reward: 180
+    price: 150000,
+    reward: 5500
   },
+
   qilin: {
     name: "Kỳ Lân",
-    price: 50000,
-    reward: 650
+    price: 500000,
+    reward: 18000
   }
+
 });
+
 
 // Đồng bộ chu kỳ thưởng và trạng thái tử vong.
 // Trả thưởng tại các mốc 24 giờ nếu được
@@ -15689,11 +15704,59 @@ const clean =
   pet.lastCleanAt <= due &&
   due - pet.lastCleanAt <= SPIRIT_CLEAN;
 
-      if (fed && clean) {
-        earned += kind.reward;
-        pet.totalEarned =
-          (pet.totalEarned || 0) + kind.reward;
-      }
+
+/* ==========================================
+   SPIRIT BEAST - REWARD EVERY 8 HOURS
+   90 CYCLES / 30 DAYS
+   KEEP ORIGINAL TOTAL REWARD
+========================================== */
+
+if (fed && clean) {
+
+  // Tổng thưởng theo chính sách cũ:
+  // 30 ngày x thưởng mỗi ngày
+  const maxTotalReward = kind.reward * 30;
+
+  const nextCycle = pet.rewardCycles + 1;
+
+  // Phân bổ nguyên kim cương cho 90 chu kỳ
+  const previousTarget = Math.floor(
+    maxTotalReward * pet.rewardCycles /
+    SPIRIT_MAX_REWARDS
+  );
+
+  const currentTarget = Math.floor(
+    maxTotalReward * nextCycle /
+    SPIRIT_MAX_REWARDS
+  );
+
+  const plannedReward =
+    currentTarget - previousTarget;
+
+  // Không cho vượt tổng thưởng đã quy định
+  const alreadyEarned = Math.max(
+    0,
+    Number(pet.totalEarned || 0)
+  );
+
+  const remainingBudget = Math.max(
+    0,
+    maxTotalReward - alreadyEarned
+  );
+
+  const rewardAmount = Math.max(
+    0,
+    Math.min(plannedReward, remainingBudget)
+  );
+
+  if (rewardAmount > 0) {
+    earned += rewardAmount;
+
+    pet.totalEarned =
+      alreadyEarned + rewardAmount;
+  }
+}
+
 
       pet.rewardCycles++;
       pet.nextRewardAt += SPIRIT_DAY;
