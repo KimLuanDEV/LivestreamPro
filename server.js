@@ -15606,10 +15606,26 @@ emitW8ShareDirectory();
    SPIRIT BEAST V1 - SERVER ENGINE
 ========================================== */
 
-const SPIRIT_DAY = 86400000;
-const SPIRIT_DEATH = 36 * 3600000;
+
+/* ==========================================
+   SPIRIT BEAST - HARD SURVIVAL V2
+========================================== */
+
+// Chu kỳ phát thưởng: 24 giờ
+const SPIRIT_DAY = 24 * 60 * 60 * 1000;
+
+// Phải cho ăn mỗi 6 giờ
+const SPIRIT_FEED = 6 * 60 * 60 * 1000;
+
+// Phải vệ sinh mỗi 6 giờ
+const SPIRIT_CLEAN = 6 * 60 * 60 * 1000;
+
+// Chết khi bỏ đói 8 giờ
+const SPIRIT_DEATH = 8 * 60 * 60 * 1000;
+
 const SPIRIT_MAX = 4;
 const SPIRIT_MAX_REWARDS = 30;
+
 
 const SPIRIT_TYPES = Object.freeze({
   dragon: {
@@ -15665,13 +15681,13 @@ function spiritTickUser(user, now) {
 
       // Phải cho ăn và vệ sinh trong 24 giờ
       // tính tới thời điểm trả thưởng.
-      const fed =
-        pet.lastFedAt <= due &&
-        due - pet.lastFedAt <= SPIRIT_DAY;
+const fed =
+  pet.lastFedAt <= due &&
+  due - pet.lastFedAt <= SPIRIT_FEED;
 
-      const clean =
-        pet.lastCleanAt <= due &&
-        due - pet.lastCleanAt <= SPIRIT_DAY;
+const clean =
+  pet.lastCleanAt <= due &&
+  due - pet.lastCleanAt <= SPIRIT_CLEAN;
 
       if (fed && clean) {
         earned += kind.reward;

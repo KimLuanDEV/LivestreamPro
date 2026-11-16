@@ -629,11 +629,14 @@ h1 {
   <section id="farmPanel" class="grid"></section>
   <section id="shopPanel" class="grid hidden"></section>
 
-  <p class="note">
-    Cho ăn và vệ sinh mỗi 24 giờ để duy trì thưởng.
-    Nếu bỏ đói liên tục 36 giờ, linh thú sẽ chết.
-    Mỗi linh thú có tối đa 30 chu kỳ thưởng.
-  </p>
+<p class="note">
+  SURVIVAL RULES:
+  Cho ăn và vệ sinh tối thiểu mỗi 6 giờ.
+  Nếu bỏ đói liên tục 8 giờ, linh thú sẽ chết vĩnh viễn.
+  Phần thưởng được xét sau mỗi 24 giờ khi đáp ứng
+  đầy đủ điều kiện chăm sóc.
+  Mỗi linh thú có tối đa 30 chu kỳ thưởng.
+</p>
 
 </main>
 
@@ -655,6 +658,10 @@ h1 {
 
 const DAY = 86400000;
 const HOUR = 3600000;
+
+const FEED_TIME = 6 * HOUR;
+const CLEAN_TIME = 6 * HOUR;
+const DEATH_TIME = 8 * HOUR;
 
 
 const ICONS = {
@@ -977,9 +984,14 @@ function updateTimers() {
     return;
   }
 
-  const fedRemaining = pet.lastFedAt + DAY - t;
-  const deathRemaining = pet.lastFedAt + 36*HOUR - t;
-  const cleanRemaining = pet.lastCleanAt + DAY - t;
+const fedRemaining =
+  pet.lastFedAt + FEED_TIME - t;
+
+const deathRemaining =
+  pet.lastFedAt + DEATH_TIME - t;
+
+const cleanRemaining =
+  pet.lastCleanAt + CLEAN_TIME - t;
 
   const finished = pet.rewardCycles >= 30;
 
@@ -1007,9 +1019,11 @@ function updateTimers() {
 
   el("rewardProgress").style.width = progress + "%";
 
-  el("deathTimer").classList.toggle(
-    "danger", deathRemaining < 12*HOUR
-  );
+el("deathTimer").classList.toggle(
+  "danger",
+  deathRemaining <= 1 * HOUR
+);
+
   el("feedTimer").classList.toggle(
     "danger", fedRemaining <= 0
   );
