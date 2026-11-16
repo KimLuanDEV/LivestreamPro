@@ -164,334 +164,351 @@ button:disabled {
     0 0 20px rgba(242,200,111,.3);
 }
 
-/* =============================================
-   HEADER
-============================================= */
 
-.top {
+
+/* ==========================================
+   SPIRIT REALM V5
+   UNIFIED ROYAL SANCTUARY
+   HEADER + WALLET + BEAST
+========================================== */
+
+/* MAIN SANCTUARY */
+
+.spirit-stage {
+  position: relative;
+  isolation: isolate;
+
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+
+  border: 1px solid #bda16b;
+  border-radius: 20px;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 55%,
+      rgba(47, 137, 112, .26),
+      transparent 65%
+    ),
+    linear-gradient(
+      180deg,
+      #123535 0%,
+      #0c292c 38%,
+      #07171e 100%
+    );
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 235, 170, .08),
+    inset 0 1px rgba(255, 235, 170, .18),
+    0 12px 30px rgba(0, 0, 0, .35);
+}
+
+/* GOLD TOP ACCENT */
+
+.spirit-stage::before {
+  content: "";
+
+  position: absolute;
+  z-index: 5;
+
+  top: 0;
+  left: 20%;
+  right: 20%;
+
+  height: 2px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #ffe7a6,
+    transparent
+  );
+
+  pointer-events: none;
+}
+
+
+/* ==========================================
+   SPIRIT REALM - MINIMAL EXIT HEADER
+========================================== */
+
+.spirit-header-minimal {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
 
-  gap: 10px;
+  width: 100%;
+  height: 48px;
 
-  margin-bottom: 18px;
+  margin: 0;
+  padding: 7px 11px 3px;
+
+  border: 0;
+  background: transparent;
 }
 
-.top > div {
-  min-width: 0;
-  flex: 1;
-}
+/* EXIT BUTTON */
 
-.sub {
-  color: #9ebbb2;
+.spirit-exit-minimal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
-  font-size: 9px;
-  font-weight: 700;
+  gap: 7px;
 
-  letter-spacing: 1.7px;
-  text-transform: uppercase;
-}
+  min-width: 70px;
+  min-height: 34px;
+  padding: 0 12px;
 
-h1 {
-  margin: 7px 0 0;
-
-  font-family: Georgia, "Times New Roman", serif;
-
-  font-size: clamp(19px, 5.3vw, 25px);
-  line-height: 1.15;
-
-  font-weight: 700;
-
-  letter-spacing: .5px;
-
-  color: var(--gold-bright);
-
-  text-shadow:
-    0 2px 0 rgba(67,39,14,.9),
-    0 0 20px rgba(232,189,91,.25);
-}
-
-.exit {
-  flex: 0 0 auto;
-
-  min-height: 39px;
-  padding: 0 13px;
-
-  border: 1px solid #b68d4e;
+  border: 1px solid rgba(229,195,123,.55);
   border-radius: 9px;
-
-  color: #ffe7a5;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 1px;
 
   background:
     linear-gradient(
       180deg,
-      #36534a,
-      #0e2426 48%,
-      #08181d
+      #29473f,
+      #10292c
     );
 
+  color: #f5dda4;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .8px;
+
   box-shadow:
-    inset 0 1px rgba(255,237,176,.22),
-    0 4px 12px rgba(0,0,0,.4);
+    inset 0 1px rgba(255,240,183,.16);
+
+  cursor: pointer;
+
+  transition: transform .15s ease;
 }
 
-.exit:active {
-  transform: scale(.97);
+.spirit-exit-minimal span {
+  font-size: 12px;
+  line-height: 1;
 }
 
-/* =============================================
-   WALLET
-============================================= */
+.spirit-exit-minimal:active {
+  transform: scale(.95);
+}
 
-.wallet {
+.spirit-exit-minimal:focus-visible {
+  outline: 2px solid #ffe0a1;
+  outline-offset: 2px;
+}
+
+@media (max-width: 375px) {
+  .spirit-header-minimal {
+    height: 44px;
+    padding: 6px 9px 2px;
+  }
+
+  .spirit-exit-minimal {
+    min-height: 32px;
+    min-width: 66px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spirit-exit-minimal {
+    transition: none;
+  }
+}
+
+
+/* ==========================================
+   WALLET - INTEGRATED
+========================================== */
+
+.spirit-stage .wallet {
   display: grid;
-  grid-template-columns:
-    repeat(2,minmax(0,1fr));
+  grid-template-columns: repeat(2, minmax(0,1fr));
 
-  gap: 10px;
-  margin: 0 0 15px;
+  width: 100%;
+  gap: 0;
+
+  margin: 0;
+  padding: 10px 12px;
+
+  border: 0;
+  border-radius: 0;
+
+  background: linear-gradient(
+    90deg,
+    rgba(6,32,34,.23),
+    rgba(31,86,70,.16),
+    rgba(6,32,34,.23)
+  );
+
+  box-shadow: none;
 }
 
-.stat {
+.spirit-stage .wallet .stat {
   position: relative;
-  min-width: 0;
-  min-height: 89px;
 
-  padding: 14px 12px;
+  min-width: 0;
+  min-height: 65px;
+
+  padding: 10px 6px;
+
+  border: 0;
+  border-radius: 0;
 
   text-align: center;
 
-  border: 1px solid #ba9457;
-  border-radius: 13px;
-
-  background:
-    radial-gradient(
-      ellipse at 50% 100%,
-      rgba(31,118,88,.34),
-      transparent 75%
-    ),
-    linear-gradient(
-      155deg,
-      #1b3635,
-      #07191e 70%
-    );
-
-  box-shadow:
-    inset 0 0 0 1px rgba(250,217,137,.08),
-    inset 0 1px rgba(255,242,190,.19),
-    0 7px 18px rgba(0,0,0,.28);
+  background: transparent;
+  box-shadow: none;
 }
 
-.stat::before {
-  content: "";
-  position: absolute;
-
-  top: 4px;
-  left: 12%;
-  right: 12%;
-
-  height: 1px;
-
-  background:
-    linear-gradient(
-      90deg,
-      transparent,
-      rgba(255,231,157,.8),
-      transparent
-    );
+.spirit-stage .wallet .stat::before {
+  display: none;
 }
 
-.stat small {
+.spirit-stage .wallet .stat:first-child {
+  border-right: 1px solid rgba(225,194,123,.26);
+}
+
+.spirit-stage .wallet .stat small {
   display: block;
+
+  color: #abc9bc;
 
   font-size: 9px;
   font-weight: 800;
-  letter-spacing: 1.2px;
-
-  color: #d5c7a1;
+  letter-spacing: 1px;
 }
 
-.stat strong {
+.spirit-stage .wallet .stat strong {
   display: block;
-  margin-top: 10px;
 
-  color: #f9dfa0;
+  margin-top: 7px;
 
-  font-size: clamp(16px,4.5vw,21px);
+  color: #f9dda1;
+
+  font-size: clamp(16px, 4.9vw, 22px);
   font-weight: 800;
 
   font-variant-numeric: tabular-nums;
 
-  text-shadow:
-    0 0 14px rgba(236,192,97,.27);
-
+  text-shadow: none;
   overflow-wrap: anywhere;
 }
 
-.stat:nth-child(2) {
-  border-color: #6baf93;
-
-  background:
-    radial-gradient(
-      ellipse at 50% 100%,
-      rgba(29,153,107,.31),
-      transparent 75%
-    ),
-    linear-gradient(
-      155deg,
-      #173c35,
-      #071b21 70%
-    );
+.spirit-stage .wallet .stat:nth-child(2) {
+  background: transparent;
+  border-color: transparent;
 }
 
-.stat:nth-child(2) strong {
-  color: #91f0bb;
+.spirit-stage .wallet .stat:nth-child(2) strong {
+  color: #91efba;
 }
 
-/* =============================================
-   MAIN BEAST SANCTUARY
-============================================= */
+/* ==========================================
+   UNIFIED BEAST ARENA
+========================================== */
 
-.hero {
+.spirit-stage .hero {
   position: relative;
   isolation: isolate;
 
-  min-height: 350px;
+  width: 100%;
+  min-height: 315px;
+
+  margin: 0;
+  padding: 0 12px 21px;
 
   overflow: hidden;
   text-align: center;
 
-  padding: 16px 13px 22px;
-
-  border: 1px solid #bc9657;
-  border-radius: 22px;
+  border: 0;
+  border-radius: 0;
 
   background:
     radial-gradient(
-      ellipse at 50% 47%,
-      rgba(66,162,137,.34),
-      transparent 56%
-    ),
-    radial-gradient(
-      ellipse at 50% 90%,
-      rgba(205,165,93,.16),
-      transparent 50%
+      ellipse at 50% 45%,
+      rgba(55,155,121,.22),
+      transparent 62%
     ),
     linear-gradient(
       180deg,
-      #14363a 0%,
-      #092027 64%,
-      #071316 100%
+      rgba(15,60,57,.12),
+      rgba(4,19,23,.27)
     );
 
-  box-shadow:
-    inset 0 0 0 1px rgba(255,231,159,.09),
-    inset 0 1px rgba(255,240,170,.22),
-    0 12px 30px rgba(0,0,0,.35);
+  box-shadow: none;
 }
 
-.hero::before {
+/* MAGIC HALO */
+
+.spirit-stage .hero::before {
   content: "";
 
   position: absolute;
   z-index: 0;
 
-  width: 270px;
-  height: 270px;
-
-  top: 43px;
-  left: 50%;
   inset: auto;
+  top: 14px;
+  left: 50%;
+
+  width: min(75%, 285px);
+  aspect-ratio: 1;
 
   transform: translateX(-50%);
 
-  border: 1px solid rgba(235,207,131,.3);
-  border-radius: 50%;
-
-  box-shadow:
-    0 0 0 12px rgba(198,178,118,.035),
-    0 0 0 27px rgba(198,178,118,.025),
-    inset 0 0 40px rgba(58,214,171,.08);
-
-  background:
-    radial-gradient(
-      circle,
-      rgba(47,185,151,.13),
-      transparent 65%
-    );
-
   pointer-events: none;
 }
 
-.hero::after {
+/* GROUND GLOW */
+
+.spirit-stage .hero::after {
   content: "";
 
   position: absolute;
   z-index: 0;
 
-  left: 12%;
-  right: 12%;
-  bottom: 76px;
+  left: 17%;
+  right: 17%;
+  bottom: 77px;
 
-  height: 30px;
+  height: 22px;
 
   border-radius: 50%;
 
-  background:
-    radial-gradient(
-      ellipse,
-      rgba(107,255,199,.28),
-      transparent 74%
-    );
+  background: rgba(95,224,174,.18);
+  filter: blur(14px);
 
-  filter: blur(8px);
   pointer-events: none;
 }
 
-.realm {
-  position: relative;
-  z-index: 2;
+/* REMOVE REDUNDANT LABEL */
 
-  display: inline-block;
-
-  padding: 5px 15px;
-
-  color: #ffe6aa;
-
-  font-family: Georgia, serif;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 2px;
-
-  text-shadow:
-    0 0 12px rgba(255,215,123,.4);
+.spirit-stage .realm {
+  display: none;
 }
 
-/* =============================================
-   MAIN BEAST IMAGE
-============================================= */
+/* ==========================================
+   MAIN SPIRIT IMAGE
+========================================== */
 
-.beast {
+.spirit-stage .beast {
   position: relative;
   z-index: 2;
 
   width: 100%;
-  height: 278px;
+  height: clamp(225px, 68vw, 285px);
 
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
 
-  margin: 2px auto 0;
+  margin: 0 auto;
 
   overflow: visible;
 }
 
-.main-beast-image {
+.spirit-stage .main-beast-image {
   display: block;
 
   width: 100%;
@@ -500,17 +517,15 @@ h1 {
   object-fit: contain;
   object-position: center;
 
-  filter:
-    drop-shadow(0 12px 20px rgba(0,0,0,.38));
+  filter: drop-shadow(
+    0 12px 20px rgba(0,0,0,.4)
+  );
 
-  animation:
-    spiritFloat 5s ease-in-out infinite;
-
-  will-change: transform;
+  animation: spiritFloat 5s ease-in-out infinite;
 }
 
 @keyframes spiritFloat {
-  0%,100% {
+  0%, 100% {
     transform: translateY(0);
   }
 
@@ -519,57 +534,60 @@ h1 {
   }
 }
 
-.hero h2 {
+/* ==========================================
+   BEAST NAME AND LEVEL
+========================================== */
+
+.spirit-beast-info {
   position: relative;
-  z-index: 2;
+  z-index: 3;
 
-  display: table;
-
-  max-width: 100%;
-  margin: 0 auto 9px;
-
-  padding: 9px 23px;
-
-  border: 1px solid #c4a064;
-  border-radius: 10px;
-
-  color: #ffe5a0;
-
-  font-family:
-    Georgia, "Times New Roman", serif;
-
-  font-size: 22px;
-  font-weight: 700;
-
-  text-shadow:
-    0 2px 3px #000;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(51,75,61,.96),
-      rgba(7,28,31,.98)
-    );
-
-  box-shadow:
-    inset 0 1px rgba(255,239,164,.2),
-    0 5px 18px rgba(0,0,0,.35);
+  padding-top: 2px;
 }
 
-.hero p {
-  position: relative;
-  z-index: 2;
+.spirit-stage .hero h2 {
+  display: block;
 
+  width: 100%;
+  max-width: none;
+
+  margin: 0 0 7px;
+  padding: 0;
+
+  border: 0;
+  border-radius: 0;
+
+  background: transparent;
+  box-shadow: none;
+
+  color: #ffe1a0;
+
+  font-family: Georgia, serif;
+  font-size: 23px;
+  font-weight: 800;
+
+  text-align: center;
+
+  text-shadow:
+    0 2px 4px rgba(0,0,0,.7),
+    0 0 14px rgba(223,188,103,.25);
+}
+
+.spirit-stage .hero p {
   margin: 0;
 
-  color: #c6d8c5;
+  color: #a9d3be;
 
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: .6px;
+  letter-spacing: .5px;
 }
 
-.beast.dead .main-beast-image {
+/* ==========================================
+   DEAD BEAST
+========================================== */
+
+.spirit-stage .beast.dead .main-beast-image {
   filter:
     grayscale(1)
     brightness(.45);
@@ -577,9 +595,45 @@ h1 {
   animation: none;
 }
 
-.beast.dead {
+.spirit-stage .beast.dead {
   opacity: .7;
 }
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media (max-width: 375px) {
+
+
+
+  .spirit-stage .wallet {
+    padding: 7px 8px;
+  }
+
+  .spirit-stage .wallet .stat {
+    min-height: 60px;
+  }
+
+  .spirit-stage .hero {
+    padding-bottom: 16px;
+  }
+
+  .spirit-stage .beast {
+    height: 235px;
+  }
+
+  .spirit-stage .hero h2 {
+    font-size: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spirit-stage .main-beast-image {
+    animation: none;
+  }
+}
+
 
 /* =============================================
    STATUS PANEL
@@ -1446,41 +1500,77 @@ h1 {
 
 <main class="app">
 
-  <header class="top">
-    <div>
-      <div class="sub">LIVESTREAMPRO · SPIRIT REALM</div>
-      <h1>LINH THÚ HUYỀN THOẠI</h1>
-    </div>
-    <button class="exit" id="exitBtn">EXIT</button>
-  </header>
 
+
+<!-- ==========================================
+     SPIRIT REALM V5
+     UNIFIED ROYAL SANCTUARY
+========================================== -->
+
+<div class="spirit-stage">
+
+
+<!-- ==========================================
+     SPIRIT REALM - MINIMAL EXIT
+========================================== -->
+
+<header class="spirit-header-minimal">
+
+  <button
+    type="button"
+    class="spirit-exit-minimal"
+    id="exitBtn"
+    aria-label="Exit game">
+
+    <span aria-hidden="true">✕</span>
+    EXIT
+
+  </button>
+
+</header>
+
+
+  <!-- DIAMOND WALLET -->
   <section class="wallet">
+
     <div class="stat">
       <small>MY DIAMONDS</small>
       <strong id="balance">—</strong>
     </div>
+
     <div class="stat">
       <small>DAILY REWARD</small>
       <strong id="dailyReward">—</strong>
     </div>
+
   </section>
 
+
+  <!-- MAIN BEAST -->
   <section class="hero">
-    <div class="realm">SPIRIT SANCTUARY</div>
 
     <div class="beast" id="mainBeast">
-  <img
-    id="mainBeastImg"
-    class="main-beast-image"
-    alt="Spirit Beast">
-</div>
+      <img
+        id="mainBeastImg"
+        class="main-beast-image"
+        alt="Spirit Beast">
+    </div>
 
+    <div class="spirit-beast-info">
+      <h2 id="beastName">
+        Đang kết nối...
+      </h2>
 
-    <h2 id="beastName">Đang kết nối...</h2>
-    <p id="beastDescription">
-      Đang tải dữ liệu linh thú
-    </p>
+      <p id="beastDescription">
+        Đang tải dữ liệu linh thú
+      </p>
+    </div>
+
   </section>
+
+</div>
+<!-- END SPIRIT STAGE -->
+
 
   <section class="panel" id="carePanel">
     <div class="section-title">TRẠNG THÁI LINH THÚ</div>

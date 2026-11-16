@@ -15641,25 +15641,25 @@ const SPIRIT_TYPES = Object.freeze({
   dragon: {
     name: "Thanh Long",
     price: 10000,
-    reward: 400
+    reward: 390
   },
 
   fox: {
     name: "Cửu Vĩ Hồ",
     price: 50000,
-    reward: 2000
+    reward: 2010
   },
 
   phoenix: {
     name: "Hỏa Phượng Hoàng",
     price: 150000,
-    reward: 5500
+    reward: 6000
   },
 
   qilin: {
     name: "Kỳ Lân",
     price: 500000,
-    reward: 18000
+    reward: 20400
   }
 
 });
