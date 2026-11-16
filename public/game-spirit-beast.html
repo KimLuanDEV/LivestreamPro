@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport"
@@ -2154,8 +2154,8 @@ button:disabled {
       type="button"
       class="spirit-inventory-btn"
       data-tab="farm"
-      aria-label="Chuồng nuôi"
-      title="Chuồng nuôi"
+      aria-label="My Beasts"
+      title="My Beasts"
       aria-haspopup="dialog"
       aria-controls="spiritInventoryModal">
 
@@ -2179,8 +2179,8 @@ button:disabled {
       type="button"
       class="spirit-inventory-btn"
       data-tab="shop"
-      aria-label="Cửa hàng"
-      title="Cửa hàng"
+      aria-label="Beast Shop"
+      title="Beast Shop"
       aria-haspopup="dialog"
       aria-controls="spiritInventoryModal">
 
@@ -2211,8 +2211,8 @@ button:disabled {
   type="button"
   class="spirit-inventory-btn spirit-guide-btn"
   id="spiritGuideBtn"
-  aria-label="Hướng dẫn chơi"
-  title="Hướng dẫn chơi"
+  aria-label="Game Guide"
+  title="Game Guide"
   aria-haspopup="dialog"
   aria-controls="spiritGuideModal">
 
@@ -2284,11 +2284,11 @@ button:disabled {
 
     <div class="spirit-beast-info">
       <h2 id="beastName">
-        Đang kết nối...
+        Connecting...
       </h2>
 
       <p id="beastDescription">
-        Đang tải dữ liệu linh thú
+        Loading spirit beast data...
       </p>
     </div>
 
@@ -2299,10 +2299,10 @@ button:disabled {
 
 
   <section class="panel" id="carePanel">
-    <div class="section-title">TRẠNG THÁI LINH THÚ</div>
+    <div class="section-title">SPIRIT BEAST STATUS</div>
 
     <div class="line">
-      <span class="muted">Phần thưởng tiếp theo</span>
+      <span class="muted">Next Reward</span>
       <span class="timer" id="rewardTimer">--:--:--</span>
     </div>
     <div class="progress">
@@ -2310,22 +2310,22 @@ button:disabled {
     </div>
 
     <div class="line">
-      <span class="muted">Thời gian còn lại để cho ăn</span>
+      <span class="muted">Time Until Next Feeding</span>
       <span class="timer" id="feedTimer">--:--:--</span>
     </div>
 
     <div class="line">
-      <span class="muted">Nguy cơ chết vì đói</span>
+      <span class="muted">Starvation Countdown</span>
       <span class="timer" id="deathTimer">--:--:--</span>
     </div>
 
     <div class="line">
-      <span class="muted">Vệ sinh</span>
+      <span class="muted">Cleaning Countdown</span>
       <span class="timer" id="cleanTimer">--:--:--</span>
     </div>
 
     <div class="line">
-      <span class="muted">Tổng kim cương đã nhận</span>
+      <span class="muted">Total Diamonds Earned</span>
       <span id="totalEarned">0 💎</span>
     </div>
 
@@ -2340,14 +2340,14 @@ button:disabled {
     type="button"
     class="action spirit-care-btn"
     data-care="feed"
-    aria-label="Cho linh thú ăn">
+    aria-label="Feed Beast">
 
     <img
       src="/assets/spirit-beast/care-feed.png"
       alt=""
       class="care-btn-image">
 
-    <span class="care-btn-label">CHO ĂN</span>
+    <span class="care-btn-label">FEED</span>
 
   </button>
 
@@ -2355,14 +2355,14 @@ button:disabled {
     type="button"
     class="action spirit-care-btn"
     data-care="clean"
-    aria-label="Vệ sinh linh thú">
+    aria-label="Clean Beast">
 
     <img
       src="/assets/spirit-beast/care-clean.png"
       alt=""
       class="care-btn-image">
 
-    <span class="care-btn-label">VỆ SINH</span>
+    <span class="care-btn-label">CLEAN</span>
 
   </button>
 
@@ -2370,14 +2370,14 @@ button:disabled {
     type="button"
     class="action spirit-care-btn"
     data-care="rest"
-    aria-label="Cho linh thú nghỉ ngơi">
+    aria-label="Let Beast Rest">
 
     <img
       src="/assets/spirit-beast/care-rest.png"
       alt=""
       class="care-btn-image">
 
-    <span class="care-btn-label">NGHỈ NGƠI</span>
+    <span class="care-btn-label">REST</span>
 
   </button>
 
@@ -2409,7 +2409,7 @@ button:disabled {
         <small>SPIRIT REALM</small>
 
         <h2 id="spiritInventoryTitle">
-          CHUỒNG NUÔI
+          MY BEASTS
         </h2>
       </div>
 
@@ -2417,7 +2417,7 @@ button:disabled {
         type="button"
         id="closeSpiritInventory"
         class="spirit-inventory-close"
-        aria-label="Đóng cửa sổ">
+        aria-label="Close Window">
         ✕
       </button>
 
@@ -2469,7 +2469,7 @@ button:disabled {
         <small>SPIRIT REALM</small>
 
         <h2 id="spiritGuideTitle">
-          HƯỚNG DẪN CHƠI
+          GAME GUIDE
         </h2>
       </div>
 
@@ -2477,79 +2477,90 @@ button:disabled {
         type="button"
         id="spiritGuideClose"
         class="spirit-guide-close"
-        aria-label="Đóng hướng dẫn">
+        aria-label="Close Guide">
         ✕
       </button>
 
     </div>
 
-    <!-- CONTENT -->
-    <div class="spirit-guide-content">
+  
+<!-- ==========================================
+     SPIRIT REALM - GAME GUIDE
+========================================== -->
 
-      <div class="spirit-guide-item">
-        <span class="spirit-guide-number">01</span>
+<div class="spirit-guide-content">
 
-        <div>
-          <h3>CHO LINH THÚ ĂN</h3>
-          <p>
-            Cho linh thú ăn tối thiểu mỗi 6 giờ
-            để duy trì sự sống và đủ điều kiện
-            nhận thưởng.
-          </p>
-        </div>
-      </div>
+  <div class="spirit-guide-item">
+    <span class="spirit-guide-number">01</span>
 
-      <div class="spirit-guide-item">
-        <span class="spirit-guide-number">02</span>
-
-        <div>
-          <h3>VỆ SINH LINH THÚ</h3>
-          <p>
-            Vệ sinh tối thiểu mỗi 6 giờ
-            để đáp ứng điều kiện chăm sóc.
-          </p>
-        </div>
-      </div>
-
-      <div class="spirit-guide-item">
-        <span class="spirit-guide-number">03</span>
-
-        <div>
-          <h3>NGUY CƠ TỬ VONG</h3>
-          <p>
-            Nếu bỏ đói liên tục 7 giờ,
-            linh thú sẽ chết vĩnh viễn.
-          </p>
-        </div>
-      </div>
-
-      <div class="spirit-guide-item">
-        <span class="spirit-guide-number">04</span>
-
-        <div>
-          <h3>PHẦN THƯỞNG</h3>
-          <p>
-            Phần thưởng được xét mỗi 8 giờ
-            khi đáp ứng đầy đủ điều kiện
-            chăm sóc.
-          </p>
-        </div>
-      </div>
-
-      <div class="spirit-guide-item">
-        <span class="spirit-guide-number">05</span>
-
-        <div>
-          <h3>CHU KỲ NUÔI</h3>
-          <p>
-            Mỗi linh thú có tối đa 90 chu kỳ
-            thưởng trong 30 ngày.
-          </p>
-        </div>
-      </div>
-
+    <div>
+      <h3>FEED YOUR BEAST</h3>
+      <p>
+        Feed your spirit beast at least once
+        every 6 hours to keep it alive and
+        maintain reward eligibility.
+      </p>
     </div>
+  </div>
 
+  <div class="spirit-guide-item">
+    <span class="spirit-guide-number">02</span>
+
+    <div>
+      <h3>KEEP YOUR BEAST CLEAN</h3>
+      <p>
+        Clean your spirit beast at least once
+        every 6 hours to meet its care
+        requirements.
+      </p>
+    </div>
+  </div>
+
+  <div class="spirit-guide-item">
+    <span class="spirit-guide-number">03</span>
+
+    <div>
+      <h3>STARVATION WARNING</h3>
+      <p>
+        If your spirit beast goes without food
+        for 7 consecutive hours, it will die
+        permanently and can no longer earn
+        rewards.
+      </p>
+    </div>
+  </div>
+
+  <div class="spirit-guide-item">
+    <span class="spirit-guide-number">04</span>
+
+    <div>
+      <h3>DIAMOND REWARDS</h3>
+      <p>
+        Rewards are evaluated every 8 hours.
+        Your beast must meet the feeding
+        and cleaning requirements to qualify.
+      </p>
+    </div>
+  </div>
+
+  <div class="spirit-guide-item">
+    <span class="spirit-guide-number">05</span>
+
+    <div>
+      <h3>REWARD CYCLES</h3>
+      <p>
+        Each spirit beast can complete up to
+        90 reward cycles over a 30-day period.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+
+
+
+    
     <!-- FOOTER -->
     <div class="spirit-guide-footer">
       LIVESTREAMPRO · SPIRIT REALM
@@ -2568,9 +2579,9 @@ button:disabled {
     <h3 id="dialogTitle"></h3>
     <p id="dialogMessage"></p>
     <div class="modal-buttons">
-      <button id="dialogCancel">ĐÓNG</button>
+      <button id="dialogCancel">CLOSE</button>
       <button class="primary" id="dialogConfirm">
-        XÁC NHẬN
+        CONFIRM
       </button>
     </div>
   </div>
@@ -2652,20 +2663,22 @@ async function request(url, data) {
     result = await response.json();
   }
 
-  if (response.status === 503) {
-    throw new Error(
-      result?.error === "GAME_NOT_CONFIGURED"
-        ? "Game chưa được cấu hình bảo mật trên server."
-        : "Máy chủ đang tạm thời không khả dụng."
-    );
-  }
 
-  if (!response.ok || !result?.ok) {
-    throw new Error(
-      result?.message ||
-      `Không thể kết nối máy chủ (${response.status}).`
-    );
-  }
+if (response.status === 503) {
+  throw new Error(
+    result?.error === "GAME_NOT_CONFIGURED"
+      ? "The game is not configured on the server."
+      : "The server is temporarily unavailable."
+  );
+}
+
+if (!response.ok || !result?.ok) {
+  throw new Error(
+    result?.message ||
+    `Unable to connect to the server (${response.status}).`
+  );
+}
+
 
   return result;
 }
@@ -2696,7 +2709,7 @@ function openDialog(title, message, action) {
     "hidden", !pendingAction
   );
   el("dialogConfirm").textContent =
-    pendingAction ? "XÁC NHẬN" : "ĐÓNG";
+    pendingAction ? "CONFIRM" : "CLOSE";
 
   el("dialog").classList.remove("hidden");
 }
@@ -2716,7 +2729,7 @@ el("dialogConfirm").onclick = async () => {
 };
 
 function showError(error) {
-  openDialog("THÔNG BÁO", error.message);
+  openDialog("NOTICE", error.message);
 }
 
 async function execute(url, data) {
@@ -2759,7 +2772,7 @@ if (pet.dead) {
 
   
   const title = document.createElement("h3");
-  title.textContent = kind?.name || "Linh thú";
+  title.textContent = kind?.name || "Spirit Beast";
 
 
 const detail = document.createElement("p");
@@ -2769,15 +2782,15 @@ const rewardPer8h = Math.floor(
 );
 
 detail.textContent = pet.dead
-  ? "ĐÃ CHẾT"
+  ? "DECEASED"
   : pet.rewardCycles >= MAX_REWARD_CYCLES
-    ? "Đã hoàn thành thưởng"
+    ? "All Rewards Collected"
     : `+${formatNum(rewardPer8h)} 💎 / 8h`;
 
 
   const button = document.createElement("button");
   button.className = "buy";
-  button.textContent = "XEM LINH THÚ";
+  button.textContent = "VIEW BEAST";
 
 
 button.onclick = () => {
@@ -2835,16 +2848,18 @@ reward.textContent =
 
   const button = document.createElement("button");
   button.className = "buy";
-  button.textContent = "MUA LINH THÚ";
+  button.textContent = "BUY BEAST";
 
-  button.onclick = () => {
-    openDialog(
-      "XÁC NHẬN MUA",
-      `Mua ${kind.name} với giá ` +
-      `${formatNum(kind.price)} kim cương?`,
-      () => execute("/api/spirit/buy", {type})
-    );
-  };
+
+button.onclick = () => {
+  openDialog(
+    "CONFIRM PURCHASE",
+    `Purchase ${kind.name} for ` +
+    `${formatNum(kind.price)} diamonds?`,
+    () => execute("/api/spirit/buy", {type})
+  );
+};
+
 
   card.append(art,title,reward,price,button);
   return card;
@@ -2879,8 +2894,10 @@ function render() {
   if (!gameState.pets.length) {
     const empty = document.createElement("div");
     empty.className = "empty";
-    empty.textContent =
-      "Bạn chưa sở hữu linh thú. Hãy mở cửa hàng.";
+
+   empty.textContent =
+  "You don't own any spirit beasts yet. Visit the Beast Shop.";
+
     farm.appendChild(empty);
   }
 
@@ -2899,19 +2916,22 @@ function render() {
 el("mainBeastImg").removeAttribute("src");
 el("mainBeastImg").style.display = "none";
 
-    el("beastName").textContent = "CHƯA CÓ LINH THÚ";
-    el("beastDescription").textContent =
-      "Mở cửa hàng để mua linh thú đầu tiên.";
+el("beastName").textContent = "NO BEAST SELECTED";
+
+el("beastDescription").textContent =
+  "Visit the Beast Shop to purchase your first spirit beast.";
   } else {
     el("mainBeastImg").src = ICONS[pet.type] || "";
     el("mainBeastImg").style.display = "block";
     el("beastName").textContent =
-      gameState.types[pet.type]?.name || "Linh thú";
+      gameState.types[pet.type]?.name || "Spirit Beast";
 
-    el("beastDescription").textContent = pet.dead
-      ? "Linh thú đã chết vì bị bỏ đói."
-      : `LEVEL ${pet.level} · ` +
-        `${pet.rewardCycles}/${MAX_REWARD_CYCLES} chu kỳ thưởng`;
+
+el("beastDescription").textContent = pet.dead
+  ? "This spirit beast has died from starvation."
+  : `LEVEL ${pet.level} · ` +
+    `${pet.rewardCycles}/${MAX_REWARD_CYCLES} reward cycles`;
+
 
     el("totalEarned").textContent =
       formatNum(pet.totalEarned) + " 💎";
@@ -2934,7 +2954,7 @@ function updateTimers() {
   if (pet.dead) {
     for (const id of [
       "rewardTimer","feedTimer","deathTimer","cleanTimer"
-    ]) el(id).textContent = "ĐÃ CHẾT";
+    ]) el(id).textContent = "DECEASED";
 
     el("rewardProgress").style.width = "0%";
     return;
@@ -2953,11 +2973,11 @@ const cleanRemaining =
   pet.rewardCycles >= MAX_REWARD_CYCLES;
 
   el("rewardTimer").textContent = finished
-    ? "HOÀN THÀNH"
+    ? "COMPLETED"
     : countdown(pet.nextRewardAt - t);
 
   el("feedTimer").textContent =
-    fedRemaining > 0 ? countdown(fedRemaining) : "QUÁ HẠN";
+    fedRemaining > 0 ? countdown(fedRemaining) : "OVERDUE";
 
   el("deathTimer").textContent =
     countdown(deathRemaining);
@@ -2965,7 +2985,7 @@ const cleanRemaining =
   el("cleanTimer").textContent =
     cleanRemaining > 0
       ? countdown(cleanRemaining)
-      : "CẦN VỆ SINH";
+      : "CLEANING REQUIRED";
 
   const progress = finished ? 100 : Math.min(
     100,
@@ -3042,8 +3062,8 @@ function openSpiritInventory(tab) {
 
   spiritInventoryTitle.textContent =
     tab === "farm"
-      ? "CHUỒNG NUÔI"
-      : "CỬA HÀNG";
+      ? "MY BEASTS"
+      : "BEAST SHOP";
 
   el("farmPanel").classList.toggle(
     "hidden",

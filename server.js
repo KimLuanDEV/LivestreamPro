@@ -15636,33 +15636,35 @@ const SPIRIT_MAX_REWARDS = 90;
    PERIOD: 30 DAYS
 ========================================== */
 
+
 const SPIRIT_TYPES = Object.freeze({
 
   dragon: {
-    name: "Thanh Long",
+    name: "Azure Dragon",
     price: 10000,
     reward: 390
   },
 
   fox: {
-    name: "Cửu Vĩ Hồ",
+    name: "Nine-Tailed Fox",
     price: 50000,
     reward: 2010
   },
 
   phoenix: {
-    name: "Hỏa Phượng Hoàng",
+    name: "Fire Phoenix",
     price: 150000,
     reward: 6000
   },
 
   qilin: {
-    name: "Kỳ Lân",
+    name: "Qilin",
     price: 500000,
     reward: 20400
   }
 
 });
+
 
 
 // Đồng bộ chu kỳ thưởng và trạng thái tử vong.
@@ -15961,10 +15963,12 @@ if (lastActionAt > 0 && remaining > 0) {
     ok: false,
     code: "CARE_COOLDOWN",
     remainingMs: remaining,
-    message:
-      "Bạn cần chờ thêm " +
-      Math.ceil(remaining / 60000) +
-      " phút trước khi chăm sóc tiếp."
+
+message:
+  "Please wait another " +
+  Math.ceil(remaining / 60000) +
+  " minute(s) before caring for your beast again."
+
   });
 }
 
