@@ -270,17 +270,104 @@ h1 {
   grid-template-columns:repeat(3,1fr);
   gap:8px;
 }
-.action {
-  background:linear-gradient(#29433f,#1b302f);
-  border:1px solid #4a7565;
-  color:#f3e3b6;
-  border-radius:13px;
-  min-height:60px;
-  padding:8px 4px;
-  font-size:11px;
-  font-weight:700;
+
+
+
+/* ==========================================
+   SPIRIT BEAST - PREMIUM CARE BUTTONS
+========================================== */
+
+.spirit-care-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
 }
-.action span {display:block;font-size:23px;margin-bottom:6px}
+
+.spirit-care-btn {
+  position: relative;
+  min-width: 0;
+  min-height: 112px;
+  padding: 10px 5px 12px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 20%,
+      rgba(59, 113, 100, .42),
+      transparent 75%
+    ),
+    linear-gradient(180deg, #223c3c, #111d23);
+
+  border: 1px solid rgba(226, 193, 121, .45);
+  border-radius: 15px;
+
+  box-shadow:
+    inset 0 1px rgba(255, 236, 183, .14),
+    0 5px 14px rgba(0, 0, 0, .3);
+
+  color: #f2dba0;
+  transition: transform .15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.care-btn-image {
+  display: block;
+  width: 62px;
+  height: 62px;
+  max-width: 100%;
+
+  object-fit: contain;
+  pointer-events: none;
+
+  filter: drop-shadow(
+    0 4px 8px rgba(0, 0, 0, .45)
+  );
+}
+
+.care-btn-label {
+  display: block;
+  font-size: 10px !important;
+  line-height: 1.3;
+  font-weight: 800;
+  letter-spacing: .7px;
+  color: #f2dda8;
+  text-align: center;
+}
+
+.spirit-care-btn:active:not(:disabled) {
+  transform: scale(.95);
+}
+
+.spirit-care-btn:disabled {
+  opacity: .4;
+  filter: grayscale(1);
+  cursor: not-allowed;
+}
+
+@media (max-width: 360px) {
+  .spirit-care-actions {
+    gap: 6px;
+  }
+
+  .spirit-care-btn {
+    min-height: 100px;
+  }
+
+  .care-btn-image {
+    width: 52px;
+    height: 52px;
+  }
+}
+
+
+
+
 .tabs {
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -473,17 +560,61 @@ h1 {
       <span id="totalEarned">0 💎</span>
     </div>
 
-    <div class="actions">
-      <button class="action" data-care="feed">
-        <span>🍖</span>CHO ĂN
-      </button>
-      <button class="action" data-care="clean">
-        <span>🫧</span>VỆ SINH
-      </button>
-      <button class="action" data-care="rest">
-        <span>🌙</span>NGHỈ NGƠI
-      </button>
-    </div>
+
+<!-- ==========================================
+     SPIRIT BEAST - IMAGE CARE BUTTONS
+========================================== -->
+
+<div class="actions spirit-care-actions">
+
+  <button
+    type="button"
+    class="action spirit-care-btn"
+    data-care="feed"
+    aria-label="Cho linh thú ăn">
+
+    <img
+      src="/assets/spirit-beast/care-feed.png"
+      alt=""
+      class="care-btn-image">
+
+    <span class="care-btn-label">CHO ĂN</span>
+
+  </button>
+
+  <button
+    type="button"
+    class="action spirit-care-btn"
+    data-care="clean"
+    aria-label="Vệ sinh linh thú">
+
+    <img
+      src="/assets/spirit-beast/care-clean.png"
+      alt=""
+      class="care-btn-image">
+
+    <span class="care-btn-label">VỆ SINH</span>
+
+  </button>
+
+  <button
+    type="button"
+    class="action spirit-care-btn"
+    data-care="rest"
+    aria-label="Cho linh thú nghỉ ngơi">
+
+    <img
+      src="/assets/spirit-beast/care-rest.png"
+      alt=""
+      class="care-btn-image">
+
+    <span class="care-btn-label">NGHỈ NGƠI</span>
+
+  </button>
+
+</div>
+
+
   </section>
 
   <nav class="tabs">
@@ -564,7 +695,9 @@ function countdown(ms) {
 async function request(url, data) {
   const options = {
     credentials: "same-origin",
-    headers: {"Content-Type":"application/json"}
+    headers: {
+      "Content-Type": "application/json"
+    }
   };
 
   if (data !== undefined) {
@@ -573,14 +706,35 @@ async function request(url, data) {
   }
 
   const response = await fetch(url, options);
-  const result = await response.json();
 
-  if (!response.ok || !result.ok) {
-    throw new Error(result.message || "Request failed.");
+  const contentType =
+    response.headers.get("content-type") || "";
+
+  let result = null;
+
+  if (contentType.includes("application/json")) {
+    result = await response.json();
+  }
+
+  if (response.status === 503) {
+    throw new Error(
+      result?.error === "GAME_NOT_CONFIGURED"
+        ? "Game chưa được cấu hình bảo mật trên server."
+        : "Máy chủ đang tạm thời không khả dụng."
+    );
+  }
+
+  if (!response.ok || !result?.ok) {
+    throw new Error(
+      result?.message ||
+      `Không thể kết nối máy chủ (${response.status}).`
+    );
   }
 
   return result;
 }
+
+
 
 function applyState(result) {
   gameState = result;
