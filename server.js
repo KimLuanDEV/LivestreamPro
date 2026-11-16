@@ -15779,6 +15779,14 @@ app.post("/api/spirit/buy", spiritAuth, (req, res) => {
       lastFedAt: now,
       lastCleanAt: now,
       lastRestAt: now,
+
+// Lần chăm sóc đầu tiên không cần chờ
+careActions: {
+  feed: 0,
+  clean: 0,
+  rest: 0
+},
+
       nextRewardAt: now + SPIRIT_DAY,
       rewardCycles: 0,
       totalEarned: 0,
@@ -15844,17 +15852,49 @@ app.post("/api/spirit/care", spiritAuth, (req, res) => {
       rest: "lastRestAt"
     }[action];
 
-    // Chống spam: một hành động mỗi 1 giờ.
-    if (now - pet[field] < 3600000) {
-      if (result.changed) saveUsers(db);
-      if (result.earned) emitCoinUpdate(req.spiritUid);
-      return res.status(400).json({
-        ok: false,
-        message: "Please wait before caring again."
-      });
-    }
+    
 
-    pet[field] = now;
+/* ==========================================
+   SPIRIT BEAST - CARE COOLDOWN V2
+   First care is immediately available
+========================================== */
+
+if (!pet.careActions ||
+    typeof pet.careActions !== "object") {
+  pet.careActions = {};
+}
+
+const lastActionAt = Number(
+  pet.careActions[action] || 0
+);
+
+const CARE_COOLDOWN = 60 * 60 * 1000;
+
+const remaining =
+  CARE_COOLDOWN - (now - lastActionAt);
+
+if (lastActionAt > 0 && remaining > 0) {
+
+  if (result.changed) saveUsers(db);
+  if (result.earned) emitCoinUpdate(req.spiritUid);
+
+  return res.status(400).json({
+    ok: false,
+    code: "CARE_COOLDOWN",
+    remainingMs: remaining,
+    message:
+      "Bạn cần chờ thêm " +
+      Math.ceil(remaining / 60000) +
+      " phút trước khi chăm sóc tiếp."
+  });
+}
+
+// Ghi nhận thời gian thực hiện hành động
+pet.careActions[action] = now;
+
+// Cập nhật trạng thái chăm sóc
+pet[field] = now;
+
 
     saveUsers(db);
     if (result.earned) emitCoinUpdate(req.spiritUid);
