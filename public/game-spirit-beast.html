@@ -106,17 +106,115 @@ h1 {
   pointer-events:none;
 }
 .realm {color:var(--gold);font-size:12px;letter-spacing:3px}
-.beast {
-  position:relative;
-  z-index:1;
-  font-size:117px;
-  line-height:1.55;
-  filter:drop-shadow(0 12px 24px #0009);
-  animation:float 4s ease-in-out infinite;
-}
+
 @keyframes float {
   50% {transform:translateY(-10px)}
 }
+
+
+
+
+/* ==========================================
+   SPIRIT BEAST - PREMIUM IMAGE SYSTEM
+========================================== */
+
+/* LINH THÚ CHÍNH */
+.beast {
+  position: relative;
+  z-index: 1;
+
+  width: 100%;
+  height: 280px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+  margin: 14px auto;
+
+  border-radius: 16px;
+
+  animation: none;
+}
+
+.main-beast-image {
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+  object-position: center;
+
+  border-radius: 16px;
+
+  filter:
+    drop-shadow(0 12px 25px rgba(0,0,0,.4));
+
+  animation: spiritFloat 4s ease-in-out infinite;
+}
+
+/* ẢNH TRONG SHOP VÀ CHUỒNG NUÔI */
+.pet-art {
+  position: relative;
+
+  width: 100%;
+  aspect-ratio: 4 / 5;
+
+  overflow: hidden;
+  padding: 0;
+
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(25,50,50,.5),
+      rgba(5,12,18,.8)
+    );
+}
+
+.pet-image {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  object-position: center;
+
+  transition: transform .3s ease;
+}
+
+.pet-card:active .pet-image {
+  transform: scale(.97);
+}
+
+/* LINH THÚ ĐÃ CHẾT */
+.beast.dead .main-beast-image,
+.pet-art.is-dead .pet-image {
+  filter: grayscale(1) brightness(.45);
+  animation: none;
+}
+
+/* CHUYỂN ĐỘNG NHẸ */
+@keyframes spiritFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .main-beast-image {
+    animation: none;
+  }
+}
+
+
+
 .beast.dead {
   filter:grayscale(1);
   opacity:.5;
@@ -216,11 +314,6 @@ h1 {
   min-width:0;
 }
 .pet-card.selected {border-color:var(--gold)}
-.pet-art {
-  font-size:58px;
-  padding:12px 0;
-  line-height:1.4;
-}
 .pet-card h3 {font-size:14px;margin:4px 0}
 .pet-card p {
   color:var(--muted);
@@ -334,7 +427,15 @@ h1 {
 
   <section class="hero">
     <div class="realm">SPIRIT SANCTUARY</div>
-    <div class="beast" id="mainBeast">🥚</div>
+
+    <div class="beast" id="mainBeast">
+  <img
+    id="mainBeastImg"
+    class="main-beast-image"
+    alt="Spirit Beast">
+</div>
+
+
     <h2 id="beastName">Đang kết nối...</h2>
     <p id="beastDescription">
       Đang tải dữ liệu linh thú
@@ -424,12 +525,14 @@ h1 {
 const DAY = 86400000;
 const HOUR = 3600000;
 
+
 const ICONS = {
-  dragon: "🐉",
-  fox: "🦊",
-  phoenix: "🔥",
-  qilin: "🦄"
+  dragon: "/assets/spirit-beast/dragon.png",
+  fox: "/assets/spirit-beast/fox.png",
+  phoenix: "/assets/spirit-beast/phoenix.png",
+  qilin: "/assets/spirit-beast/qilin.png"
 };
+
 
 let gameState = null;
 let selectedId = null;
@@ -548,11 +651,23 @@ function makeCard(pet) {
   card.className = "pet-card" +
     (pet.id === selectedId ? " selected" : "");
 
-  const art = document.createElement("div");
-  art.className = "pet-art";
-  art.textContent = ICONS[pet.type] || "🥚";
-  if (pet.dead) art.style.filter = "grayscale(1)";
+const art = document.createElement("div");
+art.className = "pet-art";
 
+const img = document.createElement("img");
+img.src = ICONS[pet.type] || "";
+img.alt = kind?.name || "Spirit Beast";
+img.loading = "lazy";
+img.className = "pet-image";
+
+art.appendChild(img);
+
+if (pet.dead) {
+  art.classList.add("is-dead");
+}
+
+
+  
   const title = document.createElement("h3");
   title.textContent = kind?.name || "Linh thú";
 
@@ -580,9 +695,16 @@ function makeShopCard(type, kind) {
   const card = document.createElement("div");
   card.className = "pet-card";
 
-  const art = document.createElement("div");
-  art.className = "pet-art";
-  art.textContent = ICONS[type] || "🥚";
+const art = document.createElement("div");
+art.className = "pet-art";
+
+const img = document.createElement("img");
+img.src = ICONS[type] || "";
+img.alt = kind.name;
+img.loading = "lazy";
+img.className = "pet-image";
+
+art.appendChild(img);
 
   const title = document.createElement("h3");
   title.textContent = kind.name;
@@ -656,12 +778,16 @@ function render() {
   el("mainBeast").classList.toggle("dead",!!pet?.dead);
 
   if (!pet) {
-    el("mainBeast").textContent = "🥚";
+    
+el("mainBeastImg").removeAttribute("src");
+el("mainBeastImg").style.display = "none";
+
     el("beastName").textContent = "CHƯA CÓ LINH THÚ";
     el("beastDescription").textContent =
       "Mở cửa hàng để mua linh thú đầu tiên.";
   } else {
-    el("mainBeast").textContent = ICONS[pet.type] || "🥚";
+    el("mainBeastImg").src = ICONS[pet.type] || "";
+    el("mainBeastImg").style.display = "block";
     el("beastName").textContent =
       gameState.types[pet.type]?.name || "Linh thú";
 
