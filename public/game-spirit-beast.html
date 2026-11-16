@@ -2170,11 +2170,302 @@ body { overflow-x:hidden; }
 @media (min-width:431px) { body { background:#00150e; } }
 @media (prefers-reduced-motion:reduce) { .realm-board .main-beast-image { animation:none; } }
 
+
+/* ==========================================
+   SPIRIT BEAST - LOADING V1
+   FULL SCREEN BACKGROUND + HITBOX
+========================================== */
+
+.spirit-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+
+  width: 100%;
+  height: 100dvh;
+
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+
+  background: #001a11;
+
+  overflow: hidden;
+
+  opacity: 1;
+  visibility: visible;
+
+  transition:
+    opacity .45s ease,
+    visibility .45s ease;
+}
+
+/* LOADING HIDDEN */
+
+.spirit-loading.is-finished {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* BACKGROUND DESIGN */
+
+.spirit-loading-board {
+  position: relative;
+  isolation: isolate;
+
+  width: 100%;
+  max-width: 430px;
+  height: 100%;
+
+  margin: 0 auto;
+
+  background-image:
+    url("/assets/spirit-beast/spirit-loading-bg.png");
+
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+
+  overflow: hidden;
+}
+
+/* ==========================================
+   PROGRESS POSITION
+   MATCH THE EXISTING IMAGE FRAME
+========================================== */
+
+.spirit-loading-track {
+  position: absolute;
+
+  left: 14%;
+  top: 76.65%;
+
+  width: 72%;
+  height: 2.25%;
+
+  overflow: hidden;
+  border-radius: 100px;
+
+  background: rgba(0, 23, 16, .35);
+
+  box-shadow:
+    inset 0 0 6px rgba(0, 0, 0, .45);
+
+}
+
+/* MOVING EMERALD BAR */
+
+.spirit-loading-fill {
+  position: relative;
+
+  width: 0%;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: linear-gradient(
+    90deg,
+    #008d62 0%,
+    #00db91 30%,
+    #6cffc6 70%,
+    #e2ffe6 100%
+  );
+
+  box-shadow:
+    0 0 10px rgba(25, 255, 166, .85),
+    0 0 20px rgba(25, 255, 166, .35);
+
+  transition: width .18s ease-out;
+}
+
+/* SHIMMER EFFECT */
+
+.spirit-loading-fill::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    rgba(255,255,255,.48) 50%,
+    transparent 80%
+  );
+
+  background-size: 160% 100%;
+  animation: spiritLoadingShine 1.6s linear infinite;
+}
+
+@keyframes spiritLoadingShine {
+  from {
+    background-position: 160% 0;
+  }
+
+  to {
+    background-position: -160% 0;
+  }
+}
+
+/* ==========================================
+   PERCENTAGE
+========================================== */
+
+.spirit-loading-percent {
+  position: absolute;
+
+  left: 36%;
+  top: 80.25%;
+
+  width: 28%;
+  height: 4.2%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #ffe7a0;
+
+  font-family: Georgia, serif;
+  font-size: clamp(17px, 5.8vw, 27px);
+  font-weight: 800;
+
+  font-variant-numeric: tabular-nums;
+
+  text-shadow:
+    0 2px 3px #00150c,
+    0 0 10px rgba(255, 205, 95, .5);
+
+  /* Che số 0% đã in sẵn trong ảnh */
+  background: radial-gradient(
+    ellipse at center,
+    #003c29 0%,
+    #003c29 42%,
+    rgba(0, 50, 34, .96) 65%,
+    rgba(0, 50, 34, 0) 100%
+  );
+}
+
+/* ==========================================
+   LOAD ERROR
+========================================== */
+
+.spirit-loading-error {
+  position: absolute;
+
+  left: 10%;
+  right: 10%;
+  bottom: 4%;
+
+  padding: 12px;
+
+  border: 1px solid rgba(245,205,120,.65);
+  border-radius: 12px;
+
+  background: rgba(0,25,19,.93);
+  text-align: center;
+}
+
+.spirit-loading-error[hidden] {
+  display: none !important;
+}
+
+.spirit-loading-error p {
+  margin: 0 0 10px;
+  color: #ffe3b2;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.spirit-loading-error button {
+  min-height: 36px;
+  padding: 0 24px;
+
+  border: 1px solid #ffdfa3;
+  border-radius: 8px;
+
+  color: #211506;
+  font-size: 12px;
+  font-weight: 900;
+
+  background: linear-gradient(
+    #fff0bd,
+    #d6a357
+  );
+}
+
+/* ACCESSIBILITY */
+
+@media (prefers-reduced-motion: reduce) {
+  .spirit-loading,
+  .spirit-loading-fill {
+    transition: none;
+  }
+
+  .spirit-loading-fill::after {
+    animation: none;
+  }
+}
+
+
 </style>
 
 </head>
 
 <body>
+
+
+  <!-- ==========================================
+     SPIRIT BEAST - FULLSCREEN LOADING
+========================================== -->
+
+<div id="spiritLoading" class="spirit-loading"
+     role="status"
+     aria-label="Loading Spirit Beast">
+
+  <div class="spirit-loading-board">
+
+    <!-- LOADING PROGRESS -->
+    <div class="spirit-loading-track"
+         role="progressbar"
+         aria-label="Game loading progress"
+         aria-valuemin="0"
+         aria-valuemax="100"
+         aria-valuenow="0"
+         id="spiritProgressTrack">
+
+      <div id="spiritLoadingFill"
+           class="spirit-loading-fill">
+      </div>
+
+    </div>
+
+    <!-- PERCENTAGE -->
+    <div id="spiritLoadingPercent"
+         class="spirit-loading-percent">
+      0%
+    </div>
+
+    <!-- ERROR / RETRY -->
+    <div id="spiritLoadingError"
+         class="spirit-loading-error"
+         hidden>
+
+      <p id="spiritLoadingErrorText">
+        Unable to load Spirit Realm.
+      </p>
+
+      <button type="button"
+              id="spiritLoadingRetry">
+        RETRY
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
 
 
   
@@ -3139,7 +3430,199 @@ async function refresh() {
   }
 }
 
-refresh();
+/* ==========================================
+   SPIRIT BEAST - LOADING ENGINE
+========================================== */
+
+const spiritLoader = document.getElementById(
+  "spiritLoading"
+);
+
+const spiritLoadingFill = document.getElementById(
+  "spiritLoadingFill"
+);
+
+const spiritLoadingPercent = document.getElementById(
+  "spiritLoadingPercent"
+);
+
+const spiritProgressTrack = document.getElementById(
+  "spiritProgressTrack"
+);
+
+const spiritLoadingError = document.getElementById(
+  "spiritLoadingError"
+);
+
+const spiritLoadingErrorText = document.getElementById(
+  "spiritLoadingErrorText"
+);
+
+const spiritLoadingRetry = document.getElementById(
+  "spiritLoadingRetry"
+);
+
+let spiritProgress = 0;
+let spiritLoadingInterval = null;
+let spiritLoadingStarted = false;
+let spiritLoadingComplete = false;
+
+/* UPDATE PROGRESS */
+
+function setSpiritProgress(value) {
+  spiritProgress = Math.max(
+    0,
+    Math.min(100, value)
+  );
+
+  const percent = Math.floor(spiritProgress);
+
+  spiritLoadingFill.style.width = percent + "%";
+
+  spiritLoadingPercent.textContent =
+    percent + "%";
+
+  spiritProgressTrack.setAttribute(
+    "aria-valuenow",
+    String(percent)
+  );
+}
+
+/* PROGRESS ANIMATION */
+
+function animateSpiritProgress() {
+  clearInterval(spiritLoadingInterval);
+
+  spiritLoadingInterval = setInterval(() => {
+    if (spiritProgress >= 90) {
+      clearInterval(spiritLoadingInterval);
+      return;
+    }
+
+    let increment = 1.5;
+
+    if (spiritProgress > 40) {
+      increment = 0.8;
+    }
+
+    if (spiritProgress > 70) {
+      increment = 0.3;
+    }
+
+    setSpiritProgress(
+      Math.min(90, spiritProgress + increment)
+    );
+  }, 90);
+}
+
+/* PRELOAD BACKGROUND */
+
+function preloadSpiritBackground() {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+
+    image.onload = resolve;
+
+    image.onerror = () => {
+      reject(
+        new Error("Unable to load Spirit Beast background.")
+      );
+    };
+
+    image.src =
+      "/assets/spirit-beast/spirit-loading-bg.png";
+  });
+}
+
+/* FINISH LOADING */
+
+async function finishSpiritLoading() {
+  clearInterval(spiritLoadingInterval);
+
+  // Only complete after game data is ready.
+  setSpiritProgress(100);
+
+  spiritLoadingComplete = true;
+
+  await new Promise(resolve => {
+    setTimeout(resolve, 250);
+  });
+
+  spiritLoader.classList.add("is-finished");
+
+  spiritLoader.addEventListener(
+    "transitionend",
+    () => {
+      spiritLoader.style.display = "none";
+    },
+    { once: true }
+  );
+
+  // Reduced-motion fallback.
+  setTimeout(() => {
+    spiritLoader.style.display = "none";
+  }, 600);
+}
+
+/* LOAD GAME */
+
+async function startSpiritGame() {
+  if (spiritLoadingStarted || spiritLoadingComplete) {
+    return;
+  }
+
+  spiritLoadingStarted = true;
+
+  spiritLoader.style.display = "flex";
+  spiritLoader.classList.remove("is-finished");
+
+  spiritLoadingError.hidden = true;
+
+  setSpiritProgress(0);
+  animateSpiritProgress();
+
+  try {
+    // Load image and actual game state.
+    const [, result] = await Promise.all([
+      preloadSpiritBackground(),
+      request("/api/spirit/state")
+    ]);
+
+    // Render the real server state.
+    applyState(result);
+
+    // Loading is complete only after render.
+    await finishSpiritLoading();
+
+  } catch (error) {
+    clearInterval(spiritLoadingInterval);
+
+    console.error(
+      "[SPIRIT LOADING]",
+      error
+    );
+
+    spiritLoadingErrorText.textContent =
+      error.message ||
+      "Unable to load Spirit Realm.";
+
+    spiritLoadingError.hidden = false;
+
+  } finally {
+    spiritLoadingStarted = false;
+  }
+}
+
+/* RETRY */
+
+spiritLoadingRetry.addEventListener(
+  "click",
+  startSpiritGame
+);
+
+/* START */
+
+startSpiritGame();
 
 setInterval(updateTimers,1000);
 
