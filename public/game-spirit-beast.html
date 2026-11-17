@@ -2495,6 +2495,141 @@ body { overflow-x:hidden; }
 
 
 
+
+
+/* ==========================================
+   SPIRIT REALM - HABITAT SLOTS V1
+========================================== */
+
+.spirit-habitat-capacity {
+  flex-shrink: 0;
+
+  margin: 12px 15px 0;
+  padding: 13px 14px;
+
+  border: 1px solid rgba(218, 180, 103, .4);
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(32, 81, 65, .85),
+      rgba(8, 31, 36, .95)
+    );
+
+  box-shadow:
+    inset 0 1px rgba(255, 236, 179, .1);
+}
+
+.spirit-slot-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.spirit-slot-stat {
+  min-width: 0;
+}
+
+.spirit-slot-stat small {
+  display: block;
+  margin-bottom: 6px;
+
+  color: #a9cbbb;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .8px;
+}
+
+.spirit-slot-stat strong {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+
+  color: #ffe0a1;
+  font-size: 21px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.spirit-slot-divider {
+  color: #8ca99a;
+  font-size: 16px;
+}
+
+.spirit-slot-available {
+  text-align: right;
+}
+
+.spirit-slot-available strong {
+  justify-content: flex-end;
+  color: #9cf3ba;
+}
+
+.spirit-free-label {
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+/* SLOT INDICATORS */
+
+.spirit-slot-bar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+
+  width: 100%;
+  margin-top: 12px;
+}
+
+.spirit-slot-cell {
+  height: 8px;
+
+  border-radius: 20px;
+  background: #294940;
+
+  box-shadow:
+    inset 0 1px 3px rgba(0,0,0,.5);
+}
+
+.spirit-slot-cell.occupied {
+  background:
+    linear-gradient(
+      90deg,
+      #98763f,
+      #f3d38d
+    );
+}
+
+.spirit-habitat-capacity.is-full
+.spirit-slot-available strong {
+  color: #ffad91;
+}
+
+/* HIDE IN BEAST SHOP */
+
+.spirit-habitat-capacity.hidden {
+  display: none !important;
+}
+
+@media (max-width: 375px) {
+  .spirit-habitat-capacity {
+    margin: 10px 10px 0;
+    padding: 11px;
+  }
+
+  .spirit-slot-stat strong {
+    font-size: 18px;
+  }
+
+  .spirit-slot-stat small {
+    font-size: 8px;
+  }
+}
+
+
+
 </style>
 
 </head>
@@ -2624,6 +2759,50 @@ body { overflow-x:hidden; }
       </button>
 
     </div>
+
+
+
+<!-- ==========================================
+     SPIRIT BEAST - HABITAT SLOT COUNTER
+========================================== -->
+
+<div
+  id="spiritHabitatCapacity"
+  class="spirit-habitat-capacity"
+  aria-label="Habitat capacity">
+
+  <div class="spirit-slot-info">
+
+    <div class="spirit-slot-stat">
+      <small>HABITAT CAPACITY</small>
+
+      <strong>
+        <span id="spiritSlotsUsed">0</span>
+        <span class="spirit-slot-divider">/</span>
+        <span id="spiritSlotsMax">4</span>
+      </strong>
+    </div>
+
+    <div class="spirit-slot-stat spirit-slot-available">
+      <small>AVAILABLE SLOTS</small>
+
+      <strong>
+        <span id="spiritSlotsFree">4</span>
+        <span class="spirit-free-label">FREE</span>
+      </strong>
+    </div>
+
+  </div>
+
+  <div
+    id="spiritSlotBar"
+    class="spirit-slot-bar"
+    aria-hidden="true">
+  </div>
+
+</div>
+
+
 
     <!-- MODAL CONTENT -->
     <div class="spirit-inventory-content">
@@ -3120,8 +3299,68 @@ button.onclick = () => {
   return card;
 }
 
+
+
+/* ==========================================
+   SPIRIT REALM - HABITAT CAPACITY
+========================================== */
+
+// Must match SPIRIT_MAX on the server.
+const SPIRIT_MAX_SLOTS = 4;
+
+function updateSpiritHabitatSlots() {
+
+  const max = SPIRIT_MAX_SLOTS;
+
+  const used = Array.isArray(gameState?.pets)
+    ? gameState.pets.filter(
+        pet => pet && pet.dead !== true
+      ).length
+    : 0;
+
+  const free = Math.max(0, max - used);
+
+  el("spiritSlotsUsed").textContent = used;
+  el("spiritSlotsMax").textContent = max;
+  el("spiritSlotsFree").textContent = free;
+
+  const capacity = el("spiritHabitatCapacity");
+
+  capacity.classList.toggle(
+    "is-full",
+    free === 0
+  );
+
+  const bar = el("spiritSlotBar");
+
+  bar.replaceChildren();
+
+  for (let i = 0; i < max; i++) {
+
+    const cell = document.createElement("span");
+
+    cell.className = "spirit-slot-cell";
+
+    if (i < used) {
+      cell.classList.add("occupied");
+    }
+
+    bar.appendChild(cell);
+
+  }
+
+}
+
+
+
+
+
 function render() {
   if (!gameState) return;
+
+  // Refresh habitat slot counter
+  updateSpiritHabitatSlots();
+
 
   el("balance").textContent =
     formatNum(gameState.balance) + " 💎";
@@ -3299,6 +3538,13 @@ function openSpiritInventory(tab) {
   if (tab !== "farm" && tab !== "shop") return;
 
   currentTab = tab;
+
+
+el("spiritHabitatCapacity").classList.toggle(
+  "hidden",
+  tab !== "farm"
+);
+
 
   spiritInventoryLastFocus =
     document.activeElement;
