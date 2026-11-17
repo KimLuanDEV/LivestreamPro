@@ -15772,12 +15772,44 @@ if (fed && clean) {
     }
   }
 
-  if (earned > 0) {
-    user.profile.coins =
-      Number(user.profile.coins || 0) + earned;
-  }
 
-  return { changed, earned };
+/* ==========================================
+   SPIRIT BEAST - AUTO REMOVE DEAD BEASTS
+   RELEASE HABITAT SLOTS
+========================================== */
+
+// Remove deceased beasts from the active habitat.
+// Rewards earned before death remain unchanged.
+
+const originalCount = user.spiritBeasts.length;
+
+user.spiritBeasts = user.spiritBeasts.filter(
+  pet => pet && pet.dead !== true
+);
+
+const removedCount =
+  originalCount - user.spiritBeasts.length;
+
+if (removedCount > 0) {
+  changed = true;
+
+  console.log(
+    `[SPIRIT] Removed ${removedCount} deceased beast(s).`
+  );
+}
+
+// Preserve all earned diamonds.
+if (earned > 0) {
+  user.profile.coins =
+    Number(user.profile.coins || 0) + earned;
+}
+
+return {
+  changed,
+  earned,
+  removedCount
+};
+
 }
 
 function spiritPublicState(user) {
@@ -15828,11 +15860,25 @@ app.post("/api/spirit/buy", spiritAuth, (req, res) => {
 
     const db = loadUsers();
     const user = db[req.spiritUid];
-    const now = Date.now();
 
-    spiritTickUser(user, now);
+  
+const now = Date.now();
 
-    const pets = user.spiritBeasts;
+// Update rewards and remove deceased beasts.
+const tickResult = spiritTickUser(user, now);
+
+// Persist changes even if the purchase is rejected later.
+if (tickResult.changed) {
+  saveUsers(db);
+
+  if (tickResult.earned > 0) {
+    emitCoinUpdate(req.spiritUid);
+  }
+}
+
+// The habitat now contains only living beasts.
+const pets = user.spiritBeasts;
+
 
     if (pets.length >= SPIRIT_MAX) {
       return res.status(400).json({
