@@ -15637,7 +15637,16 @@ const SPIRIT_MAX_REWARDS = 90;
 ========================================== */
 
 
+
+/* ==========================================
+   SPIRIT REALM - 12 BEAST COLLECTION
+   reward = TOTAL DAILY REWARD
+   3 reward cycles per day
+========================================== */
+
 const SPIRIT_TYPES = Object.freeze({
+
+  // ORIGINAL BEASTS - KEEP EXISTING VALUES
 
   dragon: {
     name: "Azure Dragon",
@@ -15645,11 +15654,39 @@ const SPIRIT_TYPES = Object.freeze({
     reward: 390
   },
 
+    tortoise: {
+    name: "Celestial Tortoise",
+    price: 20000,
+    reward: 780
+  },
+
+  tiger: {
+    name: "White Tiger",
+    price: 35000,
+    reward: 1365
+  },
+
+
   fox: {
     name: "Nine-Tailed Fox",
     price: 50000,
     reward: 2010
   },
+
+
+    wolf: {
+    name: "Moon Wolf",
+    price: 75000,
+    reward: 2925
+  },
+
+
+  griffin: {
+    name: "Storm Griffin",
+    price: 100000,
+    reward: 3900
+  },
+
 
   phoenix: {
     name: "Fire Phoenix",
@@ -15657,10 +15694,38 @@ const SPIRIT_TYPES = Object.freeze({
     reward: 6000
   },
 
+  
+  pegasus: {
+    name: "Celestial Pegasus",
+    price: 200000,
+    reward: 7800
+  },
+
+  serpent: {
+    name: "Frost Serpent",
+    price: 300000,
+    reward: 11700
+  },
+
+
+
   qilin: {
     name: "Qilin",
     price: 500000,
     reward: 20400
+  },
+
+
+  hydra: {
+    name: "Abyss Hydra",
+    price: 750000,
+    reward: 29250
+  },
+
+  leviathan: {
+    name: "Leviathan",
+    price: 1000000,
+    reward: 39000
   }
 
 });

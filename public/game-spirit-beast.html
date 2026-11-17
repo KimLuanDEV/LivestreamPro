@@ -2630,6 +2630,77 @@ body { overflow-x:hidden; }
 
 
 
+
+/* ==========================================
+   SPIRIT SHOP - EXTENDED COLLECTION
+========================================== */
+
+#shopPanel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-items: stretch;
+}
+
+#shopPanel.hidden {
+  display: none !important;
+}
+
+#shopPanel .pet-card {
+  min-width: 0;
+  height: 100%;
+}
+
+#shopPanel .pet-card h3 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 36px;
+  margin: 9px 0 5px;
+
+  font-size: 13px;
+  line-height: 1.3;
+  text-align: center;
+}
+
+#shopPanel .pet-art {
+  width: 100%;
+  aspect-ratio: 1 / 1.15;
+}
+
+#shopPanel .pet-image {
+  object-fit: contain;
+}
+
+#shopPanel .price {
+  margin-top: auto;
+  padding: 6px 0;
+  font-size: 14px;
+}
+
+#shopPanel .buy {
+  min-height: 40px;
+  margin-top: 6px;
+}
+
+@media (max-width: 375px) {
+  #shopPanel {
+    gap: 8px;
+  }
+
+  #shopPanel .pet-card h3 {
+    font-size: 12px;
+  }
+
+  #shopPanel .price {
+    font-size: 12px;
+  }
+}
+
+
+
+
 </style>
 
 </head>
@@ -2985,12 +3056,27 @@ const CLEAN_TIME = 6 * HOUR;
 const DEATH_TIME = 7 * HOUR;
 
 
+
 const ICONS = {
+
+  // ORIGINAL
   dragon: "/assets/spirit-beast/dragon.png",
   fox: "/assets/spirit-beast/fox.png",
   phoenix: "/assets/spirit-beast/phoenix.png",
-  qilin: "/assets/spirit-beast/qilin.png"
+  qilin: "/assets/spirit-beast/qilin.png",
+
+  // NEW
+  tortoise: "/assets/spirit-beast/tortoise.png",
+  tiger: "/assets/spirit-beast/tiger.png",
+  wolf: "/assets/spirit-beast/wolf.png",
+  griffin: "/assets/spirit-beast/griffin.png",
+  pegasus: "/assets/spirit-beast/pegasus.png",
+  serpent: "/assets/spirit-beast/serpent.png",
+  hydra: "/assets/spirit-beast/hydra.png",
+  leviathan: "/assets/spirit-beast/leviathan.png"
+
 };
+
 
 
 let gameState = null;
@@ -3395,10 +3481,20 @@ function render() {
     farm.appendChild(empty);
   }
 
-  for (const [type,kind] of
-       Object.entries(gameState.types)) {
-    shop.appendChild(makeShopCard(type,kind));
-  }
+
+/* ==========================================
+   SPIRIT SHOP - SORT BY PRICE
+========================================== */
+
+const sortedSpiritBeasts = Object.entries(
+  gameState.types
+).sort((a, b) => {
+  return Number(a[1].price) - Number(b[1].price);
+});
+
+for (const [type, kind] of sortedSpiritBeasts) {
+  shop.appendChild(makeShopCard(type, kind));
+}
 
   const pet = selectedPet();
 
