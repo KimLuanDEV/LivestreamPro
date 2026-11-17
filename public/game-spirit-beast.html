@@ -2397,6 +2397,104 @@ body { overflow-x:hidden; }
 }
 
 
+
+/* ==========================================
+   SPIRIT BEAST - RELEASE BUTTON V1
+========================================== */
+
+.spirit-card-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 7px;
+
+  width: 100%;
+  margin-top: auto;
+}
+
+/* VIEW BUTTON */
+
+.spirit-card-actions .buy {
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+
+  margin: 0;
+  padding: 9px 5px;
+
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .3px;
+}
+
+/* RELEASE BUTTON */
+
+.spirit-release-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-height: 35px;
+
+  margin: 0;
+  padding: 8px 5px;
+
+  border: 1px solid rgba(224, 128, 115, .6);
+  border-radius: 10px;
+
+  color: #ffd4cb;
+
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .8px;
+
+  background: linear-gradient(
+    180deg,
+    #633331,
+    #321f26
+  );
+
+  box-shadow:
+    inset 0 1px rgba(255, 217, 195, .1),
+    0 3px 8px rgba(0,0,0,.2);
+
+  cursor: pointer;
+  transition: transform .15s ease;
+}
+
+.spirit-release-btn:active {
+  transform: scale(.96);
+}
+
+.spirit-release-btn:focus-visible {
+  outline: 2px solid #ffd0be;
+  outline-offset: 2px;
+}
+
+.spirit-release-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 375px) {
+  .spirit-card-actions {
+    gap: 6px;
+  }
+
+  .spirit-release-btn {
+    min-height: 33px;
+    font-size: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spirit-release-btn {
+    transition: none;
+  }
+}
+
+
+
 </style>
 
 </head>
@@ -2915,8 +3013,61 @@ button.onclick = () => {
 };
 
 
-  card.append(art,title,detail,button);
-  return card;
+ 
+/* ==========================================
+   SPIRIT BEAST - VIEW / RELEASE ACTIONS
+========================================== */
+
+// RELEASE BUTTON
+const releaseButton = document.createElement("button");
+
+releaseButton.type = "button";
+releaseButton.className = "spirit-release-btn";
+releaseButton.textContent = "RELEASE";
+
+// CONFIRM BEFORE REMOVING
+releaseButton.onclick = () => {
+
+  if (busy) return;
+
+  const beastName = kind?.name || "Spirit Beast";
+
+  openDialog(
+    "RELEASE SPIRIT BEAST",
+
+    `Are you sure you want to release ${beastName}? ` +
+    `This action is permanent. ` +
+    `Your purchase will not be refunded.`,
+
+    () => execute(
+      "/api/spirit/release",
+      { id: pet.id }
+    )
+  );
+
+};
+
+// ACTION BUTTON CONTAINER
+const actions = document.createElement("div");
+
+actions.className = "spirit-card-actions";
+
+actions.append(
+  button,
+  releaseButton
+);
+
+// BUILD CARD
+card.append(
+  art,
+  title,
+  detail,
+  actions
+);
+
+return card;
+
+
 }
 
 function makeShopCard(type, kind) {

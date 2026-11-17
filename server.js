@@ -15938,6 +15938,109 @@ careActions: {
   }
 });
 
+
+
+
+/* ==========================================
+   SPIRIT BEAST - RELEASE BEAST API
+   REMOVE OWNED BEAST / FREE HABITAT SLOT
+========================================== */
+
+app.post("/api/spirit/release", spiritAuth, (req, res) => {
+
+  try {
+
+    // Beast ID supplied by the client
+    const id = String(req.body?.id || "");
+
+    if (!id || id.length > 128) {
+      return res.status(400).json({
+        ok: false,
+        message: "Invalid beast ID."
+      });
+    }
+
+    // Get authenticated user from server session
+    const uid = req.spiritUid;
+
+    const db = loadUsers();
+    const user = db[uid];
+
+    if (!user || !user.profile) {
+      return res.status(404).json({
+        ok: false,
+        message: "Account not found."
+      });
+    }
+
+    const now = Date.now();
+
+    // Process pending rewards and remove dead beasts
+    const tickResult = spiritTickUser(user, now);
+
+    const pets = user.spiritBeasts;
+
+    // Find beast owned by this user
+    const index = pets.findIndex(
+      pet => pet && pet.id === id
+    );
+
+    if (index === -1) {
+
+      if (tickResult.changed) {
+        saveUsers(db);
+
+        if (tickResult.earned > 0) {
+          emitCoinUpdate(uid);
+        }
+      }
+
+      return res.status(404).json({
+        ok: false,
+        message: "Spirit beast not found."
+      });
+    }
+
+    // Remove ONLY the selected beast
+    const [releasedBeast] = pets.splice(index, 1);
+
+    // Save updated user data
+    saveUsers(db);
+
+    // Notify balance change only if pending rewards were added
+    if (tickResult.earned > 0) {
+      emitCoinUpdate(uid);
+    }
+
+    console.log(
+      "[SPIRIT RELEASE]",
+      uid,
+      releasedBeast.type,
+      releasedBeast.id
+    );
+
+    // Return updated state to client
+    return res.json({
+      ok: true,
+      message: "Spirit beast released successfully.",
+      ...spiritPublicState(user)
+    });
+
+  } catch (error) {
+
+    console.error("[SPIRIT RELEASE]", error);
+
+    return res.status(500).json({
+      ok: false,
+      message: "Unable to release spirit beast."
+    });
+
+  }
+
+});
+
+
+
 app.post("/api/spirit/care", spiritAuth, (req, res) => {
   try {
     const id = String(req.body?.id || "");
