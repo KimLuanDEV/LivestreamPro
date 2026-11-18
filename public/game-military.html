@@ -6376,8 +6376,13 @@ body.w8-theme-titanium
 
 /* MENU BELOW BUTTON */
 
+
 #w8SettingsMenu {
-    top: -175px;
+    top: -280px;
+    max-height: 420px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
 }
 
 
@@ -7938,6 +7943,32 @@ onclick="openMyBetHistory()"></div>
 </button>
 
 
+
+<!-- OPTION 5: DOUBLE OR NOTHING -->
+<button
+  id="w8DoubleToggleBtn"
+  type="button"
+  class="w8-settings-option"
+  onclick="w8ToggleDoubleMode()"
+  aria-pressed="true">
+
+  <span class="w8-settings-number">05</span>
+
+  <span class="w8-settings-info">
+    <strong>DOUBLE OR NOTHING</strong>
+    <small>Optional double reward game</small>
+  </span>
+
+  <span
+    id="w8DoubleSettingsState"
+    class="w8-settings-state">
+    ON
+  </span>
+
+</button>
+
+
+
   </div>
 
 </div>
@@ -8652,6 +8683,121 @@ lastBetValue = currentBet
 let w8DoubleOffer = null;
 let w8DoubleBusy = false;
 
+
+
+/* ==========================================
+   DOUBLE OR NOTHING - USER SETTINGS
+========================================== */
+
+const W8_DOUBLE_STORE = "w8_double_mode_v1";
+
+// Mặc định ON để giữ hành vi hiện tại.
+// Người chơi có thể tắt trong Settings.
+let w8DoubleEnabled = true;
+
+try {
+  w8DoubleEnabled =
+    localStorage.getItem(W8_DOUBLE_STORE) !== "off";
+} catch (e) {
+  w8DoubleEnabled = true;
+}
+
+let w8DoubleKeepPending = null;
+
+function w8UpdateDoubleSettings() {
+  const button =
+    document.getElementById("w8DoubleToggleBtn");
+
+  const state =
+    document.getElementById("w8DoubleSettingsState");
+
+  if (!button || !state) return;
+
+  state.textContent = w8DoubleEnabled
+    ? "ON"
+    : "OFF";
+
+  state.classList.toggle(
+    "is-on",
+    w8DoubleEnabled
+  );
+
+  button.setAttribute(
+    "aria-pressed",
+    String(w8DoubleEnabled)
+  );
+}
+
+// OFF: tự nhận phần lợi nhuận
+// bằng hành động KEEP chính thức của server.
+function w8AutoKeepDoubleOffer(offer) {
+  if (!offer?.roundId) return;
+
+  const roundId = String(offer.roundId);
+
+  if (w8DoubleKeepPending === roundId) {
+    return;
+  }
+
+  w8DoubleKeepPending = roundId;
+
+  socket.timeout(10000).emit(
+    "wheel8-double-select",
+    { action: "keep" },
+    (err, response) => {
+
+      if (w8DoubleKeepPending === roundId) {
+        w8DoubleKeepPending = null;
+      }
+
+      if (err || !response?.ok) {
+        console.warn(
+          "[WHEEL8] Automatic KEEP not confirmed",
+          response?.message || err
+        );
+      }
+    }
+  );
+}
+
+function w8ToggleDoubleMode() {
+  w8DoubleEnabled = !w8DoubleEnabled;
+
+  try {
+    localStorage.setItem(
+      W8_DOUBLE_STORE,
+      w8DoubleEnabled ? "on" : "off"
+    );
+  } catch (e) {}
+
+  w8UpdateDoubleSettings();
+
+  if (!w8DoubleEnabled) {
+
+    // Tắt bảng đang hiển thị
+    document.getElementById(
+      "w8DoubleModal"
+    ).hidden = true;
+
+    // Nếu đang có lời mời chưa xử lý,
+    // yêu cầu server giữ nguyên lợi nhuận
+    if (w8DoubleOffer) {
+      w8AutoKeepDoubleOffer(w8DoubleOffer);
+    }
+
+  } else {
+
+    // Khi bật lại, kiểm tra lời mời
+    // đang chờ trên server
+    socket.emit("wheel8-double-get");
+
+  }
+}
+
+w8UpdateDoubleSettings();
+
+
+
 function w8SetDoubleBusy(busy) {
   w8DoubleBusy = busy;
 
@@ -8666,6 +8812,27 @@ function w8ShowDoubleOffer(offer) {
   if (!offer || Number(offer.profit) <= 0) return;
 
   w8DoubleOffer = offer;
+
+
+
+// ==========================================
+// DOUBLE MODE OFF - SILENT KEEP
+// ==========================================
+
+if (!w8DoubleEnabled) {
+
+  // Không hiện bảng nhân đôi
+  document.getElementById(
+    "w8DoubleModal"
+  ).hidden = true;
+
+  // Tự động nhận toàn bộ lợi nhuận
+  w8AutoKeepDoubleOffer(offer);
+
+  return;
+}
+
+
 
   // Không che bảng kết quả vòng quay
   const resultModal = document.getElementById("resultModal");
@@ -8737,6 +8904,30 @@ socket.on("wheel8-double-offer", offer => {
 
 socket.on("wheel8-double-result", result => {
   if (!result?.ok) return;
+
+
+
+// Khi người chơi đã tắt Double or Nothing,
+// xử lý hoàn tất mà không bật modal.
+if (!w8DoubleEnabled) {
+
+  if (
+    w8DoubleOffer &&
+    String(result.roundId) ===
+      String(w8DoubleOffer.roundId)
+  ) {
+    w8DoubleOffer = null;
+  }
+
+  document.getElementById(
+    "w8DoubleModal"
+  ).hidden = true;
+
+  w8SetDoubleBusy(false);
+
+  return;
+}
+
 
   // Nếu đang mở lời mời của vòng khác,
   // không đóng nhầm lời mời mới.
