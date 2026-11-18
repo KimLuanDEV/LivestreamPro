@@ -17446,6 +17446,110 @@ body.page-profile .transfer-history-card {
 }
 
 
+
+/* ==========================================
+   TRANSFER SECURITY VERIFICATION
+========================================== */
+
+.transfer-security-box {
+  margin: 16px 0;
+  padding: 17px;
+  border: 1px solid rgba(212,177,103,.23);
+  border-radius: 15px;
+  background: linear-gradient(
+    145deg,
+    rgba(212,177,103,.07),
+    rgba(9,13,22,.65)
+  );
+}
+
+.transfer-security-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 17px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+  color: #dfc489;
+}
+
+.transfer-security-required {
+  font-size: 9px;
+  padding: 5px 8px;
+  border-radius: 5px;
+  border: 1px solid rgba(212,177,103,.25);
+}
+
+.transfer-security-label {
+  display: block;
+  margin-bottom: 9px;
+  color: #c8cfda;
+  font-size: 12px;
+}
+
+.transfer-security-input-wrap {
+  display: flex;
+  align-items: center;
+  border: 1px solid rgba(212,177,103,.3);
+  border-radius: 10px;
+  background: #0b1019;
+  overflow: hidden;
+}
+
+.transfer-security-input-wrap:focus-within {
+  border-color: #dfc489;
+  box-shadow: 0 0 0 3px rgba(212,177,103,.08);
+}
+
+.transfer-security-input {
+  flex: 1;
+  min-width: 0;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 13px 12px;
+  font-size: 14px;
+  color: #f5f0e8;
+}
+
+.transfer-security-toggle {
+  flex: 0 0 58px;
+  width: 58px;
+  background: transparent;
+  border: 0;
+  color: #dfc489;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.transfer-security-hint {
+  margin: 10px 0 0;
+  color: #8290a5;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.transfer-security-error {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255,100,115,.3);
+  border-radius: 8px;
+  background: rgba(255,100,115,.08);
+  color: #ff9aa7;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.transfer-security-error.hidden {
+  display: none !important;
+}
+
+
+
+
   </style>
 </head>
 
@@ -18105,8 +18209,9 @@ body.page-profile .transfer-history-card {
 </div>
 
 
+
 <!-- ==========================================
-     2. XÁC NHẬN CHUYỂN KIM CƯƠNG
+     DIAMOND TRANSFER - SECURITY VERIFICATION
 ========================================== -->
 
 <div id="transferConfirmModal"
@@ -18118,29 +18223,29 @@ body.page-profile .transfer-history-card {
   <div class="confirm-card">
 
     <div class="confirm-kicker">
-      TRANSACTION REVIEW
+      LIVESTREAM PRO / SECURE TRANSFER
     </div>
 
     <div class="confirm-header">
-      Xác nhận giao dịch
+      Verify Your Transfer
     </div>
 
     <p class="confirm-description">
-      Vui lòng kiểm tra thông tin người nhận
-      và số kim cương trước khi chuyển.
+      Review the recipient and transfer amount,
+      then enter your security code to continue.
     </p>
 
-    <!-- NGƯỜI NHẬN -->
+    <!-- RECIPIENT -->
     <div class="confirm-user">
 
       <img id="confirmAvatar"
            class="confirm-avatar"
-           alt="Người nhận">
+           alt="Recipient">
 
       <div class="confirm-info">
 
         <div class="confirm-user-label">
-          CHUYỂN ĐẾN
+          TRANSFER TO
         </div>
 
         <div id="confirmName"
@@ -18150,14 +18255,13 @@ body.page-profile .transfer-history-card {
              class="confirm-level"></div>
 
       </div>
-
     </div>
 
-    <!-- SỐ LƯỢNG -->
+    <!-- TRANSFER AMOUNT -->
     <div class="confirm-amount-box">
 
       <div class="confirm-label">
-        SỐ KIM CƯƠNG CHUYỂN
+        TRANSFER AMOUNT
       </div>
 
       <div class="confirm-amount">
@@ -18165,36 +18269,84 @@ body.page-profile .transfer-history-card {
       </div>
 
       <div class="confirm-amount-unit">
-        KIM CƯƠNG
+        DIAMONDS
       </div>
 
     </div>
 
-    <!-- LƯU Ý -->
-    <div class="confirm-warning">
-      Giao dịch không thể hoàn tác.
-      Vui lòng xác nhận đúng người nhận.
+    <!-- SECURITY CODE -->
+    <div class="transfer-security-box">
+
+      <div class="transfer-security-heading">
+        <span>SECURITY VERIFICATION</span>
+        <span class="transfer-security-required">
+          REQUIRED
+        </span>
+      </div>
+
+      <label for="transferSecurityCode"
+             class="transfer-security-label">
+        Account Security Code
+      </label>
+
+      <div class="transfer-security-input-wrap">
+
+        <input
+          type="password"
+          id="transferSecurityCode"
+          class="transfer-security-input"
+          placeholder="Enter your security code"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          maxlength="128"
+          required>
+
+        <button
+          type="button"
+          class="transfer-security-toggle"
+          onclick="toggleTransferSecurityCode()"
+          aria-label="Show security code">
+          SHOW
+        </button>
+
+      </div>
+
+      <p class="transfer-security-hint">
+        Enter the security code you created
+        when registering your account.
+      </p>
+
+      <div id="transferSecurityError"
+           class="transfer-security-error hidden"
+           role="alert">
+      </div>
+
     </div>
 
-    <!-- BUTTONS -->
+    <div class="confirm-warning">
+      Your diamonds will be held until the
+      transfer is reviewed by an administrator.
+    </div>
+
+    <!-- ACTIONS -->
     <div class="confirm-actions">
 
       <button type="button"
               class="btn-cancel"
               onclick="closeTransferConfirm()">
-        Quay lại
+        Back
       </button>
 
       <button type="button"
               class="btn-confirm"
               onclick="confirmTransfer()">
-        Xác nhận chuyển
+        Submit Transfer Request
       </button>
 
     </div>
 
   </div>
-
 </div>
 
 
@@ -18281,59 +18433,6 @@ body.page-profile .transfer-history-card {
   </div>
 
 </div>
-
-
-
-<div id="transferConfirmModal" class="transfer-confirm hidden">
-
-  <div class="confirm-backdrop" onclick="closeTransferConfirm()"></div>
-
-  <div class="confirm-card">
-
-    <div class="confirm-header">
-    Xác nhận chuyển kim cương
-    </div>
-
-    <div class="confirm-user">
-
-      <img id="confirmAvatar" class="confirm-avatar">
-
-      <div class="confirm-info">
-        <div id="confirmName" class="confirm-name"></div>
-        <div id="confirmLevel" class="confirm-level"></div>
-      </div>
-
-    </div>
-
-    <div class="confirm-amount-box">
-      <div class="confirm-label">Số lượng chuyển</div>
-      <div class="confirm-amount">
-        <span id="confirmAmount"></span>
-      </div>
-    </div>
-
-    <div class="confirm-warning">
-      ⚠ Giao dịch không thể hoàn tác
-    </div>
-
-    <div class="confirm-actions">
-
-      <button class="btn-cancel"
-        onclick="closeTransferConfirm()">
-        Huỷ
-      </button>
-
-      <button class="btn-confirm"
-        onclick="confirmTransfer()">
-        Xác nhận
-      </button>
-
-    </div>
-
-  </div>
-
-</div>
-
 
 
 

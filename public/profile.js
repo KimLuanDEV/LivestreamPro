@@ -1922,7 +1922,7 @@ function submitTransfer(){
   );
 
   if(!target || !amount || amount <= 0){
-    showMsg("⚠️ Nhập tên nhân vật hoặc UID");
+    showMsg("Please enter a character name or UID.");
     return;
   }
 
@@ -1937,7 +1937,7 @@ const name =
     document.getElementById("previewAvatar").src;
 
   if(!name){
-    showMsg("⚠️ Chưa xác định người nhận");
+    showMsg("Please select a valid recipient.");
     return;
   }
 
@@ -1958,11 +1958,46 @@ const name =
 
 
 
-function closeTransferConfirm(){
-  document
-    .getElementById("transferConfirmModal")
-    .classList.add("hidden");
+
+function closeTransferConfirm() {
+
+  if (transferSubmitting) return;
+
+  const input = document.getElementById(
+    "transferSecurityCode"
+  );
+
+  const error = document.getElementById(
+    "transferSecurityError"
+  );
+
+  if (input) {
+    input.value = "";
+    input.type = "password";
+  }
+
+  const toggle = document.querySelector(
+    ".transfer-security-toggle"
+  );
+
+  if (toggle) {
+    toggle.textContent = "SHOW";
+    toggle.setAttribute(
+      "aria-label",
+      "Show security code"
+    );
+  }
+
+  if (error) {
+    error.textContent = "";
+    error.classList.add("hidden");
+  }
+
+  document.getElementById(
+    "transferConfirmModal"
+  ).classList.add("hidden");
 }
+
 
 
 /* ==========================================
@@ -1971,22 +2006,90 @@ function closeTransferConfirm(){
 
 let transferSubmitting = false;
 
+
+/* ==========================================
+   SECURE DIAMOND TRANSFER
+========================================== */
+
+function toggleTransferSecurityCode() {
+
+  const input = document.getElementById(
+    "transferSecurityCode"
+  );
+
+  const button = document.querySelector(
+    ".transfer-security-toggle"
+  );
+
+  if (!input || !button) return;
+
+  const visible = input.type === "password";
+
+  input.type = visible ? "text" : "password";
+  button.textContent = visible ? "HIDE" : "SHOW";
+
+  button.setAttribute(
+    "aria-label",
+    visible ? "Hide security code" : "Show security code"
+  );
+}
+
+
+function showTransferSecurityError(message) {
+
+  const box = document.getElementById(
+    "transferSecurityError"
+  );
+
+  if (!box) return;
+
+  box.textContent = message;
+  box.classList.remove("hidden");
+}
+
+
 function confirmTransfer() {
 
   if (!pendingTransfer || transferSubmitting) return;
 
-  transferSubmitting = true;
+  const securityInput = document.getElementById(
+    "transferSecurityCode"
+  );
+
+  const securityCode = securityInput?.value || "";
+
+  const errorBox = document.getElementById(
+    "transferSecurityError"
+  );
+
+  if (errorBox) {
+    errorBox.textContent = "";
+    errorBox.classList.add("hidden");
+  }
+
+  if (!securityCode.trim()) {
+
+    showTransferSecurityError(
+      "Please enter your account security code."
+    );
+
+    securityInput?.focus();
+    return;
+  }
 
   const request = { ...pendingTransfer };
 
-  const avatar =
-    document.getElementById("confirmAvatar").src;
+  const avatar = document.getElementById(
+    "confirmAvatar"
+  ).src;
 
-  const name =
-    document.getElementById("confirmName").textContent;
+  const name = document.getElementById(
+    "confirmName"
+  ).textContent;
 
-  const level =
-    document.getElementById("confirmLevel").textContent;
+  const level = document.getElementById(
+    "confirmLevel"
+  ).textContent;
 
   const amount = request.amount;
 
@@ -1994,60 +2097,77 @@ function confirmTransfer() {
     "#transferConfirmModal .btn-confirm"
   );
 
-  if (btn) btn.disabled = true;
+  transferSubmitting = true;
+
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "VERIFYING...";
+  }
 
   socket.timeout(10000).emit(
     "coin-transfer",
     {
       target: request.target,
-      amount
+      amount,
+      securityCode
     },
     (err, result) => {
 
       transferSubmitting = false;
 
-      if (btn) btn.disabled = false;
+      // Never retain the entered code after submission
+      if (securityInput) securityInput.value = "";
+
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Submit Transfer Request";
+      }
 
       if (err) {
-        showMsg(
-          "Không nhận được phản hồi. Vui lòng kiểm tra lịch sử yêu cầu trước khi thử lại."
+        showTransferSecurityError(
+          "The request timed out. Check your transfer history before trying again."
         );
         return;
       }
 
       if (!result?.ok) {
-        showMsg(
-          result?.message || "Không thể gửi yêu cầu chuyển."
+
+        showTransferSecurityError(
+          result?.message ||
+          "Transfer verification failed."
         );
+
+        securityInput?.focus();
         return;
       }
 
-      // Server đã xác nhận lưu yêu cầu
-      document.getElementById("successAvatar").src =
-        avatar;
+      document.getElementById(
+        "successAvatar"
+      ).src = avatar;
 
-      document.getElementById("successName").textContent =
-        name;
+      document.getElementById(
+        "successName"
+      ).textContent = name;
 
-      document.getElementById("successLevel").textContent =
-        level;
+      document.getElementById(
+        "successLevel"
+      ).textContent = level;
 
-      document.getElementById("successAmount").textContent =
-        amount.toLocaleString("en-US");
+      document.getElementById(
+        "successAmount"
+      ).textContent = amount.toLocaleString("en-US");
 
       pendingTransfer = null;
 
       closeTransferConfirm();
       closeTransfer();
 
-      document
-        .getElementById("transferSuccessModal")
-        .classList.remove("hidden");
-
+      document.getElementById(
+        "transferSuccessModal"
+      ).classList.remove("hidden");
     }
   );
 }
-
 
 
 function closeTransferSuccess(){

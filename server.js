@@ -10772,6 +10772,7 @@ if (!Number.isFinite(amt) || amt <= 0) {
   }
 
 
+  
 // 🔐 KIỂM TRA MÃ BẢO MẬT
 const okSec = await bcrypt.compare(
   String(securityCode),
@@ -12191,7 +12192,12 @@ app.post("/api/login", async (req,res)=>{
 
   const acc = db[username];
 
-  // 🚫 USER BỊ KHOÁ → KHÔNG CHO LOGIN
+
+
+
+  if(!acc) return res.json({ error:"invalid" });
+
+    // 🚫 USER BỊ KHOÁ → KHÔNG CHO LOGIN
 if (acc.profile?.accountBlocked) {
 
   return res.status(403).json({
@@ -12201,16 +12207,19 @@ if (acc.profile?.accountBlocked) {
 }
 
 
-  if(!acc) return res.json({ error:"invalid" });
 
  const okPass = await bcrypt.compare(String(password), acc.password);
 
-let okSec;
-if (securityCode === "__TRUSTED__") {
-  okSec = true;            // ✅ bypass khi máy đã trusted
-} else {
-  okSec = await bcrypt.compare(String(securityCode), acc.securityCode);
-}
+
+const okSec =
+  typeof securityCode === "string" &&
+  securityCode.length > 0 &&
+  typeof acc.securityCode === "string" &&
+  await bcrypt.compare(
+    securityCode,
+    acc.securityCode
+  );
+
 
 
   if(!okPass || !okSec){
@@ -12657,6 +12666,59 @@ function closeRoom(roomId, reason = "host_left") {
 
 
 
+/* ==========================================
+   TRANSFER SECURITY - ATTEMPT LIMITER
+========================================== */
+
+const TRANSFER_SECURITY_LIMIT = 5;
+const TRANSFER_SECURITY_LOCK_MS = 15 * 60 * 1000;
+
+const transferSecurityAttempts = new Map();
+
+function isTransferSecurityLocked(uid) {
+
+  const record = transferSecurityAttempts.get(uid);
+
+  if (!record) return false;
+
+  if (record.lockUntil > Date.now()) {
+    return true;
+  }
+
+  if (record.lockUntil) {
+    transferSecurityAttempts.delete(uid);
+  }
+
+  return false;
+}
+
+function recordTransferSecurityFailure(uid) {
+
+  const now = Date.now();
+
+  let record = transferSecurityAttempts.get(uid);
+
+  if (
+    !record ||
+    now - record.startedAt > TRANSFER_SECURITY_LOCK_MS
+  ) {
+    record = {
+      attempts: 0,
+      startedAt: now,
+      lockUntil: 0
+    };
+  }
+
+  record.attempts++;
+
+  if (record.attempts >= TRANSFER_SECURITY_LIMIT) {
+    record.lockUntil = now + TRANSFER_SECURITY_LOCK_MS;
+  }
+
+  transferSecurityAttempts.set(uid, record);
+
+  return record.lockUntil > now;
+}
 
 
 
@@ -13087,7 +13149,12 @@ emitPrivateSocialEvent(
    PLAYER REQUEST / HOLD BALANCE
 ========================================== */
 
-socket.on("coin-transfer", (payload = {}, ack) => {
+
+
+
+
+
+socket.on("coin-transfer", async (payload = {}, ack) => {
 
   const respond = (data) => {
     if (typeof ack === "function") ack(data);
@@ -13116,17 +13183,108 @@ socket.on("coin-transfer", (payload = {}, ack) => {
     });
   }
 
-  const amount = rawAmount;
-  const users = loadUsers();
+ 
 
-  const from = users[fromUid];
+const amount = rawAmount;
 
-  if (!from?.profile || from.profile.accountBlocked) {
-    return respond({
-      ok: false,
-      message: "Sender account unavailable."
-    });
-  }
+const securityCode =
+  typeof payload.securityCode === "string"
+    ? payload.securityCode
+    : "";
+
+// Rate-limit before verifying the code
+if (isTransferSecurityLocked(fromUid)) {
+  return respond({
+    ok: false,
+    message:
+      "Too many failed attempts. Please try again in 15 minutes."
+  });
+}
+
+if (!securityCode || securityCode.length > 128) {
+  return respond({
+    ok: false,
+    message: "Please enter a valid security code."
+  });
+}
+
+let users = loadUsers();
+let from = users[fromUid];
+
+if (!from?.profile || from.profile.accountBlocked) {
+  return respond({
+    ok: false,
+    message: "Sender account unavailable."
+  });
+}
+
+if (typeof from.securityCode !== "string") {
+  return respond({
+    ok: false,
+    message:
+      "Security code unavailable. Please contact support."
+  });
+}
+
+const securityHashAtVerification = from.securityCode;
+
+// Verify the bcrypt hash stored on the server
+let verified = false;
+
+try {
+  verified = await bcrypt.compare(
+    securityCode,
+    from.securityCode
+  );
+} catch (error) {
+  console.error("[TRANSFER SECURITY]", error);
+
+  return respond({
+    ok: false,
+    message: "Security verification is unavailable."
+  });
+}
+
+if (!verified) {
+
+  const locked = recordTransferSecurityFailure(fromUid);
+
+  return respond({
+    ok: false,
+    message: locked
+      ? "Too many failed attempts. Please try again in 15 minutes."
+      : "Incorrect security code. Please try again."
+  });
+}
+
+transferSecurityAttempts.delete(fromUid);
+
+// Reload the latest account data after bcrypt verification.
+// This prevents using the balance snapshot taken before await.
+users = loadUsers();
+from = users[fromUid];
+
+
+if (from?.securityCode !== securityHashAtVerification) {
+  return respond({
+    ok: false,
+    message: "Security credentials changed. Please try again."
+  });
+}
+
+
+if (
+  !from?.profile ||
+  from.profile.accountBlocked ||
+  from.securityCode === undefined
+) {
+  return respond({
+    ok: false,
+    message: "Sender account is unavailable."
+  });
+}
+
+
 
   let toUid = null;
 
@@ -13351,44 +13509,6 @@ socket.on("coin-transfer-history", () => {
 });
 
 
-
-socket.on("coin-transfer-history-result",(list)=>{
-
-  const box =
-    document.getElementById("transferHistoryList");
-
-  box.innerHTML = "";
-
-  if(!list || list.length === 0){
-    box.innerHTML = "<div>No transactions yet</div>";
-    return;
-  }
-
-  list.forEach(t => {
-
-    const div = document.createElement("div");
-
-    div.style.padding = "8px";
-    div.style.borderBottom = "1px solid #333";
-
-    const type =
-      t.type === "send"
-      ? "Sent"
-      : "Received";
-
-    div.innerHTML = `
-      <div><b>${type}</b> ${t.amount} 💎</div>
-      <div>${t.name}</div>
-      <div style="font-size:12px;opacity:.7">
-        ${new Date(t.time).toLocaleString()}
-      </div>
-    `;
-
-    box.appendChild(div);
-
-  });
-
-});
 
 
 
