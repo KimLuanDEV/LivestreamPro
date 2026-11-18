@@ -1,7 +1,7 @@
 
 
-const MAX_VIEWERS = 40;        // Render safe
-const SOFT_CAP    = 30;       // bắt đầu degrade
+const MAX_VIEWERS = 5;
+const SOFT_CAP = 4;
 
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
@@ -12505,12 +12505,13 @@ function normRoomId(roomId) {
 function safeMap(m){ return m instanceof Map ? m : new Map(); }
 function safeSet(s){ return s instanceof Set ? s : new Set(); }
 
-function calcBitrate(viewerCount){
-  if(viewerCount < 5)   return 1500; // kbps
-  if(viewerCount < 15)  return 1000;
-  if(viewerCount < 30)  return 600;
-  if(viewerCount < 50)  return 400;
-  return 250;
+function calcBitrate(viewerCount) {
+  const count = Math.max(0, Number(viewerCount) || 0);
+
+  if (count <= 2) return 1500;
+  if (count <= 4) return 1200;
+
+  return 900;
 }
 
 
@@ -12542,18 +12543,44 @@ function getRoom(roomId) {
 
 
 function emitViewerCount(roomId) {
+
+  roomId = normRoomId(roomId);
+
   const room = rooms.get(roomId);
   if (!room) return;
 
-const active = [...safeMap(room.viewerProfiles).values()]
-  .filter(v => !v.mini).length;
+  const profiles = [
+    ...safeMap(room.viewerProfiles).values()
+  ];
 
+  const active = profiles.filter(
+    v => v && !v.mini
+  ).length;
 
-  io.to(roomId).emit("viewer-count", { count: active });
+  io.to(roomId).emit("viewer-count", {
+    count: active
+  });
 
-   const vc = safeMap(room.viewerProfiles).size;
-  const br = calcBitrate(vc);
-  io.to(roomId).emit("set-bitrate", { bitrate: br });
+  const bitrate = calcBitrate(profiles.length);
+
+  if (!room.broadcasterId) {
+    room.lastVideoBitrate = null;
+    room.lastBitrateHostId = null;
+    return;
+  }
+
+  const changed =
+    room.lastVideoBitrate !== bitrate ||
+    room.lastBitrateHostId !== room.broadcasterId;
+
+  if (!changed) return;
+
+  room.lastVideoBitrate = bitrate;
+  room.lastBitrateHostId = room.broadcasterId;
+
+  io.to(room.broadcasterId).emit("set-bitrate", {
+    bitrate
+  });
 }
 
 

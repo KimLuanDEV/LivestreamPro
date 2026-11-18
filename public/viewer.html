@@ -1050,14 +1050,25 @@ function playNextGiftVideo(){
 }
 
 
+let __viewerGotAnyTrack = false;
 let __lastIceReq = 0;
 
-function safeIceRestart(to, reason){
-  if (!__viewerGotAnyTrack) return; 
+function safeIceRestart(to, reason) {
+  if (!__viewerGotAnyTrack) return;
+  if (!to) return;
+
   const now = Date.now();
-  if (now - __lastIceReq < 5000) return; // ⏱ 5s
+
+  if (now - __lastIceReq < 10000) {
+    return;
+  }
+
   __lastIceReq = now;
-  socket.emit("request-ice-restart", { to, reason });
+
+  socket.emit("request-ice-restart", {
+    to,
+    reason
+  });
 }
 
 
@@ -2202,47 +2213,65 @@ function getCurrentPC(){
 }
 
 
-    async function getRtcConfig() {
-     const fallback = {
-  iceServers: [],
-  iceTransportPolicy: "relay"
-};
+async function getRtcConfig() {
+  const fallback = {
+    iceServers: [],
+    iceTransportPolicy: "all"
+  };
 
-      try {
-        const r = await fetch("/ice", { cache: "no-store" });
-        if (!r.ok) return fallback;
+  try {
+    const response = await fetch("/ice", {
+      cache: "no-store"
+    });
 
-        const data = await r.json();
-        if (!data.iceServers || !Array.isArray(data.iceServers)) return fallback;
-
-        // Remove invalid STUN urls that contain ?transport=
-        const cleanedIceServers = data.iceServers
-          .map(server => {
-            let urls = server.urls;
-            if (!urls) return null;
-            if (!Array.isArray(urls)) urls = [urls];
-
-            const safeUrls = urls.filter(u =>
-              typeof u === "string" &&
-              !(u.startsWith("stun:") && u.includes("?transport="))
-            );
-            if (safeUrls.length === 0) return null;
-            return { ...server, urls: safeUrls };
-          })
-          .filter(Boolean);
-
-        if (cleanedIceServers.length === 0) return fallback;
-      return {
-  iceServers: cleanedIceServers,
-  iceTransportPolicy: "relay",
-  iceCandidatePoolSize: 10   // 🔥 chuẩn bị sẵn TURN candidates
-};
-
-      } catch (e) {
-        console.error("ICE fetch error:", e);
-        return fallback;
-      }
+    if (!response.ok) {
+      console.warn("ICE server unavailable");
+      return fallback;
     }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data.iceServers)) {
+      return fallback;
+    }
+
+    const iceServers = data.iceServers
+      .map(server => {
+
+        const raw = Array.isArray(server.urls)
+          ? server.urls
+          : [server.urls];
+
+        const urls = raw.filter(url =>
+          typeof url === "string" &&
+          /^(stun:|turn:|turns:)/i.test(url) &&
+          !(
+            url.startsWith("stun:") &&
+            url.includes("?transport=")
+          )
+        );
+
+        if (!urls.length) return null;
+
+        return {
+          urls,
+          username: server.username,
+          credential: server.credential
+        };
+
+      })
+      .filter(Boolean);
+
+    return {
+      iceServers,
+      iceTransportPolicy: "all"
+    };
+
+  } catch (error) {
+    console.warn("ICE configuration error:", error);
+    return fallback;
+  }
+}
 
     function log(msg) {
       logEl.textContent = `[${new Date().toLocaleTimeString()}] ${msg}\n` + logEl.textContent;
@@ -2295,49 +2324,41 @@ function getCurrentPC(){
         try { pc.close(); } catch {}
       }
       pcs.clear();
+
+      __viewerGotAnyTrack = false;
       player.srcObject = null;
      
       joined = false;
     }
 
 
-    function forcePlayVideo(video) {
-  if (!video) return;
+let viewerPlayPending = false;
 
-  video.muted = true;        // BẮT BUỘC
-  video.playsInline = true;
+async function forcePlayVideo(video) {
+  if (!video || viewerPlayPending) return;
 
-  const tryPlay = () => {
-    const p = video.play();
-    if (p && typeof p.catch === "function") {
-      p.catch(() => {
-        // retry sau 300ms
-        setTimeout(tryPlay, 300);
-      });
+  if (!video.srcObject) return;
+
+  viewerPlayPending = true;
+
+  try {
+    video.playsInline = true;
+
+    if (!video.paused) return;
+
+    await video.play();
+
+  } catch (error) {
+    if (error.name !== "NotAllowedError") {
+      console.warn(
+        "Viewer video playback failed:",
+        error
+      );
     }
-  };
-
-  // gọi nhiều lần cho chắc
-  tryPlay();
-  setTimeout(tryPlay, 500);
-  setTimeout(tryPlay, 1000);
+  } finally {
+    viewerPlayPending = false;
+  }
 }
-
-
-socket.on("set-bitrate", ({ bitrate })=>{
-  const pc = getCurrentPC();
-  if (!pc) return;
-
-  pc.getReceivers().forEach(r=>{
-    if (!r.track || r.track.kind !== "video") return;
-
-    const p = r.getParameters();
-    if (!p.encodings) p.encodings = [{}];
-
-    p.encodings[0].maxBitrate = bitrate * 1000;
-    r.setParameters?.(p);
-  });
-});
 
 
 socket.on("room-full", ()=>{
@@ -2348,7 +2369,7 @@ socket.on("room-full", ()=>{
 
     socket.on("offer", async ({ from, description }) => {
 
-let __viewerGotAnyTrack = false;
+
 
       let __gotTrack = false;
 
@@ -2357,17 +2378,30 @@ let __viewerGotAnyTrack = false;
       cleanupPeer(from);
       */
      
+
+      const oldPc = pcs.get(from);
+
+if (oldPc) {
+  try {
+    oldPc.close();
+  } catch (error) {
+    console.warn("Close old peer failed:", error);
+  }
+
+  pcs.delete(from);
+}
+
+__viewerGotAnyTrack = false;
+
       const rtcConfig = await getRtcConfig();
 
-      const pc = new RTCPeerConnection({
+const pc = new RTCPeerConnection({
   ...rtcConfig,
-  iceTransportPolicy: "relay" // 🔥 BẮT BUỘC DÙNG TURN
+  iceTransportPolicy: "all"
 });
 
 
 
-      limitBitrateForMobile(pc);
-      limitAudioBitrate(pc, 32); // 🔒 FIX MẤT TIẾNG KHI ĐÔNG
 
 
       pcs.set(from, pc);
@@ -3422,6 +3456,7 @@ socket.on("host-live", ({ liveStartTs }) => {
   startLiveTimer(liveStartTs);
 });
 
+
 setInterval(() => {
   if (player.srcObject && player.readyState < 2) {
     console.warn("🔄 Video stalled → retry play");
@@ -3430,41 +3465,69 @@ setInterval(() => {
 }, 2000);
 
 
-setInterval(() => {
-  const st = player.srcObject;
-  if (!st) return;
 
-  const at = st.getAudioTracks()[0];
+/* ==========================================
+   LIVESTREAM PRO
+   VIEWER CONNECTION RECOVERY
+   AVOID DUPLICATE ICE RESTART
+========================================== */
 
-  if (!at || at.readyState !== "live") {
-  console.warn("🔊 Viewer audio dead → resume + ICE");
-  forceResumeAudio(player);
-
-  socket.emit("request-ice-restart", {
-    to: hostId,
-    reason: "viewer_audio_dead"
-  });
-}
-}, 3000);
-
+let viewerTrackRecoveryPending = false;
+let viewerRecoveryTimer = null;
 
 setInterval(() => {
-  if (!player || !player.srcObject) return;
 
-  const st = player.srcObject;
+  if (document.hidden) return;
+  if (!player?.srcObject) return;
+  if (!socket.connected) return;
 
-  const v = st.getVideoTracks()[0];
-  const a = st.getAudioTracks()[0];
+  const pc = getCurrentPC();
+  if (!pc || pc.signalingState === "closed") return;
 
-  // nếu track chết → xin host ICE restart
-  if ((v && v.readyState !== "live") || (a && a.readyState !== "live")) {
-    console.warn("🧊 Viewer detect dead track → request ICE restart");
-    socket.emit("request-ice-restart", {
-      to: hostId,
-      reason: "tab background recover"
-    });
+  // Connection restored
+  if (pc.connectionState === "connected") {
+
+    viewerTrackRecoveryPending = false;
+
+    if (viewerRecoveryTimer) {
+      clearTimeout(viewerRecoveryTimer);
+      viewerRecoveryTimer = null;
+    }
+
+    return;
   }
-}, 4000);
+
+  // Only recover failed connections
+  if (
+    pc.connectionState !== "failed" &&
+    pc.iceConnectionState !== "failed"
+  ) {
+    return;
+  }
+
+  if (viewerTrackRecoveryPending) return;
+
+  const peerId = [...pcs.entries()]
+    .find(([, peer]) => peer === pc)?.[0];
+
+  if (!peerId) return;
+
+  viewerTrackRecoveryPending = true;
+
+  safeIceRestart(
+    peerId,
+    "viewer_connection_failed"
+  );
+
+  viewerRecoveryTimer = setTimeout(() => {
+
+    viewerTrackRecoveryPending = false;
+    viewerRecoveryTimer = null;
+
+  }, 12000);
+
+}, 5000);
+
 
 setInterval(() => {
   if (joined) return;

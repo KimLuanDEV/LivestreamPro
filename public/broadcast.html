@@ -1500,21 +1500,46 @@ function limitAudioBitrate(pc, kbps = 32) {
 }
 
 
-function limitVideoBitrate(pc, kbps = 800) {
-  try {
-    pc.getSenders().forEach(sender => {
-      if (!sender.track || sender.track.kind !== "video") return;
+async function limitVideoBitrate(pc, kbps = 1200) {
 
+  if (!pc || pc.signalingState === "closed") {
+    return;
+  }
+
+  const bitrate = Math.max(
+    400,
+    Math.min(1500, Number(kbps) || 1200)
+  );
+
+  for (const sender of pc.getSenders()) {
+
+    if (sender.track?.kind !== "video") {
+      continue;
+    }
+
+    try {
       const params = sender.getParameters();
-      if (!params.encodings) params.encodings = [{}];
 
-      params.encodings[0].maxBitrate = kbps * 1000; // 800kbps
-      params.encodings[0].scaleResolutionDownBy = 1.0; // giảm tải GPU
-      params.encodings[0].maxFramerate = 24; // ép fps thấp hơn
+      if (!params.encodings?.length) {
+        params.encodings = [{}];
+      }
 
-      sender.setParameters(params).catch(()=>{});
-    });
-  } catch {}
+      params.encodings[0].maxBitrate =
+        bitrate * 1000;
+
+      params.encodings[0].maxFramerate = 24;
+
+      params.encodings[0].scaleResolutionDownBy = 1;
+
+      await sender.setParameters(params);
+
+    } catch (error) {
+      console.warn(
+        "Video bitrate configuration failed:",
+        error
+      );
+    }
+  }
 }
 
 
@@ -1987,27 +2012,43 @@ socket.on("resume-viewers-list", async ({ viewers }) => {
 });
 
 
-socket.on("set-bitrate", ({ bitrate }) => {
-  if (!bitrate) return;
+let currentHostVideoBitrate = 1500;
+let applyingHostBitrate = false;
 
-  // áp dụng cho TẤT CẢ viewer PCs
-  for (const pc of pcs.values()) {
-    if (!pc) continue;
+socket.on("set-bitrate", async ({ bitrate }) => {
 
-    pc.getSenders().forEach(sender => {
-      if (!sender.track || sender.track.kind !== "video") return;
+  const next = Number(bitrate);
 
-      const params = sender.getParameters();
-      if (!params.encodings) params.encodings = [{}];
-      params.encodings[0].maxBitrate = bitrate * 1000;
-
-      sender.setParameters(params).catch(()=>{});
-    });
+  if (!Number.isFinite(next) || next <= 0) {
+    return;
   }
 
-  console.log("🎚️ Host set bitrate:", bitrate, "kbps");
-});
+  currentHostVideoBitrate = Math.max(
+    400,
+    Math.min(1500, next)
+  );
 
+  if (applyingHostBitrate) return;
+
+  applyingHostBitrate = true;
+
+  try {
+    for (const pc of pcs.values()) {
+      if (pc.signalingState === "closed") {
+        continue;
+      }
+
+      await limitVideoBitrate(
+        pc,
+        currentHostVideoBitrate
+      );
+    }
+
+  } finally {
+    applyingHostBitrate = false;
+  }
+
+});
 
 socket.on("live-stop", () => {
 
@@ -2171,9 +2212,9 @@ window.addEventListener("online", async () => {
 async function createPeerConnection(viewerId) {
   const rtcConfig = await getRtcConfig();
 
-  const pc = new RTCPeerConnection({
+const pc = new RTCPeerConnection({
   ...rtcConfig,
-  iceTransportPolicy: "relay" // 🔥 BẮT BUỘC DÙNG TURN
+  iceTransportPolicy: "all"
 });
 
 pc.__pendingCandidates = []; // 🔥 BẮT BUỘC PHẢI CÓ
@@ -2224,59 +2265,64 @@ pc.onicecandidate = (e) => {
     const guestVideo = document.getElementById("guestVideo");
 
 async function getRtcConfig() {
-  // ❌ Không dùng STUN-only cho fallback (4G/5G sẽ fail)
-  const hardFallback = {
+  const fallback = {
     iceServers: [],
-    iceTransportPolicy: "relay"
+    iceTransportPolicy: "all"
   };
 
   try {
-    const r = await fetch("/ice", { cache: "no-store" });
-    if (!r.ok) return hardFallback;
+    const response = await fetch("/ice", {
+      cache: "no-store"
+    });
 
-    const data = await r.json();
-    if (!data?.iceServers || !Array.isArray(data.iceServers)) {
-      return hardFallback;
+    if (!response.ok) {
+      console.warn("ICE server unavailable");
+      return fallback;
     }
 
-    const cleanedIceServers = data.iceServers
-      .map(server => {
-        let urls = server.urls;
-        if (!urls) return null;
-        if (!Array.isArray(urls)) urls = [urls];
+    const data = await response.json();
 
-        // ✅ CHỈ GIỮ TURN / TURNS
-        const safeUrls = urls.filter(u =>
-          typeof u === "string" &&
-          (u.startsWith("turn:") || u.startsWith("turns:"))
+    if (!Array.isArray(data.iceServers)) {
+      return fallback;
+    }
+
+    const iceServers = data.iceServers
+      .map(server => {
+
+        const raw = Array.isArray(server.urls)
+          ? server.urls
+          : [server.urls];
+
+        const urls = raw.filter(url =>
+          typeof url === "string" &&
+          /^(stun:|turn:|turns:)/i.test(url) &&
+          !(
+            url.startsWith("stun:") &&
+            url.includes("?transport=")
+          )
         );
 
-        if (safeUrls.length === 0) return null;
+        if (!urls.length) return null;
 
-        // giữ nguyên credential/username nếu có
         return {
-          urls: safeUrls,
+          urls,
           username: server.username,
           credential: server.credential
         };
+
       })
       .filter(Boolean);
 
-    if (cleanedIceServers.length === 0) {
-      return hardFallback;
-    }
-
     return {
-      iceServers: cleanedIceServers,
-      iceTransportPolicy: "relay" // 🔥 BẮT BUỘC cho 4G / 5G
+      iceServers,
+      iceTransportPolicy: "all"
     };
-  } catch (e) {
-    console.error("ICE fetch error:", e);
-    return hardFallback;
+
+  } catch (error) {
+    console.warn("ICE configuration error:", error);
+    return fallback;
   }
 }
-
-
 
     function log(msg) {
       logEl.textContent = `[${new Date().toLocaleTimeString()}] ${msg}\n` + logEl.textContent;
@@ -2339,9 +2385,13 @@ socket.on("watcher", async ({ viewerId }) => {
   // ⏳ CHỜ TRACK STABLE (rất quan trọng cho mobile)
 await new Promise(r => setTimeout(r, 200));
 
-  // khóa bitrate
-  limitAudioBitrate(pc, 32);
-  limitVideoBitrate(pc, 1200); // 1.2 Mbps
+// Configure bitrate before creating offer
+limitAudioBitrate(pc, 32);
+
+await limitVideoBitrate(
+  pc,
+  currentHostVideoBitrate
+);
 
 const offer = await pc.createOffer({
   offerToReceiveAudio: true,
@@ -2575,11 +2625,13 @@ socket.on("connect", () => {
 
       try {
         localStream = await navigator.mediaDevices.getUserMedia({
+
          video: {
   width:  { ideal: 960, max: 960 },
   height: { ideal: 540, max: 540 },
   frameRate: { ideal: 24, max: 24 }
-},
+}
+,
 audio: {
   channelCount: 1,
   echoCancellation: true,
