@@ -2113,7 +2113,7 @@ if(btnTransferHistory){
 if (list) {
   list.innerHTML = `
     <div class="history-empty">
-      Đang cập nhật trạng thái giao dịch...
+      Loading transaction history...
     </div>
   `;
 }
@@ -2204,41 +2204,45 @@ function historyEscape(value) {
 }
 
 
-// Cấu hình trạng thái
+
+/* ==========================================
+   DIAMOND TRANSFER STATUS - ENGLISH
+========================================== */
+
 function getTransferStatus(status) {
 
   switch (status) {
 
     case "pending":
       return {
-        text: "CHỜ ADMIN DUYỆT",
+        text: "PENDING APPROVAL",
         className: "pending",
         description:
-          "Yêu cầu đang chờ quản trị viên phê duyệt."
+          "Your transfer request is awaiting administrator approval."
       };
 
     case "rejected":
       return {
-        text: "ĐÃ TỪ CHỐI",
+        text: "TRANSFER REJECTED",
         className: "rejected",
         description:
-          "Yêu cầu bị từ chối. Kim cương đã hoàn về ví."
+          "Your request was rejected. The diamonds have been refunded to your wallet."
       };
 
     case "approved":
       return {
-        text: "CHUYỂN THÀNH CÔNG",
+        text: "TRANSFER COMPLETED",
         className: "approved",
         description:
-          "Giao dịch đã hoàn tất."
+          "Your diamond transfer has been successfully completed."
       };
 
     default:
       return {
-        text: "ĐÃ HOÀN TẤT",
+        text: "COMPLETED",
         className: "approved",
         description:
-          "Giao dịch trước khi áp dụng cơ chế duyệt."
+          "This transaction was completed before the approval system was introduced."
       };
   }
 }
@@ -2264,7 +2268,7 @@ function renderTransferHistory() {
   if (!filtered.length) {
     box.innerHTML = `
       <div class="history-empty">
-        Chưa có giao dịch trong mục này.
+        No transactions found.
       </div>
     `;
     return;
@@ -2287,14 +2291,14 @@ function renderTransferHistory() {
 
     const dateText =
       time > 0 && Number.isFinite(time)
-        ? new Date(time).toLocaleString("vi-VN")
-        : "Không có thời gian";
+        ? new Date(time).toLocaleString("en-US")
+        : "Date unavailable";
 
     const processed = Number(t.processedAt || 0);
 
     const processedText =
       processed > 0 && Number.isFinite(processed)
-        ? new Date(processed).toLocaleString("vi-VN")
+        ? new Date(processed).toLocaleString("en-US")
         : "";
 
     const avatar = String(t.avatar || "");
@@ -2346,7 +2350,7 @@ function renderTransferHistory() {
           ${isSend ? "-" : "+"}${validAmount.toLocaleString("en-US")}
 
           <span class="history-unit">
-            KIM CƯƠNG
+            DIAMONDS
           </span>
         </div>
 
@@ -2371,7 +2375,7 @@ function renderTransferHistory() {
 
       ${processedText ? `
         <div class="transfer-history-processed">
-          Xử lý lúc: ${historyEscape(processedText)}
+          Processed on: ${historyEscape(processedText)}
         </div>
       ` : ""}
 
@@ -2769,6 +2773,33 @@ const PROFILE_ENGLISH = new Map(Object.entries({
 
   "Chưa có giao dịch trong mục này.":
     "No transactions found in this category.",
+
+
+
+  "CHỜ ADMIN DUYỆT": "PENDING APPROVAL",
+  "ĐÃ TỪ CHỐI": "TRANSFER REJECTED",
+  "CHUYỂN THÀNH CÔNG": "TRANSFER COMPLETED",
+  "ĐÃ HOÀN TẤT": "COMPLETED",
+
+  "Yêu cầu đang chờ quản trị viên phê duyệt.":
+    "Your transfer request is awaiting administrator approval.",
+
+  "Yêu cầu bị từ chối. Kim cương đã hoàn về ví.":
+    "Your request was rejected. The diamonds have been refunded to your wallet.",
+
+  "Giao dịch đã hoàn tất.":
+    "Your diamond transfer has been successfully completed.",
+
+  "Giao dịch trước khi áp dụng cơ chế duyệt.":
+    "This transaction was completed before the approval system was introduced.",
+
+  "Đang cập nhật trạng thái giao dịch...":
+    "Loading transaction history...",
+
+  "Không có thời gian": "Date unavailable",
+  "Xử lý lúc:": "Processed on:",
+
+
 
   // ===== DEPOSIT HISTORY =====
   "LỊCH SỬ NẠP KIM CƯƠNG":
