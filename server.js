@@ -1984,11 +1984,16 @@ function w8PrepareFinalStop(round) {
     specialEvent
   };
 
-  io.emit("wheel8-final-stop", {
-    roundId: round.id,
-    targetSlot: winSlots[0],
-    endAt: round.endAt
-  });
+
+io.emit("wheel8-final-stop", {
+  roundId: round.id,
+  targetSlot: winSlots[0],
+  winSlots: [...winSlots],
+  endAt: round.endAt
+});
+
+
+
 }
 
 

@@ -8670,13 +8670,28 @@ function w8ShowDoubleOffer(offer) {
   // Không che bảng kết quả vòng quay
   const resultModal = document.getElementById("resultModal");
 
- if (
+
+if (
   w8ScratchActive ||
+  (
+    w8ScratchEnabled &&
+    (
+      !w8ScratchSettled ||
+      !w8ScratchOpened ||
+      document.getElementById("app")
+        ?.classList.contains("w8-result-concealed")
+    )
+  ) ||
   resultModal?.style.display === "flex"
 ) {
-  setTimeout(() => w8ShowDoubleOffer(offer), 600);
+  setTimeout(() => {
+    w8ShowDoubleOffer(offer);
+  }, 600);
+
   return;
 }
+
+
 
   document.getElementById("w8DoubleProfit").textContent =
     Number(offer.profit).toLocaleString("en-US");
@@ -8768,25 +8783,65 @@ socket.on("connect", () => {
 
 
 /* ==========================================
-   WHEEL8 - START FINAL 5 SECOND STOP
+   WHEEL8 - SCRATCH IMMEDIATELY AT 5S
 ========================================== */
 
 socket.on("wheel8-final-stop", data => {
-
   if (!data) return;
 
-  if (data.roundId === w8StopRoundId) return;
+  const roundId = Number(data.roundId);
 
-  w8StopRoundId = data.roundId;
+  if (roundId !== Number(currentRoundId)) return;
+  if (roundId === Number(w8StopRoundId)) return;
 
+  w8StopRoundId = roundId;
   resultShowing = true;
 
-  w8SmoothStop(
-    data.targetSlot,
-    data.endAt
-  );
+  // Scratch OFF: giữ hiệu ứng quay như cũ
+  if (!w8ScratchEnabled) {
+    w8SmoothStop(data.targetSlot, data.endAt);
+    return;
+  }
 
+  const winSlots = Array.isArray(data.winSlots)
+    ? data.winSlots.map(Number)
+    : [];
+
+  // Không hiển thị kết quả suy đoán
+  if (
+    !winSlots.length ||
+    winSlots.some(s =>
+      !Number.isInteger(s) || s < 1 || s > 8
+    )
+  ) {
+    w8SmoothStop(data.targetSlot, data.endAt);
+    return;
+  }
+
+  // Dừng animation bên dưới tấm che
+  if (w8StopFrame !== null) {
+    cancelAnimationFrame(w8StopFrame);
+    w8StopFrame = null;
+  }
+
+  ++w8StopToken;
+  stopHighlightLoop();
+
+  w8ScratchEarlyRoundId = roundId;
+  w8ScratchOpened = false;
+  w8ScratchSettled = false;
+
+  slots.forEach(el => el.classList.remove("win"));
+
+  // Ẩn HISTORY và các modal gây lộ kết quả
+  w8SetHistoryConcealed(true);
+
+  document.getElementById("w8DoubleModal").hidden = true;
+
+  // Cho phép cào ngay từ 5 giây
+  w8ScratchBegin(winSlots[0], winSlots);
 });
+
 
 
 
@@ -8799,6 +8854,12 @@ let w8ScratchActive = false;
 let w8ScratchTimer = null;
 let w8ScratchResult = null;
 let w8ScratchDrawing = false;
+
+let w8ScratchEarlyRoundId = null;
+let w8ScratchOpened = false;
+let w8ScratchSettled = false;
+let w8ScratchModalTimer = null;
+
 
 const w8ScratchCanvas =
   document.getElementById("w8ScratchCanvas");
@@ -8884,12 +8945,12 @@ function w8ScratchBegin(resultSlot, winSlots) {
 
   w8ScratchPaint();
 
-  // Không cào cũng tự mở,
-  // tránh chặn game quá lâu
-  w8ScratchTimer = setTimeout(
-    w8ScratchReveal,
-    8000
-  );
+// Cho người chơi tối đa 5 giây để cào.
+// Hết thời gian tự động mở kết quả.
+w8ScratchTimer = setTimeout(
+  () => w8ScratchReveal(),
+  5000
+);
 }
 
 function w8ScratchPoint(e) {
@@ -9027,23 +9088,43 @@ function w8ScratchReveal(force = false) {
   clearTimeout(w8ScratchTimer);
   w8ScratchTimer = null;
 
-  document.getElementById("w8ScratchLayer")
-    .hidden = true;
+  const layer =
+    document.getElementById("w8ScratchLayer");
 
+  // Đánh dấu đã mở kết quả
+  if (w8ScratchEnabled) {
+    w8ScratchOpened = true;
+  }
 
-// Cập nhật lịch sử mới
-renderHistory();
+  // Đã cào xong nhưng chưa tới 0 giây:
+  // giữ thẻ hiển thị kết quả đã cào được
+  if (w8ScratchEnabled && !w8ScratchSettled) {
 
-// Mở lại thanh lịch sử sau khi cào xong
-w8SetHistoryConcealed(false);
+    w8ScratchCtx.clearRect(
+      0, 0,
+      w8ScratchCanvas.width,
+      w8ScratchCanvas.height
+    );
 
+    document.getElementById("w8ScratchGuide")
+      .textContent = "RESULT REVEALED";
 
-document.getElementById("resultModal")
-  .style.display = "flex";
+    w8SetHistoryConcealed(true);
+    return;
+  }
 
-  // Tự đóng bảng kết quả sau 5 giây
-  setTimeout(() => {
+  // Đã có dữ liệu thanh toán từ server
+  if (layer) layer.hidden = true;
 
+  renderHistory();
+  w8SetHistoryConcealed(false);
+
+  document.getElementById("resultModal")
+    .style.display = "flex";
+
+  clearTimeout(w8ScratchModalTimer);
+
+  w8ScratchModalTimer = setTimeout(() => {
     closeResult();
 
     slots.forEach(el => {
@@ -9051,14 +9132,16 @@ document.getElementById("resultModal")
     });
 
     resultShowing = false;
-
+    w8ScratchModalTimer = null;
   }, 5000);
 }
 
 
-
-
 socket.on("wheel8-result",(data)=>{
+
+  w8ScratchSettled = true;
+
+
 
   // Bảo đảm lịch sử bị che trước khi xử lý kết quả
 if (w8ScratchEnabled) {
@@ -9237,21 +9320,34 @@ if (i === 0) {
 
 
 
-// ==========================================
-// RESULT DISPLAY MODE - ON / OFF
-// ==========================================
-
 if (w8ScratchEnabled) {
 
-  // ON: che vòng quay, cho phép cào
-  w8ScratchBegin(resultSlot, winSlots);
+  if (
+    Number(w8ScratchEarlyRoundId) ===
+    Number(currentRoundId)
+  ) {
+
+    if (w8ScratchOpened) {
+      // Đã cào và biết trước kết quả
+      // Bây giờ mới hiển thị bảng thanh toán
+      w8ScratchReveal(true);
+    } else {
+      // Chưa cào xong: giữ nguyên tấm cào
+      w8SetHistoryConcealed(true);
+    }
+
+  } else {
+    // Dự phòng nếu bỏ lỡ sự kiện 5 giây
+    w8ScratchEarlyRoundId = Number(currentRoundId);
+    w8ScratchOpened = false;
+    w8ScratchBegin(resultSlot, winSlots);
+  }
 
 } else {
-
-  // OFF: hiện kết quả bình thường, không cào
+  // Chế độ thường
   w8ScratchReveal(true);
-
 }
+
 
 })
 /* TIMER */
@@ -9259,11 +9355,6 @@ if (w8ScratchEnabled) {
 socket.on("wheel8-timer",(t)=>{
 
 
-// Che lịch sử khi tới thời điểm công bố kết quả
-// Chỉ áp dụng cho người bật chế độ cào
-if (w8ScratchEnabled && Number(t) <= 0) {
-  w8SetHistoryConcealed(true);
-}
 
 
 
@@ -10441,8 +10532,21 @@ function w8UpdateScratchSettings() {
   );
 }
 
+
 function w8ToggleScratchMode() {
+
+  // Không cho đổi chế độ giữa lúc
+  // kết quả đã được chốt nhưng chưa thanh toán.
+  if (
+    w8ScratchEarlyRoundId !== null &&
+    Number(w8ScratchEarlyRoundId) === Number(currentRoundId) &&
+    !w8ScratchSettled
+  ) {
+    return;
+  }
+
   w8ScratchEnabled = !w8ScratchEnabled;
+
 
   try {
     localStorage.setItem(
@@ -10465,6 +10569,8 @@ if (!w8ScratchEnabled) {
     w8ScratchReveal();
   }
 }
+
+
 
 // Đồng bộ trạng thái khi tải trang
 w8UpdateScratchSettings();
