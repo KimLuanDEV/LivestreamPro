@@ -2542,27 +2542,22 @@ function fakeWin(winSlots){
 
 // =======================
 // 🤖 CREATE BOT FIRST
+// ALLOW DUPLICATE WIN VALUES
 // =======================
 
 let botTop = []
-const usedWins = new Set()
 
 while(botTop.length < 5){
 
-  let win
-
-  do{
-    win = fakeWin(winSlots) // 🔥 FIX QUAN TRỌNG
-  }while(usedWins.has(win))
-
-  usedWins.add(win)
+  const win = fakeWin(winSlots)
 
   botTop.push({
-    uid: "bot_"+Math.random(),
+    uid: "bot_" + Math.random(),
     name: botNames[Math.floor(Math.random()*botNames.length)],
     win,
-    fake:true
+    fake: true
   })
+
 }
 
 
