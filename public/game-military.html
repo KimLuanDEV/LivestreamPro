@@ -8080,83 +8080,97 @@ highlightLoop = null
    Không nhảy thẳng vào ô kết quả
 ========================================== */
 
-let w8StopTimer = null;
+
+/* ==========================================
+   WHEEL8 - EXACT 5 SECOND DECELERATION
+========================================== */
+
+let w8StopFrame = null;
 let w8StopToken = 0;
+let w8StopRoundId = null;
 
-function w8SmoothStop(targetSlot, onComplete) {
-
-  // Dừng interval cũ, không xóa vị trí highlight
-  stopHighlightLoop();
-
-  // Hủy animation dừng trước đó nếu có
-  clearTimeout(w8StopTimer);
-  const token = ++w8StopToken;
+function w8SmoothStop(targetSlot, endAt) {
 
   const target = Number(targetSlot);
 
-  if (
-    !Number.isInteger(target) ||
-    target < 1 ||
-    target > 8
-  ) {
-    if (typeof onComplete === "function") {
-      onComplete();
-    }
+  if (!Number.isInteger(target) ||
+      target < 1 || target > 8) {
     return;
   }
 
-  // highlightIndex đang chỉ vào ô kế tiếp
-  const lastSlot = ((highlightIndex + 6) % 8) + 1;
+  stopHighlightLoop();
 
-  // Đi qua ít nhất 2 vòng đầy đủ
-  const distance = (target - lastSlot + 8) % 8;
+  if (w8StopFrame !== null) {
+    cancelAnimationFrame(w8StopFrame);
+  }
+
+  const token = ++w8StopToken;
+
+  // Ô hiện tại, không bắt đầu lại từ số 1
+  const lastSlot =
+    ((highlightIndex + 6) % 8) + 1;
+
+  // Chính xác 2 vòng + khoảng cách tới đích
+  const distance =
+    (target - lastSlot + 8) % 8;
+
   const totalSteps = 16 + distance;
 
-  let step = 0;
+  const finishTime = Number(endAt);
+  const startTime = finishTime - 5000;
 
-  function nextStep() {
+  let lastStep = -1;
+
+  function renderStop() {
 
     if (token !== w8StopToken) return;
 
-    // Duy trì chuyển động theo đúng thứ tự
-    const currentSlot =
-      ((lastSlot + step) % 8) + 1;
+    const now = Date.now();
 
-    slots.forEach(el => {
-      el.classList.remove("win");
-    });
+    const progress = Math.max(
+      0,
+      Math.min(1, (now - startTime) / 5000)
+    );
 
-    const active =
-      document.querySelector(".slot.s" + currentSlot);
+    // Ease-out: nhanh ở đầu, chậm dần cuối
+    const eased =
+      1 - Math.pow(1 - progress, 2.4);
 
-    if (active) {
-      active.classList.add("win");
-    }
+    const step = Math.min(
+      totalSteps,
+      Math.floor(eased * totalSteps)
+    );
 
-    highlightIndex = currentSlot % 8 + 1;
-    step++;
+    if (step !== lastStep) {
+      lastStep = step;
 
-    // Đã đến bước cuối
-    if (step >= totalSteps) {
+      const currentSlot =
+        ((lastSlot + step - 1 + 80) % 8) + 1;
 
-      if (typeof onComplete === "function") {
-        onComplete();
+      slots.forEach(el => {
+        el.classList.remove("win");
+      });
+
+      const active = document.querySelector(
+        ".slot.s" + currentSlot
+      );
+
+      if (active) {
+        active.classList.add("win");
       }
 
-      return;
+      highlightIndex = currentSlot % 8 + 1;
     }
 
-    // Từ nhanh chuyển sang chậm dần
-    const progress = step / totalSteps;
-
-    // Ease-out: khoảng nghỉ giữa các ô tăng dần
-    const delay =
-      65 + 280 * Math.pow(progress, 2.2);
-
-    w8StopTimer = setTimeout(nextStep, delay);
+    if (progress < 1) {
+      w8StopFrame =
+        requestAnimationFrame(renderStop);
+    } else {
+      w8StopFrame = null;
+    }
   }
 
-  nextStep();
+  renderStop();
 }
 
 
@@ -8371,6 +8385,31 @@ socket.on("connect", () => {
 });
 
 
+
+
+/* ==========================================
+   WHEEL8 - START FINAL 5 SECOND STOP
+========================================== */
+
+socket.on("wheel8-final-stop", data => {
+
+  if (!data) return;
+
+  if (data.roundId === w8StopRoundId) return;
+
+  w8StopRoundId = data.roundId;
+
+  resultShowing = true;
+
+  w8SmoothStop(
+    data.targetSlot,
+    data.endAt
+  );
+
+});
+
+
+
 socket.on("wheel8-result",(data)=>{
 
 const winSlots = data.slots || [data.slot]
@@ -8402,45 +8441,46 @@ renderHistory()
 
 
 
+
 resultShowing = true;
 
-// Tiếp tục chạy từ vị trí highlight hiện tại.
-// Kết quả đã được server quyết định trước.
-w8SmoothStop(resultSlot, () => {
+// Kết thúc animation của 5 giây cuối
+if (w8StopFrame !== null) {
+  cancelAnimationFrame(w8StopFrame);
+  w8StopFrame = null;
+}
 
-  // Đã giảm tốc và dừng đúng ô thắng
+++w8StopToken;
+stopHighlightLoop();
+
+// Giữ ánh sáng ở ô kết quả
+slots.forEach(el => {
+  el.classList.remove("win");
+});
+
+winSlots.forEach(s => {
+  const el = document.querySelector(
+    ".slot.s" + s
+  );
+
+  if (el) {
+    el.classList.add("win");
+  }
+});
+
+// Công bố kết quả
+document.getElementById("resultModal")
+  .style.display = "flex";
+
+setTimeout(() => {
+  closeResult();
+
   slots.forEach(el => {
     el.classList.remove("win");
   });
 
-  // Hiển thị tất cả ô thắng
-  // (bao gồm phiên đặc biệt nhiều ô)
-  winSlots.forEach(s => {
-    const el = document.querySelector(".slot.s" + s);
-
-    if (el) {
-      el.classList.add("win");
-    }
-  });
-
-  // Sau khi dừng mới mở bảng kết quả
-  document.getElementById("resultModal").style.display =
-    "flex";
-
-  setTimeout(() => {
-
-    closeResult();
-
-    slots.forEach(el => {
-      el.classList.remove("win");
-    });
-
-    resultShowing = false;
-
-  }, 5000);
-
-});
-
+  resultShowing = false;
+}, 5000);
 
 // hình slot thắng
 // hình kết quả
@@ -8565,9 +8605,9 @@ slots.forEach(s=>s.classList.remove("locked"))
 }
 
 
-// reset tốc độ mỗi round
-if(t >= 5){
-highlightSpeed = 1000
+// Chỉ reset tốc độ trước giai đoạn 5 giây
+if(t > 5 && !resultShowing){
+  highlightSpeed = 1000;
 }
 
 // sau 5 giây mới bắt đầu highlight
@@ -8575,11 +8615,8 @@ if(!resultShowing && t <= 30 && t > 5){
 startHighlightLoop()
 }
 
-// Còn 5 giây thì tăng tốc,
-// nhưng không can thiệp khi đang giảm tốc
-if(t <= 5 && !resultShowing){
-  changeHighlightSpeed(100);
-}
+// Giai đoạn 5 giây đã do w8SmoothStop xử lý.
+// Không tạo thêm interval tăng tốc ở đây.
 
 })
 /* COIN UPDATE */

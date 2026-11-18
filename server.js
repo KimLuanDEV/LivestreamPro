@@ -1929,22 +1929,96 @@ return {slot:1,multiplier:5}
 
 }
 
+
+
+/* ==========================================
+   WHEEL8 - PREPARE FINAL STOP
+========================================== */
+
+function w8PrepareFinalStop(round) {
+  if (!round || round.finalStop) return;
+
+  let winSlots;
+  let multiplier;
+  let specialEvent = false;
+
+  if (round.forcedEvent === "x5-all") {
+    specialEvent = true;
+    winSlots = [1, 6, 7, 8];
+    multiplier = 5;
+
+  } else if (round.forcedEvent === "x45-all") {
+    specialEvent = true;
+    winSlots = [2, 3, 4, 5];
+    multiplier = 45;
+
+  } else if (round.secret.overridden) {
+    winSlots = [round.secret.slot];
+    multiplier = round.secret.multiplier;
+
+  } else if (Math.random() < 0.0001) {
+    specialEvent = true;
+
+    if (Math.random() < 0.5) {
+      winSlots = [1, 6, 7, 8];
+      multiplier = 5;
+    } else {
+      winSlots = [2, 3, 4, 5];
+      multiplier = 45;
+    }
+
+  } else {
+    winSlots = [round.secret.slot];
+    multiplier = round.secret.multiplier;
+  }
+
+  round.finalStop = {
+    winSlots,
+    multiplier,
+    specialEvent
+  };
+
+  io.emit("wheel8-final-stop", {
+    roundId: round.id,
+    targetSlot: winSlots[0],
+    endAt: round.endAt
+  });
+}
+
+
+
+
 // ================================
 // ⏱ WHEEL8 TIMER REALTIME
 // ================================
-setInterval(()=>{
 
-const remain =
-Math.max(
-0,
-Math.floor(
-(wheel8Round.endAt - Date.now())/1000
-)
-)
+let w8LastTimerValue = null;
 
-io.emit("wheel8-timer",remain)
+setInterval(() => {
+  const remainingMs =
+    Math.max(0, wheel8Round.endAt - Date.now());
 
-},1000)
+  const remain = Math.max(
+    0,
+    Math.ceil(remainingMs / 1000)
+  );
+
+  // Phát timer khi số giây thay đổi
+  if (remain !== w8LastTimerValue) {
+    w8LastTimerValue = remain;
+    io.emit("wheel8-timer", remain);
+  }
+
+  // Khóa kết quả trước khi bắt đầu giảm tốc
+  if (
+    remainingMs <= 5000 &&
+    remainingMs > 0 &&
+    !wheel8Round.finalStop
+  ) {
+    w8PrepareFinalStop(wheel8Round);
+  }
+}, 100);
+
 
 
 // ================================
@@ -2087,52 +2161,24 @@ setInterval(()=>{
 
 const users = loadUsers()
 
-// 🎯 SPECIAL EVENT
-let specialEvent = false;
-let winSlots = [];
-let multiplier = null;
 
-const forcedEvent = wheel8Round.forcedEvent;
+// ==========================================
+// USE PREPARED RESULT
+// ==========================================
 
-if(forcedEvent === "x5-all"){
-
-  specialEvent = true;
-  winSlots = [1,6,7,8];
-  multiplier = 5;
-
-}else if(forcedEvent === "x45-all"){
-
-  specialEvent = true;
-  winSlots = [2,3,4,5];
-  multiplier = 45;
-
-}else if(wheel8Round.secret.overridden){
-
-  // Admin đã chọn slot thường
-  winSlots = [wheel8Round.secret.slot];
-  multiplier = wheel8Round.secret.multiplier;
-
-}else if(Math.random() < 0.0001){
-
-  // EVENT ngẫu nhiên khi Admin không override
-  specialEvent = true;
-
-  if(Math.random() < 0.5){
-    winSlots = [1,6,7,8];
-    multiplier = 5;
-  }else{
-    winSlots = [2,3,4,5];
-    multiplier = 45;
-  }
-
-}else{
-
-  winSlots = [wheel8Round.secret.slot];
-  multiplier = wheel8Round.secret.multiplier;
-
+// Dự phòng khi timer bị trễ
+if (!wheel8Round.finalStop) {
+  w8PrepareFinalStop(wheel8Round);
 }
 
+const {
+  winSlots,
+  multiplier,
+  specialEvent
+} = wheel8Round.finalStop;
+
 const resultSlot = winSlots[0] || 1;
+
 
 
 // =======================
@@ -4565,7 +4611,8 @@ socket.on("admin-wheel8-override", (data, callback) => {
     Math.floor((wheel8Round.endAt - Date.now()) / 1000)
   );
 
-  if (remain <= 2) {
+
+  if (remain <= 5 || wheel8Round.finalStop) {
     return reply({
       ok: false,
       message: "The customization window has expired."
