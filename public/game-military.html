@@ -288,32 +288,26 @@ transform:scale(1.2);
 
 
 
+
 /* ==========================================
-   WHEEL8 - HOT SLOT FLAME
+   WHEEL8 - ANIMATED HOT SLOT FIRE
 ========================================== */
 
-.slot {
-  position: absolute;
-}
-
 .slot.w8-hot-slot::after {
-  content: "🔥";
+  content: "";
   position: absolute;
 
-  top: -22px;
+  top: -35px;
   left: 50%;
 
-  width: 34px;
-  height: 40px;
+  width: 58px;
+  height: 66px;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  margin-left: -29px;
 
-  font-size: 29px;
-  line-height: 1;
-
-  margin-left: -17px;
+  background:
+    url("/assets/wheel8/hot-slot-fire.gif")
+    center / contain no-repeat;
 
   pointer-events: none;
   z-index: 12;
@@ -321,36 +315,37 @@ transform:scale(1.2);
   transform-origin: center bottom;
 
   filter:
-    drop-shadow(0 0 5px #ffb12e)
-    drop-shadow(0 0 11px #ff5a00);
+    drop-shadow(0 0 6px rgba(255,170,0,.65))
+    drop-shadow(0 0 12px rgba(255,65,0,.4));
 
-  animation: w8FlameBurn 0.9s ease-in-out infinite alternate;
+  animation: w8FireFloat 1.2s ease-in-out infinite alternate;
 }
 
-@keyframes w8FlameBurn {
+@keyframes w8FireFloat {
   0% {
-    transform: translateY(0) scale(.92) rotate(-5deg);
-    opacity: .85;
-  }
-
-  50% {
-    transform: translateY(-3px) scale(1.08) rotate(4deg);
-    opacity: 1;
+    transform: translateY(0) scale(.96);
   }
 
   100% {
-    transform: translateY(-6px) scale(.98) rotate(-3deg);
-    opacity: .93;
+    transform: translateY(-4px) scale(1.05);
   }
 }
 
-/* FRUIT: ngọn lửa tươi sáng hơn */
+/* FRUIT THEME */
 
 body.w8-theme-titanium
 .slot.w8-hot-slot::after {
   filter:
-    drop-shadow(0 0 5px #ffd76c)
-    drop-shadow(0 0 9px #ff8a4d);
+    drop-shadow(0 0 7px rgba(255,220,80,.75))
+    drop-shadow(0 0 14px rgba(255,100,0,.5));
+}
+
+/* ACCESSIBILITY */
+
+@media (prefers-reduced-motion: reduce) {
+  .slot.w8-hot-slot::after {
+    animation: none;
+  }
 }
 
 
