@@ -7282,6 +7282,242 @@ body.w8-theme-titanium .w8-scratch-guide {
   color: #896454;
 }
 
+
+
+/* ==========================================
+   WHEEL8 - PREMIUM SCRATCH CARD V3
+   AUTOMATIC MILITARY / FRUIT THEME
+========================================== */
+
+/* MILITARY - DEFAULT */
+
+#w8ScratchLayer {
+  --scratch-gold: #d6bb80;
+  --scratch-text: #f5e9c9;
+  --scratch-muted: #b4bba9;
+  --scratch-line: #94815a;
+
+  background:
+    radial-gradient(
+      circle at center,
+      #263b2c 0%,
+      #0c1811 65%,
+      #030a06 100%
+    );
+
+  border-radius: 50%;
+  isolation: isolate;
+}
+
+.w8-scratch-card {
+  position: relative;
+  width: 308px;
+  padding: 18px 12px 15px;
+  box-sizing: border-box;
+  overflow: hidden;
+
+  border: 1px solid var(--scratch-line);
+  border-radius: 12px;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(180,165,107,.17),
+      transparent 65%
+    ),
+    linear-gradient(
+      155deg,
+      #314433 0%,
+      #162519 52%,
+      #07110c 100%
+    );
+
+  color: var(--scratch-text);
+  text-align: center;
+
+  box-shadow:
+    0 14px 32px #000a,
+    inset 0 1px 0 #ffffff28,
+    inset 0 0 22px #0005;
+
+  animation: w8ScratchCardIn .25s ease-out;
+}
+
+.w8-scratch-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 24%;
+  right: 24%;
+  height: 2px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--scratch-gold),
+    transparent
+  );
+}
+
+.w8-scratch-kicker {
+  color: var(--scratch-gold);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  line-height: 1.3;
+}
+
+.w8-scratch-title {
+  margin: 6px 0 13px;
+  color: var(--scratch-text);
+  font-size: 18px;
+  font-weight: 950;
+  line-height: 1.2;
+  letter-spacing: .7px;
+  text-shadow: 0 2px 5px #0005;
+}
+
+.w8-scratch-area {
+  width: 280px;
+  height: 154px;
+  margin: 0 auto;
+
+  border: 1px solid var(--scratch-line);
+  border-radius: 8px;
+
+  background: #0b160e;
+
+  box-shadow:
+    inset 0 0 15px #0008,
+    0 4px 15px #0005;
+}
+
+.w8-scratch-under {
+  gap: 6px;
+  background:
+    radial-gradient(
+      circle at center,
+      #38543c,
+      #0e1d13 80%
+    );
+}
+
+.w8-scratch-under img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+
+  filter:
+    drop-shadow(0 3px 7px #0008)
+    drop-shadow(0 0 9px #cfaf6055);
+}
+
+.w8-scratch-under strong {
+  color: var(--scratch-gold);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+#w8ScratchCanvas {
+  width: 280px;
+  height: 154px;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.w8-scratch-guide {
+  margin-top: 13px;
+  color: var(--scratch-muted);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 1.5px;
+}
+
+/* FRUIT THEME */
+
+body.w8-theme-titanium #w8ScratchLayer {
+  --scratch-gold: #b65d74;
+  --scratch-text: #893d59;
+  --scratch-muted: #9a6d72;
+  --scratch-line: #d8a481;
+
+  background:
+    radial-gradient(
+      circle at center,
+      #ffe9d0 0%,
+      #e9b994 65%,
+      #b77b70 100%
+    );
+}
+
+body.w8-theme-titanium .w8-scratch-card {
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      #ffffffb8,
+      transparent 72%
+    ),
+    linear-gradient(
+      155deg,
+      #fff9ee 0%,
+      #f8e2d2 60%,
+      #ecc5b6 100%
+    );
+
+  box-shadow:
+    0 14px 32px #6e37444d,
+    inset 0 1px 0 #fff;
+}
+
+body.w8-theme-titanium .w8-scratch-area {
+  background: #ffe9d9;
+  box-shadow:
+    inset 0 0 12px #9b5a4a33,
+    0 4px 14px #975f6240;
+}
+
+body.w8-theme-titanium .w8-scratch-under {
+  background:
+    radial-gradient(
+      circle,
+      #fffdf0 0%,
+      #f8d7c1 75%,
+      #ecb49f 100%
+    );
+}
+
+body.w8-theme-titanium .w8-scratch-under img {
+  filter:
+    drop-shadow(0 4px 7px #9c637055);
+}
+
+body.w8-theme-titanium .w8-scratch-under strong {
+  color: #aa4e70;
+}
+
+/* ANIMATION */
+
+@keyframes w8ScratchCardIn {
+  from {
+    opacity: 0;
+    transform: scale(.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .w8-scratch-card {
+    animation: none;
+  }
+}
+
+
+
 </style>
 </head>
 
@@ -9060,11 +9296,17 @@ const w8ScratchCtx =
     willReadFrequently: true
   });
 
+
 function w8ScratchPaint() {
 
   const ctx = w8ScratchCtx;
   const w = w8ScratchCanvas.width;
   const h = w8ScratchCanvas.height;
+
+  const fruitTheme =
+    document.body.classList.contains(
+      "w8-theme-titanium"
+    );
 
   ctx.globalCompositeOperation = "source-over";
   ctx.clearRect(0, 0, w, h);
@@ -9072,30 +9314,66 @@ function w8ScratchPaint() {
   const gradient =
     ctx.createLinearGradient(0, 0, w, h);
 
-  gradient.addColorStop(0, "#53574e");
-  gradient.addColorStop(.35, "#d3c49f");
-  gradient.addColorStop(.65, "#9b927b");
-  gradient.addColorStop(1, "#484c45");
+  if (fruitTheme) {
+
+    // FRUIT - ROSE GOLD
+    gradient.addColorStop(0, "#d7a17f");
+    gradient.addColorStop(.35, "#ffe0bb");
+    gradient.addColorStop(.65, "#eabda7");
+    gradient.addColorStop(1, "#c1847c");
+
+  } else {
+
+    // MILITARY - BRUSHED STEEL
+    gradient.addColorStop(0, "#535d50");
+    gradient.addColorStop(.35, "#d7cfb4");
+    gradient.addColorStop(.65, "#a8ab94");
+    gradient.addColorStop(1, "#4c584c");
+
+  }
 
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, w, h);
 
-  ctx.fillStyle = "#39372f";
-  ctx.font = "900 17px system-ui";
+  // Vân kim loại
+  ctx.strokeStyle = fruitTheme
+    ? "rgba(255,255,255,.13)"
+    : "rgba(255,255,255,.10)";
+
+  ctx.lineWidth = 1;
+
+  for (let y = 2; y < h; y += 5) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y);
+    ctx.stroke();
+  }
+
+  // Nội dung chính
   ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
 
-  ctx.fillText("SCRATCH HERE", w / 2, 69);
+  ctx.fillStyle = fruitTheme
+    ? "#92465e"
+    : "#28372c";
 
-  ctx.font = "11px system-ui";
-  ctx.fillText("REVEAL THE MYSTERY", w / 2, 91);
+  ctx.font = "900 17px system-ui";
+  ctx.fillText("SCRATCH HERE", w / 2, 68);
 
-  ctx.globalCompositeOperation =
-    "destination-out";
+  ctx.font = "800 10px system-ui";
+  ctx.fillText(
+    "REVEAL YOUR RESULT",
+    w / 2,
+    93
+  );
 
+  // Thiết lập chức năng cào
+  ctx.globalCompositeOperation = "destination-out";
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   ctx.lineWidth = 33;
 }
+
 
 function w8ScratchBegin(resultSlot, winSlots) {
 
@@ -9130,6 +9408,23 @@ function w8ScratchBegin(resultSlot, winSlots) {
   w8ScratchDrawing = false;
 
   layer.hidden = false;
+
+
+const isFruit =
+  document.body.classList.contains(
+    "w8-theme-titanium"
+  );
+
+const kicker =
+  layer.querySelector(".w8-scratch-kicker");
+
+if (kicker) {
+  kicker.textContent = isFruit
+    ? "LUCKY FRUIT REVEAL"
+    : "CLASSIFIED RESULT";
+}
+
+
 
   document.getElementById("w8ScratchGuide")
     .textContent = "DRAG TO SCRATCH";
