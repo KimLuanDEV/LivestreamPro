@@ -7339,6 +7339,66 @@ function spiritAuth(req, res, next) {
 
 
 
+/* ==========================================
+   VERIFIED TRANSFER IDENTITY
+========================================== */
+
+function getVerifiedTransferUid(socket) {
+
+  if (!SPIRIT_SECRET || SPIRIT_SECRET.length < 32) {
+    return null;
+  }
+
+  try {
+    const cookie = String(
+      socket.handshake.headers.cookie || ""
+    );
+
+    const entry = cookie.split(";")
+      .map(s => s.trim())
+      .find(s => s.startsWith("lsp_spirit_sid="));
+
+    if (!entry) return null;
+
+    const token = entry.slice("lsp_spirit_sid=".length);
+    const parts = token.split(".");
+
+    if (parts.length !== 2) return null;
+
+    const [payload, signature] = parts;
+
+    const expected = spiritSign(payload);
+
+    const a = Buffer.from(signature);
+    const b = Buffer.from(expected);
+
+    if (
+      a.length !== b.length ||
+      !crypto.timingSafeEqual(a, b)
+    ) {
+      return null;
+    }
+
+    const session = JSON.parse(
+      Buffer.from(payload, "base64url").toString("utf8")
+    );
+
+    if (
+      !session.uid ||
+      !Number.isFinite(session.exp) ||
+      session.exp <= Date.now()
+    ) {
+      return null;
+    }
+
+    return String(session.uid);
+
+  } catch {
+    return null;
+  }
+}
+
+
 
 /* ============================================
    LSP MAIN ADMIN - PASSWORD SESSION
@@ -10784,6 +10844,251 @@ emitCoinUpdate(uid);    // 🔁 realtime coin
   res.json({ ok: true });
 });
 
+
+
+
+/* ==========================================
+   ADMIN - DIAMOND TRANSFER APPROVAL
+========================================== */
+
+// Lấy danh sách yêu cầu chuyển
+app.get("/api/admin/transfer-requests", (req, res) => {
+
+  if (!req.lspAdminActorUid) {
+    return res.status(403).json({
+      ok: false,
+      error: "NOT_ADMIN"
+    });
+  }
+
+  const users = loadUsers();
+  const list = [];
+
+  for (const [uid, user] of Object.entries(users)) {
+    if (!Array.isArray(user?.transferRequests)) continue;
+
+    for (const item of user.transferRequests) {
+      list.push({
+        ...item,
+        fromUid: uid
+      });
+    }
+  }
+
+  list.sort(
+    (a, b) => Number(b.createdAt) - Number(a.createdAt)
+  );
+
+  res.json({
+    ok: true,
+    list
+  });
+});
+
+
+// Admin duyệt / từ chối
+app.post("/api/admin/transfer-action", (req, res) => {
+
+  const adminUid = req.lspAdminActorUid;
+
+  if (!adminUid) {
+    return res.status(403).json({
+      ok: false,
+      error: "NOT_ADMIN"
+    });
+  }
+
+  const { id, action } = req.body || {};
+
+  if (
+    typeof id !== "string" ||
+    !["approve", "reject"].includes(action)
+  ) {
+    return res.status(400).json({
+      ok: false,
+      error: "INVALID_REQUEST"
+    });
+  }
+
+  const users = loadUsers();
+
+  let request = null;
+  let sender = null;
+
+  // Tìm yêu cầu theo ID
+  for (const user of Object.values(users)) {
+
+    if (!Array.isArray(user?.transferRequests)) continue;
+
+    const found = user.transferRequests.find(
+      item => item.id === id
+    );
+
+    if (found) {
+      request = found;
+      sender = user;
+      break;
+    }
+  }
+
+  if (!request || !sender?.profile) {
+    return res.status(404).json({
+      ok: false,
+      error: "REQUEST_NOT_FOUND"
+    });
+  }
+
+  if (request.status !== "pending") {
+    return res.status(409).json({
+      ok: false,
+      error: "ALREADY_PROCESSED"
+    });
+  }
+
+  const recipient = users[request.toUid];
+  const amount = Number(request.amount);
+
+  if (!Number.isSafeInteger(amount) || amount <= 0) {
+    return res.status(400).json({
+      ok: false,
+      error: "INVALID_AMOUNT"
+    });
+  }
+
+  const now = Date.now();
+
+  if (action === "approve") {
+
+    if (
+      !recipient?.profile ||
+      recipient.profile.accountBlocked
+    ) {
+      return res.status(400).json({
+        ok: false,
+        error: "RECIPIENT_UNAVAILABLE"
+      });
+    }
+
+    const current = Number(recipient.profile.coins || 0);
+
+    if (
+      !Number.isSafeInteger(current) ||
+      !Number.isSafeInteger(current + amount)
+    ) {
+      return res.status(400).json({
+        ok: false,
+        error: "INVALID_RECIPIENT_BALANCE"
+      });
+    }
+
+    // Chỉ đến đây mới cộng kim cương
+    recipient.profile.coins = current + amount;
+
+    sender.profile.coinSent =
+      Number(sender.profile.coinSent || 0) + amount;
+
+    sender.transferHistory ||= [];
+    recipient.transferHistory ||= [];
+
+    sender.transferHistory.unshift({
+      id,
+      type: "send",
+      uid: request.toUid,
+      name: request.toName,
+      avatar: recipient.profile.avatar || "",
+      amount,
+      status: "approved",
+      time: now
+    });
+
+    recipient.transferHistory.unshift({
+      id,
+      type: "receive",
+      uid: request.fromUid,
+      name: request.fromName,
+      avatar: sender.profile.avatar || "",
+      amount,
+      status: "approved",
+      time: now
+    });
+
+    sender.transferHistory =
+      sender.transferHistory.slice(0, 50);
+
+    recipient.transferHistory =
+      recipient.transferHistory.slice(0, 50);
+
+    request.status = "approved";
+
+  } else {
+
+    // Từ chối - hoàn trả kim cương bị tạm giữ
+    const current = Number(sender.profile.coins || 0);
+
+    if (
+      !Number.isSafeInteger(current) ||
+      !Number.isSafeInteger(current + amount)
+    ) {
+      return res.status(400).json({
+        ok: false,
+        error: "INVALID_SENDER_BALANCE"
+      });
+    }
+
+    sender.profile.coins = current + amount;
+
+    request.status = "rejected";
+  }
+
+  request.processedAt = now;
+  request.processedBy = adminUid;
+
+  try {
+    saveUsers(users);
+  } catch (err) {
+    console.error("[TRANSFER APPROVAL SAVE]", err);
+
+    return res.status(500).json({
+      ok: false,
+      error: "SAVE_FAILED"
+    });
+  }
+
+  emitCoinUpdate(request.fromUid);
+
+  if (action === "approve") {
+    emitCoinUpdate(request.toUid);
+  }
+
+  // Cập nhật danh sách admin
+  io.emit("diamond-transfer-update", {
+    ts: now
+  });
+
+  // Thông báo tới người gửi
+  emitToUser(request.fromUid, "notify", {
+    type: action === "approve" ? "good" : "bad",
+    message: action === "approve"
+      ? "Your diamond transfer has been approved."
+      : "Transfer rejected. Your diamonds have been refunded."
+  });
+
+  // Chỉ thông báo người nhận khi đã duyệt
+  if (action === "approve") {
+    emitToUser(request.toUid, "notify", {
+      type: "good",
+      message: `You received ${amount} diamonds from ${request.fromName}`
+    });
+  }
+
+  res.json({
+    ok: true,
+    status: request.status
+  });
+});
+
+
+
 app.get("/api/admin/withdraw-requests", (req, res) => {
   const adminUid = req.headers["x-uid"];
   if (!adminUid) return res.status(403).json({ error: "no_auth" });
@@ -12776,108 +13081,151 @@ emitPrivateSocialEvent(
 });
 
 
-socket.on("coin-transfer", ({target, amount}) => {
 
-  const fromUid = socket.data.uid;
-  if(!fromUid || !target) return;
+/* ==========================================
+   DIAMOND TRANSFER - ADMIN APPROVAL
+   PLAYER REQUEST / HOLD BALANCE
+========================================== */
 
+socket.on("coin-transfer", (payload = {}, ack) => {
+
+  const respond = (data) => {
+    if (typeof ack === "function") ack(data);
+  };
+
+  const fromUid = getVerifiedTransferUid(socket);
+
+  if (!fromUid) {
+    return respond({
+      ok: false,
+      message: "Authentication required."
+    });
+  }
+
+  const target = String(payload.target || "").trim();
+  const rawAmount = Number(payload.amount);
+
+  if (
+    !target ||
+    !Number.isSafeInteger(rawAmount) ||
+    rawAmount <= 0
+  ) {
+    return respond({
+      ok: false,
+      message: "Invalid recipient or diamond amount."
+    });
+  }
+
+  const amount = rawAmount;
   const users = loadUsers();
+
+  const from = users[fromUid];
+
+  if (!from?.profile || from.profile.accountBlocked) {
+    return respond({
+      ok: false,
+      message: "Sender account unavailable."
+    });
+  }
 
   let toUid = null;
 
-  // 1️⃣ nếu nhập UID
-  if(users[target]){
+  // Tìm bằng UID chính xác
+  if (Object.hasOwn(users, target)) {
     toUid = target;
   }
 
-  // 2️⃣ nếu không phải UID → tìm theo tên
-  if(!toUid){
-    const key = Object.keys(users).find(uid =>
+  // Hoặc tìm bằng tên nhân vật
+  if (!toUid) {
+    const matches = Object.keys(users).filter(uid =>
       users[uid]?.profile?.name
         ?.toLowerCase() === target.toLowerCase()
     );
 
-    if(key) toUid = key;
+    // Không chuyển nhầm nếu nhiều người trùng tên
+    if (matches.length === 1) {
+      toUid = matches[0];
+    }
   }
 
-  if(!toUid){
-    return emitToUser(fromUid,"notify",{
-      type:"bad",
-      message:"Player not found"
+  const to = toUid ? users[toUid] : null;
+
+  if (!to?.profile || to.profile.accountBlocked) {
+    return respond({
+      ok: false,
+      message: "Recipient not found or unavailable."
     });
   }
 
-  if(toUid === fromUid){
-    return emitToUser(fromUid,"notify",{
-      type:"bad",
-      message:"You cannot send coins to yourself"
+  if (toUid === fromUid) {
+    return respond({
+      ok: false,
+      message: "You cannot transfer to yourself."
     });
   }
 
-  const from = users[fromUid];
-  const to   = users[toUid];
+  const balance = Number(from.profile.coins || 0);
 
-  amount = Math.floor(Number(amount));
-
-  if(from.profile.coins < amount){
-    return emitToUser(fromUid,"notify",{
-      type:"bad",
-      message:"Insufficient diamonds"
+  if (
+    !Number.isSafeInteger(balance) ||
+    balance < amount
+  ) {
+    return respond({
+      ok: false,
+      message: "Insufficient diamonds."
     });
   }
 
-// 💎 transfer
-from.profile.coins -= amount;
-to.profile.coins   += amount;
+  // Tạo mã giao dịch duy nhất
+  const id = crypto.randomUUID();
+  const now = Date.now();
 
-// 📊 thống kê người gửi
-from.profile.coinSent =
-  (from.profile.coinSent || 0) + amount;
+  // Trừ khỏi số dư khả dụng để giữ chỗ
+  // Chưa cộng kim cương cho người nhận
+  from.profile.coins = balance - amount;
 
-// ❌ KHÔNG cộng coinReceived
+  // Danh sách yêu cầu thuộc người gửi
+  from.transferRequests ||= [];
 
+  from.transferRequests.unshift({
+    id,
+    fromUid,
+    toUid,
+    fromName: String(from.profile.name || fromUid),
+    toName: String(to.profile.name || toUid),
+    amount,
+    status: "pending",
+    createdAt: now,
+    processedAt: null,
+    processedBy: null,
+    note: ""
+  });
 
-// lưu lịch sử
-from.transferHistory = from.transferHistory || [];
-to.transferHistory   = to.transferHistory || [];
+  // Lưu yêu cầu và số dư trong cùng users.json
+  try {
+    saveUsers(users);
+  } catch (err) {
+    console.error("[TRANSFER REQUEST SAVE]", err);
 
-from.transferHistory.unshift({
-  type:"send",
-  uid:toUid,
-  name:to.profile.name,
-  avatar:to.profile.avatar,
-  amount,
-  time:Date.now()
-})
-
-to.transferHistory.unshift({
-  type:"receive",
-  uid:fromUid,
-  name:from.profile.name,
-  avatar:from.profile.avatar,
-  amount,
-  time:Date.now()
-})
-
-// giữ tối đa 50
-from.transferHistory = from.transferHistory.slice(0,50);
-to.transferHistory   = to.transferHistory.slice(0,50);
-
-
-  saveUsers(users);
+    return respond({
+      ok: false,
+      message: "Unable to save transfer request."
+    });
+  }
 
   emitCoinUpdate(fromUid);
-  emitCoinUpdate(toUid);
 
-emitToUser(fromUid,"notify",{
-  type:"good",
-  message:`💎 Sent ${amount} diamonds to ${to.profile.name}`
-});
+  respond({
+    ok: true,
+    id,
+    status: "pending",
+    message: "Transfer request submitted for admin approval."
+  });
 
-emitToUser(toUid,"notify",{
-  type:"good",
-  message:`🎁 ${from.profile.name} sent you ${amount} diamonds`
-});
+  // Gửi tín hiệu cập nhật tới admin dashboard
+  io.emit("diamond-transfer-update", {
+    ts: now
+  });
 });
 
 
@@ -12915,19 +13263,92 @@ socket.on("transfer-preview", ({target}) => {
 
 });
 
+
+/* ==========================================
+   DIAMOND HISTORY WITH APPROVAL STATUS
+========================================== */
+
 socket.on("coin-transfer-history", () => {
 
-  const uid = socket.data.uid
-  if(!uid) return
+  // Sử dụng hàm xác thực phiên server
+  // đã bổ sung cho hệ thống chuyển kim cương
+  const uid = getVerifiedTransferUid(socket);
 
-  const users = loadUsers()
-  const me = users[uid]
+  if (!uid) {
+    return socket.emit("coin-transfer-history-result", {
+      ok: false,
+      history: [],
+      error: "Authentication required"
+    });
+  }
+
+  const users = loadUsers();
+  const me = users[uid];
+
+  if (!me) {
+    return socket.emit("coin-transfer-history-result", {
+      ok: false,
+      history: [],
+      error: "Account not found"
+    });
+  }
+
+  const history = Array.isArray(me.transferHistory)
+    ? me.transferHistory
+    : [];
+
+  const requests = Array.isArray(me.transferRequests)
+    ? me.transferRequests
+    : [];
+
+  // Các bản ghi chuyển cũ có thể không có ID.
+  // Mặc định approved vì đã được chuyển trước đây.
+  const completed = history.map(t => ({
+    ...t,
+    status: ["pending", "approved", "rejected"]
+      .includes(t.status)
+        ? t.status
+        : "approved",
+    time: Number(t.time || t.createdAt || 0)
+  }));
+
+  // Hiển thị cả yêu cầu pending/rejected.
+  // Yêu cầu approved đã có trong transferHistory,
+  // nên không đưa vào lần thứ hai.
+  const requestHistory = requests
+    .filter(r =>
+      ["pending", "rejected", "approved"]
+        .includes(r.status)
+    )
+    .map(r => ({
+      id: r.id,
+      type: "send",
+      uid: r.toUid,
+      name: r.toName || r.toUid,
+      avatar: users[r.toUid]?.profile?.avatar || "",
+      amount: r.amount,
+      status: r.status,
+      time: Number(r.createdAt || 0),
+      processedAt: r.processedAt || null,
+      note: r.note || ""
+    }));
+
+  const ids = new Set(
+    completed.filter(t => t.id).map(t => t.id)
+  );
+
+  const merged = [
+    ...completed,
+    ...requestHistory.filter(t => !ids.has(t.id))
+  ];
+
+  merged.sort((a, b) => b.time - a.time);
 
   socket.emit("coin-transfer-history-result", {
-    history: me.transferHistory || []
-  })
-
-})
+    ok: true,
+    history: merged
+  });
+});
 
 
 

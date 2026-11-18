@@ -1427,3 +1427,288 @@ document.addEventListener("touchend", function(e){
 
 }, false);
 
+
+
+
+/* ==========================================
+   ADMIN - DIAMOND TRANSFER MANAGEMENT
+========================================== */
+
+let ADMIN_TRANSFERS = [];
+let adminTransferFilter = "pending";
+let transferAdminBusy = false;
+
+function transferAdminEscape(value) {
+  return String(value ?? "").replace(
+    /[&<>"']/g,
+    c => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[c]
+  );
+}
+
+
+// Tải yêu cầu từ server
+async function loadAdminTransfers() {
+
+  const box = document.getElementById("adminTransferList");
+  if (!box) return;
+
+  try {
+
+    const res = await fetch(
+      "/api/admin/transfer-requests",
+      { credentials: "same-origin" }
+    );
+
+    if (!res.ok) {
+      throw new Error("HTTP " + res.status);
+    }
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      throw new Error("Cannot load transfers");
+    }
+
+    ADMIN_TRANSFERS = Array.isArray(data.list)
+      ? data.list
+      : [];
+
+    renderAdminTransfers();
+
+  } catch (err) {
+    console.error("[ADMIN TRANSFERS]", err);
+    box.textContent = "Không thể tải danh sách giao dịch.";
+  }
+}
+
+
+// Hiển thị danh sách
+function renderAdminTransfers() {
+
+  const box = document.getElementById("adminTransferList");
+  const count = document.getElementById("transferPendingCount");
+
+  if (!box) return;
+
+  const pending = ADMIN_TRANSFERS.filter(
+    x => x.status === "pending"
+  ).length;
+
+  if (count) {
+    count.textContent = `${pending} Pending`;
+  }
+
+  const list = ADMIN_TRANSFERS.filter(
+    x => adminTransferFilter === "all" ||
+         x.status === adminTransferFilter
+  );
+
+  box.innerHTML = "";
+
+  if (!list.length) {
+    box.innerHTML = `
+      <div class="admin-transfer-empty">
+        Không có giao dịch trong mục này.
+      </div>
+    `;
+    return;
+  }
+
+  list.forEach(t => {
+
+    const status = ["pending", "approved", "rejected"]
+      .includes(t.status) ? t.status : "pending";
+
+    const card = document.createElement("div");
+    card.className = "admin-transfer-item";
+
+    card.innerHTML = `
+      <div class="admin-transfer-top">
+        <span class="admin-transfer-id">
+          ${transferAdminEscape(t.id)}
+        </span>
+
+        <span class="admin-transfer-status ${status}">
+          ${status.toUpperCase()}
+        </span>
+      </div>
+
+      <div class="admin-transfer-route">
+
+        <div class="admin-transfer-person">
+          <small>FROM PLAYER</small>
+          <strong>${transferAdminEscape(t.fromName)}</strong>
+          <span>UID: ${transferAdminEscape(t.fromUid)}</span>
+        </div>
+
+        <div class="admin-transfer-arrow">→</div>
+
+        <div class="admin-transfer-person">
+          <small>TO PLAYER</small>
+          <strong>${transferAdminEscape(t.toName)}</strong>
+          <span>UID: ${transferAdminEscape(t.toUid)}</span>
+        </div>
+
+      </div>
+
+      <div class="admin-transfer-bottom">
+        <div class="admin-transfer-amount">
+          ${Number(t.amount || 0).toLocaleString("en-US")}
+          <small>DIAMONDS</small>
+        </div>
+
+        <span class="admin-transfer-id">
+          ${new Date(t.createdAt).toLocaleString("vi-VN")}
+        </span>
+      </div>
+    `;
+
+    if (status === "pending") {
+
+      const actions = document.createElement("div");
+      actions.className = "admin-transfer-actions";
+
+      const approve = document.createElement("button");
+      approve.className = "admin-transfer-approve";
+      approve.textContent = "APPROVE";
+      approve.disabled = transferAdminBusy;
+
+      approve.onclick = () =>
+        adminTransferAction(t.id, "approve");
+
+      const reject = document.createElement("button");
+      reject.className = "admin-transfer-reject";
+      reject.textContent = "REJECT";
+      reject.disabled = transferAdminBusy;
+
+      reject.onclick = () =>
+        adminTransferAction(t.id, "reject");
+
+      actions.append(approve, reject);
+      card.appendChild(actions);
+    }
+
+    box.appendChild(card);
+  });
+}
+
+
+// Admin xử lý duyệt hoặc từ chối
+async function adminTransferAction(id, action) {
+
+  if (transferAdminBusy) return;
+
+  const item = ADMIN_TRANSFERS.find(x => x.id === id);
+
+  if (!item || item.status !== "pending") return;
+
+  const approve = action === "approve";
+
+  const confirmed = await showModal({
+    title: approve
+      ? "Xác nhận duyệt chuyển kim cương"
+      : "Xác nhận từ chối giao dịch",
+
+    body: approve
+      ? `Duyệt ${Number(item.amount).toLocaleString("vi-VN")} kim cương từ ${item.fromUid} đến ${item.toUid}?`
+      : `Từ chối giao dịch và hoàn lại ${Number(item.amount).toLocaleString("vi-VN")} kim cương cho ${item.fromUid}?`,
+
+    confirm: true
+  });
+
+  if (!confirmed) return;
+
+  transferAdminBusy = true;
+  renderAdminTransfers();
+
+  try {
+
+    const res = await fetch(
+      "/api/admin/transfer-action",
+      {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          id,
+          action
+        })
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok || !data.ok) {
+      throw new Error(
+        data.error || "Transfer approval failed"
+      );
+    }
+
+    await showModal({
+      title: "Giao dịch đã xử lý",
+      body: approve
+        ? "Đã duyệt và cộng kim cương cho người nhận."
+        : "Đã từ chối và hoàn kim cương cho người gửi."
+    });
+
+  } catch (err) {
+
+    await showModal({
+      title: "Không thể xử lý",
+      body: String(err.message || "Unknown error")
+    });
+
+  } finally {
+
+    transferAdminBusy = false;
+    await loadAdminTransfers();
+  }
+}
+
+
+// Bộ lọc trạng thái
+document.querySelectorAll(
+  "[data-transfer-filter]"
+).forEach(btn => {
+
+  btn.addEventListener("click", () => {
+
+    adminTransferFilter = btn.dataset.transferFilter;
+
+    document.querySelectorAll(
+      "[data-transfer-filter]"
+    ).forEach(b => b.classList.remove("active"));
+
+    btn.classList.add("active");
+
+    renderAdminTransfers();
+  });
+});
+
+
+// Load khi chọn tab quản trị
+document.querySelector(
+  '[data-tab="transfers"]'
+)?.addEventListener("click", loadAdminTransfers);
+
+
+// Realtime: dùng socket riêng như phần rút tiền
+if (typeof io === "function") {
+
+  const adminTransferSocket = io();
+
+  adminTransferSocket.on(
+    "diamond-transfer-update",
+    () => loadAdminTransfers()
+  );
+}
+
+

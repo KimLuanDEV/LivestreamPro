@@ -17287,6 +17287,164 @@ body.page-profile .profile-cover #btnChangeCover:active {
 
 
 
+/* ==========================================
+   DIAMOND HISTORY - APPROVAL STATUS
+   LUXURY BLACK & GOLD
+========================================== */
+
+body.page-profile .transfer-history-card {
+  display: block;
+  margin: 0 14px 12px;
+  padding: 16px;
+  border: 1px solid rgba(216,185,120,.16);
+  border-radius: 16px;
+  background: linear-gradient(
+    145deg, #171c25, #10141b
+  );
+}
+
+.transfer-history-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.transfer-person-info {
+  min-width: 0;
+}
+
+.transfer-history-card .transfer-name {
+  color: #f5f0e6;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.transfer-history-card .transfer-amount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  font-size: 19px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.transfer-history-card .history-unit {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  opacity: .7;
+}
+
+.transfer-uid {
+  color: #76849a;
+  font-size: 11px;
+  margin-top: 5px;
+}
+
+.transfer-history-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 15px;
+  padding-top: 13px;
+  border-top: 1px solid rgba(255,255,255,.07);
+}
+
+.transfer-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 10px;
+  letter-spacing: .5px;
+  font-weight: 800;
+}
+
+.transfer-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.transfer-status-badge.pending {
+  color: #e7bf72;
+  background: rgba(231,191,114,.1);
+  border: 1px solid rgba(231,191,114,.24);
+}
+
+.transfer-status-badge.approved {
+  color: #55d5a5;
+  background: rgba(85,213,165,.09);
+  border: 1px solid rgba(85,213,165,.23);
+}
+
+.transfer-status-badge.rejected {
+  color: #f28b93;
+  background: rgba(242,139,147,.09);
+  border: 1px solid rgba(242,139,147,.24);
+}
+
+.transfer-history-direction {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #8a96a8;
+}
+
+.transfer-history-description {
+  margin-top: 11px;
+  color: #a7b0bf;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.transfer-history-processed {
+  margin-top: 9px;
+  color: #c5ad79;
+  font-size: 11px;
+}
+
+.transfer-history-reference {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(255,255,255,.09);
+  color: #788598;
+  font-size: 10px;
+  letter-spacing: .3px;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+  body.page-profile .transfer-history-card {
+    padding: 13px;
+    margin-inline: 10px;
+  }
+
+  .transfer-history-card .transfer-amount {
+    font-size: 16px;
+  }
+
+  .transfer-history-card .transfer-avatar {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .transfer-status-badge.pending .transfer-status-dot {
+    animation: transferPendingPulse 1.7s infinite;
+  }
+}
+
+@keyframes transferPendingPulse {
+  50% { opacity: .35; }
+}
+
 
   </style>
 </head>
@@ -18177,46 +18335,6 @@ body.page-profile .profile-cover #btnChangeCover:active {
 </div>
 
 
-
-<div id="transferSuccessModal" class="transfer-confirm hidden">
-
-  <div class="confirm-backdrop"
-       onclick="closeTransferSuccess()"></div>
-
-  <div class="confirm-card">
-
-    <div class="confirm-header" style="color:#4cd964">
-    Chuyển kim cương thành công
-    </div>
-
-    <div class="confirm-user">
-
-      <img id="successAvatar" class="confirm-avatar">
-
-      <div class="confirm-info">
-        <div id="successName" class="confirm-name"></div>
-        <div id="successLevel" class="confirm-level"></div>
-      </div>
-
-    </div>
-
-    <div class="confirm-amount-box">
-      <div class="confirm-label">Đã chuyển</div>
-      <div class="confirm-amount">
-        <span id="successAmount"></span>
-      </div>
-    </div>
-
-    <div class="confirm-actions">
-      <button class="btn-confirm"
-        onclick="closeTransferSuccess()">
-        OK
-      </button>
-    </div>
-
-  </div>
-
-</div>
 
 
 

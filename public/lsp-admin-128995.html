@@ -2448,6 +2448,205 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
 
 
 
+/* ==========================================
+   ADMIN TRANSFER APPROVAL - PREMIUM
+========================================== */
+
+.transfer-admin-panel {
+  background: linear-gradient(160deg, #111a2a, #0b101b);
+}
+
+.transfer-admin-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.transfer-admin-kicker {
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-weight: 700;
+  color: #d5b774;
+}
+
+.transfer-admin-heading h2 {
+  margin: 7px 0;
+  font-size: 19px;
+  color: #f4f0e8;
+}
+
+.transfer-admin-heading p {
+  margin: 0;
+  color: #8895ad;
+  font-size: 12px;
+}
+
+.transfer-pending-count {
+  padding: 8px 13px;
+  border: 1px solid #786234;
+  border-radius: 30px;
+  color: #e8c780;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.transfer-admin-filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+
+.transfer-admin-filters button {
+  flex-shrink: 0;
+  border: 1px solid #293247;
+  border-radius: 10px;
+  padding: 9px 14px;
+  background: #151d2d;
+  color: #9ca9c0;
+  cursor: pointer;
+}
+
+.transfer-admin-filters button.active {
+  color: #16120b;
+  border-color: #d5b774;
+  background: linear-gradient(135deg, #f4dfab, #b99a56);
+}
+
+.admin-transfer-list {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-transfer-item {
+  padding: 17px;
+  border-radius: 15px;
+  background: #111827;
+  border: 1px solid #273145;
+}
+
+.admin-transfer-top,
+.admin-transfer-bottom {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-transfer-id {
+  color: #8491aa;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.admin-transfer-status {
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.admin-transfer-status.pending { color: #e8c780; }
+.admin-transfer-status.approved { color: #55d6a4; }
+.admin-transfer-status.rejected { color: #ff818c; }
+
+.admin-transfer-route {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+  gap: 12px;
+  align-items: center;
+  margin: 22px 0;
+}
+
+.admin-transfer-person {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-transfer-person small {
+  display: block;
+  color: #8895ad;
+  font-size: 10px;
+  margin-bottom: 7px;
+}
+
+.admin-transfer-person strong {
+  display: block;
+  color: #f1f3fa;
+  font-size: 14px;
+}
+
+.admin-transfer-person span {
+  font-size: 11px;
+  color: #8895ad;
+}
+
+.admin-transfer-arrow {
+  color: #c9ad70;
+  font-size: 20px;
+}
+
+.admin-transfer-amount {
+  font-size: 21px;
+  font-weight: 800;
+  color: #e8c780;
+}
+
+.admin-transfer-amount small {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.admin-transfer-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-top: 16px;
+}
+
+.admin-transfer-actions button {
+  flex: 1;
+  min-width: 0;
+  padding: 11px;
+  border-radius: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-transfer-approve {
+  background: #cbb176;
+  border: 1px solid #e4cd96;
+  color: #14110a;
+}
+
+.admin-transfer-reject {
+  background: #281923;
+  border: 1px solid #754452;
+  color: #ffabb4;
+}
+
+.admin-transfer-empty {
+  text-align: center;
+  padding: 35px 12px;
+  color: #8997ae;
+  font-size: 13px;
+}
+
+@media (max-width: 480px) {
+  .admin-transfer-item { padding: 13px; }
+  .admin-transfer-route { gap: 7px; }
+  .admin-transfer-person strong { font-size: 12px; }
+  .admin-transfer-amount { font-size: 17px; }
+}
+
+
+
+
+
 
 
   </style>
@@ -2607,6 +2806,17 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
           data-tab="withdraws">
     Rút tiền
   </button>
+
+
+
+<button
+  type="button"
+  class="tab"
+  data-tab="transfers">
+  Duyệt chuyển kim cương
+</button>
+
+
 
   <button type="button"
           class="tab"
@@ -2807,6 +3017,59 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
   </div>
 </div>
 
+
+
+
+<!-- ==========================================
+     ADMIN DIAMOND TRANSFER APPROVAL
+========================================== -->
+
+<div
+  class="admin-section hidden"
+  data-section="transfers">
+
+  <div class="card transfer-admin-panel">
+
+    <div class="transfer-admin-heading">
+      <div>
+        <span class="transfer-admin-kicker">
+          FINANCIAL CONTROL
+        </span>
+        <h2>Diamond Transfer Requests</h2>
+        <p>Review and approve player transfers.</p>
+      </div>
+
+      <span
+        id="transferPendingCount"
+        class="transfer-pending-count">0 Pending</span>
+    </div>
+
+    <div class="transfer-admin-filters">
+      <button class="active"
+              data-transfer-filter="pending">
+        Pending
+      </button>
+
+      <button data-transfer-filter="approved">
+        Approved
+      </button>
+
+      <button data-transfer-filter="rejected">
+        Rejected
+      </button>
+
+      <button data-transfer-filter="all">
+        All
+      </button>
+    </div>
+
+    <div
+      id="adminTransferList"
+      class="admin-transfer-list">
+    </div>
+
+  </div>
+</div>
 
 
 

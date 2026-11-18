@@ -1964,36 +1964,90 @@ function closeTransferConfirm(){
     .classList.add("hidden");
 }
 
-function confirmTransfer(){
 
-  if(!pendingTransfer) return;
+/* ==========================================
+   SUBMIT DIAMOND TRANSFER REQUEST
+========================================== */
 
-  const avatar = document.getElementById("confirmAvatar").src;
-  const name   = document.getElementById("confirmName").textContent;
-  const level  = document.getElementById("confirmLevel").textContent;
-  const amount = pendingTransfer.amount;
+let transferSubmitting = false;
 
-  socket.emit("coin-transfer",{
-    target: pendingTransfer.target,
-    amount: amount
-  });
+function confirmTransfer() {
 
-  // render success UI
-  document.getElementById("successAvatar").src = avatar;
-  document.getElementById("successName").textContent = name;
-  document.getElementById("successLevel").textContent = level;
-  document.getElementById("successAmount").textContent =
-  amount.toLocaleString("en-US");
+  if (!pendingTransfer || transferSubmitting) return;
 
-  pendingTransfer = null;
+  transferSubmitting = true;
 
-  closeTransferConfirm();
-  closeTransfer();
+  const request = { ...pendingTransfer };
 
-  document
-    .getElementById("transferSuccessModal")
-    .classList.remove("hidden");
+  const avatar =
+    document.getElementById("confirmAvatar").src;
+
+  const name =
+    document.getElementById("confirmName").textContent;
+
+  const level =
+    document.getElementById("confirmLevel").textContent;
+
+  const amount = request.amount;
+
+  const btn = document.querySelector(
+    "#transferConfirmModal .btn-confirm"
+  );
+
+  if (btn) btn.disabled = true;
+
+  socket.timeout(10000).emit(
+    "coin-transfer",
+    {
+      target: request.target,
+      amount
+    },
+    (err, result) => {
+
+      transferSubmitting = false;
+
+      if (btn) btn.disabled = false;
+
+      if (err) {
+        showMsg(
+          "Không nhận được phản hồi. Vui lòng kiểm tra lịch sử yêu cầu trước khi thử lại."
+        );
+        return;
+      }
+
+      if (!result?.ok) {
+        showMsg(
+          result?.message || "Không thể gửi yêu cầu chuyển."
+        );
+        return;
+      }
+
+      // Server đã xác nhận lưu yêu cầu
+      document.getElementById("successAvatar").src =
+        avatar;
+
+      document.getElementById("successName").textContent =
+        name;
+
+      document.getElementById("successLevel").textContent =
+        level;
+
+      document.getElementById("successAmount").textContent =
+        amount.toLocaleString("en-US");
+
+      pendingTransfer = null;
+
+      closeTransferConfirm();
+      closeTransfer();
+
+      document
+        .getElementById("transferSuccessModal")
+        .classList.remove("hidden");
+
+    }
+  );
 }
+
 
 
 function closeTransferSuccess(){
@@ -2054,6 +2108,17 @@ if(btnTransferHistory){
       .getElementById("transferHistoryModal")
       .classList.remove("hidden")
 
+      const list = document.getElementById("transferHistoryList");
+
+if (list) {
+  list.innerHTML = `
+    <div class="history-empty">
+      Đang cập nhật trạng thái giao dịch...
+    </div>
+  `;
+}
+
+
     socket.emit("coin-transfer-history")
 
   }
@@ -2097,86 +2162,244 @@ if(tabReceive){
 }
 
 
-socket.on("coin-transfer-history-result",(data)=>{
+/* ==========================================
+   DIAMOND HISTORY - APPROVAL TRACKING
+========================================== */
 
-  transferHistory = data.history || []
+socket.on("coin-transfer-history-result", data => {
 
-  renderTransferHistory()
+  if (data?.ok === false) {
+    transferHistory = [];
+    const box = document.getElementById(
+      "transferHistoryList"
+    );
 
-})
+    if (box) {
+      box.textContent =
+        data.error || "Unable to load transfer history.";
+    }
+    return;
+  }
+
+  transferHistory = Array.isArray(data?.history)
+    ? data.history
+    : [];
+
+  renderTransferHistory();
+});
 
 
-function renderTransferHistory(){
-
-  const box =
-  document.getElementById("transferHistoryList")
-
-  if(!box) return
-
-  box.innerHTML = ""
-
-  const filtered =
-  transferHistory.filter(
-    t => t.type === historyTab
-  )
-
-if (filtered.length === 0) {
-  box.innerHTML = `
-    <div class="history-empty">
-      Chưa có giao dịch trong mục này.
-    </div>
-  `;
-  return;
+// Xử lý ký tự HTML an toàn
+function historyEscape(value) {
+  return String(value ?? "").replace(
+    /[&<>"']/g,
+    c => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[c]
+  );
 }
 
-  filtered.forEach(t=>{
 
-    const div = document.createElement("div")
+// Cấu hình trạng thái
+function getTransferStatus(status) {
 
-    div.className = "transfer-item"
+  switch (status) {
 
-    const amountClass =
-      t.type === "send"
-      ? "transfer-send"
-      : "transfer-receive"
+    case "pending":
+      return {
+        text: "CHỜ ADMIN DUYỆT",
+        className: "pending",
+        description:
+          "Yêu cầu đang chờ quản trị viên phê duyệt."
+      };
 
-    const amountSign =
-      t.type === "send"
-      ? "-"
-      : "+"
+    case "rejected":
+      return {
+        text: "ĐÃ TỪ CHỐI",
+        className: "rejected",
+        description:
+          "Yêu cầu bị từ chối. Kim cương đã hoàn về ví."
+      };
+
+    case "approved":
+      return {
+        text: "CHUYỂN THÀNH CÔNG",
+        className: "approved",
+        description:
+          "Giao dịch đã hoàn tất."
+      };
+
+    default:
+      return {
+        text: "ĐÃ HOÀN TẤT",
+        className: "approved",
+        description:
+          "Giao dịch trước khi áp dụng cơ chế duyệt."
+      };
+  }
+}
+
+
+// Render lịch sử chuyển / nhận
+function renderTransferHistory() {
+
+  const box = document.getElementById(
+    "transferHistoryList"
+  );
+
+  if (!box) return;
+
+  box.replaceChildren();
+
+  const filtered = transferHistory
+    .filter(t => t.type === historyTab)
+    .sort((a, b) =>
+      Number(b.time || 0) - Number(a.time || 0)
+    );
+
+  if (!filtered.length) {
+    box.innerHTML = `
+      <div class="history-empty">
+        Chưa có giao dịch trong mục này.
+      </div>
+    `;
+    return;
+  }
+
+  filtered.forEach(t => {
+
+    const status = getTransferStatus(t.status);
+
+    const isSend = t.type === "send";
+
+    const amount = Number(t.amount || 0);
+
+    const validAmount =
+      Number.isFinite(amount) && amount >= 0
+        ? amount
+        : 0;
+
+    const time = Number(t.time || 0);
+
+    const dateText =
+      time > 0 && Number.isFinite(time)
+        ? new Date(time).toLocaleString("vi-VN")
+        : "Không có thời gian";
+
+    const processed = Number(t.processedAt || 0);
+
+    const processedText =
+      processed > 0 && Number.isFinite(processed)
+        ? new Date(processed).toLocaleString("vi-VN")
+        : "";
+
+    const avatar = String(t.avatar || "");
+
+    const safeAvatar =
+      avatar.startsWith("/") ||
+      avatar.startsWith("https://")
+        ? avatar
+        : "/assets/default-avatar.png";
+
+    const div = document.createElement("div");
+
+    div.className =
+      `transfer-item transfer-history-card ` +
+      `transfer-status-${status.className}`;
 
     div.innerHTML = `
-      <div class="transfer-left">
+      <div class="transfer-history-main">
 
-        <img class="transfer-avatar"
-        src="${t.avatar || '/assets/default-avatar.png'}">
+        <div class="transfer-left">
 
-        <div>
-          <div class="transfer-name">
-            ${t.name}
+          <img
+            class="transfer-avatar"
+            src="${historyEscape(fixMedia(safeAvatar))}"
+            alt="Player"
+          >
+
+          <div class="transfer-person-info">
+
+            <div class="transfer-name">
+              ${historyEscape(t.name || "Player")}
+            </div>
+
+            <div class="transfer-time">
+              ${historyEscape(dateText)}
+            </div>
+
+            <div class="transfer-uid">
+              UID: ${historyEscape(t.uid || "—")}
+            </div>
+
           </div>
 
-          <div class="transfer-time">
-            ${new Date(t.time).toLocaleString("en-US")}
-          </div>
+        </div>
+
+        <div class="transfer-amount ${
+          isSend ? "transfer-send" : "transfer-receive"
+        }">
+          ${isSend ? "-" : "+"}${validAmount.toLocaleString("en-US")}
+
+          <span class="history-unit">
+            KIM CƯƠNG
+          </span>
         </div>
 
       </div>
 
+      <div class="transfer-history-status-row">
 
-<div class="transfer-amount ${amountClass}">
-  ${amountSign}${Number(t.amount || 0).toLocaleString("en-US")}
-  <span class="history-unit">KIM CƯƠNG</span>
-</div>
+        <span class="transfer-status-badge ${status.className}">
+          <span class="transfer-status-dot"></span>
+          ${status.text}
+        </span>
 
-    `
+        <span class="transfer-history-direction">
+          ${isSend ? "SENT" : "RECEIVED"}
+        </span>
 
-    box.appendChild(div)
+      </div>
 
-  })
+      <div class="transfer-history-description">
+        ${historyEscape(status.description)}
+      </div>
 
+      ${processedText ? `
+        <div class="transfer-history-processed">
+          Xử lý lúc: ${historyEscape(processedText)}
+        </div>
+      ` : ""}
+
+      ${t.id ? `
+        <div class="transfer-history-reference">
+          TRANSACTION ID · ${historyEscape(t.id)}
+        </div>
+      ` : ""}
+    `;
+
+    box.appendChild(div);
+  });
 }
 
+
+// Cập nhật khi admin xử lý giao dịch
+socket.on("diamond-transfer-update", () => {
+
+  const modal = document.getElementById(
+    "transferHistoryModal"
+  );
+
+  if (!modal || modal.classList.contains("hidden")) {
+    return;
+  }
+
+  socket.emit("coin-transfer-history");
+});
 
 
 
