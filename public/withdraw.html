@@ -1229,23 +1229,45 @@ body.page-withdraw .wd-submit:disabled .wd-icon {
   RECIPIENT BANK DETAILS
 </div>
 
-    <div class="wd-field">
-      <label for="bankName">BANK</label>
-      <select class="wd-select" id="bankName">
-        <option value="">	Select your bank</option>
-        <option value="Vietcombank">Vietcombank</option>
-        <option value="Techcombank">Techcombank</option>
-        <option value="BIDV">BIDV</option>
-        <option value="VietinBank">VietinBank</option>
-        <option value="MB Bank">MB Bank</option>
-        <option value="ACB">ACB</option>
-      </select>
-    </div>
 
-    <div class="wd-bank-preview">
-      <img id="bankLogo" class="bank-logo hidden"
-           alt="Bank logo">
-    </div>
+<div class="wd-field">
+  <label for="bankName">BANK</label>
+
+  <select class="wd-select" id="bankName">
+    <option value="">Select your bank</option>
+    <option value="Vietcombank">Vietcombank</option>
+    <option value="Techcombank">Techcombank</option>
+    <option value="BIDV">BIDV</option>
+    <option value="VietinBank">VietinBank</option>
+    <option value="MB Bank">MB Bank</option>
+    <option value="ACB">ACB</option>
+    <option value="Other">Other Bank</option>
+  </select>
+</div>
+
+<!-- CUSTOM BANK NAME -->
+<div class="wd-field hidden" id="otherBankField">
+  <label for="otherBankName">BANK NAME</label>
+
+  <input
+    class="wd-input"
+    id="otherBankName"
+    type="text"
+    maxlength="100"
+    autocomplete="off"
+    placeholder="Enter your bank name"
+  >
+</div>
+
+<!-- BANK LOGO -->
+<div class="wd-bank-preview">
+  <img
+    id="bankLogo"
+    class="bank-logo hidden"
+    alt="Bank logo"
+  >
+</div>
+
 
     <div class="wd-field">
       <label for="bankAccount">	ACCOUNT NUMBER</label>

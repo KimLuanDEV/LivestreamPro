@@ -236,9 +236,34 @@ btnSubmit.onclick = () => {
 async function submitWithdraw(securityCode){
   const amount = Number(withdrawInput.value || 0);
 
-  const bankName = document.getElementById("bankName").value;
-  const bankAccount = document.getElementById("bankAccount").value.trim();
-  const bankOwner = document.getElementById("bankOwner").value.trim();
+
+const selectedBank = document.getElementById("bankName").value;
+
+const customBankName = document
+  .getElementById("otherBankName")
+  .value.trim();
+
+const bankName = selectedBank === "Other"
+  ? customBankName
+  : selectedBank;
+
+const bankAccount = document
+  .getElementById("bankAccount")
+  .value.trim();
+
+const bankOwner = document
+  .getElementById("bankOwner")
+  .value.trim();
+
+if (selectedBank === "Other" && !customBankName) {
+  showNotifyModal(
+    "Please enter your bank name.",
+    "warn",
+    "Bank Name Required"
+  );
+  return;
+}
+
 
   if (!bankName || !bankAccount || !bankOwner) {
 showNotifyModal(
@@ -308,10 +333,30 @@ async function loadBankDefault(){
   const data = await res.json();
   if (!data.ok || !data.bank) return;
 
-  document.getElementById("bankName").value = data.bank.name || "";
-  document.getElementById("bankAccount").value = data.bank.account || "";
-  document.getElementById("bankOwner").value = data.bank.owner || "";
-  updateBankLogo(data.bank.name); // 🔥 THÊM DÒNG NÀY
+
+const savedBank = String(data.bank.name || "").trim();
+
+const availableBanks = Array.from(bankSelect.options)
+  .some(option =>
+    option.value === savedBank &&
+    option.value !== "Other"
+  );
+
+if (savedBank && !availableBanks) {
+  bankSelect.value = "Other";
+  otherBankInput.value = savedBank;
+} else {
+  bankSelect.value = savedBank;
+}
+
+document.getElementById("bankAccount").value =
+  data.bank.account || "";
+
+document.getElementById("bankOwner").value =
+  data.bank.owner || "";
+
+updateBankSelection();
+
 }
 
 
@@ -427,6 +472,8 @@ function toggleWithdrawForm(enable) {
   bankNameEl.disabled = !enable;
   bankAccountEl.disabled = !enable;
   bankOwnerEl.disabled = !enable;
+  otherBankInput.disabled = !enable;
+
 
   if (!enable) {
     btnSubmit.disabled = true;
@@ -518,9 +565,27 @@ function goBack(){
 }
 
 
-document.getElementById("bankName").addEventListener("change", e => {
-  updateBankLogo(e.target.value);
-});
+
+const bankSelect = document.getElementById("bankName");
+const otherBankField = document.getElementById("otherBankField");
+const otherBankInput = document.getElementById("otherBankName");
+
+function updateBankSelection() {
+  const isOther = bankSelect.value === "Other";
+
+  otherBankField.classList.toggle("hidden", !isOther);
+  otherBankInput.required = isOther;
+
+  if (!isOther) {
+    otherBankInput.value = "";
+  }
+
+  updateBankLogo(bankSelect.value);
+}
+
+bankSelect.addEventListener("change", updateBankSelection);
+updateBankSelection();
+
 
 
 function openWithdrawModal(){
