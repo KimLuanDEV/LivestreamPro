@@ -6551,6 +6551,173 @@ body.w8-theme-titanium
 
 
 
+/* ==========================================
+   DOUBLE OR NOTHING - PREMIUM MODAL
+========================================== */
+
+.w8-double-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  box-sizing: border-box;
+  background: rgba(0,0,0,.86);
+  backdrop-filter: blur(10px);
+}
+
+.w8-double-overlay[hidden] {
+  display: none !important;
+}
+
+.w8-double-box {
+  width: 100%;
+  max-width: 370px;
+  padding: 30px 22px 24px;
+  box-sizing: border-box;
+  text-align: center;
+  color: #fff;
+  border-radius: 20px;
+  border: 1px solid #a88948;
+  background:
+    radial-gradient(
+      ellipse at top,
+      rgba(151,112,47,.25),
+      transparent 60%
+    ),
+    linear-gradient(160deg,#24201b,#090b10 75%);
+  box-shadow:
+    0 24px 70px #000c,
+    inset 0 0 25px #d1a65910;
+}
+
+.w8-double-kicker {
+  color: #d6b77c;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.w8-double-box h2 {
+  margin: 12px 0;
+  color: #f5d58c;
+  font-size: 24px;
+  font-weight: 950;
+  letter-spacing: 1px;
+}
+
+.w8-double-description {
+  margin: 0 0 22px;
+  color: #acafb8;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.w8-double-amount {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 17px;
+  border: 1px solid #665333;
+  border-radius: 12px;
+  background: #090b10;
+}
+
+.w8-double-amount small {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: #b3a07e;
+}
+
+.w8-double-amount strong {
+  margin: 5px 0;
+  font-size: 34px;
+  color: #f5d58c;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.w8-double-amount span {
+  font-size: 10px;
+  color: #979aa4;
+  letter-spacing: 2px;
+}
+
+.w8-double-choice-label {
+  margin: 22px 0 12px;
+  color: #d6b77c;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.w8-double-colors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.w8-double-color {
+  height: 85px;
+  border: 1px solid #ffffff30;
+  border-radius: 13px;
+  color: white;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.w8-double-color.red {
+  background: linear-gradient(145deg,#a32c38,#4b101a);
+}
+
+.w8-double-color.black {
+  background: linear-gradient(145deg,#353e4d,#090c12);
+}
+
+.w8-double-disc {
+  width: 25px;
+  height: 25px;
+  border: 2px solid #ffffff88;
+  border-radius: 50%;
+  background: #ffffff20;
+}
+
+.w8-double-message {
+  min-height: 35px;
+  margin-top: 17px;
+  color: #aeb3c0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.w8-double-keep {
+  width: 100%;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid #a88948;
+  background: transparent;
+  color: #f5d58c;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  cursor: pointer;
+}
+
+.w8-double-box button:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+
 </style>
 </head>
 
@@ -6894,6 +7061,72 @@ class="predict-title-img">
 </div>
 
 <!-- RESULT -->
+
+
+<!-- ==========================================
+     DOUBLE OR NOTHING MODAL
+========================================== -->
+
+<div id="w8DoubleModal" class="w8-double-overlay" hidden>
+
+  <div class="w8-double-box">
+
+    <div class="w8-double-kicker">
+      EXCLUSIVE BONUS GAME
+    </div>
+
+    <h2>DOUBLE OR NOTHING</h2>
+
+    <p class="w8-double-description">
+      Double your profit or walk away with your reward.
+    </p>
+
+    <div class="w8-double-amount">
+      <small>YOUR PROFIT</small>
+      <strong id="w8DoubleProfit">0</strong>
+      <span>DIAMONDS</span>
+    </div>
+
+    <div class="w8-double-choice-label">
+      CHOOSE YOUR COLOR
+    </div>
+
+    <div class="w8-double-colors">
+
+      <button
+        type="button"
+        class="w8-double-color red"
+        onclick="w8SelectDouble('red')">
+        <span class="w8-double-disc"></span>
+        RED
+      </button>
+
+      <button
+        type="button"
+        class="w8-double-color black"
+        onclick="w8SelectDouble('black')">
+        <span class="w8-double-disc"></span>
+        BLACK
+      </button>
+
+    </div>
+
+    <div id="w8DoubleMessage" class="w8-double-message">
+      50% chance to double your profit.
+    </div>
+
+    <button
+      id="w8DoubleKeep"
+      type="button"
+      class="w8-double-keep"
+      onclick="w8SelectDouble('keep')">
+      KEEP MY REWARD
+    </button>
+
+  </div>
+
+</div>
+
 
 <div id="resultModal" class="result" onclick="closeResult()">
 
@@ -7609,6 +7842,124 @@ lastBetValue = currentBet
 
 }
 /* RESULT */
+
+
+/* ==========================================
+   WHEEL8 DOUBLE OR NOTHING - CLIENT
+========================================== */
+
+let w8DoubleOffer = null;
+let w8DoubleBusy = false;
+
+function w8SetDoubleBusy(busy) {
+  w8DoubleBusy = busy;
+
+  document
+    .querySelectorAll("#w8DoubleModal button")
+    .forEach(btn => {
+      btn.disabled = busy;
+    });
+}
+
+function w8ShowDoubleOffer(offer) {
+  if (!offer || Number(offer.profit) <= 0) return;
+
+  w8DoubleOffer = offer;
+
+  // Không che bảng kết quả vòng quay
+  const resultModal = document.getElementById("resultModal");
+
+  if (resultModal?.style.display === "flex") {
+    setTimeout(() => w8ShowDoubleOffer(offer), 600);
+    return;
+  }
+
+  document.getElementById("w8DoubleProfit").textContent =
+    Number(offer.profit).toLocaleString("en-US");
+
+  document.getElementById("w8DoubleMessage").textContent =
+    "50% chance to double your profit.";
+
+  w8SetDoubleBusy(false);
+
+  document.getElementById("w8DoubleModal").hidden = false;
+}
+
+function w8SelectDouble(action) {
+  if (!w8DoubleOffer || w8DoubleBusy) return;
+
+  w8SetDoubleBusy(true);
+
+  document.getElementById("w8DoubleMessage").textContent =
+    "Processing your selection...";
+
+  socket.timeout(10000).emit(
+    "wheel8-double-select",
+    { action },
+    (err, response) => {
+      if (err || !response?.ok) {
+        w8SetDoubleBusy(false);
+
+        document.getElementById("w8DoubleMessage").textContent =
+          response?.message || "Connection error. Please retry.";
+
+        return;
+      }
+
+      // Kết quả cuối cùng sẽ được nhận qua
+      // sự kiện wheel8-double-result từ server.
+    }
+  );
+}
+
+socket.on("wheel8-double-offer", offer => {
+  w8ShowDoubleOffer(offer);
+});
+
+socket.on("wheel8-double-result", result => {
+  if (!result?.ok) return;
+
+  // Nếu đang mở lời mời của vòng khác,
+  // không đóng nhầm lời mời mới.
+  if (
+    w8DoubleOffer &&
+    result.roundId !== w8DoubleOffer.roundId
+  ) {
+    return;
+  }
+
+  const message = document.getElementById("w8DoubleMessage");
+
+  if (result.action === "keep") {
+    message.textContent =
+      "Reward collected: +" +
+      Number(result.reward).toLocaleString("en-US");
+  } else if (result.win) {
+    message.textContent =
+      "YOU WIN! +" +
+      Number(result.reward).toLocaleString("en-US") +
+      " DIAMONDS";
+  } else {
+    message.textContent =
+      "YOU LOSE! Your profit has been forfeited.";
+  }
+
+  w8DoubleOffer = null;
+
+  // Hiển thị kết quả trước khi đóng
+  setTimeout(() => {
+    if (w8DoubleOffer) return;
+
+    document.getElementById("w8DoubleModal").hidden = true;
+    w8SetDoubleBusy(false);
+  }, 2500);
+});
+
+// Khôi phục lời mời khi tải lại trang
+socket.on("connect", () => {
+  socket.emit("wheel8-double-get");
+});
+
 
 socket.on("wheel8-result",(data)=>{
 

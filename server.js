@@ -1970,6 +1970,116 @@ function generateWheel8Prediction(){
 
 
 
+/* ==========================================
+   WHEEL8 - DOUBLE OR NOTHING ENGINE
+========================================== */
+
+const W8_DOUBLE_TIMEOUT = 60000;
+
+// Thanh toán một lời mời nhân đôi
+function settleWheel8Double(uid, action) {
+  const users = loadUsers();
+  const user = users[uid];
+
+  if (!user?.profile) {
+    return { ok: false, message: "Account not found" };
+  }
+
+  const offer = user.wheel8DoubleOffer;
+
+  if (!offer || offer.status !== "pending") {
+    return { ok: false, message: "No pending reward" };
+  }
+
+  if (!["keep", "red", "black"].includes(action)) {
+    return { ok: false, message: "Invalid selection" };
+  }
+
+  const profit = Math.floor(Number(offer.profit));
+
+  if (!Number.isSafeInteger(profit) || profit <= 0) {
+    return { ok: false, message: "Invalid reward" };
+  }
+
+  // Hết thời gian thì tự động giữ phần lãi
+  if (Date.now() >= offer.expiresAt) {
+    action = "keep";
+  }
+
+  let color = null;
+  let win = false;
+  let reward = profit;
+
+  if (action !== "keep") {
+    color = crypto.randomInt(2) === 0
+      ? "red"
+      : "black";
+
+    win = action === color;
+    reward = win ? profit * 2 : 0;
+  }
+
+  if (!Number.isSafeInteger(reward)) {
+    return { ok: false, message: "Reward exceeds limit" };
+  }
+
+  const balance = Number(user.profile.coins || 0);
+
+  if (!Number.isSafeInteger(balance) ||
+      !Number.isSafeInteger(balance + reward)) {
+    return { ok: false, message: "Invalid balance" };
+  }
+
+  user.profile.coins = balance + reward;
+
+  offer.status = "completed";
+  offer.action = action;
+  offer.color = color;
+  offer.win = win;
+  offer.reward = reward;
+  offer.completedAt = Date.now();
+
+  saveUsers(users);
+  emitCoinUpdate(uid);
+
+  const result = {
+    ok: true,
+    roundId: offer.roundId,
+    action,
+    color,
+    win,
+    profit,
+    reward
+  };
+
+  emitToUser(uid, "wheel8-double-result", result);
+
+  return result;
+}
+
+// Tự động trả phần lãi khi người chơi không lựa chọn
+setInterval(() => {
+  const users = loadUsers();
+  const expired = [];
+
+  for (const [uid, user] of Object.entries(users)) {
+    const offer = user?.wheel8DoubleOffer;
+
+    if (
+      offer?.status === "pending" &&
+      Date.now() >= offer.expiresAt
+    ) {
+      expired.push(uid);
+    }
+  }
+
+  for (const uid of expired) {
+    settleWheel8Double(uid, "keep");
+  }
+}, 15000);
+
+
+
 // ================================
 // 🎡 WHEEL8 AUTO ROUND
 // ================================
@@ -2043,7 +2153,7 @@ if(winSlots.includes(o.slot)){
 
   win = o.bet * slotMulti
 
-  me.profile.coins += win
+ 
 
 }
 
@@ -2107,12 +2217,93 @@ wheel8UserHistory[o.uid] = newHistory
 })
 
 
+
+
+// ==========================================
+// DOUBLE REWARD - SETTLE ROUND PAYOUT
+// ==========================================
+
+const wheel8Totals = new Map();
+const wheel8NewOffers = [];
+
+for (const betEntry of wheel8Round.bets) {
+  const uid = betEntry.uid;
+
+  if (!wheel8Totals.has(uid)) {
+    wheel8Totals.set(uid, {
+      totalBet: 0,
+      totalWin: 0
+    });
+  }
+
+  const item = wheel8Totals.get(uid);
+
+  item.totalBet += betEntry.bet;
+
+  if (winSlots.includes(betEntry.slot)) {
+    item.totalWin +=
+      betEntry.bet * WHEEL8_SLOTS[betEntry.slot - 1].m;
+  }
+}
+
+for (const [uid, totals] of wheel8Totals) {
+  const user = users[uid];
+  if (!user?.profile) continue;
+
+  const previous = user.wheel8DoubleOffer;
+
+  // Bảo vệ lời mời cũ chưa xử lý:
+  // tự động nhận phần lãi trước khi tạo lời mời mới.
+  if (previous?.status === "pending") {
+    user.profile.coins += previous.profit;
+    previous.status = "completed";
+    previous.action = "keep";
+    previous.reward = previous.profit;
+    previous.completedAt = Date.now();
+  }
+
+  const profit = totals.totalWin - totals.totalBet;
+
+  if (profit > 0) {
+    // Chỉ trả phần vốn trước, giữ lãi chờ quyết định
+    user.profile.coins += totals.totalBet;
+
+    user.wheel8DoubleOffer = {
+      roundId: wheel8Round.id,
+      profit,
+      totalBet: totals.totalBet,
+      totalWin: totals.totalWin,
+      expiresAt: Date.now() + W8_DOUBLE_TIMEOUT,
+      status: "pending"
+    };
+
+    wheel8NewOffers.push({
+      uid,
+      offer: user.wheel8DoubleOffer
+    });
+  } else {
+    // Không có lãi: thanh toán bình thường
+    user.profile.coins += totals.totalWin;
+  }
+}
+
+
 // 💾 LƯU LỊCH SỬ CHỈ TRONG NGÀY
 cleanWheel8UserHistory(true)
 
 
 // lưu user
 saveUsers(users)
+
+
+// Thông báo riêng cho từng người chơi có lãi
+for (const item of wheel8NewOffers) {
+  emitToUser(item.uid, "wheel8-double-offer", {
+    roundId: item.offer.roundId,
+    profit: item.offer.profit,
+    expiresAt: item.offer.expiresAt
+  });
+}
 
 // =======================
 // 💎 REALTIME COIN UPDATE
@@ -4461,6 +4652,60 @@ socket.on("toggle-top-name", ()=>{
 
 })
 
+
+
+
+/* ==========================================
+   WHEEL8 DOUBLE REWARD - SOCKET EVENTS
+========================================== */
+
+socket.on("wheel8-double-get", () => {
+  const uid = socket.data.uid;
+  if (!uid) return;
+
+  const users = loadUsers();
+  const offer = users[uid]?.wheel8DoubleOffer;
+
+  if (!offer || offer.status !== "pending") return;
+
+  if (Date.now() >= offer.expiresAt) {
+    settleWheel8Double(uid, "keep");
+    return;
+  }
+
+  socket.emit("wheel8-double-offer", {
+    roundId: offer.roundId,
+    profit: offer.profit,
+    expiresAt: offer.expiresAt
+  });
+});
+
+socket.on("wheel8-double-select", (data, callback) => {
+  const reply = typeof callback === "function"
+    ? callback
+    : () => {};
+
+  const uid = socket.data.uid;
+
+  if (!uid) {
+    return reply({
+      ok: false,
+      message: "Authentication required"
+    });
+  }
+
+  const action = data?.action;
+
+  if (!["keep", "red", "black"].includes(action)) {
+    return reply({
+      ok: false,
+      message: "Invalid selection"
+    });
+  }
+
+  const result = settleWheel8Double(uid, action);
+  reply(result);
+});
 
 
 socket.on("wheel8-get-history",()=>{
