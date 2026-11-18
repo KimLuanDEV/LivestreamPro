@@ -1857,13 +1857,19 @@ function createWheel8Round(){
   // 🔢 TĂNG ROUND
   wheel8RoundCounter++
 
-  const round = {
-    id: wheel8RoundCounter,
-    startAt: Date.now(),
-    endAt: Date.now() + 35000,
-    bets: [],
-    slotPool: [0,0,0,0,0,0,0,0]
-  }
+
+const round = {
+  id: wheel8RoundCounter,
+  startAt: Date.now(),
+  endAt: Date.now() + 35000,
+  bets: [],
+  slotPool: [0,0,0,0,0,0,0,0],
+
+  // Chọn ngẫu nhiên một slot chỉ để hiển thị lửa
+  hotSlot: crypto.randomInt(1, 9),
+
+  hotSlotEmitted: false
+};
 
 
 
@@ -2008,6 +2014,27 @@ setInterval(() => {
     w8LastTimerValue = remain;
     io.emit("wheel8-timer", remain);
   }
+
+
+// ==========================================
+// HOT SLOT - TRIGGER AT 25 SECONDS
+// ==========================================
+
+if (
+  remainingMs <= 25000 &&
+  remainingMs > 0 &&
+  !wheel8Round.hotSlotEmitted
+) {
+  wheel8Round.hotSlotEmitted = true;
+
+  io.emit("wheel8-hot-slot", {
+    roundId: wheel8Round.id,
+    slot: wheel8Round.hotSlot
+  });
+}
+
+
+
 
   // Khóa kết quả trước khi bắt đầu giảm tốc
   if (
@@ -4793,6 +4820,21 @@ socket.on("wheel8-get-my-history", () => {
 socket.emit("wheel8-round-new",{
 roundId: wheel8Round.id
 })
+
+
+// Người vào khi đồng hồ đã qua mốc 20s
+// vẫn nhìn thấy HOT SLOT hiện tại.
+
+if (
+  wheel8Round.hotSlotEmitted &&
+  wheel8Round.endAt > Date.now()
+) {
+  socket.emit("wheel8-hot-slot", {
+    roundId: wheel8Round.id,
+    slot: wheel8Round.hotSlot
+  });
+}
+
 
 
 socket.emit("wheel8-history",wheel8History)
