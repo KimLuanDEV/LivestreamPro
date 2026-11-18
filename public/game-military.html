@@ -1072,6 +1072,19 @@ z-index:3;
 
 
 
+/* ==========================================
+   WHEEL8 - HIDE HISTORY BEFORE REVEAL
+========================================== */
+
+#app.w8-result-concealed .wheel-history {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+
+
+
 .history-list{
 
 display:flex;
@@ -6364,7 +6377,7 @@ body.w8-theme-titanium
 /* MENU BELOW BUTTON */
 
 #w8SettingsMenu {
-    top: -98px;
+    top: -175px;
 }
 
 
@@ -8988,6 +9001,22 @@ w8ScratchCanvas.addEventListener(
   w8ScratchEnd
 );
 
+
+
+/* ==========================================
+   CONCEAL RESULT HISTORY
+========================================== */
+
+function w8SetHistoryConcealed(hidden) {
+  document.getElementById("app")
+    ?.classList.toggle(
+      "w8-result-concealed",
+      Boolean(hidden)
+    );
+}
+
+
+
 function w8ScratchReveal(force = false) {
 
   if (!w8ScratchActive && !force) return;
@@ -9001,8 +9030,13 @@ function w8ScratchReveal(force = false) {
   document.getElementById("w8ScratchLayer")
     .hidden = true;
 
-// Công bố lịch sử và bảng kết quả cùng lúc
+
+// Cập nhật lịch sử mới
 renderHistory();
+
+// Mở lại thanh lịch sử sau khi cào xong
+w8SetHistoryConcealed(false);
+
 
 document.getElementById("resultModal")
   .style.display = "flex";
@@ -9025,6 +9059,12 @@ document.getElementById("resultModal")
 
 
 socket.on("wheel8-result",(data)=>{
+
+  // Bảo đảm lịch sử bị che trước khi xử lý kết quả
+if (w8ScratchEnabled) {
+  w8SetHistoryConcealed(true);
+}
+
 
 // Ẩn HOT SLOT khi kết quả được công bố
 w8ClearHotSlot();
@@ -9217,6 +9257,15 @@ if (w8ScratchEnabled) {
 /* TIMER */
 
 socket.on("wheel8-timer",(t)=>{
+
+
+// Che lịch sử khi tới thời điểm công bố kết quả
+// Chỉ áp dụng cho người bật chế độ cào
+if (w8ScratchEnabled && Number(t) <= 0) {
+  w8SetHistoryConcealed(true);
+}
+
+
 
 document.getElementById("timer").textContent = t
 
@@ -10405,6 +10454,11 @@ function w8ToggleScratchMode() {
   }
 
   w8UpdateScratchSettings();
+
+  // Khi tắt chế độ cào, không để lịch sử bị ẩn
+if (!w8ScratchEnabled) {
+  w8SetHistoryConcealed(false);
+}
 
   // Nếu tắt lúc đang cào, mở kết quả ngay
   if (!w8ScratchEnabled && w8ScratchActive) {
