@@ -7109,6 +7109,161 @@ body:not(.w8-theme-titanium)
 
 
 
+
+
+/* ==========================================
+   WHEEL8 - SCRATCH REVEAL
+========================================== */
+
+#w8ScratchLayer[hidden] {
+  display: none !important;
+}
+
+#w8ScratchLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 90;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(2, 5, 3, .98);
+  border-radius: 50%;
+
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.w8-scratch-card {
+  position: relative;
+  width: 310px;
+  padding: 15px;
+  box-sizing: border-box;
+
+  border: 2px solid #a98c52;
+  border-radius: 13px;
+
+  background: linear-gradient(
+    155deg,
+    #2e402d,
+    #0b140e 75%
+  );
+
+  box-shadow:
+    0 12px 35px rgba(0,0,0,.75),
+    inset 0 1px 0 rgba(255,255,255,.15);
+
+  text-align: center;
+  color: #ffe6ab;
+}
+
+.w8-scratch-kicker {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #c5ad78;
+}
+
+.w8-scratch-title {
+  margin: 6px 0 12px;
+  font-size: 19px;
+  font-weight: 1000;
+  letter-spacing: 1px;
+}
+
+.w8-scratch-area {
+  position: relative;
+  width: 280px;
+  height: 154px;
+  margin: 0 auto;
+
+  overflow: hidden;
+  border: 1px solid #b99c5c;
+  border-radius: 9px;
+
+  background: #080e0b;
+}
+
+.w8-scratch-under {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 4px;
+
+  background: radial-gradient(
+    circle,
+    #31452d,
+    #080f0a 85%
+  );
+}
+
+.w8-scratch-under img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 12px #d5aa56);
+}
+
+.w8-scratch-under strong {
+  font-size: 13px;
+  color: #ffdf91;
+}
+
+#w8ScratchCanvas {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+
+  width: 280px;
+  height: 154px;
+
+  display: block;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.w8-scratch-guide {
+  margin-top: 12px;
+  color: #c5c7b8;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .5px;
+}
+
+.w8-scratch-loading {
+  opacity: .6;
+  pointer-events: none;
+}
+
+/* FRUIT THEME */
+
+body.w8-theme-titanium .w8-scratch-card {
+  background: linear-gradient(
+    150deg,
+    #fff6e8,
+    #eac8b3
+  );
+
+  border-color: #d8a476;
+  color: #a95762;
+
+  box-shadow: 0 12px 30px rgba(55,29,24,.4);
+}
+
+body.w8-theme-titanium .w8-scratch-kicker {
+  color: #aa8060;
+}
+
+body.w8-theme-titanium .w8-scratch-guide {
+  color: #896454;
+}
+
 </style>
 </head>
 
@@ -7120,6 +7275,61 @@ body:not(.w8-theme-titanium)
 <!-- WHEEL -->
 
 <div class="wheel">
+
+
+
+<!-- ======================================
+     WHEEL8 - SCRATCH RESULT
+====================================== -->
+
+<div id="w8ScratchLayer" hidden>
+
+  <div class="w8-scratch-card">
+
+    <div class="w8-scratch-kicker">
+      MYSTERY REVEAL
+    </div>
+
+    <div class="w8-scratch-title">
+      SCRATCH YOUR RESULT
+    </div>
+
+    <div class="w8-scratch-area">
+
+      <div class="w8-scratch-under">
+
+        <img
+          id="w8ScratchResultImg"
+          src=""
+          alt="Result"
+        >
+
+        <strong id="w8ScratchResultText">
+          WINNING SLOT
+        </strong>
+
+      </div>
+
+      <canvas
+        id="w8ScratchCanvas"
+        width="280"
+        height="154"
+        aria-label="Scratch to reveal the result">
+      </canvas>
+
+    </div>
+
+    <div
+      id="w8ScratchGuide"
+      class="w8-scratch-guide">
+      DRAG TO SCRATCH
+    </div>
+
+  </div>
+
+</div>
+
+
 
 <div class="wheel-stand"></div>
 
@@ -7686,6 +7896,31 @@ onclick="openMyBetHistory()"></div>
   </span>
 
   <span class="w8-settings-arrow">›</span>
+
+</button>
+
+
+
+<!-- OPTION 4: SCRATCH REVEAL -->
+<button
+  id="w8ScratchToggleBtn"
+  type="button"
+  class="w8-settings-option"
+  onclick="w8ToggleScratchMode()"
+  aria-pressed="false">
+
+  <span class="w8-settings-number">04</span>
+
+  <span class="w8-settings-info">
+    <strong>SCRATCH REVEAL</strong>
+    <small>Scratch to uncover the result</small>
+  </span>
+
+  <span
+    id="w8ScratchSettingsState"
+    class="w8-settings-state">
+    OFF
+  </span>
 
 </button>
 
@@ -8422,10 +8657,13 @@ function w8ShowDoubleOffer(offer) {
   // Không che bảng kết quả vòng quay
   const resultModal = document.getElementById("resultModal");
 
-  if (resultModal?.style.display === "flex") {
-    setTimeout(() => w8ShowDoubleOffer(offer), 600);
-    return;
-  }
+ if (
+  w8ScratchActive ||
+  resultModal?.style.display === "flex"
+) {
+  setTimeout(() => w8ShowDoubleOffer(offer), 600);
+  return;
+}
 
   document.getElementById("w8DoubleProfit").textContent =
     Number(offer.profit).toLocaleString("en-US");
@@ -8539,8 +8777,255 @@ socket.on("wheel8-final-stop", data => {
 
 
 
+
+/* ==========================================
+   WHEEL8 - SCRATCH RESULT ENGINE
+========================================== */
+
+let w8ScratchActive = false;
+let w8ScratchTimer = null;
+let w8ScratchResult = null;
+let w8ScratchDrawing = false;
+
+const w8ScratchCanvas =
+  document.getElementById("w8ScratchCanvas");
+
+const w8ScratchCtx =
+  w8ScratchCanvas.getContext("2d", {
+    willReadFrequently: true
+  });
+
+function w8ScratchPaint() {
+
+  const ctx = w8ScratchCtx;
+  const w = w8ScratchCanvas.width;
+  const h = w8ScratchCanvas.height;
+
+  ctx.globalCompositeOperation = "source-over";
+  ctx.clearRect(0, 0, w, h);
+
+  const gradient =
+    ctx.createLinearGradient(0, 0, w, h);
+
+  gradient.addColorStop(0, "#53574e");
+  gradient.addColorStop(.35, "#d3c49f");
+  gradient.addColorStop(.65, "#9b927b");
+  gradient.addColorStop(1, "#484c45");
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.fillStyle = "#39372f";
+  ctx.font = "900 17px system-ui";
+  ctx.textAlign = "center";
+
+  ctx.fillText("SCRATCH HERE", w / 2, 69);
+
+  ctx.font = "11px system-ui";
+  ctx.fillText("REVEAL THE MYSTERY", w / 2, 91);
+
+  ctx.globalCompositeOperation =
+    "destination-out";
+
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = 33;
+}
+
+function w8ScratchBegin(resultSlot, winSlots) {
+
+  clearTimeout(w8ScratchTimer);
+
+  const layer =
+    document.getElementById("w8ScratchLayer");
+
+  const img =
+    document.getElementById("w8ScratchResultImg");
+
+  const label =
+    document.getElementById("w8ScratchResultText");
+
+  const isEvent = winSlots.length > 1;
+
+  if (isEvent) {
+    img.src = winSlots.includes(1)
+      ? "/assets/police/event-x5-all.png"
+      : "/assets/police/event-x45-all.png";
+
+    label.textContent = "SPECIAL EVENT";
+
+  } else {
+    img.src =
+      "/assets/police/slot" + resultSlot + ".png";
+
+    label.textContent = "WINNING SLOT";
+  }
+
+  w8ScratchActive = true;
+  w8ScratchDrawing = false;
+
+  layer.hidden = false;
+
+  document.getElementById("w8ScratchGuide")
+    .textContent = "DRAG TO SCRATCH";
+
+  w8ScratchPaint();
+
+  // Không cào cũng tự mở,
+  // tránh chặn game quá lâu
+  w8ScratchTimer = setTimeout(
+    w8ScratchReveal,
+    8000
+  );
+}
+
+function w8ScratchPoint(e) {
+
+  const rect =
+    w8ScratchCanvas.getBoundingClientRect();
+
+  return {
+    x: (e.clientX - rect.left) *
+       w8ScratchCanvas.width / rect.width,
+
+    y: (e.clientY - rect.top) *
+       w8ScratchCanvas.height / rect.height
+  };
+}
+
+w8ScratchCanvas.addEventListener(
+  "pointerdown",
+  e => {
+
+    if (!w8ScratchActive) return;
+
+    e.preventDefault();
+
+    w8ScratchDrawing = true;
+
+    w8ScratchCanvas.setPointerCapture(e.pointerId);
+
+    const p = w8ScratchPoint(e);
+
+    w8ScratchCtx.beginPath();
+    w8ScratchCtx.moveTo(p.x, p.y);
+
+    // Xóa ngay phần dưới đầu ngón tay
+    w8ScratchCtx.lineTo(p.x + .1, p.y + .1);
+    w8ScratchCtx.stroke();
+  }
+);
+
+w8ScratchCanvas.addEventListener(
+  "pointermove",
+  e => {
+
+    if (!w8ScratchActive ||
+        !w8ScratchDrawing) return;
+
+    e.preventDefault();
+
+    const p = w8ScratchPoint(e);
+
+    w8ScratchCtx.lineTo(p.x, p.y);
+    w8ScratchCtx.stroke();
+  }
+);
+
+function w8ScratchCheckProgress() {
+
+  if (!w8ScratchActive) return;
+
+  const w = w8ScratchCanvas.width;
+  const h = w8ScratchCanvas.height;
+
+  const pixels =
+    w8ScratchCtx.getImageData(0, 0, w, h).data;
+
+  let transparent = 0;
+  let sampled = 0;
+
+  // Lấy mẫu thưa để giảm tải thiết bị
+  for (let i = 3; i < pixels.length; i += 32) {
+    sampled++;
+
+    if (pixels[i] < 50) {
+      transparent++;
+    }
+  }
+
+  const ratio = transparent / Math.max(1, sampled);
+
+  if (ratio >= .40) {
+    w8ScratchReveal();
+  }
+}
+
+function w8ScratchEnd(e) {
+
+  if (!w8ScratchDrawing) return;
+
+  w8ScratchDrawing = false;
+
+  if (
+    w8ScratchCanvas.hasPointerCapture(e.pointerId)
+  ) {
+    w8ScratchCanvas.releasePointerCapture(
+      e.pointerId
+    );
+  }
+
+  w8ScratchCheckProgress();
+}
+
+w8ScratchCanvas.addEventListener(
+  "pointerup",
+  w8ScratchEnd
+);
+
+w8ScratchCanvas.addEventListener(
+  "pointercancel",
+  w8ScratchEnd
+);
+
+function w8ScratchReveal(force = false) {
+
+  if (!w8ScratchActive && !force) return;
+
+  w8ScratchActive = false;
+  w8ScratchDrawing = false;
+
+  clearTimeout(w8ScratchTimer);
+  w8ScratchTimer = null;
+
+  document.getElementById("w8ScratchLayer")
+    .hidden = true;
+
+// Công bố lịch sử và bảng kết quả cùng lúc
+renderHistory();
+
+document.getElementById("resultModal")
+  .style.display = "flex";
+
+  // Tự đóng bảng kết quả sau 5 giây
+  setTimeout(() => {
+
+    closeResult();
+
+    slots.forEach(el => {
+      el.classList.remove("win");
+    });
+
+    resultShowing = false;
+
+  }, 5000);
+}
+
+
+
+
 socket.on("wheel8-result",(data)=>{
-  
+
 // Ẩn HOT SLOT khi kết quả được công bố
 w8ClearHotSlot();
 
@@ -8569,8 +9054,8 @@ event: data.event || null
 
 wheelHistory = wheelHistory.slice(0,8)
 
-renderHistory()
-
+// Chỉ cập nhật lịch sử lên màn hình sau khi cào.
+// renderHistory() được gọi trong w8ScratchReveal().
 
 
 
@@ -8600,19 +9085,8 @@ winSlots.forEach(s => {
   }
 });
 
-// Công bố kết quả
-document.getElementById("resultModal")
-  .style.display = "flex";
 
-setTimeout(() => {
-  closeResult();
 
-  slots.forEach(el => {
-    el.classList.remove("win");
-  });
-
-  resultShowing = false;
-}, 5000);
 
 // hình slot thắng
 // hình kết quả
@@ -8717,6 +9191,25 @@ if (i === 0) {
 }
 
   })
+
+}
+
+
+
+
+// ==========================================
+// RESULT DISPLAY MODE - ON / OFF
+// ==========================================
+
+if (w8ScratchEnabled) {
+
+  // ON: che vòng quay, cho phép cào
+  w8ScratchBegin(resultSlot, winSlots);
+
+} else {
+
+  // OFF: hiện kết quả bình thường, không cào
+  w8ScratchReveal(true);
 
 }
 
@@ -9854,6 +10347,73 @@ document.addEventListener("keydown", (event) => {
     w8CloseShareDirectory();
   }
 });
+
+
+
+
+/* ==========================================
+   WHEEL8 - SCRATCH MODE SETTINGS
+========================================== */
+
+const W8_SCRATCH_STORE = "w8_scratch_mode_v1";
+
+// Mặc định OFF
+let w8ScratchEnabled = false;
+
+try {
+  w8ScratchEnabled =
+    localStorage.getItem(W8_SCRATCH_STORE) === "on";
+} catch (e) {
+  w8ScratchEnabled = false;
+}
+
+function w8UpdateScratchSettings() {
+  const button = document.getElementById(
+    "w8ScratchToggleBtn"
+  );
+
+  const state = document.getElementById(
+    "w8ScratchSettingsState"
+  );
+
+  if (!button || !state) return;
+
+  state.textContent =
+    w8ScratchEnabled ? "ON" : "OFF";
+
+  state.classList.toggle(
+    "is-on",
+    w8ScratchEnabled
+  );
+
+  button.setAttribute(
+    "aria-pressed",
+    String(w8ScratchEnabled)
+  );
+}
+
+function w8ToggleScratchMode() {
+  w8ScratchEnabled = !w8ScratchEnabled;
+
+  try {
+    localStorage.setItem(
+      W8_SCRATCH_STORE,
+      w8ScratchEnabled ? "on" : "off"
+    );
+  } catch (e) {
+    // Không có storage vẫn dùng được trong phiên hiện tại
+  }
+
+  w8UpdateScratchSettings();
+
+  // Nếu tắt lúc đang cào, mở kết quả ngay
+  if (!w8ScratchEnabled && w8ScratchActive) {
+    w8ScratchReveal();
+  }
+}
+
+// Đồng bộ trạng thái khi tải trang
+w8UpdateScratchSettings();
 
 
 
