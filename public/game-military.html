@@ -6860,6 +6860,186 @@ body.w8-theme-titanium
 
 
 
+
+/* ==========================================
+   DOUBLE OR NOTHING - DYNAMIC THEME
+   MILITARY / FRUIT
+========================================== */
+
+/* MILITARY - DEFAULT */
+
+#w8DoubleModal {
+  --double-bg-top: #263829;
+  --double-bg-bottom: #09110c;
+  --double-border: #ad965a;
+  --double-title: #f3d59a;
+  --double-subtitle: #b5c8ab;
+  --double-profit: #a9f47a;
+  --double-label: #c9c4ae;
+  --double-line: #ddc17b;
+  --double-amount-bg: rgba(0,0,0,.3);
+  --double-keep-bg: #303b29;
+  --double-keep-text: #f3d9a5;
+  --double-message: #c0cbb8;
+}
+
+/* FRUIT - TITANIUM THEME */
+
+body.w8-theme-titanium #w8DoubleModal {
+  --double-bg-top: #fff9eb;
+  --double-bg-bottom: #f5d9c6;
+  --double-border: #d7a56c;
+  --double-title: #a65365;
+  --double-subtitle: #b37a60;
+  --double-profit: #a66b29;
+  --double-label: #8c6b61;
+  --double-line: #e6ba83;
+  --double-amount-bg: rgba(255,255,255,.55);
+  --double-keep-bg: #fff5df;
+  --double-keep-text: #9c663e;
+  --double-message: #906d6a;
+}
+
+/* SHARED MODAL DESIGN */
+
+#w8DoubleModal.w8-double-overlay {
+  background: rgba(0,0,0,.25);
+  backdrop-filter: none;
+}
+
+#w8DoubleModal .w8-double-box {
+  width: 294px;
+  max-width: calc(100% - 24px);
+  border: 1px solid var(--double-border);
+
+  background: linear-gradient(
+    155deg,
+    var(--double-bg-top),
+    var(--double-bg-bottom)
+  );
+
+  box-shadow:
+    0 14px 38px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.15);
+}
+
+#w8DoubleModal .w8-double-box::before {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--double-line),
+    transparent
+  );
+}
+
+#w8DoubleModal .w8-double-kicker {
+  color: var(--double-subtitle);
+}
+
+#w8DoubleModal .w8-double-box h2 {
+  color: var(--double-title);
+}
+
+#w8DoubleModal .w8-double-amount {
+  background: var(--double-amount-bg);
+  border-color: var(--double-border);
+}
+
+#w8DoubleModal .w8-double-amount small,
+#w8DoubleModal .w8-double-amount span {
+  color: var(--double-label);
+}
+
+#w8DoubleModal .w8-double-amount strong {
+  color: var(--double-profit);
+}
+
+#w8DoubleModal .w8-double-choice-label {
+  color: var(--double-label);
+}
+
+#w8DoubleModal .w8-double-message {
+  color: var(--double-message);
+}
+
+#w8DoubleModal .w8-double-keep {
+  background: var(--double-keep-bg);
+  color: var(--double-keep-text);
+  border-color: var(--double-border);
+}
+
+/* ==========================================
+   FRUIT - SPECIAL DETAILS
+========================================== */
+
+body.w8-theme-titanium
+#w8DoubleModal .w8-double-box {
+  border-radius: 19px;
+
+  box-shadow:
+    0 13px 35px rgba(102,54,40,.23),
+    inset 0 1px 0 #fff;
+}
+
+body.w8-theme-titanium
+#w8DoubleModal .w8-double-box h2 {
+  text-shadow: none;
+  letter-spacing: .4px;
+}
+
+body.w8-theme-titanium
+#w8DoubleModal .w8-double-amount {
+  border-radius: 11px;
+}
+
+body.w8-theme-titanium
+#w8DoubleModal .w8-double-color {
+  border-radius: 12px;
+  box-shadow: inset 0 1px 0 #ffffff80;
+}
+
+body.w8-theme-titanium
+#w8DoubleModal .w8-double-color.red {
+  background: linear-gradient(
+    145deg,
+    #ffb8b0,
+    #f47a88
+  );
+  border-color: #e57e83;
+  color: #702b3b;
+}
+
+body.w8-theme-titanium
+#w8DoubleModal .w8-double-color.black {
+  background: linear-gradient(
+    145deg,
+    #e5d5d3,
+    #b9b0b8
+  );
+  border-color: #a79ca5;
+  color: #393039;
+}
+
+body.w8-theme-titanium
+#w8DoubleModal .w8-double-keep {
+  border-radius: 11px;
+  box-shadow: inset 0 1px 0 #fff;
+}
+
+/* MILITARY KEEPS ITS SHARP METAL DESIGN */
+
+body:not(.w8-theme-titanium)
+#w8DoubleModal .w8-double-box {
+  border-radius: 10px;
+}
+
+body:not(.w8-theme-titanium)
+#w8DoubleModal .w8-double-color {
+  border-radius: 6px;
+}
+
+
+
 </style>
 </head>
 
