@@ -668,77 +668,141 @@ async function quickWithdraw(uid){
 
 
 
-function renderWithdrawCards(list){
+function adminWithdrawEscape(value) {
+  return String(value ?? "").replace(
+    /[&<>"']/g,
+    c => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[c]
+  );
+}
+
+function adminWithdrawNote(w) {
+  const saved = String(w.note || "").trim();
+  if (saved) return saved;
+
+  const defaults = {
+    pending: "Your withdrawal request is awaiting review.",
+    processing: "Your withdrawal is being processed.",
+    approved: "Your withdrawal has been approved.",
+    rejected: "Your withdrawal request was rejected."
+  };
+
+  return defaults[w.status] || "-";
+}
+
+function adminWithdrawActions(w) {
+  const status = w.status || "pending";
+  const id = JSON.stringify(String(w.id));
+
+  if (["approved", "rejected"].includes(status)) {
+    return `<span class="muted">Đã kết thúc</span>`;
+  }
+
+  return `
+    <button class="withdraw-note-action"
+      onclick='withdrawAction(${id}, "note")'>
+      Ghi chú
+    </button>
+
+    ${
+      status === "pending"
+      ? `
+        <button class="withdraw-note-action"
+          onclick='withdrawAction(${id}, "processing")'>
+          Processing
+        </button>
+      `
+      : ""
+    }
+
+    <button class="lux-action-success"
+      onclick='withdrawAction(${id}, "approve")'>
+      Phê duyệt
+    </button>
+
+    <button class="lux-action-danger"
+      onclick='withdrawAction(${id}, "reject")'>
+      Từ chối
+    </button>
+  `;
+}
+
+
+
+function renderWithdrawCards(list) {
   const wrap = document.getElementById("withdrawCardList");
   if (!wrap) return;
 
   wrap.innerHTML = "";
 
-  if (!Array.isArray(list) || list.length === 0) {
-    wrap.innerHTML = `<div class="muted">Chưa có yêu cầu rút tiền.</div>`;
+  if (!Array.isArray(list) || !list.length) {
+    wrap.innerHTML =
+      `<div class="muted">Chưa có yêu cầu rút tiền.</div>`;
     return;
   }
 
-  list.forEach(w=>{
+  list.forEach(w => {
     const card = document.createElement("div");
     card.className = "withdraw-card";
 
-    const status = (w.status || "pending").toLowerCase();
-    const chipClass = status === "approved" ? "w-approved" : status === "rejected" ? "w-rejected" : "w-pending";
-    const time = w.createdAt ? new Date(w.createdAt).toLocaleString("vi-VN") : "-";
-    const bank = w.bank || "-";
-    const amountText = (Number(w.amount) || 0).toLocaleString();
+    const status = w.status || "pending";
+    const time = w.createdAt
+      ? new Date(w.createdAt).toLocaleString("vi-VN")
+      : "-";
+
+    const chipClass = {
+      pending: "w-pending",
+      processing: "w-processing",
+      approved: "w-approved",
+      rejected: "w-rejected"
+    }[status] || "w-pending";
 
     card.innerHTML = `
       <div class="withdraw-card-head">
-        <img src="${w.avatar || "/avatar-default.png"}" onerror="this.src='/avatar-default.png'">
+        <img src="/avatar-default.png" alt="">
         <div style="flex:1">
-          <b>${w.name || "Unknown"}</b><br>
-          <small>${w.uid || ""}</small>
+          <b>${adminWithdrawEscape(w.name || "Unknown")}</b>
+          <div>
+            <small>${adminWithdrawEscape(w.uid)}</small>
+          </div>
         </div>
 
-        <span class="w-chip ${chipClass}">${status}</span>
+        <span class="w-chip ${chipClass}">
+          ${adminWithdrawEscape(status)}
+        </span>
       </div>
 
+      <div class="withdraw-card-meta lux-withdraw-meta">
+        <div class="lux-meta-row">
+          <span>Số kim cương</span>
+          <strong>${Number(w.amount || 0).toLocaleString()}</strong>
+        </div>
 
-<div class="withdraw-card-meta lux-withdraw-meta">
+        <div class="lux-meta-row">
+          <span>Ngân hàng</span>
+          <strong>${adminWithdrawEscape(w.bank || "-")}</strong>
+        </div>
 
-  <div class="lux-meta-row">
-    <span>Số tiền</span>
-    <strong>${amountText}</strong>
-  </div>
+        <div class="lux-meta-row">
+          <span>Thời gian</span>
+          <strong>${time}</strong>
+        </div>
 
-  <div class="lux-meta-row">
-    <span>Ngân hàng</span>
-    <strong>${bank}</strong>
-  </div>
-
-  <div class="lux-meta-row">
-    <span>Thời gian</span>
-    <strong>${time}</strong>
-  </div>
-
-</div>
-
+        <div class="lux-meta-row">
+          <span>Ghi chú</span>
+          <strong class="withdraw-admin-note">
+            ${adminWithdrawEscape(adminWithdrawNote(w))}
+          </strong>
+        </div>
+      </div>
 
       <div class="withdraw-card-actions">
-        ${
-          status === "pending"
-            ? `
-
-<button class="lux-action-success"
-        onclick="withdrawAction('${w.id}','approve')">
-  Phê duyệt
-</button>
-
-<button class="lux-action-danger"
-        onclick="withdrawAction('${w.id}','reject')">
-  Từ chối
-</button>
-
-            `
-            : `<span class="muted">Đã xử lý</span>`
-        }
+        ${adminWithdrawActions(w)}
       </div>
     `;
 
@@ -747,174 +811,229 @@ function renderWithdrawCards(list){
 }
 
 
+
 async function loadWithdraws() {
-  
+  try {
+    const res = await fetch(
+      "/api/admin/withdraw-requests",
+      { credentials: "same-origin" }
+    );
 
-  const res = await fetch("/api/admin/withdraw-requests", {
-    headers: { "x-uid": admin.uid }
-  });
+    const data = await res.json();
 
-  const data = await res.json();
-  if (!data.ok) return;
-
-  const tbody = document.querySelector("#withdrawTable tbody");
-  tbody.innerHTML = "";
-
-  data.list.forEach(w => {
-    const tr = document.createElement("tr");
-
-
-tr.innerHTML = `
-  <td>
-    <div class="withdraw-user">
-      <img src="${w.avatar || '/avatar-default.png'}"
-           onerror="this.src='/avatar-default.png'">
-      <div>
-        <b>${w.name}</b><br>
-        <small>${w.uid}</small>
-      </div>
-    </div>
-  </td>
-
-  <td><b>${w.amount.toLocaleString()}</b></td>
-  <td>${w.bank || "-"}</td>
-  <td>${new Date(w.createdAt).toLocaleString("vi-VN")}</td>
-
-  <td>
-    <span class="st-${w.status}">
-      ${w.status}
-    </span>
-  </td>
-
-  <td class="withdraw-actions">
-    ${
-      w.status === "pending"
-        ? `
-        <button onclick="withdrawAction('${w.id}','approve')">✅</button>
-        <button onclick="withdrawAction('${w.id}','reject')">❌</button>
-        `
-        : "-"
+    if (!res.ok || !data.ok) {
+      console.error(
+        "Unable to load withdrawals:",
+        data.error
+      );
+      return;
     }
-  </td>
-`;
 
-    tbody.appendChild(tr);
-  });
+    WITHDRAWS = Array.isArray(data.list)
+      ? data.list
+      : [];
 
+    withdrawPage = 1;
+    renderWithdrawPage();
 
-WITHDRAWS = data.list || [];
-withdrawPage = 1;
-renderWithdrawPage();
-
-
-
+  } catch (err) {
+    console.error("Load withdrawals failed:", err);
+  }
 }
 
 
 
-function renderWithdrawPage(){
-  const totalPages = Math.max(1, Math.ceil(WITHDRAWS.length / WITHDRAW_PAGE_SIZE));
-  if (withdrawPage < 1) withdrawPage = 1;
-  if (withdrawPage > totalPages) withdrawPage = totalPages;
+
+function renderWithdrawPage() {
+  const totalPages = Math.max(
+    1,
+    Math.ceil(WITHDRAWS.length / WITHDRAW_PAGE_SIZE)
+  );
+
+  withdrawPage = Math.max(
+    1,
+    Math.min(withdrawPage, totalPages)
+  );
 
   const start = (withdrawPage - 1) * WITHDRAW_PAGE_SIZE;
-  const slice = WITHDRAWS.slice(start, start + WITHDRAW_PAGE_SIZE);
+  const slice = WITHDRAWS.slice(
+    start,
+    start + WITHDRAW_PAGE_SIZE
+  );
 
-  // 🖥 render TABLE
-  const tbody = document.querySelector("#withdrawTable tbody");
+  const tbody = document.querySelector(
+    "#withdrawTable tbody"
+  );
+
   if (tbody) {
     tbody.innerHTML = "";
-    slice.forEach(w=>{
+
+    slice.forEach(w => {
       const tr = document.createElement("tr");
+      const status = w.status || "pending";
+
+      const date = w.createdAt
+        ? new Date(w.createdAt).toLocaleString("vi-VN")
+        : "-";
 
       tr.innerHTML = `
         <td>
           <div class="withdraw-user">
-            <img src="${w.avatar || '/avatar-default.png'}"
-                 onerror="this.src='/avatar-default.png'">
+            <img src="/avatar-default.png" alt="">
             <div>
-              <b>${w.name}</b><br>
-              <small>${w.uid}</small>
+              <b>${adminWithdrawEscape(w.name || "Unknown")}</b>
+              <br>
+              <small>${adminWithdrawEscape(w.uid)}</small>
             </div>
           </div>
         </td>
 
-        <td><b>${Number(w.amount).toLocaleString()}</b></td>
-        <td>${w.bank || "-"}</td>
-        <td>${new Date(w.createdAt).toLocaleString("vi-VN")}</td>
+        <td>
+          <b>${Number(w.amount || 0).toLocaleString()}</b>
+        </td>
+
+        <td>${adminWithdrawEscape(w.bank || "-")}</td>
+
+        <td>${date}</td>
 
         <td>
-          <span class="st-${w.status}">
-            ${w.status}
+          <span class="st-${adminWithdrawEscape(status)}">
+            ${adminWithdrawEscape(status)}
           </span>
         </td>
 
+        <td class="withdraw-admin-note">
+          ${adminWithdrawEscape(adminWithdrawNote(w))}
+        </td>
+
         <td class="withdraw-actions">
-          ${
-            w.status === "pending"
-              ? `
-              <button onclick="withdrawAction('${w.id}','approve')">✅</button>
-              <button onclick="withdrawAction('${w.id}','reject')">❌</button>
-              `
-              : "-"
-          }
+          ${adminWithdrawActions(w)}
         </td>
       `;
+
       tbody.appendChild(tr);
     });
   }
 
-  // 📱 render CARD LIST
+  // Mobile
   renderWithdrawCards(slice);
 
-  // 🔢 update pager
-  const info = document.getElementById("withdrawPageInfo");
+  // Pagination
+  const info = document.getElementById(
+    "withdrawPageInfo"
+  );
+
   if (info) {
-    info.textContent = `Trang ${withdrawPage} / ${totalPages}`;
+    info.textContent =
+      `Trang ${withdrawPage} / ${totalPages}`;
   }
 
-  const btnPrev = document.getElementById("withdrawPrev");
-  const btnNext = document.getElementById("withdrawNext");
+  const prev = document.getElementById("withdrawPrev");
+  const next = document.getElementById("withdrawNext");
 
-  if (btnPrev) btnPrev.disabled = withdrawPage <= 1;
-  if (btnNext) btnNext.disabled = withdrawPage >= totalPages;
+  if (prev) prev.disabled = withdrawPage <= 1;
+  if (next) next.disabled = withdrawPage >= totalPages;
 }
 
 
 
 async function withdrawAction(id, action) {
+  const item = WITHDRAWS.find(
+    w => String(w.id) === String(id)
+  );
+
+  if (!item) return;
+
+  const titles = {
+    processing: "Chuyển sang đang xử lý",
+    note: "Cập nhật ghi chú giao dịch",
+    approve: "Phê duyệt yêu cầu rút tiền",
+    reject: "Từ chối yêu cầu rút tiền"
+  };
+
+  const descriptions = {
+    processing:
+      "Nhập thông báo tiến độ gửi tới người dùng:",
+    note:
+      "Nhập ghi chú mới gửi tới người dùng:",
+    approve:
+      "Nhập ghi chú phê duyệt (tùy chọn):",
+    reject:
+      "Nhập lý do từ chối:"
+  };
+
   const note = await showModal({
-    title: action === "approve" ? "Phê duyệt rút tiền" : "Từ chối rút tiền",
-    body: "Nhập ghi chú (tuỳ chọn):",
+    title: titles[action] || "Cập nhật giao dịch",
+    body: descriptions[action] || "Nhập ghi chú:",
     input: true,
     confirm: true
   });
+
   if (note === false) return;
 
-  const res = await fetch("/api/admin/withdraw-action", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-uid": admin.uid
-    },
-    body: JSON.stringify({
-      adminUid: admin.uid,
-      withdrawId: id, 
-      action,
-      note
-    })
-  });
+  if (action === "reject" && !String(note).trim()) {
+    await showModal({
+      title: "Thiếu lý do",
+      body: "Vui lòng nhập lý do từ chối giao dịch."
+    });
+    return;
+  }
 
-  const data = await res.json();
+  if (action === "note" && !String(note).trim()) {
+    await showModal({
+      title: "Thiếu ghi chú",
+      body: "Vui lòng nhập nội dung thông báo."
+    });
+    return;
+  }
 
-  await showModal({
-    title: data.ok ? "Thành công" : "Thất bại",
-    body: data.ok
-      ? "Đã xử lý yêu cầu rút tiền"
-      : ("Lỗi: " + (data.error || "unknown"))
-  });
+  if (["approve", "reject"].includes(action)) {
+    const confirmed = await showModal({
+      title: "Xác nhận thao tác",
+      body: action === "approve"
+        ? "Bạn chắc chắn muốn phê duyệt giao dịch này?"
+        : "Bạn chắc chắn muốn từ chối và hoàn kim cương?",
+      confirm: true
+    });
 
-  if (data.ok) loadWithdraws();
+    if (!confirmed) return;
+  }
+
+  try {
+    const res = await fetch("/api/admin/withdraw-action", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: "same-origin",
+      body: JSON.stringify({
+        withdrawId: id,
+        action,
+        note: String(note)
+      })
+    });
+
+    const data = await res.json();
+
+    await showModal({
+      title: data.ok ? "Thành công" : "Thất bại",
+      body: data.ok
+        ? "Đã cập nhật giao dịch và thông báo."
+        : "Lỗi: " + (data.error || "unknown")
+    });
+
+    if (data.ok) {
+      await loadWithdraws();
+    }
+
+  } catch (err) {
+    console.error("Withdraw action error:", err);
+
+    await showModal({
+      title: "Lỗi kết nối",
+      body: "Không thể kết nối tới máy chủ."
+    });
+  }
 }
 
 

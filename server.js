@@ -10464,80 +10464,176 @@ app.get("/api/admin/withdraw-requests", (req, res) => {
   res.json({ ok: true, list });
 });
 
-app.post("/api/admin/withdraw-action", (req, res) => {
-  const { adminUid, withdrawId, id, action, note } = req.body || {};
-  const wid = withdrawId || id;
 
-  // 🔍 validate
-  if (!adminUid || !wid || !action) {
-    return res.status(400).json({ error: "missing" });
+/* ==========================================
+   ADMIN WITHDRAWAL STATUS + NOTES
+   Pending / Processing / Approved / Rejected
+========================================== */
+
+app.post("/api/admin/withdraw-action", (req, res) => {
+  const adminUid = req.lspAdminActorUid;
+
+  const { withdrawId, id, action, note } = req.body || {};
+  const wid = String(withdrawId || id || "");
+
+  const allowedActions = [
+    "processing",
+    "note",
+    "approve",
+    "reject"
+  ];
+
+  if (!wid || !allowedActions.includes(action)) {
+    return res.status(400).json({
+      ok: false,
+      error: "invalid_request"
+    });
   }
 
-  if (!["approve", "reject"].includes(action)) {
-    return res.status(400).json({ error: "invalid_action" });
+  // Xác thực Admin từ session phía server
+  if (!adminUid) {
+    return res.status(403).json({
+      ok: false,
+      error: "not_admin"
+    });
+  }
+
+  if (typeof note !== "string" || note.length > 1000) {
+    return res.status(400).json({
+      ok: false,
+      error: "invalid_note"
+    });
   }
 
   const db = loadUsers();
-  const admin = db[adminUid];
-  if (!admin || admin.role !== "admin") {
-    return res.status(403).json({ error: "not_admin" });
-  }
-
   const list = loadWithdraws();
-  const reqItem = list.find(x => x.id === wid);
+
+  const reqItem = list.find(
+    x => String(x.id) === wid
+  );
+
   if (!reqItem) {
-    return res.status(404).json({ error: "not_found" });
+    return res.status(404).json({
+      ok: false,
+      error: "withdraw_not_found"
+    });
   }
 
-  if (reqItem.status !== "pending") {
-    return res.status(400).json({ error: "already_processed" });
+  const status = reqItem.status || "pending";
+
+  // Không cho thay đổi giao dịch đã kết thúc
+  if (["approved", "rejected"].includes(status)) {
+    return res.status(400).json({
+      ok: false,
+      error: "already_processed"
+    });
   }
 
   const user = db[reqItem.uid];
+
   if (!user?.profile) {
-    return res.status(404).json({ error: "user_not_found" });
+    return res.status(404).json({
+      ok: false,
+      error: "user_not_found"
+    });
   }
 
-  const amount = Number(reqItem.amount) || 0;
+  const amount = Number(reqItem.amount);
 
-  // =========================
-  // ❌ REJECT → HOÀN LẠI
-  // =========================
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return res.status(400).json({
+      ok: false,
+      error: "invalid_withdraw_amount"
+    });
+  }
+
+  const customNote = note.trim();
+
+  const defaultNotes = {
+    pending: "Your withdrawal request is awaiting review.",
+    processing: "Your withdrawal is being processed.",
+    approved: "Your withdrawal has been approved.",
+    rejected: "Your withdrawal request was rejected."
+  };
+
+  const now = Date.now();
+
+  // Chỉ cập nhật ghi chú, không thay đổi trạng thái
+  if (action === "note") {
+    reqItem.note = customNote || defaultNotes[status];
+    reqItem.noteUpdatedAt = now;
+    reqItem.noteUpdatedBy = adminUid;
+
+    saveWithdraws(list);
+    emitWithdrawUpdate();
+
+    return res.json({
+      ok: true,
+      status: reqItem.status,
+      note: reqItem.note
+    });
+  }
+
+  // Chuyển sang đang xử lý
+  if (action === "processing") {
+    reqItem.status = "processing";
+    reqItem.note = customNote || defaultNotes.processing;
+    reqItem.processingAt ||= now;
+    reqItem.noteUpdatedAt = now;
+    reqItem.noteUpdatedBy = adminUid;
+
+    saveWithdraws(list);
+    emitWithdrawUpdate();
+
+    return res.json({
+      ok: true,
+      status: "processing",
+      note: reqItem.note
+    });
+  }
+
+  // Từ chối: hoàn lại số kim cương đã giữ
   if (action === "reject") {
     reqItem.status = "rejected";
-    reqItem.note = note || "";
+    reqItem.note = customNote || defaultNotes.rejected;
     reqItem.handledBy = adminUid;
-    reqItem.handledAt = Date.now();
+    reqItem.handledAt = now;
 
-    // hoàn lại đúng những gì đã hold
     user.profile.coinReceived =
-      (user.profile.coinReceived || 0) + amount;
+      Number(user.profile.coinReceived || 0) + amount;
 
+    // Lưu dữ liệu người dùng và giao dịch
     saveUsers(db);
     saveWithdraws(list);
 
     emitCoinUpdate(reqItem.uid);
-    io.emit("withdraw-update", { id: wid, action });
+    emitWithdrawUpdate();
 
-    return res.json({ ok: true });
+    return res.json({
+      ok: true,
+      status: "rejected",
+      note: reqItem.note
+    });
   }
 
-  // =========================
-  // ✅ APPROVE → CHỈ ĐỔI STATUS
-  // =========================
-  reqItem.status = "approved";
-  reqItem.note = note || "";
-  reqItem.handledBy = adminUid;
-  reqItem.handledAt = Date.now();
+  // Phê duyệt: không trừ kim cương thêm lần nữa
+  if (action === "approve") {
+    reqItem.status = "approved";
+    reqItem.note = customNote || defaultNotes.approved;
+    reqItem.handledBy = adminUid;
+    reqItem.handledAt = now;
 
-  saveUsers(db);
-  saveWithdraws(list);
+    saveWithdraws(list);
+    emitWithdrawUpdate();
 
-  emitCoinUpdate(reqItem.uid);
-  io.emit("withdraw-update", { id: wid, action });
-
-  return res.json({ ok: true });
+    return res.json({
+      ok: true,
+      status: "approved",
+      note: reqItem.note
+    });
+  }
 });
+
 
 
 app.post("/api/profile/bank-default", (req, res) => {

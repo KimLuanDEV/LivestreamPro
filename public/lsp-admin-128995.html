@@ -2418,6 +2418,38 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
 
 
 
+
+/* ADMIN WITHDRAW NOTES */
+.admin-section[data-section="withdraws"] .st-processing,
+.admin-section[data-section="withdraws"] .w-processing {
+  color: #79baff;
+  font-weight: 700;
+}
+
+.withdraw-admin-note {
+  min-width: 180px;
+  max-width: 280px;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  color: #c8d0df;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.withdraw-note-action {
+  color: #e8cc91;
+  border: 1px solid rgba(232,204,145,.3);
+  background: #151c28;
+  border-radius: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+
+
+
+
+
   </style>
 
 
@@ -2746,16 +2778,19 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
 
     <div class="table-wrap">
       <table class="admin-table compact" id="withdrawTable">
-        <thead>
-          <tr>
-            <th>Người dùng</th>
-            <th>Số tiền</th>
-            <th>Ngân hàng</th>
-            <th>Thời gian</th>
-            <th>Trạng thái</th>
-            <th></th>
-          </tr>
-        </thead>
+
+<thead>
+  <tr>
+    <th>Người dùng</th>
+    <th>Số tiền</th>
+    <th>Ngân hàng</th>
+    <th>Thời gian</th>
+    <th>Trạng thái</th>
+    <th>Ghi chú xử lý</th>
+    <th>Thao tác</th>
+  </tr>
+</thead>
+
         <tbody></tbody>
       </table>
     </div>

@@ -380,6 +380,39 @@ async function loadWithdrawHistory(page = 1) {
   renderWithdrawPage();
 }
 
+
+
+function getWithdrawNote(w) {
+  const note = String(w.note || "").trim();
+
+  if (note) return note;
+
+  const notes = {
+    pending: "Your withdrawal request is awaiting review.",
+    processing: "Your withdrawal is being processed.",
+    approved: "Your withdrawal has been approved.",
+    rejected: "Your withdrawal request was rejected."
+  };
+
+  return notes[w.status] || "Status unavailable.";
+}
+
+function wdEscapeHTML(value) {
+  return String(value ?? "").replace(
+    /[&<>"']/g,
+    char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[char]
+  );
+}
+
+
+
+
 function renderWithdrawPage(){
   const body = document.getElementById("withdrawHistoryBody");
   const empty = document.getElementById("withdrawEmpty");
@@ -397,7 +430,9 @@ function renderWithdrawPage(){
   empty.style.display = "none";
 
   // kiểm tra pending
-  const hasPending = withdrawCache.some(w => w.status === "pending");
+  const hasPending = withdrawCache.some(
+  w => ["pending", "processing"].includes(w.status)
+);
   toggleWithdrawForm(!hasPending);
 
   const totalPages = Math.ceil(withdrawCache.length / WITHDRAW_PAGE_SIZE);
@@ -419,7 +454,10 @@ function renderWithdrawPage(){
       <td class="st-${w.status}">
         ${statusText(w.status)}
       </td>
-      <td>${w.note || "-"}</td>
+
+      <td class="wd-transaction-note">
+  ${wdEscapeHTML(getWithdrawNote(w))}
+</td>
     `;
     body.appendChild(tr);
   });
@@ -519,6 +557,19 @@ function statusText(s) {
     `;
 
   }
+
+
+
+// PROCESSING
+if (s === "processing") {
+  return `
+    <span class="wd-status">
+      ${wdIcon("clock")}
+      Processing
+    </span>
+  `;
+}
+
 
   // APPROVED
   if (s === "approved") {
