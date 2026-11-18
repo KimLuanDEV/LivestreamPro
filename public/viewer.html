@@ -29,6 +29,461 @@
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 
   <link rel="stylesheet" href="/style.css" />
+
+
+
+<style>
+/* ==========================================
+   LIVESTREAM PRO - PREMIUM VIEWER V2
+   LUXURY BLACK & CHAMPAGNE GOLD
+========================================== */
+
+body.viewer-fullscreen {
+  --view-gold: #dfbd84;
+  --view-light: #f6e6c9;
+  --view-line: rgba(223,189,132,.3);
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background: #08090d !important;
+  color: var(--view-light);
+  font-family: Inter, system-ui, sans-serif;
+}
+
+body.viewer-fullscreen *,
+body.viewer-fullscreen *::before,
+body.viewer-fullscreen *::after {
+  box-sizing: border-box;
+}
+
+/* MAIN VIEW */
+
+body.viewer-fullscreen > .container {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  background: #08090d;
+}
+
+body.viewer-fullscreen > .container > .card {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* HIDE OLD PAGE HEADER */
+
+body.viewer-fullscreen .page-header,
+body.viewer-fullscreen .container > .card > hr {
+  display: none !important;
+}
+
+/* FULL SCREEN STAGE */
+
+body.viewer-fullscreen #liveStage {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100dvh;
+  margin: 0 !important;
+  padding: 0;
+  overflow: hidden;
+  background: #050608;
+}
+
+body.viewer-fullscreen #hostCard {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: #050608;
+  box-shadow: none;
+}
+
+body.viewer-fullscreen .video-card__inner {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #050608;
+}
+
+body.viewer-fullscreen #player {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+  background: #050608;
+}
+
+/* LIVE TOP INFORMATION */
+
+body.viewer-fullscreen .live-overlay {
+  position: absolute;
+  top: calc(14px + env(safe-area-inset-top,0px));
+  left: 15px;
+  right: 58px;
+  z-index: 30;
+
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+
+  width: auto;
+  max-width: calc(100% - 75px);
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+body.viewer-fullscreen .live-overlay > b {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+
+  border: 1px solid rgba(255,120,120,.5);
+  border-radius: 9px;
+  background: rgba(151,30,41,.92);
+
+  color: #fff;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 1px;
+}
+
+body.viewer-fullscreen .live-overlay > .dot {
+  width: 7px;
+  height: 7px;
+  margin: 0 -4px 0 2px;
+  border-radius: 50%;
+  background: #ff7777;
+  box-shadow: 0 0 9px #f44;
+}
+
+body.viewer-fullscreen #hdBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--view-line);
+  border-radius: 9px;
+  background: rgba(15,18,22,.86);
+  color: #eed5aa;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+body.viewer-fullscreen .live-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--view-line);
+  border-radius: 9px;
+  background: rgba(15,18,22,.83);
+  backdrop-filter: blur(12px);
+  color: #f4e2c3;
+  font-size: 10px;
+}
+
+/* TOP RIGHT EXIT */
+
+body.viewer-fullscreen #btnBackLobby {
+  position: fixed;
+  top: calc(13px + env(safe-area-inset-top,0px));
+  right: 13px;
+  left: auto;
+  bottom: auto;
+  z-index: 120;
+
+  display: grid;
+  place-items: center;
+
+  width: 39px;
+  height: 39px;
+  min-width: 39px;
+  min-height: 39px;
+  padding: 0;
+
+  border: 1px solid var(--view-line);
+  border-radius: 12px;
+  background: rgba(17,19,24,.87);
+  color: #f2d3a1;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* DIAMOND COUNTER */
+
+body.viewer-fullscreen .gift-total-overlay.viewer {
+  position: absolute;
+  top: calc(56px + env(safe-area-inset-top,0px));
+  left: 15px;
+  right: auto;
+  bottom: auto;
+  z-index: 31;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  width: max-content;
+  max-width: calc(100vw - 30px);
+  min-height: 34px;
+  padding: 6px 12px;
+
+  border: 1px solid var(--view-line);
+  border-radius: 10px;
+  background: rgba(22,20,20,.85);
+  color: #f4d99f;
+  font-size: 13px;
+  backdrop-filter: blur(12px);
+}
+
+/* VIEWER AVATARS */
+
+body.viewer-fullscreen #viewerAvatars {
+  position: absolute;
+  top: calc(100px + env(safe-area-inset-top,0px));
+  left: 15px;
+  right: auto;
+  z-index: 32;
+  max-width: calc(100% - 30px);
+}
+
+/* ACTION BUTTONS */
+
+body.viewer-fullscreen #chatFab,
+body.viewer-fullscreen #giftFab,
+body.viewer-fullscreen #pipBtn,
+body.viewer-fullscreen #muteBtn {
+  position: fixed;
+  right: 14px;
+  left: auto;
+  z-index: 90;
+
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  min-height: 46px;
+  margin: 0;
+  padding: 0;
+
+  border: 1px solid rgba(228,191,126,.45);
+  border-radius: 14px;
+  background: linear-gradient(145deg,#30271e,#15171b);
+  color: #f6dda9;
+  font-size: 20px;
+  line-height: 1;
+  box-shadow: 0 7px 18px rgba(0,0,0,.36);
+  cursor: pointer;
+  transform: none;
+}
+
+body.viewer-fullscreen #muteBtn {
+  bottom: calc(259px + env(safe-area-inset-bottom,0px));
+}
+
+body.viewer-fullscreen #pipBtn {
+  bottom: calc(200px + env(safe-area-inset-bottom,0px));
+}
+
+body.viewer-fullscreen #chatFab {
+  bottom: calc(141px + env(safe-area-inset-bottom,0px));
+}
+
+body.viewer-fullscreen #giftFab {
+  bottom: calc(82px + env(safe-area-inset-bottom,0px));
+  border-color: #ead09c;
+  background: linear-gradient(140deg,#efd9ae,#bc9155);
+  color: #2b2013;
+}
+
+body.viewer-fullscreen #chatFab:active,
+body.viewer-fullscreen #giftFab:active,
+body.viewer-fullscreen #pipBtn:active,
+body.viewer-fullscreen #muteBtn:active {
+  filter: brightness(1.15);
+}
+
+/* CHAT MESSAGES */
+
+body.viewer-fullscreen #chatOverlay {
+  position: absolute;
+  left: 12px;
+  right: 73px;
+  bottom: calc(75px + env(safe-area-inset-bottom,0px));
+  z-index: 25;
+  width: auto;
+  max-width: 480px;
+  max-height: min(34dvh,260px);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+body.viewer-fullscreen #chatOverlay::-webkit-scrollbar {
+  display: none;
+}
+
+/* CHAT INPUT */
+
+body.viewer-fullscreen #chatInputOverlay:not(.hidden) {
+  position: fixed;
+  left: 10px;
+  right: 10px;
+  bottom: calc(12px + env(safe-area-inset-bottom,0px));
+  z-index: 200;
+
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: auto;
+  padding: 9px;
+
+  border: 1px solid var(--view-line);
+  border-radius: 15px;
+  background: rgba(18,19,23,.97);
+  box-shadow: 0 15px 35px rgba(0,0,0,.5);
+}
+
+body.viewer-fullscreen #quickChatInput {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  outline: 0;
+  border-radius: 10px;
+  background: #29272a;
+  color: #fff;
+  font-size: 16px;
+}
+
+body.viewer-fullscreen #quickChatSend {
+  flex: 0 0 43px;
+  width: 43px;
+  height: 43px;
+  padding: 0;
+  border: 0;
+  border-radius: 11px;
+  background: linear-gradient(135deg,#f4dfb3,#c29859);
+  color: #22180e;
+  font-size: 20px;
+}
+
+/* GIFT PANEL */
+
+body.viewer-fullscreen #giftPanel:not(.hidden) {
+  position: fixed;
+  left: 50%;
+  right: auto;
+  bottom: 0;
+  top: auto;
+  z-index: 210;
+
+  width: 100%;
+  max-width: 520px;
+  max-height: 75dvh;
+
+  margin: 0;
+  padding-bottom: env(safe-area-inset-bottom,0px);
+  overflow-y: auto;
+
+  border: 1px solid rgba(225,184,115,.43);
+  border-bottom: none;
+  border-radius: 22px 22px 0 0;
+
+  background: linear-gradient(160deg,#29241f,#14151a 65%);
+  color: #f4e4c7;
+  box-shadow: 0 -20px 60px rgba(0,0,0,.65);
+
+  transform: translateX(-50%);
+}
+
+body.viewer-fullscreen .gift-panel__header {
+  color: #f1d8a8;
+}
+
+body.viewer-fullscreen .gift-card {
+  border-radius: 13px;
+}
+
+body.viewer-fullscreen .gift-combo__btn.is-active {
+  border-color: #f0cf91;
+  background: #5a4328;
+  color: #ffe5b5;
+}
+
+/* GIFT EFFECTS ABOVE VIDEO */
+
+body.viewer-fullscreen #giftLayer,
+body.viewer-fullscreen #giftVideoLayer,
+body.viewer-fullscreen #reactionsLayerViewer,
+body.viewer-fullscreen #joinOverlayViewer,
+body.viewer-fullscreen #pinOverlay {
+  pointer-events: none;
+}
+
+/* MOBILE */
+
+@media (max-width: 480px) {
+  body.viewer-fullscreen .live-meta {
+    font-size: 9px;
+  }
+
+  body.viewer-fullscreen #chatOverlay {
+    right: 68px;
+    max-height: 29dvh;
+  }
+
+  body.viewer-fullscreen #chatFab,
+  body.viewer-fullscreen #giftFab,
+  body.viewer-fullscreen #pipBtn,
+  body.viewer-fullscreen #muteBtn {
+    right: 10px;
+    width: 43px;
+    height: 43px;
+    min-width: 43px;
+    min-height: 43px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.viewer-fullscreen .chat-fab,
+  body.viewer-fullscreen .gift-fab {
+    transition: none;
+  }
+}
+</style>
+
+
+
 </head>
 <body class="viewer-fullscreen">
 
@@ -109,7 +564,8 @@
 <div class="chat-overlay" id="chatOverlay"></div>
 
 <!-- CHAT QUICK BUTTON -->
-<button class="chat-fab" id="chatFab">💬</button>
+<button class="chat-fab" id="chatFab"
+        type="button" aria-label="Open chat">💬</button>
 
 
 <!-- PIP BUTTON -->
@@ -119,14 +575,17 @@
 
 
 <!-- ❌ EXIT BUTTON -->
-    <button id="btnBackLobby" class="page-exit-btn">✕</button>
+<button id="btnBackLobby"
+        class="page-exit-btn"
+        type="button"
+        aria-label="Leave live room">✕</button>
 
 
 <!-- CHAT INPUT OVERLAY -->
 <div class="chat-input-overlay hidden" id="chatInputOverlay">
   <input
     id="quickChatInput"
-    placeholder="Nhập tin nhắn..."
+    placeholder="Send a message..."
     autocomplete="off"
   />
   <button id="quickChatSend">➤</button>
@@ -149,7 +608,8 @@
 
 
 <!-- GIFT FLOAT BUTTON -->
-<button class="gift-fab" id="giftFab" title="Tặng quà">🎁</button>
+<button class="gift-fab" id="giftFab"
+        type="button" title="Send Gift">🎁</button>
 
 <!-- GIFT PANEL -->
 <div class="gift-panel hidden" id="giftPanel">
