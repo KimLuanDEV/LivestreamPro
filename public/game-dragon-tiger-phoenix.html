@@ -3793,11 +3793,14 @@ body.dtp-debug .dtp-chip {
 
 
 /* ==========================================
-   MYTHIC ROYAL NOTIFICATION
-   LUXURY BLACK & GOLD
+   MYTHIC ROYAL NOTIFICATION V2
+   OBSIDIAN BLACK · CHAMPAGNE GOLD
 ========================================== */
 
 .notify-modal {
+  --notify-accent: #e8bb70;
+  --notify-glow: rgba(232,187,112,.18);
+
   position: fixed;
   inset: 0;
   z-index: 3000;
@@ -3806,87 +3809,117 @@ body.dtp-debug .dtp-chip {
   align-items: center;
   justify-content: center;
 
+  padding: 20px;
   box-sizing: border-box;
-  padding: 16px;
 
-  background: rgba(2, 4, 9, .88);
-
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(0,2,8,.84);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
-/* MAIN CONTAINER */
+/* MODAL FRAME */
 
 .notify-modal .notify-wrap {
   position: relative;
+  isolation: isolate;
 
+  width: min(370px,100%);
+  max-height: calc(100dvh - 40px);
+
+  padding: 29px 26px 23px;
   box-sizing: border-box;
-  width: min(365px, 100%);
-  max-height: calc(100dvh - 32px);
 
-  padding: 34px 24px 23px;
-
-  overflow-x: hidden;
-  overflow-y: auto;
-
-  border: 1px solid #b28c52;
   border-radius: 20px;
+  border: 1px solid rgba(224,181,108,.65);
 
   background:
     radial-gradient(
-      ellipse at 50% 0%,
-      rgba(190, 141, 61, .16),
-      transparent 60%
+      ellipse at 50% -10%,
+      rgba(194,143,67,.20),
+      transparent 62%
     ),
     linear-gradient(
-      155deg,
-      #20212a 0%,
-      #11151f 45%,
-      #080b12 100%
+      160deg,
+      #23212a 0%,
+      #10141e 48%,
+      #080a10 100%
     );
 
   box-shadow:
-    0 25px 80px rgba(0,0,0,.8),
-    0 0 32px rgba(200,153,77,.14),
-    inset 0 1px 0 rgba(255,239,199,.18);
+    0 30px 90px rgba(0,0,0,.85),
+    0 0 38px rgba(209,158,75,.12),
+    inset 0 1px 0 rgba(255,240,196,.16);
 
   text-align: center;
+  overflow-x: hidden;
+  overflow-y: auto;
 
-  animation: notifyRoyalIn .3s ease both;
+  animation: notifyEnter .35s
+    cubic-bezier(.2,.8,.2,1) both;
 }
 
-/* INNER GOLD BORDER */
+/* DECORATIVE INNER BORDER */
 
 .notify-modal .notify-wrap::before {
   content: "";
   position: absolute;
-
   inset: 6px;
-  border: 1px solid rgba(214,178,111,.2);
+
+  border: 1px solid rgba(230,190,120,.12);
   border-radius: 14px;
 
   pointer-events: none;
+  z-index: -1;
 }
 
-/* TOP GOLDEN LINE */
+/* TOP GOLD LINE */
 
 .notify-modal .notify-topline {
   position: absolute;
   top: 0;
-  left: 25%;
-  right: 25%;
-
+  left: 22%;
+  width: 56%;
   height: 2px;
 
   background: linear-gradient(
     90deg,
     transparent,
-    #ffe3a2,
+    #ffe9ae,
+    #c99746,
+    transparent
+  );
+
+  box-shadow: 0 0 16px rgba(255,206,110,.45);
+}
+
+/* BRAND */
+
+.notify-modal .notify-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+
+  color: #bda278;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  white-space: nowrap;
+}
+
+.notify-modal .notify-brand-line {
+  width: 23px;
+  height: 1px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #ba975d,
     transparent
   );
 }
 
-/* NOTICE SYMBOL */
+/* CENTER SYMBOL */
 
 .notify-modal .notify-symbol {
   position: relative;
@@ -3895,72 +3928,89 @@ body.dtp-debug .dtp-chip {
   align-items: center;
   justify-content: center;
 
-  width: 58px;
-  height: 58px;
-  margin: 0 auto 18px;
+  width: 76px;
+  height: 76px;
+  margin: 28px auto 19px;
 
-  border-radius: 50%;
-  border: 1px solid #b9955c;
+  border-radius: 22px;
+  border: 1px solid var(--notify-accent);
 
   background:
     radial-gradient(
-      circle at 35% 25%,
-      #58442a,
-      #201a16 72%
-    );
+      circle at 35% 20%,
+      rgba(255,229,165,.17),
+      transparent 70%
+    ),
+    linear-gradient(145deg,#30271f,#12141b);
 
   box-shadow:
-    0 0 0 6px rgba(196,145,70,.06),
-    0 0 20px rgba(230,176,81,.16),
-    inset 0 1px 0 rgba(255,236,176,.2);
+    0 0 0 7px rgba(223,177,96,.045),
+    0 0 32px var(--notify-glow),
+    inset 0 1px 0 rgba(255,235,189,.18);
+
+  transform: rotate(45deg);
 }
 
 .notify-modal .notify-symbol span {
-  color: #f9dfaa;
-  font-family: Georgia, serif;
-  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100%;
+
+  transform: rotate(-45deg);
+
+  font-family: Georgia,serif;
+  font-size: 42px;
   font-weight: 700;
   line-height: 1;
+
+  color: var(--notify-accent);
+  text-shadow: 0 0 18px var(--notify-glow);
 }
 
-/* BRAND */
+/* STATUS LABEL */
 
-.notify-modal .notify-brand {
-  margin-bottom: 8px;
+.notify-modal .notify-status {
+  color: var(--notify-accent);
 
-  color: #ac956e;
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 2px;
+  font-weight: 800;
+  letter-spacing: 3px;
+
+  margin-bottom: 9px;
 }
 
-/* TITLE */
+/* HEADING */
 
 .notify-modal .notify-title {
   margin: 0;
 
-  color: #f7dcaa;
-  font-size: 22px;
+  color: #f8e7c1;
+  font-size: clamp(18px,5vw,23px);
   font-weight: 900;
-  letter-spacing: 1.2px;
-  line-height: 1.35;
 
-  text-shadow: 0 2px 8px rgba(0,0,0,.65);
+  line-height: 1.35;
+  letter-spacing: .8px;
+
+  text-shadow: 0 3px 12px rgba(0,0,0,.8);
 }
 
-/* DIVIDER */
+/* GOLD DIVIDER */
 
 .notify-modal .notify-divider {
   position: relative;
 
-  width: 78%;
+  width: 76%;
   height: 1px;
-  margin: 19px auto;
+
+  margin: 21px auto;
 
   background: linear-gradient(
     90deg,
     transparent,
-    #b18a54,
+    rgba(224,179,104,.65),
     transparent
   );
 }
@@ -3972,56 +4022,50 @@ body.dtp-debug .dtp-chip {
   top: 50%;
   left: 50%;
 
-  transform: translate(-50%, -50%);
+  transform: translate(-50%,-50%);
 
-  padding: 0 9px;
+  padding: 0 10px;
 
-  background: #161821;
-  color: #d4af70;
+  color: #dbb473;
+  background: #151620;
 
-  font-size: 9px;
+  font-size: 10px;
 }
 
-/* CONTENT - OVERRIDE OLD ABSOLUTE POSITION */
+/* MESSAGE CONTENT */
 
 .notify-modal .notify-content {
   position: relative;
-
   top: auto;
   left: auto;
-
   transform: none;
 
   width: 100%;
-  margin: 0;
   padding: 0;
+  margin: 0;
 
   text-align: center;
 }
-
-/* MAIN MESSAGE */
 
 .notify-modal .notify-text {
   margin: 0;
   padding: 0;
 
-  color: #f1e9dc;
-  font-size: 17px;
+  color: #f1e8d8;
+  font-size: 16px;
   font-weight: 750;
   line-height: 1.55;
 
   overflow-wrap: anywhere;
 }
 
-/* DESCRIPTION */
-
 .notify-modal .notify-description {
-  margin: 10px 0 0;
+  margin: 12px 0 0;
 
-  color: #aaa49b;
+  color: #a9a9b4;
   font-size: 13px;
-  font-weight: 400;
-  line-height: 1.6;
+  font-weight: 450;
+  line-height: 1.7;
 
   overflow-wrap: anywhere;
 }
@@ -4035,106 +4079,142 @@ body.dtp-debug .dtp-chip {
 .notify-modal .notify-confirm {
   position: relative;
 
+  width: 100%;
+  min-height: 52px;
+
   display: flex;
   align-items: center;
   justify-content: center;
 
-  box-sizing: border-box;
+  margin-top: 28px;
+  padding: 12px 20px;
 
-  width: 100%;
-  min-height: 48px;
-
-  margin-top: 27px;
-  padding: 12px 16px;
-
-  border: 1px solid #d0a767;
-  border-radius: 11px;
+  border: 1px solid #f6d49a;
+  border-radius: 10px;
 
   background: linear-gradient(
     180deg,
-    #796039,
-    #4e3922 65%,
-    #3b2a1b
+    #f6dfac 0%,
+    #d5a65d 48%,
+    #a87638 100%
   );
 
   box-shadow:
-    inset 0 1px 0 rgba(255,232,175,.32),
-    0 6px 16px rgba(0,0,0,.26);
+    inset 0 1px 0 rgba(255,255,255,.5),
+    inset 0 -2px 0 rgba(70,40,10,.2),
+    0 8px 24px rgba(199,143,59,.18);
 
-  color: #ffe6b4;
+  color: #291b0b;
+
   font-family: inherit;
   font-size: 13px;
   font-weight: 900;
-  letter-spacing: 1.7px;
+  letter-spacing: 2px;
 
   cursor: pointer;
-  touch-action: manipulation;
+  overflow: hidden;
 
   transition:
-    background .18s ease,
-    transform .18s ease;
+    transform .2s ease,
+    filter .2s ease,
+    box-shadow .2s ease;
+}
+
+.notify-modal .notify-confirm::before {
+  content: "";
+  position: absolute;
+
+  top: 0;
+  left: -75%;
+
+  width: 55%;
+  height: 100%;
+
+  background: linear-gradient(
+    110deg,
+    transparent,
+    rgba(255,255,255,.35),
+    transparent
+  );
+
+  transform: skewX(-25deg);
+  transition: left .5s ease;
+}
+
+.notify-modal .notify-confirm:hover::before {
+  left: 125%;
+}
+
+.notify-modal .notify-confirm:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 10px 28px rgba(214,158,69,.3);
 }
 
 .notify-modal .notify-confirm:active {
-  transform: scale(.98);
-
-  background: linear-gradient(
-    180deg,
-    #9c7a47,
-    #624626
-  );
+  transform: scale(.975);
 }
 
 .notify-modal .notify-confirm:focus-visible {
-  outline: 2px solid #ffe2a2;
-  outline-offset: 3px;
+  outline: 2px solid #fff0c9;
+  outline-offset: 4px;
+}
+
+.notify-modal .notify-button-arrow {
+  position: absolute;
+  right: 17px;
+
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1;
 }
 
 /* FOOTER */
 
 .notify-modal .notify-footer {
-  margin-top: 19px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  color: #857760;
+  gap: 12px;
+  margin-top: 24px;
+
+  color: #85775f;
   font-size: 9px;
   font-weight: 800;
-  letter-spacing: 1.35px;
+  letter-spacing: 1.4px;
 }
 
-/* STATE COLORS */
+.notify-modal .notify-footer i {
+  width: 3px;
+  height: 3px;
 
-.notify-modal[data-type="warning"] .notify-symbol {
-  border-color: #e4ab58;
+  background: #ba8e50;
+  transform: rotate(45deg);
 }
 
-.notify-modal[data-type="warning"] .notify-symbol span {
-  color: #ffc776;
+/* DIFFERENT MESSAGE TYPES */
+
+.notify-modal[data-type="warning"] {
+  --notify-accent: #f0bf71;
+  --notify-glow: rgba(255,180,69,.25);
 }
 
-.notify-modal[data-type="error"] .notify-symbol {
-  border-color: #ca6b6b;
-  background: linear-gradient(145deg,#4a2428,#211519);
+.notify-modal[data-type="error"] {
+  --notify-accent: #ff8585;
+  --notify-glow: rgba(255,79,79,.24);
 }
 
-.notify-modal[data-type="error"] .notify-symbol span {
-  color: #ffa2a2;
+.notify-modal[data-type="success"] {
+  --notify-accent: #83e6b1;
+  --notify-glow: rgba(75,228,144,.24);
 }
 
-.notify-modal[data-type="success"] .notify-symbol {
-  border-color: #67b58b;
-  background: linear-gradient(145deg,#244535,#131e1b);
-}
+/* ENTRANCE ANIMATION */
 
-.notify-modal[data-type="success"] .notify-symbol span {
-  color: #80ebae;
-}
-
-/* OPEN ANIMATION */
-
-@keyframes notifyRoyalIn {
+@keyframes notifyEnter {
   from {
     opacity: 0;
-    transform: translateY(16px) scale(.96);
+    transform: translateY(24px) scale(.93);
   }
 
   to {
@@ -4143,40 +4223,42 @@ body.dtp-debug .dtp-chip {
   }
 }
 
-/* SMALL DEVICES */
+/* SMALL SCREENS */
 
-@media (max-width: 360px) {
+@media(max-width:360px) {
   .notify-modal {
     padding: 12px;
   }
 
   .notify-modal .notify-wrap {
-    padding: 28px 19px 21px;
+    padding: 25px 19px 20px;
+  }
+
+  .notify-modal .notify-symbol {
+    width: 64px;
+    height: 64px;
+    margin-top: 23px;
   }
 
   .notify-modal .notify-title {
     font-size: 19px;
   }
-
-  .notify-modal .notify-text {
-    font-size: 15px;
-  }
 }
 
-@media (max-height: 550px) {
+@media(max-height:550px) {
   .notify-modal .notify-wrap {
-    padding-top: 17px;
+    padding-top: 16px;
     padding-bottom: 14px;
   }
 
   .notify-modal .notify-symbol {
-    width: 42px;
-    height: 42px;
-    margin-bottom: 10px;
+    width: 48px;
+    height: 48px;
+    margin: 13px auto;
   }
 
   .notify-modal .notify-symbol span {
-    font-size: 24px;
+    font-size: 29px;
   }
 
   .notify-modal .notify-divider {
@@ -4184,13 +4266,18 @@ body.dtp-debug .dtp-chip {
   }
 
   .notify-modal .notify-confirm {
-    margin-top: 16px;
+    margin-top: 15px;
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@media(prefers-reduced-motion:reduce) {
   .notify-modal .notify-wrap {
     animation: none;
+  }
+
+  .notify-modal .notify-confirm,
+  .notify-modal .notify-confirm::before {
+    transition: none;
   }
 }
 
@@ -6198,27 +6285,35 @@ body.dtp-debug .dtp-chip {
 
 
 
-<!-- ======================================
-     MYTHIC ROYAL NOTIFICATION
-====================================== -->
+
+<!-- ==========================================
+     MYTHIC ROYAL NOTIFICATION V2
+========================================== -->
 
 <div id="notifyModal"
      class="notify-modal"
+     data-type="warning"
      role="alertdialog"
      aria-modal="true"
      aria-labelledby="notifyTitle"
-     aria-describedby="notifyText">
+     aria-describedby="notifyText notifyDescription">
 
   <div class="notify-wrap">
 
     <div class="notify-topline"></div>
 
+    <div class="notify-brand">
+      <span class="notify-brand-line"></span>
+      MYTHIC ROYAL ARENA
+      <span class="notify-brand-line"></span>
+    </div>
+
     <div class="notify-symbol" aria-hidden="true">
       <span>!</span>
     </div>
 
-    <div class="notify-brand">
-      MYTHIC ROYAL ARENA
+    <div class="notify-status">
+      SYSTEM MESSAGE
     </div>
 
     <h2 id="notifyTitle" class="notify-title">
@@ -6234,26 +6329,31 @@ body.dtp-debug .dtp-chip {
       </div>
 
       <p id="notifyDescription"
-         class="notify-description">
-      </p>
+         class="notify-description"></p>
 
     </div>
 
     <button type="button"
             class="notify-confirm"
             onclick="closeNotify()">
-      CONFIRM
+
+      <span>CONTINUE</span>
+      <span class="notify-button-arrow"
+            aria-hidden="true">›</span>
+
     </button>
 
     <div class="notify-footer">
-      DRAGON · TIGER · PHOENIX
+      <span>DRAGON</span>
+      <i></i>
+      <span>TIGER</span>
+      <i></i>
+      <span>PHOENIX</span>
     </div>
 
   </div>
 
 </div>
-
-
 
 
 
@@ -7064,8 +7164,36 @@ function showNotify(msg) {
 
   modal.dataset.type = type;
 
+const status = modal.querySelector(".notify-status");
+
+if (status) {
+  status.textContent = {
+    warning: "ROUND NOTICE",
+    error: "ACTION REQUIRED",
+    success: "ACTION COMPLETED"
+  }[type] || "SYSTEM MESSAGE";
+}
+
+
   title.textContent = heading;
-  text.textContent = message;
+
+  const displayMessages = {
+  "betting closed":
+    "The betting period has ended.",
+
+  "not enough coins":
+    "Unable to place your bet.",
+
+  "success":
+    "Operation completed successfully.",
+
+  "successful":
+    "Operation completed successfully."
+};
+
+text.textContent = displayMessages[key] || message;
+
+
   desc.textContent = description;
   symbol.textContent = mark;
 
