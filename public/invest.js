@@ -63,22 +63,6 @@ socket.on("force-logout", (data) => {
 });
 
 
-// === PORTFOLIO SHEET ===
-function openPortfolio(){
-  const sheet = document.getElementById("portfolioSheet");
-  if(sheet){
-    sheet.classList.remove("hidden");
-  }else{
-    console.warn("❌ Không tìm thấy #portfolioSheet");
-  }
-}
-
-function closePortfolio(){
-  const sheet = document.getElementById("portfolioSheet");
-  if(sheet){
-    sheet.classList.add("hidden");
-  }
-}
 
 
 
@@ -221,14 +205,146 @@ function openWheelGame(){
 }
 
 
-function openPortfolio(){
-  document.getElementById("portfolioSheet").classList.remove("hidden");
+
+// ==========================================
+// TRADE CENTER - MULTI PAGE CONTROLLER
+// ==========================================
+
+let currentTradePage = 1;
+
+// Get all showroom pages
+function getTradePages() {
+  const sheet = document.getElementById("portfolioSheet");
+
+  if (!sheet) return [];
+
+  return Array.from(
+    sheet.querySelectorAll(".trade-showroom-page")
+  );
+}
+
+// Activate page
+function setTradePage(pageNumber) {
+  const pages = getTradePages();
+  const total = pages.length;
+
+  if (!total) return;
+
+  const page = Math.max(
+    1,
+    Math.min(total, pageNumber)
+  );
+
+  currentTradePage = page;
+
+  pages.forEach((element, index) => {
+    const active = index + 1 === page;
+
+    element.hidden = !active;
+    element.classList.toggle("is-active", active);
+
+    element.querySelectorAll("button").forEach(button => {
+      button.tabIndex = active ? 0 : -1;
+    });
+  });
+
+  // Page counter
+  const counter =
+    document.getElementById("tradePageCounter");
+
+  if (counter) {
+    counter.textContent =
+      String(page).padStart(2, "0") +
+      " / " +
+      String(total).padStart(2, "0");
+  }
+
+  // Navigation status
+  const prev =
+    document.getElementById("tradePagePrev");
+
+  const next =
+    document.getElementById("tradePageNext");
+
+  if (prev) prev.disabled = page === 1;
+  if (next) next.disabled = page === total;
+}
+
+// Previous / next
+function changeTradePage(direction) {
+  if (direction !== -1 && direction !== 1) return;
+
+  setTradePage(currentTradePage + direction);
+}
+
+
+
+// ==========================================
+// TRADE SHOWROOM 02 - FUTURE GAME SLOTS
+// ==========================================
+
+const TRADE_PAGE_2_GAMES = {
+  1: null,
+  2: null,
+  3: null,
+  4: null,
+  5: null,
+  6: null
+};
+
+function openTradeSlot(slot) {
+  const url = TRADE_PAGE_2_GAMES[slot];
+
+  // Chưa gắn game: giữ nguyên showroom
+  if (!url) {
+    console.info(
+      `[TRADE CENTER] Slot ${slot} chưa có game.`
+    );
+    return;
+  }
+
+  // Chỉ cho phép mở trang nội bộ
+  if (
+    typeof url !== "string" ||
+    !/^\/(?!\/)[a-zA-Z0-9/_-]+\.html$/.test(url)
+  ) {
+    console.warn("Invalid Trade Center game URL");
+    return;
+  }
+
+  window.location.href = url;
+}
+
+
+// Open Trade Center
+function openPortfolio() {
+  const sheet =
+    document.getElementById("portfolioSheet");
+
+  if (!sheet) return;
+
+  setTradePage(1);
+
+  sheet.classList.remove("hidden");
   document.body.classList.add("sheet-open");
 }
 
-function closePortfolio(){
-  document.getElementById("portfolioSheet").classList.add("hidden");
-  document.body.classList.remove("sheet-open");
+// Close Trade Center
+function closePortfolio() {
+  const sheet =
+    document.getElementById("portfolioSheet");
+
+  if (!sheet) return;
+
+  sheet.classList.add("hidden");
+
+  const gameHub =
+    document.getElementById("gameHubSheet");
+
+  if (!gameHub ||
+      gameHub.classList.contains("hidden")) {
+    document.body.classList.remove("sheet-open");
+  }
 }
 
 
