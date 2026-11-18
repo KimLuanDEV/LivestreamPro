@@ -8132,9 +8132,17 @@ function w8SmoothStop(targetSlot, endAt) {
       Math.min(1, (now - startTime) / 5000)
     );
 
-    // Ease-out: nhanh ở đầu, chậm dần cuối
-    const eased =
-      1 - Math.pow(1 - progress, 2.4);
+
+/* ==========================================
+   PROGRESSIVE MOMENTUM - SMOOTH BRAKING
+========================================== */
+
+// Giảm tốc nhẹ, giữ quán tính lâu hơn.
+// 1.25 = giữ đà tốt, dừng từ từ.
+// Không giảm quá gấp như 2.4.
+const eased =
+  1 - Math.pow(1 - progress, 1.25);
+
 
     const step = Math.min(
       totalSteps,
