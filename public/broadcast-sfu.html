@@ -845,6 +845,272 @@ button:disabled {
 
 
 
+
+/* ==========================================
+   SFU - FLOATING LIVE CHAT
+========================================== */
+
+.sfu-chat-toggle {
+  position: fixed;
+  z-index: 12;
+
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  height: 46px;
+  min-width: 100px;
+  padding: 0 17px;
+
+  border: 1px solid rgba(222,187,126,.55);
+  border-radius: 999px;
+
+  background: rgba(17,19,24,.86);
+  color: #f0d5a3;
+
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 1px;
+
+  backdrop-filter: blur(14px);
+  box-shadow: 0 8px 28px rgba(0,0,0,.35);
+}
+
+.sfu-chat-toggle.active {
+  background: #3b3021;
+  border-color: #e8c486;
+}
+
+.sfu-chat-unread {
+  position: absolute;
+  top: -7px;
+  right: -5px;
+
+  min-width: 21px;
+  height: 21px;
+  padding: 0 5px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 999px;
+  background: #dd484f;
+  color: white;
+  font-size: 10px;
+}
+
+.sfu-chat-unread[hidden] {
+  display: none !important;
+}
+
+.sfu-chat-panel {
+  position: fixed;
+  z-index: 15;
+
+  right: calc(12px + env(safe-area-inset-right, 0px));
+  bottom: calc(79px + env(safe-area-inset-bottom, 0px));
+
+  display: flex;
+  flex-direction: column;
+
+  width: min(390px, calc(100vw - 24px));
+  height: min(470px, 62dvh);
+  min-height: 0;
+  overflow: hidden;
+
+  border: 1px solid rgba(225,190,128,.36);
+  border-radius: 20px;
+
+  background: rgba(18,21,27,.96);
+  backdrop-filter: blur(22px);
+
+  box-shadow: 0 18px 65px rgba(0,0,0,.55);
+}
+
+.sfu-chat-header {
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 17px 18px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.sfu-chat-header strong {
+  display: block;
+  color: #ebd3a5;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.sfu-chat-header small {
+  display: block;
+  margin-top: 5px;
+  color: #9398a2;
+  font-size: 10px;
+}
+
+#sfuChatClose {
+  width: 32px;
+  height: 32px;
+
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 9px;
+
+  background: #282b32;
+  color: #e4d2b4;
+  font-size: 23px;
+}
+
+.sfu-chat-messages {
+  flex: 1;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  padding: 16px;
+}
+
+.sfu-chat-empty {
+  margin: auto;
+  color: #969ba5;
+  font-size: 12px;
+  text-align: center;
+}
+
+.sfu-chat-item {
+  padding: 11px 12px;
+  border: 1px solid rgba(255,255,255,.055);
+  border-radius: 12px;
+  background: rgba(255,255,255,.045);
+}
+
+.sfu-chat-item.is-host {
+  border-color: rgba(223,190,131,.25);
+  background: rgba(223,190,131,.075);
+}
+
+.sfu-chat-author {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  margin-bottom: 5px;
+
+  color: #e9ca8f;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.sfu-chat-role {
+  padding: 3px 5px;
+  border-radius: 5px;
+
+  background: rgba(224,184,106,.17);
+  color: #f3d69c;
+
+  font-size: 8px;
+  letter-spacing: .5px;
+}
+
+.sfu-chat-text {
+  margin: 0;
+  color: #f0f0f1;
+
+  font-size: 12px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.sfu-chat-form {
+  flex-shrink: 0;
+
+  display: flex;
+  gap: 8px;
+
+  padding: 12px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+
+#sfuChatInput {
+  flex: 1;
+  min-width: 0;
+  height: 43px;
+
+  padding: 0 13px;
+
+  border: 1px solid rgba(216,184,127,.2);
+  border-radius: 11px;
+
+  outline: none;
+  background: #262932;
+  color: #fff;
+
+  font-size: 16px;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+#sfuChatInput:focus {
+  border-color: #dbb77d;
+}
+
+#sfuChatSend {
+  flex-shrink: 0;
+  padding: 0 16px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: linear-gradient(135deg,#f0d8a6,#c19a5b);
+  color: #241b10;
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+#sfuChatSend:disabled {
+  opacity: .45;
+}
+
+.sfu-chat-error {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0 13px;
+
+  color: #f19a9d;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.sfu-chat-error:not(:empty) {
+  padding-bottom: 11px;
+}
+
+@media (max-width: 600px) {
+  .sfu-chat-panel {
+    height: min(450px, 58dvh);
+    border-radius: 17px;
+  }
+}
+
+
+
+
 </style>
 
 
@@ -960,6 +1226,99 @@ button:disabled {
     role="status"
     aria-live="polite">
   </p>
+
+
+
+<!-- ======================================
+     SFU LIVE COMMENTS
+====================================== -->
+
+<button
+  type="button"
+  id="sfuChatToggle"
+  class="sfu-chat-toggle"
+  aria-label="Open live comments"
+  aria-controls="sfuChatPanel"
+  aria-expanded="false">
+
+  <svg viewBox="0 0 24 24"
+       width="19"
+       height="19"
+       fill="none"
+       stroke="currentColor"
+       stroke-width="1.8"
+       stroke-linecap="round"
+       stroke-linejoin="round"
+       aria-hidden="true">
+    <path d="M20 11.5a8 8 0 0 1-8 8
+             8.4 8.4 0 0 1-3.2-.6
+             L4 20l1.2-4.3A8 8 0 1 1 20 11.5Z"/>
+    <path d="M8 11h8M8 14h5"/>
+  </svg>
+
+  <span>CHAT</span>
+
+  <span id="sfuChatUnread"
+        class="sfu-chat-unread"
+        hidden>0</span>
+</button>
+
+<section
+  id="sfuChatPanel"
+  class="sfu-chat-panel hidden"
+  aria-label="Livestream comments">
+
+  <div class="sfu-chat-header">
+    <div>
+      <strong>LIVE COMMENTS</strong>
+      <small>Room conversation</small>
+    </div>
+
+    <button
+      type="button"
+      id="sfuChatClose"
+      aria-label="Close live comments">
+      &times;
+    </button>
+  </div>
+
+  <div
+    id="sfuChatMessages"
+    class="sfu-chat-messages"
+    role="log"
+    aria-live="polite"
+    aria-relevant="additions">
+    <p class="sfu-chat-empty">
+      No comments yet.
+    </p>
+  </div>
+
+  <form id="sfuChatForm" class="sfu-chat-form">
+
+    <input
+      type="text"
+      id="sfuChatInput"
+      maxlength="300"
+      autocomplete="off"
+      placeholder="Write a comment..."
+      aria-label="Comment text"
+      required>
+
+    <button
+      id="sfuChatSend"
+      type="submit"
+      aria-label="Send comment">
+      SEND
+    </button>
+
+  </form>
+
+  <p id="sfuChatError"
+     class="sfu-chat-error"
+     role="status"></p>
+
+</section>
+
 
   <!-- SETTINGS BACKDROP -->
   <div
@@ -1191,6 +1550,262 @@ let viewerConnected = false;
 const $ = id => document.getElementById(id);
 
 
+
+/* ==========================================
+   SFU LIVE CHAT - CLIENT
+========================================== */
+
+const chatToggle = $("sfuChatToggle");
+const chatPanel = $("sfuChatPanel");
+const chatClose = $("sfuChatClose");
+const chatMessages = $("sfuChatMessages");
+const chatForm = $("sfuChatForm");
+const chatInput = $("sfuChatInput");
+const chatSend = $("sfuChatSend");
+const chatUnread = $("sfuChatUnread");
+const chatError = $("sfuChatError");
+
+let sfuChatReady = false;
+let sfuChatSending = false;
+let sfuChatUnreadCount = 0;
+
+const sfuChatItems = new Map();
+
+function setChatError(message = "") {
+  chatError.textContent = String(message);
+}
+
+function setChatReady(ready) {
+  sfuChatReady = !!ready;
+
+  chatInput.disabled = !sfuChatReady;
+  chatSend.disabled = !sfuChatReady || sfuChatSending;
+
+  if (!sfuChatReady) {
+    chatInput.placeholder = "Connecting to room...";
+  } else {
+    chatInput.placeholder = "Write a comment...";
+  }
+}
+
+function updateChatUnread() {
+  chatUnread.hidden = sfuChatUnreadCount === 0;
+  chatUnread.textContent =
+    sfuChatUnreadCount > 99
+      ? "99+"
+      : String(sfuChatUnreadCount);
+}
+
+function renderSfuChat() {
+
+  chatMessages.replaceChildren();
+
+  const messages = [...sfuChatItems.values()]
+    .sort((a, b) => a.ts - b.ts)
+    .slice(-50);
+
+  if (!messages.length) {
+    const empty = document.createElement("p");
+
+    empty.className = "sfu-chat-empty";
+    empty.textContent = "No comments yet.";
+
+    chatMessages.appendChild(empty);
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+
+  for (const message of messages) {
+
+    const item = document.createElement("div");
+    item.className = "sfu-chat-item";
+
+    if (message.host) {
+      item.classList.add("is-host");
+    }
+
+    const author = document.createElement("div");
+    author.className = "sfu-chat-author";
+
+    const name = document.createElement("span");
+    name.textContent = String(message.name || "Player");
+    author.appendChild(name);
+
+    if (message.host) {
+      const role = document.createElement("span");
+
+      role.className = "sfu-chat-role";
+      role.textContent = "HOST";
+
+      author.appendChild(role);
+
+    } else if (message.verified) {
+      const verified = document.createElement("span");
+
+      verified.textContent = "✓";
+      verified.title = "Verified account";
+
+      author.appendChild(verified);
+    }
+
+    const body = document.createElement("p");
+    body.className = "sfu-chat-text";
+    body.textContent = String(message.text || "");
+
+    item.append(author, body);
+    fragment.appendChild(item);
+  }
+
+  chatMessages.appendChild(fragment);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function addSfuChatMessage(message, countUnread = false) {
+  if (
+    !message ||
+    message.roomId !== roomId ||
+    typeof message.id !== "string"
+  ) {
+    return;
+  }
+
+  if (sfuChatItems.has(message.id)) return;
+
+  sfuChatItems.set(message.id, message);
+
+  while (sfuChatItems.size > 50) {
+    const oldest = sfuChatItems.keys().next().value;
+    sfuChatItems.delete(oldest);
+  }
+
+  if (
+    countUnread &&
+    chatPanel.classList.contains("hidden")
+  ) {
+    sfuChatUnreadCount++;
+    updateChatUnread();
+  }
+
+  renderSfuChat();
+}
+
+function openSfuChat() {
+  chatPanel.classList.remove("hidden");
+  chatToggle.classList.add("active");
+
+  chatToggle.setAttribute("aria-expanded", "true");
+
+  sfuChatUnreadCount = 0;
+  updateChatUnread();
+
+  if (sfuChatReady) {
+    chatInput.focus();
+  }
+}
+
+function closeSfuChat() {
+  chatPanel.classList.add("hidden");
+  chatToggle.classList.remove("active");
+
+  chatToggle.setAttribute("aria-expanded", "false");
+  chatToggle.focus();
+}
+
+chatToggle.addEventListener("click", () => {
+  if (chatPanel.classList.contains("hidden")) {
+    openSfuChat();
+  } else {
+    closeSfuChat();
+  }
+});
+
+chatClose.addEventListener("click", closeSfuChat);
+
+// Nhận bình luận realtime từ server.
+socket.on("sfu:chat:new", message => {
+  addSfuChatMessage(message, true);
+});
+
+// Tải lịch sử sau khi đã vào phòng hợp lệ.
+function loadSfuChatHistory() {
+
+  if (!socket.connected) return;
+
+  socket.timeout(8000).emit(
+    "sfu:chat:history",
+    { roomId },
+
+    (error, response) => {
+
+      if (error || !response?.ok) {
+        setChatReady(false);
+        setChatError(
+          response?.error || "Unable to load comments."
+        );
+        return;
+      }
+
+      setChatError("");
+      setChatReady(true);
+
+      for (const message of response.messages || []) {
+        addSfuChatMessage(message, false);
+      }
+    }
+  );
+}
+
+// Gửi bình luận.
+chatForm.addEventListener("submit", event => {
+  event.preventDefault();
+
+  const text = chatInput.value.trim();
+
+  if (
+    !sfuChatReady ||
+    sfuChatSending ||
+    !socket.connected ||
+    !text
+  ) {
+    return;
+  }
+
+  sfuChatSending = true;
+  chatSend.disabled = true;
+  setChatError("");
+
+  socket.timeout(8000).emit(
+    "sfu:chat:send",
+    { roomId, text },
+
+    (error, response) => {
+      sfuChatSending = false;
+      chatSend.disabled = !sfuChatReady;
+
+      if (error || !response?.ok) {
+        setChatError(
+          response?.error || "Unable to send comment."
+        );
+        return;
+      }
+
+      chatInput.value = "";
+      setChatError("");
+      chatInput.focus();
+    }
+  );
+});
+
+socket.on("disconnect", () => {
+  setChatReady(false);
+});
+
+setChatReady(false);
+
+
+
+
 /* ==========================================
    FULLSCREEN SFU - SETTINGS PANEL
 ========================================== */
@@ -1350,9 +1965,13 @@ async function joinSignalingRoom() {
     );
   });
 
-  if (!response?.ok) {
-    throw new Error("Room access was not authorized.");
-  }
+if (!response?.ok) {
+  throw new Error("Room access was not authorized.");
+}
+
+// Phòng đã xác thực thành công.
+// Cho phép tải và gửi bình luận.
+loadSfuChatHistory();
 }
 
 async function getToken() {
@@ -1805,6 +2424,7 @@ socket.on("host-stream-ready", () => {
 
 
 socket.on("room-closed", async () => {
+setChatReady(false);
   if (isViewer) {
     if (lkRoom) await lkRoom.disconnect();
     setStatus("ENDED");

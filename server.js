@@ -16990,6 +16990,150 @@ socket.on("sfu:join-ack", (data, cb) => {
 });
 
 
+
+/* ==========================================
+   SFU LIVESTREAM - REALTIME COMMENTS
+========================================== */
+
+// Kiểm tra thành viên thực tế của phòng.
+function getAuthorizedSfuChatRoom(roomId) {
+  const id = normRoomId(roomId);
+  if (!id) return null;
+
+  const room = rooms.get(id);
+  const uid = socket.data.uid;
+
+  if (
+    !room ||
+    !socket.data.authenticated ||
+    !uid ||
+    socket.data.roomId !== id ||
+    !socket.rooms.has(id)
+  ) {
+    return null;
+  }
+
+  const isHost =
+    String(room.ownerUid) === String(uid) &&
+    room.broadcasterId === socket.id;
+
+  const viewer = room.viewerProfiles?.get(String(uid));
+
+  const isMember =
+    isHost ||
+    (
+      viewer?.socketId === socket.id &&
+      room.viewers.has(socket.id)
+    );
+
+  return isMember ? { room, id, uid, isHost } : null;
+}
+
+// Nhận lịch sử bình luận của phòng.
+socket.on("sfu:chat:history", (data, ack) => {
+  if (typeof ack !== "function") return;
+
+  const access = getAuthorizedSfuChatRoom(data?.roomId);
+
+  if (!access) {
+    return ack({
+      ok: false,
+      error: "Room access denied."
+    });
+  }
+
+  ack({
+    ok: true,
+    messages: Array.isArray(access.room.sfuComments)
+      ? access.room.sfuComments.slice(-50)
+      : []
+  });
+});
+
+// Gửi bình luận.
+socket.on("sfu:chat:send", (data, ack) => {
+
+  if (typeof ack !== "function") return;
+
+  const access = getAuthorizedSfuChatRoom(data?.roomId);
+
+  if (!access) {
+    return ack({
+      ok: false,
+      error: "You are not in this livestream."
+    });
+  }
+
+  const now = Date.now();
+
+  // Chống gửi liên tục.
+  if (now - (socket.data.lastSfuCommentAt || 0) < 1500) {
+    return ack({
+      ok: false,
+      error: "Please slow down."
+    });
+  }
+
+  const content = String(data?.text || "").trim();
+
+  if (
+    !content ||
+    content.length > 300 ||
+    /[\u0000-\u0008\u000B\u000C\u000E-\u001F]/.test(content)
+  ) {
+    return ack({
+      ok: false,
+      error: "Comment must be 1–300 characters."
+    });
+  }
+
+  const db = loadUsers();
+  const account = db[access.uid];
+
+  if (!account?.profile) {
+    return ack({
+      ok: false,
+      error: "Account not available."
+    });
+  }
+
+  socket.data.lastSfuCommentAt = now;
+
+  const message = {
+    id: crypto.randomUUID(),
+    roomId: access.id,
+    uid: String(access.uid),
+    name: String(
+      account.profile.name || "Player"
+    ).slice(0, 50),
+    verified: !!account.profile.verified,
+    host: access.isHost,
+    text: content,
+    ts: now
+  };
+
+  if (!Array.isArray(access.room.sfuComments)) {
+    access.room.sfuComments = [];
+  }
+
+  access.room.sfuComments.push(message);
+
+  // Chỉ giữ 50 bình luận gần nhất trong RAM.
+  if (access.room.sfuComments.length > 50) {
+    access.room.sfuComments.splice(
+      0,
+      access.room.sfuComments.length - 50
+    );
+  }
+
+  // Chỉ phát tới đúng phòng.
+  io.to(access.id).emit("sfu:chat:new", message);
+
+  ack({ ok: true, id: message.id });
+});
+
+
+
 // ======================================
 // ACTIVE SCREEN SHARE DIRECTORY
 // ======================================
