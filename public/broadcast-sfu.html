@@ -2064,6 +2064,427 @@ button:disabled {
   }
 }
 
+
+
+
+/* ==========================================
+   SFU - LUXURY LIVE GIFTS
+========================================== */
+
+.sfu-gift-toggle {
+  position: fixed;
+  z-index: 16;
+
+  right: calc(76px + env(safe-area-inset-right,0px));
+  bottom: calc(18px + env(safe-area-inset-bottom,0px));
+
+  display: grid;
+  place-items: center;
+
+  width: 48px;
+  height: 48px;
+  padding: 0;
+
+  border-radius: 50%;
+  border: 1px solid rgba(237,199,138,.55);
+
+  background: linear-gradient(145deg,#4E3724,#16181D);
+  color: #F2D39D;
+
+  box-shadow: 0 5px 20px rgba(0,0,0,.4);
+  backdrop-filter: blur(12px);
+}
+
+.sfu-gift-toggle svg {
+  width: 23px;
+  height: 23px;
+}
+
+.sfu-gift-toggle:active {
+  transform: scale(.94);
+}
+
+.sfu-gift-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  background: rgba(0,0,0,.62);
+  backdrop-filter: blur(5px);
+}
+
+.sfu-gift-sheet {
+  width: min(100%,480px);
+  max-height: 85dvh;
+  overflow-y: auto;
+
+  padding:
+    22px
+    18px
+    calc(24px + env(safe-area-inset-bottom,0px));
+
+  border-radius: 24px 24px 0 0;
+  border: 1px solid rgba(225,190,132,.35);
+
+  background: linear-gradient(155deg,#23232A,#111319);
+  color: #F6E6CC;
+
+  box-shadow: 0 -15px 55px rgba(0,0,0,.55);
+}
+
+.sfu-gift-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.sfu-gift-head small {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: #BA9865;
+}
+
+.sfu-gift-head h2 {
+  margin: 7px 0;
+  font-size: 18px;
+  letter-spacing: .6px;
+  color: #F0D39E;
+}
+
+.sfu-gift-head p {
+  margin: 0;
+  font-size: 11px;
+  color: #AEB0B8;
+}
+
+#sfuGiftClose {
+  flex-shrink: 0;
+  width: 35px;
+  height: 35px;
+
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.13);
+
+  background: #2A2C33;
+  color: #E8DAC3;
+  font-size: 25px;
+}
+
+.sfu-gift-balance {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 14px;
+  margin-bottom: 16px;
+
+  background: rgba(214,174,104,.08);
+  border: 1px solid rgba(218,181,117,.25);
+  border-radius: 12px;
+}
+
+.sfu-gift-balance span {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #B6AB9A;
+}
+
+.sfu-gift-balance strong {
+  font-size: 18px;
+  color: #EFCF95;
+  font-variant-numeric: tabular-nums;
+}
+
+.sfu-gift-grid {
+  display: grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: 8px;
+}
+
+.sfu-gift-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+
+  min-width: 0;
+  padding: 14px 5px;
+
+  background: #272A31;
+  color: #F6E6CC;
+
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 14px;
+}
+
+.sfu-gift-card.selected {
+  border-color: #E8C187;
+  background: #443724;
+  box-shadow: inset 0 0 0 1px rgba(233,193,133,.2);
+}
+
+
+.sfu-gift-card strong {
+  font-size: 10px;
+}
+
+.sfu-gift-card small {
+  color: #E6C48B;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.sfu-gift-feedback {
+  min-height: 19px;
+  margin: 14px 0 9px;
+  font-size: 11px;
+  color: #EAB0A7;
+  text-align: center;
+}
+
+.sfu-gift-confirm {
+  width: 100%;
+  height: 48px;
+
+  border: 0;
+  border-radius: 13px;
+
+  background: linear-gradient(125deg,#F6DEAD,#D6AD6D);
+  color: #241A0D;
+
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: .5px;
+}
+
+.sfu-gift-confirm:disabled {
+  opacity: .4;
+}
+
+.sfu-gift-announcement {
+  position: fixed;
+  z-index: 35;
+
+  top: calc(85px + env(safe-area-inset-top,0px));
+  left: 50%;
+  transform: translateX(-50%);
+
+  width: max-content;
+  max-width: calc(100% - 28px);
+
+  padding: 12px 18px;
+
+  border: 1px solid rgba(239,205,147,.5);
+  border-radius: 999px;
+
+  background: rgba(27,22,20,.9);
+  color: #F5D7A1;
+
+  font-size: 12px;
+  font-weight: 750;
+  text-align: center;
+
+  box-shadow: 0 8px 25px rgba(0,0,0,.4);
+
+  pointer-events: none;
+}
+
+@media (max-width: 380px) {
+  .sfu-gift-grid {
+    gap: 5px;
+  }
+
+  .sfu-gift-card {
+    padding: 12px 3px;
+  }
+
+  .sfu-gift-card strong {
+    font-size: 9px;
+  }
+
+  .sfu-gift-toggle {
+    right: calc(70px + env(safe-area-inset-right,0px));
+    width: 44px;
+    height: 44px;
+  }
+}
+
+
+
+/* ==========================================
+   SFU - PREMIUM IMAGE GIFT COLLECTION
+========================================== */
+
+.sfu-gift-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.sfu-gift-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 7px;
+
+  min-width: 0;
+  padding: 12px 5px 14px;
+
+  border: 1px solid rgba(230,194,130,.17);
+  border-radius: 16px;
+
+  background: linear-gradient(
+    155deg,
+    rgba(67,57,45,.7),
+    rgba(24,27,34,.95)
+  );
+
+  color: #F6E8D1;
+  cursor: pointer;
+
+  transition:
+    transform .18s ease,
+    border-color .18s ease,
+    background .18s ease;
+}
+
+.sfu-gift-card.selected {
+  border-color: #F0CC8B;
+  background: linear-gradient(
+    155deg,
+    #59432A,
+    #26232A
+  );
+}
+
+.sfu-gift-card:active {
+  transform: scale(.96);
+}
+
+.sfu-gift-image {
+  display: block;
+  width: min(100%, 90px);
+  height: 88px;
+  object-fit: contain;
+  flex-shrink: 0;
+
+  filter: drop-shadow(
+    0 6px 9px rgba(0,0,0,.38)
+  );
+
+  transition: transform .2s ease;
+}
+
+.sfu-gift-card.selected .sfu-gift-image {
+  transform: scale(1.08);
+}
+
+.sfu-gift-card strong {
+  color: #F9EACD;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.sfu-gift-card small {
+  color: #E8C68D;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+@media (max-width: 390px) {
+  .sfu-gift-grid {
+    gap: 6px;
+  }
+
+  .sfu-gift-image {
+    height: 67px;
+  }
+
+  .sfu-gift-card {
+    padding: 10px 3px 12px;
+  }
+}
+
+
+
+.sfu-gift-toggle-image {
+  display: block;
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  pointer-events: none;
+
+  filter: drop-shadow(
+    0 2px 5px rgba(0,0,0,.35)
+  );
+}
+
+
+
+/* ==========================================
+   SFU - IMAGE GIFT ANNOUNCEMENT
+========================================== */
+
+.sfu-gift-announcement {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  width: max-content;
+  max-width: calc(100vw - 28px);
+  padding: 8px 17px 8px 9px;
+
+  border-radius: 18px;
+  background: rgba(25,22,25,.93);
+
+  white-space: normal;
+}
+
+.sfu-gift-announcement-image {
+  flex: 0 0 65px;
+  width: 65px;
+  height: 65px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 9px rgba(0,0,0,.4));
+}
+
+.sfu-gift-announcement-details {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.sfu-gift-announcement-details strong {
+  font-size: 12px;
+  color: #F4D59F;
+  overflow-wrap: anywhere;
+}
+
+.sfu-gift-announcement-details span {
+  font-size: 11px;
+  color: #E9E2D5;
+  line-height: 1.5;
+}
+
+@media (max-width: 380px) {
+  .sfu-gift-announcement-image {
+    flex-basis: 52px;
+    width: 52px;
+    height: 52px;
+  }
+}
+
+
 </style>
 
 
@@ -2209,6 +2630,145 @@ button:disabled {
 <!-- ======================================
      SFU LIVE COMMENTS
 ====================================== -->
+
+
+
+<!-- ======================================
+     SFU LIVE GIFT BUTTON
+====================================== -->
+
+<button
+  id="sfuGiftToggle"
+  class="sfu-gift-toggle hidden"
+  type="button"
+  aria-label="Send gift to host"
+  title="Send gift">
+
+
+<img
+  src="/assets/live-gifts/gift-box.webp"
+  class="sfu-gift-toggle-image"
+  alt=""
+  draggable="false">
+
+</button>
+
+<!-- GIFT MODAL -->
+<div id="sfuGiftOverlay" class="sfu-gift-overlay hidden">
+
+  <section
+    class="sfu-gift-sheet"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="sfuGiftTitle">
+
+    <div class="sfu-gift-head">
+      <div>
+        <small>LIVESTREAMPRO</small>
+        <h2 id="sfuGiftTitle">SEND LIVE GIFT</h2>
+        <p>Support the host with diamonds</p>
+      </div>
+
+      <button
+        type="button"
+        id="sfuGiftClose"
+        aria-label="Close gifts">×</button>
+    </div>
+
+    <div class="sfu-gift-balance">
+      <span>MY DIAMONDS</span>
+      <strong id="sfuGiftBalance">—</strong>
+    </div>
+
+
+<!-- PREMIUM LIVE GIFT COLLECTION -->
+<div id="sfuGiftList" class="sfu-gift-grid">
+
+  <button
+    type="button"
+    class="sfu-gift-card"
+    data-gift-id="heart">
+
+    <img
+      class="sfu-gift-image"
+      src="/assets/live-gifts/heart.webp"
+      alt="Heart"
+      loading="lazy">
+
+    <strong>Heart</strong>
+    <small>50 💎</small>
+  </button>
+
+  <button
+    type="button"
+    class="sfu-gift-card"
+    data-gift-id="flower">
+
+    <img
+      class="sfu-gift-image"
+      src="/assets/live-gifts/flower.webp"
+      alt="Flower"
+      loading="lazy">
+
+    <strong>Flower</strong>
+    <small>100 💎</small>
+  </button>
+
+  <button
+    type="button"
+    class="sfu-gift-card"
+    data-gift-id="rocket">
+
+    <img
+      class="sfu-gift-image"
+      src="/assets/live-gifts/rocket.webp"
+      alt="Rocket"
+      loading="lazy">
+
+    <strong>Rocket</strong>
+    <small>200 💎</small>
+  </button>
+
+  <button
+    type="button"
+    class="sfu-gift-card"
+    data-gift-id="king">
+
+    <img
+      class="sfu-gift-image"
+      src="/assets/live-gifts/crown.webp"
+      alt="Crown"
+      loading="lazy">
+
+    <strong>Crown</strong>
+    <small>1,000 💎</small>
+  </button>
+
+</div>
+
+    <p id="sfuGiftFeedback"
+       class="sfu-gift-feedback"
+       role="status"></p>
+
+    <button
+      id="sfuGiftConfirm"
+      type="button"
+      class="sfu-gift-confirm"
+      disabled>
+      SELECT A GIFT
+    </button>
+
+  </section>
+</div>
+
+<!-- FLOATING GIFT ANNOUNCEMENT -->
+<div
+  id="sfuGiftAnnouncement"
+  class="sfu-gift-announcement hidden"
+  aria-live="polite">
+</div>
+
+
 
 
 <!-- PREMIUM FLOATING CHAT BUTTON -->
@@ -2678,6 +3238,305 @@ const chatSend = $("sfuChatSend");
 const chatUnread = $("sfuChatUnread");
 const chatError = $("sfuChatError");
 
+/* ==========================================
+   SFU LIVE GIFTS - CLIENT
+========================================== */
+
+const giftToggle = $("sfuGiftToggle");
+const giftOverlay = $("sfuGiftOverlay");
+const giftClose = $("sfuGiftClose");
+const giftBalance = $("sfuGiftBalance");
+const giftConfirm = $("sfuGiftConfirm");
+const giftFeedback = $("sfuGiftFeedback");
+const giftAnnouncement = $("sfuGiftAnnouncement");
+
+
+const LIVE_GIFT_OPTIONS = {
+  heart: {
+    name: "Heart",
+    cost: 50,
+    image: "/assets/live-gifts/heart.webp"
+  },
+  flower: {
+    name: "Flower",
+    cost: 100,
+    image: "/assets/live-gifts/flower.webp"
+  },
+  rocket: {
+    name: "Rocket",
+    cost: 200,
+    image: "/assets/live-gifts/rocket.webp"
+  },
+  king: {
+    name: "Crown",
+    cost: 1000,
+    image: "/assets/live-gifts/crown.webp"
+  }
+};
+
+let selectedLiveGift = null;
+let liveGiftSending = false;
+let liveGiftBalanceValue = null;
+let pendingLiveGiftRequest = null;
+let giftAnnouncementTimer = null;
+
+function setLiveGiftBalance(value) {
+  const n = Number(value);
+
+  liveGiftBalanceValue =
+    Number.isFinite(n) && n >= 0
+      ? Math.floor(n)
+      : null;
+
+  giftBalance.textContent =
+    liveGiftBalanceValue === null
+      ? "—"
+      : liveGiftBalanceValue.toLocaleString("en-US");
+}
+
+function refreshLiveGiftBalance() {
+  if (!isViewer || !socket.connected) return;
+
+  socket.timeout(8000).emit(
+    "sfu:gift:balance",
+    { roomId },
+    (error, result) => {
+
+      if (error || !result?.ok) {
+        giftFeedback.textContent =
+          result?.error || "Unable to load balance.";
+        return;
+      }
+
+      setLiveGiftBalance(result.coins);
+    }
+  );
+}
+
+function updateLiveGiftButton() {
+
+  const gift = LIVE_GIFT_OPTIONS[selectedLiveGift];
+
+  giftConfirm.disabled =
+    !gift ||
+    liveGiftSending ||
+    !sfuChatLive ||
+    !socket.connected;
+
+  giftConfirm.textContent = liveGiftSending
+    ? "SENDING..."
+    : gift
+      ? `SEND ${gift.name.toUpperCase()} · ${gift.cost.toLocaleString()} 💎`
+      : "SELECT A GIFT";
+}
+
+function openLiveGiftSheet() {
+  if (!isViewer || !sfuChatLive) return;
+
+  giftOverlay.classList.remove("hidden");
+  giftFeedback.textContent = "";
+
+  refreshLiveGiftBalance();
+  updateLiveGiftButton();
+}
+
+function closeLiveGiftSheet() {
+  if (liveGiftSending) return;
+  giftOverlay.classList.add("hidden");
+}
+
+giftToggle.addEventListener("click", openLiveGiftSheet);
+giftClose.addEventListener("click", closeLiveGiftSheet);
+
+giftOverlay.addEventListener("click", event => {
+  if (event.target === giftOverlay) {
+    closeLiveGiftSheet();
+  }
+});
+
+document.querySelectorAll(".sfu-gift-card").forEach(button => {
+
+  button.addEventListener("click", () => {
+    if (liveGiftSending) return;
+
+    const id = button.dataset.giftId;
+    if (!LIVE_GIFT_OPTIONS[id]) return;
+
+    // If a request timed out, preserve its original
+    // transaction ID until safely resolved.
+    if (
+      pendingLiveGiftRequest &&
+      pendingLiveGiftRequest.giftId !== id
+    ) {
+      giftFeedback.textContent =
+        "Retry or resolve your previous gift first.";
+      return;
+    }
+
+    selectedLiveGift = id;
+
+    document.querySelectorAll(".sfu-gift-card")
+      .forEach(card => {
+        card.classList.toggle(
+          "selected",
+          card.dataset.giftId === id
+        );
+      });
+
+    giftFeedback.textContent = "";
+    updateLiveGiftButton();
+  });
+
+});
+
+giftConfirm.addEventListener("click", () => {
+
+  const gift = LIVE_GIFT_OPTIONS[selectedLiveGift];
+
+  if (
+    !gift ||
+    liveGiftSending ||
+    !socket.connected ||
+    !sfuChatLive ||
+    !isViewer
+  ) return;
+
+  if (
+    liveGiftBalanceValue !== null &&
+    liveGiftBalanceValue < gift.cost &&
+    !pendingLiveGiftRequest
+  ) {
+    giftFeedback.textContent = "Insufficient diamonds.";
+    return;
+  }
+
+  // Reuse the transaction ID on a timeout retry.
+  if (!pendingLiveGiftRequest) {
+    pendingLiveGiftRequest = {
+      requestId: crypto.randomUUID(),
+      giftId: selectedLiveGift
+    };
+  }
+
+  liveGiftSending = true;
+  giftFeedback.textContent = "";
+  updateLiveGiftButton();
+
+  socket.timeout(10000).emit(
+    "sfu:gift:send",
+    {
+      roomId,
+      giftId: pendingLiveGiftRequest.giftId,
+      requestId: pendingLiveGiftRequest.requestId
+    },
+    (error, response) => {
+
+      liveGiftSending = false;
+
+      if (error) {
+        giftFeedback.textContent =
+          "Connection uncertain. Retry the same gift to check the transaction.";
+        updateLiveGiftButton();
+        return;
+      }
+
+      if (!response?.ok) {
+        giftFeedback.textContent =
+          response?.error || "Unable to send gift.";
+
+        // A confirmed rejection means no charge occurred.
+        pendingLiveGiftRequest = null;
+
+        if (typeof response?.coins === "number") {
+          setLiveGiftBalance(response.coins);
+        } else {
+          refreshLiveGiftBalance();
+        }
+
+        updateLiveGiftButton();
+        return;
+      }
+
+      pendingLiveGiftRequest = null;
+
+      setLiveGiftBalance(response.coins);
+      giftFeedback.textContent = "";
+
+      showMessage(
+        response.duplicate
+          ? "Gift transaction already completed."
+          : `Gift sent: ${gift.name}!`
+      );
+
+      giftOverlay.classList.add("hidden");
+      updateLiveGiftButton();
+    }
+  );
+
+});
+
+// Receive wallet updates on this account.
+socket.on("coin-update", data => {
+  if (!isViewer) return;
+
+  if (Number.isFinite(Number(data?.coins))) {
+    setLiveGiftBalance(data.coins);
+  }
+});
+
+// Show successful gifts to everyone in this room.
+socket.on("sfu:gift:new", data => {
+
+  if (data?.roomId !== roomId) return;
+
+  const donor = String(data.donor || "Viewer")
+    .slice(0, 50);
+
+  const cost = Number(data.cost) || 0;
+
+
+const gift = Object.prototype.hasOwnProperty.call(
+  LIVE_GIFT_OPTIONS,
+  data.giftId
+)
+  ? LIVE_GIFT_OPTIONS[data.giftId]
+  : null;
+
+giftAnnouncement.replaceChildren();
+
+const image = document.createElement("img");
+image.className = "sfu-gift-announcement-image";
+image.src = gift?.image || "/assets/live-gifts/gift-box.webp";
+image.alt = "";
+image.decoding = "async";
+
+const details = document.createElement("div");
+details.className = "sfu-gift-announcement-details";
+
+const sender = document.createElement("strong");
+sender.textContent = donor;
+
+const description = document.createElement("span");
+description.textContent =
+  `sent ${gift?.name || "a gift"} to Host · ` +
+  `${cost.toLocaleString("en-US")} diamonds`;
+
+details.append(sender, description);
+giftAnnouncement.append(image, details);
+
+
+  giftAnnouncement.classList.remove("hidden");
+
+  clearTimeout(giftAnnouncementTimer);
+
+  giftAnnouncementTimer = setTimeout(() => {
+    giftAnnouncement.classList.add("hidden");
+  }, 3500);
+
+});
+
+
+
 let sfuChatReady = false;
 let sfuChatSending = false;
 let sfuChatUnreadCount = 0;
@@ -2695,6 +3554,22 @@ function setSfuChatLive(isLive) {
 
   const wasLive = sfuChatLive;
   sfuChatLive = Boolean(isLive);
+
+
+// Gift button is only available to Viewers during LIVE.
+giftToggle.classList.toggle(
+  "hidden",
+  !isViewer || !sfuChatLive
+);
+
+if (!sfuChatLive) {
+  giftOverlay.classList.add("hidden");
+  giftAnnouncement.classList.add("hidden");
+}
+
+updateLiveGiftButton();
+
+
 
   chatToggle.classList.toggle(
     "hidden",

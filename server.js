@@ -17241,6 +17241,254 @@ const message = {
 
 
 
+
+/* ==========================================
+   SFU LIVE GIFTS - SERVER WALLET ENGINE
+   Uses real profile.coins
+========================================== */
+
+const SFU_LIVE_GIFTS = Object.freeze({
+  heart:  { name: "Heart",  emoji: "❤️", cost: 50 },
+  flower: { name: "Flower", emoji: "🌸", cost: 100 },
+  rocket: { name: "Rocket", emoji: "🚀", cost: 200 },
+  king:   { name: "Crown",  emoji: "👑", cost: 1000 }
+});
+
+// Return authenticated viewer's real balance.
+socket.on("sfu:gift:balance", (data, ack) => {
+  if (typeof ack !== "function") return;
+
+  const access = getAuthorizedSfuChatRoom(data?.roomId);
+
+  if (!access || access.isHost) {
+    return ack({ ok: false, error: "Viewer access required." });
+  }
+
+  const account = loadUsers()[access.uid];
+
+  if (!account?.profile) {
+    return ack({ ok: false, error: "Account unavailable." });
+  }
+
+  ack({
+    ok: true,
+    coins: Math.max(0, Math.floor(Number(account.profile.coins) || 0))
+  });
+});
+
+socket.on("sfu:gift:send", (data, ack) => {
+
+  if (typeof ack !== "function") return;
+
+  const reply = (error) => ack({
+    ok: false,
+    error
+  });
+
+  // Must be a verified, active Viewer in this room.
+  const access = getAuthorizedSfuChatRoom(data?.roomId);
+
+  if (
+    !access ||
+    access.isHost ||
+    socket.data.authenticated !== true
+  ) {
+    return reply("You must be a signed-in viewer.");
+  }
+
+  const room = access.room;
+
+  if (!room.liveStartTs || !room.broadcasterId) {
+    return reply("The livestream is not active.");
+  }
+
+  const hostSocket = io.sockets.sockets.get(
+    room.broadcasterId
+  );
+
+  const hostUid = String(room.ownerUid || "");
+
+  if (
+    !hostSocket?.connected ||
+    hostSocket.data.authenticated !== true ||
+    String(hostSocket.data.uid || "") !== hostUid ||
+    !hostUid ||
+    hostUid === access.uid
+  ) {
+    return reply("Host is not available.");
+  }
+
+  // Gift prices always come from the server.
+  const giftId = String(data?.giftId || "");
+  const gift = SFU_LIVE_GIFTS[giftId];
+
+  if (!gift) {
+    return reply("Invalid gift.");
+  }
+
+  const requestId = String(data?.requestId || "");
+
+  if (!/^[a-f0-9-]{36}$/i.test(requestId)) {
+    return reply("Invalid transaction ID.");
+  }
+
+  const db = loadUsers();
+
+  const sender = db[access.uid];
+  const receiver = db[hostUid];
+
+  if (
+    !sender?.profile ||
+    !receiver?.profile ||
+    sender.profile.accountBlocked ||
+    receiver.profile.accountBlocked
+  ) {
+    return reply("Account unavailable.");
+  }
+
+  const senderProfile = sender.profile;
+  const hostProfile = receiver.profile;
+
+  const history = Array.isArray(senderProfile.liveGiftHistory)
+    ? senderProfile.liveGiftHistory
+    : [];
+
+  // Idempotency: an acknowledged transaction cannot
+  // be charged again if the same request is retried.
+  const previous = history.find(
+    tx => tx.id === requestId && tx.direction === "sent"
+  );
+
+  if (previous) {
+    return ack({
+      ok: true,
+      duplicate: true,
+      transactionId: requestId,
+      coins: Math.floor(Number(senderProfile.coins) || 0)
+    });
+  }
+
+  const now = Date.now();
+
+  if (now - (socket.data.lastSfuGiftAt || 0) < 1000) {
+    return reply("Please wait before sending another gift.");
+  }
+
+  const cost = gift.cost;
+  const balance = Math.floor(Number(senderProfile.coins));
+
+  if (!Number.isSafeInteger(balance) || balance < 0) {
+    return reply("Invalid account balance.");
+  }
+
+  if (balance < cost) {
+    return ack({
+      ok: false,
+      error: "Insufficient diamonds.",
+      coins: balance
+    });
+  }
+
+  const hostBalance = Math.floor(Number(hostProfile.coins));
+
+  if (
+    !Number.isSafeInteger(hostBalance) ||
+    hostBalance < 0 ||
+    hostBalance > Number.MAX_SAFE_INTEGER - cost
+  ) {
+    return reply("Host wallet is unavailable.");
+  }
+
+  const senderName = String(
+    senderProfile.name || "Viewer"
+  ).slice(0, 50);
+
+  const ts = Date.now();
+
+  // Real wallet transfer.
+  senderProfile.coins = balance - cost;
+  hostProfile.coins = hostBalance + cost;
+
+  // Profile statistics.
+  senderProfile.coinSent =
+    (Number(senderProfile.coinSent) || 0) + cost;
+
+  hostProfile.coinReceived =
+    (Number(hostProfile.coinReceived) || 0) + cost;
+
+  const transaction = {
+    id: requestId,
+    roomId: access.id,
+    giftId,
+    giftName: gift.name,
+    amount: cost,
+    fromUid: access.uid,
+    toUid: hostUid,
+    ts
+  };
+
+  // Maintain recent audit history on both accounts.
+  senderProfile.liveGiftHistory = [
+    ...history,
+    { ...transaction, direction: "sent" }
+  ].slice(-200);
+
+  hostProfile.liveGiftHistory = [
+    ...(Array.isArray(hostProfile.liveGiftHistory)
+      ? hostProfile.liveGiftHistory
+      : []),
+    { ...transaction, direction: "received" }
+  ].slice(-200);
+
+  try {
+    // Synchronous persistence before success is returned.
+    saveUsers(db);
+  } catch (error) {
+    console.error("[SFU GIFT SAVE]", error);
+    return reply("Unable to save gift transaction.");
+  }
+
+  socket.data.lastSfuGiftAt = now;
+
+  // Update both real profile wallets.
+  emitCoinUpdate(access.uid);
+  emitCoinUpdate(hostUid);
+
+  // Room gift statistics.
+  room.giftTotal = (Number(room.giftTotal) || 0) + cost;
+
+  room.giftByUser ||= new Map();
+  room.giftByUser.set(
+    access.uid,
+    (Number(room.giftByUser.get(access.uid)) || 0) + cost
+  );
+
+  const payload = {
+    roomId: access.id,
+    transactionId: requestId,
+    donor: senderName,
+    giftId,
+    giftName: gift.name,
+    emoji: gift.emoji,
+    cost,
+    ts
+  };
+
+  // Only this room sees the gift animation.
+  io.to(access.id).emit("sfu:gift:new", payload);
+
+  ack({
+    ok: true,
+    transactionId: requestId,
+    coins: senderProfile.coins
+  });
+
+});
+
+
+
+
+
 // ======================================
 // ACTIVE SCREEN SHARE DIRECTORY
 // ======================================
