@@ -3930,6 +3930,11 @@ async function exitSfuMiniPlayer() {
   syncSfuMiniPlayer();
 }
 
+
+/* ==========================================
+   SFU - MOBILE + DESKTOP MINI PLAYER
+========================================== */
+
 sfuMiniPlayerBtn.addEventListener(
   "click",
   async () => {
@@ -3946,25 +3951,77 @@ sfuMiniPlayerBtn.addEventListener(
       return;
     }
 
-    try {
-      if (isSfuMiniActive(video)) {
+    if (isSfuMiniActive(video)) {
+      try {
         await exitSfuMiniPlayer();
-        return;
+      } catch (error) {
+        console.warn("[SFU PiP EXIT]", error);
+      }
+      return;
+    }
+
+    const isAppleMobile =
+      /iPad|iPhone|iPod/i.test(navigator.userAgent) ||
+      (
+        navigator.platform === "MacIntel" &&
+        navigator.maxTouchPoints > 1
+      );
+
+    const safariSupported =
+      typeof video.webkitSetPresentationMode === "function" &&
+      typeof video.webkitSupportsPresentationMode === "function" &&
+      video.webkitSupportsPresentationMode(
+        "picture-in-picture"
+      );
+
+    const standardSupported =
+      document.pictureInPictureEnabled === true &&
+      typeof video.requestPictureInPicture === "function";
+
+    video.disablePictureInPicture = false;
+
+    if (
+      video.readyState <
+        HTMLMediaElement.HAVE_CURRENT_DATA ||
+      video.videoWidth === 0
+    ) {
+      showMessage(
+        "Video is still loading. Please try again."
+      );
+      return;
+    }
+
+    try {
+
+      // iPhone / iPad: ưu tiên Safari PiP.
+      if (isAppleMobile && safariSupported) {
+
+        video.webkitSetPresentationMode(
+          "picture-in-picture"
+        );
+
       }
 
-      if (
-        document.pictureInPictureEnabled &&
-        typeof video.requestPictureInPicture === "function"
-      ) {
+      // Android Chrome / Desktop.
+      else if (standardSupported) {
+
         await video.requestPictureInPicture();
-      } else if (
-        typeof video.webkitSupportsPresentationMode === "function" &&
-        video.webkitSupportsPresentationMode("picture-in-picture")
-      ) {
-        video.webkitSetPresentationMode("picture-in-picture");
-      } else {
+
+      }
+
+      // Safari fallback.
+      else if (safariSupported) {
+
+        video.webkitSetPresentationMode(
+          "picture-in-picture"
+        );
+
+      }
+
+      else {
+
         showMessage(
-          "Mini Player is not supported in this browser."
+          "Picture-in-Picture is not available on this device."
         );
         return;
       }
@@ -3972,16 +4029,47 @@ sfuMiniPlayerBtn.addEventListener(
       syncSfuMiniPlayer();
 
     } catch (error) {
-      console.warn("[SFU MINI PLAYER]", error);
 
-      showMessage(
-        "Unable to open Mini Player. Please try again."
-      );
+      console.error("[SFU MOBILE PIP ERROR]", {
+        name: error?.name,
+        message: error?.message,
+        userAgent: navigator.userAgent,
+        readyState: video.readyState,
+        videoWidth: video.videoWidth,
+        videoHeight: video.videoHeight,
+        standardSupported,
+        safariSupported,
+        isAppleMobile
+      });
+
+      let message =
+        "Mini Player is unavailable on this device.";
+
+      if (error?.name === "NotAllowedError") {
+        message =
+          "The browser blocked Mini Player. Please try again.";
+      }
+
+      else if (error?.name === "NotSupportedError") {
+        message =
+          "This phone does not support PiP for live video.";
+      }
+
+      else if (error?.name === "InvalidStateError") {
+        message =
+          "The livestream video is not ready for PiP.";
+      }
+
+      else if (error?.name === "SecurityError") {
+        message =
+          "Mini Player is blocked by browser permissions.";
+      }
+
+      showMessage(message);
     }
+
   }
 );
-
-
 
 /* ==========================================
    SFU - REALTIME VIEWER DIRECTORY
@@ -5457,10 +5545,18 @@ function addRemoteTrack(track) {
   element.autoplay = true;
 
   if (track.kind === Track.Kind.Video) {
-    element.playsInline = true;
-    element.style.width = "100%";
-    element.style.height = "100%";
-    element.style.objectFit = "contain";
+
+element.playsInline = true;
+element.autoplay = true;
+element.disablePictureInPicture = false;
+
+element.setAttribute("playsinline", "");
+element.setAttribute("webkit-playsinline", "");
+
+element.style.width = "100%";
+element.style.height = "100%";
+element.style.objectFit = "contain";
+
 
     $("remoteMedia").querySelectorAll("video")
       .forEach(video => video.remove());
