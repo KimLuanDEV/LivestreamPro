@@ -16676,20 +16676,6 @@ for (const v of list) {
 
 
 
-// ===== SOCKET DISCONNECT TRACK =====
-
-if (uid) {
-  const set = activeUsers.get(uid);
-  if (set) {
-    set.delete(socket.id);
-    if (set.size === 0) {
-      activeUsers.delete(uid);
-
-      // ⚪ AGENT OFFLINE REALTIME
-      emitAgentStatus(uid, false);
-    }
-  }
-}
 
   
 
