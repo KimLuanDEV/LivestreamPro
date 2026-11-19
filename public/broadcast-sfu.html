@@ -818,6 +818,33 @@ button:disabled {
   bottom: calc(18px + env(safe-area-inset-bottom,0px));
 }
 
+
+/* ==========================================
+   SFU - CAMERA CONTROL GRID
+========================================== */
+
+.studio-control-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.studio-control-grid .control {
+  min-width: 0;
+  min-height: 82px;
+  padding: 12px 5px;
+  flex-direction: column;
+  gap: 9px;
+  font-size: 9px;
+}
+
+.studio-control-grid .studio-icon {
+  width: 22px;
+  height: 22px;
+}
+
+
+
 </style>
 
 
@@ -1064,18 +1091,6 @@ button:disabled {
           <span>MICROPHONE ON</span>
         </button>
 
-        <button
-          class="control"
-          id="screenBtn"
-          disabled>
-
-          <svg class="studio-icon">
-            <use href="#ico-screen"></use>
-          </svg>
-
-          <span>SHARE SCREEN</span>
-        </button>
-
       </div>
 
       <div class="studio-control-bottom">
@@ -1168,7 +1183,6 @@ let started = false;
 let stopping = false;
 let cameraOn = true;
 let micOn = true;
-let screenOn = false;
 let cameraFacing = "user"; // Camera trước
 let cameraSwitching = false;
 let viewerConnecting = false;
@@ -1274,7 +1288,6 @@ function setHostButtons(live) {
   $("flipCameraBtn").disabled =
     !live || !cameraOn || cameraSwitching;
   $("micBtn").disabled = !live;
-  $("screenBtn").disabled = !live;
   $("stopBtn").disabled = !live;
 }
 
@@ -1657,27 +1670,6 @@ setStudioButtonText(
   }
 }
 
-async function toggleScreen() {
-  if (!lkRoom || !started) return;
-
-  try {
-    const next = !screenOn;
-
-    await lkRoom.localParticipant.setScreenShareEnabled(next);
-
-    screenOn = next;
-
-setStudioButtonText(
-  "screenBtn",
-  screenOn ? "STOP SHARING" : "SHARE SCREEN"
-);
-
-    $("screenBtn").classList.toggle("active", screenOn);
-
-  } catch (error) {
-    showMessage(error.message);
-  }
-}
 
 async function stopLive() {
   if (stopping) return;
@@ -1763,7 +1755,7 @@ $("startBtn").onclick = startLive;
 $("cameraBtn").onclick = toggleCamera;
 $("flipCameraBtn").onclick = flipCamera;
 $("micBtn").onclick = toggleMic;
-$("screenBtn").onclick = toggleScreen;
+
 $("stopBtn").onclick = stopLive;
 $("backBtn").onclick = () => {
   if (started) stopLive();
