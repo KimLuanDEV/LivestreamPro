@@ -6636,13 +6636,49 @@ avatarWrap.appendChild(avatar);
 
 
 
-function addSfuChatMessage(message, countUnread = false) {
+
+/* ==========================================
+   SFU LIVE CHAT - PK SHARED MESSAGE
+========================================== */
+
+function addSfuChatMessage(
+  message,
+  countUnread = false
+) {
   if (
     !message ||
-    message.roomId !== roomId ||
     typeof message.id !== "string"
   ) {
     return;
+  }
+
+  const activePkId = pkMatch?.id || null;
+
+  // Shared PK message: accept only from the current match
+  // and from one of the two authorized rooms.
+  if (message.pkMatchId) {
+
+    if (
+      !activePkId ||
+      message.pkMatchId !== activePkId ||
+      !pkMatch.rooms?.includes(message.roomId)
+    ) {
+      return;
+    }
+
+  } else {
+
+    // Original regular chat and system messages
+    // belong only to the current livestream room.
+    if (message.roomId !== roomId) {
+      return;
+    }
+
+    // During PK, avoid mixing old/ordinary chat
+    // with the shared battle conversation.
+    if (activePkId && message.system !== true) {
+      return;
+    }
   }
 
   if (sfuChatItems.has(message.id)) return;
@@ -6664,6 +6700,7 @@ function addSfuChatMessage(message, countUnread = false) {
 
   renderSfuChat();
 }
+
 
 function openSfuChat() {
   if (!sfuChatLive) return;
@@ -6749,6 +6786,16 @@ function loadSfuChatHistory() {
         return;
       }
 
+      // Ignore history belonging to a different PK state.
+// This protects against asynchronous responses arriving late.
+const currentPkId = pkMatch?.id || null;
+
+if (
+  (response.pkMatchId || null) !== currentPkId
+) {
+  return;
+}
+
       setChatError("");
 
 
@@ -6766,9 +6813,14 @@ if (sfuChatLive) {
 
 if (!sfuChatLive) return;
 
+
+// Merge history with realtime comments.
+// Duplicate IDs are filtered by addSfuChatMessage().
 for (const message of response.messages || []) {
   addSfuChatMessage(message, false);
 }
+
+renderSfuChat();
 
     }
   );
@@ -8122,11 +8174,23 @@ pkPeerRoom = room;
 async function pkBegin(state) {
   if (!state || !state.rooms?.includes(roomId)) return;
 
-  const sameMatch = pkMatch?.id === state.id;
+const sameMatch = pkMatch?.id === state.id;
 
-  pkMatch = state;
-  pkDraw(state);
-  pkUpdateTimer();
+pkMatch = state;
+pkDraw(state);
+pkUpdateTimer();
+
+// Enter shared chat only when joining a new PK.
+if (!sameMatch) {
+  sfuChatItems.clear();
+  sfuChatUnreadCount = 0;
+
+  updateChatUnread();
+  renderSfuChat();
+}
+
+// Also refresh history when a viewer joins mid-battle.
+loadSfuChatHistory();
 
   pkBoard.classList.remove("hidden");
   pkPeer.classList.remove("hidden");
@@ -8178,8 +8242,21 @@ if (result.winnerRoom === roomId) {
   text = "PK DRAW! Both hosts scored equally.";
 }
 
-  pkMatch = null;
-  pkInvite = null;
+pkMatch = null;
+pkInvite = null;
+
+// Leave shared chat and return to the local room.
+sfuChatItems.clear();
+
+sfuChatUnreadCount = 0;
+updateChatUnread();
+renderSfuChat();
+
+// The server has already removed the PK match
+// before emitting sfu:pk:ended.
+if (socket.connected && sfuChatLive) {
+  loadSfuChatHistory();
+}
 
   pkConnectEpoch++;
 

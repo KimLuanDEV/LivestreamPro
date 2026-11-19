@@ -17766,14 +17766,19 @@ pkPruneInvites();
   const match = {
     id: crypto.randomUUID(),
     rooms: [from.id, target.id],
+
     names: [
       String(users[from.room.ownerUid]?.profile?.name || "Host A").slice(0, 50),
       String(users[target.room.ownerUid]?.profile?.name || "Host B").slice(0, 50)
     ],
     scores: [0, 0],
+
 endAt: Date.now() + PK_DURATION,
 timer: null,
-peerParticipants: new Map()
+peerParticipants: new Map(),
+
+sharedComments: []
+
   };
 
   pkMatches.set(from.id, match);
@@ -18285,11 +18290,17 @@ socket.on("disconnect", () => {
 
 
 
-// Nhận lịch sử bình luận của phòng.
+
+/* ==========================================
+   SFU CHAT HISTORY - ROOM / PK SHARED
+========================================== */
+
 socket.on("sfu:chat:history", (data, ack) => {
   if (typeof ack !== "function") return;
 
-  const access = getAuthorizedSfuChatRoom(data?.roomId);
+  const access = getAuthorizedSfuChatRoom(
+    data?.roomId
+  );
 
   if (!access) {
     return ack({
@@ -18298,22 +18309,34 @@ socket.on("sfu:chat:history", (data, ack) => {
     });
   }
 
+  let match = pkMatches.get(access.id);
 
-ack({
-  ok: true,
+  // Do not expose PK chat after the battle expires.
+  if (match && Date.now() >= match.endAt) {
+    pkFinish(match, "timeout");
+    match = null;
+  }
 
-  live: Boolean(access.room.liveStartTs),
+  const messages = match
+    ? match.sharedComments
+    : access.room.sfuComments;
 
-  // Tổng quà đã nhận từ đầu phiên LIVE.
-  totalCoins: Number(access.room.giftTotal) || 0,
+  ack({
+    ok: true,
+    live: Boolean(access.room.liveStartTs),
 
-  messages: Array.isArray(access.room.sfuComments)
-    ? access.room.sfuComments.slice(-50)
-    : []
+    // Keep the original room's gift statistics.
+    totalCoins: Number(access.room.giftTotal) || 0,
+
+    // Allows the client to reject stale history responses.
+    pkMatchId: match?.id || null,
+
+    messages: Array.isArray(messages)
+      ? messages.slice(-50)
+      : []
+  });
 });
 
-
-});
 
 // Gửi bình luận.
 socket.on("sfu:chat:send", (data, ack) => {
@@ -18373,11 +18396,27 @@ socket.on("sfu:chat:send", (data, ack) => {
   socket.data.lastSfuCommentAt = now;
 
 
+  // Get the active PK match from the authenticated room.
+let chatPkMatch = pkMatches.get(access.id);
+
+if (
+  chatPkMatch &&
+  Date.now() >= chatPkMatch.endAt
+) {
+  pkFinish(chatPkMatch, "timeout");
+  chatPkMatch = null;
+}
+
+
 const message = {
   id: crypto.randomUUID(),
 
-  roomId: access.id,
-  uid: String(access.uid),
+roomId: access.id,
+
+// Same ID for messages shared by both PK rooms.
+pkMatchId: chatPkMatch?.id || null,
+
+uid: String(access.uid),
 
   name: String(
     account.profile.name || "Player"
@@ -18397,13 +18436,42 @@ const message = {
 
 
 
+
+// ==========================================
+// SAVE COMMENTS TO CORRECT CHAT SCOPE
+// ==========================================
+
+if (chatPkMatch) {
+
+  // During PK, store comments in the shared battle history.
+  chatPkMatch.sharedComments ||= [];
+
+  chatPkMatch.sharedComments.push(message);
+
+  if (chatPkMatch.sharedComments.length > 50) {
+    chatPkMatch.sharedComments.splice(
+      0,
+      chatPkMatch.sharedComments.length - 50
+    );
+  }
+
+  // Send once to each of the two participating rooms.
+  for (const pkRoomId of chatPkMatch.rooms) {
+    io.to(pkRoomId).emit(
+      "sfu:chat:new",
+      message
+    );
+  }
+
+} else {
+
+  // Outside PK, keep the original private room chat.
   if (!Array.isArray(access.room.sfuComments)) {
     access.room.sfuComments = [];
   }
 
   access.room.sfuComments.push(message);
 
-  // Chỉ giữ 50 bình luận gần nhất trong RAM.
   if (access.room.sfuComments.length > 50) {
     access.room.sfuComments.splice(
       0,
@@ -18411,10 +18479,17 @@ const message = {
     );
   }
 
-  // Chỉ phát tới đúng phòng.
-  io.to(access.id).emit("sfu:chat:new", message);
+  io.to(access.id).emit(
+    "sfu:chat:new",
+    message
+  );
+}
 
-  ack({ ok: true, id: message.id });
+ack({
+  ok: true,
+  id: message.id
+});
+
 });
 
 
