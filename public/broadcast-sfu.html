@@ -1666,7 +1666,7 @@ button:disabled {
 
 .sfu-chat-toggle {
   z-index: 16;
-  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(8px + env(safe-area-inset-bottom, 0px));
 }
 
 /* Small error notification */
@@ -1706,7 +1706,7 @@ button:disabled {
 @media (max-width: 480px) {
   .sfu-chat-panel {
     height: min(305px, 43dvh);
-    bottom: 0;
+    bottom: -10px;
     border-radius: 0;
   }
 
@@ -2076,7 +2076,7 @@ button:disabled {
   z-index: 16;
 
   right: calc(13px + env(safe-area-inset-right,0px));
-  bottom: calc(72px + env(safe-area-inset-bottom,0px));
+  bottom: calc(62px + env(safe-area-inset-bottom,0px));
 
   display: grid;
   place-items: center;
@@ -3702,7 +3702,7 @@ body.sfu-role-viewer #sfuVoiceToggle {
   );
 
   bottom: calc(
-    134px + env(safe-area-inset-bottom, 0px)
+    118px + env(safe-area-inset-bottom, 0px)
   );
 
   width: 48px;
@@ -3716,13 +3716,13 @@ body.sfu-role-viewer #sfuVoiceToggle {
 
   body.sfu-role-host #sfuVoiceToggle {
     bottom: calc(
-      72px + env(safe-area-inset-bottom, 0px)
+      62px + env(safe-area-inset-bottom, 0px)
     );
   }
 
   body.sfu-role-viewer #sfuVoiceToggle {
     bottom: calc(
-      128px + env(safe-area-inset-bottom, 0px)
+      118px + env(safe-area-inset-bottom, 0px)
     );
   }
 
