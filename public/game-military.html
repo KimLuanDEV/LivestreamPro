@@ -11215,6 +11215,98 @@ box.style.display="none"
 
 let w8Capture = null;
 let w8ShareToken = "";
+
+/* ==========================================
+   W8 LIVEKIT SFU - HOST
+========================================== */
+
+let w8SfuRoom = null;
+let w8SfuProof = "";
+
+let w8LiveKitSDKPromise = null;
+
+function w8GetLiveKitSDK() {
+  if (!w8LiveKitSDKPromise) {
+    w8LiveKitSDKPromise = import(
+      "https://cdn.jsdelivr.net/npm/livekit-client@2.17.0/+esm"
+    ).catch(error => {
+      w8LiveKitSDKPromise = null;
+      throw error;
+    });
+  }
+
+  return w8LiveKitSDKPromise;
+}
+
+async function w8ConnectSfuHost() {
+  const SDK = await w8GetLiveKitSDK();
+
+  const response = await fetch(
+    "/api/w8share/sfu-token",
+    {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        token: w8ShareToken,
+        socketId: socket.id,
+        proof: w8SfuProof,
+        role: "host"
+      })
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok || !data.ok) {
+    throw new Error(
+      data.error || "Cannot obtain LiveKit token"
+    );
+  }
+
+  const room = new SDK.Room({
+    adaptiveStream: true,
+    dynacast: true
+  });
+
+  w8SfuRoom = room;
+
+  try {
+    await room.connect(data.url, data.token);
+
+    const screenTrack =
+      w8Capture?.getVideoTracks()[0];
+
+    if (!screenTrack ||
+        screenTrack.readyState !== "live") {
+      throw new Error("Screen capture has stopped.");
+    }
+
+    screenTrack.contentHint = "motion";
+
+    await room.localParticipant.publishTrack(
+      screenTrack,
+      {
+        source: SDK.Track.Source.ScreenShare,
+        simulcast: true,
+        videoEncoding: {
+       maxBitrate: w8MobileActive ? 1500000 : 2200000,
+       maxFramerate: w8MobileActive ? 10 : 24
+        }
+      }
+    );
+
+  } catch (error) {
+    await room.disconnect().catch(() => {});
+    if (w8SfuRoom === room) w8SfuRoom = null;
+    throw error;
+  }
+}
+
+
+
 let w8Starting = false;
 
 let w8IceServers = [
@@ -11270,6 +11362,196 @@ let w8MobileActive = false;
 let w8MobileWatchers = 0;
 let w8MobileTimer = null;
 let w8MobileLoopSeq = 0;
+
+
+/* ==========================================
+   MILITARY - MOBILE SFU CANVAS CAPTURE
+   ANDROID + IPHONE
+========================================== */
+
+let w8MobileSfuCanvas = null;
+
+async function w8PrepareMobileSfuCapture() {
+
+  if (
+    typeof HTMLCanvasElement.prototype.captureStream !==
+    "function"
+  ) {
+    throw new Error(
+      "Trình duyệt chưa hỗ trợ Canvas Video Capture."
+    );
+  }
+
+  if (typeof html2canvas !== "function") {
+    throw new Error("Không tải được html2canvas.");
+  }
+
+  const app = document.getElementById("app");
+
+  if (!app) {
+    throw new Error("Không tìm thấy giao diện game.");
+  }
+
+  const output = document.createElement("canvas");
+
+  output.width = 430;
+  output.height = 870;
+
+  const ctx = output.getContext("2d", {
+    alpha: false
+  });
+
+  if (!ctx) {
+    throw new Error("Không tạo được canvas video.");
+  }
+
+  w8MobileSfuCanvas = output;
+
+  const seq = ++w8MobileLoopSeq;
+
+  // Chụp một khung hình và vẽ vào canvas video.
+  async function paintFrame() {
+
+    const frame = await html2canvas(app, {
+      backgroundColor: "#000",
+      width: 430,
+      height: 870,
+      scale: 1,
+
+      useCORS: true,
+      allowTaint: false,
+      logging: false,
+
+      scrollX: 0,
+      scrollY: 0,
+
+      windowWidth: 430,
+      windowHeight: 870,
+
+      ignoreElements: el =>
+        el.id === "w8ShareButton" ||
+        el.id === "w8SharePanel" ||
+        el.id === "w8LiveComments",
+
+      onclone: doc => {
+
+        const game = doc.getElementById("app");
+        const body = doc.body;
+
+        if (!game) return;
+
+        game.style.position = "absolute";
+        game.style.left = "0";
+        game.style.top = "0";
+        game.style.transform = "none";
+
+        game.style.width = "430px";
+        game.style.height = "870px";
+
+        body.style.position = "static";
+        body.style.display = "block";
+        body.style.width = "430px";
+        body.style.height = "870px";
+      }
+    });
+
+    try {
+
+      if (
+        seq !== w8MobileLoopSeq ||
+        !w8MobileActive ||
+        w8MobileSfuCanvas !== output
+      ) {
+        return;
+      }
+
+      ctx.drawImage(
+        frame,
+        0,
+        0,
+        output.width,
+        output.height
+      );
+
+    } finally {
+      // Giải phóng bitmap trung gian.
+      frame.width = 1;
+      frame.height = 1;
+    }
+  }
+
+  // Có ảnh đầu tiên trước khi tạo video track.
+  await paintFrame();
+
+  if (
+    !w8MobileActive ||
+    seq !== w8MobileLoopSeq
+  ) {
+    throw new Error("Mobile capture cancelled.");
+  }
+
+  const stream = output.captureStream(10);
+
+  const track = stream.getVideoTracks()[0];
+
+  if (!track || track.readyState !== "live") {
+    stream.getTracks().forEach(t => t.stop());
+    throw new Error("Không tạo được video track.");
+  }
+
+  track.contentHint = "motion";
+
+  w8Capture = stream;
+
+  track.addEventListener(
+    "ended",
+    w8StopShare,
+    { once: true }
+  );
+
+  // Cập nhật ảnh không chồng nhiều lần dựng DOM.
+  async function renderLoop() {
+
+    if (
+      !w8MobileActive ||
+      seq !== w8MobileLoopSeq ||
+      w8MobileSfuCanvas !== output ||
+      !w8ShareToken
+    ) {
+      return;
+    }
+
+    try {
+      await paintFrame();
+    } catch (error) {
+      console.warn("[W8 MOBILE CAPTURE]", error);
+    }
+
+    if (
+      w8MobileActive &&
+      seq === w8MobileLoopSeq &&
+      w8MobileSfuCanvas === output &&
+      w8ShareToken
+    ) {
+      w8MobileTimer = setTimeout(renderLoop, 120);
+    }
+  }
+
+  // Bắt đầu cập nhật ngay khi token phòng đã có.
+  w8StartMobileSfuRendering = () => {
+    if (
+      w8MobileActive &&
+      w8MobileSfuCanvas === output &&
+      seq === w8MobileLoopSeq
+    ) {
+      clearTimeout(w8MobileTimer);
+      w8MobileTimer = setTimeout(renderLoop, 0);
+    }
+  };
+}
+
+let w8StartMobileSfuRendering = null;
+
 
 // Chụp riêng giao diện game 430 x 870
 async function w8CaptureMobileFrame() {
@@ -11418,10 +11700,21 @@ if (comments) {
 w8MobileActive = false;
 w8MobileWatchers = 0;
 
+
 w8MobileLoopSeq++;
 
 clearTimeout(w8MobileTimer);
 w8MobileTimer = null;
+
+w8StartMobileSfuRendering = null;
+
+// Giải phóng canvas đã dùng để tạo video.
+if (w8MobileSfuCanvas) {
+  w8MobileSfuCanvas.width = 1;
+  w8MobileSfuCanvas.height = 1;
+  w8MobileSfuCanvas = null;
+}
+
 
   const token = w8ShareToken;
   w8ShareToken = "";
@@ -11439,6 +11732,14 @@ w8MobileTimer = null;
   }
 
   w8Capture = null;
+
+if (w8SfuRoom) {
+  const oldRoom = w8SfuRoom;
+  w8SfuRoom = null;
+  oldRoom.disconnect().catch(console.warn);
+}
+
+w8SfuProof = "";
 
   document.getElementById("w8ShareButton").textContent =
     "SHARE";
@@ -11485,21 +11786,32 @@ if (
   try {
 
 
+
 if (w8IsMobile) {
 
-  // Android / iPhone: kiểm tra khả năng chụp game
-  await w8CaptureMobileFrame();
-
+  // Mobile: tạo canvas video để publish lên SFU.
   w8MobileActive = true;
+
+  await w8PrepareMobileSfuCapture();
 
 } else {
 
-  // Máy tính: giữ chức năng WebRTC cũ
-  w8Capture = await navigator.mediaDevices.getDisplayMedia({
-    video: { frameRate: 12 },
-    audio: false
-  });
 
+w8Capture = await navigator.mediaDevices.getDisplayMedia({
+  video: {
+    frameRate: {
+      ideal: 24,
+      max: 24
+    },
+    width: {
+      ideal: 1280
+    },
+    height: {
+      ideal: 720
+    }
+  },
+  audio: false
+});
   const track = w8Capture.getVideoTracks()[0];
 
   if (!track) {
@@ -11525,7 +11837,9 @@ if (w8IsMobile) {
 
       socket.timeout(8000).emit(
         "w8share:start",
-        {},
+        { mode: "sfu" },
+
+        
         (error, data) => {
 
           resolve(error
@@ -11549,6 +11863,21 @@ if (w8IsMobile) {
 
     w8ShareToken = reply.token;
 
+
+w8SfuProof = reply.proof || "";
+
+// Desktop và mobile đều publish lên LiveKit.
+await w8ConnectSfuHost();
+
+// Mobile bắt đầu cập nhật canvas khi kết nối SFU thành công.
+if (
+  w8IsMobile &&
+  typeof w8StartMobileSfuRendering === "function"
+) {
+  w8StartMobileSfuRendering();
+}
+
+
     const link =
       location.origin +
       "/military-live.html?room=" +
@@ -11569,12 +11898,8 @@ if (w8IsMobile) {
 
 
 if (w8IsMobile) {
-
   document.getElementById("w8ShareTip").textContent =
-    "Live now";
-
-  w8StartMobileBroadcast();
-
+    "LIVE · Mobile SFU";
 }
 
   } catch (error) {
@@ -11624,8 +11949,11 @@ w8MobileWatchers = count;
 document.getElementById("w8ShareCount").textContent =
   count + " người xem";
 
-// Điện thoại dùng truyền ảnh, không tạo WebRTC peer
-if (w8MobileActive || !w8Capture) return;
+if (
+  w8SfuRoom ||
+  w8MobileActive ||
+  !w8Capture
+) return;
 
 
 

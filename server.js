@@ -16717,6 +16717,140 @@ const W8_SHARE_LIMIT = 8;
 
 const W8_SHARE_DIRECTORY_ROOM = "w8share:directory";
 
+
+/* ==========================================
+   MILITARY SCREEN SHARE - LIVEKIT SFU TOKEN
+========================================== */
+
+app.post("/api/w8share/sfu-token", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+
+  try {
+    const token = String(req.body?.token || "");
+    const socketId = String(req.body?.socketId || "");
+    const proof = String(req.body?.proof || "");
+    const role = String(req.body?.role || "");
+
+    if (
+      !/^[a-f0-9]{36}$/.test(token) ||
+      !["host", "viewer"].includes(role)
+    ) {
+      return res.status(400).json({
+        ok: false,
+        error: "INVALID_REQUEST"
+      });
+    }
+
+    if (!SFU_URL || !SFU_KEY || !SFU_SECRET) {
+      return res.status(503).json({
+        ok: false,
+        error: "SFU_NOT_CONFIGURED"
+      });
+    }
+
+    const session = wheel8ScreenShares.get(token);
+    const client = io.sockets.sockets.get(socketId);
+
+    if (
+      !session ||
+      session.mode !== "sfu" ||
+      !client?.connected
+    ) {
+      return res.status(403).json({
+        ok: false,
+        error: "SESSION_NOT_AVAILABLE"
+      });
+    }
+
+    const expected = client.data.w8SfuProof;
+
+    if (
+      !expected ||
+      proof.length !== expected.length
+    ) {
+      return res.status(403).json({
+        ok: false,
+        error: "INVALID_SESSION"
+      });
+    }
+
+    if (!crypto.timingSafeEqual(
+      Buffer.from(proof),
+      Buffer.from(expected)
+    )) {
+      return res.status(403).json({
+        ok: false,
+        error: "INVALID_SESSION"
+      });
+    }
+
+    if (role === "host") {
+
+      if (
+        session.hostId !== socketId ||
+        client.data.w8Hosting !== token ||
+        !client.data.authenticated ||
+        !client.data.uid ||
+        String(client.data.uid) !==
+          String(session.hostUid)
+      ) {
+        return res.status(403).json({
+          ok: false,
+          error: "HOST_NOT_AUTHORIZED"
+        });
+      }
+
+    } else {
+
+      if (
+        !session.viewers.has(socketId) ||
+        client.data.w8Watching !== token ||
+        !session.hostId ||
+        !io.sockets.sockets.has(session.hostId)
+      ) {
+        return res.status(403).json({
+          ok: false,
+          error: "VIEWER_NOT_AUTHORIZED"
+        });
+      }
+
+    }
+
+    const grant = new AccessToken(
+      SFU_KEY,
+      SFU_SECRET,
+      {
+        identity: `w8_${role}_${socketId}`,
+        ttl: "30m"
+      }
+    );
+
+    grant.addGrant({
+      roomJoin: true,
+      room: `w8_${token}`,
+      canPublish: role === "host",
+      canSubscribe: role === "viewer",
+      canPublishData: false
+    });
+
+    return res.json({
+      ok: true,
+      url: SFU_URL,
+      token: await grant.toJwt()
+    });
+
+  } catch (error) {
+    console.error("[W8 SFU]", error);
+
+    return res.status(500).json({
+      ok: false,
+      error: "SFU_TOKEN_ERROR"
+    });
+  }
+});
+
+
+
 function getW8ActiveShareList() {
   const users = loadUsers();
   const result = [];
@@ -16886,17 +17020,27 @@ socket.on("w8share:directory:leave", () => {
 
     const token = crypto.randomBytes(18).toString("hex");
 
- wheel8ScreenShares.set(token, {
+
+wheel8ScreenShares.set(token, {
   hostId: socket.id,
   hostUid: uid,
   viewers: new Set(),
-  releaseTimer: null
+  releaseTimer: null,
+  mode: _data?.mode === "sfu" ? "sfu" : "mobile"
 });
+
+socket.data.w8SfuProof =
+  crypto.randomBytes(24).toString("hex");
 
     socket.data.w8Hosting = token;
 
     
-ack({ ok: true, token });
+ack({
+  ok: true,
+  token,
+  mode: wheel8ScreenShares.get(token).mode,
+  proof: socket.data.w8SfuProof
+});
 
 emitW8ShareDirectory();
 
@@ -17027,8 +17171,11 @@ if (!session) {
       }
     }
 
-    session.viewers.add(socket.id);
-    socket.data.w8Watching = token;
+session.viewers.add(socket.id);
+socket.data.w8Watching = token;
+
+socket.data.w8SfuProof =
+  crypto.randomBytes(24).toString("hex");
 
 const hostOnline = Boolean(
   session.hostId &&
@@ -17037,7 +17184,9 @@ const hostOnline = Boolean(
 
 ack({
   ok: true,
-  paused: !hostOnline
+  paused: !hostOnline,
+  mode: session.mode,
+  proof: socket.data.w8SfuProof
 });
 
 if (hostOnline) {

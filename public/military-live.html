@@ -1531,6 +1531,155 @@ const status = document.getElementById("status");
 
 const socket = io();
 
+
+
+/* ==========================================
+   MILITARY LIVE - SFU VIEWER
+========================================== */
+
+let w8ViewerSfuRoom = null;
+let w8ViewerSfuConnecting = false;
+
+let w8ViewerLiveKitPromise = null;
+
+function w8GetViewerLiveKit() {
+  if (!w8ViewerLiveKitPromise) {
+    w8ViewerLiveKitPromise = import(
+      "https://cdn.jsdelivr.net/npm/livekit-client@2.17.0/+esm"
+    ).catch(error => {
+      w8ViewerLiveKitPromise = null;
+      throw error;
+    });
+  }
+
+  return w8ViewerLiveKitPromise;
+}
+
+async function w8ConnectViewerSFU(proof) {
+  if (w8ViewerSfuConnecting || !socket.connected) {
+    return;
+  }
+
+  w8ViewerSfuConnecting = true;
+
+  try {
+    if (w8ViewerSfuRoom) {
+      await w8ViewerSfuRoom.disconnect();
+      w8ViewerSfuRoom = null;
+    }
+
+    const SDK = await w8GetViewerLiveKit();
+
+    const response = await fetch(
+      "/api/w8share/sfu-token",
+      {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          token,
+          socketId: socket.id,
+          proof,
+          role: "viewer"
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+      throw new Error(
+        data.error || "Unable to join SFU"
+      );
+    }
+
+    const room = new SDK.Room({
+      adaptiveStream: true
+    });
+
+    w8ViewerSfuRoom = room;
+
+    room.on(
+      SDK.RoomEvent.TrackSubscribed,
+      (track) => {
+
+        if (track.kind !== SDK.Track.Kind.Video) {
+          return;
+        }
+
+        const frame =
+          document.getElementById("screenFrame");
+
+        frame.hidden = true;
+
+        video.style.display = "block";
+        video.autoplay = true;
+        video.playsInline = true;
+        video.muted = true;
+
+        track.attach(video);
+
+        video.play().catch(() => {
+          setStatus("Tap the video to start playback.");
+        });
+
+        setStatus("WATCHING LIVE · SFU");
+      }
+    );
+
+    room.on(
+      SDK.RoomEvent.TrackUnsubscribed,
+      (track) => {
+        track.detach();
+        setStatus("Waiting for video...");
+      }
+    );
+
+    room.on(
+      SDK.RoomEvent.Disconnected,
+      () => {
+        if (w8ViewerSfuRoom === room) {
+          w8ViewerSfuRoom = null;
+          setStatus("SFU disconnected.");
+        }
+      }
+    );
+
+    await room.connect(data.url, data.token, {
+      autoSubscribe: true
+    });
+
+    setStatus("Connected to SFU. Waiting for video...");
+
+  } catch (error) {
+    console.error("[W8 SFU VIEWER]", error);
+
+    if (w8ViewerSfuRoom) {
+      await w8ViewerSfuRoom.disconnect()
+        .catch(() => {});
+      w8ViewerSfuRoom = null;
+    }
+
+    setStatus(error.message || "SFU connection failed.");
+
+  } finally {
+    w8ViewerSfuConnecting = false;
+  }
+}
+
+function w8DisconnectViewerSFU() {
+  if (!w8ViewerSfuRoom) return;
+
+  const room = w8ViewerSfuRoom;
+  w8ViewerSfuRoom = null;
+
+  room.disconnect().catch(console.warn);
+}
+
+
+
 let pc = null;
 let pendingIce = [];
 
@@ -1543,6 +1692,8 @@ function setStatus(message) {
 }
 
 function closePeer() {
+
+w8DisconnectViewerSFU();
 
   if (pc) pc.close();
 
@@ -1602,33 +1753,57 @@ socket.on("connect", async () => {
 
   if (!socket.connected) return;
 
-  socket.timeout(10000).emit(
-    "w8share:join",
-    { token },
-    (err, reply) => {
 
-if (err || !reply?.ok) {
+socket.timeout(10000).emit(
+  "w8share:join",
+  { token },
 
-  setStatus(
-    reply?.error || "Unable to join the viewing room."
-  );
+  async (err, reply) => {
 
-} else if (reply.paused) {
+    // JOIN FAILED
+    if (err || !reply?.ok) {
 
-  setStatus(
-    "Broadcaster temporarily offline. Waiting for LIVE..."
-  );
+      setStatus(
+        reply?.error ||
+        "Unable to join the viewing room."
+      );
 
-} else {
+      return;
+    }
 
-  setStatus(
-    "Connected. Waiting for the video stream..."
-  );
+    // BROADCASTER OFFLINE
+    if (reply.paused) {
 
-}
+      setStatus(
+        "Broadcaster temporarily offline. Waiting for LIVE..."
+      );
+
+      return;
+    }
+
+    // JOIN SUCCESS
+    setStatus(
+      "Connected. Waiting for the video stream..."
+    );
+
+    // ======================================
+    // CONNECT TO LIVEKIT SFU
+    // ======================================
+
+    if (
+      reply.mode === "sfu" &&
+      reply.proof
+    ) {
+
+      await w8ConnectViewerSFU(
+        reply.proof
+      );
 
     }
-  );
+
+  }
+);
+
 
 });
 
