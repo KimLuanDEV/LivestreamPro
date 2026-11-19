@@ -3116,18 +3116,32 @@ button:disabled {
 
 
 /* ==========================================
-   SFU PK - PERFECT 50/50 VIDEO LAYOUT
+   SFU PK - COMPACT TOP SPLIT LAYOUT
+   2 khung video gọn hơn, nằm phía trên
 ========================================== */
 
-/* Both PK panels have identical dimensions */
+.studio.sfu-pk-active {
+  --pk-top-gap: clamp(
+    72px,
+    calc(10dvh + env(safe-area-inset-top, 0px)),
+    120px
+  );
+
+  --pk-stage-height: clamp(50dvh, 52dvh, 56dvh);
+  --pk-side-gap: 0px;
+  --pk-stage-radius: 22px;
+  --pk-divider: 1px;
+}
+
+/* Hai khung video có cùng kích thước */
 .studio.sfu-pk-active .video-area,
 .studio.sfu-pk-active .sfu-pk-peer {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: var(--pk-top-gap);
+  bottom: auto;
 
   width: 50%;
-  height: 100%;
+  height: var(--pk-stage-height);
 
   min-width: 0;
   min-height: 0;
@@ -3137,27 +3151,31 @@ button:disabled {
 
   overflow: hidden;
   box-sizing: border-box;
-
   background: #000;
 }
 
-/* Local host - left side */
+/* Khung bản thân - bên trái */
 .studio.sfu-pk-active .video-area {
   left: 0;
   right: auto;
   z-index: 2;
+
+  border-top-left-radius: var(--pk-stage-radius);
+  border-bottom-left-radius: var(--pk-stage-radius);
 }
 
-/* Opponent - right side */
+/* Khung đối thủ - bên phải */
 .studio.sfu-pk-active .sfu-pk-peer {
   left: 50%;
   right: 0;
   z-index: 3;
 
-  border-left: 1px solid rgba(223,190,131,.45);
+  border-top-right-radius: var(--pk-stage-radius);
+  border-bottom-right-radius: var(--pk-stage-radius);
+  border-left: var(--pk-divider) solid rgba(223,190,131,.4);
 }
 
-/* Full-size media containers */
+/* Vùng media bên trong */
 .studio.sfu-pk-active #remoteMedia,
 .studio.sfu-pk-active .sfu-pk-peer-media {
   position: absolute;
@@ -3168,11 +3186,10 @@ button:disabled {
 
   margin: 0;
   padding: 0;
-
   overflow: hidden;
 }
 
-/* Same display rules for both hosts */
+/* Cả 2 video dùng chung cách hiển thị */
 .studio.sfu-pk-active #localVideo,
 .studio.sfu-pk-active #remoteMedia video,
 .studio.sfu-pk-active #sfuPkPeerMedia video {
@@ -3191,210 +3208,93 @@ button:disabled {
 
   object-fit: cover;
   object-position: center center;
-
   background: #000;
 }
 
-/* Keep the regular hidden state working */
+/* Nếu muốn thấy toàn bộ người mà không crop nhiều,
+   có thể đổi object-fit: cover -> contain */
+
 .studio.sfu-pk-active .hidden {
   display: none !important;
 }
 
-/* Prevent video distortion on mobile */
-@media (max-width: 600px) {
-  .studio.sfu-pk-active .video-area,
-  .studio.sfu-pk-active .sfu-pk-peer {
-    height: 100%;
-    width: 50%;
-  }
-}
-
-
-.sfu-pk-peer-media audio {
-  display: none;
-}
-
+/* Tên host đặt trong vùng video */
 .sfu-pk-peer-name {
   position: absolute;
-  top: 105px;
-  right: 8px;
-  left: 8px;
-  padding: 7px 8px;
-  border-radius: 8px;
-  background: rgba(0,0,0,.6);
+  top: 14px;
+  right: 10px;
+  left: 10px;
+
+  padding: 7px 10px;
+  border-radius: 9px;
+
+  background: rgba(0,0,0,.55);
   color: #F2D59F;
+
   text-align: center;
   font-size: 11px;
   font-weight: 800;
   overflow-wrap: anywhere;
 }
 
+/* Bảng điểm nằm phía trên khung video */
 .sfu-pk-board {
   position: absolute;
   left: 50%;
-  top: calc(65px + env(safe-area-inset-top,0px));
+  top: calc(
+    var(--pk-top-gap) - 56px
+  );
   transform: translateX(-50%);
   z-index: 11;
 
-  width: min(390px,94vw);
-  padding: 12px;
+  width: min(390px, 94vw);
+  padding: 10px 12px;
 
   border: 1px solid rgba(238,193,119,.5);
-  border-radius: 15px;
+  border-radius: 14px;
+
   background: rgba(14,15,21,.86);
   backdrop-filter: blur(14px);
   box-shadow: 0 12px 40px rgba(0,0,0,.4);
 }
 
-.sfu-pk-top {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  margin-bottom: 10px;
-}
+/* Nút audio đặt gần đáy khung video */
+.sfu-pk-audio {
+  position: absolute;
+  z-index: 7;
 
-.sfu-pk-top strong {
-  color: #EEC98A;
+  right: 8px;
+  bottom: 12px;
+
+  max-width: calc(100% - 16px);
+  padding: 9px 8px;
+
+  border: 1px solid #C6A474;
+  border-radius: 9px;
+
+  background: rgba(12,13,20,.83);
+  color: #F1D9AC;
+
   font-size: 10px;
-  letter-spacing: 2px;
-}
-
-.sfu-pk-top span {
-  color: white;
-  font-size: 16px;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
 }
 
-.sfu-pk-scores {
-  display: grid;
-  grid-template-columns: 1fr 38px 1fr;
-  align-items: center;
-  text-align: center;
-  gap: 5px;
-}
+/* Mobile */
+@media (max-width: 600px) {
+  .studio.sfu-pk-active {
+--pk-top-gap: clamp(
+  72px,
+  calc(11dvh + env(safe-area-inset-top, 0px)),
+  120px
+);
 
-.sfu-pk-scores > div {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  min-width: 0;
-}
+    --pk-stage-height: clamp(50dvh, 54dvh, 58dvh);
+    --pk-stage-radius: 14px;
+  }
 
-.sfu-pk-scores small {
-  color: #B7BCC8;
-  font-size: 10px;
-  overflow-wrap: anywhere;
-}
-
-.sfu-pk-scores strong {
-  color: #F8E4BF;
-  font-size: 19px;
-  font-variant-numeric: tabular-nums;
-}
-
-.sfu-pk-scores b {
-  font: 800 19px Georgia,serif;
-  color: #F0BE70;
-}
-
-.sfu-pk-bars {
-  display: flex;
-  height: 8px;
-  margin-top: 12px;
-  overflow: hidden;
-  border-radius: 99px;
-  background: #242830;
-}
-
-#sfuPkBarA {
-  width: 50%;
-  background: #549DF0;
-  transition: width .3s;
-}
-
-#sfuPkBarB {
-  width: 50%;
-  background: #EF797E;
-  transition: width .3s;
-}
-
-.sfu-pk-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  background: rgba(0,0,0,.76);
-  backdrop-filter: blur(8px);
-}
-
-.sfu-pk-dialog {
-  width: min(100%,400px);
-  padding: 23px;
-  border-radius: 20px;
-  border: 1px solid rgba(234,198,132,.5);
-  background: #191C25;
-  color: #EDE6DA;
-}
-
-.sfu-pk-dialog small {
-  color: #D5AD72;
-  font-size: 10px;
-  letter-spacing: 1.5px;
-}
-
-.sfu-pk-dialog h2 {
-  margin: 13px 0;
-  font: 700 23px Georgia,serif;
-}
-
-.sfu-pk-dialog p {
-  color: #AEB1BD;
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-#sfuPkRoomInput {
-  width: 100%;
-  margin: 10px 0;
-  padding: 14px;
-  border: 1px solid #5B4A33;
-  border-radius: 10px;
-  outline: none;
-  background: #10131A;
-  color: white;
-  font: inherit;
-}
-
-.sfu-pk-dialog-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 9px;
-  margin-top: 12px;
-}
-
-.sfu-pk-dialog-actions button {
-  min-height: 43px;
-  border: 1px solid #6E5838;
-  border-radius: 10px;
-  background: #292D35;
-  color: white;
-  font-weight: 800;
-  font-size: 11px;
-}
-
-#sfuPkConfirm {
-  background: linear-gradient(135deg,#F4D9A2,#BC9156);
-  color: #25190A;
-}
-
-@media (max-width: 480px) {
   .sfu-pk-board {
-    top: calc(70px + env(safe-area-inset-top,0px));
-    padding: 9px;
+    width: min(360px, 95vw);
+    padding: 9px 10px;
   }
 
   .sfu-pk-scores strong {
@@ -3402,10 +3302,21 @@ button:disabled {
   }
 
   .sfu-pk-peer-name {
-    top: 175px;
+    top: 10px;
+    font-size: 10px;
   }
 }
 
+/* Màn hình nhỏ */
+@media (max-width: 430px) {
+  .studio.sfu-pk-active {
+    --pk-stage-height: 52dvh;
+  }
+
+  .sfu-pk-board {
+    top: calc(var(--pk-top-gap) - 50px);
+  }
+}
 
 
 
