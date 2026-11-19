@@ -7121,36 +7121,47 @@ saveInvestState(investRound);
 
 
 
+/* ==========================================
+   SECURE SESSION MANAGEMENT
+========================================== */
+
 function kickOldSessions(uid, newSocket) {
+
   const sockets = activeUsers.get(uid);
   if (!sockets) return;
 
-  for (const sid of sockets) {
-    const s = io.sockets.sockets.get(sid);
-    if (!s) continue;
+  for (const sid of [...sockets]) {
 
-    // 🛑 CÙNG THIẾT BỊ → KHÔNG KICK
+    // Never disconnect the current socket
+    if (sid === newSocket.id) {
+      continue;
+    }
+
+    const oldSocket = io.sockets.sockets.get(sid);
+
+    // Remove stale socket references
+    if (!oldSocket) {
+      sockets.delete(sid);
+      continue;
+    }
+
+    // Same verified login session: allow
     if (
-      s.data.deviceId &&
-      newSocket.data.deviceId &&
-      s.data.deviceId === newSocket.data.deviceId
+      newSocket.data.sessionId &&
+      oldSocket.data.sessionId &&
+      newSocket.data.sessionId ===
+        oldSocket.data.sessionId
     ) {
       continue;
     }
 
-    // ⛔ ĐANG POLLING → KHÔNG KICK NGAY (TRÁNH 400)
-    if (s.conn?.transport?.name === "polling") {
-      console.log("⏳ Skip kick polling socket:", s.id);
-      continue;
-    }
-
-    // ❌ KHÁC THIẾT BỊ → KICK
-    s.emit("force-logout", {
+    oldSocket.emit("force-logout", {
       reason: "logged_in_elsewhere",
-      message: "Connection error. Please check your internet connection!"
+      message: "Your account was signed in on another device."
     });
 
-    s.disconnect(true);
+    sockets.delete(sid);
+    oldSocket.disconnect(true);
   }
 }
 
@@ -7217,17 +7228,36 @@ function bindSocketToUser(uid, socket) {
     return false;
   }
 
-  let set = activeUsers.get(verifiedUid);
 
-  if (!set) {
-    set = new Set();
-    activeUsers.set(verifiedUid, set);
-  }
+  
+// Reject invalid identity
+if (!socket.data.sessionId) {
+  socket.emit("auth-error", {
+    message: "Invalid login session."
+  });
+  return false;
+}
 
-  set.add(socket.id);
+// Only apply session policy on first binding
+let set = activeUsers.get(verifiedUid);
 
-  // Keep existing device session policy
-  kickOldSessions(verifiedUid, socket);
+if (set?.has(socket.id)) {
+  return true;
+}
+
+// Disconnect older independent sessions first
+kickOldSessions(verifiedUid, socket);
+
+// Create active user entry if necessary
+set = activeUsers.get(verifiedUid);
+
+if (!set) {
+  set = new Set();
+  activeUsers.set(verifiedUid, set);
+}
+
+set.add(socket.id);
+
 
   socket.data.role =
     account.role ||
@@ -7486,6 +7516,25 @@ io.use((socket, next) => {
     socket.data.role = "guest";
     socket.data.profile = null;
 
+
+
+    // Signed session identity, never use client deviceId
+const rawCookie = String(
+  socket.handshake.headers.cookie || ""
+);
+
+const sessionCookie = rawCookie
+  .split(";")
+  .map(s => s.trim())
+  .find(s => s.startsWith("lsp_spirit_sid="));
+
+const signedToken = sessionCookie
+  ? sessionCookie.slice("lsp_spirit_sid=".length)
+  : "";
+
+socket.data.sessionId = null;
+
+
     // Identity comes from signed HTTP-only cookie
     const verifiedUid = getVerifiedTransferUid(socket);
 
@@ -7507,6 +7556,13 @@ io.use((socket, next) => {
     }
 
     socket.data.uid = String(verifiedUid);
+
+
+// Only assign after successful session verification
+socket.data.sessionId = crypto
+  .createHash("sha256")
+  .update(signedToken)
+  .digest("hex");
 
     socket.data.role =
       account.role ||
@@ -12991,6 +13047,7 @@ socket.on("auth", (data = {}) => {
 
 
 socket.on("disconnect", () => {
+
   const uid = socket.data.uid;
   if (!uid) return;
 
@@ -12998,11 +13055,23 @@ socket.on("disconnect", () => {
   if (!set) return;
 
   set.delete(socket.id);
-  if (set.size === 0) activeUsers.delete(uid);
 
-  console.log("🔌 SOCKET DISCONNECT:", uid, socket.id);
+  if (set.size === 0) {
+
+    activeUsers.delete(uid);
+
+    // Agent offline only when no active socket remains
+    emitAgentStatus(uid, false);
+
+    emitActiveUsers();
+  }
+
+  console.log(
+    "[SOCKET] DISCONNECTED:",
+    uid,
+    socket.id
+  );
 });
-
 
 
 
@@ -13217,22 +13286,6 @@ socket.on("auth-login", () => {
   emitAgentStatus(uid, true);
 });
 
-// ❌ HANDLE DISCONNECT (BẮT BUỘC)
-socket.on("disconnect", () => {
-  const uid = socket.data.uid;
-  if (!uid) return;
-
-  const set = activeUsers.get(uid);
-  if (set) {
-    set.delete(socket.id);
-    if (set.size === 0) {
-      activeUsers.delete(uid);
-      emitAgentStatus(uid, false);
-    }
-  }
-
-  console.log("❌ SOCKET OFFLINE:", uid, socket.id);
-});
 
 
 socket.on("lp-gift-post", async ({ postId, toUid, fromUid, giftId, coin }) => {
@@ -15010,8 +15063,11 @@ saveInbox(Object.fromEntries(userInbox));
 
 
 
-  function isGuest(socket){
-  return String(socket.data.uid || "").startsWith("guest_");
+function isGuest(socket) {
+  return (
+    socket.data.authenticated !== true ||
+    !socket.data.uid
+  );
 }
 
 function blockGuest(socket, feature){
@@ -15173,9 +15229,44 @@ emitAllUsers();
 
 
 
-socket.on("host-reconnect", ({ roomId }) => {
-  const room = getRoom(roomId);
+socket.on("host-reconnect", ({ roomId } = {}) => {
+
+  roomId = normRoomId(roomId);
+  if (!roomId) return;
+
+  const room = rooms.get(roomId);
   if (!room) return;
+
+  const uid = socket.data.uid;
+
+  if (
+    !socket.data.authenticated ||
+    !uid ||
+    !room.ownerUid ||
+    String(room.ownerUid) !== String(uid)
+  ) {
+    socket.emit("room-error", {
+      message: "Unauthorized host reconnect."
+    });
+    return;
+  }
+
+  // A different active host cannot be replaced
+  if (
+    room.broadcasterId &&
+    room.broadcasterId !== socket.id
+  ) {
+    const activeHost = io.sockets.sockets.get(
+      room.broadcasterId
+    );
+
+    if (activeHost?.connected) {
+      socket.emit("room-error", {
+        message: "The host is already connected."
+      });
+      return;
+    }
+  }
 
   room.broadcasterId = socket.id;
   room.pendingRelease = false;
@@ -15186,16 +15277,18 @@ socket.on("host-reconnect", ({ roomId }) => {
   }
 
   socket.join(roomId);
+  socket.data.roomId = roomId;
+  socket.data.role = "broadcaster";
 
- socket.emit("host-resume", {
-  liveStartTs: room.liveStartTs,
-  viewers: Array.from(safeMap(room.viewerProfiles).values())
-});
-
+  socket.emit("host-resume", {
+    liveStartTs: room.liveStartTs,
+    viewers: Array.from(
+      safeMap(room.viewerProfiles).values()
+    )
+  });
 
   io.to(roomId).emit("host-back-online");
 });
-
 
 
 
@@ -15368,20 +15461,36 @@ if (uid && name) {
 
 
 socket.on("viewer-join", ({ roomId, profile }) => {
-  // ✅ lưu profile cho Player Lobby
-socket.data.profile = profile;
 
 
-if(isGuest(socket)){
-  // ép profile Guest an toàn
+const verifiedUid = socket.data.uid;
+
+const db = loadUsers();
+const verifiedAccount = verifiedUid
+  ? db[verifiedUid]
+  : null;
+
+if (
+  socket.data.authenticated &&
+  verifiedAccount?.profile
+) {
   profile = {
-    uid: socket.data.uid,
+    ...verifiedAccount.profile,
+    uid: verifiedUid
+  };
+} else {
+  profile = {
+    uid: `guest_${socket.id}`,
     name: "Guest",
-    avatar: "https://i.ibb.co/GvJWn19q/icon-192.png",
+    avatar: "/icons/icon-192.png",
     level: 1,
     coins: 0
   };
 }
+
+socket.data.profile = profile;
+
+
 
 
   roomId = normRoomId(roomId);
@@ -15411,8 +15520,9 @@ if (socket.data.role !== "admin") {
 }
 
 
-  // ✅ UID ổn định (ưu tiên profile.uid)
-  const uid = String(profile?.uid || "").trim() || safeName(profile?.name);
+const uid = socket.data.authenticated
+  ? String(socket.data.uid)
+  : `guest_${socket.id}`;
 
   // 👻 CHỐNG MULTI-TAB: kick socket cũ
   const old = room.viewerProfiles.get(uid);
@@ -15560,10 +15670,18 @@ socket.on("live-start", ({ roomId }) => {
   const room = getRoom(roomId);
   if (!room) return;
 
-  // 🔥 CHO PHÉP host đã join dù socket.id có thay đổi do auth
-  if (!room.broadcasterId || room.broadcasterId !== socket.id) {
-    room.broadcasterId = socket.id;   // 👑 force bind host
-  }
+if (
+  !socket.data.authenticated ||
+  !socket.data.uid ||
+  !room.ownerUid ||
+  room.ownerUid !== socket.data.uid ||
+  room.broadcasterId !== socket.id
+) {
+  socket.emit("room-error", {
+    message: "Unauthorized livestream operation."
+  });
+  return;
+}
 
   if (!room.liveStartTs) {
     room.liveStartTs = Date.now();
@@ -15606,39 +15724,105 @@ saveLiveState(state);
 
 
   // Join room with role: broadcaster | viewer | guest
-  socket.on("join-room", ({ roomId, role, profile }) => {
+socket.on("join-room", ({ roomId, role, profile }) => {
 
-    if (blockIfLocked(socket)) return;
+  if (blockIfLocked(socket)) return;
 
+  roomId = normRoomId(roomId);
 
-    // 🔒 Guest chỉ được join với role=viewer
-if(isGuest(socket) && role !== "viewer"){
-  socket.emit("need-login", { feature:"join-as-host" });
-  return;
-}
+  if (
+    !roomId ||
+    !["broadcaster", "viewer"].includes(role)
+  ) {
+    return;
+  }
 
-     roomId = normRoomId(roomId);
-    if (!roomId || !role) return;
+  const room = getRoom(roomId);
 
-    socket.join(roomId);
-    socket.data.roomId = roomId;
-    socket.data.role = role;
-    socket.role = role;
+  // Verify broadcaster BEFORE joining or modifying room
+  if (role === "broadcaster") {
+
+    const uid = socket.data.uid;
+
+    if (
+      !socket.data.authenticated ||
+      !uid
+    ) {
+      socket.emit("need-login", {
+        feature: "join-as-host"
+      });
+      return;
+    }
+
+    const account = loadUsers()[uid];
+
+    if (
+      !account?.profile ||
+      account.profile.accountBlocked
+    ) {
+      socket.emit("room-error", {
+        message: "Account unavailable."
+      });
+      return;
+    }
+
+    if (
+      room.ownerUid &&
+      room.ownerUid !== uid
+    ) {
+      socket.emit("room-error", {
+        message: "You are not the owner of this room."
+      });
+      return;
+    }
+
+    if (
+      room.broadcasterId &&
+      room.broadcasterId !== socket.id
+    ) {
+      const currentHost =
+        io.sockets.sockets.get(room.broadcasterId);
+
+      if (currentHost?.connected) {
+        socket.emit("room-error", {
+          message: "Host is already connected."
+        });
+        return;
+      }
+    }
+
+    room.ownerUid = uid;
+  }
+
+  socket.join(roomId);
+
+  socket.data.roomId = roomId;
+  socket.data.role = role;
+  socket.role = role;
 
     // store profile (name/coins) for Gift Engine
    socket.data.userName = safeName(
   profile?.name || (role === "broadcaster" ? "Host" : "Viewer")
 );
 
-    socket.data.coins = clampInt(profile?.coins, 0, 1_000_000_000);
-    if (!socket.data.coins) socket.data.coins = START_COINS;
+const verifiedAccount = socket.data.uid
+  ? loadUsers()[socket.data.uid]
+  : null;
+
+socket.data.coins = verifiedAccount?.profile
+  ? clampInt(
+      verifiedAccount.profile.coins,
+      0,
+      1_000_000_000
+    )
+  : 0;
 
     // sync wallet to this socket
     socket.emit("wallet-sync", { coins: socket.data.coins });
 
 
 
-    const room = getRoom(roomId);
+    
 
 // 👑 GỬI PROFILE HOST CHO VIEWER VỪA JOIN
 if (role === "viewer" && room.hostProfile) {
@@ -15677,12 +15861,29 @@ if (room.liveStartTs) {
     const name = String(profile?.name || "").trim().slice(0, 20);
     const avatar = String(profile?.avatar || "").trim();
 
- room.hostProfile = {
-  uid: profile?.uid || socket.data.uid,   // 🔥 THÊM
-  name: name || "Host",
-  avatar: avatar || "",
-  level: Number(profile?.level) || 1,
-  ts: Date.now(),
+const hostUid = socket.data.uid;
+const hostAccount = hostUid
+  ? loadUsers()[hostUid]
+  : null;
+
+if (
+  !socket.data.authenticated ||
+  !hostAccount?.profile
+) {
+  socket.emit("need-login", {
+    feature: "join-as-host"
+  });
+  return;
+}
+
+room.ownerUid = hostUid;
+
+room.hostProfile = {
+  uid: hostUid,
+  name: safeName(hostAccount.profile.name || "Host"),
+  avatar: hostAccount.profile.avatar || "",
+  level: Number(hostAccount.profile.level) || 1,
+  ts: Date.now()
 };
 
 
@@ -15740,6 +15941,32 @@ if (room.liveStartTs) {
   if (!roomId || !text) return;
 
   const room = getRoom(roomId);
+
+
+  
+if (!room) return;
+
+// Verify that the socket has actually joined this room
+if (!socket.rooms.has(roomId)) {
+  return;
+}
+
+// Only the verified broadcaster can send host chat
+if (
+  socket.data.role === "broadcaster" &&
+  (
+    !socket.data.authenticated ||
+    room.ownerUid !== socket.data.uid ||
+    room.broadcasterId !== socket.id
+  )
+) {
+  socket.emit("room-error", {
+    message: "Unauthorized livestream chat."
+  });
+  return;
+}
+
+
   if (!room) return;
 
   const r = String(socket.data.role || "").toLowerCase();
@@ -16138,22 +16365,6 @@ socket.on("host-stream-ready", ({ roomId }) => {
   socket.on("disconnect", () => {
 
 
-
-    
-
-
-
-const uid = socket.data.uid;
-if (uid && activeUsers.has(uid)) {
-  const set = activeUsers.get(uid);
-  set.delete(socket.id);
-
-  if (set.size === 0) {
-    activeUsers.delete(uid);
-  }
-
-  emitActiveUsers();
-}
 
 
 
