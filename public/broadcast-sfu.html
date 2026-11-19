@@ -3114,35 +3114,101 @@ button:disabled {
   color: #FFE1AB;
 }
 
-.studio.sfu-pk-active .video-area {
-  width: 50%;
-  right: auto;
-  top: 0;
-  bottom: 0;
-}
 
-.sfu-pk-peer {
+/* ==========================================
+   SFU PK - PERFECT 50/50 VIDEO LAYOUT
+========================================== */
+
+/* Both PK panels have identical dimensions */
+.studio.sfu-pk-active .video-area,
+.studio.sfu-pk-active .sfu-pk-peer {
   position: absolute;
   top: 0;
-  right: 0;
+  bottom: 0;
+
   width: 50%;
   height: 100%;
+
+  min-width: 0;
+  min-height: 0;
+
+  margin: 0;
+  padding: 0;
+
   overflow: hidden;
-  background: #090B12;
+  box-sizing: border-box;
+
+  background: #000;
+}
+
+/* Local host - left side */
+.studio.sfu-pk-active .video-area {
+  left: 0;
+  right: auto;
+  z-index: 2;
+}
+
+/* Opponent - right side */
+.studio.sfu-pk-active .sfu-pk-peer {
+  left: 50%;
+  right: 0;
   z-index: 3;
+
+  border-left: 1px solid rgba(223,190,131,.45);
 }
 
-.sfu-pk-peer-media {
+/* Full-size media containers */
+.studio.sfu-pk-active #remoteMedia,
+.studio.sfu-pk-active .sfu-pk-peer-media {
+  position: absolute;
+  inset: 0;
+
   width: 100%;
   height: 100%;
+
+  margin: 0;
+  padding: 0;
+
+  overflow: hidden;
 }
 
-.sfu-pk-peer-media video {
-  width: 100%;
-  height: 100%;
+/* Same display rules for both hosts */
+.studio.sfu-pk-active #localVideo,
+.studio.sfu-pk-active #remoteMedia video,
+.studio.sfu-pk-active #sfuPkPeerMedia video {
+  position: absolute;
+  inset: 0;
+
   display: block;
+  width: 100%;
+  height: 100%;
+
+  max-width: none;
+  max-height: none;
+
+  margin: 0;
+  padding: 0;
+
   object-fit: cover;
+  object-position: center center;
+
+  background: #000;
 }
+
+/* Keep the regular hidden state working */
+.studio.sfu-pk-active .hidden {
+  display: none !important;
+}
+
+/* Prevent video distortion on mobile */
+@media (max-width: 600px) {
+  .studio.sfu-pk-active .video-area,
+  .studio.sfu-pk-active .sfu-pk-peer {
+    height: 100%;
+    width: 50%;
+  }
+}
+
 
 .sfu-pk-peer-media audio {
   display: none;
