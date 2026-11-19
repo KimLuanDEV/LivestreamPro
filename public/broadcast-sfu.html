@@ -1236,7 +1236,7 @@ button:disabled {
 <button
   type="button"
   id="sfuChatToggle"
-  class="sfu-chat-toggle"
+  class="sfu-chat-toggle hidden"
   aria-label="Open live comments"
   aria-controls="sfuChatPanel"
   aria-expanded="false">
@@ -1569,6 +1569,42 @@ let sfuChatReady = false;
 let sfuChatSending = false;
 let sfuChatUnreadCount = 0;
 
+
+
+/* ==========================================
+   SFU CHAT - LIVE VISIBILITY
+========================================== */
+
+let sfuChatLive = false;
+
+function setSfuChatLive(isLive) {
+
+  sfuChatLive = Boolean(isLive);
+
+  chatToggle.classList.toggle(
+    "hidden",
+    !sfuChatLive
+  );
+
+  if (!sfuChatLive) {
+
+    chatPanel.classList.add("hidden");
+    chatToggle.classList.remove("active");
+
+    chatToggle.setAttribute(
+      "aria-expanded",
+      "false"
+    );
+
+    sfuChatUnreadCount = 0;
+    updateChatUnread();
+
+    setChatReady(false);
+  }
+}
+
+
+
 const sfuChatItems = new Map();
 
 function setChatError(message = "") {
@@ -1691,6 +1727,7 @@ function addSfuChatMessage(message, countUnread = false) {
 }
 
 function openSfuChat() {
+  if (!sfuChatLive) return;
   chatPanel.classList.remove("hidden");
   chatToggle.classList.add("active");
 
@@ -1727,6 +1764,33 @@ socket.on("sfu:chat:new", message => {
   addSfuChatMessage(message, true);
 });
 
+
+
+/* ==========================================
+   CHAT VISIBILITY FROM SERVER
+========================================== */
+
+socket.on("sfu:chat:live-state", data => {
+
+  if (data?.roomId !== roomId) return;
+
+  if (data.live) {
+
+    setSfuChatLive(true);
+
+    // Tải lịch sử và kích hoạt nhập bình luận.
+    loadSfuChatHistory();
+
+  } else {
+
+    setSfuChatLive(false);
+
+  }
+
+});
+
+
+
 // Tải lịch sử sau khi đã vào phòng hợp lệ.
 function loadSfuChatHistory() {
 
@@ -1747,11 +1811,16 @@ function loadSfuChatHistory() {
       }
 
       setChatError("");
-      setChatReady(true);
 
-      for (const message of response.messages || []) {
-        addSfuChatMessage(message, false);
-      }
+setSfuChatLive(response.live === true);
+setChatReady(sfuChatLive);
+
+if (!sfuChatLive) return;
+
+for (const message of response.messages || []) {
+  addSfuChatMessage(message, false);
+}
+
     }
   );
 }
@@ -1798,13 +1867,13 @@ chatForm.addEventListener("submit", event => {
 });
 
 socket.on("disconnect", () => {
-  setChatReady(false);
+  setSfuChatLive(false);
 });
 
 setChatReady(false);
 
 
-
+setSfuChatLive(false);
 
 /* ==========================================
    FULLSCREEN SFU - SETTINGS PANEL
@@ -2294,6 +2363,7 @@ async function stopLive() {
   if (stopping) return;
 
   stopping = true;
+  setSfuChatLive(false);
 
   try {
     if (started) {
@@ -2424,7 +2494,7 @@ socket.on("host-stream-ready", () => {
 
 
 socket.on("room-closed", async () => {
-setChatReady(false);
+  setSfuChatLive(false);
   if (isViewer) {
     if (lkRoom) await lkRoom.disconnect();
     setStatus("ENDED");

@@ -15928,11 +15928,20 @@ if (
   return;
 }
 
-  if (!room.liveStartTs) {
-    room.liveStartTs = Date.now();
-  }
+if (!room.liveStartTs) {
+  room.liveStartTs = Date.now();
+}
 
-  emitLobbyUpdate();
+// Thông báo livestream đã bắt đầu
+// tới Host và tất cả Viewer trong phòng.
+io.to(roomId).emit("sfu:chat:live-state", {
+  roomId,
+  live: true
+});
+
+emitLobbyUpdate();
+
+
 });
 
 
@@ -15951,8 +15960,14 @@ socket.on("live-stop", ({ roomId }) => {
     topDonors: roomGiftTop(room, 5),
   };
 
-  // ⛔ dừng live
-  room.liveStartTs = null;
+ // ⛔ dừng live
+room.liveStartTs = null;
+
+// Ẩn CHAT ngay trên tất cả thiết bị.
+io.to(roomId).emit("sfu:chat:live-state", {
+  roomId,
+  live: false
+});
 
   // 🔔 gửi cho riêng HOST
   socket.emit("live-ended-stats", stats);
@@ -17042,12 +17057,17 @@ socket.on("sfu:chat:history", (data, ack) => {
     });
   }
 
-  ack({
-    ok: true,
-    messages: Array.isArray(access.room.sfuComments)
-      ? access.room.sfuComments.slice(-50)
-      : []
-  });
+ack({
+  ok: true,
+
+  // Trạng thái livestream hiện tại.
+  live: Boolean(access.room.liveStartTs),
+
+  messages: Array.isArray(access.room.sfuComments)
+    ? access.room.sfuComments.slice(-50)
+    : []
+});
+
 });
 
 // Gửi bình luận.
@@ -17063,6 +17083,14 @@ socket.on("sfu:chat:send", (data, ack) => {
       error: "You are not in this livestream."
     });
   }
+
+  if (!access.room.liveStartTs) {
+  return ack({
+    ok: false,
+    error: "Livestream is not active."
+  });
+}
+
 
   const now = Date.now();
 
