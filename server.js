@@ -14,7 +14,11 @@ const express = require("express");
 const http = require("http");
 const path = require("path");
 const { Server } = require("socket.io");
-const { AccessToken } = require("livekit-server-sdk");
+
+const {
+  AccessToken,
+  RoomServiceClient
+} = require("livekit-server-sdk");
 
 const twilio = require("twilio");
 
@@ -11512,6 +11516,229 @@ app.get("/api/profile/bank-default", (req, res) => {
 
 const rooms = new Map();
 
+
+
+/* ==========================================
+   LIVESTREAMPRO - PK BATTLE ENGINE
+========================================== */
+
+const PK_DURATION = 180000; // 3 minutes
+const PK_INVITE_TTL = 60000;
+
+const pkMatches = new Map();
+const pkInvites = new Map();
+
+
+
+/* ==========================================
+   SFU PK - PRODUCTION HELPERS
+========================================== */
+
+// Create LiveKit server management client.
+function pkRoomServiceClient() {
+  if (!SFU_URL || !SFU_KEY || !SFU_SECRET) {
+    return null;
+  }
+
+  const url = SFU_URL
+    .replace(/^ws:/, "http:")
+    .replace(/^wss:/, "https:");
+
+  return new RoomServiceClient(
+    url,
+    SFU_KEY,
+    SFU_SECRET
+  );
+}
+
+// Remove expired or invalid invitations.
+function pkPruneInvites() {
+  const now = Date.now();
+
+  for (const [id, invite] of pkInvites) {
+    if (
+      invite.expiresAt <= now ||
+      !pkHost(invite.fromRoom, invite.fromSocket) ||
+      !pkHost(invite.targetRoom, invite.targetSocket)
+    ) {
+      pkInvites.delete(id);
+    }
+  }
+}
+
+// Cancel invitations involving a room.
+function pkClearInvitesFor(roomId) {
+  for (const [id, invite] of pkInvites) {
+
+    if (
+      invite.fromRoom !== roomId &&
+      invite.targetRoom !== roomId
+    ) continue;
+
+    pkInvites.delete(id);
+
+    io.to(invite.fromSocket)
+      .emit("sfu:pk:cancelled");
+
+    io.to(invite.targetSocket)
+      .emit("sfu:pk:cancelled");
+  }
+}
+
+// Automatically expire invitations.
+const pkInviteSweep = setInterval(() => {
+
+  const expired = [...pkInvites.values()].filter(
+    invite =>
+      invite.expiresAt <= Date.now() ||
+      !pkHost(invite.fromRoom, invite.fromSocket) ||
+      !pkHost(invite.targetRoom, invite.targetSocket)
+  );
+
+  for (const invite of expired) {
+    pkClearInvitesFor(invite.targetRoom);
+  }
+
+}, 5000);
+
+pkInviteSweep.unref?.();
+
+// Disconnect PK-only LiveKit viewers.
+async function pkRevokePeerParticipants(match) {
+
+  const client = pkRoomServiceClient();
+
+  if (!client) return;
+
+  const participants = [
+    ...(match.peerParticipants?.values() || [])
+  ];
+
+  const tasks = participants.map(
+    async ({ peerRoom, identity }) => {
+      try {
+        await client.removeParticipant(
+          `lsp_${peerRoom}`,
+          identity
+        );
+      } catch (error) {
+        console.warn(
+          "[PK REMOVE PARTICIPANT]",
+          error.message
+        );
+      }
+    }
+  );
+
+  await Promise.allSettled(tasks);
+}
+
+
+
+
+
+function pkHost(roomId, socketId) {
+  const id = normRoomId(roomId);
+  const room = rooms.get(id);
+  const host = room?.broadcasterId
+    ? io.sockets.sockets.get(room.broadcasterId)
+    : null;
+
+  if (
+    !room?.liveStartTs ||
+    !room.streamReady ||
+    room.mediaMode !== "sfu" ||
+    !host?.connected ||
+    host.id !== socketId ||
+    host.data.authenticated !== true ||
+    String(host.data.uid) !== String(room.ownerUid) ||
+    host.data.roomId !== id
+  ) return null;
+
+  return { id, room, host };
+}
+
+function pkPublicState(match) {
+  return {
+    id: match.id,
+    rooms: [...match.rooms],
+    names: [...match.names],
+    scores: [...match.scores],
+    endAt: match.endAt
+  };
+}
+
+function pkBroadcast(match, event, data) {
+  for (const id of match.rooms) {
+    io.to(id).emit(event, data);
+  }
+}
+
+function pkFinish(match, reason = "timeout") {
+  if (!match || pkMatches.get(match.rooms[0]) !== match) {
+    return;
+  }
+
+  clearTimeout(match.timer);
+
+// Remove outstanding PK invitations.
+pkClearInvitesFor(match.rooms[0]);
+pkClearInvitesFor(match.rooms[1]);
+
+// Disconnect PK-only video subscribers.
+// Normal livestream participants remain connected.
+void pkRevokePeerParticipants(match);
+
+  const [a, b] = match.scores;
+  const winnerRoom =
+    a === b ? null : match.rooms[a > b ? 0 : 1];
+
+  const result = {
+    ...pkPublicState(match),
+    reason,
+    winnerRoom
+  };
+
+  for (const id of match.rooms) {
+    pkMatches.delete(id);
+  }
+
+  pkBroadcast(match, "sfu:pk:ended", result);
+}
+
+function pkRecordGift(roomId, amount) {
+  const match = pkMatches.get(roomId);
+
+  if (!match) return;
+
+  if (Date.now() >= match.endAt) {
+    pkFinish(match);
+    return;
+  }
+
+  const index = match.rooms.indexOf(roomId);
+  if (index < 0) return;
+
+  if (!Number.isSafeInteger(amount) || amount <= 0) {
+    return;
+  }
+
+  if (
+    match.scores[index] >
+    Number.MAX_SAFE_INTEGER - amount
+  ) return;
+
+  match.scores[index] += amount;
+
+  pkBroadcast(
+    match,
+    "sfu:pk:score",
+    pkPublicState(match)
+  );
+}
+
+
+
 // ===== LIVESTREAM PRO SOCIAL =====
 const lpPosts = loadSocial();
 
@@ -13005,6 +13232,162 @@ if (
     return res.status(500).json({
       ok: false,
       error: "SFU_TOKEN_FAILED"
+    });
+  }
+});
+
+
+
+/* ==========================================
+   SFU PK - SECURE PEER VIDEO TOKEN
+========================================== */
+
+app.post("/api/sfu/pk-token", async (req, res) => {
+
+
+  res.set("Cache-Control", "no-store");
+
+  try {
+    const id = normRoomId(req.body?.roomId);
+    const socketId = String(req.body?.socketId || "");
+
+if (!SFU_URL || !SFU_KEY || !SFU_SECRET) {
+  return res.status(503).json({
+    ok: false,
+    error: "SFU_NOT_CONFIGURED"
+  });
+}
+
+    const match = pkMatches.get(id);
+    const client = io.sockets.sockets.get(socketId);
+    const room = rooms.get(id);
+
+    if (!match || !client?.connected || !room) {
+      return res.status(403).json({
+        ok: false,
+        error: "PK_NOT_AVAILABLE"
+      });
+    }
+
+    const peerId = match.rooms.find(x => x !== id);
+
+    if (!peerId || Date.now() >= match.endAt) {
+      return res.status(403).json({
+        ok: false,
+        error: "PK_EXPIRED"
+      });
+    }
+
+    const cookie = String(req.headers.cookie || "")
+      .split(";")
+      .map(x => x.trim())
+      .find(x => x.startsWith("lsp_spirit_sid="));
+
+    const raw = cookie
+      ? cookie.slice("lsp_spirit_sid=".length)
+      : "";
+
+    const sessionId = raw
+      ? crypto.createHash("sha256")
+          .update(raw)
+          .digest("hex")
+      : "";
+
+    const uid = String(client.data.uid || "");
+
+    const isHost =
+      room.broadcasterId === socketId &&
+      String(room.ownerUid) === uid;
+
+    const isViewer =
+      room.viewerProfiles?.get(uid)?.socketId === socketId &&
+      room.viewers?.has(socketId);
+
+    if (
+      !client.data.authenticated ||
+      !uid ||
+      !sessionId ||
+      client.data.sessionId !== sessionId ||
+      client.data.roomId !== id ||
+      !client.rooms.has(id) ||
+      (!isHost && !isViewer)
+    ) {
+      return res.status(403).json({
+        ok: false,
+        error: "PK_ACCESS_DENIED"
+      });
+    }
+
+    const account = loadUsers()[uid];
+
+    if (
+      !account?.profile ||
+      account.profile.accountBlocked
+    ) {
+      return res.status(403).json({
+        ok: false,
+        error: "ACCOUNT_UNAVAILABLE"
+      });
+    }
+
+    const peer = rooms.get(peerId);
+    const peerHost = peer?.broadcasterId
+      ? io.sockets.sockets.get(peer.broadcasterId)
+      : null;
+
+    if (
+      !peer?.liveStartTs ||
+      !peer.streamReady ||
+      !peerHost?.connected
+    ) {
+      return res.status(409).json({
+        ok: false,
+        error: "PEER_OFFLINE"
+      });
+    }
+
+const identity = `pk_${match.id}_${socketId}`;
+
+const grant = new AccessToken(
+  SFU_KEY,
+  SFU_SECRET,
+  {
+    identity,
+    ttl: "30s"
+  }
+);
+
+    grant.addGrant({
+      roomJoin: true,
+      room: `lsp_${peerId}`,
+      canPublish: false,
+      canSubscribe: true,
+      canPublishData: false
+    });
+
+const token = await grant.toJwt();
+
+// Track issued PK participant identities.
+match.peerParticipants ||= new Map();
+
+match.peerParticipants.set(identity, {
+  peerRoom: peerId,
+  identity
+});
+
+return res.json({
+  ok: true,
+  url: SFU_URL,
+  token,
+  peerRoomId: peerId
+});
+
+  } catch (error) {
+    console.error("[SFU PK TOKEN]", error);
+
+    return res.status(500).json({
+      ok: false,
+      error: "PK_TOKEN_FAILED"
     });
   }
 });
@@ -16053,6 +16436,14 @@ socket.on("live-stop", ({ roomId }) => {
   const room = getRoom(roomId);
   if (room.broadcasterId !== socket.id) return;
 
+const currentPk = pkMatches.get(normRoomId(roomId));
+
+if (currentPk) {
+  pkFinish(currentPk, "host_stopped");
+}
+
+pkClearInvitesFor(normRoomId(roomId));
+
 // 📊 Thống kê buổi live
   const stats = {
     durationMs: room.liveStartTs ? Date.now() - room.liveStartTs : 0,
@@ -17136,6 +17527,219 @@ return cb({
 
 
 /* ==========================================
+   SFU PK - SOCKET ACTIONS
+========================================== */
+
+socket.on("sfu:pk:invite", (data, ack) => {
+  if (typeof ack !== "function") return;
+
+  const from = pkHost(data?.roomId, socket.id);
+  const targetId = normRoomId(data?.targetRoomId);
+
+  if (!from) {
+    return ack({ ok: false, error: "Start your live first." });
+  }
+
+  if (!targetId || targetId === from.id) {
+    return ack({ ok: false, error: "Invalid target room." });
+  }
+
+  const targetRoom = rooms.get(targetId);
+  const target = pkHost(
+    targetId,
+    targetRoom?.broadcasterId
+  );
+
+  if (!target) {
+    return ack({ ok: false, error: "Target host is not live." });
+  }
+
+pkPruneInvites();
+
+// Only one pending invitation per host.
+const hasPendingInvite = [...pkInvites.values()].some(
+  invite =>
+    invite.fromRoom === from.id ||
+    invite.targetRoom === from.id ||
+    invite.fromRoom === targetId ||
+    invite.targetRoom === targetId
+);
+
+if (
+  pkMatches.has(from.id) ||
+  pkMatches.has(targetId) ||
+  hasPendingInvite
+) {
+  return ack({
+    ok: false,
+    error: "A PK invitation or battle is already active."
+  });
+}
+
+
+  const invite = {
+    id: crypto.randomUUID(),
+    fromRoom: from.id,
+    targetRoom: targetId,
+    fromSocket: socket.id,
+    targetSocket: target.host.id,
+    expiresAt: Date.now() + PK_INVITE_TTL
+  };
+
+  pkInvites.set(targetId, invite);
+
+  const users = loadUsers();
+  const name = String(
+    users[from.room.ownerUid]?.profile?.name || "Host"
+  ).slice(0, 50);
+
+  io.to(target.host.id).emit("sfu:pk:invite", {
+    inviteId: invite.id,
+    fromRoom: from.id,
+    fromName: name
+  });
+
+  ack({ ok: true });
+});
+
+socket.on("sfu:pk:respond", (data, ack) => {
+  if (typeof ack !== "function") return;
+
+  const target = pkHost(data?.roomId, socket.id);
+
+  if (!target) {
+    return ack({ ok: false, error: "Host not authorized." });
+  }
+
+pkPruneInvites();
+
+  const invite = pkInvites.get(target.id);
+
+  if (
+    !invite ||
+    invite.id !== data?.inviteId ||
+    invite.targetSocket !== socket.id ||
+    invite.expiresAt <= Date.now()
+  ) {
+    pkInvites.delete(target.id);
+    return ack({ ok: false, error: "Invitation expired." });
+  }
+
+  pkInvites.delete(target.id);
+
+  const from = pkHost(
+    invite.fromRoom,
+    invite.fromSocket
+  );
+
+  if (!from) {
+    return ack({ ok: false, error: "Other host went offline." });
+  }
+
+  if (data?.accept !== true) {
+    io.to(from.host.id).emit("sfu:pk:declined");
+    return ack({ ok: true });
+  }
+
+  if (
+    pkMatches.has(from.id) ||
+    pkMatches.has(target.id)
+  ) {
+    return ack({ ok: false, error: "PK already active." });
+  }
+
+  const users = loadUsers();
+
+  const match = {
+    id: crypto.randomUUID(),
+    rooms: [from.id, target.id],
+    names: [
+      String(users[from.room.ownerUid]?.profile?.name || "Host A").slice(0, 50),
+      String(users[target.room.ownerUid]?.profile?.name || "Host B").slice(0, 50)
+    ],
+    scores: [0, 0],
+endAt: Date.now() + PK_DURATION,
+timer: null,
+peerParticipants: new Map()
+  };
+
+  pkMatches.set(from.id, match);
+  pkMatches.set(target.id, match);
+
+  match.timer = setTimeout(
+    () => pkFinish(match),
+    PK_DURATION
+  );
+
+  pkBroadcast(
+    match,
+    "sfu:pk:started",
+    pkPublicState(match)
+  );
+
+  ack({ ok: true });
+});
+
+socket.on("sfu:pk:state", (data, ack) => {
+  if (typeof ack !== "function") return;
+
+  const access = getAuthorizedSfuChatRoom(data?.roomId);
+
+  if (!access) {
+    return ack({ ok: false });
+  }
+
+  const match = pkMatches.get(access.id);
+
+  ack({
+    ok: true,
+    match: match ? pkPublicState(match) : null
+  });
+});
+
+socket.on("sfu:pk:stop", (data, ack) => {
+  if (typeof ack !== "function") return;
+
+  const host = pkHost(data?.roomId, socket.id);
+
+  if (!host) {
+    return ack({ ok: false });
+  }
+
+  const match = pkMatches.get(host.id);
+
+  if (match) pkFinish(match, "host_stopped");
+pkClearInvitesFor(host.id);
+
+  ack({ ok: true });
+});
+
+// ==========================================
+// PK - HOST DISCONNECT HANDLING
+// ==========================================
+
+socket.on("disconnect", () => {
+
+  const roomId = socket.data.roomId;
+  const room = rooms.get(roomId);
+
+  // Viewer disconnect must not end the battle.
+  if (!room || room.broadcasterId !== socket.id) {
+    return;
+  }
+
+  const match = pkMatches.get(roomId);
+
+  if (match) {
+    pkFinish(match, "host_disconnected");
+  }
+
+  pkClearInvitesFor(roomId);
+});
+
+
+
+/* ==========================================
    SFU LIVESTREAM - REALTIME COMMENTS
 ========================================== */
 
@@ -17668,7 +18272,8 @@ const transaction = {
     (Number(room.giftByUser.get(access.uid)) || 0) + cost
   );
 
-
+// Count verified gift value toward the active PK battle.
+pkRecordGift(access.id, cost);
 
 const payload = {
   roomId: access.id,

@@ -3102,6 +3102,280 @@ button:disabled {
 }
 
 
+
+/* ==========================================
+   SFU - PK LIVE BATTLE
+========================================== */
+
+.sfu-pk-start {
+  width: 100%;
+  border-color: rgba(233,181,100,.6);
+  background: linear-gradient(125deg,#4B2C26,#302338);
+  color: #FFE1AB;
+}
+
+.studio.sfu-pk-active .video-area {
+  width: 50%;
+  right: auto;
+  top: 0;
+  bottom: 0;
+}
+
+.sfu-pk-peer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  background: #090B12;
+  z-index: 3;
+}
+
+.sfu-pk-peer-media {
+  width: 100%;
+  height: 100%;
+}
+
+.sfu-pk-peer-media video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.sfu-pk-peer-media audio {
+  display: none;
+}
+
+.sfu-pk-peer-name {
+  position: absolute;
+  top: 105px;
+  right: 8px;
+  left: 8px;
+  padding: 7px 8px;
+  border-radius: 8px;
+  background: rgba(0,0,0,.6);
+  color: #F2D59F;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.sfu-pk-board {
+  position: absolute;
+  left: 50%;
+  top: calc(65px + env(safe-area-inset-top,0px));
+  transform: translateX(-50%);
+  z-index: 11;
+
+  width: min(390px,94vw);
+  padding: 12px;
+
+  border: 1px solid rgba(238,193,119,.5);
+  border-radius: 15px;
+  background: rgba(14,15,21,.86);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 12px 40px rgba(0,0,0,.4);
+}
+
+.sfu-pk-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.sfu-pk-top strong {
+  color: #EEC98A;
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+
+.sfu-pk-top span {
+  color: white;
+  font-size: 16px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.sfu-pk-scores {
+  display: grid;
+  grid-template-columns: 1fr 38px 1fr;
+  align-items: center;
+  text-align: center;
+  gap: 5px;
+}
+
+.sfu-pk-scores > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.sfu-pk-scores small {
+  color: #B7BCC8;
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+
+.sfu-pk-scores strong {
+  color: #F8E4BF;
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sfu-pk-scores b {
+  font: 800 19px Georgia,serif;
+  color: #F0BE70;
+}
+
+.sfu-pk-bars {
+  display: flex;
+  height: 8px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #242830;
+}
+
+#sfuPkBarA {
+  width: 50%;
+  background: #549DF0;
+  transition: width .3s;
+}
+
+#sfuPkBarB {
+  width: 50%;
+  background: #EF797E;
+  transition: width .3s;
+}
+
+.sfu-pk-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0,0,0,.76);
+  backdrop-filter: blur(8px);
+}
+
+.sfu-pk-dialog {
+  width: min(100%,400px);
+  padding: 23px;
+  border-radius: 20px;
+  border: 1px solid rgba(234,198,132,.5);
+  background: #191C25;
+  color: #EDE6DA;
+}
+
+.sfu-pk-dialog small {
+  color: #D5AD72;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+}
+
+.sfu-pk-dialog h2 {
+  margin: 13px 0;
+  font: 700 23px Georgia,serif;
+}
+
+.sfu-pk-dialog p {
+  color: #AEB1BD;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+#sfuPkRoomInput {
+  width: 100%;
+  margin: 10px 0;
+  padding: 14px;
+  border: 1px solid #5B4A33;
+  border-radius: 10px;
+  outline: none;
+  background: #10131A;
+  color: white;
+  font: inherit;
+}
+
+.sfu-pk-dialog-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.sfu-pk-dialog-actions button {
+  min-height: 43px;
+  border: 1px solid #6E5838;
+  border-radius: 10px;
+  background: #292D35;
+  color: white;
+  font-weight: 800;
+  font-size: 11px;
+}
+
+#sfuPkConfirm {
+  background: linear-gradient(135deg,#F4D9A2,#BC9156);
+  color: #25190A;
+}
+
+@media (max-width: 480px) {
+  .sfu-pk-board {
+    top: calc(70px + env(safe-area-inset-top,0px));
+    padding: 9px;
+  }
+
+  .sfu-pk-scores strong {
+    font-size: 15px;
+  }
+
+  .sfu-pk-peer-name {
+    top: 175px;
+  }
+}
+
+
+
+
+/* ==========================================
+   SFU PK - ADDITIONAL CONTROLS
+========================================== */
+
+.sfu-pk-end {
+  background: #482629;
+  color: #FFD6C4;
+  border-color: #AC686B;
+}
+
+.sfu-pk-audio {
+  position: absolute;
+  z-index: 7;
+
+  right: 8px;
+  bottom: calc(
+    70px + env(safe-area-inset-bottom, 0px)
+  );
+
+  max-width: calc(100% - 16px);
+  padding: 9px 8px;
+
+  border: 1px solid #C6A474;
+  border-radius: 9px;
+
+  background: rgba(12,13,20,.83);
+  color: #F1D9AC;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+
 </style>
 
 
@@ -3179,6 +3453,89 @@ button:disabled {
   <span id="videoBadge" hidden>STANDBY</span>
 
 </section>
+
+
+
+<!-- SFU PK - PEER VIDEO -->
+<section id="sfuPkPeer" class="sfu-pk-peer hidden">
+
+  <div
+    id="sfuPkPeerMedia"
+    class="sfu-pk-peer-media">
+  </div>
+
+  <button
+    type="button"
+    id="sfuPkAudioBtn"
+    class="sfu-pk-audio"
+    aria-pressed="false">
+    UNMUTE OPPONENT
+  </button>
+
+  <span
+    id="sfuPkPeerName"
+    class="sfu-pk-peer-name">
+    OPPONENT
+  </span>
+
+</section>
+
+<!-- SFU PK - SCOREBOARD -->
+<div id="sfuPkBoard" class="sfu-pk-board hidden">
+
+  <div class="sfu-pk-top">
+    <strong>PK BATTLE</strong>
+    <span id="sfuPkTimer">03:00</span>
+  </div>
+
+  <div class="sfu-pk-scores">
+    <div>
+      <small id="sfuPkNameA">HOST A</small>
+      <strong id="sfuPkScoreA">0</strong>
+    </div>
+
+    <b>VS</b>
+
+    <div>
+      <small id="sfuPkNameB">HOST B</small>
+      <strong id="sfuPkScoreB">0</strong>
+    </div>
+  </div>
+
+  <div class="sfu-pk-bars">
+    <div id="sfuPkBarA"></div>
+    <div id="sfuPkBarB"></div>
+  </div>
+
+</div>
+
+<!-- SFU PK - INVITE DIALOG -->
+<div id="sfuPkOverlay" class="sfu-pk-overlay hidden">
+
+  <div class="sfu-pk-dialog">
+    <small>LIVESTREAMPRO / PK BATTLE</small>
+    <h2 id="sfuPkDialogTitle">CHALLENGE HOST</h2>
+
+    <p id="sfuPkDialogText">
+      Enter the Room ID of another live host.
+    </p>
+
+    <input
+      id="sfuPkRoomInput"
+      type="text"
+      inputmode="numeric"
+      maxlength="15"
+      placeholder="HOST ROOM ID"
+      autocomplete="off">
+
+    <div class="sfu-pk-dialog-actions">
+      <button type="button" id="sfuPkCancel">CANCEL</button>
+      <button type="button" id="sfuPkConfirm">SEND INVITE</button>
+    </div>
+  </div>
+
+</div>
+
 
 <!-- MINIMAL TOP CONTROLS -->
 <div class="studio-topbar">
@@ -3682,6 +4039,24 @@ button:disabled {
 
         <span>START LIVE</span>
       </button>
+
+
+<!-- PK BATTLE CONTROL -->
+<button
+  type="button"
+  id="sfuPkStartBtn"
+  class="control sfu-pk-start"
+  disabled>
+  <span>PK BATTLE · CHALLENGE HOST</span>
+</button>
+
+<button
+  type="button"
+  id="sfuPkEndBtn"
+  class="control sfu-pk-end hidden">
+  END PK · KEEP LIVE
+</button>
+
 
       <div class="studio-control-grid">
 
@@ -5589,6 +5964,7 @@ updateSfuViewerDirectory(response.viewers);
 // Phòng đã xác thực thành công.
 // Cho phép tải và gửi bình luận.
 loadSfuChatHistory();
+syncPK();
 }
 
 async function getToken() {
@@ -5721,6 +6097,8 @@ async function startLive() {
     started = true;
     cameraOn = true;
     micOn = true;
+
+pkStartBtn.disabled = false;
 
     cameraFacing =
   lkRoom.localParticipant
@@ -5908,7 +6286,13 @@ setStudioButtonText(
 
 
 async function stopLive() {
+
+
   if (stopping) return;
+
+  if (pkMatch && socket.connected) {
+  socket.emit("sfu:pk:stop", { roomId }, () => {});
+}
 
   stopping = true;
   setSfuChatLive(false);
@@ -6092,6 +6476,557 @@ if (
     showMessage("Press START LIVE to begin broadcasting.");
   }
 }
+
+
+
+
+/* ==========================================
+   SFU - PK LIVE BATTLE CLIENT
+========================================== */
+
+const pkStartBtn = $("sfuPkStartBtn");
+const pkEndBtn = $("sfuPkEndBtn");
+const pkAudioBtn = $("sfuPkAudioBtn");
+const pkOverlay = $("sfuPkOverlay");
+const pkRoomInput = $("sfuPkRoomInput");
+const pkConfirm = $("sfuPkConfirm");
+const pkCancel = $("sfuPkCancel");
+
+const pkBoard = $("sfuPkBoard");
+const pkPeer = $("sfuPkPeer");
+const pkPeerMedia = $("sfuPkPeerMedia");
+
+let pkMatch = null;
+let pkPeerRoom = null;
+let pkInvite = null;
+let pkTimerInterval = null;
+let pkConnecting = false;
+let pkAudioEnabled = false;
+let pkConnectEpoch = 0;
+
+const pkFormat = n =>
+  Math.max(0, Number(n) || 0).toLocaleString("en-US");
+
+function pkDraw(state) {
+  if (!state || !Array.isArray(state.scores)) return;
+
+  const [a, b] = state.scores;
+  const total = a + b;
+  const percent = total > 0 ? a / total * 100 : 50;
+
+  $("sfuPkNameA").textContent = state.names?.[0] || "HOST A";
+  $("sfuPkNameB").textContent = state.names?.[1] || "HOST B";
+
+  $("sfuPkScoreA").textContent = pkFormat(a);
+  $("sfuPkScoreB").textContent = pkFormat(b);
+
+  $("sfuPkBarA").style.width = `${percent}%`;
+  $("sfuPkBarB").style.width = `${100 - percent}%`;
+}
+
+function pkUpdateTimer() {
+  if (!pkMatch) return;
+
+  const seconds = Math.max(
+    0,
+    Math.ceil((pkMatch.endAt - Date.now()) / 1000)
+  );
+
+  const minutes = String(Math.floor(seconds / 60))
+    .padStart(2, "0");
+
+  const remain = String(seconds % 60).padStart(2, "0");
+
+  $("sfuPkTimer").textContent = `${minutes}:${remain}`;
+}
+
+function pkOpenDialog(title, description, isInvitation = false) {
+  $("sfuPkDialogTitle").textContent = title;
+  $("sfuPkDialogText").textContent = description;
+
+  pkRoomInput.classList.toggle("hidden", isInvitation);
+  pkConfirm.textContent = isInvitation ? "ACCEPT" : "SEND INVITE";
+  pkCancel.textContent = isInvitation ? "DECLINE" : "CANCEL";
+
+  pkOverlay.classList.remove("hidden");
+}
+
+function pkCloseDialog() {
+  pkOverlay.classList.add("hidden");
+}
+
+
+/* ==========================================
+   PK - END BATTLE WITHOUT STOPPING LIVE
+========================================== */
+
+pkEndBtn.addEventListener("click", async () => {
+
+  if (
+    pkEndBtn.disabled ||
+    isViewer ||
+    !pkMatch
+  ) return;
+
+  pkEndBtn.disabled = true;
+
+  try {
+    const result = await pkRequest(
+      "sfu:pk:stop",
+      { roomId }
+    );
+
+    if (!result?.ok) {
+      showMessage("Could not end PK. Please retry.");
+    }
+
+  } catch {
+    showMessage(
+      "PK stop pending. Recheck your connection."
+    );
+  } finally {
+    pkEndBtn.disabled = false;
+  }
+});
+
+/* ==========================================
+   PK - OPPONENT AUDIO CONTROL
+========================================== */
+
+pkAudioBtn.addEventListener("click", async () => {
+
+  pkAudioEnabled = !pkAudioEnabled;
+
+  pkAudioBtn.textContent = pkAudioEnabled
+    ? "MUTE OPPONENT"
+    : "UNMUTE OPPONENT";
+
+  pkAudioBtn.setAttribute(
+    "aria-pressed",
+    String(pkAudioEnabled)
+  );
+
+  for (
+    const audio of pkPeerMedia.querySelectorAll("audio")
+  ) {
+    audio.muted = !pkAudioEnabled;
+
+    if (pkAudioEnabled) {
+      try {
+        await audio.play();
+      } catch {
+        showMessage(
+          "Tap again to enable opponent audio."
+        );
+      }
+    }
+  }
+});
+
+
+
+pkStartBtn.addEventListener("click", () => {
+  if (isViewer || !started || pkMatch) return;
+
+  pkInvite = null;
+  pkRoomInput.value = "";
+
+  pkOpenDialog(
+    "CHALLENGE HOST",
+    "Enter the Room ID of a host who is currently live."
+  );
+});
+
+pkRoomInput.addEventListener("input", () => {
+  pkRoomInput.value = pkRoomInput.value.replace(/\D/g, "");
+});
+
+function pkRequest(event, payload) {
+  return new Promise((resolve, reject) => {
+    socket.timeout(10000).emit(
+      event,
+      payload,
+      (error, response) => {
+        if (error) reject(error);
+        else resolve(response);
+      }
+    );
+  });
+}
+
+pkConfirm.addEventListener("click", async () => {
+  if (pkConfirm.disabled) return;
+
+  pkConfirm.disabled = true;
+
+  try {
+    let response;
+
+    if (pkInvite) {
+      response = await pkRequest("sfu:pk:respond", {
+        roomId,
+        inviteId: pkInvite.inviteId,
+        accept: true
+      });
+    } else {
+      const targetRoomId = pkRoomInput.value.trim();
+
+      if (!/^[0-9]{1,15}$/.test(targetRoomId)) {
+        showMessage("Enter a valid numeric Room ID.");
+        return;
+      }
+
+      response = await pkRequest("sfu:pk:invite", {
+        roomId,
+        targetRoomId
+      });
+    }
+
+    if (!response?.ok) {
+      showMessage(response?.error || "PK request failed.");
+      return;
+    }
+
+    pkInvite = null;
+    pkCloseDialog();
+
+    showMessage("PK request completed.");
+
+  } catch {
+    showMessage("PK connection timeout.");
+  } finally {
+    pkConfirm.disabled = false;
+  }
+});
+
+pkCancel.addEventListener("click", async () => {
+  if (pkInvite) {
+    try {
+      await pkRequest("sfu:pk:respond", {
+        roomId,
+        inviteId: pkInvite.inviteId,
+        accept: false
+      });
+    } catch {
+      // Invitation expires automatically on the server.
+    }
+  }
+
+  pkInvite = null;
+  pkCloseDialog();
+});
+
+socket.on("sfu:pk:invite", data => {
+  if (isViewer || !started || pkMatch) return;
+
+  pkInvite = data;
+
+  pkOpenDialog(
+    "PK INVITATION",
+    `${data.fromName || "Another host"} has invited you to a PK battle.`,
+    true
+  );
+});
+
+socket.on("sfu:pk:declined", () => {
+  showMessage("The host declined your PK invitation.");
+});
+
+socket.on("sfu:pk:cancelled", () => {
+
+  if (pkInvite) {
+    pkInvite = null;
+    pkCloseDialog();
+  }
+
+  showMessage(
+    "PK invitation was cancelled or expired."
+  );
+});
+
+
+
+async function pkConnectPeer(match) {
+  if (pkConnecting || pkPeerRoom) return;
+
+  pkConnecting = true;
+
+  let room = null;
+
+  try {
+    const response = await fetch("/api/sfu/pk-token", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        roomId,
+        socketId: socket.id
+      })
+    });
+
+    const credentials = await response.json();
+
+    if (!response.ok || !credentials.ok) {
+      throw new Error(credentials.error || "PK access denied.");
+    }
+
+
+    const connectEpoch = pkConnectEpoch;
+
+
+    room = new Room({
+      adaptiveStream: true,
+      dynacast: true
+    });
+
+
+
+    room.on(RoomEvent.TrackSubscribed, track => {
+      if (
+        track.kind !== Track.Kind.Video &&
+        track.kind !== Track.Kind.Audio
+      ) return;
+
+const element = track.attach();
+
+element.autoplay = true;
+
+if (track.kind === Track.Kind.Video) {
+  element.playsInline = true;
+  element.muted = true;
+
+  pkPeerMedia.querySelectorAll("video")
+    .forEach(video => video.remove());
+
+} else {
+  element.style.display = "none";
+  element.muted = !pkAudioEnabled;
+}
+
+pkPeerMedia.appendChild(element);
+    });
+
+    room.on(RoomEvent.TrackUnsubscribed, track => {
+      track.detach().forEach(element => element.remove());
+    });
+
+    await room.connect(
+      credentials.url,
+      credentials.token,
+      { autoSubscribe: true }
+    );
+
+
+if (
+  pkMatch?.id !== match.id ||
+  connectEpoch !== pkConnectEpoch
+) {
+  await room.disconnect();
+  return;
+}
+
+// Reconnect only while the same PK is active.
+room.on(RoomEvent.Disconnected, () => {
+
+  if (pkPeerRoom !== room) return;
+
+  pkPeerRoom = null;
+
+  if (
+    pkMatch?.id === match.id &&
+    socket.connected
+  ) {
+    showMessage(
+      "Opponent video disconnected. Reconnecting..."
+    );
+
+    setTimeout(() => {
+      if (
+        pkMatch?.id === match.id &&
+        !pkPeerRoom
+      ) {
+        pkConnectPeer(match);
+      }
+    }, 2500);
+  }
+});
+
+pkPeerRoom = room;
+
+
+  } catch (error) {
+    if (room) {
+      await room.disconnect().catch(() => {});
+    }
+
+    console.error("[SFU PK PEER]", error);
+    showMessage("Unable to connect opponent video.");
+  } finally {
+    pkConnecting = false;
+  }
+}
+
+async function pkBegin(state) {
+  if (!state || !state.rooms?.includes(roomId)) return;
+
+  const sameMatch = pkMatch?.id === state.id;
+
+  pkMatch = state;
+  pkDraw(state);
+  pkUpdateTimer();
+
+  pkBoard.classList.remove("hidden");
+  pkPeer.classList.remove("hidden");
+  document.querySelector(".studio")
+    .classList.add("sfu-pk-active");
+
+  const index = state.rooms.indexOf(roomId);
+  const otherIndex = index === 0 ? 1 : 0;
+
+  $("sfuPkPeerName").textContent =
+    state.names?.[otherIndex] || "OPPONENT";
+
+  pkStartBtn.disabled = true;
+
+  pkEndBtn.classList.toggle("hidden", isViewer);
+pkEndBtn.disabled = isViewer;
+
+pkAudioBtn.classList.remove("hidden");
+
+  if (pkTimerInterval) clearInterval(pkTimerInterval);
+
+  pkTimerInterval = setInterval(pkUpdateTimer, 1000);
+
+  if (!sameMatch || !pkPeerRoom) {
+    await pkConnectPeer(state);
+  }
+}
+
+async function pkEnd(data) {
+  if (!pkMatch || (data?.id && data.id !== pkMatch.id)) {
+    return;
+  }
+
+  const result = data || pkMatch;
+
+  let text = "PK battle ended.";
+
+if (result.winnerRoom === roomId) {
+  text = isViewer
+    ? "PK VICTORY! Your host won!"
+    : "PK VICTORY! You won the battle.";
+
+} else if (result.winnerRoom) {
+  text = isViewer
+    ? "PK finished. Your host lost."
+    : "PK finished. The opponent won.";
+
+} else if (result.reason === "timeout") {
+  text = "PK DRAW! Both hosts scored equally.";
+}
+
+  pkMatch = null;
+  pkInvite = null;
+
+  pkConnectEpoch++;
+
+pkAudioEnabled = false;
+
+pkAudioBtn.textContent = "UNMUTE OPPONENT";
+
+pkAudioBtn.setAttribute(
+  "aria-pressed",
+  "false"
+);
+
+pkAudioBtn.classList.add("hidden");
+pkEndBtn.classList.add("hidden");
+
+  clearInterval(pkTimerInterval);
+  pkTimerInterval = null;
+
+  if (pkPeerRoom) {
+    const oldRoom = pkPeerRoom;
+    pkPeerRoom = null;
+    await oldRoom.disconnect().catch(() => {});
+  }
+
+  pkPeerMedia.replaceChildren();
+
+  pkPeer.classList.add("hidden");
+  pkBoard.classList.add("hidden");
+
+  document.querySelector(".studio")
+    .classList.remove("sfu-pk-active");
+
+  pkStartBtn.disabled = isViewer || !started || stopping;
+
+  showMessage(text);
+}
+
+socket.on("sfu:pk:started", pkBegin);
+
+socket.on("sfu:pk:score", data => {
+  if (pkMatch?.id !== data?.id) return;
+
+  pkMatch = data;
+  pkDraw(data);
+});
+
+socket.on("sfu:pk:ended", pkEnd);
+
+async function syncPK() {
+  if (!socket.connected) return;
+
+  try {
+    const response = await pkRequest(
+      "sfu:pk:state",
+      { roomId }
+    );
+
+    if (response?.ok && response.match) {
+      await pkBegin(response.match);
+    } else if (pkMatch) {
+      await pkEnd({ reason: "state_reset" });
+    }
+  } catch {
+    // Connection may be reconnecting.
+  }
+}
+
+socket.on("connect", () => {
+
+  // Rejoin the signaling room before checking PK.
+  if (pkMatch) {
+    joinSignalingRoom().catch(() => {
+      syncPK();
+    });
+  }
+});
+
+
+socket.on("disconnect", () => {
+
+  if (!pkMatch) return;
+
+  $("sfuPkTimer").textContent = "RECONNECTING";
+
+  // Invalidate any pending PK connection.
+  pkConnectEpoch++;
+
+  if (pkPeerRoom) {
+
+    const oldRoom = pkPeerRoom;
+    pkPeerRoom = null;
+
+    oldRoom.disconnect().catch(() => {});
+  }
+});
+
+
+
 </script>
 </body>
 </html>
