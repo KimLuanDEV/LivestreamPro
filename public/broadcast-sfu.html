@@ -3673,6 +3673,60 @@ button:disabled {
   }
 }
 
+
+
+/* ==========================================
+   SFU VOICE BUTTON - HOST / VIEWER POSITION
+========================================== */
+
+/* HOST: Same position as Gift button */
+body.sfu-role-host #sfuVoiceToggle {
+  right: calc(
+    13px + env(safe-area-inset-right, 0px)
+  );
+
+  bottom: calc(
+    72px + env(safe-area-inset-bottom, 0px)
+  );
+
+  width: 48px;
+  height: 48px;
+
+  z-index: 17;
+}
+
+/* VIEWER: Above Gift button */
+body.sfu-role-viewer #sfuVoiceToggle {
+  right: calc(
+    13px + env(safe-area-inset-right, 0px)
+  );
+
+  bottom: calc(
+    134px + env(safe-area-inset-bottom, 0px)
+  );
+
+  width: 48px;
+  height: 48px;
+
+  z-index: 17;
+}
+
+/* Smaller phones */
+@media (max-width: 380px) {
+
+  body.sfu-role-host #sfuVoiceToggle {
+    bottom: calc(
+      72px + env(safe-area-inset-bottom, 0px)
+    );
+  }
+
+  body.sfu-role-viewer #sfuVoiceToggle {
+    bottom: calc(
+      134px + env(safe-area-inset-bottom, 0px)
+    );
+  }
+
+}
 </style>
 
 
@@ -4676,6 +4730,20 @@ const roomId = String(qs.get("room") || "")
 
 const isViewer = qs.get("mode") === "viewer";
 const role = isViewer ? "viewer" : "host";
+
+/* ==========================================
+   SFU ROLE BASED UI
+========================================== */
+
+document.body.classList.toggle(
+  "sfu-role-viewer",
+  isViewer
+);
+
+document.body.classList.toggle(
+  "sfu-role-host",
+  !isViewer
+);
 
 const socket = io({
   reconnection: true
