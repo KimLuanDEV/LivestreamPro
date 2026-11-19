@@ -1751,9 +1751,22 @@ const res2 = await fetch("/api/login", {
 
   const data = await res2.json();
 
-if(!data || !data.profile){
-  showMsg(	"Sign in failed. Please try again.");
+if (!res2.ok || !data?.ok || !data?.profile) {
+  showMsg(
+    data?.error === "blocked"
+      ? "Your account has been locked."
+      : "Sign in failed. Please try again."
+  );
   return;
+}
+
+// Refresh trusted device token
+if (data.trustedToken) {
+  localStorage.setItem(
+    "trustedToken",
+    data.trustedToken
+  );
+  localStorage.setItem("trustedUser", u);
 }
 
   // 🔥 LƯU PROFILE + XOÁ GUEST

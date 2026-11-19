@@ -4336,11 +4336,14 @@ io.on("connection", socket => {
 
 
   
-  const { uid, deviceId } = socket.handshake.auth || {};
+// UID was verified by Socket.IO middleware
+const uid = socket.data.uid;
 
-  socket.data.uid = uid;
+// Device identifier is client metadata only
+const deviceId =
+  socket.handshake.auth?.deviceId || null;
 
-  socket.data.deviceId = deviceId;
+socket.data.deviceId = deviceId;
 
 
 // =======================================
@@ -4853,10 +4856,22 @@ socket.emit("wheel8-my-bets", myWheelBets);
 
 
 
-    // 🔥 gửi danh sách cược hiện tại cho admin
-  emitAdminDtpBets();
-  
-  bindSocketToUser(uid, socket);
+// 🔥 gửi danh sách cược hiện tại cho admin
+emitAdminDtpBets();
+
+// ==========================================
+// SECURE SOCKET USER BINDING
+// ==========================================
+
+if (
+  socket.data.authenticated === true &&
+  socket.data.uid
+) {
+  bindSocketToUser(
+    socket.data.uid,
+    socket
+  );
+}
 
 
 
@@ -7153,21 +7168,79 @@ function emitToUser(uid, event, data) {
 
 
 
+/* ==========================================
+   SECURE SOCKET USER BINDING
+========================================== */
+
 function bindSocketToUser(uid, socket) {
-  let set = activeUsers.get(uid);
-  if (!set) {
-    set = new Set();
-    activeUsers.set(uid, set);
+
+  const verifiedUid = socket.data.uid;
+
+  // Only authenticated sockets may bind
+  if (
+    !socket.data.authenticated ||
+    !verifiedUid
+  ) {
+    socket.emit("auth-error", {
+      message: "Authentication required."
+    });
+
+    return false;
   }
 
-  // 🔥 chỉ kick khác device
- set.add(socket.id);          // bind trước
-kickOldSessions(uid, socket); // kick sau
+  // Prevent binding to another account
+  if (String(uid) !== String(verifiedUid)) {
 
+    console.warn(
+      "[SECURITY] UID mismatch:",
+      socket.id
+    );
 
-  socket.data.uid = uid;
+    socket.emit("auth-error", {
+      message: "Unauthorized account."
+    });
 
-  console.log("🔐 SOCKET BIND:", uid, socket.id, socket.data.deviceId);
+    return false;
+  }
+
+  const db = loadUsers();
+  const account = db[verifiedUid];
+
+  if (
+    !account?.profile ||
+    account.profile.accountBlocked
+  ) {
+    socket.emit("auth-error", {
+      message: "Account unavailable."
+    });
+
+    return false;
+  }
+
+  let set = activeUsers.get(verifiedUid);
+
+  if (!set) {
+    set = new Set();
+    activeUsers.set(verifiedUid, set);
+  }
+
+  set.add(socket.id);
+
+  // Keep existing device session policy
+  kickOldSessions(verifiedUid, socket);
+
+  socket.data.role =
+    account.role ||
+    account.profile.role ||
+    "user";
+
+  console.log(
+    "[SOCKET] VERIFIED BIND:",
+    verifiedUid,
+    socket.id
+  );
+
+  return true;
 }
 
 
@@ -7397,6 +7470,68 @@ function getVerifiedTransferUid(socket) {
     return null;
   }
 }
+
+
+
+/* ==========================================
+   LIVESTREAMPRO - VERIFIED SOCKET IDENTITY
+   NEVER TRUST CLIENT-SUPPLIED UID
+========================================== */
+
+io.use((socket, next) => {
+  try {
+
+    // Reset identity before authentication
+    socket.data.uid = null;
+    socket.data.role = "guest";
+    socket.data.profile = null;
+
+    // Identity comes from signed HTTP-only cookie
+    const verifiedUid = getVerifiedTransferUid(socket);
+
+    // Allow anonymous connection for public features
+    if (!verifiedUid) {
+      socket.data.authenticated = false;
+      return next();
+    }
+
+    const db = loadUsers();
+    const account = db[verifiedUid];
+
+    if (
+      !account?.profile ||
+      account.profile.accountBlocked
+    ) {
+      socket.data.authenticated = false;
+      return next();
+    }
+
+    socket.data.uid = String(verifiedUid);
+
+    socket.data.role =
+      account.role ||
+      account.profile.role ||
+      "user";
+
+    socket.data.profile = account.profile;
+    socket.data.authenticated = true;
+
+    return next();
+
+  } catch (error) {
+
+    console.error(
+      "[SOCKET AUTH] Verification failed:",
+      error.message
+    );
+
+    socket.data.uid = null;
+    socket.data.role = "guest";
+    socket.data.authenticated = false;
+
+    return next();
+  }
+});
 
 
 
@@ -12087,6 +12222,14 @@ app.post("/api/prelogin", async (req,res)=>{
   const acc = db[username];
   if(!acc) return res.json({ ok:false });
 
+if (acc.profile?.accountBlocked) {
+  return res.status(403).json({
+    error: "blocked",
+    message: "Your account has been locked"
+  });
+}
+
+
   const ok = await bcrypt.compare(String(password), acc.password);
   if(!ok) return res.json({ ok:false });
 
@@ -12795,37 +12938,56 @@ io.on("connection", (socket) => {
  // lấy deviceId từ client
   socket.data.deviceId = socket.handshake.auth?.deviceId;
 
-  // 🔐 ADMIN / USER REGISTER
-  socket.on("register-admin", (uid) => {
-    if (!uid) return;
-    bindSocketToUser(uid, socket);
-    console.log("🧑‍⚖️ ADMIN REGISTER:", uid, socket.id);
-  });
+/* ==========================================
+   VERIFIED SOCKET REGISTRATION
+========================================== */
 
-  socket.on("register-user", (uid) => {
-    if (!uid) return;
-    bindSocketToUser(uid, socket);
-    console.log("👤 USER REGISTER:", uid, socket.id);
-  });
+socket.on("register-user", (uid) => {
 
+  const verifiedUid = socket.data.uid;
 
+  if (!bindSocketToUser(verifiedUid, socket)) {
+    return;
+  }
 
-// 🔐 AUTH SOCKET (BẮT BUỘC – TOÀN APP)
-socket.on("auth", ({ uid, deviceId }) => {
-  if (!uid) return;
-
-  const users = loadUsers();
-  const me = users[uid];
-
-  socket.data.uid = uid;
-  socket.data.deviceId = deviceId || null;
-
-  // 🔥 thêm dòng này
-  socket.data.role = me?.role || me?.profile?.role || "user";
-
-  bindSocketToUser(uid, socket);
+  console.log(
+    "[SOCKET] USER REGISTER:",
+    verifiedUid
+  );
 });
 
+
+socket.on("register-admin", (uid) => {
+
+  const verifiedUid = socket.data.uid;
+
+  if (!bindSocketToUser(verifiedUid, socket)) {
+    return;
+  }
+
+  // This event does not grant admin privileges
+  console.log(
+    "[SOCKET] VERIFIED REGISTER:",
+    verifiedUid
+  );
+});
+
+
+socket.on("auth", (data = {}) => {
+
+  const verifiedUid = socket.data.uid;
+
+  if (!bindSocketToUser(verifiedUid, socket)) {
+    return;
+  }
+
+  // Device ID is not an authentication factor
+  socket.data.deviceId =
+    data?.deviceId ||
+    socket.data.deviceId ||
+    null;
+
+});
 
 
 socket.on("disconnect", () => {
@@ -13028,17 +13190,32 @@ socket.on("topup-transferred", async ({ fromUid, agentUid, time }) => {
 
 
 
-// 🔐 LOGIN SOCKET (CHUẨN HOÁ)
-socket.on("socket-login", ({ uid }) => {
-  bindSocketToUser(uid, socket);
+/* ==========================================
+   VERIFIED SOCKET LOGIN
+========================================== */
+
+socket.on("socket-login", () => {
+
+  const uid = socket.data.uid;
+
+  if (!bindSocketToUser(uid, socket)) {
+    return;
+  }
+
   emitAgentStatus(uid, true);
 });
 
-socket.on("auth-login", ({ uid }) => {
-  bindSocketToUser(uid, socket);
+
+socket.on("auth-login", () => {
+
+  const uid = socket.data.uid;
+
+  if (!bindSocketToUser(uid, socket)) {
+    return;
+  }
+
   emitAgentStatus(uid, true);
 });
-
 
 // ❌ HANDLE DISCONNECT (BẮT BUỘC)
 socket.on("disconnect", () => {
@@ -14919,16 +15096,18 @@ socket.on("auth-ping", ({ uid }) => {
 
 
 
- socket.on("auth-login", ({ uid }) => {
-  uid = String(uid || "").trim();
-  if (!uid) return;
+socket.on("auth-login", () => {
 
-  // 🚫 BỎ QUA GUEST
-  if (uid.startsWith("guest_")) {
-    socket.data.uid = uid;
-    socket.data.role = "guest";
+  const uid = socket.data.uid;
+
+  if (!socket.data.authenticated || !uid) {
     return;
   }
+
+  if (!bindSocketToUser(uid, socket)) {
+    return;
+  }
+  
 
   const db = loadUsers();
   if (db[uid]) {
@@ -14983,10 +15162,10 @@ if (inbox && inbox.length) {
 
   }
 
-  socket.data.uid = uid;
-  emitActiveUsers();
-  emitCoinUpdate(uid);
-  emitAllUsers(); // 🔁 đảm bảo FE luôn có role
+// UID already verified and bound
+emitActiveUsers();
+emitCoinUpdate(uid);
+emitAllUsers();
 });
 
 
