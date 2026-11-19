@@ -15943,6 +15943,11 @@ if (!room.sfuPolicyMessageId) {
 
   const now = Date.now();
 
+
+// Khởi tạo thống kê cho phiên LIVE mới.
+room.giftTotal = 0;
+room.giftByUser = new Map();
+
   // New livestream starts with a fresh chat.
   room.sfuComments = [];
 
@@ -17124,16 +17129,20 @@ socket.on("sfu:chat:history", (data, ack) => {
     });
   }
 
+
 ack({
   ok: true,
 
-  // Trạng thái livestream hiện tại.
   live: Boolean(access.room.liveStartTs),
+
+  // Tổng quà đã nhận từ đầu phiên LIVE.
+  totalCoins: Number(access.room.giftTotal) || 0,
 
   messages: Array.isArray(access.room.sfuComments)
     ? access.room.sfuComments.slice(-50)
     : []
 });
+
 
 });
 
@@ -17463,16 +17472,26 @@ socket.on("sfu:gift:send", (data, ack) => {
     (Number(room.giftByUser.get(access.uid)) || 0) + cost
   );
 
-  const payload = {
-    roomId: access.id,
-    transactionId: requestId,
-    donor: senderName,
-    giftId,
-    giftName: gift.name,
-    emoji: gift.emoji,
-    cost,
-    ts
-  };
+
+const payload = {
+  roomId: access.id,
+  transactionId: requestId,
+
+  donor: senderName,
+
+  giftId,
+  giftName: gift.name,
+  emoji: gift.emoji,
+
+  cost,
+
+  // Tổng kim cương Host đã nhận
+  // trong phiên LIVE hiện tại.
+  totalCoins: room.giftTotal,
+
+  ts
+};
+
 
   // Only this room sees the gift animation.
   io.to(access.id).emit("sfu:gift:new", payload);

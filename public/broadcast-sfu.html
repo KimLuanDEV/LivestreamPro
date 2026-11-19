@@ -2485,6 +2485,86 @@ button:disabled {
 }
 
 
+
+/* ==========================================
+   SFU - LIVE DIAMOND EARNINGS
+========================================== */
+
+.sfu-live-earnings {
+  position: absolute;
+  z-index: 10;
+
+  top: calc(66px + env(safe-area-inset-top, 0px));
+  right: calc(12px + env(safe-area-inset-right, 0px));
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+
+  min-width: 130px;
+  max-width: calc(100vw - 24px);
+  padding: 10px 13px;
+
+  border: 1px solid rgba(225,190,128,.32);
+  border-radius: 13px;
+
+  background: rgba(8,10,14,.68);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  box-shadow: 0 5px 20px rgba(0,0,0,.24);
+
+  pointer-events: none;
+}
+
+.sfu-earnings-label {
+  color: #C8B89B;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .9px;
+  white-space: nowrap;
+}
+
+.sfu-earnings-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sfu-earnings-value svg {
+  width: 19px;
+  height: 19px;
+  color: #83D9F8;
+}
+
+#sfuLiveEarningsCount {
+  color: #F2D397;
+  font-size: 19px;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .sfu-live-earnings {
+    top: calc(59px + env(safe-area-inset-top, 0px));
+    padding: 8px 11px;
+    min-width: 118px;
+  }
+
+  #sfuLiveEarningsCount {
+    font-size: 17px;
+  }
+
+  .sfu-earnings-label {
+    font-size: 7px;
+  }
+}
+
+
+
+
 </style>
 
 
@@ -2615,6 +2695,42 @@ button:disabled {
   </div>
 
 </div>
+
+
+<!-- ======================================
+     SFU - LIVE GIFT EARNINGS
+====================================== -->
+
+<div
+  id="sfuLiveEarnings"
+  class="sfu-live-earnings hidden"
+  aria-label="Diamonds received by host this live">
+
+  <span class="sfu-earnings-label">
+    LIVE GIFTS RECEIVED
+  </span>
+
+  <div class="sfu-earnings-value">
+
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.6"
+      stroke-linejoin="round"
+      aria-hidden="true">
+
+      <path d="M6 3h12l5 7-11 12L1 10l5-7Z"/>
+      <path d="M1 10h22M6 3l3 7 3 12 3-12 3-7"/>
+
+    </svg>
+
+    <strong id="sfuLiveEarningsCount">0</strong>
+
+  </div>
+
+</div>
+
 
 
 <!-- AUTO-DISMISS STUDIO NOTIFICATION -->
@@ -3195,6 +3311,44 @@ const $ = id => document.getElementById(id);
 const sfuViewerBadge = $("sfuViewerBadge");
 const sfuViewerCount = $("sfuViewerCount");
 
+
+
+/* ==========================================
+   SFU - HOST LIVE GIFTS COUNTER
+========================================== */
+
+const sfuLiveEarnings = $("sfuLiveEarnings");
+const sfuLiveEarningsCount =
+  $("sfuLiveEarningsCount");
+
+function updateSfuLiveEarnings(value) {
+
+  const amount = Number(value);
+
+  if (
+    !Number.isFinite(amount) ||
+    amount < 0
+  ) return;
+
+  sfuLiveEarningsCount.textContent =
+    Math.floor(amount).toLocaleString("en-US");
+}
+
+// Cập nhật từ hệ thống quà phòng hiện có.
+socket.on("gift-stats", data => {
+  if (!data || !sfuChatLive) return;
+
+  updateSfuLiveEarnings(data.totalCoins);
+});
+
+// Khi phòng kết thúc, không giữ tổng phiên cũ.
+socket.on("room-closed", () => {
+  updateSfuLiveEarnings(0);
+  sfuLiveEarnings.classList.add("hidden");
+});
+
+
+
 function updateSfuViewerCount(value) {
 
   const count = Math.max(
@@ -3488,6 +3642,9 @@ socket.on("coin-update", data => {
 socket.on("sfu:gift:new", data => {
 
   if (data?.roomId !== roomId) return;
+  // Server là nguồn xác thực tổng kim cương.
+updateSfuLiveEarnings(data.totalCoins);
+
 
   const donor = String(data.donor || "Viewer")
     .slice(0, 50);
@@ -3554,6 +3711,19 @@ function setSfuChatLive(isLive) {
 
   const wasLive = sfuChatLive;
   sfuChatLive = Boolean(isLive);
+
+
+
+// Cả Host và Viewer đều nhìn thấy tổng quà.
+sfuLiveEarnings.classList.toggle(
+  "hidden",
+  !sfuChatLive
+);
+
+if (!sfuChatLive) {
+  updateSfuLiveEarnings(0);
+}
+
 
 
 // Gift button is only available to Viewers during LIVE.
@@ -3954,8 +4124,18 @@ function loadSfuChatHistory() {
 
       setChatError("");
 
+
 setSfuChatLive(response.live === true);
 setChatReady(sfuChatLive);
+
+// Đồng bộ tổng quà khi mới tham gia phòng,
+// tải lại trang hoặc kết nối lại.
+if (sfuChatLive) {
+  updateSfuLiveEarnings(response.totalCoins);
+}
+
+
+
 
 if (!sfuChatLive) return;
 
