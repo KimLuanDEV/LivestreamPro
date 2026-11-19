@@ -1937,6 +1937,77 @@ button:disabled {
 
 
 
+
+/* ==========================================
+   SFU - SYSTEM CHAT MESSAGE
+========================================== */
+
+.sfu-chat-messages .sfu-chat-item.is-system {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 5px 0;
+
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.sfu-system-avatar {
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+
+  border: 1px solid rgba(230,196,137,.55);
+  border-radius: 50%;
+
+  background: rgba(54,42,25,.92);
+  color: #E9CA91;
+}
+
+.sfu-system-avatar svg {
+  width: 19px;
+  height: 19px;
+}
+
+.sfu-chat-item.is-system .sfu-chat-author {
+  display: inline;
+  margin-right: 7px;
+
+  color: #F2D39B;
+  font-weight: 800;
+}
+
+.sfu-system-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 5px;
+
+  border-radius: 4px;
+
+  background: rgba(223,190,131,.16);
+  color: #EACB96;
+
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  vertical-align: middle;
+}
+
+.sfu-chat-item.is-system .sfu-chat-text {
+  color: #F5E9D3;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.55;
+  text-shadow: 0 1px 6px #000;
+}
+
+
+
+
 </style>
 
 
@@ -2540,10 +2611,13 @@ function setSfuChatLive(isLive) {
     "false"
   );
 
-  sfuChatUnreadCount = 0;
-  updateChatUnread();
+sfuChatUnreadCount = 0;
+updateChatUnread();
 
-  setChatReady(false);
+sfuChatItems.clear();
+renderSfuChat();
+
+setChatReady(false);
 }
 
 
@@ -2589,6 +2663,8 @@ function renderSfuChat() {
     .sort((a, b) => a.ts - b.ts)
     .slice(-10);
 
+
+
   if (!messages.length) {
     const empty = document.createElement("p");
     empty.className = "sfu-chat-empty";
@@ -2604,11 +2680,69 @@ function renderSfuChat() {
     const item = document.createElement("div");
     item.className = "sfu-chat-item";
 
+
     if (message.host) {
       item.classList.add("is-host");
     }
 
    
+
+/* ======================================
+   OFFICIAL SYSTEM COMMENT
+====================================== */
+
+if (message.system === true) {
+
+  item.classList.add("is-system");
+
+  const avatarWrap = document.createElement("div");
+  avatarWrap.className =
+    "sfu-chat-avatar sfu-system-avatar";
+
+  avatarWrap.innerHTML = `
+    <svg viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="1.8"
+         stroke-linecap="round"
+         stroke-linejoin="round"
+         aria-hidden="true">
+      <path d="M12 2 20 5v6c0 5-3.5 8.5-8 11
+               -4.5-2.5-8-6-8-11V5l8-3Z"/>
+      <path d="m8.5 12 2.5 2.5 4.5-5"/>
+    </svg>
+  `;
+
+  const content = document.createElement("div");
+  content.className = "sfu-chat-content";
+
+  const author = document.createElement("div");
+  author.className = "sfu-chat-author";
+
+  const name = document.createElement("span");
+  name.textContent = "LivestreamPro";
+
+  const badge = document.createElement("span");
+  badge.className = "sfu-system-badge";
+  badge.textContent = "SYSTEM";
+
+  author.append(name, badge);
+
+  const body = document.createElement("span");
+  body.className = "sfu-chat-text";
+  body.textContent = String(message.text || "");
+
+  content.append(author, body);
+  item.append(avatarWrap, content);
+
+  fragment.appendChild(item);
+
+  // System comment does not use a user avatar.
+  continue;
+}
+
+
+
 /* ======================================
    LIVE CHAT - PROFILE AVATAR
 ====================================== */

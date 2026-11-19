@@ -15932,6 +15932,55 @@ if (!room.liveStartTs) {
   room.liveStartTs = Date.now();
 }
 
+
+
+/* ==========================================
+   SFU - OFFICIAL LIVESTREAM POLICY
+   ONCE PER BROADCAST
+========================================== */
+
+if (!room.sfuPolicyMessageId) {
+
+  const now = Date.now();
+
+  // New livestream starts with a fresh chat.
+  room.sfuComments = [];
+
+  const policyMessage = {
+    id: crypto.randomUUID(),
+    roomId: normRoomId(roomId),
+
+    system: true,
+    uid: null,
+    name: "LivestreamPro",
+    avatar: "",
+    verified: true,
+    host: false,
+
+    text:
+      "Welcome to LivestreamPro! Please respect others, " +
+      "protect personal information, and avoid spam, " +
+      "harassment, hate speech, illegal or prohibited " +
+      "content. Follow our community guidelines " +
+      "and enjoy the livestream.",
+
+    ts: now
+  };
+
+  room.sfuPolicyMessageId = policyMessage.id;
+
+  // Save in the same history as user comments.
+  room.sfuComments.push(policyMessage);
+
+  // Send to Host and all current Viewers.
+  io.to(normRoomId(roomId)).emit(
+    "sfu:chat:new",
+    policyMessage
+  );
+}
+
+
+
 // Thông báo livestream đã bắt đầu
 // tới Host và tất cả Viewer trong phòng.
 io.to(roomId).emit("sfu:chat:live-state", {
