@@ -2007,6 +2007,62 @@ button:disabled {
 
 
 
+/* ==========================================
+   SFU - REALTIME VIEWER COUNTER
+========================================== */
+
+.sfu-viewer-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  min-width: 58px;
+  height: 36px;
+  padding: 0 11px;
+
+  border: 1px solid rgba(223,190,131,.28);
+  border-radius: 12px;
+
+  background: rgba(0,0,0,.58);
+  color: #F2DFBB;
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+
+  pointer-events: none;
+}
+
+.sfu-viewer-badge svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  color: #E5C48D;
+}
+
+#sfuViewerCount {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 480px) {
+  .sfu-viewer-badge {
+    height: 34px;
+    min-width: 51px;
+    padding: 0 9px;
+    gap: 5px;
+    font-size: 11px;
+  }
+
+  .sfu-viewer-badge svg {
+    width: 16px;
+    height: 16px;
+  }
+}
 
 </style>
 
@@ -2095,6 +2151,31 @@ button:disabled {
       <span id="statusDot" class="dot"></span>
       <span id="statusText">OFFLINE</span>
     </div>
+
+ <!-- REALTIME VIEWERS -->
+  <div
+    id="sfuViewerBadge"
+    class="sfu-viewer-badge hidden"
+    aria-label="Current viewers">
+
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true">
+
+      <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12Z"/>
+      <circle cx="12" cy="12" r="3"/>
+
+    </svg>
+
+    <span id="sfuViewerCount">0</span>
+
+  </div>
+
 
     <button
       type="button"
@@ -2546,6 +2627,41 @@ let viewerConnected = false;
 
 const $ = id => document.getElementById(id);
 
+
+/* ==========================================
+   SFU - REALTIME VIEWER COUNT
+========================================== */
+
+const sfuViewerBadge = $("sfuViewerBadge");
+const sfuViewerCount = $("sfuViewerCount");
+
+function updateSfuViewerCount(value) {
+
+  const count = Math.max(
+    0,
+    Math.floor(Number(value) || 0)
+  );
+
+  sfuViewerCount.textContent =
+    count.toLocaleString("en-US");
+}
+
+// Server cập nhật khi Viewer vào hoặc rời phòng.
+socket.on("viewer-count", data => {
+
+  if (!data) return;
+
+  updateSfuViewerCount(data.count);
+
+});
+
+// Mất kết nối thì không giữ số liệu cũ.
+socket.on("disconnect", () => {
+
+  updateSfuViewerCount(0);
+  sfuViewerBadge.classList.add("hidden");
+
+});
 
 
 /* ==========================================
@@ -3183,11 +3299,33 @@ const showMessage = (text, type = "auto") => {
 };
 
 
+
 function setStatus(text, live = false) {
+
   $("statusText").textContent = text;
-  $("statusDot").classList.toggle("live", live);
+
+  $("statusDot").classList.toggle(
+    "live",
+    live
+  );
+
   $("connectionLabel").textContent = text;
+
+  // Hiển thị bộ đếm khi đang phát/xem LIVE.
+  const showViewers =
+    text === "LIVE" ||
+    text === "WATCHING";
+
+  sfuViewerBadge.classList.toggle(
+    "hidden",
+    !showViewers
+  );
+
+  if (!showViewers) {
+    updateSfuViewerCount(0);
+  }
 }
+
 
 function setPlaceholder(visible, text = "") {
   $("placeholder").classList.toggle("hidden", !visible);
@@ -3346,6 +3484,9 @@ async function joinSignalingRoom() {
 if (!response?.ok) {
   throw new Error("Room access was not authorized.");
 }
+
+// Đồng bộ số người xem ngay khi vào phòng.
+updateSfuViewerCount(response.viewerCount);
 
 // Phòng đã xác thực thành công.
 // Cho phép tải và gửi bình luận.

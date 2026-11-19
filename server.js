@@ -17029,13 +17029,26 @@ socket.on("sfu:join-ack", (data, cb) => {
 
   const uid = String(socket.data.uid);
 
+
+const currentViewerCount = [
+  ...safeMap(room.viewerProfiles).values()
+].filter(
+  viewer => viewer && !viewer.mini
+).length;
+
+
   if (role === "host") {
 
     const authorized =
       room.ownerUid === uid &&
       room.broadcasterId === socket.id;
 
-    return cb({ ok: authorized });
+    return cb({
+  ok: authorized,
+  ...(authorized
+    ? { viewerCount: currentViewerCount }
+    : {})
+});
   }
 
   if (role === "viewer") {
@@ -17047,7 +17060,12 @@ socket.on("sfu:join-ack", (data, cb) => {
       viewer.socketId === socket.id &&
       room.viewers.has(socket.id);
 
-    return cb({ ok: authorized });
+    return cb({
+  ok: authorized,
+  ...(authorized
+    ? { viewerCount: currentViewerCount }
+    : {})
+});
   }
 
   return cb({ ok: false });
