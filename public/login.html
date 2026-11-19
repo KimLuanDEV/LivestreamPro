@@ -1735,15 +1735,18 @@ if(t && tu === u){
   const d = await res.json();
   
 if(d.ok){
-  const res2 = await fetch("/api/login",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      username:u,
-      password:p,
-      securityCode:"__TRUSTED__"
-    })
-  });
+  
+const res2 = await fetch("/api/login", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    username: u,
+    password: p,
+    trustedToken: t
+  })
+});
 
 
   const data = await res2.json();

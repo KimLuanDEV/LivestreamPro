@@ -12187,7 +12187,13 @@ function mhVerifiedUid(cookieHeader) {
 
 
 app.post("/api/login", async (req,res)=>{
-  const { username, password, securityCode } = req.body;
+  const {
+    username,
+    password,
+    securityCode,
+    trustedToken
+  } = req.body;
+
   const db = loadUsers();
 
   const acc = db[username];
@@ -12211,14 +12217,43 @@ if (acc.profile?.accountBlocked) {
  const okPass = await bcrypt.compare(String(password), acc.password);
 
 
-const okSec =
+// ==========================================
+// VERIFY SECURITY CODE OR TRUSTED DEVICE
+// ==========================================
+
+let okSec = false;
+
+// 1. Verify the actual security code
+if (
   typeof securityCode === "string" &&
   securityCode.length > 0 &&
-  typeof acc.securityCode === "string" &&
-  await bcrypt.compare(
+  typeof acc.securityCode === "string"
+) {
+  okSec = await bcrypt.compare(
     securityCode,
     acc.securityCode
   );
+}
+
+// 2. Verify a previously trusted device
+if (
+  !okSec &&
+  typeof trustedToken === "string" &&
+  trustedToken.length >= 32 &&
+  acc.trusted &&
+  Object.prototype.hasOwnProperty.call(
+    acc.trusted,
+    trustedToken
+  )
+) {
+  const expiresAt = Number(
+    acc.trusted[trustedToken]
+  );
+
+  okSec =
+    Number.isFinite(expiresAt) &&
+    expiresAt > Date.now();
+}
 
 
 
