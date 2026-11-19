@@ -3057,13 +3057,6 @@ body.social-page #giftModal .lp-gift-card {
     );
 }
 
-.lp-gift-art span {
-  font-size: 42px;
-  line-height: 1;
-
-  filter:
-    drop-shadow(0 5px 9px rgba(0,0,0,.3));
-}
 
 /* GIFT NAME */
 
@@ -3626,6 +3619,109 @@ body.social-page #giftUserModal #giftUserList {
 
 @media(prefers-reduced-motion:reduce) {
   .lp-gift-sender-card {
+    transition: none;
+  }
+}
+
+
+
+/* ==========================================
+   PREMIUM 3D GIFT IMAGES
+========================================== */
+
+#giftModal .lp-gift-art {
+  position: relative;
+
+  width: 100%;
+  height: 76px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(221,174,96,.15),
+      transparent 72%
+    );
+
+  border-radius: 16px;
+
+  overflow: visible;
+}
+
+#giftModal .lp-gift-image {
+  width: 90%;
+  height: 90%;
+
+  max-width: 96px;
+  max-height: 96px;
+
+  object-fit: contain;
+  object-position: center;
+
+  display: block;
+
+  filter:
+    drop-shadow(0 7px 9px rgba(0,0,0,.45));
+
+  transition:
+    transform .25s ease,
+    filter .25s ease;
+
+  pointer-events: none;
+  user-select: none;
+}
+
+/* SELECTED GIFT */
+
+#giftModal .lp-gift-card.selected
+.lp-gift-image {
+  transform: scale(1.12);
+
+  filter:
+    drop-shadow(
+      0 0 11px rgba(229,183,99,.52)
+    )
+    drop-shadow(
+      0 8px 9px rgba(0,0,0,.4)
+    );
+}
+
+/* HOVER */
+
+@media (hover:hover) {
+  #giftModal .lp-gift-card:hover
+  .lp-gift-image {
+    transform: translateY(-3px) scale(1.08);
+  }
+}
+
+/* MISSING IMAGE */
+
+#giftModal .lp-gift-art-missing::after {
+  content: "IMAGE";
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: #8f806c;
+}
+
+/* MOBILE */
+
+@media(max-width:380px) {
+  #giftModal .lp-gift-art {
+    height: 66px;
+  }
+
+  #giftModal .lp-gift-image {
+    max-width: 78px;
+    max-height: 78px;
+  }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  #giftModal .lp-gift-image {
     transition: none;
   }
 }

@@ -9,21 +9,79 @@ const auth = JSON.parse(localStorage.getItem("user_profile") || "{}");
 
 
 
-// ===== POST GIFTS CONFIG =====
-const POST_GIFTS = [
-  { id: "rose",    icon: "🌹", coin: 10 },
-  { id: "beer",    icon: "🍺", coin: 20 },
-  { id: "cake",    icon: "🎂", coin: 50 },
-  { id: "diamond", icon: "💎", coin: 100 },
 
-  // 🔥 thêm mới
-  { id: "rocket",  icon: "🚀", coin: 200 },
-  { id: "crown",   icon: "👑", coin: 500 },
-  { id: "car",     icon: "🏎️", coin: 1000 },
-  { id: "castle",  icon: "🏰", coin: 2000 },
-  { id: "sword",  icon: "🗡️", coin: 5000 },
-  { id: "phoenix",  icon: "🐦", coin: 10000 },
-  { id: "dragon",  icon: "🐉", coin: 20000 }
+/* ==========================================
+   POST GIFTS - PREMIUM IMAGE COLLECTION
+========================================== */
+
+const POST_GIFTS = [
+
+  {
+    id: "rose",
+    image: "/assets/social/gifts/rose.webp",
+    coin: 10
+  },
+
+  {
+    id: "beer",
+    image: "/assets/social/gifts/beer.webp",
+    coin: 20
+  },
+
+  {
+    id: "cake",
+    image: "/assets/social/gifts/cake.webp",
+    coin: 50
+  },
+
+  {
+    id: "diamond",
+    image: "/assets/social/gifts/diamond.webp",
+    coin: 100
+  },
+
+  {
+    id: "rocket",
+    image: "/assets/social/gifts/rocket.webp",
+    coin: 200
+  },
+
+  {
+    id: "crown",
+    image: "/assets/social/gifts/crown.webp",
+    coin: 500
+  },
+
+  {
+    id: "car",
+    image: "/assets/social/gifts/car.webp",
+    coin: 1000
+  },
+
+  {
+    id: "castle",
+    image: "/assets/social/gifts/castle.webp",
+    coin: 2000
+  },
+
+  {
+    id: "sword",
+    image: "/assets/social/gifts/sword.webp",
+    coin: 5000
+  },
+
+  {
+    id: "phoenix",
+    image: "/assets/social/gifts/phoenix.webp",
+    coin: 10000
+  },
+
+  {
+    id: "dragon",
+    image: "/assets/social/gifts/dragon.webp",
+    coin: 20000
+  }
+
 ];
 
 let giftPostId = null;
@@ -2481,13 +2539,30 @@ function openGift(postId, ownerUid) {
     card.className = "lp-gift-card";
     card.dataset.giftId = g.id;
 
-    const art = document.createElement("div");
-    art.className = "lp-gift-art";
 
-    const icon = document.createElement("span");
-    icon.textContent = g.icon;
+const art = document.createElement("div");
+art.className = "lp-gift-art";
 
-    art.appendChild(icon);
+const img = document.createElement("img");
+
+img.src = g.image;
+img.alt = POST_GIFT_NAMES[g.id] || g.id;
+
+img.className = "lp-gift-image";
+
+img.loading = "lazy";
+img.decoding = "async";
+
+img.draggable = false;
+
+img.onerror = function() {
+  this.onerror = null;
+  this.style.display = "none";
+  art.classList.add("lp-gift-art-missing");
+};
+
+art.appendChild(img);
+
 
     const name = document.createElement("span");
     name.className = "lp-gift-name";
@@ -2584,8 +2659,8 @@ function updateGiftSelection() {
 
   const g = selectedPostGift;
 
-  nameEl.textContent =
-    `${g.icon} ${POST_GIFT_NAMES[g.id] || g.id}`;
+nameEl.textContent =
+  POST_GIFT_NAMES[g.id] || g.id;
 
   costEl.textContent =
     Number(g.coin).toLocaleString("en-US");
