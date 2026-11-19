@@ -17313,12 +17313,91 @@ const message = {
    Uses real profile.coins
 ========================================== */
 
+
 const SFU_LIVE_GIFTS = Object.freeze({
-  heart:  { name: "Heart",  emoji: "❤️", cost: 50 },
-  flower: { name: "Flower", emoji: "🌸", cost: 100 },
-  rocket: { name: "Rocket", emoji: "🚀", cost: 200 },
-  king:   { name: "Crown",  emoji: "👑", cost: 1000 }
+
+  rose: {
+    name: "Rose", emoji: "🌹", cost: 10
+  },
+
+  heart: {
+    name: "Heart", emoji: "❤️", cost: 50
+  },
+
+  flower: {
+    name: "Flower", emoji: "🌸", cost: 100
+  },
+
+  cake: {
+    name: "Cake", emoji: "🎂", cost: 150
+  },
+
+  rocket: {
+    name: "Rocket", emoji: "🚀", cost: 200
+  },
+
+  diamond: {
+    name: "Diamond", emoji: "💎", cost: 300
+  },
+
+  teddy: {
+    name: "Teddy Bear", emoji: "🧸", cost: 500
+  },
+
+  champagne: {
+    name: "Champagne", emoji: "🥂", cost: 800
+  },
+
+  king: {
+    name: "Crown", emoji: "👑", cost: 1000
+  },
+
+  car: {
+    name: "Luxury Car", emoji: "🏎️", cost: 2000
+  },
+
+  sword: {
+    name: "Golden Sword", emoji: "⚔️", cost: 3000
+  },
+
+  pegasus: {
+    name: "Pegasus", emoji: "🐎", cost: 5000
+  },
+
+  phoenix: {
+    name: "Phoenix", emoji: "🔥", cost: 7000
+  },
+
+  dragon: {
+    name: "Dragon", emoji: "🐉", cost: 10000
+  },
+
+  castle: {
+    name: "Royal Castle", emoji: "🏰", cost: 15000
+  },
+
+  yacht: {
+    name: "Royal Yacht", emoji: "🛥️", cost: 20000
+  },
+
+  supercar: {
+    name: "Supercar", emoji: "🏎️", cost: 25000
+  },
+
+  palace: {
+    name: "Golden Palace", emoji: "🏯", cost: 30000
+  },
+
+  celestialDragon: {
+    name: "Celestial Dragon", emoji: "🐲", cost: 40000
+  },
+
+  universe: {
+    name: "Royal Universe", emoji: "🌌", cost: 50000
+  }
+
 });
+
 
 // Return authenticated viewer's real balance.
 socket.on("sfu:gift:balance", (data, ack) => {
@@ -17384,13 +17463,26 @@ socket.on("sfu:gift:send", (data, ack) => {
     return reply("Host is not available.");
   }
 
-  // Gift prices always come from the server.
-  const giftId = String(data?.giftId || "");
-  const gift = SFU_LIVE_GIFTS[giftId];
 
-  if (!gift) {
-    return reply("Invalid gift.");
-  }
+const giftId = String(data?.giftId || "");
+
+if (
+  !Object.hasOwn(SFU_LIVE_GIFTS, giftId)
+) {
+  return reply("Invalid gift.");
+}
+
+const gift = SFU_LIVE_GIFTS[giftId];
+
+if (
+  !gift ||
+  !Number.isSafeInteger(gift.cost) ||
+  gift.cost <= 0
+) {
+  return reply("Invalid gift configuration.");
+}
+
+
 
   const requestId = String(data?.requestId || "");
 

@@ -2906,6 +2906,96 @@ button:disabled {
 }
 
 
+
+/* ==========================================
+   SFU - EXPANDED PREMIUM GIFT COLLECTION
+========================================== */
+
+.sfu-gift-sheet {
+  display: flex;
+  flex-direction: column;
+  max-height: min(88dvh, 780px);
+  overflow: hidden;
+}
+
+.sfu-gift-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  padding: 4px 3px 12px;
+  margin-bottom: 12px;
+
+  scrollbar-width: thin;
+  scrollbar-color: #8d714c transparent;
+}
+
+.sfu-gift-card {
+  min-width: 0;
+  min-height: 125px;
+  padding: 10px 4px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  border-radius: 14px;
+}
+
+.sfu-gift-image {
+  width: 100%;
+  max-width: 78px;
+  height: 72px;
+  object-fit: contain;
+}
+
+.sfu-gift-card strong {
+  width: 100%;
+  font-size: 10px;
+  line-height: 1.35;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.sfu-gift-card small {
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.sfu-gift-feedback,
+.sfu-gift-confirm {
+  flex-shrink: 0;
+}
+
+@media (max-width: 390px) {
+
+  .sfu-gift-grid {
+    gap: 6px;
+  }
+
+  .sfu-gift-card {
+    min-height: 110px;
+  }
+
+  .sfu-gift-image {
+    height: 58px;
+  }
+
+  .sfu-gift-card strong,
+  .sfu-gift-card small {
+    font-size: 9px;
+  }
+}
+
+
+
+
 </style>
 
 
@@ -3231,69 +3321,12 @@ button:disabled {
 
 
 <!-- PREMIUM LIVE GIFT COLLECTION -->
-<div id="sfuGiftList" class="sfu-gift-grid">
-
-  <button
-    type="button"
-    class="sfu-gift-card"
-    data-gift-id="heart">
-
-    <img
-      class="sfu-gift-image"
-      src="/assets/live-gifts/heart.webp"
-      alt="Heart"
-      loading="lazy">
-
-    <strong>Heart</strong>
-    <small>50 💎</small>
-  </button>
-
-  <button
-    type="button"
-    class="sfu-gift-card"
-    data-gift-id="flower">
-
-    <img
-      class="sfu-gift-image"
-      src="/assets/live-gifts/flower.webp"
-      alt="Flower"
-      loading="lazy">
-
-    <strong>Flower</strong>
-    <small>100 💎</small>
-  </button>
-
-  <button
-    type="button"
-    class="sfu-gift-card"
-    data-gift-id="rocket">
-
-    <img
-      class="sfu-gift-image"
-      src="/assets/live-gifts/rocket.webp"
-      alt="Rocket"
-      loading="lazy">
-
-    <strong>Rocket</strong>
-    <small>200 💎</small>
-  </button>
-
-  <button
-    type="button"
-    class="sfu-gift-card"
-    data-gift-id="king">
-
-    <img
-      class="sfu-gift-image"
-      src="/assets/live-gifts/crown.webp"
-      alt="Crown"
-      loading="lazy">
-
-    <strong>Crown</strong>
-    <small>1,000 💎</small>
-  </button>
-
+<div
+  id="sfuGiftList"
+  class="sfu-gift-grid">
 </div>
+
+
 
     <p id="sfuGiftFeedback"
        class="sfu-gift-feedback"
@@ -3309,6 +3342,7 @@ button:disabled {
 
   </section>
 </div>
+
 
 <!-- FLOATING GIFT ANNOUNCEMENT -->
 <div
@@ -4029,7 +4063,13 @@ const giftFeedback = $("sfuGiftFeedback");
 const giftAnnouncement = $("sfuGiftAnnouncement");
 
 
+
 const LIVE_GIFT_OPTIONS = {
+  rose: {
+    name: "Rose",
+    cost: 10,
+    image: "/assets/live-gifts/rose.webp"
+  },
   heart: {
     name: "Heart",
     cost: 50,
@@ -4040,17 +4080,135 @@ const LIVE_GIFT_OPTIONS = {
     cost: 100,
     image: "/assets/live-gifts/flower.webp"
   },
+  cake: {
+    name: "Cake",
+    cost: 150,
+    image: "/assets/live-gifts/cake.webp"
+  },
   rocket: {
     name: "Rocket",
     cost: 200,
     image: "/assets/live-gifts/rocket.webp"
   },
+  diamond: {
+    name: "Diamond",
+    cost: 300,
+    image: "/assets/live-gifts/diamond.webp"
+  },
+  teddy: {
+    name: "Teddy Bear",
+    cost: 500,
+    image: "/assets/live-gifts/teddy.webp"
+  },
+  champagne: {
+    name: "Champagne",
+    cost: 800,
+    image: "/assets/live-gifts/champagne.webp"
+  },
   king: {
     name: "Crown",
     cost: 1000,
     image: "/assets/live-gifts/crown.webp"
+  },
+  car: {
+    name: "Luxury Car",
+    cost: 2000,
+    image: "/assets/live-gifts/car.webp"
+  },
+  sword: {
+    name: "Golden Sword",
+    cost: 3000,
+    image: "/assets/live-gifts/sword.webp"
+  },
+  pegasus: {
+    name: "Pegasus",
+    cost: 5000,
+    image: "/assets/live-gifts/pegasus.webp"
+  },
+  phoenix: {
+    name: "Phoenix",
+    cost: 7000,
+    image: "/assets/live-gifts/phoenix.webp"
+  },
+  dragon: {
+    name: "Dragon",
+    cost: 10000,
+    image: "/assets/live-gifts/dragon.webp"
+  },
+  castle: {
+    name: "Royal Castle",
+    cost: 15000,
+    image: "/assets/live-gifts/castle.webp"
+  },
+  yacht: {
+    name: "Royal Yacht",
+    cost: 20000,
+    image: "/assets/live-gifts/yacht.webp"
+  },
+  supercar: {
+    name: "Supercar",
+    cost: 25000,
+    image: "/assets/live-gifts/supercar.webp"
+  },
+  palace: {
+    name: "Golden Palace",
+    cost: 30000,
+    image: "/assets/live-gifts/palace.webp"
+  },
+  celestialDragon: {
+    name: "Celestial Dragon",
+    cost: 40000,
+    image: "/assets/live-gifts/celestial-dragon.webp"
+  },
+  universe: {
+    name: "Royal Universe",
+    cost: 50000,
+    image: "/assets/live-gifts/universe.webp"
   }
 };
+
+
+/* ==========================================
+   SFU - AUTO RENDER LIVE GIFTS
+========================================== */
+
+function renderLiveGiftCollection() {
+
+  const container = document.getElementById("sfuGiftList");
+  if (!container) return;
+
+  const fragment = document.createDocumentFragment();
+
+  Object.entries(LIVE_GIFT_OPTIONS).forEach(([id, gift]) => {
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "sfu-gift-card";
+    button.dataset.giftId = id;
+
+    const image = document.createElement("img");
+    image.className = "sfu-gift-image";
+    image.src = gift.image;
+    image.alt = gift.name;
+    image.loading = "lazy";
+
+    const title = document.createElement("strong");
+    title.textContent = gift.name;
+
+    const price = document.createElement("small");
+    price.textContent = `${gift.cost.toLocaleString("en-US")} 💎`;
+
+    button.append(image, title, price);
+    fragment.appendChild(button);
+
+  });
+
+  container.replaceChildren(fragment);
+}
+
+renderLiveGiftCollection();
+
+
 
 let selectedLiveGift = null;
 let liveGiftSending = false;
