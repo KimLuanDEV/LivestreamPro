@@ -13010,6 +13010,51 @@ if (
 });
 
 
+
+/* ==========================================
+   SFU - ACTIVE VIEWER DIRECTORY
+========================================== */
+
+function getSfuActiveViewers(room) {
+
+  if (!room) return [];
+
+  const viewers = [];
+
+  for (const viewer of safeMap(
+    room.viewerProfiles
+  ).values()) {
+
+    if (
+      !viewer ||
+      viewer.mini === true ||
+      !viewer.socketId
+    ) continue;
+
+    const viewerSocket =
+      io.sockets.sockets.get(viewer.socketId);
+
+    if (
+      !viewerSocket?.connected ||
+      !room.viewers.has(viewer.socketId)
+    ) continue;
+
+    viewers.push({
+      name: String(
+        viewer.name || "Player"
+      ).slice(0, 50),
+
+      avatar: normalizeAvatar(
+        String(viewer.avatar || "")
+      )
+    });
+  }
+
+  return viewers;
+}
+
+
+
 function emitViewerCount(roomId) {
 
   roomId = normRoomId(roomId);
@@ -13021,13 +13066,16 @@ function emitViewerCount(roomId) {
     ...safeMap(room.viewerProfiles).values()
   ];
 
-  const active = profiles.filter(
-    v => v && !v.mini
-  ).length;
 
-  io.to(roomId).emit("viewer-count", {
-    count: active
-  });
+const activeViewers = getSfuActiveViewers(room);
+
+io.to(roomId).emit("viewer-count", {
+  roomId,
+  count: activeViewers.length,
+  viewers: activeViewers
+});
+
+
 
   const bitrate = calcBitrate(profiles.length);
 
@@ -17035,11 +17083,10 @@ socket.on("sfu:join-ack", (data, cb) => {
   const uid = String(socket.data.uid);
 
 
-const currentViewerCount = [
-  ...safeMap(room.viewerProfiles).values()
-].filter(
-  viewer => viewer && !viewer.mini
-).length;
+
+const currentViewers = getSfuActiveViewers(room);
+const currentViewerCount = currentViewers.length;
+
 
 
   if (role === "host") {
@@ -17048,12 +17095,17 @@ const currentViewerCount = [
       room.ownerUid === uid &&
       room.broadcasterId === socket.id;
 
-    return cb({
+
+return cb({
   ok: authorized,
   ...(authorized
-    ? { viewerCount: currentViewerCount }
+    ? {
+        viewerCount: currentViewerCount,
+        viewers: currentViewers
+      }
     : {})
 });
+
   }
 
   if (role === "viewer") {
@@ -17065,12 +17117,17 @@ const currentViewerCount = [
       viewer.socketId === socket.id &&
       room.viewers.has(socket.id);
 
-    return cb({
+
+return cb({
   ok: authorized,
   ...(authorized
-    ? { viewerCount: currentViewerCount }
+    ? {
+        viewerCount: currentViewerCount,
+        viewers: currentViewers
+      }
     : {})
 });
+
   }
 
   return cb({ ok: false });

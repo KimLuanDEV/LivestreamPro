@@ -2486,74 +2486,424 @@ button:disabled {
 
 
 
+
 /* ==========================================
-   SFU - LIVE DIAMOND EARNINGS
+   SFU - LUXURY DIAMOND CAPSULE V2
 ========================================== */
 
 .sfu-live-earnings {
   position: absolute;
   z-index: 10;
 
-  top: calc(66px + env(safe-area-inset-top, 0px));
+  top: calc(65px + env(safe-area-inset-top, 0px));
   right: calc(12px + env(safe-area-inset-right, 0px));
 
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 
-  min-width: 130px;
+  width: max-content;
   max-width: calc(100vw - 24px);
-  padding: 10px 13px;
+  min-width: 0;
+  min-height: 37px;
 
-  border: 1px solid rgba(225,190,128,.32);
-  border-radius: 13px;
+  padding: 6px 12px 6px 7px;
 
-  background: rgba(8,10,14,.68);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(222,187,129,.25);
+  border-radius: 999px;
 
-  box-shadow: 0 5px 20px rgba(0,0,0,.24);
+  background: linear-gradient(
+    115deg,
+    rgba(33,36,45,.83),
+    rgba(9,11,17,.82)
+  );
+
+  box-shadow:
+    0 5px 18px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.06);
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 
   pointer-events: none;
-}
-
-
-.sfu-earnings-value {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.sfu-earnings-value svg {
-  width: 19px;
-  height: 19px;
-  color: #83D9F8;
-}
-
-#sfuLiveEarningsCount {
-  color: #F2D397;
-  font-size: 19px;
-  font-weight: 850;
-  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
+/* Diamond emblem */
+.sfu-earnings-diamond {
+  flex: 0 0 25px;
+
+  display: grid;
+  place-items: center;
+
+  width: 25px;
+  height: 25px;
+
+  border-radius: 50%;
+
+  background: radial-gradient(
+    circle at 35% 25%,
+    rgba(96,201,245,.25),
+    rgba(24,80,122,.12) 75%
+  );
+}
+
+.sfu-earnings-diamond svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+
+  filter: drop-shadow(
+    0 1px 4px rgba(100,204,249,.36)
+  );
+}
+
+/* Realtime diamond amount */
+#sfuLiveEarningsCount {
+  display: block;
+
+  color: #F4D69E;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .1px;
+
+  text-shadow: 0 1px 8px rgba(229,184,108,.13);
+}
+
+/* Subtle description */
+.sfu-earnings-caption {
+  color: #AFA391;
+
+  font-size: 8px;
+  font-weight: 750;
+  letter-spacing: .65px;
+  line-height: 1;
+}
+
+/* Mobile */
 @media (max-width: 480px) {
   .sfu-live-earnings {
-    top: calc(59px + env(safe-area-inset-top, 0px));
-    padding: 8px 11px;
-    min-width: 118px;
+    top: calc(58px + env(safe-area-inset-top, 0px));
+
+    gap: 6px;
+    min-height: 33px;
+    padding: 5px 10px 5px 6px;
+  }
+
+  .sfu-earnings-diamond {
+    flex-basis: 23px;
+    width: 23px;
+    height: 23px;
+  }
+
+  .sfu-earnings-diamond svg {
+    width: 16px;
+    height: 16px;
   }
 
   #sfuLiveEarningsCount {
-    font-size: 17px;
+    font-size: 13px;
   }
 
+  .sfu-earnings-caption {
+    font-size: 7px;
+  }
+}
 
+/* Very small screens */
+@media (max-width: 350px) {
+  .sfu-earnings-caption {
+    display: none;
+  }
 }
 
 
+
+
+/* ==========================================
+   SFU - PREMIUM LIVE VIEWER DIRECTORY
+========================================== */
+
+/* Clickable viewer counter */
+.sfu-viewer-badge {
+  pointer-events: auto;
+  cursor: pointer;
+  font: inherit;
+  transition:
+    background .2s ease,
+    border-color .2s ease,
+    transform .2s ease;
+}
+
+.sfu-viewer-badge:hover,
+.sfu-viewer-badge[aria-expanded="true"] {
+  background: rgba(54,44,30,.88);
+  border-color: rgba(238,199,137,.65);
+}
+
+.sfu-viewer-badge:active {
+  transform: scale(.96);
+}
+
+.sfu-viewer-badge:focus-visible {
+  outline: 2px solid #EBC68A;
+  outline-offset: 3px;
+}
+
+.sfu-viewer-badge .sfu-viewer-chevron {
+  width: 12px;
+  height: 12px;
+  opacity: .7;
+  transition: transform .2s ease;
+}
+
+.sfu-viewer-badge[aria-expanded="true"]
+.sfu-viewer-chevron {
+  transform: rotate(180deg);
+}
+
+/* Overlay */
+.sfu-viewer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  background: rgba(0,0,0,.58);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+/* Bottom sheet */
+.sfu-viewer-sheet {
+  width: min(100%,480px);
+  max-height: min(76dvh,630px);
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  padding:
+    10px 18px
+    calc(18px + env(safe-area-inset-bottom,0px));
+
+  border: 1px solid rgba(225,186,121,.28);
+  border-bottom: none;
+  border-radius: 24px 24px 0 0;
+
+  background: linear-gradient(
+    155deg,
+    #24232A 0%,
+    #14161C 65%,
+    #0E1016 100%
+  );
+
+  color: #F4E8D5;
+
+  box-shadow: 0 -16px 65px rgba(0,0,0,.55);
+  animation: sfuViewerSheetIn .23s ease-out;
+}
+
+@keyframes sfuViewerSheetIn {
+  from {
+    transform: translateY(30px);
+    opacity: .5;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.sfu-viewer-sheet-handle {
+  flex-shrink: 0;
+  width: 38px;
+  height: 4px;
+  margin: 0 auto 20px;
+
+  border-radius: 99px;
+  background: rgba(228,196,142,.35);
+}
+
+/* Header */
+.sfu-viewer-sheet-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+
+  flex-shrink: 0;
+  padding-bottom: 18px;
+
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.sfu-viewer-sheet-heading {
+  min-width: 0;
+}
+
+.sfu-viewer-sheet-heading small {
+  color: #BFA276;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 1.5px;
+}
+
+.sfu-viewer-sheet-heading h2 {
+  margin: 7px 0 5px;
+  color: #F2D39C;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: .5px;
+}
+
+.sfu-viewer-sheet-heading p {
+  margin: 0;
+  color: #A7ABB5;
+  font-size: 11px;
+}
+
+.sfu-viewer-sheet-close {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 10px;
+
+  background: rgba(255,255,255,.06);
+  color: #E8DBC7;
+
+  font-size: 24px;
+  line-height: 1;
+}
+
+/* Viewer rows */
+.sfu-viewer-list {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  padding: 7px 0;
+
+  scrollbar-width: thin;
+  scrollbar-color: #60513A transparent;
+}
+
+.sfu-viewer-person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 12px 3px;
+  border-bottom: 1px solid rgba(255,255,255,.055);
+}
+
+.sfu-viewer-person:last-child {
+  border-bottom: none;
+}
+
+.sfu-viewer-avatar {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+
+  display: block;
+  object-fit: cover;
+
+  border-radius: 50%;
+  border: 1px solid rgba(231,196,136,.4);
+
+  background: #252831;
+}
+
+.sfu-viewer-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sfu-viewer-name {
+  display: block;
+  overflow: hidden;
+
+  color: #F5E8D5;
+  font-size: 13px;
+  font-weight: 750;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sfu-viewer-presence {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  margin-top: 5px;
+
+  color: #91CDB1;
+  font-size: 10px;
+}
+
+.sfu-viewer-presence::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #70C59A;
+}
+
+.sfu-viewer-empty {
+  padding: 30px 10px;
+  margin: 0;
+  color: #A9ADB7;
+  text-align: center;
+  font-size: 12px;
+}
+
+/* Footer */
+.sfu-viewer-sheet-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  flex-shrink: 0;
+  padding-top: 14px;
+
+  border-top: 1px solid rgba(255,255,255,.07);
+
+  color: #9299A4;
+  font-size: 10px;
+}
+
+.sfu-viewer-online-dot {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+  background: #65BC8B;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sfu-viewer-sheet {
+    animation: none;
+  }
+}
 
 
 </style>
@@ -2644,29 +2994,43 @@ button:disabled {
       <span id="statusText">OFFLINE</span>
     </div>
 
- <!-- REALTIME VIEWERS -->
-  <div
-    id="sfuViewerBadge"
-    class="sfu-viewer-badge hidden"
-    aria-label="Current viewers">
 
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.8"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true">
+<!-- REALTIME VIEWERS - CLICKABLE -->
+<button
+  type="button"
+  id="sfuViewerBadge"
+  class="sfu-viewer-badge hidden"
+  aria-label="View people watching"
+  aria-controls="sfuViewerOverlay"
+  aria-expanded="false"
+  title="View live viewers">
 
-      <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12Z"/>
-      <circle cx="12" cy="12" r="3"/>
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true">
+    <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12Z"/>
+    <circle cx="12" cy="12" r="3"/>
+  </svg>
 
-    </svg>
+  <span id="sfuViewerCount">0</span>
 
-    <span id="sfuViewerCount">0</span>
+  <svg
+    class="sfu-viewer-chevron"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    aria-hidden="true">
+    <path d="m7 10 5 5 5-5"/>
+  </svg>
 
-  </div>
+</button>
+
 
 
     <button
@@ -2688,37 +3052,117 @@ button:disabled {
 </div>
 
 
+
+
+
+<!-- ======================================
+     SFU - LIVE VIEWERS SHEET
+====================================== -->
+
+<div
+  id="sfuViewerOverlay"
+  class="sfu-viewer-overlay hidden">
+
+  <section
+    class="sfu-viewer-sheet"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="sfuViewerTitle">
+
+    <div class="sfu-viewer-sheet-handle"></div>
+
+    <header class="sfu-viewer-sheet-header">
+
+      <div class="sfu-viewer-sheet-heading">
+        <small>LIVESTREAMPRO · LIVE ROOM</small>
+        <h2 id="sfuViewerTitle">LIVE VIEWERS</h2>
+        <p id="sfuViewerSummary">
+          0 people watching
+        </p>
+      </div>
+
+      <button
+        type="button"
+        id="sfuViewerClose"
+        class="sfu-viewer-sheet-close"
+        aria-label="Close viewer list">
+        &times;
+      </button>
+
+    </header>
+
+    <div
+      id="sfuViewerList"
+      class="sfu-viewer-list">
+
+      <p class="sfu-viewer-empty">
+        No viewers yet.
+      </p>
+
+    </div>
+
+    <div class="sfu-viewer-sheet-footer">
+      <span class="sfu-viewer-online-dot"></span>
+      Updated in real time
+    </div>
+
+  </section>
+
+</div>
+
+
 <!-- ======================================
      SFU - LIVE GIFT EARNINGS
+====================================== -->
+
+
+<!-- ======================================
+     SFU - DIAMOND RECEIVED CAPSULE V2
 ====================================== -->
 
 <div
   id="sfuLiveEarnings"
   class="sfu-live-earnings hidden"
-  aria-label="Diamonds received by host this live">
+  aria-label="Diamonds received during this live">
 
-
-
-  <div class="sfu-earnings-value">
+  <span class="sfu-earnings-diamond">
 
     <svg
       viewBox="0 0 24 24"
       fill="none"
-      stroke="currentColor"
-      stroke-width="1.6"
-      stroke-linejoin="round"
       aria-hidden="true">
 
-      <path d="M6 3h12l5 7-11 12L1 10l5-7Z"/>
-      <path d="M1 10h22M6 3l3 7 3 12 3-12 3-7"/>
+      <path
+        d="M6.2 3.5h11.6L22 9.5 12 21 2 9.5 6.2 3.5Z"
+        fill="#65C8F4"
+        stroke="#A6E9FF"
+        stroke-width="1"/>
+
+      <path
+        d="M2 9.5h20L12 21 2 9.5Z"
+        fill="#308FCA"/>
+
+      <path
+        d="M8.5 9.5 12 21l3.5-11.5h-7Z"
+        fill="#BDF3FF"/>
+
+      <path
+        d="m6.2 3.5 2.3 6h7l2.3-6"
+        stroke="#E8FCFF"
+        stroke-width="1.1"/>
 
     </svg>
 
-    <strong id="sfuLiveEarningsCount">0</strong>
+  </span>
 
-  </div>
+  <strong id="sfuLiveEarningsCount">0</strong>
+
+  <span class="sfu-earnings-caption">
+    RECEIVED
+  </span>
 
 </div>
+
 
 
 
@@ -3303,6 +3747,183 @@ const sfuViewerCount = $("sfuViewerCount");
 
 
 /* ==========================================
+   SFU - REALTIME VIEWER DIRECTORY
+========================================== */
+
+const sfuViewerOverlay = $("sfuViewerOverlay");
+const sfuViewerClose = $("sfuViewerClose");
+const sfuViewerList = $("sfuViewerList");
+const sfuViewerSummary = $("sfuViewerSummary");
+
+const SFU_DEFAULT_AVATAR = "/avatar-default.png";
+
+let currentSfuViewers = [];
+
+function safeSfuViewerAvatar(value) {
+  const raw = String(value || "").trim();
+
+  if (!raw) return SFU_DEFAULT_AVATAR;
+
+  try {
+    const url = new URL(raw, location.origin);
+
+    if (
+      url.protocol === "https:" ||
+      url.origin === location.origin
+    ) {
+      return url.href;
+    }
+  } catch (_) {}
+
+  return SFU_DEFAULT_AVATAR;
+}
+
+function renderSfuViewerList() {
+
+  sfuViewerList.replaceChildren();
+
+  const count = currentSfuViewers.length;
+
+  sfuViewerSummary.textContent =
+    `${count.toLocaleString("en-US")} ` +
+    `${count === 1 ? "person" : "people"} watching`;
+
+  if (count === 0) {
+    const empty = document.createElement("p");
+
+    empty.className = "sfu-viewer-empty";
+    empty.textContent = "No viewers yet.";
+
+    sfuViewerList.appendChild(empty);
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+
+  for (const viewer of currentSfuViewers) {
+
+    const row = document.createElement("div");
+    row.className = "sfu-viewer-person";
+
+    const avatar = document.createElement("img");
+    avatar.className = "sfu-viewer-avatar";
+    avatar.alt = "";
+    avatar.loading = "lazy";
+    avatar.decoding = "async";
+
+    avatar.onerror = () => {
+      avatar.onerror = null;
+      avatar.src = SFU_DEFAULT_AVATAR;
+    };
+
+    avatar.src = safeSfuViewerAvatar(viewer.avatar);
+
+    const info = document.createElement("div");
+    info.className = "sfu-viewer-info";
+
+    const name = document.createElement("strong");
+    name.className = "sfu-viewer-name";
+    name.textContent = String(
+      viewer.name || "Player"
+    ).slice(0, 50);
+
+    const presence = document.createElement("span");
+    presence.className = "sfu-viewer-presence";
+    presence.textContent = "Watching now";
+
+    info.append(name, presence);
+    row.append(avatar, info);
+
+    fragment.appendChild(row);
+  }
+
+  sfuViewerList.appendChild(fragment);
+}
+
+function updateSfuViewerDirectory(viewers) {
+
+  if (!Array.isArray(viewers)) return;
+
+  currentSfuViewers = viewers
+    .filter(v => v && typeof v === "object")
+    .map(v => ({
+      name: String(v.name || "Player"),
+      avatar: String(v.avatar || "")
+    }));
+
+  if (!sfuViewerOverlay.classList.contains("hidden")) {
+    renderSfuViewerList();
+  }
+}
+
+function openSfuViewerList() {
+
+  if (sfuViewerBadge.classList.contains("hidden")) {
+    return;
+  }
+
+  renderSfuViewerList();
+
+  sfuViewerOverlay.classList.remove("hidden");
+
+  sfuViewerBadge.setAttribute(
+    "aria-expanded",
+    "true"
+  );
+
+  sfuViewerClose.focus();
+}
+
+function closeSfuViewerList() {
+
+  if (sfuViewerOverlay.classList.contains("hidden")) {
+    return;
+  }
+
+  sfuViewerOverlay.classList.add("hidden");
+
+  sfuViewerBadge.setAttribute(
+    "aria-expanded",
+    "false"
+  );
+
+  if (!sfuViewerBadge.classList.contains("hidden")) {
+    sfuViewerBadge.focus();
+  }
+}
+
+sfuViewerBadge.addEventListener(
+  "click",
+  openSfuViewerList
+);
+
+sfuViewerClose.addEventListener(
+  "click",
+  closeSfuViewerList
+);
+
+sfuViewerOverlay.addEventListener(
+  "click",
+  event => {
+    if (event.target === sfuViewerOverlay) {
+      closeSfuViewerList();
+    }
+  }
+);
+
+document.addEventListener("keydown", event => {
+  if (
+    event.key === "Escape" &&
+    !sfuViewerOverlay.classList.contains("hidden")
+  ) {
+    closeSfuViewerList();
+  }
+});
+
+
+
+
+/* ==========================================
    SFU - HOST LIVE GIFTS COUNTER
 ========================================== */
 
@@ -3350,21 +3971,35 @@ function updateSfuViewerCount(value) {
 }
 
 // Server cập nhật khi Viewer vào hoặc rời phòng.
+
 socket.on("viewer-count", data => {
 
   if (!data) return;
 
+  // Chỉ cập nhật đúng phòng đang xem.
+  if (
+    data.roomId &&
+    data.roomId !== roomId
+  ) return;
+
   updateSfuViewerCount(data.count);
+  updateSfuViewerDirectory(data.viewers);
 
 });
 
+
 // Mất kết nối thì không giữ số liệu cũ.
+
 socket.on("disconnect", () => {
 
   updateSfuViewerCount(0);
+  updateSfuViewerDirectory([]);
+
+  closeSfuViewerList();
   sfuViewerBadge.classList.add("hidden");
 
 });
+
 
 
 /* ==========================================
@@ -4369,14 +5004,16 @@ function setStatus(text, live = false) {
   // Chỉ reset khi phòng không còn hoạt động.
   // Không reset ở trạng thái CONNECTED vì
   // server đã gửi số lượng người xem.
-  if (
-    text === "OFFLINE" ||
-    text === "WAITING" ||
-    text === "ENDED" ||
-    text === "DISCONNECTED"
-  ) {
-    updateSfuViewerCount(0);
-  }
+if (
+  text === "OFFLINE" ||
+  text === "WAITING" ||
+  text === "ENDED" ||
+  text === "DISCONNECTED"
+) {
+  updateSfuViewerCount(0);
+  updateSfuViewerDirectory([]);
+  closeSfuViewerList();
+}
 }
 
 
@@ -4541,6 +5178,9 @@ if (!response?.ok) {
 
 // Đồng bộ số người xem ngay khi vào phòng.
 updateSfuViewerCount(response.viewerCount);
+
+// Nhận danh sách avatar + tên Viewer ban đầu.
+updateSfuViewerDirectory(response.viewers);
 
 // Phòng đã xác thực thành công.
 // Cho phép tải và gửi bình luận.
