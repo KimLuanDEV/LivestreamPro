@@ -17127,18 +17127,30 @@ socket.on("sfu:chat:send", (data, ack) => {
 
   socket.data.lastSfuCommentAt = now;
 
-  const message = {
-    id: crypto.randomUUID(),
-    roomId: access.id,
-    uid: String(access.uid),
-    name: String(
-      account.profile.name || "Player"
-    ).slice(0, 50),
-    verified: !!account.profile.verified,
-    host: access.isHost,
-    text: content,
-    ts: now
-  };
+
+const message = {
+  id: crypto.randomUUID(),
+
+  roomId: access.id,
+  uid: String(access.uid),
+
+  name: String(
+    account.profile.name || "Player"
+  ).slice(0, 50),
+
+  // Avatar lấy trực tiếp từ tài khoản đã xác thực
+  avatar: normalizeAvatar(
+    account.profile.avatar || ""
+  ),
+
+  verified: !!account.profile.verified,
+  host: access.isHost,
+
+  text: content,
+  ts: now
+};
+
+
 
   if (!Array.isArray(access.room.sfuComments)) {
     access.room.sfuComments = [];

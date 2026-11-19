@@ -1812,6 +1812,131 @@ button:disabled {
 
 
 
+/* ==========================================
+   SFU - LIVE CHAT AVATAR V4
+========================================== */
+
+/* Each message: avatar + content */
+.sfu-chat-messages .sfu-chat-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+
+  width: 100%;
+  margin: 0;
+  padding: 2px 0;
+
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Circular avatar */
+.sfu-chat-avatar {
+  position: relative;
+
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+
+  display: grid;
+  place-items: center;
+
+  overflow: hidden;
+
+  border-radius: 50%;
+  border: 1px solid rgba(235,204,148,.46);
+
+  background: linear-gradient(
+    145deg,
+    #53432D,
+    #22252C
+  );
+
+  box-shadow: 0 2px 9px rgba(0,0,0,.32);
+}
+
+/* Profile image */
+.sfu-chat-avatar img {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  display: block;
+  object-fit: cover;
+  border-radius: 50%;
+
+  background: #22252C;
+}
+
+/* Fallback when no avatar is available */
+.sfu-avatar-fallback {
+  color: #F1D6A5;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+/* Content beside avatar */
+.sfu-chat-content {
+  flex: 1;
+  min-width: 0;
+
+  padding-top: 2px;
+
+  color: #fff;
+  line-height: 1.5;
+
+  overflow-wrap: anywhere;
+}
+
+/* Name and text stay together */
+.sfu-chat-content .sfu-chat-author {
+  display: inline;
+  margin-right: 6px;
+
+  color: #F0CE91;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.sfu-chat-content .sfu-chat-text {
+  display: inline;
+
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+
+  text-shadow: 0 1px 6px rgba(0,0,0,.9);
+}
+
+.sfu-chat-verified {
+  margin-left: 5px;
+  color: #61B6FF;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+/* Compact avatar on smaller phones */
+@media (max-width: 380px) {
+  .sfu-chat-avatar {
+    flex-basis: 30px;
+    width: 30px;
+    height: 30px;
+  }
+
+  .sfu-chat-messages .sfu-chat-item {
+    gap: 7px;
+  }
+}
+
+
+
+
 </style>
 
 
@@ -2451,20 +2576,23 @@ function updateChatUnread() {
       : String(sfuChatUnreadCount);
 }
 
+
+/* ==========================================
+   SFU LIVE CHAT - AVATAR RENDER
+========================================== */
+
 function renderSfuChat() {
 
   chatMessages.replaceChildren();
 
-const messages = [...sfuChatItems.values()]
-  .sort((a, b) => a.ts - b.ts)
-  .slice(-10);
+  const messages = [...sfuChatItems.values()]
+    .sort((a, b) => a.ts - b.ts)
+    .slice(-10);
 
   if (!messages.length) {
     const empty = document.createElement("p");
-
     empty.className = "sfu-chat-empty";
     empty.textContent = "No comments yet.";
-
     chatMessages.appendChild(empty);
     return;
   }
@@ -2480,14 +2608,77 @@ const messages = [...sfuChatItems.values()]
       item.classList.add("is-host");
     }
 
+   
+/* ======================================
+   LIVE CHAT - PROFILE AVATAR
+====================================== */
+
+const avatarWrap = document.createElement("div");
+avatarWrap.className = "sfu-chat-avatar";
+
+const displayName = String(
+  message.name || "Player"
+);
+
+const DEFAULT_AVATAR = "/avatar-default.png";
+
+const avatar = document.createElement("img");
+
+avatar.alt = "";
+avatar.loading = "lazy";
+avatar.decoding = "async";
+
+// Khi ảnh hỏng, chỉ thử avatar mặc định một lần.
+avatar.onerror = () => {
+  avatar.onerror = null;
+  avatar.src = DEFAULT_AVATAR;
+};
+
+// Kiểm tra URL avatar từ server.
+const avatarUrl = String(message.avatar || "").trim();
+
+let safeAvatar = DEFAULT_AVATAR;
+
+try {
+  if (avatarUrl) {
+    const url = new URL(avatarUrl, location.origin);
+
+    if (
+      url.protocol === "https:" ||
+      (
+        url.origin === location.origin &&
+        url.protocol === "http:"
+      )
+    ) {
+      safeAvatar = url.href;
+    }
+  }
+} catch (_) {
+  safeAvatar = DEFAULT_AVATAR;
+}
+
+avatar.src = safeAvatar;
+
+avatarWrap.appendChild(avatar);
+
+
+    // ======================================
+    // NAME + ROLE + COMMENT
+    // ======================================
+
+    const content = document.createElement("div");
+    content.className = "sfu-chat-content";
+
     const author = document.createElement("div");
     author.className = "sfu-chat-author";
 
     const name = document.createElement("span");
-    name.textContent = String(message.name || "Player");
+    name.textContent = displayName;
+
     author.appendChild(name);
 
     if (message.host) {
+
       const role = document.createElement("span");
 
       role.className = "sfu-chat-role";
@@ -2496,25 +2687,32 @@ const messages = [...sfuChatItems.values()]
       author.appendChild(role);
 
     } else if (message.verified) {
-      const verified = document.createElement("span");
 
+      const verified = document.createElement("span");
+      verified.className = "sfu-chat-verified";
       verified.textContent = "✓";
       verified.title = "Verified account";
 
       author.appendChild(verified);
     }
 
-    const body = document.createElement("p");
+    const body = document.createElement("span");
     body.className = "sfu-chat-text";
     body.textContent = String(message.text || "");
 
-    item.append(author, body);
+    content.append(author, body);
+    item.append(avatarWrap, content);
+
     fragment.appendChild(item);
   }
 
   chatMessages.appendChild(fragment);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  chatMessages.scrollTop =
+    chatMessages.scrollHeight;
 }
+
+
 
 function addSfuChatMessage(message, countUnread = false) {
   if (
