@@ -2906,6 +2906,80 @@ button:disabled {
 }
 
 
+
+/* ==========================================
+   SFU - PREMIUM MINI PLAYER BUTTON
+========================================== */
+
+.sfu-mini-player-btn {
+  flex: 0 0 36px;
+
+  display: grid;
+  place-items: center;
+
+  width: 36px;
+  height: 36px;
+  padding: 0;
+
+  border: 1px solid rgba(224,190,132,.3);
+  border-radius: 12px;
+
+  background: rgba(14,16,21,.73);
+  color: #EDCD92;
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  box-shadow: 0 4px 15px rgba(0,0,0,.2);
+
+  transition:
+    transform .18s ease,
+    border-color .18s ease,
+    background .18s ease;
+}
+
+.sfu-mini-player-btn svg {
+  display: block;
+  width: 19px;
+  height: 19px;
+}
+
+.sfu-mini-player-btn:hover,
+.sfu-mini-player-btn[aria-pressed="true"] {
+  border-color: #E8C58D;
+  background: rgba(70,54,33,.88);
+}
+
+.sfu-mini-player-btn:active {
+  transform: scale(.93);
+}
+
+.sfu-mini-player-btn:focus-visible {
+  outline: 2px solid #E8C58D;
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .sfu-mini-player-btn {
+    flex-basis: 34px;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+
+  .sfu-mini-player-btn svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .studio-top-actions {
+    gap: 6px;
+  }
+}
+
+
+
+
 </style>
 
 
@@ -3027,6 +3101,48 @@ button:disabled {
     stroke-width="2"
     aria-hidden="true">
     <path d="m7 10 5 5 5-5"/>
+  </svg>
+
+</button>
+
+
+
+<!-- ======================================
+     SFU - VIEWER MINI PLAYER
+====================================== -->
+
+<button
+  type="button"
+  id="sfuMiniPlayerBtn"
+  class="sfu-mini-player-btn hidden"
+  aria-label="Minimize livestream"
+  aria-pressed="false"
+  title="Mini Player">
+
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true">
+
+    <rect
+      x="2.5"
+      y="3.5"
+      width="19"
+      height="17"
+      rx="2.5"/>
+
+    <rect
+      x="11.5"
+      y="11.5"
+      width="7"
+      height="5.5"
+      rx="1"/>
+
+    <path d="M7 8h5"/>
   </svg>
 
 </button>
@@ -3743,6 +3859,127 @@ const $ = id => document.getElementById(id);
 
 const sfuViewerBadge = $("sfuViewerBadge");
 const sfuViewerCount = $("sfuViewerCount");
+
+
+
+/* ==========================================
+   SFU - VIEWER PICTURE IN PICTURE
+========================================== */
+
+const sfuMiniPlayerBtn = $("sfuMiniPlayerBtn");
+
+function getSfuViewerVideo() {
+  return $("remoteMedia").querySelector("video");
+}
+
+function isSfuMiniActive(video) {
+  if (!video) return false;
+
+  return (
+    document.pictureInPictureElement === video ||
+    video.webkitPresentationMode === "picture-in-picture"
+  );
+}
+
+function syncSfuMiniPlayer() {
+  const video = getSfuViewerVideo();
+
+  const canShow =
+    isViewer &&
+    viewerConnected &&
+    !sfuEndStarted &&
+    !!video &&
+    !!video.srcObject;
+
+  sfuMiniPlayerBtn.classList.toggle(
+    "hidden",
+    !canShow
+  );
+
+  const active = isSfuMiniActive(video);
+
+  sfuMiniPlayerBtn.setAttribute(
+    "aria-pressed",
+    String(active)
+  );
+
+  sfuMiniPlayerBtn.title = active
+    ? "Return to livestream"
+    : "Mini Player";
+
+  sfuMiniPlayerBtn.setAttribute(
+    "aria-label",
+    active
+      ? "Exit mini player"
+      : "Minimize livestream"
+  );
+}
+
+async function exitSfuMiniPlayer() {
+  const video = getSfuViewerVideo();
+
+  if (document.pictureInPictureElement) {
+    await document.exitPictureInPicture();
+  } else if (
+    video?.webkitPresentationMode === "picture-in-picture" &&
+    typeof video.webkitSetPresentationMode === "function"
+  ) {
+    video.webkitSetPresentationMode("inline");
+  }
+
+  syncSfuMiniPlayer();
+}
+
+sfuMiniPlayerBtn.addEventListener(
+  "click",
+  async () => {
+
+    const video = getSfuViewerVideo();
+
+    if (
+      !isViewer ||
+      !viewerConnected ||
+      !video ||
+      !video.srcObject
+    ) {
+      showMessage("Livestream video is not ready.");
+      return;
+    }
+
+    try {
+      if (isSfuMiniActive(video)) {
+        await exitSfuMiniPlayer();
+        return;
+      }
+
+      if (
+        document.pictureInPictureEnabled &&
+        typeof video.requestPictureInPicture === "function"
+      ) {
+        await video.requestPictureInPicture();
+      } else if (
+        typeof video.webkitSupportsPresentationMode === "function" &&
+        video.webkitSupportsPresentationMode("picture-in-picture")
+      ) {
+        video.webkitSetPresentationMode("picture-in-picture");
+      } else {
+        showMessage(
+          "Mini Player is not supported in this browser."
+        );
+        return;
+      }
+
+      syncSfuMiniPlayer();
+
+    } catch (error) {
+      console.warn("[SFU MINI PLAYER]", error);
+
+      showMessage(
+        "Unable to open Mini Player. Please try again."
+      );
+    }
+  }
+);
 
 
 
@@ -5232,6 +5469,26 @@ function addRemoteTrack(track) {
     $("remoteMedia").classList.remove("hidden");
     setPlaceholder(false);
 
+
+// Sync the Mini Player when the remote video arrives.
+element.addEventListener(
+  "enterpictureinpicture",
+  syncSfuMiniPlayer
+);
+
+element.addEventListener(
+  "leavepictureinpicture",
+  syncSfuMiniPlayer
+);
+
+element.addEventListener(
+  "webkitpresentationmodechanged",
+  syncSfuMiniPlayer
+);
+
+syncSfuMiniPlayer();
+
+
   } else {
     element.style.display = "none";
     $("remoteMedia").appendChild(element);
@@ -5282,6 +5539,13 @@ async function connectSFU() {
   });
 
   lkRoom.on(RoomEvent.Disconnected, () => {
+
+    viewerConnected = false;
+
+exitSfuMiniPlayer().catch(() => {});
+syncSfuMiniPlayer();
+
+
     setStatus("DISCONNECTED");
     if (isViewer) {
       setPlaceholder(true, "Connection lost");
@@ -5551,9 +5815,13 @@ async function joinAsViewer() {
       }
     }
 
-    viewerConnected = true;
+viewerConnected = true;
 
-    setStatus("WATCHING", true);
+syncSfuMiniPlayer();
+
+setStatus("WATCHING", true);
+
+
     $("videoBadge").textContent = "LIVE · SFU";
     showMessage("Connected to livestream.");
 
@@ -5576,13 +5844,26 @@ async function joinAsViewer() {
 
 
 
+
 async function exitViewer() {
+
+  try {
+    await exitSfuMiniPlayer();
+  } catch (error) {
+    console.warn("[SFU MINI EXIT]", error);
+  }
+
   if (lkRoom) {
     await lkRoom.disconnect();
   }
+
+  viewerConnected = false;
   socket.disconnect();
+
   goLobby();
 }
+
+
 
 $("startBtn").onclick = startLive;
 $("cameraBtn").onclick = toggleCamera;
@@ -5594,6 +5875,8 @@ $("backBtn").onclick = () => {
   if (started) stopLive();
   else goLobby();
 };
+
+
 
 $("soundBtn").onclick = async () => {
   try {
@@ -5662,6 +5945,8 @@ socket.on("room-closed", () => {
   }
 
   viewerConnected = false;
+  exitSfuMiniPlayer().catch(() => {});
+  syncSfuMiniPlayer();
 });
 
 
