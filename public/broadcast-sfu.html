@@ -2995,6 +2995,112 @@ button:disabled {
 
 
 
+/* ==========================================
+   SFU - PREMIUM GIFT COMBO
+========================================== */
+
+.sfu-combo-panel {
+  flex-shrink: 0;
+  padding: 12px;
+  margin-bottom: 10px;
+
+  border: 1px solid rgba(223,190,131,.24);
+  border-radius: 15px;
+
+  background: rgba(255,255,255,.035);
+}
+
+.sfu-combo-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.sfu-combo-heading strong {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #E8C98E;
+}
+
+.sfu-combo-heading span {
+  font-size: 10px;
+  color: #999DA8;
+}
+
+.sfu-combo-list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0,1fr));
+  gap: 7px;
+}
+
+.sfu-combo-btn {
+  min-width: 0;
+  height: 39px;
+  padding: 0 3px;
+
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 9px;
+
+  background: #292C33;
+  color: #E1DACE;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.sfu-combo-btn.active {
+  border-color: #E6C789;
+  background: linear-gradient(135deg,#F6DEAC,#C79A59);
+  color: #261B0B;
+}
+
+.sfu-combo-btn:disabled {
+  opacity: .45;
+}
+
+.sfu-combo-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 13px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+
+.sfu-combo-total span {
+  font-size: 10px;
+  font-weight: 800;
+  color: #AEB0B8;
+}
+
+.sfu-combo-total strong {
+  font-size: 17px;
+  font-weight: 900;
+  color: #F1D49C;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 380px) {
+  .sfu-combo-panel {
+    padding: 9px;
+  }
+
+  .sfu-combo-list {
+    gap: 5px;
+  }
+
+  .sfu-combo-btn {
+    height: 36px;
+    font-size: 11px;
+  }
+
+  .sfu-combo-heading span {
+    font-size: 9px;
+  }
+}
+
 
 </style>
 
@@ -3325,6 +3431,42 @@ button:disabled {
   id="sfuGiftList"
   class="sfu-gift-grid">
 </div>
+
+
+<!-- SFU GIFT COMBO QUANTITY -->
+<div class="sfu-combo-panel">
+
+  <div class="sfu-combo-heading">
+    <strong>GIFT QUANTITY</strong>
+    <span>Send multiple gifts at once</span>
+  </div>
+
+  <div id="sfuGiftComboList" class="sfu-combo-list">
+
+    <button type="button" class="sfu-combo-btn active"
+      data-quantity="1" aria-pressed="true">×1</button>
+
+    <button type="button" class="sfu-combo-btn"
+      data-quantity="5" aria-pressed="false">×5</button>
+
+    <button type="button" class="sfu-combo-btn"
+      data-quantity="10" aria-pressed="false">×10</button>
+
+    <button type="button" class="sfu-combo-btn"
+      data-quantity="20" aria-pressed="false">×20</button>
+
+    <button type="button" class="sfu-combo-btn"
+      data-quantity="50" aria-pressed="false">×50</button>
+
+  </div>
+
+  <div class="sfu-combo-total">
+    <span>TOTAL COST</span>
+    <strong id="sfuGiftTotal">0 💎</strong>
+  </div>
+
+</div>
+
 
 
 
@@ -4216,6 +4358,75 @@ let liveGiftBalanceValue = null;
 let pendingLiveGiftRequest = null;
 let giftAnnouncementTimer = null;
 
+
+/* ==========================================
+   SFU GIFT COMBO - CLIENT STATE
+========================================== */
+
+const SFU_GIFT_QUANTITIES = [1, 5, 10, 20, 50];
+
+let selectedGiftQuantity = 1;
+
+const giftComboList = $("sfuGiftComboList");
+const giftTotal = $("sfuGiftTotal");
+
+function getLiveGiftTotal() {
+  const gift = Object.hasOwn(
+    LIVE_GIFT_OPTIONS,
+    selectedLiveGift
+  ) ? LIVE_GIFT_OPTIONS[selectedLiveGift] : null;
+
+  if (!gift) return 0;
+
+  return gift.cost * selectedGiftQuantity;
+}
+
+function updateLiveGiftCombo() {
+  const total = getLiveGiftTotal();
+
+  giftTotal.textContent =
+    `${total.toLocaleString("en-US")} 💎`;
+
+  giftComboList
+    .querySelectorAll(".sfu-combo-btn")
+    .forEach(button => {
+
+      const quantity = Number(button.dataset.quantity);
+      const active = quantity === selectedGiftQuantity;
+
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+
+      button.disabled =
+        liveGiftSending || !!pendingLiveGiftRequest;
+    });
+}
+
+giftComboList.addEventListener("click", event => {
+
+  const button = event.target.closest(".sfu-combo-btn");
+  if (!button || !giftComboList.contains(button)) return;
+
+  if (liveGiftSending || pendingLiveGiftRequest) {
+    giftFeedback.textContent =
+      "Resolve your previous gift transaction first.";
+    return;
+  }
+
+  const quantity = Number(button.dataset.quantity);
+
+  if (!SFU_GIFT_QUANTITIES.includes(quantity)) return;
+
+  selectedGiftQuantity = quantity;
+
+  giftFeedback.textContent = "";
+
+  updateLiveGiftCombo();
+  updateLiveGiftButton();
+});
+
+
+
 function setLiveGiftBalance(value) {
   const n = Number(value);
 
@@ -4249,9 +4460,19 @@ function refreshLiveGiftBalance() {
   );
 }
 
+
 function updateLiveGiftButton() {
 
-  const gift = LIVE_GIFT_OPTIONS[selectedLiveGift];
+  const gift = Object.hasOwn(
+    LIVE_GIFT_OPTIONS,
+    selectedLiveGift
+  ) ? LIVE_GIFT_OPTIONS[selectedLiveGift] : null;
+
+  const quantity =
+    pendingLiveGiftRequest?.quantity ||
+    selectedGiftQuantity;
+
+  const total = gift ? gift.cost * quantity : 0;
 
   giftConfirm.disabled =
     !gift ||
@@ -4262,9 +4483,12 @@ function updateLiveGiftButton() {
   giftConfirm.textContent = liveGiftSending
     ? "SENDING..."
     : gift
-      ? `SEND ${gift.name.toUpperCase()} · ${gift.cost.toLocaleString()} 💎`
+      ? `SEND ${quantity} ${gift.name.toUpperCase()} · ${total.toLocaleString("en-US")} 💎`
       : "SELECT A GIFT";
+
+  updateLiveGiftCombo();
 }
+
 
 function openLiveGiftSheet() {
   if (!isViewer || !sfuChatLive) return;
@@ -4290,6 +4514,7 @@ giftOverlay.addEventListener("click", event => {
   }
 });
 
+
 document.querySelectorAll(".sfu-gift-card").forEach(button => {
 
   button.addEventListener("click", () => {
@@ -4300,10 +4525,7 @@ document.querySelectorAll(".sfu-gift-card").forEach(button => {
 
     // If a request timed out, preserve its original
     // transaction ID until safely resolved.
-    if (
-      pendingLiveGiftRequest &&
-      pendingLiveGiftRequest.giftId !== id
-    ) {
+if (pendingLiveGiftRequest) {
       giftFeedback.textContent =
         "Retry or resolve your previous gift first.";
       return;
@@ -4325,9 +4547,13 @@ document.querySelectorAll(".sfu-gift-card").forEach(button => {
 
 });
 
+
 giftConfirm.addEventListener("click", () => {
 
-  const gift = LIVE_GIFT_OPTIONS[selectedLiveGift];
+  const gift = Object.hasOwn(
+    LIVE_GIFT_OPTIONS,
+    selectedLiveGift
+  ) ? LIVE_GIFT_OPTIONS[selectedLiveGift] : null;
 
   if (
     !gift ||
@@ -4337,25 +4563,33 @@ giftConfirm.addEventListener("click", () => {
     !isViewer
   ) return;
 
+  const quantity =
+    pendingLiveGiftRequest?.quantity ||
+    selectedGiftQuantity;
+
+  const totalCost = gift.cost * quantity;
+
   if (
     liveGiftBalanceValue !== null &&
-    liveGiftBalanceValue < gift.cost &&
+    liveGiftBalanceValue < totalCost &&
     !pendingLiveGiftRequest
   ) {
     giftFeedback.textContent = "Insufficient diamonds.";
     return;
   }
 
-  // Reuse the transaction ID on a timeout retry.
+  // Giữ cùng ID và số lượng khi retry.
   if (!pendingLiveGiftRequest) {
     pendingLiveGiftRequest = {
       requestId: crypto.randomUUID(),
-      giftId: selectedLiveGift
+      giftId: selectedLiveGift,
+      quantity
     };
   }
 
   liveGiftSending = true;
   giftFeedback.textContent = "";
+
   updateLiveGiftButton();
 
   socket.timeout(10000).emit(
@@ -4363,6 +4597,7 @@ giftConfirm.addEventListener("click", () => {
     {
       roomId,
       giftId: pendingLiveGiftRequest.giftId,
+      quantity: pendingLiveGiftRequest.quantity,
       requestId: pendingLiveGiftRequest.requestId
     },
     (error, response) => {
@@ -4371,16 +4606,17 @@ giftConfirm.addEventListener("click", () => {
 
       if (error) {
         giftFeedback.textContent =
-          "Connection uncertain. Retry the same gift to check the transaction.";
+          "Connection uncertain. Retry the same combo to check the transaction.";
+
         updateLiveGiftButton();
         return;
       }
 
       if (!response?.ok) {
-        giftFeedback.textContent =
-          response?.error || "Unable to send gift.";
 
-        // A confirmed rejection means no charge occurred.
+        giftFeedback.textContent =
+          response?.error || "Unable to send gift combo.";
+
         pendingLiveGiftRequest = null;
 
         if (typeof response?.coins === "number") {
@@ -4396,20 +4632,22 @@ giftConfirm.addEventListener("click", () => {
       pendingLiveGiftRequest = null;
 
       setLiveGiftBalance(response.coins);
+
       giftFeedback.textContent = "";
 
       showMessage(
         response.duplicate
           ? "Gift transaction already completed."
-          : `Gift sent: ${gift.name}!`
+          : `Successfully sent ${quantity} ${gift.name}!`
       );
 
       giftOverlay.classList.add("hidden");
+
       updateLiveGiftButton();
     }
   );
-
 });
+
 
 // Receive wallet updates on this account.
 socket.on("coin-update", data => {
@@ -4455,10 +4693,18 @@ details.className = "sfu-gift-announcement-details";
 const sender = document.createElement("strong");
 sender.textContent = donor;
 
+
 const description = document.createElement("span");
+
+const quantity = Number.isSafeInteger(data.quantity) &&
+  data.quantity > 0
+    ? data.quantity
+    : 1;
+
 description.textContent =
-  `sent ${gift?.name || "a gift"} to Host · ` +
+  `sent ${gift?.name || "a gift"} ×${quantity} to Host · ` +
   `${cost.toLocaleString("en-US")} diamonds`;
+
 
 details.append(sender, description);
 giftAnnouncement.append(image, details);

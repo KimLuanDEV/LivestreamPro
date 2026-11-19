@@ -17484,6 +17484,27 @@ if (
 
 
 
+/* ======================================
+   SFU GIFT COMBO - SERVER VALIDATION
+====================================== */
+
+const quantity = Number(data?.quantity ?? 1);
+
+if (![1, 5, 10, 20, 50].includes(quantity)) {
+  return reply("Invalid gift quantity.");
+}
+
+const cost = gift.cost * quantity;
+
+if (
+  !Number.isSafeInteger(cost) ||
+  cost <= 0
+) {
+  return reply("Invalid combo total.");
+}
+
+
+
   const requestId = String(data?.requestId || "");
 
   if (!/^[a-f0-9-]{36}$/i.test(requestId)) {
@@ -17532,7 +17553,7 @@ if (
     return reply("Please wait before sending another gift.");
   }
 
-  const cost = gift.cost;
+  
   const balance = Math.floor(Number(senderProfile.coins));
 
   if (!Number.isSafeInteger(balance) || balance < 0) {
@@ -17594,16 +17615,22 @@ hostProfile.coinReceived = hostWallet + cost;
 
 
     
-  const transaction = {
-    id: requestId,
-    roomId: access.id,
-    giftId,
-    giftName: gift.name,
-    amount: cost,
-    fromUid: access.uid,
-    toUid: hostUid,
-    ts
-  };
+
+const transaction = {
+  id: requestId,
+  roomId: access.id,
+
+  giftId,
+  giftName: gift.name,
+
+  quantity,
+  unitCost: gift.cost,
+  amount: cost,
+
+  fromUid: access.uid,
+  toUid: hostUid,
+  ts
+};
 
   // Maintain recent audit history on both accounts.
   senderProfile.liveGiftHistory = [
@@ -17642,6 +17669,7 @@ hostProfile.coinReceived = hostWallet + cost;
   );
 
 
+
 const payload = {
   roomId: access.id,
   transactionId: requestId,
@@ -17652,14 +17680,15 @@ const payload = {
   giftName: gift.name,
   emoji: gift.emoji,
 
+  quantity,
+  unitCost: gift.cost,
   cost,
 
-  // Tổng kim cương Host đã nhận
-  // trong phiên LIVE hiện tại.
   totalCoins: room.giftTotal,
 
   ts
 };
+
 
 
   // Only this room sees the gift animation.
