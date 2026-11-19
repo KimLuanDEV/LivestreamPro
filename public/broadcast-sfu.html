@@ -2906,80 +2906,6 @@ button:disabled {
 }
 
 
-
-/* ==========================================
-   SFU - PREMIUM MINI PLAYER BUTTON
-========================================== */
-
-.sfu-mini-player-btn {
-  flex: 0 0 36px;
-
-  display: grid;
-  place-items: center;
-
-  width: 36px;
-  height: 36px;
-  padding: 0;
-
-  border: 1px solid rgba(224,190,132,.3);
-  border-radius: 12px;
-
-  background: rgba(14,16,21,.73);
-  color: #EDCD92;
-
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-
-  box-shadow: 0 4px 15px rgba(0,0,0,.2);
-
-  transition:
-    transform .18s ease,
-    border-color .18s ease,
-    background .18s ease;
-}
-
-.sfu-mini-player-btn svg {
-  display: block;
-  width: 19px;
-  height: 19px;
-}
-
-.sfu-mini-player-btn:hover,
-.sfu-mini-player-btn[aria-pressed="true"] {
-  border-color: #E8C58D;
-  background: rgba(70,54,33,.88);
-}
-
-.sfu-mini-player-btn:active {
-  transform: scale(.93);
-}
-
-.sfu-mini-player-btn:focus-visible {
-  outline: 2px solid #E8C58D;
-  outline-offset: 3px;
-}
-
-@media (max-width: 480px) {
-  .sfu-mini-player-btn {
-    flex-basis: 34px;
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-  }
-
-  .sfu-mini-player-btn svg {
-    width: 17px;
-    height: 17px;
-  }
-
-  .studio-top-actions {
-    gap: 6px;
-  }
-}
-
-
-
-
 </style>
 
 
@@ -3101,48 +3027,6 @@ button:disabled {
     stroke-width="2"
     aria-hidden="true">
     <path d="m7 10 5 5 5-5"/>
-  </svg>
-
-</button>
-
-
-
-<!-- ======================================
-     SFU - VIEWER MINI PLAYER
-====================================== -->
-
-<button
-  type="button"
-  id="sfuMiniPlayerBtn"
-  class="sfu-mini-player-btn hidden"
-  aria-label="Minimize livestream"
-  aria-pressed="false"
-  title="Mini Player">
-
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.8"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    aria-hidden="true">
-
-    <rect
-      x="2.5"
-      y="3.5"
-      width="19"
-      height="17"
-      rx="2.5"/>
-
-    <rect
-      x="11.5"
-      y="11.5"
-      width="7"
-      height="5.5"
-      rx="1"/>
-
-    <path d="M7 8h5"/>
   </svg>
 
 </button>
@@ -3861,215 +3745,6 @@ const sfuViewerBadge = $("sfuViewerBadge");
 const sfuViewerCount = $("sfuViewerCount");
 
 
-
-/* ==========================================
-   SFU - VIEWER PICTURE IN PICTURE
-========================================== */
-
-const sfuMiniPlayerBtn = $("sfuMiniPlayerBtn");
-
-function getSfuViewerVideo() {
-  return $("remoteMedia").querySelector("video");
-}
-
-function isSfuMiniActive(video) {
-  if (!video) return false;
-
-  return (
-    document.pictureInPictureElement === video ||
-    video.webkitPresentationMode === "picture-in-picture"
-  );
-}
-
-function syncSfuMiniPlayer() {
-  const video = getSfuViewerVideo();
-
-  const canShow =
-    isViewer &&
-    viewerConnected &&
-    !sfuEndStarted &&
-    !!video &&
-    !!video.srcObject;
-
-  sfuMiniPlayerBtn.classList.toggle(
-    "hidden",
-    !canShow
-  );
-
-  const active = isSfuMiniActive(video);
-
-  sfuMiniPlayerBtn.setAttribute(
-    "aria-pressed",
-    String(active)
-  );
-
-  sfuMiniPlayerBtn.title = active
-    ? "Return to livestream"
-    : "Mini Player";
-
-  sfuMiniPlayerBtn.setAttribute(
-    "aria-label",
-    active
-      ? "Exit mini player"
-      : "Minimize livestream"
-  );
-}
-
-async function exitSfuMiniPlayer() {
-  const video = getSfuViewerVideo();
-
-  if (document.pictureInPictureElement) {
-    await document.exitPictureInPicture();
-  } else if (
-    video?.webkitPresentationMode === "picture-in-picture" &&
-    typeof video.webkitSetPresentationMode === "function"
-  ) {
-    video.webkitSetPresentationMode("inline");
-  }
-
-  syncSfuMiniPlayer();
-}
-
-
-/* ==========================================
-   SFU - MOBILE + DESKTOP MINI PLAYER
-========================================== */
-
-sfuMiniPlayerBtn.addEventListener(
-  "click",
-  async () => {
-
-    const video = getSfuViewerVideo();
-
-    if (
-      !isViewer ||
-      !viewerConnected ||
-      !video ||
-      !video.srcObject
-    ) {
-      showMessage("Livestream video is not ready.");
-      return;
-    }
-
-    if (isSfuMiniActive(video)) {
-      try {
-        await exitSfuMiniPlayer();
-      } catch (error) {
-        console.warn("[SFU PiP EXIT]", error);
-      }
-      return;
-    }
-
-    const isAppleMobile =
-      /iPad|iPhone|iPod/i.test(navigator.userAgent) ||
-      (
-        navigator.platform === "MacIntel" &&
-        navigator.maxTouchPoints > 1
-      );
-
-    const safariSupported =
-      typeof video.webkitSetPresentationMode === "function" &&
-      typeof video.webkitSupportsPresentationMode === "function" &&
-      video.webkitSupportsPresentationMode(
-        "picture-in-picture"
-      );
-
-    const standardSupported =
-      document.pictureInPictureEnabled === true &&
-      typeof video.requestPictureInPicture === "function";
-
-    video.disablePictureInPicture = false;
-
-    if (
-      video.readyState <
-        HTMLMediaElement.HAVE_CURRENT_DATA ||
-      video.videoWidth === 0
-    ) {
-      showMessage(
-        "Video is still loading. Please try again."
-      );
-      return;
-    }
-
-    try {
-
-      // iPhone / iPad: ưu tiên Safari PiP.
-      if (isAppleMobile && safariSupported) {
-
-        video.webkitSetPresentationMode(
-          "picture-in-picture"
-        );
-
-      }
-
-      // Android Chrome / Desktop.
-      else if (standardSupported) {
-
-        await video.requestPictureInPicture();
-
-      }
-
-      // Safari fallback.
-      else if (safariSupported) {
-
-        video.webkitSetPresentationMode(
-          "picture-in-picture"
-        );
-
-      }
-
-      else {
-
-        showMessage(
-          "Picture-in-Picture is not available on this device."
-        );
-        return;
-      }
-
-      syncSfuMiniPlayer();
-
-    } catch (error) {
-
-      console.error("[SFU MOBILE PIP ERROR]", {
-        name: error?.name,
-        message: error?.message,
-        userAgent: navigator.userAgent,
-        readyState: video.readyState,
-        videoWidth: video.videoWidth,
-        videoHeight: video.videoHeight,
-        standardSupported,
-        safariSupported,
-        isAppleMobile
-      });
-
-      let message =
-        "Mini Player is unavailable on this device.";
-
-      if (error?.name === "NotAllowedError") {
-        message =
-          "The browser blocked Mini Player. Please try again.";
-      }
-
-      else if (error?.name === "NotSupportedError") {
-        message =
-          "This phone does not support PiP for live video.";
-      }
-
-      else if (error?.name === "InvalidStateError") {
-        message =
-          "The livestream video is not ready for PiP.";
-      }
-
-      else if (error?.name === "SecurityError") {
-        message =
-          "Mini Player is blocked by browser permissions.";
-      }
-
-      showMessage(message);
-    }
-
-  }
-);
 
 /* ==========================================
    SFU - REALTIME VIEWER DIRECTORY
@@ -5545,18 +5220,10 @@ function addRemoteTrack(track) {
   element.autoplay = true;
 
   if (track.kind === Track.Kind.Video) {
-
-element.playsInline = true;
-element.autoplay = true;
-element.disablePictureInPicture = false;
-
-element.setAttribute("playsinline", "");
-element.setAttribute("webkit-playsinline", "");
-
-element.style.width = "100%";
-element.style.height = "100%";
-element.style.objectFit = "contain";
-
+    element.playsInline = true;
+    element.style.width = "100%";
+    element.style.height = "100%";
+    element.style.objectFit = "contain";
 
     $("remoteMedia").querySelectorAll("video")
       .forEach(video => video.remove());
@@ -5564,26 +5231,6 @@ element.style.objectFit = "contain";
     $("remoteMedia").appendChild(element);
     $("remoteMedia").classList.remove("hidden");
     setPlaceholder(false);
-
-
-// Sync the Mini Player when the remote video arrives.
-element.addEventListener(
-  "enterpictureinpicture",
-  syncSfuMiniPlayer
-);
-
-element.addEventListener(
-  "leavepictureinpicture",
-  syncSfuMiniPlayer
-);
-
-element.addEventListener(
-  "webkitpresentationmodechanged",
-  syncSfuMiniPlayer
-);
-
-syncSfuMiniPlayer();
-
 
   } else {
     element.style.display = "none";
@@ -5635,13 +5282,6 @@ async function connectSFU() {
   });
 
   lkRoom.on(RoomEvent.Disconnected, () => {
-
-    viewerConnected = false;
-
-exitSfuMiniPlayer().catch(() => {});
-syncSfuMiniPlayer();
-
-
     setStatus("DISCONNECTED");
     if (isViewer) {
       setPlaceholder(true, "Connection lost");
@@ -5911,13 +5551,9 @@ async function joinAsViewer() {
       }
     }
 
-viewerConnected = true;
+    viewerConnected = true;
 
-syncSfuMiniPlayer();
-
-setStatus("WATCHING", true);
-
-
+    setStatus("WATCHING", true);
     $("videoBadge").textContent = "LIVE · SFU";
     showMessage("Connected to livestream.");
 
@@ -5940,26 +5576,13 @@ setStatus("WATCHING", true);
 
 
 
-
 async function exitViewer() {
-
-  try {
-    await exitSfuMiniPlayer();
-  } catch (error) {
-    console.warn("[SFU MINI EXIT]", error);
-  }
-
   if (lkRoom) {
     await lkRoom.disconnect();
   }
-
-  viewerConnected = false;
   socket.disconnect();
-
   goLobby();
 }
-
-
 
 $("startBtn").onclick = startLive;
 $("cameraBtn").onclick = toggleCamera;
@@ -5971,8 +5594,6 @@ $("backBtn").onclick = () => {
   if (started) stopLive();
   else goLobby();
 };
-
-
 
 $("soundBtn").onclick = async () => {
   try {
@@ -6041,8 +5662,6 @@ socket.on("room-closed", () => {
   }
 
   viewerConnected = false;
-  exitSfuMiniPlayer().catch(() => {});
-  syncSfuMiniPlayer();
 });
 
 
