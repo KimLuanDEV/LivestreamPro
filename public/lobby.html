@@ -4114,7 +4114,8 @@ btnConfirmRoom?.addEventListener("click", ()=>{
     }
 
     // OK => bật overlay + countdown rồi chuyển trang
-    const url = `/broadcast.html?room=${encodeURIComponent(room)}&name=${encodeURIComponent(name || "Host")}`;
+   const url =
+  `/broadcast-sfu.html?room=${encodeURIComponent(room)}`;
 
     showCountdownOverlay(room);
 
@@ -4270,10 +4271,13 @@ function render(list){
     const a = document.createElement("a");
     a.className = "lobby-card" + (r.__virtual ? " lobby-card--virtual" : "");
 
-    // ✅ room ảo đi theo link cố định, room thật đi theo viewer.html?room=
-    a.href = r.__virtual
-      ? (r.__link || `/viewer.html?room=${encodeURIComponent(r.roomId)}`)
-      : `/viewer.html?room=${encodeURIComponent(r.roomId)}`;
+const viewerURL = r.mediaMode === "sfu"
+  ? `/broadcast-sfu.html?mode=viewer&room=${encodeURIComponent(r.roomId)}`
+  : `/viewer.html?room=${encodeURIComponent(r.roomId)}`;
+
+a.href = r.__virtual
+  ? (r.__link || viewerURL)
+  : viewerURL;
 
     const hostName   = r.host?.name   || (r.__virtual ? "Virtual Room" : "Host");
     const verified = r.host?.verified;

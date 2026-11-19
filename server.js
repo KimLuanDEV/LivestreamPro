@@ -14,6 +14,8 @@ const express = require("express");
 const http = require("http");
 const path = require("path");
 const { Server } = require("socket.io");
+const { AccessToken } = require("livekit-server-sdk");
+
 const twilio = require("twilio");
 
 
@@ -12774,6 +12776,238 @@ function getRoom(roomId) {
 
 
 
+/* ==========================================
+   LIVESTREAM PRO - LIVEKIT SFU TOKEN
+========================================== */
+
+const SFU_URL = process.env.LIVEKIT_URL;
+const SFU_KEY = process.env.LIVEKIT_API_KEY;
+const SFU_SECRET = process.env.LIVEKIT_API_SECRET;
+
+app.post("/api/sfu/token", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+
+  try {
+    const roomId = normRoomId(req.body?.roomId);
+    const requestedRole = String(req.body?.role || "");
+
+    if (
+      !roomId ||
+      roomId.length > 64 ||
+      !/^[a-z0-9_.-]+$/.test(roomId)
+    ) {
+      return res.status(400).json({
+        ok: false,
+        error: "INVALID_ROOM"
+      });
+    }
+
+    if (!["host", "viewer"].includes(requestedRole)) {
+      return res.status(400).json({
+        ok: false,
+        error: "INVALID_ROLE"
+      });
+    }
+
+    if (!SFU_URL || !SFU_KEY || !SFU_SECRET) {
+      return res.status(503).json({
+        ok: false,
+        error: "SFU_NOT_CONFIGURED"
+      });
+    }
+
+    const room = rooms.get(roomId);
+
+    if (!room) {
+      return res.status(404).json({
+        ok: false,
+        error: "ROOM_NOT_FOUND"
+      });
+    }
+
+    // Identity from signed HTTP-only session.
+    // Never accept uid from req.body.
+    let uid = null;
+
+    if (SPIRIT_SECRET && SPIRIT_SECRET.length >= 32) {
+      try {
+        const raw = String(req.headers.cookie || "")
+          .split(";")
+          .map(s => s.trim())
+          .find(s => s.startsWith("lsp_spirit_sid="));
+
+        if (raw) {
+          const token = raw.slice("lsp_spirit_sid=".length);
+          const [payload, signature] = token.split(".");
+          const expected = spiritSign(payload);
+
+          const a = Buffer.from(signature || "");
+          const b = Buffer.from(expected);
+
+          if (
+            a.length === b.length &&
+            crypto.timingSafeEqual(a, b)
+          ) {
+            const session = JSON.parse(
+              Buffer.from(payload, "base64url")
+                .toString("utf8")
+            );
+
+            if (
+              session.exp > Date.now() &&
+              session.uid
+            ) {
+              uid = String(session.uid);
+            }
+          }
+        }
+      } catch {
+        uid = null;
+      }
+    }
+
+    const db = loadUsers();
+    const account = uid ? db[uid] : null;
+
+    if (!account?.profile ||
+        account.profile.accountBlocked) {
+      uid = null;
+    }
+
+const sessionCookie = String(req.headers.cookie || "")
+  .split(";")
+  .map(s => s.trim())
+  .find(s => s.startsWith("lsp_spirit_sid="));
+
+const rawSession = sessionCookie
+  ? sessionCookie.slice("lsp_spirit_sid=".length)
+  : "";
+
+const requestSessionId = rawSession
+  ? crypto.createHash("sha256")
+      .update(rawSession)
+      .digest("hex")
+  : null;
+
+  
+
+
+if (requestedRole === "host") {
+
+  if (!uid) {
+    return res.status(401).json({
+      ok: false,
+      error: "LOGIN_REQUIRED"
+    });
+  }
+
+  const hostSocket = room.broadcasterId
+    ? io.sockets.sockets.get(room.broadcasterId)
+    : null;
+
+
+if (
+  room.ownerUid !== uid ||
+  !hostSocket?.connected ||
+  hostSocket.data.authenticated !== true ||
+  hostSocket.data.uid !== uid ||
+  !requestSessionId ||
+  hostSocket.data.sessionId !== requestSessionId ||
+  hostSocket.data.roomId !== roomId
+) {
+  return res.status(403).json({
+    ok: false,
+    error: "NOT_ROOM_OWNER"
+  });
+}
+
+
+  room.mediaMode = "sfu";
+
+} else {
+
+  if (!uid) {
+    return res.status(401).json({
+      ok: false,
+      error: "LOGIN_REQUIRED"
+    });
+  }
+
+  if (
+    room.mediaMode !== "sfu" ||
+    !room.broadcasterId ||
+    !room.streamReady
+  ) {
+    return res.status(409).json({
+      ok: false,
+      error: "STREAM_NOT_READY"
+    });
+  }
+
+  const viewer = room.viewerProfiles?.get(uid);
+
+  const viewerSocket = viewer?.socketId
+    ? io.sockets.sockets.get(viewer.socketId)
+    : null;
+
+
+if (
+  !viewerSocket?.connected ||
+  viewerSocket.data.authenticated !== true ||
+  viewerSocket.data.uid !== uid ||
+  !requestSessionId ||
+  viewerSocket.data.sessionId !== requestSessionId ||
+  viewerSocket.data.roomId !== roomId ||
+  !room.viewers.has(viewer.socketId)
+) {
+  return res.status(403).json({
+    ok: false,
+    error: "VIEWER_NOT_IN_ROOM"
+  });
+}
+
+
+
+}
+
+
+    const grant = new AccessToken(
+      SFU_KEY,
+      SFU_SECRET,
+      {
+        identity: requestedRole === "host"
+          ? `host_${uid}`
+          : `viewer_${uid}`,
+        name: account.profile.name || "Member",
+        ttl: "30m"
+      }
+    );
+
+    grant.addGrant({
+      roomJoin: true,
+      room: `lsp_${roomId}`,
+      canPublish: requestedRole === "host",
+      canSubscribe: true,
+      canPublishData: false
+    });
+
+    return res.json({
+      ok: true,
+      url: SFU_URL,
+      token: await grant.toJwt(),
+      role: requestedRole,
+      roomId
+    });
+
+  } catch (err) {
+    console.error("[SFU TOKEN]", err);
+
+    return res.status(500).json({
+      ok: false,
+      error: "SFU_TOKEN_FAILED"
+    });
+  }
+});
 
 
 function emitViewerCount(roomId) {
@@ -12829,6 +13063,7 @@ function getLobbyList() {
   viewers: safeSet(room.viewers).size,
   liveStartTs: room.liveStartTs,
   host: room.hostProfile || null, // 👈 thêm
+  mediaMode: room.mediaMode || "p2p",
 });
 
     }
@@ -12837,6 +13072,9 @@ function getLobbyList() {
   list.sort((a, b) => (b.viewers - a.viewers) || (b.liveStartTs - a.liveStartTs));
   return list;
 }
+
+
+
 
 function emitLobbyUpdate() {
   io.emit("lobby-update", { rooms: getLobbyList(), ts: Date.now() });
@@ -15744,6 +15982,12 @@ socket.on("join-room", ({ roomId, role, profile }) => {
 
     const uid = socket.data.uid;
 
+
+    if (!room.mediaMode) {
+  room.mediaMode = "p2p";
+}
+
+
     if (
       !socket.data.authenticated ||
       !uid
@@ -16556,6 +16800,53 @@ emitW8ShareDirectory();
 
 io.on("connection", (socket) => {
 
+
+
+
+socket.on("sfu:join-ack", (data, cb) => {
+
+  if (typeof cb !== "function") return;
+
+  const roomId = normRoomId(data?.roomId);
+  const role = data?.role;
+
+  const room = rooms.get(roomId);
+
+  if (
+    !room ||
+    !socket.data.authenticated ||
+    !socket.data.uid ||
+    !socket.rooms.has(roomId) ||
+    socket.data.roomId !== roomId
+  ) {
+    return cb({ ok: false });
+  }
+
+  const uid = String(socket.data.uid);
+
+  if (role === "host") {
+
+    const authorized =
+      room.ownerUid === uid &&
+      room.broadcasterId === socket.id;
+
+    return cb({ ok: authorized });
+  }
+
+  if (role === "viewer") {
+
+    const viewer = room.viewerProfiles?.get(uid);
+
+    const authorized =
+      !!viewer &&
+      viewer.socketId === socket.id &&
+      room.viewers.has(socket.id);
+
+    return cb({ ok: authorized });
+  }
+
+  return cb({ ok: false });
+});
 
 
 // ======================================

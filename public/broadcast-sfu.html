@@ -1,0 +1,792 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SFU Live Studio | LivestreamPro</title>
+
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #090b10;
+  --panel: #171a22;
+  --gold: #dfbe83;
+  --line: rgba(223,190,131,.28);
+  --muted: #9ea4b1;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: Inter, Arial, sans-serif;
+  color: #f5f0e8;
+  background:
+    radial-gradient(ellipse at top,
+      #272015 0%, transparent 52%),
+    var(--bg);
+}
+button { font: inherit; cursor: pointer; }
+button:disabled { opacity: .4; cursor: not-allowed; }
+.hidden { display: none !important; }
+
+.studio {
+  width: min(100%, 1100px);
+  min-height: 100dvh;
+  margin: auto;
+  padding: max(18px, env(safe-area-inset-top))
+           15px
+           max(24px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--line);
+}
+.brand {
+  color: var(--gold);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+h1 {
+  font: 700 clamp(22px,4vw,30px) Georgia,serif;
+  margin: 6px 0 0;
+}
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #c5cad4;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #727986;
+}
+.dot.live {
+  background: #ff525c;
+  box-shadow: 0 0 12px #ff525c;
+}
+
+.video-area {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  min-height: 250px;
+  max-height: 72dvh;
+  background: #050608;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  overflow: hidden;
+}
+.video-area video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+#remoteMedia {
+  position: absolute;
+  inset: 0;
+}
+#remoteMedia video {
+  width: 100%;
+  height: 100%;
+}
+.placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  gap: 10px;
+  pointer-events: none;
+  background: #090b10;
+}
+.placeholder strong {
+  color: var(--gold);
+  font: 700 27px Georgia,serif;
+}
+.placeholder span {
+  color: var(--muted);
+  font-size: 13px;
+}
+.video-badge {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  padding: 8px 13px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgba(10,12,16,.8);
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 800;
+}
+.info {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 12px;
+}
+.info-card {
+  min-width: 0;
+  padding: 17px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+}
+.info-card small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 1px;
+  margin-bottom: 9px;
+}
+.info-card strong {
+  display: block;
+  color: var(--gold);
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+.controls {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 10px;
+}
+.control {
+  min-height: 48px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #222630;
+  color: #f2e8d7;
+  font-weight: 700;
+  font-size: 12px;
+}
+.control.primary {
+  background: linear-gradient(135deg,#f3ddaf,#b98c50);
+  color: #21190e;
+}
+.control.danger {
+  border-color: rgba(255,102,110,.4);
+  color: #ff939a;
+}
+.control.active {
+  border-color: #dfbe83;
+  background: #42341f;
+  color: #f1d7a4;
+}
+.message {
+  margin: 0;
+  min-height: 20px;
+  color: #c5cad4;
+  font-size: 12px;
+  text-align: center;
+}
+@media (max-width:600px) {
+  .video-area {
+    aspect-ratio: 9/12;
+    min-height: 300px;
+  }
+  .studio { gap: 14px; }
+}
+</style>
+</head>
+
+<body>
+<main class="studio">
+  <header>
+    <div>
+      <div class="brand">LIVESTREAM PRO / SFU</div>
+      <h1 id="pageTitle">Live Studio</h1>
+    </div>
+    <div class="status">
+      <span id="statusDot" class="dot"></span>
+      <span id="statusText">OFFLINE</span>
+    </div>
+  </header>
+
+  <section class="video-area">
+    <video
+      id="localVideo"
+      autoplay
+      playsinline
+      muted
+      class="hidden"
+    ></video>
+
+    <div id="remoteMedia" class="hidden"></div>
+
+    <div id="placeholder" class="placeholder">
+      <strong>SFU LIVE STUDIO</strong>
+      <span id="placeholderText">Ready to connect</span>
+    </div>
+
+    <span class="video-badge" id="videoBadge">STANDBY</span>
+  </section>
+
+  <section class="info">
+    <div class="info-card">
+      <small>ROOM ID</small>
+      <strong id="roomLabel">—</strong>
+    </div>
+    <div class="info-card">
+      <small>CONNECTION</small>
+      <strong id="connectionLabel">Not connected</strong>
+    </div>
+  </section>
+
+  <section class="controls" id="hostControls">
+    <button class="control primary" id="startBtn">
+      START LIVE
+    </button>
+    <button class="control" id="cameraBtn" disabled>
+      CAMERA ON
+    </button>
+    <button class="control" id="micBtn" disabled>
+      MICROPHONE ON
+    </button>
+    <button class="control" id="screenBtn" disabled>
+      SHARE SCREEN
+    </button>
+    <button class="control danger" id="stopBtn" disabled>
+      END LIVE
+    </button>
+    <button class="control" id="backBtn">
+      BACK TO LOBBY
+    </button>
+  </section>
+
+  <section class="controls hidden" id="viewerControls">
+    <button class="control primary" id="soundBtn">
+      ENABLE AUDIO
+    </button>
+    <button class="control" id="viewerExitBtn">
+      EXIT ROOM
+    </button>
+  </section>
+
+  <p class="message" id="message" role="status"></p>
+</main>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script type="module">
+import {
+  Room,
+  RoomEvent,
+  Track,
+  VideoPresets
+} from "https://cdn.jsdelivr.net/npm/livekit-client@2.17.0/+esm";
+
+const qs = new URLSearchParams(location.search);
+
+const roomId = String(qs.get("room") || "")
+  .trim()
+  .toLowerCase();
+
+const isViewer = qs.get("mode") === "viewer";
+const role = isViewer ? "viewer" : "host";
+
+const socket = io({
+  reconnection: true
+});
+
+let lkRoom = null;
+let started = false;
+let stopping = false;
+let cameraOn = true;
+let micOn = true;
+let screenOn = false;
+let viewerConnecting = false;
+let viewerConnected = false;
+
+const $ = id => document.getElementById(id);
+
+const showMessage = text => {
+  $("message").textContent = String(text || "");
+};
+
+function setStatus(text, live = false) {
+  $("statusText").textContent = text;
+  $("statusDot").classList.toggle("live", live);
+  $("connectionLabel").textContent = text;
+}
+
+function setPlaceholder(visible, text = "") {
+  $("placeholder").classList.toggle("hidden", !visible);
+  if (text) $("placeholderText").textContent = text;
+}
+
+function setHostButtons(live) {
+  $("startBtn").disabled = live;
+  $("cameraBtn").disabled = !live;
+  $("micBtn").disabled = !live;
+  $("screenBtn").disabled = !live;
+  $("stopBtn").disabled = !live;
+}
+
+function goLobby() {
+  window.location.href = "/lobby.html";
+}
+
+function waitSocket() {
+  return new Promise((resolve, reject) => {
+    if (socket.connected) return resolve();
+
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error("Socket connection timed out."));
+    }, 10000);
+
+    function cleanup() {
+      clearTimeout(timeout);
+      socket.off("connect", onConnect);
+      socket.off("connect_error", onError);
+    }
+
+    function onConnect() {
+      cleanup();
+      resolve();
+    }
+
+    function onError(err) {
+      cleanup();
+      reject(err);
+    }
+
+    socket.once("connect", onConnect);
+    socket.once("connect_error", onError);
+  });
+}
+
+async function joinSignalingRoom() {
+  await waitSocket();
+
+  if (isViewer) {
+    socket.emit("viewer-join", {
+      roomId
+    });
+  } else {
+    socket.emit("join-room", {
+      roomId,
+      role: "broadcaster"
+    });
+  }
+
+  const response = await new Promise((resolve, reject) => {
+    socket.timeout(8000).emit(
+      "sfu:join-ack",
+      { roomId, role },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+  });
+
+  if (!response?.ok) {
+    throw new Error("Room access was not authorized.");
+  }
+}
+
+async function getToken() {
+  const response = await fetch("/api/sfu/token", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      roomId,
+      role
+    })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok || !data.ok) {
+    throw new Error(data.error || "Unable to obtain SFU token.");
+  }
+
+  return data;
+}
+
+function addRemoteTrack(track) {
+  if (
+    track.kind !== Track.Kind.Video &&
+    track.kind !== Track.Kind.Audio
+  ) return;
+
+  const element = track.attach();
+
+  element.autoplay = true;
+
+  if (track.kind === Track.Kind.Video) {
+    element.playsInline = true;
+    element.style.width = "100%";
+    element.style.height = "100%";
+    element.style.objectFit = "contain";
+
+    $("remoteMedia").querySelectorAll("video")
+      .forEach(video => video.remove());
+
+    $("remoteMedia").appendChild(element);
+    $("remoteMedia").classList.remove("hidden");
+    setPlaceholder(false);
+
+  } else {
+    element.style.display = "none";
+    $("remoteMedia").appendChild(element);
+  }
+}
+
+function attachLocalCamera() {
+  const pub = lkRoom?.localParticipant
+    .getTrackPublication(Track.Source.Camera);
+
+  const track = pub?.videoTrack;
+  if (!track) return;
+
+  const video = $("localVideo");
+
+  track.attach(video);
+  video.muted = true;
+  video.classList.remove("hidden");
+
+  setPlaceholder(false);
+}
+
+async function connectSFU() {
+  const credentials = await getToken();
+
+  lkRoom = new Room({
+    adaptiveStream: true,
+    dynacast: true,
+    videoCaptureDefaults: {
+      resolution: VideoPresets.h720.resolution,
+      frameRate: 30
+    },
+    publishDefaults: {
+      simulcast: true,
+      videoEncoding: {
+        maxBitrate: 2500000,
+        maxFramerate: 30
+      }
+    }
+  });
+
+  lkRoom.on(RoomEvent.TrackSubscribed, track => {
+    if (isViewer) addRemoteTrack(track);
+  });
+
+  lkRoom.on(RoomEvent.TrackUnsubscribed, track => {
+    track.detach().forEach(el => el.remove());
+  });
+
+  lkRoom.on(RoomEvent.Disconnected, () => {
+    setStatus("DISCONNECTED");
+    if (isViewer) {
+      setPlaceholder(true, "Connection lost");
+    }
+  });
+
+  await lkRoom.connect(
+    credentials.url,
+    credentials.token,
+    {
+      autoSubscribe: true
+    }
+  );
+
+  setStatus("CONNECTED", true);
+}
+
+async function startLive() {
+  if (started || stopping) return;
+
+  $("startBtn").disabled = true;
+  showMessage("Connecting to SFU...");
+
+  try {
+    await joinSignalingRoom();
+    await connectSFU();
+
+    await lkRoom.localParticipant.setCameraEnabled(true);
+    await lkRoom.localParticipant.setMicrophoneEnabled(true);
+
+    attachLocalCamera();
+
+    started = true;
+    cameraOn = true;
+    micOn = true;
+
+    setHostButtons(true);
+    setStatus("LIVE", true);
+
+    $("videoBadge").textContent = "LIVE · SFU";
+
+    socket.emit("host-stream-ready", { roomId });
+    socket.emit("live-start", { roomId });
+
+    showMessage("Your livestream is now active.");
+
+  } catch (error) {
+    console.error("[SFU HOST]", error);
+
+    if (lkRoom) {
+      await lkRoom.disconnect().catch(() => {});
+      lkRoom = null;
+    }
+
+    setHostButtons(false);
+    setStatus("OFFLINE");
+    showMessage(error.message || "Unable to start livestream.");
+  }
+}
+
+async function toggleCamera() {
+  if (!lkRoom || !started) return;
+
+  try {
+    const next = !cameraOn;
+
+    await lkRoom.localParticipant.setCameraEnabled(next);
+
+    cameraOn = next;
+
+    $("cameraBtn").textContent =
+      cameraOn ? "CAMERA ON" : "CAMERA OFF";
+
+    $("cameraBtn").classList.toggle("active", !cameraOn);
+
+    if (cameraOn) {
+      attachLocalCamera();
+    } else {
+      $("localVideo").classList.add("hidden");
+      setPlaceholder(true, "Camera is disabled");
+    }
+
+  } catch (error) {
+    showMessage(error.message);
+  }
+}
+
+async function toggleMic() {
+  if (!lkRoom || !started) return;
+
+  try {
+    const next = !micOn;
+
+    await lkRoom.localParticipant.setMicrophoneEnabled(next);
+
+    micOn = next;
+
+    $("micBtn").textContent =
+      micOn ? "MICROPHONE ON" : "MICROPHONE OFF";
+
+    $("micBtn").classList.toggle("active", !micOn);
+
+  } catch (error) {
+    showMessage(error.message);
+  }
+}
+
+async function toggleScreen() {
+  if (!lkRoom || !started) return;
+
+  try {
+    const next = !screenOn;
+
+    await lkRoom.localParticipant.setScreenShareEnabled(next);
+
+    screenOn = next;
+
+    $("screenBtn").textContent =
+      screenOn ? "STOP SHARING" : "SHARE SCREEN";
+
+    $("screenBtn").classList.toggle("active", screenOn);
+
+  } catch (error) {
+    showMessage(error.message);
+  }
+}
+
+async function stopLive() {
+  if (stopping) return;
+
+  stopping = true;
+
+  try {
+    if (started) {
+      socket.emit("live-stop", { roomId });
+    }
+
+    if (lkRoom) {
+      await lkRoom.disconnect();
+      lkRoom = null;
+    }
+
+    started = false;
+    setStatus("OFFLINE");
+    $("videoBadge").textContent = "ENDED";
+
+  } finally {
+    goLobby();
+  }
+}
+
+
+async function joinAsViewer() {
+  if (!isViewer || viewerConnecting || viewerConnected) {
+    return;
+  }
+
+  viewerConnecting = true;
+
+  showMessage("Joining livestream...");
+  setPlaceholder(true, "Connecting to host");
+
+  try {
+    await joinSignalingRoom();
+    await connectSFU();
+
+    for (const participant of lkRoom.remoteParticipants.values()) {
+      for (const publication of participant.trackPublications.values()) {
+        if (publication.track) {
+          addRemoteTrack(publication.track);
+        }
+      }
+    }
+
+    viewerConnected = true;
+
+    setStatus("WATCHING", true);
+    $("videoBadge").textContent = "LIVE · SFU";
+    showMessage("Connected to livestream.");
+
+  } catch (error) {
+    console.error("[SFU VIEWER]", error);
+
+    if (lkRoom) {
+      await lkRoom.disconnect().catch(() => {});
+      lkRoom = null;
+    }
+
+    setStatus("WAITING");
+    setPlaceholder(true, "Waiting for host");
+    showMessage(error.message || "Waiting for livestream.");
+
+  } finally {
+    viewerConnecting = false;
+  }
+}
+
+
+
+async function exitViewer() {
+  if (lkRoom) {
+    await lkRoom.disconnect();
+  }
+  socket.disconnect();
+  goLobby();
+}
+
+$("startBtn").onclick = startLive;
+$("cameraBtn").onclick = toggleCamera;
+$("micBtn").onclick = toggleMic;
+$("screenBtn").onclick = toggleScreen;
+$("stopBtn").onclick = stopLive;
+$("backBtn").onclick = () => {
+  if (started) stopLive();
+  else goLobby();
+};
+
+$("soundBtn").onclick = async () => {
+  try {
+    await lkRoom?.startAudio();
+    $("soundBtn").textContent = "AUDIO ENABLED";
+    showMessage("Audio playback enabled.");
+  } catch (error) {
+    showMessage(error.message);
+  }
+};
+
+$("viewerExitBtn").onclick = exitViewer;
+
+socket.on("room-error", data => {
+  showMessage(data?.message || "Room error.");
+});
+
+socket.on("need-login", () => {
+  showMessage("Please sign in to access this room.");
+});
+
+socket.on("room-full", () => {
+  showMessage("This room is full.");
+});
+
+
+socket.on("wait-host-stream", () => {
+  if (!isViewer) return;
+
+  setStatus("WAITING");
+  setPlaceholder(true, "Waiting for host");
+  showMessage("Waiting for host to start broadcasting.");
+});
+
+socket.on("host-stream-ready", () => {
+  if (!isViewer || viewerConnecting || viewerConnected) {
+    return;
+  }
+
+  joinAsViewer();
+});
+
+
+socket.on("room-closed", async () => {
+  if (isViewer) {
+    if (lkRoom) await lkRoom.disconnect();
+    setStatus("ENDED");
+    setPlaceholder(true, "Livestream has ended");
+    showMessage("The host ended the livestream.");
+  }
+});
+
+if (
+  !roomId ||
+  roomId.length > 64 ||
+  !/^[a-z0-9_.-]+$/.test(roomId)
+) {
+  showMessage("Invalid room ID.");
+  $("startBtn").disabled = true;
+
+} else {
+  $("roomLabel").textContent = roomId;
+
+  if (isViewer) {
+    $("pageTitle").textContent = "Live Viewer";
+    $("hostControls").classList.add("hidden");
+    $("viewerControls").classList.remove("hidden");
+    $("localVideo").classList.add("hidden");
+
+    joinAsViewer();
+  } else {
+    $("pageTitle").textContent = "Live Studio";
+    showMessage("Press START LIVE to begin broadcasting.");
+  }
+}
+</script>
+</body>
+</html>
