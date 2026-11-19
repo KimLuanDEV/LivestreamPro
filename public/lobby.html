@@ -2915,8 +2915,18 @@ body.lobby-page
   <div class="modal-card">
     <h3> Tạo phòng livestream</h3>
 
-    <label>Room ID (viết liền không dấu)</label>
-    <input id="roomInput" placeholder="vd: abc123" />
+<label>Room ID (chỉ nhập số)</label>
+
+<input
+  id="roomInput"
+  type="text"
+  inputmode="numeric"
+  pattern="[0-9]+"
+  placeholder="VD: 123456789"
+  autocomplete="off"
+  maxlength="15"
+  required
+/>
 
     <label>Tên Host</label>
     <input id="hostNameInput" placeholder="Tên hiển thị" />
@@ -3997,6 +4007,13 @@ const btnCancelRoom = document.getElementById("btnCancelRoom");
 const btnConfirmRoom = document.getElementById("btnConfirmRoom");
 
 const roomInput = document.getElementById("roomInput");
+
+// ROOM ID - ONLY NUMBERS
+roomInput?.addEventListener("input", () => {
+  roomInput.value = roomInput.value.replace(/[^0-9]/g, "");
+});
+
+
 const hostNameInput = document.getElementById("hostNameInput");
 
 function openCreateRoom(){
@@ -4083,8 +4100,14 @@ btnConfirmRoom?.addEventListener("click", ()=>{
     return;
   }
 
-  // chuẩn hoá client-side luôn (để hoa/thường coi như 1)
-  const room = roomRaw.toLowerCase();
+// ROOM ID MUST CONTAIN ONLY NUMBERS
+if (!/^[0-9]{1,15}$/.test(roomRaw)) {
+  openErr("Room ID chỉ được chứa từ 1 đến 15 chữ số.");
+  roomInput.focus();
+  return;
+}
+
+const room = roomRaw;
 
   // khóa UI modal tạo phòng
   btnConfirmRoom.classList.add("is-loading");

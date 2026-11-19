@@ -104,7 +104,6 @@ hr{border:none;border-top:1px solid var(--stroke);margin:14px 0}
 /* Inputs / buttons */
 input, button{
   width:100%;
-  padding:12px 12px;
   border-radius:14px;
   border:1px solid var(--stroke);
   background: rgba(0,0,0,.22);

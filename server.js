@@ -15867,9 +15867,16 @@ io.to(socket.id).emit("host-live", {
 
 
 
-socket.on("room-check", ({ roomId }, cb) => {
+socket.on("room-check", ({ roomId } = {}, cb) => {
+
   const rid = normRoomId(roomId);
-  if (!rid) return cb?.({ ok: false, reason: "empty" });
+
+  if (!/^[0-9]{1,15}$/.test(rid)) {
+    return cb?.({
+      ok: false,
+      reason: "invalid_room_id"
+    });
+  }
 
   const room = rooms.get(rid);
 
@@ -15966,6 +15973,7 @@ socket.on("join-room", ({ roomId, role, profile }) => {
 
   if (blockIfLocked(socket)) return;
 
+
   roomId = normRoomId(roomId);
 
   if (
@@ -15975,7 +15983,20 @@ socket.on("join-room", ({ roomId, role, profile }) => {
     return;
   }
 
+  // Chặn tạo phòng mới bằng Room ID không phải số
+  if (
+    role === "broadcaster" &&
+    !/^[0-9]{1,15}$/.test(roomId)
+  ) {
+    socket.emit("room-error", {
+      reason: "invalid_room_id",
+      message: "Room ID must contain only numbers."
+    });
+    return;
+  }
+
   const room = getRoom(roomId);
+
 
   // Verify broadcaster BEFORE joining or modifying room
   if (role === "broadcaster") {
