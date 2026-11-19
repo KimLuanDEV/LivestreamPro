@@ -850,40 +850,135 @@ button:disabled {
    SFU - FLOATING LIVE CHAT
 ========================================== */
 
+
+/* ==========================================
+   SFU - PREMIUM FLOATING CHAT V2
+========================================== */
+
 .sfu-chat-toggle {
   position: fixed;
   z-index: 12;
 
   right: calc(16px + env(safe-area-inset-right, 0px));
-  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(22px + env(safe-area-inset-bottom, 0px));
 
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
 
-  height: 46px;
-  min-width: 100px;
-  padding: 0 17px;
+  width: 54px;
+  height: 54px;
+  min-width: 0;
+  padding: 0;
 
-  border: 1px solid rgba(222,187,126,.55);
-  border-radius: 999px;
+  border-radius: 50%;
+  border: 1px solid rgba(229,195,137,.42);
 
-  background: rgba(17,19,24,.86);
-  color: #f0d5a3;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(52,46,37,.9),
+      rgba(14,16,21,.92)
+    );
 
-  font-size: 11px;
-  font-weight: 850;
-  letter-spacing: 1px;
+  color: #E9CA92;
 
-  backdrop-filter: blur(14px);
-  box-shadow: 0 8px 28px rgba(0,0,0,.35);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  box-shadow:
+    0 8px 30px rgba(0,0,0,.4),
+    inset 0 1px rgba(255,255,255,.08);
+
+  cursor: pointer;
+
+  transition:
+    transform .2s ease,
+    border-color .2s ease,
+    background .2s ease;
+}
+
+.sfu-chat-icon {
+  width: 25px;
+  height: 25px;
+  flex-shrink: 0;
+}
+
+.sfu-chat-toggle:hover {
+  border-color: rgba(244,214,160,.75);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(74,59,39,.97),
+      rgba(25,25,29,.97)
+    );
+}
+
+.sfu-chat-toggle:active {
+  transform: scale(.94);
 }
 
 .sfu-chat-toggle.active {
-  background: #3b3021;
-  border-color: #e8c486;
+  border-color: #E5C184;
+  background: #3B3021;
 }
+
+.sfu-chat-toggle:focus-visible {
+  outline: 2px solid #E5C184;
+  outline-offset: 3px;
+}
+
+.sfu-chat-unread {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+
+  display: grid;
+  place-items: center;
+
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+
+  border: 2px solid #12151B;
+  border-radius: 999px;
+
+  background: #D94F58;
+  color: #FFFFFF;
+
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.sfu-chat-unread[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 480px) {
+  .sfu-chat-toggle {
+    width: 48px;
+    height: 48px;
+    right: calc(14px + env(safe-area-inset-right, 0px));
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .sfu-chat-icon {
+    width: 23px;
+    height: 23px;
+  }
+
+  .sfu-chat-panel {
+    bottom: calc(77px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sfu-chat-toggle {
+    transition: none;
+  }
+}
+
 
 .sfu-chat-unread {
   position: absolute;
@@ -1492,33 +1587,47 @@ button:disabled {
      SFU LIVE COMMENTS
 ====================================== -->
 
+
+<!-- PREMIUM FLOATING CHAT BUTTON -->
 <button
   type="button"
   id="sfuChatToggle"
   class="sfu-chat-toggle hidden"
   aria-label="Open live comments"
   aria-controls="sfuChatPanel"
-  aria-expanded="false">
+  aria-expanded="false"
+  title="Live comments">
 
-  <svg viewBox="0 0 24 24"
-       width="19"
-       height="19"
-       fill="none"
-       stroke="currentColor"
-       stroke-width="1.8"
-       stroke-linecap="round"
-       stroke-linejoin="round"
-       aria-hidden="true">
-    <path d="M20 11.5a8 8 0 0 1-8 8
-             8.4 8.4 0 0 1-3.2-.6
-             L4 20l1.2-4.3A8 8 0 1 1 20 11.5Z"/>
-    <path d="M8 11h8M8 14h5"/>
+  <svg
+    viewBox="0 0 24 24"
+    class="sfu-chat-icon"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.65"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true">
+
+    <path d="
+      M20.5 11.5
+      a8.5 8.5 0 0 1-8.5 8.5
+      c-1.3 0-2.6-.3-3.7-.8
+      L3.5 20.5l1.5-4.4
+      A8.5 8.5 0 1 1 20.5 11.5Z
+    "/>
+
+    <path d="M8.5 10.5h7"/>
+    <path d="M8.5 14h4.5"/>
+
   </svg>
 
-  <span id="sfuChatUnread"
-        class="sfu-chat-unread"
-        hidden>0</span>
+  <span
+    id="sfuChatUnread"
+    class="sfu-chat-unread"
+    hidden>0</span>
+
 </button>
+
 
 <section
   id="sfuChatPanel"
