@@ -29,6 +29,8 @@ const POST_GIFTS = [
 let giftPostId = null;
 let giftPostOwner = null;
 
+let selectedPostGift = null;
+let giftSendPending = false;
 
 
 let composeImages = []; // 🔥 danh sách ảnh đang preview
@@ -2433,47 +2435,265 @@ function clearMessageBadge(){
 
 
 
-// ===== POST GIFT =====
-function openGift(postId, ownerUid){
+
+/* ==========================================
+   SOCIAL LUXURY GIFT COLLECTION V2
+========================================== */
+
+const POST_GIFT_NAMES = {
+  rose: "Rose",
+  beer: "Cheers",
+  cake: "Birthday Cake",
+  diamond: "Diamond",
+  rocket: "Rocket",
+  crown: "Royal Crown",
+  car: "Supercar",
+  castle: "Royal Castle",
+  sword: "Divine Sword",
+  phoenix: "Phoenix",
+  dragon: "Dragon"
+};
+
+function openGift(postId, ownerUid) {
+
   giftPostId = postId;
   giftPostOwner = ownerUid;
 
+  selectedPostGift = null;
+
+  const modal = document.getElementById("giftModal");
   const box = document.getElementById("giftList");
-  if(!box) return;
 
-  box.innerHTML = POST_GIFTS.map(g => `
-    <div class="lp-action"
-      style="display:flex;
-             justify-content:space-between;
-             align-items:center;
-             padding:14px;
-             border-bottom:1px solid rgba(255,255,255,.08)"
-      onclick="sendGift('${g.id}', ${g.coin})">
-      <span>${g.icon} ${g.id}</span>
-      <b>${g.coin} 💎</b>
-    </div>
-  `).join("");
+  if (!modal || !box) return;
 
-  document.getElementById("giftModal")?.classList.remove("hidden");
+  document.getElementById("giftCount").textContent =
+    `${POST_GIFTS.length} GIFTS`;
+
+  // Generate gift collection
+
+  box.innerHTML = "";
+
+  POST_GIFTS.forEach(g => {
+
+    const card = document.createElement("button");
+
+    card.type = "button";
+    card.className = "lp-gift-card";
+    card.dataset.giftId = g.id;
+
+    const art = document.createElement("div");
+    art.className = "lp-gift-art";
+
+    const icon = document.createElement("span");
+    icon.textContent = g.icon;
+
+    art.appendChild(icon);
+
+    const name = document.createElement("span");
+    name.className = "lp-gift-name";
+    name.textContent =
+      POST_GIFT_NAMES[g.id] || g.id;
+
+    const price = document.createElement("span");
+    price.className = "lp-gift-price";
+
+    // Price comes from existing POST_GIFTS config
+    price.textContent =
+      `💎 ${Number(g.coin).toLocaleString("en-US")}`;
+
+    card.append(art, name, price);
+
+    card.addEventListener("click", () => {
+      selectPostGift(g.id);
+    });
+
+    box.appendChild(card);
+
+  });
+
+  updateGiftSelection();
+
+  modal.classList.remove("hidden");
+
 }
 
-function closeGift(){
-  document.getElementById("giftModal")?.classList.add("hidden");
+
+/* ==========================================
+   SELECT GIFT
+========================================== */
+
+function selectPostGift(giftId) {
+
+  const gift = POST_GIFTS.find(
+    g => g.id === giftId
+  );
+
+  if (!gift) return;
+
+  selectedPostGift = gift;
+
+  updateGiftSelection();
+
 }
 
-function sendGift(giftId, coin){
-  if(!giftPostId || !giftPostOwner) return;
 
-  socket.emit("lp-gift-post",{
+/* ==========================================
+   UPDATE SELECTION
+========================================== */
+
+function updateGiftSelection() {
+
+  const nameEl =
+    document.getElementById("selectedGiftName");
+
+  const costEl =
+    document.getElementById("selectedGiftCost");
+
+  const amountEl =
+    document.getElementById("giftSendAmount");
+
+  const sendBtn =
+    document.getElementById("confirmGiftBtn");
+
+  document.querySelectorAll(
+    "#giftList .lp-gift-card"
+  ).forEach(card => {
+
+    const selected =
+      selectedPostGift?.id === card.dataset.giftId;
+
+    card.classList.toggle("selected", selected);
+
+    card.setAttribute(
+      "aria-pressed",
+      String(selected)
+    );
+
+  });
+
+  if (!selectedPostGift) {
+
+    nameEl.textContent = "Select a gift";
+    costEl.textContent = "—";
+    amountEl.textContent = "";
+
+    sendBtn.disabled = true;
+
+    return;
+  }
+
+  const g = selectedPostGift;
+
+  nameEl.textContent =
+    `${g.icon} ${POST_GIFT_NAMES[g.id] || g.id}`;
+
+  costEl.textContent =
+    Number(g.coin).toLocaleString("en-US");
+
+  amountEl.textContent =
+    `· ${Number(g.coin).toLocaleString("en-US")} 💎`;
+
+  sendBtn.disabled = giftSendPending;
+
+}
+
+
+/* ==========================================
+   CONFIRM SEND
+========================================== */
+
+function confirmSelectedGift() {
+
+  if (giftSendPending) return;
+
+  if (!selectedPostGift) return;
+
+  if (!giftPostId || !giftPostOwner) return;
+
+  if (!socket.connected) {
+
+    showToast(
+      "Connection lost. Please try again.",
+      "error"
+    );
+
+    return;
+  }
+
+  const g = selectedPostGift;
+
+  sendGift(g.id, g.coin);
+
+}
+
+
+/* ==========================================
+   SEND GIFT - KEEP EXISTING SOCKET EVENT
+========================================== */
+
+function sendGift(giftId, coin) {
+
+  if (!giftPostId || !giftPostOwner) return;
+
+  if (giftSendPending) return;
+
+  // Only allow items from existing gift catalog
+
+  const gift = POST_GIFTS.find(
+    g => g.id === giftId
+  );
+
+  if (!gift || Number(gift.coin) !== Number(coin)) {
+    return;
+  }
+
+  giftSendPending = true;
+
+  const sendBtn =
+    document.getElementById("confirmGiftBtn");
+
+  if (sendBtn) {
+    sendBtn.disabled = true;
+  }
+
+  socket.emit("lp-gift-post", {
+
     postId: giftPostId,
     toUid: giftPostOwner,
     fromUid: auth.uid,
-    giftId,
-    coin
+    giftId: gift.id,
+    coin: gift.coin
+
   });
 
+  // Existing implementation does not expose an
+  // acknowledgement callback; emitting is not
+  // proof that the gift was accepted by server.
+
+  giftSendPending = false;
+
   closeGift();
+
 }
+
+
+/* ==========================================
+   CLOSE GIFT COLLECTION
+========================================== */
+
+function closeGift() {
+
+  document.getElementById("giftModal")
+    ?.classList.add("hidden");
+
+  selectedPostGift = null;
+
+  giftPostId = null;
+  giftPostOwner = null;
+
+}
+
+
 
 // 🔁 REALTIME UPDATE QUÀ + NGƯỜI TẶNG
 socket.on("lp-gift-post", ({ postId, total, fromUid, amount }) => {
@@ -2637,60 +2857,171 @@ function notifyWithdraw(data) {
 }
 
 
-function openGiftUsers(postId){
+
+/* ==========================================
+   SOCIAL - PREMIUM GIFT SENDERS V2
+========================================== */
+
+function openGiftUsers(postId) {
+
   const post = window.lpPostMap?.[postId];
-  if(!post || !post.gifts?.byUser) return;
 
-  const box = document.getElementById("giftUserList");
-  box.innerHTML = "";
+  if (!post) return;
 
-  Object.entries(post.gifts.byUser)
-    .sort((a,b)=>b[1]-a[1])
-    .forEach(([uid, amt])=>{
-      const div = document.createElement("div");
-      div.className = "lp-action";
-      div.style.padding = "10px";
+  const byUser = post.gifts?.byUser || {};
 
-      const u = window.allUsers?.[uid];
+  const modal =
+    document.getElementById("giftUserModal");
 
-const name = u?.name || uid;
-const avatar = u?.avatar
-  ? fixMedia(u.avatar)
-  : "https://i.ibb.co/GvJWn19q/icon-192.png" +
-    encodeURIComponent(name);
+  const list =
+    document.getElementById("giftUserList");
 
-div.innerHTML = `
-  <div style="display:flex;align-items:center;gap:10px">
-    <img src="${avatar}"
-         style="width:36px;height:36px;
-                border-radius:50%;
-                object-fit:cover;
-                cursor:pointer"
-         onclick="openUserProfile('${uid}')">
+  const totalEl =
+    document.getElementById("giftUsersTotal");
 
-    <div style="flex:1">
-      <div style="font-weight:700;cursor:pointer"
-           onclick="openUserProfile('${uid}')">
-        ${name}
-      </div>
-      <div style="opacity:.8;font-size:13px">
-        ${amt} 💎
-      </div>
-    </div>
-  </div>
-`;
+  const countEl =
+    document.getElementById("giftUsersCount");
 
+  if (!modal || !list || !totalEl || !countEl) {
+    return;
+  }
 
+  // Lấy người đã tặng và tổng tiền từng người
+  const users = Object.entries(byUser)
+    .map(([uid, amount]) => ({
+      uid,
+      amount: Number(amount) || 0
+    }))
+    .filter(u => u.amount > 0)
+    .sort((a, b) => b.amount - a.amount);
 
-      box.appendChild(div);
+  const total = users.reduce(
+    (sum, u) => sum + u.amount,
+    0
+  );
+
+  totalEl.textContent =
+    `${total.toLocaleString("en-US")} 💎`;
+
+  countEl.textContent =
+    users.length.toLocaleString("en-US");
+
+  list.replaceChildren();
+
+  if (!users.length) {
+
+    const empty = document.createElement("div");
+    empty.className = "lp-gift-senders-empty";
+
+    empty.textContent =
+      "No gifts have been sent to this post yet.";
+
+    list.appendChild(empty);
+
+    modal.classList.remove("hidden");
+    return;
+
+  }
+
+  users.forEach(({uid, amount}, index) => {
+
+    const user = window.allUsers?.[uid];
+
+    const name =
+      user?.name || uid;
+
+    const avatar =
+      user?.avatar
+        ? fixMedia(user.avatar)
+        : "/icons/icon-192.png";
+
+    // CARD
+    const card = document.createElement("button");
+
+    card.type = "button";
+    card.className = "lp-gift-sender-card";
+
+    // AVATAR
+    const img = document.createElement("img");
+
+    img.className = "lp-gift-sender-avatar";
+    img.src = avatar;
+    img.alt = "";
+    img.loading = "lazy";
+
+    img.onerror = function() {
+      this.onerror = null;
+      this.src = "/icons/icon-192.png";
+    };
+
+    // INFO
+    const info = document.createElement("div");
+    info.className = "lp-gift-sender-info";
+
+    const nameEl = document.createElement("div");
+    nameEl.className = "lp-gift-sender-name";
+    nameEl.textContent = name;
+
+    const uidEl = document.createElement("div");
+    uidEl.className = "lp-gift-sender-uid";
+    uidEl.textContent = `UID ${uid}`;
+
+    info.append(nameEl, uidEl);
+
+    // RIGHT SIDE
+    const right = document.createElement("div");
+    right.className = "lp-gift-sender-right";
+
+    const amountEl = document.createElement("div");
+    amountEl.className = "lp-gift-sender-amount";
+
+    amountEl.textContent =
+      `${amount.toLocaleString("en-US")} 💎`;
+
+    const rankEl = document.createElement("div");
+    rankEl.className = "lp-gift-sender-rank";
+
+    rankEl.textContent =
+      `#${index + 1} SUPPORTER`;
+
+    right.append(amountEl, rankEl);
+
+    card.append(img, info, right);
+
+    // Bấm vào xem hồ sơ người tặng
+    card.addEventListener("click", () => {
+
+      closeGiftUsers();
+
+      openUserProfile(uid);
+
     });
 
-  document.getElementById("giftUserModal").classList.remove("hidden");
+    list.appendChild(card);
+
+  });
+
+  // Reset scroll mỗi lần mở
+  list.scrollTop = 0;
+
+  modal.classList.remove("hidden");
+
 }
 
-function closeGiftUsers(){
-  document.getElementById("giftUserModal").classList.add("hidden");
+
+/* ==========================================
+   CLOSE GIFT SENDERS
+========================================== */
+
+function closeGiftUsers() {
+
+  const modal =
+    document.getElementById("giftUserModal");
+
+  modal?.classList.add("hidden");
+
 }
+
 
 
 
