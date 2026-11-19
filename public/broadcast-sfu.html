@@ -7,277 +7,1086 @@
       content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SFU Live Studio | LivestreamPro</title>
 
+
+
 <style>
 :root {
   color-scheme: dark;
-  --bg: #090b10;
-  --panel: #171a22;
   --gold: #dfbe83;
-  --line: rgba(223,190,131,.28);
-  --muted: #9ea4b1;
+  --gold-light: #f4dfb7;
+  --line: rgba(223,190,131,.24);
+  --muted: #9da2ad;
+  font-family: Inter, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
 }
+
 * { box-sizing: border-box; }
-body {
+
+html, body {
   margin: 0;
-  min-height: 100dvh;
-  font-family: Inter, Arial, sans-serif;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #050608;
   color: #f5f0e8;
-  background:
-    radial-gradient(ellipse at top,
-      #272015 0%, transparent 52%),
-    var(--bg);
 }
-button { font: inherit; cursor: pointer; }
-button:disabled { opacity: .4; cursor: not-allowed; }
+
+button {
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:disabled {
+  opacity: .38;
+  cursor: not-allowed;
+}
+
 .hidden { display: none !important; }
 
 .studio {
-  width: min(100%, 1100px);
-  min-height: 100dvh;
-  margin: auto;
-  padding: max(18px, env(safe-area-inset-top))
-           15px
-           max(24px, env(safe-area-inset-bottom));
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  isolation: isolate;
+  background: #050608;
 }
 
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid var(--line);
-}
-.brand {
-  color: var(--gold);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 2px;
-}
-h1 {
-  font: 700 clamp(22px,4vw,30px) Georgia,serif;
-  margin: 6px 0 0;
-}
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  color: #c5cad4;
-}
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #727986;
-}
-.dot.live {
-  background: #ff525c;
-  box-shadow: 0 0 12px #ff525c;
-}
+/* FULL SCREEN VIDEO */
 
 .video-area {
-  position: relative;
+  position: absolute;
+  inset: 0;
   width: 100%;
-  aspect-ratio: 16/9;
-  min-height: 250px;
-  max-height: 72dvh;
-  background: #050608;
-  border: 1px solid var(--line);
-  border-radius: 20px;
+  height: 100%;
   overflow: hidden;
+  background: #050608;
 }
-.video-area video {
+
+.video-area > video,
+#remoteMedia {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.video-area video,
+#remoteMedia video {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
   background: #000;
 }
-#remoteMedia {
-  position: absolute;
-  inset: 0;
-}
-#remoteMedia video {
-  width: 100%;
-  height: 100%;
-}
+
+#localVideo { z-index: 1; }
+#remoteMedia { z-index: 2; }
+
+/* PREMIUM PLACEHOLDER */
+
 .placeholder {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-content: center;
+  z-index: 3;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+
+  padding: 28px;
   text-align: center;
-  gap: 10px;
+
+  background:
+    radial-gradient(
+      ellipse 60% 50% at 50% 44%,
+      rgba(171,122,53,.13),
+      transparent 80%
+    ),
+    linear-gradient(145deg,#13161d,#07090e 72%);
+
   pointer-events: none;
-  background: #090b10;
 }
+
+.studio-emblem {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100px;
+  height: 100px;
+  margin-bottom: 20px;
+}
+
+.emblem-ring {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(224,188,117,.5);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 9px rgba(223,190,131,.035),
+    0 0 40px rgba(212,158,77,.08);
+}
+
+.emblem-ring::before,
+.emblem-ring::after {
+  content: "";
+  position: absolute;
+  inset: 13px;
+  border: 1px solid rgba(223,190,131,.25);
+  border-radius: 50%;
+}
+
+.emblem-ring::after {
+  inset: 28px;
+  border-color: rgba(223,190,131,.4);
+}
+
+.emblem-center {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--gold-light);
+  box-shadow: 0 0 25px rgba(223,190,131,.6);
+}
+
+.studio-eyebrow {
+  color: #a99064;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 4px;
+}
+
 .placeholder strong {
-  color: var(--gold);
-  font: 700 27px Georgia,serif;
+  color: var(--gold-light);
+  font: 700 clamp(28px,5vw,48px) Georgia,serif;
+  letter-spacing: 1px;
 }
-.placeholder span {
-  color: var(--muted);
+
+#placeholderText {
+  color: #a5a7ae;
   font-size: 13px;
+  letter-spacing: .4px;
 }
+
+/* FLOATING TOPBAR */
+
+.studio-topbar {
+  position: absolute;
+  z-index: 10;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding:
+    calc(15px + env(safe-area-inset-top,0px))
+    calc(16px + env(safe-area-inset-right,0px))
+    15px
+    calc(16px + env(safe-area-inset-left,0px));
+
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,.75),
+    transparent
+  );
+}
+
+.studio-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.studio-brand-mark {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+
+  width: 36px;
+  height: 36px;
+
+  border: 1px solid rgba(235,199,135,.52);
+  border-radius: 11px;
+
+  background: linear-gradient(145deg,#463521,#14161a);
+  color: #f5dcaa;
+  font: 800 19px Georgia,serif;
+}
+
+.studio-brand-name,
+.studio-brand-sub {
+  display: block;
+  white-space: nowrap;
+}
+
+.studio-brand-name {
+  color: #f1dfbd;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 1.3px;
+}
+
+.studio-brand-sub {
+  margin-top: 4px;
+  color: #9d9586;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+}
+
+.studio-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* CONNECTION STATUS */
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  min-height: 38px;
+  padding: 0 12px;
+
+  border: 1px solid rgba(228,190,126,.2);
+  border-radius: 999px;
+
+  background: rgba(15,16,20,.73);
+  backdrop-filter: blur(12px);
+
+  color: #e8e0d3;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #858993;
+}
+
+.dot.live {
+  background: #ff6068;
+  box-shadow: 0 0 10px #ff6068;
+}
+
+/* SETTINGS BUTTON */
+
+.studio-settings-button {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+
+  width: 44px;
+  height: 44px;
+  padding: 0;
+
+  border: 1px solid rgba(240,203,138,.48);
+  border-radius: 14px;
+
+  background: rgba(31,29,26,.85);
+  backdrop-filter: blur(16px);
+  color: var(--gold-light);
+
+  box-shadow: 0 5px 20px rgba(0,0,0,.28);
+}
+
+.studio-settings-button:active {
+  transform: scale(.95);
+}
+
+.studio-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* VIDEO BADGE */
+
 .video-badge {
   position: absolute;
-  top: 15px;
-  left: 15px;
-  padding: 8px 13px;
+  z-index: 9;
+
+  left: max(17px, env(safe-area-inset-left));
+  bottom: calc(70px + env(safe-area-inset-bottom));
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  min-height: 34px;
+  padding: 0 13px;
+
   border: 1px solid var(--line);
-  border-radius: 9px;
-  background: rgba(10,12,16,.8);
-  color: var(--gold);
-  font-size: 11px;
+  border-radius: 8px;
+
+  background: rgba(11,12,16,.72);
+  color: var(--gold-light);
+  font-size: 10px;
   font-weight: 800;
+  letter-spacing: 1px;
 }
+
+.video-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* FOOTER */
+
+.studio-footer {
+  position: absolute;
+  z-index: 5;
+  bottom: calc(21px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  color: rgba(235,219,190,.6);
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 1.4px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.studio-footer span {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #bc9b65;
+}
+
+/* NOTIFICATION */
+
+.message {
+  position: absolute;
+  z-index: 11;
+
+  left: 50%;
+  bottom: calc(112px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+
+  width: max-content;
+  max-width: calc(100% - 36px);
+  margin: 0;
+
+  padding: 11px 16px;
+  border: 1px solid rgba(225,192,134,.23);
+  border-radius: 11px;
+
+  background: rgba(14,16,20,.87);
+  color: #e1d4bd;
+
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+
+  backdrop-filter: blur(12px);
+}
+
+.message:empty { display: none; }
+
+/* SETTINGS OVERLAY */
+
+.studio-settings-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(0,0,0,.57);
+  backdrop-filter: blur(5px);
+}
+
+/* BOTTOM SHEET */
+
+.studio-settings-panel {
+  position: fixed;
+  z-index: 21;
+
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+
+  width: min(100%, 480px);
+  max-height: min(88dvh, 760px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  padding:
+    12px
+    20px
+    calc(24px + env(safe-area-inset-bottom));
+
+  background:
+    radial-gradient(
+      ellipse at top,
+      rgba(194,145,69,.1),
+      transparent 62%
+    ),
+    #16191f;
+
+  border: 1px solid rgba(232,191,123,.3);
+  border-bottom: none;
+  border-radius: 23px 23px 0 0;
+
+  box-shadow: 0 -20px 70px rgba(0,0,0,.45);
+  animation: sheetRise .23s ease-out;
+}
+
+@keyframes sheetRise {
+  from {
+    opacity: .5;
+    transform: translate(-50%,35px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%,0);
+  }
+}
+
+.studio-sheet-handle {
+  width: 39px;
+  height: 4px;
+  margin: 0 auto 23px;
+  border-radius: 99px;
+  background: rgba(234,205,155,.35);
+}
+
+.studio-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.studio-sheet-kicker {
+  color: #bd9d6b;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.studio-sheet-header h1 {
+  margin: 8px 0;
+  font: 700 27px Georgia,serif;
+  color: var(--gold-light);
+}
+
+.studio-sheet-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.studio-sheet-close {
+  display: grid;
+  place-items: center;
+  width: 35px;
+  height: 35px;
+  padding: 0;
+
+  border: 1px solid var(--line);
+  border-radius: 10px;
+
+  background: #29292c;
+  color: #e6d7bc;
+  font-size: 25px;
+}
+
+/* ROOM INFO */
+
 .info {
   display: grid;
   grid-template-columns: repeat(2,minmax(0,1fr));
-  gap: 12px;
+  gap: 10px;
+  margin-bottom: 19px;
 }
+
 .info-card {
   min-width: 0;
-  padding: 17px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--panel);
-}
-.info-card small {
-  display: block;
-  color: var(--muted);
-  font-size: 10px;
-  letter-spacing: 1px;
-  margin-bottom: 9px;
-}
-.info-card strong {
-  display: block;
-  color: var(--gold);
-  font-size: 18px;
-  overflow-wrap: anywhere;
-}
-.controls {
-  display: grid;
-  grid-template-columns: repeat(2,minmax(0,1fr));
-  gap: 10px;
-}
-.control {
-  min-height: 48px;
-  padding: 12px;
+  padding: 15px;
+
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: #222630;
-  color: #f2e8d7;
-  font-weight: 700;
-  font-size: 12px;
+
+  background: rgba(255,255,255,.035);
 }
-.control.primary {
-  background: linear-gradient(135deg,#f3ddaf,#b98c50);
-  color: #21190e;
+
+.info-card small {
+  display: block;
+  margin-bottom: 9px;
+  color: #a5a5a8;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
 }
-.control.danger {
-  border-color: rgba(255,102,110,.4);
-  color: #ff939a;
+
+.info-card strong {
+  display: block;
+  color: var(--gold-light);
+  font-size: 15px;
+  overflow-wrap: anywhere;
 }
-.control.active {
-  border-color: #dfbe83;
-  background: #42341f;
-  color: #f1d7a4;
+
+/* CONTROL BUTTONS */
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
 }
-.message {
-  margin: 0;
-  min-height: 20px;
-  color: #c5cad4;
-  font-size: 12px;
+
+.studio-control-grid {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 9px;
+}
+
+.studio-control-grid .control {
+  min-height: 91px;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 5px;
+  font-size: 9px;
+}
+
+.studio-control-bottom {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 9px;
+}
+
+.control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  min-width: 0;
+  min-height: 53px;
+  padding: 12px;
+
+  border: 1px solid var(--line);
+  border-radius: 12px;
+
+  background: #292c33;
+  color: #e8decb;
+
+  font-size: 11px;
+  font-weight: 800;
   text-align: center;
 }
-@media (max-width:600px) {
-  .video-area {
-    aspect-ratio: 9/12;
-    min-height: 300px;
-  }
-  .studio { gap: 14px; }
+
+.control span { min-width: 0; }
+
+.control.primary {
+  min-height: 61px;
+  border-color: #f1d6a3;
+
+  background: linear-gradient(
+    135deg,
+    #f9e5bb,
+    #dab77c,
+    #b68a50
+  );
+
+  color: #271d0f;
+  font-size: 12px;
+  letter-spacing: .5px;
 }
+
+.control.danger {
+  border-color: rgba(244,109,117,.35);
+  background: #322126;
+  color: #ff9fa4;
+}
+
+.control.back {
+  background: rgba(255,255,255,.035);
+  color: #c5c5c8;
+}
+
+.control.active {
+  border-color: #e5bd79;
+  background: #463a2a;
+  color: #f5dcaa;
+}
+
+.control:focus-visible,
+.studio-settings-button:focus-visible,
+.studio-sheet-close:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+  .studio-brand-mark {
+    width: 32px;
+    height: 32px;
+  }
+
+  .studio-brand-name {
+    font-size: 9px;
+    letter-spacing: .8px;
+  }
+
+  .studio-brand-sub {
+    font-size: 7px;
+  }
+
+  .status {
+    padding: 0 9px;
+    min-height: 34px;
+    font-size: 9px;
+  }
+
+  .studio-settings-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .placeholder strong {
+    font-size: 29px;
+  }
+
+  .studio-eyebrow {
+    font-size: 9px;
+    letter-spacing: 3px;
+  }
+
+  .studio-settings-panel {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .studio-brand-sub { display: none; }
+  .studio-top-actions { gap: 6px; }
+  .status { font-size: 8px; }
+  .studio-control-grid .control { font-size: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+
+
+/* ==========================================
+   SFU - ULTRA MINIMAL FULLSCREEN
+========================================== */
+
+.studio {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  background: #000;
+  overflow: hidden;
+}
+
+.video-area {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+
+.video-area video,
+#remoteMedia,
+#remoteMedia video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Empty background until video connects */
+
+.placeholder {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  pointer-events: none;
+}
+
+#placeholderText,
+#videoBadge,
+.studio-footer,
+.studio-brand,
+.studio-emblem,
+.studio-eyebrow {
+  display: none !important;
+}
+
+/* Only connection status and settings */
+
+.studio-topbar {
+  position: absolute;
+  z-index: 10;
+  inset: 0 0 auto;
+
+  display: flex;
+  justify-content: flex-end;
+
+  padding:
+    calc(12px + env(safe-area-inset-top, 0px))
+    calc(12px + env(safe-area-inset-right, 0px))
+    12px
+    calc(12px + env(safe-area-inset-left, 0px));
+
+  background: transparent;
+  pointer-events: none;
+}
+
+.studio-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.status {
+  min-height: 36px;
+  padding: 0 12px;
+  background: rgba(0,0,0,.58);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 12px;
+}
+
+.studio-settings-button {
+  width: 42px;
+  height: 42px;
+  background: rgba(0,0,0,.65);
+  border: 1px solid rgba(223,190,131,.4);
+  border-radius: 12px;
+}
+
+/* Keep notification compact */
+
+.message {
+  bottom: calc(18px + env(safe-area-inset-bottom,0px));
+}
+
 </style>
+
+
 </head>
 
 <body>
+
+
+
+<!-- ICON LIBRARY -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     style="position:absolute;width:0;height:0;overflow:hidden"
+     aria-hidden="true">
+
+  <symbol id="ico-settings" viewBox="0 0 24 24">
+    <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/>
+    <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.86 1.86-.06-.06A1.7 1.7 0 0 0 16 18.4a1.7 1.7 0 0 0-1 .55 1.7 1.7 0 0 0-.5 1.2V21h-5v-.85a1.7 1.7 0 0 0-1.5-1.7 1.7 1.7 0 0 0-1.88.34l-.06.06-1.86-1.86.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.75-1.5H2v-3h.85A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.88L4.2 7.06 6.06 5.2l.06.06A1.7 1.7 0 0 0 8 5.6a1.7 1.7 0 0 0 1.5-1.75V3h5v.85A1.7 1.7 0 0 0 16 5.6a1.7 1.7 0 0 0 1.88-.34l.06-.06L19.8 7.06l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.75 1.5H22v3h-.85A1.7 1.7 0 0 0 19.4 15Z"/>
+  </symbol>
+
+  <symbol id="ico-video" viewBox="0 0 24 24">
+    <rect x="3" y="5" width="13" height="14" rx="2"/>
+    <path d="m16 10 5-3v10l-5-3"/>
+  </symbol>
+
+  <symbol id="ico-mic" viewBox="0 0 24 24">
+    <rect x="9" y="2" width="6" height="13" rx="3"/>
+    <path d="M5 10a7 7 0 0 0 14 0M12 17v5m-4 0h8"/>
+  </symbol>
+
+  <symbol id="ico-screen" viewBox="0 0 24 24">
+    <rect x="2" y="3" width="20" height="15" rx="2"/>
+    <path d="M8 22h8M12 18v4"/>
+  </symbol>
+
+  <symbol id="ico-play" viewBox="0 0 24 24">
+    <path d="m8 5 12 7-12 7V5Z"/>
+  </symbol>
+
+  <symbol id="ico-stop" viewBox="0 0 24 24">
+    <rect x="5" y="5" width="14" height="14" rx="2"/>
+  </symbol>
+
+  <symbol id="ico-back" viewBox="0 0 24 24">
+    <path d="m15 18-6-6 6-6M9 12h12"/>
+  </symbol>
+
+  <symbol id="ico-audio" viewBox="0 0 24 24">
+    <path d="M11 5 6 9H3v6h3l5 4V5Z"/>
+    <path d="M15 9a5 5 0 0 1 0 6m3-9a9 9 0 0 1 0 12"/>
+  </symbol>
+
+</svg>
+
 <main class="studio">
-  <header>
-    <div>
-      <div class="brand">LIVESTREAM PRO / SFU</div>
-      <h1 id="pageTitle">Live Studio</h1>
-    </div>
+
+
+<!-- FULLSCREEN VIDEO -->
+<section class="video-area">
+
+  <video
+    id="localVideo"
+    autoplay
+    playsinline
+    muted
+    class="hidden">
+  </video>
+
+  <div id="remoteMedia" class="hidden"></div>
+
+  <!-- Giữ ID để JavaScript hoạt động -->
+  <div id="placeholder" class="placeholder">
+    <span id="placeholderText" hidden></span>
+  </div>
+
+  <span id="videoBadge" hidden>STANDBY</span>
+
+</section>
+
+<!-- MINIMAL TOP CONTROLS -->
+<div class="studio-topbar">
+
+  <div class="studio-top-actions">
+
     <div class="status">
       <span id="statusDot" class="dot"></span>
       <span id="statusText">OFFLINE</span>
     </div>
-  </header>
 
-  <section class="video-area">
-    <video
-      id="localVideo"
-      autoplay
-      playsinline
-      muted
-      class="hidden"
-    ></video>
+    <button
+      type="button"
+      id="studioSettingsBtn"
+      class="studio-settings-button"
+      aria-label="Open broadcast controls"
+      aria-controls="studioSettingsPanel"
+      aria-expanded="false">
 
-    <div id="remoteMedia" class="hidden"></div>
+      <svg class="studio-icon">
+        <use href="#ico-settings"></use>
+      </svg>
 
-    <div id="placeholder" class="placeholder">
-      <strong>SFU LIVE STUDIO</strong>
-      <span id="placeholderText">Ready to connect</span>
+    </button>
+
+  </div>
+
+</div>
+
+
+
+  <!-- SHORT NOTIFICATION -->
+  <p
+    class="message"
+    id="message"
+    role="status"
+    aria-live="polite">
+  </p>
+
+  <!-- SETTINGS BACKDROP -->
+  <div
+    id="studioSettingsOverlay"
+    class="studio-settings-overlay hidden">
+  </div>
+
+  <!-- SETTINGS SHEET -->
+  <aside
+    id="studioSettingsPanel"
+    class="studio-settings-panel hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="pageTitle"
+    tabindex="-1">
+
+    <div class="studio-sheet-handle"></div>
+
+    <div class="studio-sheet-header">
+      <div>
+        <span class="studio-sheet-kicker">
+          CONTROL CENTER
+        </span>
+
+        <h1 id="pageTitle">
+          Live Studio
+        </h1>
+
+        <p>Broadcast settings & controls</p>
+      </div>
+
+      <button
+        type="button"
+        id="studioSettingsClose"
+        class="studio-sheet-close"
+        aria-label="Close settings">
+        &times;
+      </button>
     </div>
 
-    <span class="video-badge" id="videoBadge">STANDBY</span>
-  </section>
+    <!-- ROOM INFO -->
+    <section class="info">
 
-  <section class="info">
-    <div class="info-card">
-      <small>ROOM ID</small>
-      <strong id="roomLabel">—</strong>
-    </div>
-    <div class="info-card">
-      <small>CONNECTION</small>
-      <strong id="connectionLabel">Not connected</strong>
-    </div>
-  </section>
+      <div class="info-card">
+        <small>ROOM ID</small>
+        <strong id="roomLabel">—</strong>
+      </div>
 
-  <section class="controls" id="hostControls">
-    <button class="control primary" id="startBtn">
-      START LIVE
-    </button>
-    <button class="control" id="cameraBtn" disabled>
-      CAMERA ON
-    </button>
-    <button class="control" id="micBtn" disabled>
-      MICROPHONE ON
-    </button>
-    <button class="control" id="screenBtn" disabled>
-      SHARE SCREEN
-    </button>
-    <button class="control danger" id="stopBtn" disabled>
-      END LIVE
-    </button>
-    <button class="control" id="backBtn">
-      BACK TO LOBBY
-    </button>
-  </section>
+      <div class="info-card">
+        <small>CONNECTION</small>
+        <strong id="connectionLabel">
+          Not connected
+        </strong>
+      </div>
 
-  <section class="controls hidden" id="viewerControls">
-    <button class="control primary" id="soundBtn">
-      ENABLE AUDIO
-    </button>
-    <button class="control" id="viewerExitBtn">
-      EXIT ROOM
-    </button>
-  </section>
+    </section>
 
-  <p class="message" id="message" role="status"></p>
+    <!-- HOST CONTROLS -->
+    <section class="controls" id="hostControls">
+
+      <button
+        class="control primary"
+        id="startBtn">
+
+        <svg class="studio-icon">
+          <use href="#ico-play"></use>
+        </svg>
+
+        <span>START LIVE</span>
+      </button>
+
+      <div class="studio-control-grid">
+
+        <button
+          class="control"
+          id="cameraBtn"
+          disabled>
+
+          <svg class="studio-icon">
+            <use href="#ico-video"></use>
+          </svg>
+
+          <span>CAMERA ON</span>
+        </button>
+
+        <button
+          class="control"
+          id="micBtn"
+          disabled>
+
+          <svg class="studio-icon">
+            <use href="#ico-mic"></use>
+          </svg>
+
+          <span>MICROPHONE ON</span>
+        </button>
+
+        <button
+          class="control"
+          id="screenBtn"
+          disabled>
+
+          <svg class="studio-icon">
+            <use href="#ico-screen"></use>
+          </svg>
+
+          <span>SHARE SCREEN</span>
+        </button>
+
+      </div>
+
+      <div class="studio-control-bottom">
+
+        <button
+          class="control danger"
+          id="stopBtn"
+          disabled>
+
+          <svg class="studio-icon">
+            <use href="#ico-stop"></use>
+          </svg>
+
+          <span>END LIVE</span>
+        </button>
+
+        <button
+          class="control back"
+          id="backBtn">
+
+          <svg class="studio-icon">
+            <use href="#ico-back"></use>
+          </svg>
+
+          <span>BACK TO LOBBY</span>
+        </button>
+
+      </div>
+
+    </section>
+
+    <!-- VIEWER CONTROLS -->
+    <section
+      class="controls hidden"
+      id="viewerControls">
+
+      <button
+        class="control primary"
+        id="soundBtn">
+
+        <svg class="studio-icon">
+          <use href="#ico-audio"></use>
+        </svg>
+
+        <span>ENABLE AUDIO</span>
+      </button>
+
+      <button
+        class="control back"
+        id="viewerExitBtn">
+
+        <svg class="studio-icon">
+          <use href="#ico-back"></use>
+        </svg>
+
+        <span>EXIT ROOM</span>
+      </button>
+
+    </section>
+
+  </aside>
+
 </main>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -313,6 +1122,83 @@ let viewerConnecting = false;
 let viewerConnected = false;
 
 const $ = id => document.getElementById(id);
+
+
+/* ==========================================
+   FULLSCREEN SFU - SETTINGS PANEL
+========================================== */
+
+const studioSettingsBtn = $("studioSettingsBtn");
+const studioSettingsPanel = $("studioSettingsPanel");
+const studioSettingsOverlay = $("studioSettingsOverlay");
+const studioSettingsClose = $("studioSettingsClose");
+
+let studioLastFocus = null;
+
+function openStudioSettings() {
+  studioLastFocus = document.activeElement;
+
+  studioSettingsPanel.classList.remove("hidden");
+  studioSettingsOverlay.classList.remove("hidden");
+
+  studioSettingsBtn.setAttribute(
+    "aria-expanded", "true"
+  );
+
+  document.body.classList.add("settings-open");
+  studioSettingsClose.focus();
+}
+
+function closeStudioSettings() {
+  studioSettingsPanel.classList.add("hidden");
+  studioSettingsOverlay.classList.add("hidden");
+
+  studioSettingsBtn.setAttribute(
+    "aria-expanded", "false"
+  );
+
+  document.body.classList.remove("settings-open");
+
+  if (studioLastFocus?.isConnected) {
+    studioLastFocus.focus();
+  }
+}
+
+studioSettingsBtn.addEventListener(
+  "click",
+  openStudioSettings
+);
+
+studioSettingsClose.addEventListener(
+  "click",
+  closeStudioSettings
+);
+
+studioSettingsOverlay.addEventListener(
+  "click",
+  closeStudioSettings
+);
+
+document.addEventListener("keydown", event => {
+  if (
+    event.key === "Escape" &&
+    !studioSettingsPanel.classList.contains("hidden")
+  ) {
+    closeStudioSettings();
+  }
+});
+
+// Chỉ cập nhật chữ, không xóa SVG icon.
+function setStudioButtonText(id, text) {
+  const button = $(id);
+  const label = button?.querySelector("span");
+
+  if (label) {
+    label.textContent = text;
+  }
+}
+
+
 
 const showMessage = text => {
   $("message").textContent = String(text || "");
@@ -566,8 +1452,10 @@ async function toggleCamera() {
 
     cameraOn = next;
 
-    $("cameraBtn").textContent =
-      cameraOn ? "CAMERA ON" : "CAMERA OFF";
+setStudioButtonText(
+  "cameraBtn",
+  cameraOn ? "CAMERA ON" : "CAMERA OFF"
+);
 
     $("cameraBtn").classList.toggle("active", !cameraOn);
 
@@ -593,8 +1481,10 @@ async function toggleMic() {
 
     micOn = next;
 
-    $("micBtn").textContent =
-      micOn ? "MICROPHONE ON" : "MICROPHONE OFF";
+setStudioButtonText(
+  "micBtn",
+  micOn ? "MICROPHONE ON" : "MICROPHONE OFF"
+);
 
     $("micBtn").classList.toggle("active", !micOn);
 
@@ -613,8 +1503,10 @@ async function toggleScreen() {
 
     screenOn = next;
 
-    $("screenBtn").textContent =
-      screenOn ? "STOP SHARING" : "SHARE SCREEN";
+setStudioButtonText(
+  "screenBtn",
+  screenOn ? "STOP SHARING" : "SHARE SCREEN"
+);
 
     $("screenBtn").classList.toggle("active", screenOn);
 
@@ -716,7 +1608,7 @@ $("backBtn").onclick = () => {
 $("soundBtn").onclick = async () => {
   try {
     await lkRoom?.startAudio();
-    $("soundBtn").textContent = "AUDIO ENABLED";
+    setStudioButtonText("soundBtn", "AUDIO ENABLED");
     showMessage("Audio playback enabled.");
   } catch (error) {
     showMessage(error.message);
