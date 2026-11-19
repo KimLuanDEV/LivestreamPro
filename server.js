@@ -11517,6 +11517,95 @@ app.get("/api/profile/bank-default", (req, res) => {
 const rooms = new Map();
 
 
+/* ==========================================
+   SFU VOICE CHAT - SERVER STATE
+========================================== */
+
+const SFU_VOICE_MAX = 3;
+
+const sfuVoiceRooms = new Map();
+
+function getSfuVoiceRoom(roomId) {
+  const id = normRoomId(roomId);
+
+  if (!sfuVoiceRooms.has(id)) {
+    sfuVoiceRooms.set(id, {
+      pending: new Map(),
+      speakers: new Map()
+    });
+  }
+
+  return sfuVoiceRooms.get(id);
+}
+
+function sfuVoiceSummary(roomId) {
+  const state = getSfuVoiceRoom(roomId);
+
+  return {
+    maxSpeakers: SFU_VOICE_MAX,
+    pending: [...state.pending.values()],
+    speakers: [...state.speakers.values()]
+  };
+}
+
+function emitSfuVoiceState(roomId) {
+  const id = normRoomId(roomId);
+  const room = rooms.get(id);
+
+  if (!room) return;
+
+  const state = sfuVoiceSummary(id);
+
+  // Chỉ host nhận danh sách yêu cầu đang chờ.
+  if (room.broadcasterId) {
+    io.to(room.broadcasterId).emit(
+      "sfu:voice:host-state",
+      state
+    );
+  }
+
+  // Cả phòng nhận danh sách người đang nói.
+  io.to(id).emit("sfu:voice:room-state", {
+    speakers: state.speakers,
+    maxSpeakers: state.maxSpeakers
+  });
+}
+
+async function setSfuVoicePermission(
+  roomId,
+  uid,
+  enabled
+) {
+  const service = pkRoomServiceClient();
+
+  if (!service) {
+    throw new Error("LIVEKIT_NOT_CONFIGURED");
+  }
+
+  await service.updateParticipant(
+    `lsp_${normRoomId(roomId)}`,
+    `viewer_${uid}`,
+    undefined,
+    {
+      canPublish: Boolean(enabled),
+      canSubscribe: true,
+      canPublishData: false,
+      canPublishSources: enabled
+        ? ["microphone"]
+        : []
+    }
+  );
+}
+
+function clearSfuVoiceRoom(roomId) {
+  const id = normRoomId(roomId);
+
+  sfuVoiceRooms.delete(id);
+
+  io.to(id).emit("sfu:voice:ended");
+}
+
+
 
 /* ==========================================
    LIVESTREAMPRO - PK BATTLE ENGINE
@@ -13210,13 +13299,28 @@ if (
       }
     );
 
-    grant.addGrant({
-      roomJoin: true,
-      room: `lsp_${roomId}`,
-      canPublish: requestedRole === "host",
-      canSubscribe: true,
-      canPublishData: false
-    });
+const approvedSpeaker =
+  requestedRole === "viewer" &&
+  getSfuVoiceRoom(roomId)
+    .speakers.has(String(uid));
+
+const canPublish =
+  requestedRole === "host" ||
+  approvedSpeaker;
+
+grant.addGrant({
+  roomJoin: true,
+  room: `lsp_${roomId}`,
+  canPublish,
+  canPublishSources:
+    requestedRole === "host"
+      ? ["camera", "microphone"]
+      : approvedSpeaker
+        ? ["microphone"]
+        : [],
+  canSubscribe: true,
+  canPublishData: false
+});
 
     return res.json({
       ok: true,
@@ -13555,7 +13659,7 @@ function closeRoom(roomId, reason = "host_left") {
   const room = rooms.get(roomId);   // 🔥 LẤY ROOM TRƯỚC
   if (!room) return;
 
-
+clearSfuVoiceRoom(roomId);
 
 
   // 🔔 notify host
@@ -17776,6 +17880,401 @@ function getAuthorizedSfuChatRoom(roomId) {
 
   return isMember ? { room, id, uid, isHost } : null;
 }
+
+
+/* ==========================================
+   SFU VOICE REQUEST - SOCKET ACTIONS
+========================================== */
+
+socket.on("sfu:voice:state", (data, ack) => {
+  if (typeof ack !== "function") return;
+
+  const access = getAuthorizedSfuChatRoom(
+    data?.roomId
+  );
+
+  if (!access) {
+    return ack({
+      ok: false,
+      error: "ACCESS_DENIED"
+    });
+  }
+
+  const state = sfuVoiceSummary(access.id);
+
+  ack({
+    ok: true,
+    isHost: access.isHost,
+    approved: state.speakers.some(
+      x => x.uid === String(access.uid)
+    ),
+    pending: access.isHost
+      ? state.pending
+      : [],
+    speakers: state.speakers,
+    maxSpeakers: state.maxSpeakers
+  });
+});
+
+
+socket.on("sfu:voice:request", (data, ack) => {
+  if (typeof ack !== "function") return;
+
+  const access = getAuthorizedSfuChatRoom(
+    data?.roomId
+  );
+
+  if (!access || access.isHost) {
+    return ack({
+      ok: false,
+      error: "ACCESS_DENIED"
+    });
+  }
+
+  if (
+    access.room.mediaMode !== "sfu" ||
+    !access.room.liveStartTs
+  ) {
+    return ack({
+      ok: false,
+      error: "LIVE_NOT_ACTIVE"
+    });
+  }
+
+  const state = getSfuVoiceRoom(access.id);
+  const uid = String(access.uid);
+
+  if (state.speakers.has(uid)) {
+    return ack({
+      ok: false,
+      error: "ALREADY_APPROVED"
+    });
+  }
+
+  if (state.pending.has(uid)) {
+    return ack({
+      ok: false,
+      error: "REQUEST_PENDING"
+    });
+  }
+
+  if (state.pending.size >= 20) {
+    return ack({
+      ok: false,
+      error: "REQUEST_QUEUE_FULL"
+    });
+  }
+
+  const db = loadUsers();
+
+  const name = String(
+    db[uid]?.profile?.name || "Viewer"
+  ).slice(0, 50);
+
+  state.pending.set(uid, {
+    uid,
+    name,
+    requestedAt: Date.now()
+  });
+
+  emitSfuVoiceState(access.id);
+
+  ack({ ok: true });
+});
+
+
+socket.on("sfu:voice:respond", async (data, ack) => {
+  if (typeof ack !== "function") return;
+
+  const access = getAuthorizedSfuChatRoom(
+    data?.roomId
+  );
+
+  if (!access?.isHost) {
+    return ack({
+      ok: false,
+      error: "HOST_ONLY"
+    });
+  }
+
+  const uid = String(data?.uid || "");
+  const approve = data?.approve === true;
+
+  const state = getSfuVoiceRoom(access.id);
+  const request = state.pending.get(uid);
+
+  if (!request) {
+    return ack({
+      ok: false,
+      error: "REQUEST_NOT_FOUND"
+    });
+  }
+
+  if (
+    approve &&
+    state.speakers.size >= SFU_VOICE_MAX
+  ) {
+    return ack({
+      ok: false,
+      error: "VOICE_ROOM_FULL"
+    });
+  }
+
+  if (!approve) {
+    state.pending.delete(uid);
+
+    const viewer =
+      access.room.viewerProfiles?.get(uid);
+
+    if (viewer?.socketId) {
+      io.to(viewer.socketId).emit(
+        "sfu:voice:declined"
+      );
+    }
+
+    emitSfuVoiceState(access.id);
+
+    return ack({ ok: true });
+  }
+
+  const viewer =
+    access.room.viewerProfiles?.get(uid);
+
+  const target = viewer?.socketId
+    ? io.sockets.sockets.get(viewer.socketId)
+    : null;
+
+  if (
+    !target?.connected ||
+    target.data.authenticated !== true ||
+    String(target.data.uid) !== uid ||
+    target.data.roomId !== access.id ||
+    !access.room.viewers.has(target.id)
+  ) {
+    state.pending.delete(uid);
+    emitSfuVoiceState(access.id);
+
+    return ack({
+      ok: false,
+      error: "VIEWER_OFFLINE"
+    });
+  }
+
+  try {
+    // Cấp quyền microphone tại LiveKit.
+    await setSfuVoicePermission(
+      access.id,
+      uid,
+      true
+    );
+
+    // Kiểm tra lại sau thao tác bất đồng bộ.
+    const latest = getSfuVoiceRoom(access.id);
+    const currentRoom = rooms.get(access.id);
+
+    const currentViewer =
+      currentRoom?.viewerProfiles?.get(uid);
+
+    const stillAuthorized =
+      currentRoom === access.room &&
+      currentRoom.broadcasterId === socket.id &&
+      currentViewer?.socketId === target.id &&
+      target.connected &&
+      currentRoom.viewers.has(target.id) &&
+      latest.pending.has(uid) &&
+      latest.speakers.size < SFU_VOICE_MAX;
+
+    if (!stillAuthorized) {
+      await setSfuVoicePermission(
+        access.id,
+        uid,
+        false
+      );
+
+      return ack({
+        ok: false,
+        error: "REQUEST_EXPIRED"
+      });
+    }
+
+    latest.pending.delete(uid);
+
+    latest.speakers.set(uid, {
+      uid,
+      name: request.name,
+      socketId: target.id
+    });
+
+    target.emit("sfu:voice:approved");
+
+    emitSfuVoiceState(access.id);
+
+    ack({ ok: true });
+
+  } catch (error) {
+    console.error("[SFU VOICE APPROVE]", error);
+
+    ack({
+      ok: false,
+      error: "VOICE_PERMISSION_FAILED"
+    });
+  }
+});
+
+
+socket.on("sfu:voice:leave", async (data, ack) => {
+  if (typeof ack !== "function") return;
+
+  const access = getAuthorizedSfuChatRoom(
+    data?.roomId
+  );
+
+  if (!access || access.isHost) {
+    return ack({
+      ok: false,
+      error: "ACCESS_DENIED"
+    });
+  }
+
+  const uid = String(access.uid);
+  const state = getSfuVoiceRoom(access.id);
+
+  if (!state.speakers.has(uid)) {
+    state.pending.delete(uid);
+
+    emitSfuVoiceState(access.id);
+
+    return ack({ ok: true });
+  }
+
+  try {
+    await setSfuVoicePermission(
+      access.id,
+      uid,
+      false
+    );
+
+    state.speakers.delete(uid);
+
+    socket.emit("sfu:voice:revoked");
+
+    emitSfuVoiceState(access.id);
+
+    ack({ ok: true });
+
+  } catch (error) {
+    console.error("[SFU VOICE LEAVE]", error);
+
+    ack({
+      ok: false,
+      error: "VOICE_LEAVE_FAILED"
+    });
+  }
+});
+
+
+socket.on("sfu:voice:revoke", async (data, ack) => {
+  if (typeof ack !== "function") return;
+
+  const access = getAuthorizedSfuChatRoom(
+    data?.roomId
+  );
+
+  if (!access?.isHost) {
+    return ack({
+      ok: false,
+      error: "HOST_ONLY"
+    });
+  }
+
+  const uid = String(data?.uid || "");
+  const state = getSfuVoiceRoom(access.id);
+
+  if (!state.speakers.has(uid)) {
+    return ack({
+      ok: false,
+      error: "SPEAKER_NOT_FOUND"
+    });
+  }
+
+  try {
+    await setSfuVoicePermission(
+      access.id,
+      uid,
+      false
+    );
+
+    state.speakers.delete(uid);
+
+    const viewer =
+      access.room.viewerProfiles?.get(uid);
+
+    if (viewer?.socketId) {
+      io.to(viewer.socketId).emit(
+        "sfu:voice:revoked"
+      );
+    }
+
+    emitSfuVoiceState(access.id);
+
+    ack({ ok: true });
+
+  } catch (error) {
+    console.error("[SFU VOICE REVOKE]", error);
+
+    ack({
+      ok: false,
+      error: "VOICE_REVOKE_FAILED"
+    });
+  }
+});
+
+socket.on("disconnect", () => {
+  const roomId = normRoomId(
+    socket.data.roomId
+  );
+
+  const uid = String(
+    socket.data.uid || ""
+  );
+
+  if (!roomId || !uid) return;
+
+  const state = sfuVoiceRooms.get(roomId);
+  if (!state) return;
+
+  let changed = false;
+
+  if (state.pending.has(uid)) {
+    state.pending.delete(uid);
+    changed = true;
+  }
+
+  const speaker = state.speakers.get(uid);
+
+  if (speaker?.socketId === socket.id) {
+    state.speakers.delete(uid);
+    changed = true;
+
+    // Thu hồi quyền trên LiveKit.
+    setSfuVoicePermission(
+      roomId,
+      uid,
+      false
+    ).catch(error => {
+      console.error(
+        "[SFU VOICE DISCONNECT]",
+        error
+      );
+    });
+  }
+
+  if (changed) {
+    emitSfuVoiceState(roomId);
+  }
+});
+
+
 
 // Nhận lịch sử bình luận của phòng.
 socket.on("sfu:chat:history", (data, ack) => {

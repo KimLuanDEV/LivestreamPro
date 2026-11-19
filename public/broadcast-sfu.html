@@ -3442,6 +3442,237 @@ button:disabled {
 }
 
 
+
+/* ==========================================
+   SFU VOICE CHAT - PREMIUM BLACK & GOLD
+========================================== */
+
+.sfu-voice-toggle {
+  position: fixed;
+  z-index: 12;
+
+  right: calc(16px + env(safe-area-inset-right));
+  bottom: calc(90px + env(safe-area-inset-bottom));
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 52px;
+  height: 52px;
+  padding: 0;
+
+  border: 1px solid rgba(231,192,125,.5);
+  border-radius: 50%;
+
+  background: linear-gradient(
+    145deg,#3d3225,#111317
+  );
+
+  color: #f1d39b;
+
+  box-shadow: 0 8px 28px rgba(0,0,0,.45);
+}
+
+.sfu-voice-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+
+  min-width: 20px;
+  padding: 4px;
+
+  border-radius: 50%;
+  background: #d94c55;
+  color: white;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.sfu-voice-overlay {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  background: rgba(0,0,0,.65);
+  backdrop-filter: blur(6px);
+}
+
+.sfu-voice-sheet {
+  width: min(100%,480px);
+  max-height: 85dvh;
+  overflow-y: auto;
+
+  padding:
+    24px 20px
+    calc(25px + env(safe-area-inset-bottom));
+
+  border: 1px solid rgba(232,192,126,.3);
+  border-bottom: 0;
+  border-radius: 24px 24px 0 0;
+
+  background:
+    linear-gradient(155deg,#24211d,#11141a 65%);
+
+  box-shadow: 0 -15px 60px rgba(0,0,0,.55);
+}
+
+.sfu-voice-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+
+  margin-bottom: 24px;
+}
+
+.sfu-voice-header small {
+  color: #bc9861;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.sfu-voice-header h2 {
+  margin: 8px 0;
+  color: #f0d5a5;
+  font: 700 27px Georgia,serif;
+}
+
+.sfu-voice-header p,
+#sfuVoiceStatus {
+  color: #a6a7ad;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+#sfuVoiceClose {
+  width: 35px;
+  height: 35px;
+
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 10px;
+
+  background: #2c2b2b;
+  color: #e9d4af;
+  font-size: 24px;
+}
+
+.sfu-voice-sheet h3 {
+  margin: 18px 0 12px;
+  color: #d9c097;
+
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.sfu-voice-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sfu-voice-primary,
+.sfu-voice-secondary {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px;
+
+  border-radius: 12px;
+
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .5px;
+}
+
+.sfu-voice-primary {
+  border: 1px solid #e4c18a;
+  background: linear-gradient(
+    135deg,#f4dba9,#bd9257
+  );
+  color: #21190f;
+}
+
+.sfu-voice-secondary {
+  border: 1px solid rgba(238,110,119,.4);
+  background: #342428;
+  color: #ffadb0;
+}
+
+.sfu-voice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.sfu-voice-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  padding: 12px;
+
+  border: 1px solid rgba(226,190,128,.18);
+  border-radius: 12px;
+
+  background: rgba(255,255,255,.035);
+}
+
+.sfu-voice-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+
+  color: #f0e3cc;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.sfu-voice-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
+}
+
+.sfu-voice-actions button {
+  padding: 9px 10px;
+  border: 1px solid rgba(228,192,130,.45);
+  border-radius: 8px;
+
+  background: #453725;
+  color: #f4d7a1;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.sfu-voice-actions button.reject {
+  border-color: rgba(233,112,120,.3);
+  background: #342327;
+  color: #ffb2b7;
+}
+
+.sfu-voice-feedback {
+  margin: 14px 0 0;
+  color: #d5b782;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+@media (max-width:480px) {
+  .sfu-voice-toggle {
+    width: 47px;
+    height: 47px;
+
+    right: calc(14px + env(safe-area-inset-right));
+    bottom: calc(78px + env(safe-area-inset-bottom));
+  }
+}
+
 </style>
 
 
@@ -4034,6 +4265,115 @@ button:disabled {
      role="status"></p>
 
 </section>
+
+
+<!-- ==========================================
+     SFU VOICE CHAT - FLOATING CONTROL
+========================================== -->
+
+<button
+  id="sfuVoiceToggle"
+  type="button"
+  class="sfu-voice-toggle hidden"
+  aria-label="Voice chat">
+  <svg
+    viewBox="0 0 24 24"
+    width="22"
+    height="22"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round">
+    <rect x="9" y="2" width="6" height="12" rx="3"/>
+    <path d="M5 10a7 7 0 0 0 14 0"/>
+    <path d="M12 17v5M8 22h8"/>
+  </svg>
+
+  <span id="sfuVoiceBadge"
+        class="sfu-voice-badge hidden">
+    0
+  </span>
+</button>
+
+<div
+  id="sfuVoiceOverlay"
+  class="sfu-voice-overlay hidden">
+
+  <section class="sfu-voice-sheet">
+
+    <div class="sfu-voice-header">
+      <div>
+        <small>LIVE AUDIO</small>
+        <h2>Voice Chat</h2>
+        <p>Talk with the livestream host</p>
+      </div>
+
+      <button
+        id="sfuVoiceClose"
+        type="button"
+        aria-label="Close voice chat">
+        ×
+      </button>
+    </div>
+
+    <div
+      id="sfuVoiceViewerControls"
+      class="sfu-voice-controls hidden">
+
+      <p id="sfuVoiceStatus">
+        Request permission to speak.
+      </p>
+
+      <button
+        id="sfuVoiceRequest"
+        type="button"
+        class="sfu-voice-primary">
+        REQUEST TO SPEAK
+      </button>
+
+      <button
+        id="sfuVoiceMic"
+        type="button"
+        class="sfu-voice-primary hidden">
+        TURN MICROPHONE ON
+      </button>
+
+      <button
+        id="sfuVoiceLeave"
+        type="button"
+        class="sfu-voice-secondary hidden">
+        LEAVE VOICE
+      </button>
+    </div>
+
+    <div
+      id="sfuVoiceHostControls"
+      class="hidden">
+
+      <h3>Speaker Requests</h3>
+
+      <div id="sfuVoiceRequests"
+           class="sfu-voice-list">
+      </div>
+    </div>
+
+    <div class="sfu-voice-section">
+      <h3>Active Speakers</h3>
+      <div id="sfuVoiceSpeakers"
+           class="sfu-voice-list">
+      </div>
+    </div>
+
+    <p
+      id="sfuVoiceFeedback"
+      class="sfu-voice-feedback"
+      role="status">
+    </p>
+
+  </section>
+</div>
+
 
 
   <!-- SETTINGS BACKDROP -->
@@ -6119,9 +6459,24 @@ async function connectSFU() {
     }
   });
 
-  lkRoom.on(RoomEvent.TrackSubscribed, track => {
-    if (isViewer) addRemoteTrack(track);
-  });
+ lkRoom.on(
+  RoomEvent.TrackSubscribed,
+  (track, publication, participant) => {
+
+    if (isViewer) {
+      addRemoteTrack(track);
+      return;
+    }
+
+    // Host nhận âm thanh từ người xem được duyệt.
+    if (
+      track.kind === Track.Kind.Audio &&
+      participant.identity.startsWith("viewer_")
+    ) {
+      addRemoteTrack(track);
+    }
+  }
+);
 
   lkRoom.on(RoomEvent.TrackUnsubscribed, track => {
     track.detach().forEach(el => el.remove());
@@ -6163,7 +6518,8 @@ async function startLive() {
     started = true;
     cameraOn = true;
     micOn = true;
-
+voiceUI.toggle.classList.remove("hidden");
+syncSfuVoice();
 pkStartBtn.disabled = false;
 
     cameraFacing =
@@ -6406,7 +6762,8 @@ async function joinAsViewer() {
     }
 
     viewerConnected = true;
-
+voiceUI.toggle.classList.remove("hidden");
+syncSfuVoice();
     setStatus("WATCHING", true);
     $("videoBadge").textContent = "LIVE · SFU";
     showMessage("Connected to livestream.");
@@ -7090,6 +7447,486 @@ socket.on("disconnect", () => {
     oldRoom.disconnect().catch(() => {});
   }
 });
+
+
+
+
+/* ==========================================
+   SFU VOICE CHAT - CLIENT ENGINE
+========================================== */
+
+const voiceUI = {
+  toggle: $("sfuVoiceToggle"),
+  badge: $("sfuVoiceBadge"),
+  overlay: $("sfuVoiceOverlay"),
+  close: $("sfuVoiceClose"),
+
+  viewer: $("sfuVoiceViewerControls"),
+  host: $("sfuVoiceHostControls"),
+
+  request: $("sfuVoiceRequest"),
+  mic: $("sfuVoiceMic"),
+  leave: $("sfuVoiceLeave"),
+
+  status: $("sfuVoiceStatus"),
+  requests: $("sfuVoiceRequests"),
+  speakers: $("sfuVoiceSpeakers"),
+  feedback: $("sfuVoiceFeedback")
+};
+
+let sfuVoiceApproved = false;
+let sfuVoicePending = false;
+let sfuVoiceMicOn = false;
+let sfuVoiceBusy = false;
+
+function voiceFeedback(message) {
+  voiceUI.feedback.textContent =
+    String(message || "");
+}
+
+function voiceRequest(event, payload = {}) {
+  return new Promise((resolve, reject) => {
+    socket.timeout(8000).emit(
+      event,
+      { roomId, ...payload },
+      (error, result) => {
+        if (error) return reject(error);
+
+        if (!result?.ok) {
+          return reject(
+            new Error(
+              result?.error || "VOICE_REQUEST_FAILED"
+            )
+          );
+        }
+
+        resolve(result);
+      }
+    );
+  });
+}
+
+function updateVoiceViewerUI() {
+  if (!isViewer) return;
+
+  voiceUI.request.classList.toggle(
+    "hidden",
+    sfuVoiceApproved
+  );
+
+  voiceUI.mic.classList.toggle(
+    "hidden",
+    !sfuVoiceApproved
+  );
+
+  voiceUI.leave.classList.toggle(
+    "hidden",
+    !sfuVoiceApproved && !sfuVoicePending
+  );
+
+  voiceUI.request.disabled =
+    sfuVoicePending || sfuVoiceBusy;
+
+  voiceUI.request.textContent =
+    sfuVoicePending
+      ? "WAITING FOR APPROVAL"
+      : "REQUEST TO SPEAK";
+
+  voiceUI.mic.textContent =
+    sfuVoiceMicOn
+      ? "MUTE MICROPHONE"
+      : "TURN MICROPHONE ON";
+
+  voiceUI.mic.classList.toggle(
+    "active",
+    sfuVoiceMicOn
+  );
+
+  voiceUI.status.textContent =
+    sfuVoiceApproved
+      ? sfuVoiceMicOn
+        ? "Your microphone is live."
+        : "Approved. You can turn on your microphone."
+      : sfuVoicePending
+        ? "Waiting for the host to approve..."
+        : "Request permission to speak.";
+}
+
+function makeVoiceButton(label, handler, reject = false) {
+  const button = document.createElement("button");
+
+  button.type = "button";
+  button.textContent = label;
+
+  if (reject) {
+    button.classList.add("reject");
+  }
+
+  button.onclick = handler;
+
+  return button;
+}
+
+function makeVoiceRow(name) {
+  const row = document.createElement("div");
+  row.className = "sfu-voice-item";
+
+  const text = document.createElement("span");
+  text.className = "sfu-voice-name";
+  text.textContent = String(name || "Viewer");
+
+  const actions = document.createElement("div");
+  actions.className = "sfu-voice-actions";
+
+  row.append(text, actions);
+
+  return { row, actions };
+}
+
+function renderVoiceRequests(list) {
+  if (isViewer) return;
+
+  voiceUI.requests.replaceChildren();
+
+  for (const request of list || []) {
+    const { row, actions } =
+      makeVoiceRow(request.name);
+
+    actions.append(
+      makeVoiceButton("APPROVE", () =>
+        respondVoice(request.uid, true)
+      ),
+
+      makeVoiceButton(
+        "DECLINE",
+        () => respondVoice(request.uid, false),
+        true
+      )
+    );
+
+    voiceUI.requests.appendChild(row);
+  }
+
+  voiceUI.badge.textContent =
+    String((list || []).length);
+
+  voiceUI.badge.classList.toggle(
+    "hidden",
+    !(list || []).length
+  );
+
+  if (!list?.length) {
+    const empty = document.createElement("p");
+    empty.className = "sfu-voice-feedback";
+    empty.textContent = "No pending requests.";
+
+    voiceUI.requests.appendChild(empty);
+  }
+}
+
+function renderVoiceSpeakers(list) {
+  voiceUI.speakers.replaceChildren();
+
+  for (const speaker of list || []) {
+    const { row, actions } =
+      makeVoiceRow(speaker.name);
+
+    if (!isViewer) {
+      actions.append(
+        makeVoiceButton(
+          "REMOVE",
+          () => revokeVoice(speaker.uid),
+          true
+        )
+      );
+    }
+
+    voiceUI.speakers.appendChild(row);
+  }
+
+  if (!list?.length) {
+    const empty = document.createElement("p");
+    empty.className = "sfu-voice-feedback";
+    empty.textContent = "No active speakers.";
+
+    voiceUI.speakers.appendChild(empty);
+  }
+}
+
+async function respondVoice(uid, approve) {
+  if (sfuVoiceBusy) return;
+
+  sfuVoiceBusy = true;
+
+  try {
+    await voiceRequest(
+      "sfu:voice:respond",
+      { uid, approve }
+    );
+
+    voiceFeedback(
+      approve
+        ? "Speaker approved."
+        : "Request declined."
+    );
+
+  } catch (error) {
+    voiceFeedback(error.message);
+
+  } finally {
+    sfuVoiceBusy = false;
+  }
+}
+
+async function revokeVoice(uid) {
+  if (sfuVoiceBusy) return;
+
+  sfuVoiceBusy = true;
+
+  try {
+    await voiceRequest(
+      "sfu:voice:revoke",
+      { uid }
+    );
+
+    voiceFeedback("Speaker removed.");
+
+  } catch (error) {
+    voiceFeedback(error.message);
+
+  } finally {
+    sfuVoiceBusy = false;
+  }
+}
+
+async function requestToSpeak() {
+  if (
+    !isViewer ||
+    !viewerConnected ||
+    sfuVoicePending ||
+    sfuVoiceApproved ||
+    sfuVoiceBusy
+  ) return;
+
+  sfuVoiceBusy = true;
+
+  try {
+    await voiceRequest("sfu:voice:request");
+
+    sfuVoicePending = true;
+    voiceFeedback("Request sent to host.");
+
+  } catch (error) {
+    voiceFeedback(error.message);
+
+  } finally {
+    sfuVoiceBusy = false;
+    updateVoiceViewerUI();
+  }
+}
+
+async function toggleViewerVoiceMic() {
+  if (
+    !isViewer ||
+    !sfuVoiceApproved ||
+    !lkRoom ||
+    sfuVoiceBusy
+  ) return;
+
+  sfuVoiceBusy = true;
+
+  try {
+    const enabled = !sfuVoiceMicOn;
+
+    await lkRoom.localParticipant
+      .setMicrophoneEnabled(enabled);
+
+    sfuVoiceMicOn = enabled;
+
+    voiceFeedback(
+      enabled
+        ? "Microphone enabled."
+        : "Microphone muted."
+    );
+
+  } catch (error) {
+    voiceFeedback(
+      error.message || "Microphone unavailable."
+    );
+
+  } finally {
+    sfuVoiceBusy = false;
+    updateVoiceViewerUI();
+  }
+}
+
+async function leaveVoiceChat() {
+  if (!isViewer || sfuVoiceBusy) return;
+
+  sfuVoiceBusy = true;
+
+  try {
+    if (sfuVoiceMicOn && lkRoom) {
+      await lkRoom.localParticipant
+        .setMicrophoneEnabled(false);
+    }
+
+    sfuVoiceMicOn = false;
+
+    await voiceRequest("sfu:voice:leave");
+
+    sfuVoiceApproved = false;
+    sfuVoicePending = false;
+
+    voiceFeedback("You left voice chat.");
+
+  } catch (error) {
+    voiceFeedback(error.message);
+
+  } finally {
+    sfuVoiceBusy = false;
+    updateVoiceViewerUI();
+  }
+}
+
+async function syncSfuVoice() {
+  if (!socket.connected) return;
+
+  try {
+    const state = await voiceRequest(
+      "sfu:voice:state"
+    );
+
+    if (isViewer) {
+      sfuVoiceApproved =
+        state.approved === true;
+
+      if (!sfuVoiceApproved) {
+        sfuVoiceMicOn = false;
+      }
+
+      updateVoiceViewerUI();
+
+    } else {
+      renderVoiceRequests(state.pending);
+    }
+
+    renderVoiceSpeakers(state.speakers);
+
+  } catch (error) {
+    console.warn("[SFU VOICE SYNC]", error);
+  }
+}
+
+/* ==========================================
+   VOICE CHAT - UI EVENTS
+========================================== */
+
+voiceUI.toggle.onclick = () => {
+  voiceUI.overlay.classList.remove("hidden");
+  voiceFeedback("");
+  syncSfuVoice();
+};
+
+voiceUI.close.onclick = () => {
+  voiceUI.overlay.classList.add("hidden");
+};
+
+voiceUI.overlay.onclick = event => {
+  if (event.target === voiceUI.overlay) {
+    voiceUI.overlay.classList.add("hidden");
+  }
+};
+
+voiceUI.request.onclick = requestToSpeak;
+voiceUI.mic.onclick = toggleViewerVoiceMic;
+voiceUI.leave.onclick = leaveVoiceChat;
+
+/* ==========================================
+   VOICE CHAT - SERVER EVENTS
+========================================== */
+
+socket.on("sfu:voice:host-state", state => {
+  if (isViewer) return;
+
+  renderVoiceRequests(state.pending);
+  renderVoiceSpeakers(state.speakers);
+});
+
+socket.on("sfu:voice:room-state", state => {
+  renderVoiceSpeakers(state.speakers);
+});
+
+socket.on("sfu:voice:approved", () => {
+  if (!isViewer) return;
+
+  sfuVoiceApproved = true;
+  sfuVoicePending = false;
+
+  updateVoiceViewerUI();
+
+  voiceFeedback(
+    "Approved! Tap TURN MICROPHONE ON to speak."
+  );
+
+  voiceUI.overlay.classList.remove("hidden");
+});
+
+socket.on("sfu:voice:declined", () => {
+  if (!isViewer) return;
+
+  sfuVoicePending = false;
+
+  updateVoiceViewerUI();
+  voiceFeedback("Your request was declined.");
+});
+
+socket.on("sfu:voice:revoked", async () => {
+  if (!isViewer) return;
+
+  sfuVoiceApproved = false;
+  sfuVoicePending = false;
+  sfuVoiceMicOn = false;
+
+  try {
+    await lkRoom?.localParticipant
+      .setMicrophoneEnabled(false);
+  } catch {}
+
+  updateVoiceViewerUI();
+  voiceFeedback("Voice permission was removed.");
+});
+
+socket.on("sfu:voice:ended", async () => {
+  sfuVoiceApproved = false;
+  sfuVoicePending = false;
+  sfuVoiceMicOn = false;
+
+  try {
+    if (isViewer && lkRoom) {
+      await lkRoom.localParticipant
+        .setMicrophoneEnabled(false);
+    }
+  } catch {}
+
+  voiceUI.overlay.classList.add("hidden");
+  voiceUI.toggle.classList.add("hidden");
+
+  updateVoiceViewerUI();
+});
+
+voiceUI.viewer.classList.toggle(
+  "hidden",
+  !isViewer
+);
+
+voiceUI.host.classList.toggle(
+  "hidden",
+  isViewer
+);
+
+updateVoiceViewerUI();
+
 
 
 
