@@ -17,7 +17,8 @@ const { Server } = require("socket.io");
 
 const {
   AccessToken,
-  RoomServiceClient
+  RoomServiceClient,
+  TrackSource
 } = require("livekit-server-sdk");
 
 const twilio = require("twilio");
@@ -11590,9 +11591,11 @@ async function setSfuVoicePermission(
       canPublish: Boolean(enabled),
       canSubscribe: true,
       canPublishData: false,
-      canPublishSources: enabled
-        ? ["microphone"]
-        : []
+
+canPublishSources: enabled
+  ? [TrackSource.MICROPHONE]
+  : []
+
     }
   );
 }
@@ -13311,13 +13314,19 @@ const canPublish =
 grant.addGrant({
   roomJoin: true,
   room: `lsp_${roomId}`,
+
   canPublish,
+
   canPublishSources:
     requestedRole === "host"
-      ? ["camera", "microphone"]
+      ? [
+          TrackSource.CAMERA,
+          TrackSource.MICROPHONE
+        ]
       : approvedSpeaker
-        ? ["microphone"]
+        ? [TrackSource.MICROPHONE]
         : [],
+
   canSubscribe: true,
   canPublishData: false
 });
