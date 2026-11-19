@@ -1732,6 +1732,84 @@ button:disabled {
 
 
 
+/* ==========================================
+   SFU - PREMIUM SEND BUTTON V2
+========================================== */
+
+#sfuChatSend {
+  flex: 0 0 46px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+
+  background: linear-gradient(
+    145deg,
+    #F5DDAF 0%,
+    #DFBB7E 55%,
+    #C79A56 100%
+  );
+
+  color: #2B2115;
+
+  box-shadow:
+    0 4px 16px rgba(0,0,0,.24),
+    inset 0 1px rgba(255,255,255,.45);
+
+  cursor: pointer;
+
+  transition:
+    transform .18s ease,
+    opacity .18s ease,
+    box-shadow .18s ease;
+}
+
+#sfuChatSend .sfu-send-icon {
+  display: block;
+  width: 21px;
+  height: 21px;
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+
+#sfuChatSend:active:not(:disabled) {
+  transform: scale(.92);
+}
+
+#sfuChatSend:focus-visible {
+  outline: 2px solid #F0D49C;
+  outline-offset: 3px;
+}
+
+#sfuChatSend:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+@media (max-width: 480px) {
+  #sfuChatSend {
+    flex-basis: 44px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    padding: 0;
+  }
+
+  #sfuChatSend .sfu-send-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
 
 
 </style>
@@ -1938,12 +2016,31 @@ button:disabled {
       aria-label="Comment text"
       required>
 
-    <button
-      id="sfuChatSend"
-      type="submit"
-      aria-label="Send comment">
-      SEND
-    </button>
+ 
+<!-- PREMIUM SEND COMMENT BUTTON -->
+<button
+  id="sfuChatSend"
+  type="submit"
+  aria-label="Send comment"
+  title="Send comment">
+
+  <svg
+    class="sfu-send-icon"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true">
+
+    <path d="M21.5 2.5 10.2 13.8"/>
+    <path d="M21.5 2.5 14.8 21.5l-4.6-7.7-7.7-4.6Z"/>
+
+  </svg>
+
+</button>
+
 
   </form>
 
@@ -2360,7 +2457,7 @@ function renderSfuChat() {
 
 const messages = [...sfuChatItems.values()]
   .sort((a, b) => a.ts - b.ts)
-  .slice(-6);
+  .slice(-10);
 
   if (!messages.length) {
     const empty = document.createElement("p");
