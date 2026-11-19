@@ -3311,7 +3311,8 @@ function setStatus(text, live = false) {
 
   $("connectionLabel").textContent = text;
 
-  // Hiển thị bộ đếm khi đang phát/xem LIVE.
+  // Hiển thị số người xem khi Host LIVE
+  // hoặc Viewer đang xem.
   const showViewers =
     text === "LIVE" ||
     text === "WATCHING";
@@ -3321,10 +3322,19 @@ function setStatus(text, live = false) {
     !showViewers
   );
 
-  if (!showViewers) {
+  // Chỉ reset khi phòng không còn hoạt động.
+  // Không reset ở trạng thái CONNECTED vì
+  // server đã gửi số lượng người xem.
+  if (
+    text === "OFFLINE" ||
+    text === "WAITING" ||
+    text === "ENDED" ||
+    text === "DISCONNECTED"
+  ) {
     updateSfuViewerCount(0);
   }
 }
+
 
 
 function setPlaceholder(visible, text = "") {
