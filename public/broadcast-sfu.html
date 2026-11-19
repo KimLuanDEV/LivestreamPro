@@ -564,8 +564,25 @@ button:disabled {
 
 .studio-control-grid {
   display: grid;
-  grid-template-columns: repeat(3,minmax(0,1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.studio-control-grid .control {
+  min-height: 80px;
+  flex-direction: column;
   gap: 9px;
+  padding: 12px 6px;
+  font-size: 10px;
+}
+
+#flipCameraBtn .studio-icon {
+  width: 23px;
+  height: 23px;
+}
+
+#flipCameraBtn:disabled {
+  opacity: .35;
 }
 
 .studio-control-grid .control {
@@ -1001,6 +1018,40 @@ button:disabled {
           <span>CAMERA ON</span>
         </button>
 
+
+
+<!-- FLIP FRONT / BACK CAMERA -->
+<button
+  type="button"
+  class="control"
+  id="flipCameraBtn"
+  disabled
+  aria-label="Switch front or back camera">
+
+  <svg class="studio-icon"
+       viewBox="0 0 24 24"
+       fill="none"
+       stroke="currentColor"
+       stroke-width="1.7"
+       stroke-linecap="round"
+       stroke-linejoin="round">
+
+    <path d="M4 8V5h3"/>
+    <path d="M20 16v3h-3"/>
+    <path d="M5 5a9 9 0 0 1 14 3"/>
+    <path d="M19 19a9 9 0 0 1-14-3"/>
+
+    <rect x="8" y="9" width="8" height="6" rx="1.5"/>
+    <circle cx="12" cy="12" r="1.5"/>
+
+  </svg>
+
+  <span>FLIP CAMERA</span>
+
+</button>
+
+
+
         <button
           class="control"
           id="micBtn"
@@ -1118,6 +1169,8 @@ let stopping = false;
 let cameraOn = true;
 let micOn = true;
 let screenOn = false;
+let cameraFacing = "user"; // Camera trước
+let cameraSwitching = false;
 let viewerConnecting = false;
 let viewerConnected = false;
 
@@ -1218,6 +1271,8 @@ function setPlaceholder(visible, text = "") {
 function setHostButtons(live) {
   $("startBtn").disabled = live;
   $("cameraBtn").disabled = !live;
+  $("flipCameraBtn").disabled =
+    !live || !cameraOn || cameraSwitching;
   $("micBtn").disabled = !live;
   $("screenBtn").disabled = !live;
   $("stopBtn").disabled = !live;
@@ -1418,6 +1473,15 @@ async function startLive() {
     cameraOn = true;
     micOn = true;
 
+    cameraFacing =
+  lkRoom.localParticipant
+    .getTrackPublication(Track.Source.Camera)
+    ?.videoTrack
+    ?.mediaStreamTrack
+    ?.getSettings?.().facingMode || "user";
+
+cameraSwitching = false;
+
     setHostButtons(true);
     setStatus("LIVE", true);
 
@@ -1452,6 +1516,9 @@ async function toggleCamera() {
 
     cameraOn = next;
 
+    $("flipCameraBtn").disabled =
+  !cameraOn || cameraSwitching;
+
 setStudioButtonText(
   "cameraBtn",
   cameraOn ? "CAMERA ON" : "CAMERA OFF"
@@ -1470,6 +1537,103 @@ setStudioButtonText(
     showMessage(error.message);
   }
 }
+
+
+
+/* ==========================================
+   LIVEKIT SFU - FLIP CAMERA
+   FRONT / BACK CAMERA
+========================================== */
+
+async function flipCamera() {
+
+  if (
+    !lkRoom ||
+    !started ||
+    !cameraOn ||
+    cameraSwitching
+  ) {
+    return;
+  }
+
+  const button = $("flipCameraBtn");
+
+  cameraSwitching = true;
+  button.disabled = true;
+
+  const nextFacing =
+    cameraFacing === "user"
+      ? "environment"
+      : "user";
+
+  try {
+
+    const publication =
+      lkRoom.localParticipant
+        .getTrackPublication(Track.Source.Camera);
+
+    const cameraTrack = publication?.videoTrack;
+
+    if (
+      !cameraTrack ||
+      typeof cameraTrack.restartTrack !== "function"
+    ) {
+      throw new Error("Camera track unavailable.");
+    }
+
+    // LiveKit thay nguồn camera trên track hiện tại.
+    await cameraTrack.restartTrack({
+      facingMode: nextFacing,
+      resolution: VideoPresets.h720.resolution,
+      frameRate: 30
+    });
+
+    // Kiểm tra camera được trình duyệt chọn.
+    const actualFacing =
+      cameraTrack.mediaStreamTrack
+        ?.getSettings?.().facingMode;
+
+    if (
+      actualFacing &&
+      actualFacing !== nextFacing
+    ) {
+      throw new Error(
+        "Requested camera is not available."
+      );
+    }
+
+    cameraFacing = nextFacing;
+
+    // Gắn lại hình ảnh xem trước.
+    attachLocalCamera();
+
+    showMessage(
+      cameraFacing === "environment"
+        ? "Back camera enabled."
+        : "Front camera enabled."
+    );
+
+  } catch (error) {
+
+    console.error("[SFU CAMERA SWITCH]", error);
+
+    showMessage(
+      error.message || "Unable to switch camera."
+    );
+
+  } finally {
+
+    cameraSwitching = false;
+
+    button.disabled =
+      !started ||
+      !cameraOn ||
+      !lkRoom;
+  }
+}
+
+
+
 
 async function toggleMic() {
   if (!lkRoom || !started) return;
@@ -1597,6 +1761,7 @@ async function exitViewer() {
 
 $("startBtn").onclick = startLive;
 $("cameraBtn").onclick = toggleCamera;
+$("flipCameraBtn").onclick = flipCamera;
 $("micBtn").onclick = toggleMic;
 $("screenBtn").onclick = toggleScreen;
 $("stopBtn").onclick = stopLive;
