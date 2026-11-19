@@ -17398,15 +17398,24 @@ socket.on("sfu:gift:send", (data, ack) => {
     });
   }
 
-  const hostBalance = Math.floor(Number(hostProfile.coins));
 
-  if (
-    !Number.isSafeInteger(hostBalance) ||
-    hostBalance < 0 ||
-    hostBalance > Number.MAX_SAFE_INTEGER - cost
-  ) {
-    return reply("Host wallet is unavailable.");
-  }
+/* ======================================
+   HOST RECEIVING WALLET VALIDATION
+====================================== */
+
+const hostWallet = Number(
+  hostProfile.coinReceived ?? 0
+);
+
+if (
+  !Number.isSafeInteger(hostWallet) ||
+  hostWallet < 0 ||
+  hostWallet > Number.MAX_SAFE_INTEGER - cost
+) {
+  return reply("Host receiving wallet is unavailable.");
+}
+
+
 
   const senderName = String(
     senderProfile.name || "Viewer"
@@ -17414,17 +17423,28 @@ socket.on("sfu:gift:send", (data, ack) => {
 
   const ts = Date.now();
 
-  // Real wallet transfer.
-  senderProfile.coins = balance - cost;
-  hostProfile.coins = hostBalance + cost;
 
-  // Profile statistics.
-  senderProfile.coinSent =
-    (Number(senderProfile.coinSent) || 0) + cost;
+/* ======================================
+   SFU GIFT - CORRECT WALLET TRANSFER
+====================================== */
 
-  hostProfile.coinReceived =
-    (Number(hostProfile.coinReceived) || 0) + cost;
+// Viewer pays from usable diamonds.
+senderProfile.coins = balance - cost;
 
+// Track diamonds sent by Viewer.
+senderProfile.coinSent =
+  (Number(senderProfile.coinSent) || 0) + cost;
+
+// Host receives gifts into receiving Wallet.
+hostProfile.coinReceived = hostWallet + cost;
+
+// IMPORTANT:
+// Do NOT increase hostProfile.coins.
+// Received gifts belong to the Wallet,
+// not the usable diamond balance.
+
+
+    
   const transaction = {
     id: requestId,
     roomId: access.id,
