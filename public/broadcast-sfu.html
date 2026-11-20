@@ -4477,6 +4477,51 @@ body {
 
 
 
+/* ==========================================
+   PK REMATCH - PREMIUM BUTTON
+========================================== */
+
+.sfu-pk-rematch {
+  min-height: 49px;
+
+  border: 1px solid #F5C877;
+  border-radius: 12px;
+
+  background: linear-gradient(
+    135deg,
+    #F5DAA3,
+    #D8A85B,
+    #B98038
+  );
+
+  color: #241708;
+
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .7px;
+
+  box-shadow:
+    0 5px 20px rgba(200,145,55,.18),
+    inset 0 1px rgba(255,255,255,.4);
+}
+
+.sfu-pk-rematch:active:not(:disabled) {
+  transform: scale(.97);
+}
+
+.sfu-pk-rematch:disabled {
+  opacity: .5;
+}
+
+.studio.sfu-pk-active.pk-round-finished
+.sfu-pk-top strong {
+  color: #F5CA7E;
+}
+
+
+
+
+
 </style>
 
 
@@ -5266,6 +5311,17 @@ body {
   class="control sfu-pk-end hidden">
   END PK · KEEP LIVE
 </button>
+
+
+<!-- PK REMATCH CONTROL -->
+<button
+  type="button"
+  id="sfuPkRematchBtn"
+  class="control sfu-pk-rematch hidden">
+  REMATCH · NEXT ROUND
+</button>
+
+
 
 
       <div class="studio-control-grid">
@@ -7781,6 +7837,8 @@ if (
 
 const pkStartBtn = $("sfuPkStartBtn");
 const pkEndBtn = $("sfuPkEndBtn");
+const pkRematchBtn = $("sfuPkRematchBtn");
+
 const pkAudioBtn = $("sfuPkAudioBtn");
 const pkOverlay = $("sfuPkOverlay");
 const pkRoomInput = $("sfuPkRoomInput");
@@ -7794,6 +7852,8 @@ const pkPeerMedia = $("sfuPkPeerMedia");
 let pkMatch = null;
 let pkPeerRoom = null;
 let pkInvite = null;
+let pkRematchInvite = null;
+
 let pkTimerInterval = null;
 let pkConnecting = false;
 let pkAudioEnabled = false;
@@ -7827,21 +7887,89 @@ pkBoard.style.setProperty(
 
 }
 
+
 function pkUpdateTimer() {
+
   if (!pkMatch) return;
+
+  const timer = $("sfuPkTimer");
+
+  if (pkMatch.phase === "finished") {
+    timer.textContent = "00:00";
+    return;
+  }
 
   const seconds = Math.max(
     0,
-    Math.ceil((pkMatch.endAt - Date.now()) / 1000)
+    Math.ceil(
+      (pkMatch.endAt - Date.now()) / 1000
+    )
   );
 
-  const minutes = String(Math.floor(seconds / 60))
-    .padStart(2, "0");
+  const minutes = String(
+    Math.floor(seconds / 60)
+  ).padStart(2, "0");
 
-  const remain = String(seconds % 60).padStart(2, "0");
+  const remain = String(
+    seconds % 60
+  ).padStart(2, "0");
 
-  $("sfuPkTimer").textContent = `${minutes}:${remain}`;
+  timer.textContent = `${minutes}:${remain}`;
 }
+
+
+
+/* ==========================================
+   PK - ROUND STATUS UI
+========================================== */
+
+function pkUpdateRoundUI() {
+
+  if (!pkMatch) {
+    pkRematchBtn.classList.add("hidden");
+
+    document.querySelector(".studio")
+      ?.classList.remove("pk-round-finished");
+
+    return;
+  }
+
+  const finished =
+    pkMatch.phase === "finished";
+
+  const studio = document.querySelector(".studio");
+
+  studio?.classList.toggle(
+    "pk-round-finished",
+    finished
+  );
+
+  // Only hosts can request a rematch.
+  pkRematchBtn.classList.toggle(
+    "hidden",
+    isViewer || !finished
+  );
+
+  pkRematchBtn.disabled =
+    isViewer ||
+    !finished ||
+    !socket.connected;
+
+  const round = Number(pkMatch.round) || 1;
+
+  const title = document.querySelector(
+    ".sfu-pk-top strong"
+  );
+
+  if (title) {
+    title.textContent = finished
+      ? `ROUND ${round} FINISHED`
+      : `PK ROUND ${round}`;
+  }
+}
+
+
+
 
 function pkOpenDialog(title, description, isInvitation = false) {
   $("sfuPkDialogTitle").textContent = title;
@@ -7862,6 +7990,53 @@ function pkCloseDialog() {
 /* ==========================================
    PK - END BATTLE WITHOUT STOPPING LIVE
 ========================================== */
+
+
+
+/* ==========================================
+   PK - SEND REMATCH INVITATION
+========================================== */
+
+pkRematchBtn.addEventListener("click", async () => {
+
+  if (
+    isViewer ||
+    !pkMatch ||
+    pkMatch.phase !== "finished" ||
+    pkRematchBtn.disabled
+  ) {
+    return;
+  }
+
+  pkRematchBtn.disabled = true;
+
+  try {
+
+    const result = await pkRequest(
+      "sfu:pk:rematch-invite",
+      { roomId }
+    );
+
+    if (!result?.ok) {
+      showMessage(
+        result?.error || "Unable to invite rematch."
+      );
+      return;
+    }
+
+    showMessage(
+      "Rematch invitation sent. Waiting for opponent."
+    );
+
+  } catch {
+    showMessage("Rematch invitation timed out.");
+
+  } finally {
+    pkUpdateRoundUI();
+  }
+});
+
+
 
 pkEndBtn.addEventListener("click", async () => {
 
@@ -7963,15 +8138,34 @@ pkConfirm.addEventListener("click", async () => {
   pkConfirm.disabled = true;
 
   try {
-    let response;
 
-    if (pkInvite) {
-      response = await pkRequest("sfu:pk:respond", {
-        roomId,
-        inviteId: pkInvite.inviteId,
-        accept: true
-      });
-    } else {
+
+let response;
+
+if (pkRematchInvite) {
+
+  response = await pkRequest(
+    "sfu:pk:rematch-respond",
+    {
+      roomId,
+      inviteId: pkRematchInvite.inviteId,
+      accept: true
+    }
+  );
+
+} else if (pkInvite) {
+
+  response = await pkRequest(
+    "sfu:pk:respond",
+    {
+      roomId,
+      inviteId: pkInvite.inviteId,
+      accept: true
+    }
+  );
+
+} else {
+
       const targetRoomId = pkRoomInput.value.trim();
 
       if (!/^[0-9]{1,15}$/.test(targetRoomId)) {
@@ -7990,8 +8184,10 @@ pkConfirm.addEventListener("click", async () => {
       return;
     }
 
-    pkInvite = null;
-    pkCloseDialog();
+  pkInvite = null;
+pkRematchInvite = null;
+
+pkCloseDialog();
 
     showMessage("PK request completed.");
 
@@ -8002,22 +8198,94 @@ pkConfirm.addEventListener("click", async () => {
   }
 });
 
+
 pkCancel.addEventListener("click", async () => {
-  if (pkInvite) {
-    try {
-      await pkRequest("sfu:pk:respond", {
-        roomId,
-        inviteId: pkInvite.inviteId,
-        accept: false
-      });
-    } catch {
-      // Invitation expires automatically on the server.
+
+  pkCancel.disabled = true;
+
+  try {
+
+    if (pkRematchInvite) {
+
+      await pkRequest(
+        "sfu:pk:rematch-respond",
+        {
+          roomId,
+          inviteId: pkRematchInvite.inviteId,
+          accept: false
+        }
+      );
+
+    } else if (pkInvite) {
+
+      await pkRequest(
+        "sfu:pk:respond",
+        {
+          roomId,
+          inviteId: pkInvite.inviteId,
+          accept: false
+        }
+      );
+
     }
+
+  } catch {
+    showMessage(
+      "Unable to respond. Invitation may have expired."
+    );
+
+  } finally {
+
+    pkInvite = null;
+    pkRematchInvite = null;
+
+    pkCloseDialog();
+    pkCancel.disabled = false;
+  }
+});
+
+
+
+
+/* ==========================================
+   PK - INCOMING REMATCH INVITATION
+========================================== */
+
+socket.on("sfu:pk:rematch-invite", data => {
+
+  if (
+    isViewer ||
+    !pkMatch ||
+    pkMatch.phase !== "finished" ||
+    data?.matchId !== pkMatch.id
+  ) {
+    return;
   }
 
-  pkInvite = null;
-  pkCloseDialog();
+  pkRematchInvite = data;
+
+  pkOpenDialog(
+    "REMATCH INVITATION",
+    `${data.fromName || "Opponent"} invites you to ROUND ${data.round}. Accept the rematch?`,
+    true
+  );
 });
+
+socket.on("sfu:pk:rematch-declined", () => {
+  showMessage("Opponent declined the rematch.");
+});
+
+socket.on("sfu:pk:rematch-expired", () => {
+
+  if (pkRematchInvite) {
+    pkRematchInvite = null;
+    pkCloseDialog();
+  }
+
+  showMessage("Rematch invitation expired.");
+});
+
+
 
 socket.on("sfu:pk:invite", data => {
   if (isViewer || !started || pkMatch) return;
@@ -8177,8 +8445,10 @@ async function pkBegin(state) {
 const sameMatch = pkMatch?.id === state.id;
 
 pkMatch = state;
+
 pkDraw(state);
 pkUpdateTimer();
+pkUpdateRoundUI();
 
 // Enter shared chat only when joining a new PK.
 if (!sameMatch) {
@@ -8244,6 +8514,10 @@ if (result.winnerRoom === roomId) {
 
 pkMatch = null;
 pkInvite = null;
+pkRematchInvite = null;
+
+pkCloseDialog();
+pkUpdateRoundUI();
 
 // Leave shared chat and return to the local room.
 sfuChatItems.clear();
@@ -8271,6 +8545,7 @@ pkAudioBtn.setAttribute(
 
 pkAudioBtn.classList.add("hidden");
 pkEndBtn.classList.add("hidden");
+pkRematchBtn.classList.add("hidden");
 
   clearInterval(pkTimerInterval);
   pkTimerInterval = null;
@@ -8296,11 +8571,92 @@ pkEndBtn.classList.add("hidden");
 
 socket.on("sfu:pk:started", pkBegin);
 
+
+/* ==========================================
+   PK ROUND FINISHED - KEEP VIDEO / CHAT
+========================================== */
+
+socket.on("sfu:pk:round-ended", state => {
+
+  if (!pkMatch || pkMatch.id !== state?.id) {
+    return;
+  }
+
+  pkMatch = state;
+
+  pkDraw(state);
+  pkUpdateTimer();
+  pkUpdateRoundUI();
+
+  let resultText = "PK round finished.";
+
+  if (state.winnerRoom === roomId) {
+    resultText = isViewer
+      ? "Your host won this PK round!"
+      : "You won this PK round!";
+
+  } else if (state.winnerRoom) {
+    resultText = isViewer
+      ? "Your host lost this PK round."
+      : "Opponent won this PK round.";
+
+  } else {
+    resultText = "PK round ended in a draw.";
+  }
+
+  showMessage(resultText);
+
+  // No pkEnd() here.
+  // Keep both videos and the shared chat.
+});
+
+
+
+
+
+/* ==========================================
+   PK - REMATCH STARTED
+========================================== */
+
+socket.on("sfu:pk:rematch-started", state => {
+
+  if (!state?.rooms?.includes(roomId)) return;
+
+  pkRematchInvite = null;
+  pkCloseDialog();
+
+  // An existing PK connection does not need
+  // to reconnect LiveKit or clear shared chat.
+  if (pkMatch?.id === state.id) {
+
+    pkMatch = state;
+
+    pkDraw(state);
+    pkUpdateTimer();
+    pkUpdateRoundUI();
+
+    showMessage(
+      `PK ROUND ${state.round} STARTED!`
+    );
+
+    return;
+  }
+
+  // Recovered viewer / host state.
+  void pkBegin(state);
+});
+
+
+
 socket.on("sfu:pk:score", data => {
+
   if (pkMatch?.id !== data?.id) return;
 
   pkMatch = data;
+
   pkDraw(data);
+  pkUpdateTimer();
+  pkUpdateRoundUI();
 });
 
 socket.on("sfu:pk:ended", pkEnd);

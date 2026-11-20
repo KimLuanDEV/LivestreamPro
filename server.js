@@ -11616,6 +11616,7 @@ function clearSfuVoiceRoom(roomId) {
 
 const PK_DURATION = 180000; // 3 minutes
 const PK_INVITE_TTL = 60000;
+const PK_REMATCH_TTL = 60000; // 60 seconds
 
 const pkMatches = new Map();
 const pkInvites = new Map();
@@ -11750,15 +11751,26 @@ function pkHost(roomId, socketId) {
   return { id, room, host };
 }
 
+
 function pkPublicState(match) {
   return {
     id: match.id,
+
     rooms: [...match.rooms],
     names: [...match.names],
     scores: [...match.scores],
-    endAt: match.endAt
+
+    endAt: match.endAt,
+
+    // playing = đang đếm ngược
+    // finished = hết giờ, vẫn giữ kết nối PK
+    phase: match.phase,
+
+    round: match.round,
+    winnerRoom: match.winnerRoom
   };
 }
+
 
 function pkBroadcast(match, event, data) {
   for (const id of match.rooms) {
@@ -11766,12 +11778,108 @@ function pkBroadcast(match, event, data) {
   }
 }
 
+
+
+/* ==========================================
+   PK - FINISH ROUND, KEEP CONNECTION
+========================================== */
+
+function pkCompleteRound(match) {
+
+  if (!match) return;
+
+  if (pkMatches.get(match.rooms[0]) !== match) {
+    return;
+  }
+
+  // Prevent multiple round-end events.
+  if (match.phase !== "playing") return;
+
+  clearTimeout(match.timer);
+  match.timer = null;
+
+  match.phase = "finished";
+
+  const [a, b] = match.scores;
+
+  match.winnerRoom =
+    a === b
+      ? null
+      : match.rooms[a > b ? 0 : 1];
+
+  // Only the round finishes.
+  // The PK connection and shared chat remain active.
+  pkBroadcast(
+    match,
+    "sfu:pk:round-ended",
+    pkPublicState(match)
+  );
+}
+
+
+/* ==========================================
+   PK - START NEXT ROUND
+========================================== */
+
+function pkStartNextRound(match) {
+
+  if (!match) return false;
+
+  if (pkMatches.get(match.rooms[0]) !== match) {
+    return false;
+  }
+
+  if (match.phase !== "finished") {
+    return false;
+  }
+
+  clearTimeout(match.timer);
+
+  if (match.rematchInvite?.timer) {
+    clearTimeout(match.rematchInvite.timer);
+  }
+
+  match.rematchInvite = null;
+
+  match.round += 1;
+  match.phase = "playing";
+
+  // Reset only PK round points.
+  // Never reset wallet or gift statistics.
+  match.scores = [0, 0];
+
+  match.winnerRoom = null;
+  match.endAt = Date.now() + PK_DURATION;
+
+  match.timer = setTimeout(() => {
+    pkCompleteRound(match);
+  }, PK_DURATION);
+
+  // Both rooms enter the next round.
+  pkBroadcast(
+    match,
+    "sfu:pk:rematch-started",
+    pkPublicState(match)
+  );
+
+  return true;
+}
+
+
+
 function pkFinish(match, reason = "timeout") {
   if (!match || pkMatches.get(match.rooms[0]) !== match) {
     return;
   }
 
   clearTimeout(match.timer);
+
+  // Cancel any pending rematch invitation.
+if (match.rematchInvite?.timer) {
+  clearTimeout(match.rematchInvite.timer);
+}
+
+match.rematchInvite = null;
 
 // Remove outstanding PK invitations.
 pkClearInvitesFor(match.rooms[0]);
@@ -11798,27 +11906,40 @@ void pkRevokePeerParticipants(match);
   pkBroadcast(match, "sfu:pk:ended", result);
 }
 
+
 function pkRecordGift(roomId, amount) {
+
   const match = pkMatches.get(roomId);
 
   if (!match) return;
 
+  // Round finished: stay connected but stop scoring.
+  if (match.phase !== "playing") {
+    return;
+  }
+
   if (Date.now() >= match.endAt) {
-    pkFinish(match);
+    pkCompleteRound(match);
     return;
   }
 
   const index = match.rooms.indexOf(roomId);
+
   if (index < 0) return;
 
-  if (!Number.isSafeInteger(amount) || amount <= 0) {
+  if (
+    !Number.isSafeInteger(amount) ||
+    amount <= 0
+  ) {
     return;
   }
 
   if (
     match.scores[index] >
     Number.MAX_SAFE_INTEGER - amount
-  ) return;
+  ) {
+    return;
+  }
 
   match.scores[index] += amount;
 
@@ -11828,6 +11949,7 @@ function pkRecordGift(roomId, amount) {
     pkPublicState(match)
   );
 }
+
 
 
 
@@ -13384,7 +13506,7 @@ if (!SFU_URL || !SFU_KEY || !SFU_SECRET) {
 
     const peerId = match.rooms.find(x => x !== id);
 
-    if (!peerId || Date.now() >= match.endAt) {
+    if (!peerId) {
       return res.status(403).json({
         ok: false,
         error: "PK_EXPIRED"
@@ -17775,8 +17897,13 @@ pkPruneInvites();
 
 endAt: Date.now() + PK_DURATION,
 timer: null,
-peerParticipants: new Map(),
 
+phase: "playing",
+round: 1,
+winnerRoom: null,
+rematchInvite: null,
+
+peerParticipants: new Map(),
 sharedComments: []
 
   };
@@ -17784,10 +17911,10 @@ sharedComments: []
   pkMatches.set(from.id, match);
   pkMatches.set(target.id, match);
 
-  match.timer = setTimeout(
-    () => pkFinish(match),
-    PK_DURATION
-  );
+match.timer = setTimeout(
+  () => pkCompleteRound(match),
+  PK_DURATION
+);
 
   pkBroadcast(
     match,
@@ -17797,6 +17924,196 @@ sharedComments: []
 
   ack({ ok: true });
 });
+
+
+
+/* ==========================================
+   PK - REQUEST REMATCH
+========================================== */
+
+socket.on("sfu:pk:rematch-invite", (data, ack) => {
+
+  if (typeof ack !== "function") return;
+
+  const host = pkHost(data?.roomId, socket.id);
+
+  if (!host) {
+    return ack({
+      ok: false,
+      error: "Host not authorized."
+    });
+  }
+
+  const match = pkMatches.get(host.id);
+
+  if (!match || match.phase !== "finished") {
+    return ack({
+      ok: false,
+      error: "Finish the current round first."
+    });
+  }
+
+  // Only one pending rematch invitation.
+  if (match.rematchInvite) {
+    return ack({
+      ok: false,
+      error: "A rematch invitation is already pending."
+    });
+  }
+
+  const otherId = match.rooms.find(
+    id => id !== host.id
+  );
+
+  const otherRoom = rooms.get(otherId);
+
+  const other = pkHost(
+    otherId,
+    otherRoom?.broadcasterId
+  );
+
+  if (!other) {
+    return ack({
+      ok: false,
+      error: "Opponent host is offline."
+    });
+  }
+
+  const invite = {
+    id: crypto.randomUUID(),
+
+    fromRoom: host.id,
+    targetRoom: otherId,
+
+    fromSocket: socket.id,
+    targetSocket: other.host.id,
+
+    expiresAt: Date.now() + PK_REMATCH_TTL,
+    timer: null
+  };
+
+  match.rematchInvite = invite;
+
+  invite.timer = setTimeout(() => {
+
+    if (match.rematchInvite !== invite) return;
+
+    match.rematchInvite = null;
+
+    io.to(invite.fromSocket).emit(
+      "sfu:pk:rematch-expired"
+    );
+
+    io.to(invite.targetSocket).emit(
+      "sfu:pk:rematch-expired"
+    );
+
+  }, PK_REMATCH_TTL);
+
+  io.to(other.host.id).emit(
+    "sfu:pk:rematch-invite",
+    {
+      inviteId: invite.id,
+      matchId: match.id,
+      round: match.round + 1,
+      fromName: match.names[
+        match.rooms.indexOf(host.id)
+      ]
+    }
+  );
+
+  ack({ ok: true });
+});
+
+
+/* ==========================================
+   PK - ACCEPT / DECLINE REMATCH
+========================================== */
+
+socket.on("sfu:pk:rematch-respond", (data, ack) => {
+
+  if (typeof ack !== "function") return;
+
+  const host = pkHost(data?.roomId, socket.id);
+
+  if (!host) {
+    return ack({
+      ok: false,
+      error: "Host not authorized."
+    });
+  }
+
+  const match = pkMatches.get(host.id);
+
+  if (!match || match.phase !== "finished") {
+    return ack({
+      ok: false,
+      error: "Rematch is unavailable."
+    });
+  }
+
+  const invite = match.rematchInvite;
+
+  if (
+    !invite ||
+    invite.id !== data?.inviteId ||
+    invite.targetRoom !== host.id ||
+    invite.targetSocket !== socket.id ||
+    invite.expiresAt <= Date.now()
+  ) {
+    return ack({
+      ok: false,
+      error: "Rematch invitation expired."
+    });
+  }
+
+  clearTimeout(invite.timer);
+  match.rematchInvite = null;
+
+  // Decline: keep PK connection open.
+  if (data?.accept !== true) {
+
+    io.to(invite.fromSocket).emit(
+      "sfu:pk:rematch-declined"
+    );
+
+    return ack({ ok: true });
+  }
+
+  // Verify both hosts are still live.
+  const inviter = pkHost(
+    invite.fromRoom,
+    invite.fromSocket
+  );
+
+  const receiver = pkHost(
+    invite.targetRoom,
+    invite.targetSocket
+  );
+
+  if (!inviter || !receiver) {
+    return ack({
+      ok: false,
+      error: "A host is no longer available."
+    });
+  }
+
+  const started = pkStartNextRound(match);
+
+  if (!started) {
+    return ack({
+      ok: false,
+      error: "Unable to start the next round."
+    });
+  }
+
+  ack({
+    ok: true,
+    round: match.round
+  });
+});
+
+
 
 socket.on("sfu:pk:state", (data, ack) => {
   if (typeof ack !== "function") return;
@@ -18311,11 +18628,14 @@ socket.on("sfu:chat:history", (data, ack) => {
 
   let match = pkMatches.get(access.id);
 
-  // Do not expose PK chat after the battle expires.
-  if (match && Date.now() >= match.endAt) {
-    pkFinish(match, "timeout");
-    match = null;
-  }
+// The round may finish, but PK shared chat remains active.
+if (
+  match &&
+  match.phase === "playing" &&
+  Date.now() >= match.endAt
+) {
+  pkCompleteRound(match);
+}
 
   const messages = match
     ? match.sharedComments
@@ -18401,12 +18721,11 @@ let chatPkMatch = pkMatches.get(access.id);
 
 if (
   chatPkMatch &&
+  chatPkMatch.phase === "playing" &&
   Date.now() >= chatPkMatch.endAt
 ) {
-  pkFinish(chatPkMatch, "timeout");
-  chatPkMatch = null;
+  pkCompleteRound(chatPkMatch);
 }
-
 
 const message = {
   id: crypto.randomUUID(),
