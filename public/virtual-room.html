@@ -338,6 +338,9 @@ try {
   room = null;
 }
 
+console.log("[VIRTUAL ROOM] Room data:", room);
+console.log("[VIRTUAL ROOM] Room link:", room?.link);
+
 function showFallback() {
   loading.style.display = "none";
   fallback.style.display = "flex";
@@ -512,18 +515,59 @@ if (liveURL) {
 
 }
 
-// OPEN EXTERNAL SOURCE
+
+/* ==========================================
+   LIVESTREAM PRO - OPEN EXTERNAL SOURCE V2
+========================================== */
 
 document.getElementById("openExternalBtn")
   .addEventListener("click", () => {
 
-    if (!liveURL) return;
+    // Ưu tiên link gốc từ phòng ảo
+    let targetURL = room?.link || "";
 
-    window.open(
-      liveURL,
-      "_blank",
-      "noopener,noreferrer"
-    );
+    // Nếu không có link gốc thì dùng link iframe
+    if (!targetURL) {
+      targetURL = liveURL;
+    }
+
+    // Kiểm tra URL
+    try {
+
+      const url = new URL(targetURL);
+
+      if (url.protocol !== "https:") {
+        throw new Error("Invalid protocol");
+      }
+
+      // Chỉ cho mở những tên miền được hỗ trợ
+      const allowedHosts = [
+        "youtube.com",
+        "www.youtube.com",
+        "m.youtube.com",
+        "youtu.be",
+        "bigo.tv",
+        "www.bigo.tv",
+        "us06web.zoom.us"
+      ];
+
+      if (!allowedHosts.includes(url.hostname)) {
+        throw new Error("Unsupported domain");
+      }
+
+      // Chuyển thẳng sang nguồn video
+      window.location.assign(url.href);
+
+    } catch (error) {
+
+      console.error(
+        "[VIRTUAL ROOM] Open source failed:",
+        error
+      );
+
+      alert("Unable to open live source.");
+
+    }
 
   });
 
