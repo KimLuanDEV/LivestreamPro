@@ -20521,15 +20521,15 @@ const VIRTUAL_LIVE_ROOMS = Object.freeze({
     videoId: "Zb6zrxrHv14"
   },
 
-  /*
-  Music: {
-    roomId: "Music",
-    title: "MUSIC LIVE",
-    avatar: "/assets/live-avatar/music.jpg",
+  
+ Youtube: {
+    roomId: "Youtube",
+    title: "50 NĂM VỀ SAU",
+    avatar: "/assets/live-avatar/Youtube.jpg",
     type: "youtube",
-    videoId: "THAY_BANG_VIDEO_ID"
+    videoId: "k7YJHCR9JBE"
   },
-
+/*
   Movie: {
     roomId: "Movie",
     title: "MOVIE LIVE",
