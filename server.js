@@ -17709,6 +17709,40 @@ socket.on("sfu:join-ack", (data, cb) => {
   const uid = String(socket.data.uid);
 
 
+ // ==========================================
+// SFU - VERIFIED HOST PROFILE
+// ==========================================
+
+const usersForHost = loadUsers();
+
+const hostUid = String(room.ownerUid || "");
+const hostAccount = usersForHost[hostUid];
+const viewerAccount = usersForHost[uid];
+
+const viewerFriends =
+  viewerAccount?.profile?.friends || [];
+
+const hostRequests =
+  hostAccount?.profile?.friendRequests || [];
+
+const sfuHostInfo = hostAccount?.profile
+  ? {
+      uid: hostUid,
+      name: String(
+        hostAccount.profile.name || "Live Host"
+      ).slice(0, 50),
+      avatar: normalizeAvatar(
+        hostAccount.profile.avatar || ""
+      ),
+      isFriend: viewerFriends
+        .map(String)
+        .includes(hostUid),
+      requested: hostRequests
+        .map(String)
+        .includes(uid)
+    }
+  : null; 
+
 
 const currentViewers = getSfuActiveViewers(room);
 const currentViewerCount = currentViewers.length;
@@ -17726,8 +17760,9 @@ return cb({
   ok: authorized,
   ...(authorized
     ? {
-        viewerCount: currentViewerCount,
-        viewers: currentViewers
+viewerCount: currentViewerCount,
+viewers: currentViewers,
+host: sfuHostInfo
       }
     : {})
 });
@@ -17748,8 +17783,9 @@ return cb({
   ok: authorized,
   ...(authorized
     ? {
-        viewerCount: currentViewerCount,
-        viewers: currentViewers
+viewerCount: currentViewerCount,
+viewers: currentViewers,
+host: sfuHostInfo
       }
     : {})
 });
@@ -18211,6 +18247,135 @@ function getAuthorizedSfuChatRoom(roomId) {
 
   return isMember ? { room, id, uid, isHost } : null;
 }
+
+
+
+
+/* ==========================================
+   SFU LIVE - SECURE ADD FRIEND
+========================================== */
+
+socket.on("sfu:friend:request", (data, ack) => {
+
+  if (typeof ack !== "function") return;
+
+  // Validate actual membership of this live room.
+  const access = getAuthorizedSfuChatRoom(
+    data?.roomId
+  );
+
+  if (!access) {
+    return ack({
+      ok: false,
+      error: "Room access denied."
+    });
+  }
+
+  if (access.isHost) {
+    return ack({
+      ok: false,
+      error: "You cannot add yourself."
+    });
+  }
+
+  const from = String(access.uid);
+  const to = String(access.room.ownerUid || "");
+
+  if (!to || from === to) {
+    return ack({
+      ok: false,
+      error: "Invalid host account."
+    });
+  }
+
+  const db = loadUsers();
+
+  const sender = db[from];
+  const receiver = db[to];
+
+  if (
+    !sender?.profile ||
+    !receiver?.profile
+  ) {
+    return ack({
+      ok: false,
+      error: "Account not available."
+    });
+  }
+
+  if (
+    sender.profile.accountBlocked ||
+    receiver.profile.accountBlocked
+  ) {
+    return ack({
+      ok: false,
+      error: "Account unavailable."
+    });
+  }
+
+  const senderBlocked =
+    (sender.profile.blockedUsers || [])
+      .map(String);
+
+  const receiverBlocked =
+    (receiver.profile.blockedUsers || [])
+      .map(String);
+
+  if (
+    senderBlocked.includes(to) ||
+    receiverBlocked.includes(from)
+  ) {
+    return ack({
+      ok: false,
+      error: "Friend request unavailable."
+    });
+  }
+
+  sender.profile.friends ||= [];
+  receiver.profile.friends ||= [];
+  receiver.profile.friendRequests ||= [];
+
+  const alreadyFriends =
+    sender.profile.friends.map(String).includes(to) ||
+    receiver.profile.friends.map(String).includes(from);
+
+  if (alreadyFriends) {
+    return ack({
+      ok: true,
+      status: "friends"
+    });
+  }
+
+  if (
+    receiver.profile.friendRequests
+      .map(String)
+      .includes(from)
+  ) {
+    return ack({
+      ok: true,
+      status: "pending"
+    });
+  }
+
+  receiver.profile.friendRequests.push(from);
+
+  saveUsers(db);
+
+  // Reuse the existing realtime friend notification.
+  emitToUser(to, "friend-request", {
+    from,
+    name: sender.profile.name || "Player",
+    avatar: normalizeAvatar(
+      sender.profile.avatar || ""
+    )
+  });
+
+  return ack({
+    ok: true,
+    status: "pending"
+  });
+});
+
 
 
 /* ==========================================
