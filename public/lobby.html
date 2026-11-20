@@ -3462,7 +3462,37 @@ if (profile.uid) {
 
 
 const VIRTUAL_ROOMS = [
+
+{
+  roomId: "Youtube",
+  title: "CỎ DẠI VÀ HOA DÀNH DÀNH",
+  viewers: 0,
+  avatar: "/assets/live-avatar/Youtube.jpg",
+  link: "/virtual-room.html?room=Youtube"
+},
+
+
+
+
   /*
+
+  {
+  roomId: "Music",
+  title: "MUSIC LIVE",
+  viewers: 0,
+  avatar: "/assets/live-avatar/music.jpg",
+  link: "/virtual-room.html?room=Music"
+},
+
+{
+  roomId: "Movie",
+  title: "MOVIE LIVE",
+  viewers: 0,
+  avatar: "/assets/live-avatar/movie.jpg",
+  link: "/virtual-room.html?room=Movie"
+},
+
+
   {
     roomId: "KimDogCat",
     title: "LiveGame",
@@ -3945,18 +3975,29 @@ const VIRTUAL_ROOMS = [
 
 
 
-function getVirtualRooms(){
-  // map về format giống room thật để tái dùng render()
+
+function getVirtualRooms() {
   return VIRTUAL_ROOMS.map(v => ({
     roomId: v.roomId,
-    viewers: v.viewers || 0,
-    liveStartTs: Date.now() - 5 * 60 * 1000, // giả lập "đang live"
+
+    viewers: Number(
+      window.__virtualLiveCounts?.[v.roomId] ?? 0
+    ),
+
+    liveStartTs: Date.now() - 5 * 60 * 1000,
+
     hasGuest: false,
-    host: { name: v.title || "Virtual Room", avatar: v.avatar || "" },
+
+    host: {
+      name: v.title || "Virtual Room",
+      avatar: v.avatar || ""
+    },
+
     __virtual: true,
     __link: v.link
   }));
 }
+
 
 // ===== WELCOME MODAL (NEON) =====
 const welcomeModal = document.getElementById("welcomeModal");
@@ -4299,7 +4340,7 @@ const viewerURL = r.mediaMode === "sfu"
   : `/viewer.html?room=${encodeURIComponent(r.roomId)}`;
 
 a.href = r.__virtual
-  ? (r.__link || viewerURL)
+  ? `/virtual-room.html?room=${encodeURIComponent(r.roomId)}`
   : viewerURL;
 
     const hostName   = r.host?.name   || (r.__virtual ? "Virtual Room" : "Host");
@@ -4404,6 +4445,32 @@ clearQ.addEventListener("click", ()=>{
   render(__rooms);
   qEl.focus();
 });
+
+
+
+/* ==========================================
+   VIRTUAL LIVE - REAL VIEWER COUNT
+========================================== */
+
+window.__virtualLiveCounts = {};
+
+socket.on("virtual-live:counts", counts => {
+
+  window.__virtualLiveCounts = counts || {};
+
+  render(__rooms);
+
+});
+
+socket.on("connect", () => {
+
+  socket.emit("virtual-live:get-counts");
+
+});
+
+socket.emit("virtual-live:get-counts");
+
+
 
 /* ===== socket ===== */
 function requestLobby(){

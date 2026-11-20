@@ -20504,6 +20504,194 @@ setInterval(() => {
 
 
 
+
+/* ==========================================
+   LIVESTREAM PRO - VIRTUAL LIVE SYSTEM
+========================================== */
+
+// 1. Danh sách phòng ảo
+
+const VIRTUAL_LIVE_ROOMS = Object.freeze({
+
+  Youtube: {
+    roomId: "Youtube",
+    title: "CỎ DẠI VÀ HOA DÀNH DÀNH",
+    avatar: "/assets/live-avatar/Youtube.jpg",
+    type: "youtube",
+    videoId: "Zb6zrxrHv14"
+  },
+
+  /*
+  Music: {
+    roomId: "Music",
+    title: "MUSIC LIVE",
+    avatar: "/assets/live-avatar/music.jpg",
+    type: "youtube",
+    videoId: "THAY_BANG_VIDEO_ID"
+  },
+
+  Movie: {
+    roomId: "Movie",
+    title: "MOVIE LIVE",
+    avatar: "/assets/live-avatar/movie.jpg",
+    type: "mp4",
+    url: "/videos/movie.mp4"
+  }
+*/
+});
+
+// 2. Socket.IO room name
+
+function virtualLiveChannel(roomId) {
+  return "virtual-live:" + roomId;
+}
+
+
+// 3. Đếm số kết nối thực đang trong phòng
+
+function virtualLiveCounts() {
+
+  const result = {};
+
+  for (const roomId of Object.keys(VIRTUAL_LIVE_ROOMS)) {
+
+    const channel = virtualLiveChannel(roomId);
+
+    result[roomId] =
+      io.sockets.adapter.rooms.get(channel)?.size || 0;
+
+  }
+
+  return result;
+
+}
+
+
+// 4. Gửi số người xem tới tất cả client
+
+function broadcastVirtualLiveCounts() {
+
+  io.emit(
+    "virtual-live:counts",
+    virtualLiveCounts()
+  );
+
+}
+
+
+// 5. API lấy thông tin video
+
+app.get("/api/virtual-live/rooms/:roomId", (req, res) => {
+
+  const roomId = String(req.params.roomId || "");
+
+  if (!Object.prototype.hasOwnProperty.call(
+    VIRTUAL_LIVE_ROOMS,
+    roomId
+  )) {
+
+    return res.status(404).json({
+      error: "Room not found"
+    });
+
+  }
+
+  res.set("Cache-Control", "no-store");
+
+  res.json(VIRTUAL_LIVE_ROOMS[roomId]);
+
+});
+
+
+// 6. Socket.IO handlers
+
+io.on("connection", socket => {
+
+  // Lobby yêu cầu số người xem
+
+  socket.on("virtual-live:get-counts", () => {
+
+    socket.emit(
+      "virtual-live:counts",
+      virtualLiveCounts()
+    );
+
+  });
+
+
+  // Người xem vào phòng ảo
+
+  socket.on("virtual-live:join", (data = {}, callback) => {
+
+    const roomId = String(data?.roomId || "");
+
+    if (!Object.prototype.hasOwnProperty.call(
+      VIRTUAL_LIVE_ROOMS,
+      roomId
+    )) {
+
+      if (typeof callback === "function") {
+        callback({
+          ok: false,
+          error: "Room not found"
+        });
+      }
+
+      return;
+    }
+
+    // Rời phòng ảo cũ, nếu có
+
+    for (const joined of socket.rooms) {
+
+      if (joined.startsWith("virtual-live:")) {
+        socket.leave(joined);
+      }
+
+    }
+
+    // Vào phòng mới
+
+    socket.join(virtualLiveChannel(roomId));
+
+    if (typeof callback === "function") {
+      callback({ ok: true });
+    }
+
+    broadcastVirtualLiveCounts();
+
+  });
+
+
+  // Người xem rời phòng
+
+  socket.on("virtual-live:leave", () => {
+
+    for (const joined of socket.rooms) {
+
+      if (joined.startsWith("virtual-live:")) {
+        socket.leave(joined);
+      }
+
+    }
+
+    broadcastVirtualLiveCounts();
+
+  });
+
+
+  // Ngắt kết nối
+
+  socket.on("disconnect", () => {
+
+    broadcastVirtualLiveCounts();
+
+  });
+
+});
+
+
+
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
 
