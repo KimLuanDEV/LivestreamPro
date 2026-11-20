@@ -3462,16 +3462,16 @@ if (profile.uid) {
 
 
 const VIRTUAL_ROOMS = [
-  /*
+  
   {
-    roomId: "KimDogCat",
-    title: "LiveGame",
+    roomId: "Youtube",
+    title: "Film",
     viewers: 0,
-    avatar: "https://i.ibb.co/GfwZdM61/107.jpg",
-    link: "https://us06web.zoom.us/j/8190972376?pwd=mWvhhpx5atN0iMXo92BobJpLQSnbf2.1"
+    avatar: "/assets/live-avatar/Youtube.jpg",
+    link: "https://www.youtube.com/watch?v=Zb6zrxrHv14&list=RDZb6zrxrHv14&start_radio=1"
   },
 
-   
+   /*
   {
     roomId: "emmbe68",
     title: "👸🏻Xuka 🍀",
@@ -4298,9 +4298,24 @@ const viewerURL = r.mediaMode === "sfu"
   ? `/broadcast-sfu.html?mode=viewer&room=${encodeURIComponent(r.roomId)}`
   : `/viewer.html?room=${encodeURIComponent(r.roomId)}`;
 
+  
 a.href = r.__virtual
-  ? (r.__link || viewerURL)
+  ? `/virtual-room.html?room=${encodeURIComponent(r.roomId)}`
   : viewerURL;
+
+if (r.__virtual) {
+  a.addEventListener("click", () => {
+    sessionStorage.setItem(
+      "lsp_virtual_room",
+      JSON.stringify({
+        roomId: r.roomId,
+        title: r.host?.name || "Virtual Live",
+        avatar: r.host?.avatar || "",
+        link: r.__link || ""
+      })
+    );
+  });
+}
 
     const hostName   = r.host?.name   || (r.__virtual ? "Virtual Room" : "Host");
     const verified = r.host?.verified;

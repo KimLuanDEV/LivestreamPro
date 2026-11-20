@@ -1,0 +1,519 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover">
+
+<meta name="theme-color" content="#08090d">
+<title>Virtual Live - Livestream Pro</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #08090d;
+  color: #f4dfb6;
+  font-family: Arial, sans-serif;
+}
+
+.virtual-app {
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* PREMIUM HEADER */
+
+.virtual-header {
+  flex: 0 0 auto;
+  min-height: 65px;
+  padding:
+    calc(10px + env(safe-area-inset-top, 0px))
+    14px
+    10px;
+
+  background: linear-gradient(
+    135deg, #292218, #101115
+  );
+
+  border-bottom: 1px solid #a8864e;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  z-index: 10;
+}
+
+.virtual-back,
+.virtual-expand {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+
+  background: #28231d;
+  color: #f4dfb6;
+
+  border: 1px solid #8c7148;
+  border-radius: 11px;
+
+  font-size: 21px;
+  cursor: pointer;
+}
+
+.virtual-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.virtual-avatar {
+  width: 39px;
+  height: 39px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 1.5px solid #d9b97d;
+}
+
+.virtual-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #f4dfb6;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.virtual-status {
+  margin-top: 5px;
+  font-size: 10px;
+  color: #d6b57a;
+  letter-spacing: 1px;
+}
+
+.live-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: #ff4242;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+/* FRAME AREA */
+
+.virtual-content {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: #000;
+  overflow: hidden;
+}
+
+.virtual-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #000;
+}
+
+/* LOADING */
+
+.virtual-loading {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+
+  background: #0b0b0e;
+  z-index: 2;
+}
+
+.virtual-spinner {
+  width: 39px;
+  height: 39px;
+  border: 3px solid #373029;
+  border-top-color: #edc784;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.virtual-loading-text {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #d5b985;
+}
+
+/* FALLBACK */
+
+.virtual-fallback {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+
+  padding: 25px;
+  background: #101115;
+  text-align: center;
+}
+
+.virtual-fallback button {
+  padding: 13px 22px;
+  background: linear-gradient(135deg,#f4dfb6,#b99056);
+  border: none;
+  border-radius: 11px;
+  color: #22180d;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.virtual-fallback p {
+  color: #aaa;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* FOOTER */
+
+.virtual-footer {
+  flex: 0 0 auto;
+  min-height: 42px;
+
+  padding:
+    12px
+    10px
+    calc(12px + env(safe-area-inset-bottom,0px));
+
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+
+  color: #bc9b62;
+  background: #121317;
+  border-top: 1px solid #594629;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="virtual-app">
+
+  <header class="virtual-header">
+
+    <button
+      class="virtual-back"
+      onclick="location.replace('/lobby.html')"
+      aria-label="Back to Lobby">
+      &#8592;
+    </button>
+
+    <div class="virtual-info">
+
+      <img
+        id="virtualAvatar"
+        class="virtual-avatar"
+        alt="Host avatar">
+
+      <div style="min-width:0">
+        <div
+          id="virtualTitle"
+          class="virtual-title">
+          Virtual Live
+        </div>
+
+        <div class="virtual-status">
+          <span class="live-dot"></span>
+          LIVE ROOM
+        </div>
+      </div>
+
+    </div>
+
+    <button
+      class="virtual-expand"
+      id="expandBtn"
+      aria-label="Fullscreen">
+      &#x26F6;
+    </button>
+
+  </header>
+
+  <main class="virtual-content">
+
+    <div
+      class="virtual-loading"
+      id="virtualLoading">
+
+      <div class="virtual-spinner"></div>
+
+      <div class="virtual-loading-text">
+        CONNECTING TO LIVE...
+      </div>
+
+    </div>
+
+    <iframe
+      id="virtualFrame"
+      class="virtual-frame"
+      title="Embedded live room"
+      allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+      allowfullscreen
+      referrerpolicy="strict-origin-when-cross-origin">
+    </iframe>
+
+    <div
+      id="virtualFallback"
+      class="virtual-fallback">
+
+      <h3>LIVE ROOM UNAVAILABLE</h3>
+
+      <p>
+        The external provider may not allow
+        playback inside an embedded frame.
+      </p>
+
+      <button id="openExternalBtn">
+        OPEN LIVE SOURCE
+      </button>
+
+      <button
+        onclick="location.replace('/lobby.html')">
+        BACK TO LOBBY
+      </button>
+
+    </div>
+
+  </main>
+
+  <footer class="virtual-footer">
+    LIVESTREAM PRO · VIRTUAL LIVE
+  </footer>
+
+</div>
+
+<script>
+
+const frame = document.getElementById("virtualFrame");
+const loading = document.getElementById("virtualLoading");
+const fallback = document.getElementById("virtualFallback");
+
+let room = null;
+let liveURL = "";
+
+try {
+  room = JSON.parse(
+    sessionStorage.getItem("lsp_virtual_room") || "null"
+  );
+} catch {
+  room = null;
+}
+
+function showFallback() {
+  loading.style.display = "none";
+  fallback.style.display = "flex";
+}
+
+
+/* ==========================================
+   LIVESTREAM PRO - YOUTUBE EMBED SUPPORT
+========================================== */
+
+function validLiveUrl(value) {
+
+  try {
+
+    const url = new URL(value);
+
+    if (url.protocol !== "https:") {
+      return "";
+    }
+
+    const host = url.hostname.toLowerCase();
+
+    let videoId = "";
+
+    // YOUTUBE SHORT LINK
+    // https://youtu.be/VIDEO_ID
+
+    if (host === "youtu.be") {
+      videoId = url.pathname.split("/")[1] || "";
+    }
+
+    // YOUTUBE STANDARD / LIVE / SHORTS
+    else if (
+      host === "youtube.com" ||
+      host === "www.youtube.com" ||
+      host === "m.youtube.com" ||
+      host === "www.youtube-nocookie.com" ||
+      host === "youtube-nocookie.com"
+    ) {
+
+      if (url.pathname === "/watch") {
+
+        videoId = url.searchParams.get("v") || "";
+
+      } else {
+
+        const parts = url.pathname.split("/").filter(Boolean);
+
+        if (
+          ["live", "shorts", "embed"].includes(parts[0])
+        ) {
+          videoId = parts[1] || "";
+        }
+
+      }
+
+    }
+
+    // YOUTUBE VIDEO ID VALIDATION
+
+    if (/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+
+      const params = new URLSearchParams({
+        playsinline: "1",
+        controls: "1",
+        rel: "0",
+        modestbranding: "1"
+      });
+
+      return (
+        "https://www.youtube-nocookie.com/embed/" +
+        videoId +
+        "?" +
+        params.toString()
+      );
+
+    }
+
+    // OTHER EXTERNAL PROVIDERS
+
+    const allowedHosts = [
+      "www.bigo.tv",
+      "bigo.tv",
+      "us06web.zoom.us"
+    ];
+
+    if (allowedHosts.includes(host)) {
+      return url.href;
+    }
+
+    return "";
+
+  } catch (error) {
+
+    console.error("Invalid live URL:", error);
+
+    return "";
+
+  }
+
+}
+
+
+
+if (!room || !room.link) {
+  showFallback();
+} else {
+
+  liveURL = validLiveUrl(room.link);
+
+  document.getElementById("virtualTitle")
+    .textContent = room.title || "Virtual Live";
+
+  const avatar = document.getElementById("virtualAvatar");
+
+  if (room.avatar) {
+    avatar.src = room.avatar;
+  } else {
+    avatar.style.display = "none";
+  }
+
+  avatar.onerror = () => {
+    avatar.style.display = "none";
+  };
+
+  if (liveURL) {
+
+    frame.addEventListener("load", () => {
+      loading.style.display = "none";
+    });
+
+    frame.addEventListener("error", showFallback);
+
+    frame.src = liveURL;
+
+  } else {
+    showFallback();
+  }
+}
+
+// OPEN EXTERNAL SOURCE
+
+document.getElementById("openExternalBtn")
+  .addEventListener("click", () => {
+
+    if (!liveURL) return;
+
+    window.open(
+      liveURL,
+      "_blank",
+      "noopener,noreferrer"
+    );
+
+  });
+
+// FULLSCREEN
+
+document.getElementById("expandBtn")
+  .addEventListener("click", async () => {
+
+    const app = document.querySelector(".virtual-app");
+
+    try {
+
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else if (app.requestFullscreen) {
+        await app.requestFullscreen();
+      }
+
+    } catch (err) {
+      console.warn("Fullscreen unavailable:", err);
+    }
+
+  });
+
+</script>
+</body>
+</html>
