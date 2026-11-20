@@ -20511,34 +20511,53 @@ setInterval(() => {
 
 // 1. Danh sách phòng ảo
 
+
 const VIRTUAL_LIVE_ROOMS = Object.freeze({
 
-  Youtube: {
-    roomId: "Youtube",
+  Youtube1: {
+    roomId: "Youtube1",
     title: "CỎ DẠI VÀ HOA DÀNH DÀNH",
     avatar: "/assets/live-avatar/Youtube.jpg",
     type: "youtube",
     videoId: "Zb6zrxrHv14"
   },
 
-  
- Youtube: {
-    roomId: "Youtube",
+  Youtube2: {
+    roomId: "Youtube2",
     title: "50 NĂM VỀ SAU",
     avatar: "/assets/live-avatar/Youtube.jpg",
     type: "youtube",
     videoId: "k7YJHCR9JBE"
   },
-/*
-  Movie: {
-    roomId: "Movie",
-    title: "MOVIE LIVE",
-    avatar: "/assets/live-avatar/movie.jpg",
-    type: "mp4",
-    url: "/videos/movie.mp4"
-  }
-*/
+
 });
+
+
+/* ==========================================
+   VIRTUAL LIVE - SHARED PLAYBACK CLOCK
+========================================== */
+
+// Mốc bắt đầu chung theo từng phòng.
+// Dùng cùng một mốc sau khi server khởi động.
+
+const virtualLiveStartTimes = new Map();
+
+for (const [roomId, room] of Object.entries(
+  VIRTUAL_LIVE_ROOMS
+)) {
+
+  if (room.sync && room.type === "mp4") {
+
+    virtualLiveStartTimes.set(
+      roomId,
+      Date.now()
+    );
+
+  }
+
+}
+
+
 
 // 2. Socket.IO room name
 
@@ -20598,7 +20617,20 @@ app.get("/api/virtual-live/rooms/:roomId", (req, res) => {
 
   res.set("Cache-Control", "no-store");
 
-  res.json(VIRTUAL_LIVE_ROOMS[roomId]);
+  
+const room = VIRTUAL_LIVE_ROOMS[roomId];
+
+res.json({
+
+  ...room,
+
+  serverNow: Date.now(),
+
+  startedAt:
+    virtualLiveStartTimes.get(roomId) || null
+
+});
+
 
 });
 

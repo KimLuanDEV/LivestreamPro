@@ -260,7 +260,8 @@ body {
 
 
 <script src="/socket.io/socket.io.js"></script>
-
+<!-- HLS PLAYER -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
 <script>
 
 (() => {
@@ -371,74 +372,416 @@ body {
         room.avatar || "/icons/icon-192.png";
 
 
-      // YOUTUBE
 
-      if (room.type === "youtube") {
+/* ==========================================
+   VIRTUAL LIVE - UNIVERSAL VIDEO PLAYER
+   YOUTUBE / MP4 / HLS / IFRAME
+========================================== */
 
-        const videoId = String(room.videoId || "");
+const type = String(room.type || "").toLowerCase();
 
-        if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
-          throw new Error("Invalid YouTube video ID");
-        }
+const url = String(room.url || "").trim();
 
-        const iframe =
-          document.createElement("iframe");
+function validVideoUrl(value) {
 
-        iframe.className = "video-frame";
+  try {
 
-        iframe.title =
-          room.title || "YouTube Video";
+    const parsed = new URL(value, location.origin);
 
-        iframe.allow =
-          "autoplay; encrypted-media; fullscreen; picture-in-picture";
+    return (
+      parsed.protocol === "https:" ||
+      (
+        parsed.protocol === "http:" &&
+        parsed.origin === location.origin
+      )
+    );
 
-        iframe.allowFullscreen = true;
+  } catch {
 
-        iframe.referrerPolicy =
-          "strict-origin-when-cross-origin";
+    return false;
 
-        iframe.src =
-          "https://www.youtube.com/embed/" +
-          encodeURIComponent(videoId) +
-          "?autoplay=1&playsinline=1&rel=0";
+  }
 
-        videoStage.appendChild(iframe);
+}
 
+function makeVideo() {
+
+  const video = document.createElement("video");
+
+  video.className = "video-native";
+
+  video.controls = true;
+  video.autoplay = true;
+  video.playsInline = true;
+
+  video.preload = "auto";
+
+  video.addEventListener("error", () => {
+    showError("Unable to load video source.");
+  });
+
+  videoStage.appendChild(video);
+
+  return video;
+
+}
+
+
+
+/* ==========================================
+   VIRTUAL LIVE - VIDEO TIME SYNC
+========================================== */
+
+function enableVirtualLiveSync(video, room) {
+
+  if (!room.sync || !room.startedAt) {
+    return;
+  }
+
+  // Ước lượng chênh lệch đồng hồ client/server
+  const clockOffset =
+    Number(room.serverNow) - Date.now();
+
+  let syncTimer = null;
+
+  function getTargetTime() {
+
+    const duration = video.duration;
+
+    if (
+      !Number.isFinite(duration) ||
+      duration <= 0
+    ) {
+      return null;
+    }
+
+    const serverTime =
+      Date.now() + clockOffset;
+
+    const elapsed = Math.max(
+      0,
+      (serverTime - room.startedAt) / 1000
+    );
+
+    // Phát lặp liên tục theo đồng hồ server
+    if (room.loop) {
+      return elapsed % duration;
+    }
+
+    return Math.min(
+      elapsed,
+      Math.max(0, duration - 0.1)
+    );
+
+  }
+
+  function syncPlayback(force = false) {
+
+    const target = getTargetTime();
+
+    if (target === null) return;
+
+    const duration = video.duration;
+
+    const diff = Math.abs(
+      video.currentTime - target
+    );
+
+    // Tính khoảng cách khi video lặp
+    const circularDiff = room.loop
+      ? Math.min(diff, duration - diff)
+      : diff;
+
+    if (force || circularDiff > 2) {
+
+      try {
+        video.currentTime = target;
+      } catch (error) {
+        console.warn("Video sync failed", error);
       }
 
+    }
 
-      // MP4
+    // Đảm bảo video tiếp tục chạy
+    if (video.paused && !video.ended) {
 
-      else if (room.type === "mp4") {
+      attemptPlay(video);
 
-        const video =
-          document.createElement("video");
+    }
 
-        video.className = "video-native";
+  }
 
-        video.controls = true;
+  function startSync() {
 
-        video.autoplay = true;
+    syncPlayback(true);
 
-        video.playsInline = true;
+    if (syncTimer) {
+      clearInterval(syncTimer);
+    }
 
-        video.preload = "metadata";
+    // Kiểm tra sai lệch sau mỗi 5 giây
+    syncTimer = setInterval(() => {
 
-        video.src = room.url;
+      if (document.hidden) return;
 
-        videoStage.appendChild(video);
+      syncPlayback();
 
-        video.play().catch(() => {});
+    }, 5000);
 
+  }
+
+  video.addEventListener(
+    "loadedmetadata",
+    startSync,
+    { once: true }
+  );
+
+  video.addEventListener("ended", () => {
+
+    if (room.loop) {
+      syncPlayback(true);
+    }
+
+  });
+
+  document.addEventListener(
+    "visibilitychange",
+    () => {
+
+      if (!document.hidden) {
+        syncPlayback(true);
       }
 
-      else {
+    }
+  );
 
-        throw new Error(
-          "Unsupported video source"
+  window.addEventListener(
+    "pagehide",
+    () => {
+
+      if (syncTimer) {
+        clearInterval(syncTimer);
+      }
+
+    },
+    { once: true }
+  );
+
+}
+
+
+
+function attemptPlay(video) {
+
+  video.play().catch(() => {
+
+    // Một số trình duyệt chỉ cho autoplay khi mute.
+
+    video.muted = true;
+
+    video.play().catch(() => {
+
+      // Người xem có thể bấm Play thủ công.
+
+    });
+
+  });
+
+}
+
+
+// ==========================================
+// YOUTUBE
+// ==========================================
+
+if (type === "youtube") {
+
+  const videoId = String(room.videoId || "");
+
+  if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+    throw new Error("Invalid YouTube ID");
+  }
+
+  const iframe = document.createElement("iframe");
+
+  iframe.className = "video-frame";
+
+  iframe.title = room.title || "YouTube";
+
+  iframe.allow =
+    "autoplay; encrypted-media; fullscreen; picture-in-picture";
+
+  iframe.allowFullscreen = true;
+
+  iframe.referrerPolicy =
+    "strict-origin-when-cross-origin";
+
+  iframe.src =
+    "https://www.youtube.com/embed/" +
+    encodeURIComponent(videoId) +
+    "?autoplay=1&playsinline=1&rel=0";
+
+  videoStage.appendChild(iframe);
+
+}
+
+
+// ==========================================
+// MP4 / WEBM
+// ==========================================
+
+
+else if (type === "mp4") {
+
+  if (!validVideoUrl(url)) {
+    throw new Error("Invalid video URL");
+  }
+
+  const video = makeVideo();
+
+  video.loop = Boolean(room.loop);
+
+  // Không cho điều khiển thời gian phát
+  // khi phòng đang ở chế độ LIVE SYNC
+  if (room.sync) {
+
+    video.controls = false;
+
+  }
+
+  video.src = url;
+
+  // Bật đồng bộ theo server
+  enableVirtualLiveSync(video, room);
+
+  // Autoplay nếu trình duyệt cho phép
+  attemptPlay(video);
+
+}
+
+
+
+// ==========================================
+// HLS - M3U8 LIVE STREAM
+// ==========================================
+
+else if (type === "hls") {
+
+  if (!validVideoUrl(url)) {
+    throw new Error("Invalid HLS URL");
+  }
+
+  const video = makeVideo();
+
+  // Safari / iOS Native HLS
+  if (
+    video.canPlayType(
+      "application/vnd.apple.mpegurl"
+    )
+  ) {
+
+    video.src = url;
+
+    attemptPlay(video);
+
+  }
+
+  // Chrome / Android / Edge
+  else if (
+    window.Hls &&
+    Hls.isSupported()
+  ) {
+
+    const hls = new Hls({
+      enableWorker: true,
+      lowLatencyMode: true
+    });
+
+    hls.loadSource(url);
+
+    hls.attachMedia(video);
+
+    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+
+      attemptPlay(video);
+
+    });
+
+    hls.on(Hls.Events.ERROR, (_, data) => {
+
+      if (data.fatal) {
+
+        showError(
+          "HLS playback error: " + data.details
         );
 
       }
+
+    });
+
+    window.addEventListener(
+      "pagehide",
+      () => hls.destroy(),
+      { once: true }
+    );
+
+  }
+
+  else {
+
+    throw new Error(
+      "HLS is not supported in this browser"
+    );
+
+  }
+
+}
+
+
+// ==========================================
+// EXTERNAL IFRAME
+// ==========================================
+
+else if (type === "iframe") {
+
+  if (!validVideoUrl(url)) {
+    throw new Error("Invalid embed URL");
+  }
+
+  const iframe = document.createElement("iframe");
+
+  iframe.className = "video-frame";
+
+  iframe.title =
+    room.title || "External Video";
+
+  iframe.allow =
+    "autoplay; fullscreen; picture-in-picture; encrypted-media";
+
+  iframe.allowFullscreen = true;
+
+  iframe.referrerPolicy =
+    "strict-origin-when-cross-origin";
+
+  iframe.src = url;
+
+  videoStage.appendChild(iframe);
+
+}
+
+
+// ==========================================
+// UNSUPPORTED
+// ==========================================
+
+else {
+
+  throw new Error(
+    "Unsupported source type: " + type
+  );
+
+}
+
 
       loadingState.classList.add("hidden");
 
