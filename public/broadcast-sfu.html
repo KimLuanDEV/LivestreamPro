@@ -4624,16 +4624,17 @@ body {
   box-shadow: 0 0 7px #FF525C;
 }
 
+
 .sfu-host-add {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
 
   flex: 0 0 27px;
-
   width: 27px;
   height: 27px;
-  padding: 0;
+
+  margin: 0;
+  padding: 0 0 3px;
 
   border: none;
   border-radius: 50%;
@@ -4646,9 +4647,13 @@ body {
 
   color: #23180D;
 
+  font-family: Arial, sans-serif;
   font-size: 21px;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1;
+
+  text-align: center;
+  box-sizing: border-box;
 }
 
 .sfu-host-add:active:not(:disabled) {
@@ -4914,10 +4919,10 @@ body {
         Live Host
       </span>
 
-      <span class="sfu-host-subtitle">
-        <span class="sfu-host-live-dot"></span>
-        LIVE HOST
-      </span>
+<span class="sfu-host-subtitle">
+  <span class="sfu-host-live-dot"></span>
+  <span id="sfuHostUid">UID: ---</span>
+</span>
 
     </div>
 
@@ -5823,6 +5828,7 @@ const $ = id => document.getElementById(id);
 const sfuHostBadge = $("sfuHostBadge");
 const sfuHostAvatar = $("sfuHostAvatar");
 const sfuHostName = $("sfuHostName");
+const sfuHostUid = $("sfuHostUid");
 const sfuHostAddFriend = $("sfuHostAddFriend");
 
 const SFU_DEFAULT_AVATAR = "/icons/icon-192.png";
@@ -5867,6 +5873,9 @@ function updateSfuHostBadge(host) {
   };
 
   sfuHostName.textContent = sfuCurrentHost.name;
+
+// Display the verified host account UID.
+sfuHostUid.textContent = `UID: ${sfuCurrentHost.uid}`;
 
   sfuHostAvatar.src = sfuSafeAvatar(
     sfuCurrentHost.avatar
