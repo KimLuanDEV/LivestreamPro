@@ -5025,6 +5025,48 @@ body {
 }
 
 
+
+/* ==========================================
+   SFU HOST BADGE - CLEAN COMPACT V4
+========================================== */
+
+.studio-topbar .sfu-host-badge {
+  min-height: 52px;
+  padding: 6px 8px 6px 6px;
+  border-radius: 999px;
+  gap: 7px;
+}
+
+.studio-topbar .sfu-host-info {
+  gap: 5px;
+}
+
+.studio-topbar .sfu-host-avatar-wrap {
+  flex-basis: 36px;
+  width: 36px;
+  height: 36px;
+}
+
+.studio-topbar #sfuLiveEarningsCount {
+  font-size: 12px;
+  font-weight: 850;
+}
+
+@media (max-width: 480px) {
+  .studio-topbar .sfu-host-badge {
+    min-height: 48px;
+    padding: 5px 7px 5px 5px;
+  }
+
+  .studio-topbar .sfu-host-avatar-wrap {
+    flex-basis: 34px;
+    width: 34px;
+    height: 34px;
+  }
+}
+
+
+
 </style>
 
 
@@ -5217,11 +5259,6 @@ body {
       Live Host
     </span>
 
-    <!-- UID -->
-    <span class="sfu-host-subtitle">
-      <span class="sfu-host-live-dot"></span>
-      <span id="sfuHostUid">UID: ---</span>
-    </span>
 
     <!-- LIVE DIAMONDS RECEIVED -->
     <div
@@ -5259,9 +5296,7 @@ body {
 
       <strong id="sfuLiveEarningsCount">0</strong>
 
-      <span class="sfu-earnings-caption">
-        RECEIVED
-      </span>
+
 
     </div>
 
@@ -6120,7 +6155,7 @@ const $ = id => document.getElementById(id);
 const sfuHostBadge = $("sfuHostBadge");
 const sfuHostAvatar = $("sfuHostAvatar");
 const sfuHostName = $("sfuHostName");
-const sfuHostUid = $("sfuHostUid");
+
 const sfuHostAddFriend = $("sfuHostAddFriend");
 
 const SFU_DEFAULT_AVATAR = "/icons/icon-192.png";
@@ -6166,8 +6201,7 @@ function updateSfuHostBadge(host) {
 
   sfuHostName.textContent = sfuCurrentHost.name;
 
-// Display the verified host account UID.
-sfuHostUid.textContent = `UID: ${sfuCurrentHost.uid}`;
+
 
   sfuHostAvatar.src = sfuSafeAvatar(
     sfuCurrentHost.avatar
