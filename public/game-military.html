@@ -10200,6 +10200,13 @@ box.appendChild(div)
 
 
 
+fetch("/api/wheel8-round")
+.then(r=>r.json())
+.then(d=>{
+document.getElementById("roundId").textContent =
+d.roundId
+})
+
 
 
 // 📜 LOAD USER BET HISTORY
@@ -10207,22 +10214,28 @@ socket.emit("wheel8-get-my-history")
 
 
 
-/* ==========================================
-   WHEEL8 BET CONFIRMATION
-========================================== */
+socket.on("wheel8-bet-ok",()=>{
 
-socket.on("wheel8-bet-ok", (data = {}) => {
+if(!lastBetSlot) return
 
-  // Server đã gửi wheel8-my-bets
-  // Không tự cộng lần thứ hai.
+myBets[lastBetSlot-1] += lastBetValue
 
-  lastBetSlot = 0;
-  lastBetValue = 0;
+const el = document.getElementById("mybet"+lastBetSlot)
 
-  // Chỉ cập nhật lịch sử sau khi cược thành công
-  socket.emit("wheel8-get-my-history");
+if(el){
 
-});
+const value = myBets[lastBetSlot-1]
+
+el.textContent = value
+el.style.display = value > 0 ? "block" : "none"
+
+}
+
+// reset
+lastBetSlot = 0
+lastBetValue = 0
+
+})
 
 
 socket.on("wheel8-bet-fail",(data)=>{
