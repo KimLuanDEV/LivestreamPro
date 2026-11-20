@@ -407,12 +407,12 @@ function validLiveUrl(value) {
         modestbranding: "1"
       });
 
-      return (
-        "https://www.youtube-nocookie.com/embed/" +
-        videoId +
-        "?" +
-        params.toString()
-      );
+return (
+  "https://www.youtube.com/embed/" +
+  videoId +
+  "?" +
+  params.toString()
+);
 
     }
 
@@ -463,19 +463,53 @@ if (!room || !room.link) {
     avatar.style.display = "none";
   };
 
-  if (liveURL) {
 
-    frame.addEventListener("load", () => {
-      loading.style.display = "none";
-    });
+if (liveURL) {
 
-    frame.addEventListener("error", showFallback);
+  console.log("[VIRTUAL ROOM] Original:", room.link);
+  console.log("[VIRTUAL ROOM] Embed:", liveURL);
 
-    frame.src = liveURL;
+  frame.setAttribute(
+    "referrerpolicy",
+    "strict-origin-when-cross-origin"
+  );
 
-  } else {
+  frame.setAttribute(
+    "allow",
+    "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+  );
+
+  frame.setAttribute("allowfullscreen", "");
+
+  frame.addEventListener("load", () => {
+
+    console.log("[VIRTUAL ROOM] Iframe document loaded");
+
+    loading.style.display = "none";
+
+  });
+
+  frame.addEventListener("error", () => {
+
+    console.error("[VIRTUAL ROOM] Iframe load error");
+
     showFallback();
-  }
+
+  });
+
+  frame.src = liveURL;
+
+} else {
+
+  console.error(
+    "[VIRTUAL ROOM] Invalid URL or missing room data",
+    room
+  );
+
+  showFallback();
+
+}
+
 }
 
 // OPEN EXTERNAL SOURCE
