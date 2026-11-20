@@ -8119,21 +8119,35 @@ function attachLocalCamera() {
 async function connectSFU() {
   const credentials = await getToken();
 
-  lkRoom = new Room({
-    adaptiveStream: true,
-    dynacast: true,
-    videoCaptureDefaults: {
-      resolution: VideoPresets.h720.resolution,
-      frameRate: 30
-    },
-    publishDefaults: {
-      simulcast: true,
-      videoEncoding: {
-        maxBitrate: 2500000,
-        maxFramerate: 30
-      }
+
+lkRoom = new Room({
+
+  // Automatically select an appropriate video layer.
+  adaptiveStream: true,
+
+  // Stop sending unused simulcast layers.
+  dynacast: true,
+
+  // Mobile-friendly capture.
+  videoCaptureDefaults: {
+    resolution: VideoPresets.h540.resolution,
+    frameRate: 30
+  },
+
+  publishDefaults: {
+
+    // Keep multi-quality streaming enabled.
+    simulcast: true,
+
+    videoEncoding: {
+      maxBitrate: 1200000,
+      maxFramerate: 30
     }
-  });
+
+  }
+
+});
+
 
  lkRoom.on(
   RoomEvent.TrackSubscribed,
@@ -8307,12 +8321,11 @@ async function flipCamera() {
     }
 
     // LiveKit thay nguồn camera trên track hiện tại.
-    await cameraTrack.restartTrack({
-      facingMode: nextFacing,
-      resolution: VideoPresets.h720.resolution,
-      frameRate: 30
-    });
-
+ await cameraTrack.restartTrack({
+  facingMode: nextFacing,
+  resolution: VideoPresets.h540.resolution,
+  frameRate: 30
+});
     // Kiểm tra camera được trình duyệt chọn.
     const actualFacing =
       cameraTrack.mediaStreamTrack
