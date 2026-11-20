@@ -5109,13 +5109,6 @@ socket.emit("factory-update", factoryDB[uid]);
 
 
 
-
-// ================================
-// 🎡 WHEEL8 BET
-// ================================
-
-const betCooldown = new Map()
-
 /* ==========================================
    WHEEL8 - OPTIMIZED BET HANDLER
 ========================================== */

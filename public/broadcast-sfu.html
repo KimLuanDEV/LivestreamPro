@@ -4940,11 +4940,6 @@ body {
 
   <div class="studio-top-actions">
 
-    <div class="status">
-      <span id="statusDot" class="dot"></span>
-      <span id="statusText">OFFLINE</span>
-    </div>
-
 
 <!-- REALTIME VIEWERS - CLICKABLE -->
 <button
@@ -7521,17 +7516,10 @@ const showMessage = (text, type = "auto") => {
 
 function setStatus(text, live = false) {
 
-  $("statusText").textContent = text;
-
-  $("statusDot").classList.toggle(
-    "live",
-    live
-  );
-
+  // Keep connection information in Settings.
   $("connectionLabel").textContent = text;
 
-  // Hiển thị số người xem khi Host LIVE
-  // hoặc Viewer đang xem.
+  // Show viewer counter when hosting or watching.
   const showViewers =
     text === "LIVE" ||
     text === "WATCHING";
@@ -7541,21 +7529,18 @@ function setStatus(text, live = false) {
     !showViewers
   );
 
-  // Chỉ reset khi phòng không còn hoạt động.
-  // Không reset ở trạng thái CONNECTED vì
-  // server đã gửi số lượng người xem.
-if (
-  text === "OFFLINE" ||
-  text === "WAITING" ||
-  text === "ENDED" ||
-  text === "DISCONNECTED"
-) {
-  updateSfuViewerCount(0);
-  updateSfuViewerDirectory([]);
-  closeSfuViewerList();
+  // Reset viewers only when room is inactive.
+  if (
+    text === "OFFLINE" ||
+    text === "WAITING" ||
+    text === "ENDED" ||
+    text === "DISCONNECTED"
+  ) {
+    updateSfuViewerCount(0);
+    updateSfuViewerDirectory([]);
+    closeSfuViewerList();
+  }
 }
-}
-
 
 
 function setPlaceholder(visible, text = "") {
