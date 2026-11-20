@@ -4732,6 +4732,299 @@ body {
 }
 
 
+
+/* ==========================================
+   LIVESTREAMPRO - HOST PREMIUM V3
+   AVATAR + UID + DIAMOND + FRIEND
+========================================== */
+
+/* TOP BAR */
+
+.studio-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+/* MAIN HOST CAPSULE */
+
+.studio-topbar .sfu-host-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  flex: 0 1 auto;
+  width: max-content;
+  max-width: min(245px, calc(100vw - 142px));
+  min-width: 0;
+  height: auto;
+  min-height: 65px;
+
+  margin: 0;
+  padding: 7px 8px 7px 6px;
+
+  border: 1px solid rgba(233,194,127,.42);
+  border-radius: 18px;
+
+  background: linear-gradient(
+    120deg,
+    rgba(43,42,40,.94),
+    rgba(12,17,26,.92)
+  );
+
+  box-shadow:
+    0 7px 24px rgba(0,0,0,.36),
+    inset 0 1px rgba(255,255,255,.08);
+
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+/* AVATAR */
+
+.studio-topbar .sfu-host-avatar-wrap {
+  flex: 0 0 39px;
+  width: 39px;
+  height: 39px;
+
+  border: 2px solid #DEBA7A;
+  border-radius: 50%;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 0 0 2px rgba(222,186,122,.1),
+    0 0 12px rgba(222,186,122,.12);
+}
+
+.studio-topbar .sfu-host-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* TEXT COLUMN */
+
+.studio-topbar .sfu-host-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 4px;
+}
+
+.studio-topbar .sfu-host-name {
+  display: block;
+
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1.1;
+
+  color: #FFF0D5;
+}
+
+.studio-topbar .sfu-host-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  max-width: 100%;
+  min-width: 0;
+
+  color: #BFB3A1;
+  font-size: 9px;
+  line-height: 1.1;
+  letter-spacing: 0;
+}
+
+#sfuHostUid {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.studio-topbar .sfu-host-live-dot {
+  flex: 0 0 5px;
+  width: 5px;
+  height: 5px;
+  background: #FF5560;
+}
+
+/* DIAMONDS NOW INSIDE THE HOST BADGE */
+
+.studio-topbar .sfu-host-badge
+#sfuLiveEarnings {
+  position: static;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: row;
+
+  align-self: flex-start;
+
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 16px;
+
+  margin: 0;
+  padding: 0;
+  gap: 4px;
+
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+
+  pointer-events: none;
+}
+
+/* DIAMOND ICON */
+
+.studio-topbar #sfuLiveEarnings
+.sfu-earnings-diamond {
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.studio-topbar #sfuLiveEarnings
+.sfu-earnings-diamond svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* RECEIVED VALUE */
+
+.studio-topbar #sfuLiveEarningsCount {
+  display: block;
+
+  min-width: 0;
+  max-width: 100%;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: #F7D18D;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.1;
+
+  font-variant-numeric: tabular-nums;
+}
+
+/* SMALL LABEL */
+
+.studio-topbar .sfu-earnings-caption {
+  flex-shrink: 0;
+
+  color: #9B968D;
+  font-size: 7px;
+  font-weight: 750;
+  letter-spacing: .3px;
+}
+
+/* ADD FRIEND BUTTON */
+
+.studio-topbar .sfu-host-add {
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 27px;
+
+  width: 27px;
+  height: 27px;
+
+  margin: 0;
+  padding: 0 0 2px;
+
+  border: 0;
+  border-radius: 50%;
+
+  background: linear-gradient(
+    135deg,
+    #FFE7AC,
+    #D6A257
+  );
+
+  color: #291A09;
+  font-size: 20px;
+  line-height: 1;
+  text-align: center;
+}
+
+/* MOBILE */
+
+@media (max-width: 480px) {
+
+  .studio-topbar .sfu-host-badge {
+    max-width: min(230px, calc(100vw - 135px));
+    min-height: 62px;
+    gap: 6px;
+    padding: 6px;
+  }
+
+  .studio-topbar .sfu-host-avatar-wrap {
+    flex-basis: 34px;
+    width: 34px;
+    height: 34px;
+  }
+
+  .studio-topbar .sfu-host-name {
+    font-size: 10px;
+  }
+
+  .studio-topbar #sfuLiveEarningsCount {
+    font-size: 11px;
+  }
+
+  .studio-topbar .sfu-host-add {
+    flex-basis: 25px;
+    width: 25px;
+    height: 25px;
+  }
+}
+
+/* VERY SMALL PHONES */
+
+@media (max-width: 370px) {
+
+  .studio-topbar .sfu-host-badge {
+    max-width: calc(100vw - 130px);
+  }
+
+  .studio-topbar .sfu-earnings-caption {
+    display: none;
+  }
+}
+
+
 </style>
 
 
@@ -4897,45 +5190,96 @@ body {
 <!-- MINIMAL TOP CONTROLS -->
 <div class="studio-topbar">
 
-  <!-- LIVE HOST PROFILE -->
-  <div
-    id="sfuHostBadge"
-    class="sfu-host-badge hidden">
 
-    <div class="sfu-host-avatar-wrap">
+<!-- ======================================
+     SFU - HOST PROFILE PREMIUM V3
+====================================== -->
 
-      <img
-        id="sfuHostAvatar"
-        class="sfu-host-avatar"
-        alt="Host avatar">
+<div
+  id="sfuHostBadge"
+  class="sfu-host-badge hidden">
 
-    </div>
+  <!-- HOST AVATAR -->
+  <div class="sfu-host-avatar-wrap">
+    <img
+      id="sfuHostAvatar"
+      class="sfu-host-avatar"
+      alt="Host avatar">
+  </div>
 
-    <div class="sfu-host-info">
+  <!-- HOST INFORMATION -->
+  <div class="sfu-host-info">
 
-      <span
-        id="sfuHostName"
-        class="sfu-host-name">
-        Live Host
+    <!-- NAME -->
+    <span
+      id="sfuHostName"
+      class="sfu-host-name">
+      Live Host
+    </span>
+
+    <!-- UID -->
+    <span class="sfu-host-subtitle">
+      <span class="sfu-host-live-dot"></span>
+      <span id="sfuHostUid">UID: ---</span>
+    </span>
+
+    <!-- LIVE DIAMONDS RECEIVED -->
+    <div
+      id="sfuLiveEarnings"
+      class="sfu-live-earnings hidden"
+      aria-label="Diamonds received during this live">
+
+      <span class="sfu-earnings-diamond">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true">
+
+          <path
+            d="M6.2 3.5h11.6L22 9.5 12 21 2 9.5 6.2 3.5Z"
+            fill="#65C8F4"
+            stroke="#A6E9FF"
+            stroke-width="1"/>
+
+          <path
+            d="M2 9.5h20L12 21 2 9.5Z"
+            fill="#308FCA"/>
+
+          <path
+            d="M8.5 9.5 12 21l3.5-11.5h-7Z"
+            fill="#BDF3FF"/>
+
+          <path
+            d="m6.2 3.5 2.3 6h7l2.3-6"
+            stroke="#E8FCFF"
+            stroke-width="1.1"/>
+
+        </svg>
       </span>
 
-<span class="sfu-host-subtitle">
-  <span class="sfu-host-live-dot"></span>
-  <span id="sfuHostUid">UID: ---</span>
-</span>
+      <strong id="sfuLiveEarningsCount">0</strong>
+
+      <span class="sfu-earnings-caption">
+        RECEIVED
+      </span>
 
     </div>
 
-    <button
-      type="button"
-      id="sfuHostAddFriend"
-      class="sfu-host-add"
-      title="Add host as friend"
-      aria-label="Add host as friend">
-      +
-    </button>
-
   </div>
+
+  <!-- ADD FRIEND -->
+  <button
+    type="button"
+    id="sfuHostAddFriend"
+    class="sfu-host-add"
+    title="Add host as friend"
+    aria-label="Add host as friend">
+    +
+  </button>
+
+</div>
+
+
 
 
   <div class="studio-top-actions">
@@ -5061,53 +5405,6 @@ body {
      SFU - LIVE GIFT EARNINGS
 ====================================== -->
 
-
-<!-- ======================================
-     SFU - DIAMOND RECEIVED CAPSULE V2
-====================================== -->
-
-<div
-  id="sfuLiveEarnings"
-  class="sfu-live-earnings hidden"
-  aria-label="Diamonds received during this live">
-
-  <span class="sfu-earnings-diamond">
-
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true">
-
-      <path
-        d="M6.2 3.5h11.6L22 9.5 12 21 2 9.5 6.2 3.5Z"
-        fill="#65C8F4"
-        stroke="#A6E9FF"
-        stroke-width="1"/>
-
-      <path
-        d="M2 9.5h20L12 21 2 9.5Z"
-        fill="#308FCA"/>
-
-      <path
-        d="M8.5 9.5 12 21l3.5-11.5h-7Z"
-        fill="#BDF3FF"/>
-
-      <path
-        d="m6.2 3.5 2.3 6h7l2.3-6"
-        stroke="#E8FCFF"
-        stroke-width="1.1"/>
-
-    </svg>
-
-  </span>
-
-  <strong id="sfuLiveEarningsCount">0</strong>
-
-  <span class="sfu-earnings-caption">
-    RECEIVED
-  </span>
-
-</div>
 
 
 
