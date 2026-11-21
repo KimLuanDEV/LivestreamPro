@@ -1258,6 +1258,242 @@ body.auth-page .auth-foot {
 }
 
 
+
+/* ==========================================
+   LIVESTREAM PRO - LOGIN STATUS V2
+========================================== */
+
+.login-status-overlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 99999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.login-status-overlay.hidden {
+  display: none !important;
+}
+
+.login-status-backdrop {
+  position: absolute;
+  inset: 0;
+
+  background: rgba(3, 4, 7, .94);
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.login-status-card {
+  position: relative;
+  z-index: 1;
+
+  width: 100%;
+  max-width: 350px;
+
+  padding: 38px 24px 30px;
+
+  text-align: center;
+
+  background: linear-gradient(
+    155deg,
+    #2b251e 0%,
+    #17191d 60%,
+    #101115 100%
+  );
+
+  border: 1px solid rgba(222, 181, 111, .48);
+  border-radius: 20px;
+
+  box-shadow:
+    0 25px 70px rgba(0, 0, 0, .65),
+    inset 0 1px rgba(255, 255, 255, .06);
+
+  animation: loginStatusAppear .25s ease-out;
+}
+
+.login-status-brand {
+  color: #cba86f;
+
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 2.5px;
+
+  margin-bottom: 29px;
+}
+
+.login-status-icon {
+  width: 82px;
+  height: 82px;
+
+  margin: 0 auto 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: rgba(202, 158, 88, .08);
+  border: 2px solid rgba(215, 174, 104, .3);
+}
+
+.login-status-icon.loading {
+  border-color: rgba(215, 174, 104, .3);
+}
+
+.login-status-icon.success {
+  border-color: #76c992;
+  background: rgba(70, 180, 110, .10);
+}
+
+.login-status-icon.error {
+  border-color: #e07777;
+  background: rgba(210, 65, 65, .10);
+}
+
+.login-status-spinner {
+  width: 45px;
+  height: 45px;
+
+  border: 3px solid rgba(213, 174, 108, .16);
+  border-top-color: #e9c387;
+
+  border-radius: 50%;
+
+  animation: loginSpin .8s linear infinite;
+}
+
+.login-status-icon.success::after {
+  content: "✓";
+
+  color: #88e4aa;
+  font-size: 44px;
+  font-weight: 900;
+}
+
+.login-status-icon.error::after {
+  content: "×";
+
+  color: #ff9292;
+  font-size: 50px;
+  font-weight: 700;
+}
+
+#loginStatusTitle {
+  color: #f0dbb8;
+
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 1.1px;
+
+  margin: 0 0 12px;
+}
+
+#loginStatusText {
+  color: #b9b1a5;
+
+  font-size: 13px;
+  line-height: 1.6;
+
+  margin: 0;
+  white-space: pre-line;
+}
+
+.login-status-progress {
+  height: 4px;
+  margin-top: 28px;
+
+  overflow: hidden;
+  border-radius: 20px;
+
+  background: rgba(218, 180, 119, .13);
+}
+
+.login-status-progress span {
+  display: block;
+  width: 35%;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: linear-gradient(
+    90deg,
+    #86623a,
+    #f5d69e,
+    #bb8849
+  );
+
+  animation: loginProgress 1.3s ease-in-out infinite;
+}
+
+.login-status-close {
+  width: 100%;
+  min-height: 44px;
+
+  margin-top: 25px;
+
+  border: 1px solid #d6b47b;
+  border-radius: 9px;
+
+  background: linear-gradient(
+    135deg,
+    #f0d7a7,
+    #c39a60
+  );
+
+  color: #282016;
+  font-size: 12px;
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+@keyframes loginSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes loginProgress {
+  0% {
+    transform: translateX(-110%);
+  }
+
+  100% {
+    transform: translateX(310%);
+  }
+}
+
+@keyframes loginStatusAppear {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-status-spinner,
+  .login-status-progress span,
+  .login-status-card {
+    animation: none;
+  }
+}
+
+
+
 </style>
 
 </head>
@@ -1638,7 +1874,54 @@ body.auth-page .auth-foot {
 
 </div>
 
-<!-- GIỮ NGUYÊN PHẦN SCRIPT CŨ BÊN DƯỚI -->
+
+
+<!-- ==========================================
+     LIVESTREAM PRO - LOGIN STATUS OVERLAY
+========================================== -->
+
+<div id="loginStatusOverlay"
+     class="login-status-overlay hidden"
+     role="status"
+     aria-live="polite"
+     aria-atomic="true">
+
+  <div class="login-status-backdrop"></div>
+
+  <div class="login-status-card">
+
+    <div class="login-status-brand">
+      LIVESTREAM PRO
+    </div>
+
+    <div id="loginStatusIcon"
+         class="login-status-icon loading">
+      <span class="login-status-spinner"></span>
+    </div>
+
+    <h2 id="loginStatusTitle">
+      SIGNING IN
+    </h2>
+
+    <p id="loginStatusText">
+      Verifying your account. Please wait...
+    </p>
+
+    <div id="loginStatusProgress"
+         class="login-status-progress">
+      <span></span>
+    </div>
+
+    <button id="loginStatusClose"
+            type="button"
+            class="login-status-close hidden"
+            onclick="hideLoginStatus()">
+      TRY AGAIN
+    </button>
+
+  </div>
+
+</div>
 
 
 
@@ -1713,159 +1996,494 @@ async function submitForgot() {
 let __loginUser = null;
 let __loginPass = null;
 
-async function login(){
-  const u = document.getElementById("username").value.trim();
-  const p = document.getElementById("password").value;
-
-  if(!u || !p){
-    showMsg("Please enter your username and password.");
-    return;
-  }
-
-  const t = localStorage.getItem("trustedToken");
-const tu = localStorage.getItem("trustedUser");
-
-if(t && tu === u){
-  const res = await fetch("/api/check-trusted",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({ username:u, trustedToken:t })
-  });
-
-  const d = await res.json();
-  
-if(d.ok){
-  
-const res2 = await fetch("/api/login", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    username: u,
-    password: p,
-    trustedToken: t
-  })
-});
 
 
-  const data = await res2.json();
+/* ==========================================
+   LOGIN STATUS - CONTROLLER
+========================================== */
 
-if (!res2.ok || !data?.ok || !data?.profile) {
-  showMsg(
-    data?.error === "blocked"
-      ? "Your account has been locked."
-      : "Sign in failed. Please try again."
+let loginRequestBusy = false;
+
+const LOGIN_SUCCESS_DELAY = 1500;
+const LOGIN_ERROR_DELAY = 2200;
+
+const loginSleep = ms =>
+  new Promise(resolve => setTimeout(resolve, ms));
+
+function showLoginStatus(type, message) {
+
+  const overlay = document.getElementById(
+    "loginStatusOverlay"
   );
-  return;
+
+  const icon = document.getElementById(
+    "loginStatusIcon"
+  );
+
+  const title = document.getElementById(
+    "loginStatusTitle"
+  );
+
+  const text = document.getElementById(
+    "loginStatusText"
+  );
+
+  const progress = document.getElementById(
+    "loginStatusProgress"
+  );
+
+  const close = document.getElementById(
+    "loginStatusClose"
+  );
+
+  overlay.classList.remove("hidden");
+
+  icon.className = "login-status-icon " + type;
+  icon.textContent = "";
+
+  progress.classList.toggle(
+    "hidden",
+    type !== "loading"
+  );
+
+  close.classList.add("hidden");
+
+  if (type === "loading") {
+
+    title.textContent = "SIGNING IN";
+
+    text.textContent =
+      message ||
+      "Verifying your account. Please wait...";
+
+    const spinner = document.createElement("span");
+    spinner.className = "login-status-spinner";
+
+    icon.appendChild(spinner);
+
+  } else if (type === "success") {
+
+    title.textContent = "LOGIN SUCCESSFUL";
+
+    text.textContent =
+      message ||
+      "Welcome back! Redirecting to your account...";
+
+  } else {
+
+    title.textContent = "SIGN IN FAILED";
+
+    text.textContent =
+      message ||
+      "Unable to sign in. Please try again.";
+
+    close.classList.remove("hidden");
+
+  }
 }
 
-// Refresh trusted device token
-if (data.trustedToken) {
+function hideLoginStatus() {
+
+  document.getElementById(
+    "loginStatusOverlay"
+  ).classList.add("hidden");
+
+}
+
+async function loginStatusError(message) {
+
+  showLoginStatus(
+    "error",
+    message
+  );
+
+  await loginSleep(LOGIN_ERROR_DELAY);
+
+  hideLoginStatus();
+
+}
+
+async function loginStatusSuccess(profile) {
+
+  showLoginStatus(
+    "success",
+    "Welcome back! Redirecting to your account..."
+  );
+
+  await loginSleep(LOGIN_SUCCESS_DELAY);
+
+  window.location.replace("/social.html");
+
+}
+
+/* ==========================================
+   SAFE LOGIN HTTP REQUEST
+========================================== */
+
+async function loginPost(url, body) {
+
+  const controller = new AbortController();
+
+  const timer = setTimeout(
+    () => controller.abort(),
+    15000
+  );
+
+  try {
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: "same-origin",
+      signal: controller.signal,
+      body: JSON.stringify(body)
+    });
+
+    const data = await response.json();
+
+    return {
+      httpOk: response.ok,
+      data
+    };
+
+  } finally {
+
+    clearTimeout(timer);
+
+  }
+}
+
+function saveSuccessfulLogin(data, username) {
+
+  if (!data?.ok || !data?.profile?.uid) {
+    throw new Error("INVALID_LOGIN_RESPONSE");
+  }
+
   localStorage.setItem(
-    "trustedToken",
-    data.trustedToken
-  );
-  localStorage.setItem("trustedUser", u);
-}
-
-  // 🔥 LƯU PROFILE + XOÁ GUEST
-  localStorage.setItem("user_profile", JSON.stringify(data.profile));
-  localStorage.setItem("login_uid", data?.profile?.uid);
-  localStorage.removeItem("isGuest");      // ⭐ QUAN TRỌNG
-  localStorage.removeItem("guest_uid");   // nếu có
-
-  location.href="/social.html";
-  return;
-}
-
-}
-
-
-  const res = await fetch("/api/prelogin",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({ username:u, password:p })
-  });
-
-const data = await res.json();
-
-if (data.error === "blocked") {
-
-  showMsg(
-    "Your account has been suspended.\nPlease contact support for assistance.",
-    "Account Suspended",
-    true
+    "user_profile",
+    JSON.stringify(data.profile)
   );
 
-  return;
+  localStorage.setItem(
+    "login_uid",
+    data.profile.uid
+  );
+
+  localStorage.removeItem("isGuest");
+  localStorage.removeItem("guest_uid");
+
+  if (data.trustedToken) {
+
+    localStorage.setItem(
+      "trustedToken",
+      data.trustedToken
+    );
+
+    localStorage.setItem(
+      "trustedUser",
+      username
+    );
+
+  }
 }
 
-if(!data.ok){
-  showMsg("Incorrect username or password.");
-  return;
+function getLoginError(data) {
+
+  if (data?.error === "blocked") {
+
+    return (
+      "Your account has been suspended.\n" +
+      "Please contact support for assistance."
+    );
+
+  }
+
+  return "Incorrect account credentials. Please try again.";
 }
 
 
-  // Đúng → mới mở modal bảo mật
-  __loginUser = u;
-  __loginPass = p;
 
-  document.getElementById("secModal").classList.remove("hidden");
-  document.getElementById("secInput").focus();
-}
+/* ==========================================
+   LIVESTREAM PRO - LOGIN V2
+========================================== */
 
+async function login() {
 
+  if (loginRequestBusy) return;
 
+  const u = document.getElementById(
+    "username"
+  ).value.trim();
 
-async function submitSecurity(){
-  const sec = document.getElementById("secInput").value;
-  if(!sec){
-    showMsg("Please enter your security code.");
+  const p = document.getElementById(
+    "password"
+  ).value;
+
+  if (!u || !p) {
+
+    showMsg(
+      "Please enter your username and password."
+    );
+
     return;
   }
 
-  const res = await fetch("/api/login",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      username: __loginUser,
-      password: __loginPass,
-      securityCode: sec
-    })
-  });
+  loginRequestBusy = true;
 
-  const data = await res.json();
+  const startTime = Date.now();
 
- if (data.error === "blocked") {
-showMsg(
-  "Your account has been suspended.\nPlease contact support for assistance.",
-  "Account Suspended",
-  true
-);
-  closeSec();
-  return;
+  showLoginStatus(
+    "loading",
+    "Verifying your account. Please wait..."
+  );
+
+  try {
+
+    const trustedToken =
+      localStorage.getItem("trustedToken");
+
+    const trustedUser =
+      localStorage.getItem("trustedUser");
+
+    // 1. Check trusted device
+    if (trustedToken && trustedUser === u) {
+
+      const check = await loginPost(
+        "/api/check-trusted",
+        {
+          username: u,
+          trustedToken
+        }
+      );
+
+      if (check.httpOk && check.data?.ok) {
+
+        const result = await loginPost(
+          "/api/login",
+          {
+            username: u,
+            password: p,
+            trustedToken
+          }
+        );
+
+        if (
+          result.httpOk &&
+          result.data?.ok &&
+          result.data?.profile?.uid
+        ) {
+
+          saveSuccessfulLogin(result.data, u);
+
+          // Keep the loading state visible briefly
+          const elapsed = Date.now() - startTime;
+          await loginSleep(Math.max(0, 600 - elapsed));
+
+          await loginStatusSuccess(
+            result.data.profile
+          );
+
+          return;
+        }
+
+        if (result.data?.error === "blocked") {
+          await loginStatusError(
+            getLoginError(result.data)
+          );
+          return;
+        }
+
+        // Trusted token rejected: fall back
+        // to normal security verification.
+        localStorage.removeItem("trustedToken");
+        localStorage.removeItem("trustedUser");
+
+      } else {
+
+        localStorage.removeItem("trustedToken");
+        localStorage.removeItem("trustedUser");
+
+      }
+
+    }
+
+    // 2. Standard username/password verification
+    const result = await loginPost(
+      "/api/prelogin",
+      {
+        username: u,
+        password: p
+      }
+    );
+
+    if (!result.httpOk || !result.data?.ok) {
+
+      await loginStatusError(
+        getLoginError(result.data)
+      );
+
+      return;
+    }
+
+    // 3. Show security verification modal
+    __loginUser = u;
+    __loginPass = p;
+
+    const elapsed = Date.now() - startTime;
+
+    await loginSleep(Math.max(0, 600 - elapsed));
+
+    hideLoginStatus();
+
+    document.getElementById(
+      "secModal"
+    ).classList.remove("hidden");
+
+    document.getElementById(
+      "secInput"
+    ).focus();
+
+  } catch (error) {
+
+    console.error(
+      "[LOGIN] Request failed",
+      error
+    );
+
+    await loginStatusError(
+      error?.name === "AbortError"
+        ? "The server took too long to respond. Please try again."
+        : "Unable to connect to the server. Please try again."
+    );
+
+  } finally {
+
+    loginRequestBusy = false;
+
+  }
+
 }
 
-if(data.error){
-  showMsg("Incorrect security code. Please try again.");
-  return;
+
+
+/* ==========================================
+   SECURITY VERIFICATION - STATUS V2
+========================================== */
+
+async function submitSecurity() {
+
+  if (loginRequestBusy) return;
+
+  const sec = document.getElementById(
+    "secInput"
+  ).value;
+
+  if (!sec) {
+
+    showMsg(
+      "Please enter your security code."
+    );
+
+    return;
+  }
+
+  if (!__loginUser || !__loginPass) {
+
+    showMsg(
+      "Login session expired. Please sign in again."
+    );
+
+    closeSec();
+    return;
+  }
+
+  loginRequestBusy = true;
+
+  showLoginStatus(
+    "loading",
+    "Verifying your security code..."
+  );
+
+  try {
+
+    const result = await loginPost(
+      "/api/login",
+      {
+        username: __loginUser,
+        password: __loginPass,
+        securityCode: sec
+      }
+    );
+
+    const data = result.data;
+
+    if (data?.error === "blocked") {
+
+      closeSec();
+
+      await loginStatusError(
+        getLoginError(data)
+      );
+
+      return;
+    }
+
+    if (
+      !result.httpOk ||
+      !data?.ok ||
+      !data?.profile?.uid
+    ) {
+
+      document.getElementById(
+        "secInput"
+      ).value = "";
+
+      await loginStatusError(
+        "Incorrect security code. Please try again."
+      );
+
+      document.getElementById(
+        "secInput"
+      ).focus();
+
+      return;
+    }
+
+    // Save only after final server verification
+    saveSuccessfulLogin(
+      data,
+      __loginUser
+    );
+
+    closeSec();
+
+    // Show success before navigating
+    await loginStatusSuccess(
+      data.profile
+    );
+
+  } catch (error) {
+
+    console.error(
+      "[LOGIN] Security verification failed",
+      error
+    );
+
+    await loginStatusError(
+      error?.name === "AbortError"
+        ? "Verification timed out. Please try again."
+        : "Unable to verify your account. Please try again."
+    );
+
+  } finally {
+
+    loginRequestBusy = false;
+
+  }
+
 }
-
-  // login thành công
-  localStorage.setItem("user_profile", JSON.stringify(data.profile));
-  localStorage.setItem("login_uid", data?.profile?.uid);
-  localStorage.removeItem("isGuest");
-
-if(data.trustedToken){
-  localStorage.setItem("trustedToken", data.trustedToken);
-  localStorage.setItem("trustedUser", __loginUser);
-}
-
-
-  location.href = "/social.html";
-}
-
 
 function closeSec(){
   document.getElementById("secModal").classList.add("hidden");
