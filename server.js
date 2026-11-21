@@ -13038,7 +13038,8 @@ const CARD_TOPUP_PACKAGES = Object.freeze([
   { id: "p6", amountVnd: 500000, diamonds: 1250 },
   { id: "p7", amountVnd: 1000000, diamonds: 2500 },
   { id: "p8", amountVnd: 2000000, diamonds: 5000 },
-  { id: "p9", amountVnd: 5000000, diamonds: 12500 }
+  { id: "p9", amountVnd: 5000000, diamonds: 12500 },
+  { id: "p10", amountVnd: 10000000, diamonds: 25000 }
 ]);
 
 // Return packages for display only.
