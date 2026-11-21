@@ -12317,7 +12317,7 @@ const NEW_TOPUP_AGENTS = [
       owner: "Nguyễn Vinh Luân",
       qr: "/images/topup/qr-kimdogcat.png"
     }
-  }
+  },
 
     // ĐẠI LÝ THỨ 5
     {
