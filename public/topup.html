@@ -1802,6 +1802,37 @@ body.checkout-open {
 
 
 
+/* ==========================================
+   PAY SECURELY BUTTON
+========================================== */
+
+#cardPayBtn {
+  width: 100%;
+  min-height: 52px;
+  border-radius: 13px;
+  font-weight: 850;
+  letter-spacing: .7px;
+  transition: opacity .2s, box-shadow .2s;
+}
+
+#cardPayBtn:not(:disabled) {
+  opacity: 1;
+  color: #24190c;
+  border: 1px solid #ffe1a2;
+  background: linear-gradient(
+    135deg,
+    #ffe7b4,
+    #d9a75a
+  );
+  box-shadow: 0 5px 24px rgba(218,171,88,.28);
+}
+
+#cardPayBtn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+
 
 
 

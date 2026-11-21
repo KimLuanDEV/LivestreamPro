@@ -642,21 +642,37 @@ function renderCardPackages() {
 
     button.append(icon, diamonds, price);
 
-    button.addEventListener("click", () => {
-      selectedCardPackage = pkg;
-      renderCardPackages();
 
-      cardSelectedDiamonds.textContent =
-        formatCardNumber(pkg.diamonds) + " Diamonds";
+button.addEventListener("click", () => {
 
-      cardSelectedAmount.textContent =
-        formatCardVnd(pkg.amountVnd);
+  selectedCardPackage = pkg;
 
-      cardPayBtn.disabled = !cardPaymentEnabled;
+  renderCardPackages();
 
+  cardSelectedDiamonds.textContent =
+    formatCardNumber(pkg.diamonds) + " Diamonds";
 
-      cardPaymentStatus.classList.add("hidden");
-    });
+  cardSelectedAmount.textContent =
+    formatCardVnd(pkg.amountVnd);
+
+  // Enable payment only when the gateway is ready.
+  cardPayBtn.disabled = !cardPaymentEnabled;
+
+  if (cardPaymentEnabled) {
+
+    cardPaymentStatus.classList.add("hidden");
+
+  } else {
+
+    showCardStatus(
+      "Card payment is not available yet. " +
+      "Please try again later."
+    );
+
+  }
+
+});
+
 
     cardPackageList.appendChild(button);
   }
