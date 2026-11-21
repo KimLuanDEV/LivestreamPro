@@ -13024,65 +13024,503 @@ const blockedByYou =
 
 
 
+
 /* ==========================================
-   LIVESTREAM PRO - CARD TOP-UP MAINTENANCE
-   NO REAL PAYMENTS
+   LIVESTREAM PRO - PAYMENT GATEWAY
 ========================================== */
 
 const CARD_TOPUP_PACKAGES = Object.freeze([
-  { id: "p1", amountVnd: 10000,  diamonds: 20 },
-  { id: "p2", amountVnd: 20000,  diamonds: 50 },
-  { id: "p3", amountVnd: 50000,  diamonds: 130 },
-  { id: "p4", amountVnd: 100000, diamonds: 250 },
-  { id: "p5", amountVnd: 200000, diamonds: 500 },
-  { id: "p6", amountVnd: 500000, diamonds: 1250 },
-  { id: "p7", amountVnd: 1000000, diamonds: 2500 },
-  { id: "p8", amountVnd: 2000000, diamonds: 5000 },
-  { id: "p9", amountVnd: 5000000, diamonds: 12500 },
-  { id: "p10", amountVnd: 10000000, diamonds: 25000 }
+  { id:"p1", amountVnd:10000, diamonds:20 },
+  { id:"p2", amountVnd:20000, diamonds:50 },
+  { id:"p3", amountVnd:50000, diamonds:130 },
+  { id:"p4", amountVnd:100000, diamonds:250 },
+  { id:"p5", amountVnd:200000, diamonds:500 },
+  { id:"p6", amountVnd:500000, diamonds:1250 },
+  { id:"p7", amountVnd:1000000, diamonds:2500 },
+  { id:"p8", amountVnd:2000000, diamonds:5000 },
+  { id:"p9", amountVnd:5000000, diamonds:12500 },
+  { id:"p10", amountVnd:10000000, diamonds:25000 }
 ]);
 
-// Return packages for display only.
+const PG_MERCHANT_ID =
+  process.env.SEPAY_PG_MERCHANT_ID || "";
+
+const PG_SECRET_KEY =
+  process.env.SEPAY_PG_SECRET_KEY || "";
+
+const PG_IPN_SECRET =
+  process.env.SEPAY_PG_IPN_SECRET || "";
+
+const PG_MODE =
+  process.env.SEPAY_PG_MODE === "production"
+    ? "production"
+    : "sandbox";
+
+const PG_PUBLIC_URL = String(
+  process.env.LSP_PUBLIC_URL || ""
+).replace(/\/$/, "");
+
+const PG_ORDERS_FILE = path.join(
+  "/opt/render/project/data",
+  "lsp_pg_orders.json"
+);
+
+function pgConfigured() {
+  return Boolean(
+    PG_MERCHANT_ID &&
+    PG_SECRET_KEY &&
+    PG_IPN_SECRET &&
+    /^https:\/\/[^/?#]+$/i.test(PG_PUBLIC_URL)
+  );
+}
+
+function pgLoadOrders() {
+  if (!fs.existsSync(PG_ORDERS_FILE)) return {};
+
+  const data = JSON.parse(
+    fs.readFileSync(PG_ORDERS_FILE, "utf8")
+  );
+
+  if (!data || Array.isArray(data) ||
+      typeof data !== "object") {
+    throw new Error("Invalid payment ledger.");
+  }
+
+  return data;
+}
+
+function pgAtomicSave(filename, data) {
+  const temp = filename + "." + process.pid + ".tmp";
+
+  fs.writeFileSync(
+    temp,
+    JSON.stringify(data, null, 2),
+    { mode: 0o600 }
+  );
+
+  fs.renameSync(temp, filename);
+}
+
+function pgVerifySecret(actual, expected) {
+
+  const a = Buffer.from(String(actual || ""));
+  const b = Buffer.from(String(expected || ""));
+
+  return a.length > 0 &&
+    a.length === b.length &&
+    crypto.timingSafeEqual(a, b);
+}
+
+/* ==========================================
+   PAYMENT PACKAGES
+========================================== */
+
 app.get("/api/card-topup/packages", (req, res) => {
+
   res.set("Cache-Control", "no-store");
 
   res.json({
     ok: true,
-    maintenance: true,
+    enabled: pgConfigured(),
     packages: CARD_TOPUP_PACKAGES
   });
+
 });
 
-// Disable payment creation on the server.
-app.post("/api/card-topup/create", (req, res) => {
-  res.status(503).json({
-    ok: false,
-    maintenance: true,
-    message: "Card payment is under maintenance."
-  });
+/* ==========================================
+   CREATE PAYMENT
+========================================== */
+
+const pgCreateAttempts = new Map();
+
+app.post(
+  "/api/card-topup/create",
+  spiritAuth,
+  async (req, res) => {
+
+    res.set("Cache-Control", "no-store");
+
+    if (!pgConfigured()) {
+      return res.status(503).json({
+        ok: false,
+        message: "Payment service unavailable."
+      });
+    }
+
+    // Same-origin protection.
+    const origin = req.headers.origin;
+
+    if (origin && origin !== PG_PUBLIC_URL) {
+      return res.status(403).json({
+        ok: false,
+        message: "Invalid request origin."
+      });
+    }
+
+    const uid = String(req.spiritUid || "");
+
+    const pkg = CARD_TOPUP_PACKAGES.find(
+      x => x.id === req.body?.packageId
+    );
+
+    const method = String(
+      req.body?.paymentMethod || ""
+    );
+
+    if (
+      !uid ||
+      !pkg ||
+      ![
+        "CARD",
+        "BANK_TRANSFER",
+        "NAPAS_BANK_TRANSFER"
+      ].includes(method)
+    ) {
+      return res.status(400).json({
+        ok: false,
+        message: "Invalid payment request."
+      });
+    }
+
+    const now = Date.now();
+
+    const attempts = (
+      pgCreateAttempts.get(uid) || []
+    ).filter(t => now - t < 60000);
+
+    if (attempts.length >= 5) {
+      return res.status(429).json({
+        ok: false,
+        message: "Too many payment attempts."
+      });
+    }
+
+    attempts.push(now);
+    pgCreateAttempts.set(uid, attempts);
+
+    try {
+
+      // Official SDK generates the signed checkout fields.
+      const { SePayPgClient } =
+        await import("sepay-pg-node");
+
+      const client = new SePayPgClient({
+        env: PG_MODE,
+        merchant_id: PG_MERCHANT_ID,
+        secret_key: PG_SECRET_KEY
+      });
+
+      const invoice =
+        "LSP" +
+        crypto.randomBytes(10)
+          .toString("hex")
+          .toUpperCase();
+
+      const orders = pgLoadOrders();
+
+      orders[invoice] = {
+        uid,
+        packageId: pkg.id,
+        amountVnd: pkg.amountVnd,
+        diamonds: pkg.diamonds,
+        method,
+        status: "pending",
+        createdAt: now
+      };
+
+      pgAtomicSave(PG_ORDERS_FILE, orders);
+
+      const returnUrl =
+        PG_PUBLIC_URL + "/api/card-topup/return";
+
+      const fields =
+        client.checkout.initOneTimePaymentFields({
+          operation: "PURCHASE",
+          payment_method: method,
+          order_invoice_number: invoice,
+          order_amount: pkg.amountVnd,
+          currency: "VND",
+          order_description:
+            "Livestream Pro Topup " + invoice,
+          customer_id: uid,
+          success_url:
+            returnUrl + "?result=success&invoice=" + invoice,
+          error_url:
+            returnUrl + "?result=error&invoice=" + invoice,
+          cancel_url:
+            returnUrl + "?result=cancel&invoice=" + invoice
+        });
+
+      return res.json({
+        ok: true,
+        invoice,
+        checkoutUrl: client.checkout.initCheckoutUrl(),
+        fields
+      });
+
+    } catch (error) {
+
+      console.error("[PAYMENT CREATE]", error.message);
+
+      return res.status(500).json({
+        ok: false,
+        message: "Unable to create payment."
+      });
+
+    }
+  }
+);
+
+/* ==========================================
+   PAYMENT IPN - SEPAY
+========================================== */
+
+app.post("/api/card-topup/ipn", (req, res) => {
+
+  res.set("Cache-Control", "no-store");
+
+  if (!pgConfigured()) {
+    return res.status(503).json({
+      success: false
+    });
+  }
+
+  if (!pgVerifySecret(
+    req.headers["x-secret-key"],
+    PG_IPN_SECRET
+  )) {
+    return res.status(401).json({
+      success: false
+    });
+  }
+
+  const payload = req.body || {};
+
+  if (payload.notification_type !== "ORDER_PAID") {
+    return res.json({ success: true });
+  }
+
+  const remoteOrder = payload.order || {};
+  const txn = payload.transaction || {};
+
+  const invoice = String(
+    remoteOrder.order_invoice_number || ""
+  );
+
+  if (!/^LSP[A-F0-9]{20}$/.test(invoice)) {
+    return res.status(400).json({
+      success: false
+    });
+  }
+
+  try {
+
+    const orders = pgLoadOrders();
+    const order = orders[invoice];
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Unknown order."
+      });
+    }
+
+    const orderAmount = Number(
+      remoteOrder.order_amount
+    );
+
+    const paidAmount = Number(
+      txn.transaction_amount
+    );
+
+    const paymentValid =
+      remoteOrder.order_status === "CAPTURED" &&
+      remoteOrder.order_currency === "VND" &&
+      txn.transaction_status === "APPROVED" &&
+      txn.transaction_type === "PAYMENT" &&
+      txn.transaction_currency === "VND" &&
+      Number.isSafeInteger(orderAmount) &&
+      Number.isSafeInteger(paidAmount) &&
+      orderAmount === order.amountVnd &&
+      paidAmount === order.amountVnd &&
+      (!txn.payment_method ||
+        txn.payment_method === order.method);
+
+    if (!paymentValid) {
+      return res.status(422).json({
+        success: false,
+        message: "Payment validation failed."
+      });
+    }
+
+    // Sandbox must never credit real wallets.
+    if (PG_MODE !== "production") {
+
+      orders[invoice] = {
+        ...order,
+        status: "sandbox_confirmed",
+        confirmedAt: Date.now()
+      };
+
+      pgAtomicSave(PG_ORDERS_FILE, orders);
+
+      return res.json({ success: true });
+    }
+
+    const users = loadUsers();
+    const user = users[order.uid];
+
+    if (!user?.profile) {
+      return res.status(409).json({
+        success: false,
+        message: "User unavailable."
+      });
+    }
+
+    // A persistent marker prevents ordinary replay.
+    user.profile.creditedPaymentInvoices ||= {};
+
+    if (!user.profile.creditedPaymentInvoices[invoice]) {
+
+      const balance = Number(user.profile.coins || 0);
+      const deposit = Number(
+        user.profile.coinDeposit || 0
+      );
+
+      if (
+        !Number.isSafeInteger(balance) ||
+        balance < 0 ||
+        !Number.isSafeInteger(deposit) ||
+        deposit < 0 ||
+        !Number.isSafeInteger(balance + order.diamonds) ||
+        !Number.isSafeInteger(deposit + order.diamonds)
+      ) {
+        return res.status(409).json({
+          success: false,
+          message: "Invalid wallet data."
+        });
+      }
+
+      user.profile.coins = balance + order.diamonds;
+      user.profile.coinDeposit =
+        deposit + order.diamonds;
+
+      user.profile.creditedPaymentInvoices[invoice] = {
+        diamonds: order.diamonds,
+        at: Date.now()
+      };
+
+      pgAtomicSave(USERS_FILE, users);
+    }
+
+    if (order.status !== "paid") {
+
+      orders[invoice] = {
+        ...order,
+        status: "paid",
+        paidAt: Date.now(),
+        providerTransactionId: String(
+          txn.transaction_id || txn.id || ""
+        )
+      };
+
+      pgAtomicSave(PG_ORDERS_FILE, orders);
+    }
+
+    emitCoinUpdate(order.uid);
+
+    return res.json({ success: true });
+
+  } catch (error) {
+
+    console.error("[PAYMENT IPN]", error.message);
+
+    return res.status(500).json({
+      success: false
+    });
+  }
 });
 
-// Disable gateway callbacks.
-app.get("/api/card-topup/ipn", (req, res) => {
-  res.status(503).json({
-    RspCode: "99",
-    Message: "Payment integration disabled"
-  });
-});
+/* ==========================================
+   PAYMENT RETURN
+========================================== */
 
-// Disable payment return processing.
 app.get("/api/card-topup/return", (req, res) => {
-  res.redirect(303, "/topup.html");
+
+  const result = [
+    "success",
+    "error",
+    "cancel"
+  ].includes(req.query.result)
+    ? req.query.result
+    : "unknown";
+
+  const invoice = /^LSP[A-F0-9]{20}$/.test(
+    String(req.query.invoice || "")
+  )
+    ? String(req.query.invoice)
+    : "";
+
+  // The return URL never credits diamonds.
+  res.redirect(
+    303,
+    "/topup.html?payment=" +
+      result +
+      "&invoice=" +
+      encodeURIComponent(invoice)
+  );
 });
 
-// Disable payment status processing.
-app.get("/api/card-topup/status/:id", (req, res) => {
-  res.status(503).json({
-    ok: false,
-    maintenance: true,
-    message: "Card payment is under maintenance."
-  });
-});
+/* ==========================================
+   PAYMENT STATUS
+========================================== */
+
+app.get(
+  "/api/card-topup/status/:id",
+  spiritAuth,
+  (req, res) => {
+
+    res.set("Cache-Control", "no-store");
+
+    try {
+
+      const invoice = String(req.params.id);
+      const order = pgLoadOrders()[invoice];
+
+      if (
+        !order ||
+        order.uid !== String(req.spiritUid)
+      ) {
+        return res.status(404).json({
+          ok: false,
+          message: "Payment order not found."
+        });
+      }
+
+      const users = loadUsers();
+
+      const credited = Boolean(
+        users[order.uid]?.profile
+          ?.creditedPaymentInvoices?.[invoice]
+      );
+
+      return res.json({
+        ok: true,
+        invoice,
+        status: credited ? "paid" : "pending",
+        diamonds: order.diamonds,
+        amountVnd: order.amountVnd
+      });
+
+    } catch (error) {
+
+      return res.status(500).json({
+        ok: false,
+        message: "Unable to check payment status."
+      });
+    }
+  }
+);
 
 
 
