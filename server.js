@@ -13030,12 +13030,15 @@ const blockedByYou =
 ========================================== */
 
 const CARD_TOPUP_PACKAGES = Object.freeze([
-  { id: "p1", amountVnd: 10000,  diamonds: 100 },
-  { id: "p2", amountVnd: 20000,  diamonds: 200 },
-  { id: "p3", amountVnd: 50000,  diamonds: 500 },
-  { id: "p4", amountVnd: 100000, diamonds: 1000 },
-  { id: "p5", amountVnd: 200000, diamonds: 2000 },
-  { id: "p6", amountVnd: 500000, diamonds: 5000 }
+  { id: "p1", amountVnd: 10000,  diamonds: 20 },
+  { id: "p2", amountVnd: 20000,  diamonds: 50 },
+  { id: "p3", amountVnd: 50000,  diamonds: 130 },
+  { id: "p4", amountVnd: 100000, diamonds: 250 },
+  { id: "p5", amountVnd: 200000, diamonds: 500 },
+  { id: "p6", amountVnd: 500000, diamonds: 1250 },
+  { id: "p7", amountVnd: 1000000, diamonds: 2500 },
+  { id: "p8", amountVnd: 2000000, diamonds: 5000 },
+  { id: "p9", amountVnd: 5000000, diamonds: 12500 }
 ]);
 
 // Return packages for display only.
