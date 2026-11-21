@@ -782,11 +782,50 @@ function showCardMaintenance() {
   ).focus();
 }
 
+
 /* ==========================================
-   PAY BUTTON
+   LIVESTREAM PRO - PAYMENT CHECKOUT PREVIEW
 ========================================== */
 
-cardPayBtn.addEventListener("click", () => {
+let checkoutLastFocus = null;
+let checkoutSelectedMethod = "atm";
+
+const CHECKOUT_METHODS = [
+  {
+    id: "atm",
+    title: "Domestic ATM Card",
+    subtitle: "Vietnamese bank cards",
+    icon: "🏦"
+  },
+  {
+    id: "visa",
+    title: "Visa",
+    subtitle: "International payment card",
+    icon: "💳"
+  },
+  {
+    id: "mastercard",
+    title: "Mastercard",
+    subtitle: "International payment card",
+    icon: "💳"
+  }
+];
+
+function closeCardCheckout() {
+
+  const checkout = document.getElementById(
+    "lspCardCheckout"
+  );
+
+  if (!checkout) return;
+
+  checkout.classList.remove("show");
+  document.body.classList.remove("checkout-open");
+
+  checkoutLastFocus?.focus?.();
+}
+
+function openCardCheckout() {
 
   if (!selectedCardPackage) {
     showToast(
@@ -796,10 +835,316 @@ cardPayBtn.addEventListener("click", () => {
     return;
   }
 
-  // No payment request is created.
-  // No diamonds are credited.
-  showCardMaintenance();
+  checkoutLastFocus = document.activeElement;
+  checkoutSelectedMethod = "atm";
 
+  let checkout = document.getElementById(
+    "lspCardCheckout"
+  );
+
+  if (!checkout) {
+
+    checkout = document.createElement("div");
+    checkout.id = "lspCardCheckout";
+    checkout.className = "lsp-checkout";
+
+    checkout.innerHTML = `
+      <section class="lsp-checkout-page"
+               role="dialog"
+               aria-modal="true"
+               aria-labelledby="lspCheckoutTitle">
+
+        <header class="lsp-checkout-header">
+
+          <button id="lspCheckoutBack"
+                  type="button"
+                  class="lsp-checkout-back"
+                  aria-label="Back to top-up">
+            &#8592;
+          </button>
+
+          <div class="lsp-checkout-brand">
+            <small>LIVESTREAM PRO</small>
+            <h2 id="lspCheckoutTitle">
+              Secure Checkout
+            </h2>
+          </div>
+
+          <span class="lsp-checkout-lock">
+            &#128274;
+          </span>
+
+        </header>
+
+        <main class="lsp-checkout-body">
+
+          <div class="lsp-preview-label">
+            PAYMENT PREVIEW · NOT ACTIVE
+          </div>
+
+          <div class="lsp-order-card">
+
+            <div class="lsp-order-heading">
+              <span>Order Summary</span>
+              <small>DIAMOND TOP-UP</small>
+            </div>
+
+            <div class="lsp-order-product">
+              <span class="lsp-order-diamond">
+                &#128142;
+              </span>
+
+              <div class="lsp-order-name">
+                <strong id="lspCheckoutDiamonds"></strong>
+                <small>Livestream Pro Wallet</small>
+              </div>
+            </div>
+
+            <div class="lsp-order-divider"></div>
+
+            <div class="lsp-order-total">
+              <span>Total Payment</span>
+              <strong id="lspCheckoutTotal"></strong>
+            </div>
+
+          </div>
+
+          <h3 class="lsp-method-heading">
+            SELECT PAYMENT METHOD
+          </h3>
+
+          <div id="lspCheckoutMethods"
+               class="lsp-checkout-methods"
+               role="radiogroup"
+               aria-label="Payment method">
+          </div>
+
+          <div class="lsp-checkout-security">
+            <span>&#128274;</span>
+            <div>
+              <strong>Checkout demonstration</strong>
+              <small>
+                No card details are requested.
+                No payment will be processed.
+              </small>
+            </div>
+          </div>
+
+        </main>
+
+        <footer class="lsp-checkout-footer">
+          <div class="lsp-checkout-footer-total">
+            <span>Amount to pay</span>
+            <strong id="lspCheckoutFooterTotal"></strong>
+          </div>
+
+          <button id="lspCheckoutConfirm"
+                  type="button">
+            CONFIRM PAYMENT
+          </button>
+        </footer>
+
+      </section>
+    `;
+
+    document.body.appendChild(checkout);
+
+    checkout.querySelector(
+      "#lspCheckoutBack"
+    ).addEventListener(
+      "click",
+      closeCardCheckout
+    );
+
+    checkout.addEventListener("click", event => {
+      if (event.target === checkout) {
+        closeCardCheckout();
+      }
+    });
+
+
+checkout.querySelector(
+  "#lspCheckoutConfirm"
+).addEventListener("click", () => {
+
+  closeCardCheckout();
+  openDemoCardDetails();
+
+});
+
+
+    checkout.addEventListener("keydown", event => {
+
+      if (event.key === "Escape") {
+        closeCardCheckout();
+        return;
+      }
+
+      if (event.key !== "Tab") return;
+
+      const controls = [
+        ...checkout.querySelectorAll(
+          "button:not(:disabled)"
+        )
+      ];
+
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (
+        !event.shiftKey &&
+        document.activeElement === last
+      ) {
+        event.preventDefault();
+        first.focus();
+      }
+
+    });
+
+  }
+
+  const pkg = selectedCardPackage;
+
+  checkout.querySelector(
+    "#lspCheckoutDiamonds"
+  ).textContent =
+    formatCardNumber(pkg.diamonds) + " Diamonds";
+
+  checkout.querySelector(
+    "#lspCheckoutTotal"
+  ).textContent = formatCardVnd(pkg.amountVnd);
+
+  checkout.querySelector(
+    "#lspCheckoutFooterTotal"
+  ).textContent = formatCardVnd(pkg.amountVnd);
+
+  renderCheckoutMethods(checkout);
+
+  checkout.classList.add("show");
+  document.body.classList.add("checkout-open");
+
+  checkout.querySelector(
+    "#lspCheckoutBack"
+  ).focus();
+
+}
+
+/* ==========================================
+   PAYMENT METHOD SELECTION
+========================================== */
+
+function renderCheckoutMethods(checkout) {
+
+  const container = checkout.querySelector(
+    "#lspCheckoutMethods"
+  );
+
+  container.replaceChildren();
+
+  CHECKOUT_METHODS.forEach(method => {
+
+    const selected =
+      method.id === checkoutSelectedMethod;
+
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "lsp-payment-method";
+    button.setAttribute("role", "radio");
+    button.setAttribute("aria-checked", String(selected));
+
+    if (selected) {
+      button.classList.add("selected");
+    }
+
+    const icon = document.createElement("span");
+    icon.className = "lsp-method-icon";
+    icon.textContent = method.icon;
+
+    const info = document.createElement("span");
+    info.className = "lsp-method-info";
+
+    const title = document.createElement("strong");
+    title.textContent = method.title;
+
+    const subtitle = document.createElement("small");
+    subtitle.textContent = method.subtitle;
+
+    info.append(title, subtitle);
+
+    const check = document.createElement("span");
+    check.className = "lsp-method-check";
+    check.textContent = selected ? "●" : "○";
+
+    button.append(icon, info, check);
+
+    button.addEventListener("click", () => {
+
+      checkoutSelectedMethod = method.id;
+
+      renderCheckoutMethods(checkout);
+
+      const buttons = [
+        ...container.querySelectorAll(
+          ".lsp-payment-method"
+        )
+      ];
+
+      const index = CHECKOUT_METHODS.findIndex(
+        m => m.id === method.id
+      );
+
+      buttons[index]?.focus();
+
+    });
+
+    button.addEventListener("keydown", event => {
+
+      if (
+        event.key !== "ArrowDown" &&
+        event.key !== "ArrowUp" &&
+        event.key !== "ArrowRight" &&
+        event.key !== "ArrowLeft"
+      ) return;
+
+      event.preventDefault();
+
+      const index = CHECKOUT_METHODS.findIndex(
+        m => m.id === checkoutSelectedMethod
+      );
+
+      const direction =
+        event.key === "ArrowDown" ||
+        event.key === "ArrowRight" ? 1 : -1;
+
+      const next = (
+        index + direction + CHECKOUT_METHODS.length
+      ) % CHECKOUT_METHODS.length;
+
+      checkoutSelectedMethod = CHECKOUT_METHODS[next].id;
+      renderCheckoutMethods(checkout);
+
+      container.querySelectorAll(
+        ".lsp-payment-method"
+      )[next]?.focus();
+
+    });
+
+    container.appendChild(button);
+
+  });
+
+}
+
+/* ==========================================
+   MAIN PAY BUTTON
+========================================== */
+
+cardPayBtn.addEventListener("click", () => {
+  openCardCheckout();
 });
 
 /* ==========================================
@@ -807,3 +1152,366 @@ cardPayBtn.addEventListener("click", () => {
 ========================================== */
 
 loadCardPackages();
+
+
+
+/* ==========================================
+   LIVESTREAM PRO - CARD DETAILS PREVIEW V3
+========================================== */
+
+function closeDemoCardDetails() {
+
+  document.getElementById(
+    "lspDemoCardScreen"
+  )?.remove();
+
+  document.body.classList.remove("checkout-open");
+
+}
+
+function openDemoCardDetails() {
+
+  document.getElementById(
+    "lspDemoCardScreen"
+  )?.remove();
+
+  const screen = document.createElement("div");
+
+  screen.id = "lspDemoCardScreen";
+  screen.className = "lsp-demo-card-screen";
+
+  const amount = selectedCardPackage
+    ? formatCardVnd(selectedCardPackage.amountVnd)
+    : "—";
+
+  const currentYear = new Date().getFullYear();
+
+  const monthOptions = Array.from(
+    { length: 12 },
+    (_, i) => String(i + 1).padStart(2, "0")
+  ).map(month =>
+    `<option value="${month}">${month}</option>`
+  ).join("");
+
+  const yearOptions = Array.from(
+    { length: 11 },
+    (_, i) => String(currentYear + i)
+  ).map(year =>
+    `<option value="${year.slice(-2)}">${year}</option>`
+  ).join("");
+
+  screen.innerHTML = `
+    <section
+      class="lsp-demo-card-page"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="lspDemoCardTitle">
+
+      <header class="lsp-demo-card-header">
+
+        <button
+          id="lspDemoCardBack"
+          type="button"
+          aria-label="Back to checkout">
+          &#8592;
+        </button>
+
+        <div>
+          <small>LIVESTREAM PRO</small>
+
+          <h2 id="lspDemoCardTitle">
+            Card Details
+          </h2>
+        </div>
+
+      </header>
+
+      <main class="lsp-demo-card-body">
+
+        <div class="lsp-demo-warning">
+          PAYMENT PREVIEW ONLY
+          · DO NOT ENTER REAL CARD DETAILS
+        </div>
+
+        <!-- CARD PREVIEW -->
+
+        <div class="lsp-demo-bank-card">
+
+          <div class="lsp-demo-card-brand">
+            <strong>LIVESTREAM PRO</strong>
+            <span>&#128179;</span>
+          </div>
+
+          <div
+            class="lsp-demo-card-number"
+            id="lspPreviewNumber">
+            •••• •••• •••• ••••
+          </div>
+
+          <div class="lsp-demo-card-bottom">
+
+            <div>
+              <small>CARD HOLDER</small>
+
+              <strong id="lspPreviewName">
+                YOUR NAME
+              </strong>
+            </div>
+
+            <div>
+              <small>EXPIRES</small>
+
+              <strong id="lspPreviewExpiry">
+                MM/YY
+              </strong>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- EDITABLE INFORMATION -->
+
+        <div class="lsp-demo-fields">
+
+          <label for="lspCardLastFour">
+            Card Number (Last 4 Digits)
+          </label>
+
+          <input
+            id="lspCardLastFour"
+            class="lsp-demo-field lsp-demo-input"
+            type="text"
+            inputmode="numeric"
+            maxlength="4"
+            autocomplete="off"
+            placeholder="Enter last 4 digits">
+
+          <label for="lspCardHolderName">
+            Cardholder Name
+          </label>
+
+          <input
+            id="lspCardHolderName"
+            class="lsp-demo-field lsp-demo-input"
+            type="text"
+            maxlength="60"
+            autocomplete="off"
+            placeholder="Enter cardholder name">
+
+          <div class="lsp-demo-field-grid">
+
+            <div>
+              <label for="lspCardExpiryMonth">
+                Expiry Month
+              </label>
+
+              <select
+                id="lspCardExpiryMonth"
+                class="lsp-demo-field lsp-demo-input">
+
+                <option value="">MM</option>
+
+                ${monthOptions}
+
+              </select>
+            </div>
+
+            <div>
+              <label for="lspCardExpiryYear">
+                Expiry Year
+              </label>
+
+              <select
+                id="lspCardExpiryYear"
+                class="lsp-demo-field lsp-demo-input">
+
+                <option value="">YY</option>
+
+                ${yearOptions}
+
+              </select>
+            </div>
+
+          </div>
+
+          <label>CVV</label>
+
+          <div class="lsp-demo-field">
+            •••
+            <span class="lsp-demo-nocollect">
+              Not requested
+            </span>
+          </div>
+
+        </div>
+
+        <p class="lsp-demo-description">
+          Demonstration only. Enter your name and
+          optionally the last four digits of a card.
+          Never enter a full card number, CVV or OTP.
+          No card information is saved or transmitted.
+        </p>
+
+      </main>
+
+      <footer class="lsp-demo-card-footer">
+
+        <div class="lsp-demo-amount">
+          <span>Payment Amount</span>
+
+          <strong id="lspDemoPaymentAmount">
+          </strong>
+        </div>
+
+        <button
+          id="lspDemoCardConfirm"
+          type="button">
+          CONFIRM DEMO PAYMENT
+        </button>
+
+      </footer>
+
+    </section>
+  `;
+
+  document.body.appendChild(screen);
+
+  document.body.classList.add("checkout-open");
+
+  // Show selected payment amount.
+  screen.querySelector(
+    "#lspDemoPaymentAmount"
+  ).textContent = amount;
+
+  /* ======================================
+     LIVE CARD NUMBER PREVIEW
+  ====================================== */
+
+  const cardLastFour = screen.querySelector(
+    "#lspCardLastFour"
+  );
+
+  const previewNumber = screen.querySelector(
+    "#lspPreviewNumber"
+  );
+
+  cardLastFour.addEventListener("input", () => {
+
+    const digits = cardLastFour.value
+      .replace(/\D/g, "")
+      .slice(0, 4);
+
+    cardLastFour.value = digits;
+
+    previewNumber.textContent =
+      "•••• •••• •••• " + digits.padEnd(4, "•");
+
+  });
+
+  /* ======================================
+     LIVE CARDHOLDER NAME PREVIEW
+  ====================================== */
+
+  const cardHolderName = screen.querySelector(
+    "#lspCardHolderName"
+  );
+
+  const previewName = screen.querySelector(
+    "#lspPreviewName"
+  );
+
+  cardHolderName.addEventListener("input", () => {
+
+    previewName.textContent =
+      cardHolderName.value.trim().toUpperCase()
+      || "YOUR NAME";
+
+  });
+
+  /* ======================================
+     LIVE EXPIRY PREVIEW
+  ====================================== */
+
+  const expiryMonth = screen.querySelector(
+    "#lspCardExpiryMonth"
+  );
+
+  const expiryYear = screen.querySelector(
+    "#lspCardExpiryYear"
+  );
+
+  const previewExpiry = screen.querySelector(
+    "#lspPreviewExpiry"
+  );
+
+  function updateExpiryPreview() {
+
+    previewExpiry.textContent =
+      (expiryMonth.value || "MM") +
+      "/" +
+      (expiryYear.value || "YY");
+
+  }
+
+  expiryMonth.addEventListener(
+    "change",
+    updateExpiryPreview
+  );
+
+  expiryYear.addEventListener(
+    "change",
+    updateExpiryPreview
+  );
+
+  /* ======================================
+     BACK TO CHECKOUT
+  ====================================== */
+
+  screen.querySelector(
+    "#lspDemoCardBack"
+  ).addEventListener("click", () => {
+
+    closeDemoCardDetails();
+
+    openCardCheckout();
+
+  });
+
+  /* ======================================
+     FINAL CONFIRMATION
+  ====================================== */
+
+  screen.querySelector(
+    "#lspDemoCardConfirm"
+  ).addEventListener("click", () => {
+
+    // No card processing.
+    // No API requests.
+    // No transaction is created.
+
+    closeDemoCardDetails();
+
+    showCardMaintenance();
+
+  });
+
+  /* ======================================
+     ESCAPE KEY
+  ====================================== */
+
+  screen.addEventListener("keydown", event => {
+
+    if (event.key === "Escape") {
+
+      closeDemoCardDetails();
+
+      openCardCheckout();
+
+    }
+
+  });
+
+  cardHolderName.focus();
+
+}
