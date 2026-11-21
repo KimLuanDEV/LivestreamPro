@@ -12288,7 +12288,7 @@ const NEW_TOPUP_AGENTS = [
 
   // ĐẠI LÝ THỨ 2
   {
-    uid: "NguyenPhuongVu",
+    uid: "Agent_TopUp_1",
     bank: {
       name: "Vietcombank",
       account: "1017495554",
@@ -12299,12 +12299,23 @@ const NEW_TOPUP_AGENTS = [
 
   // ĐẠI LÝ THỨ 3
   {
-    uid: "HoangHiep",
+    uid: "Agent_TopUp_2",
     bank: {
       name: "Techcombank",
       account: "2888388888",
       owner: "Hoàng Kim Hiệp",
       qr: "/images/topup/qr-hoang-hiep.png"
+    }
+  },
+
+  // ĐẠI LÝ THỨ 4
+    {
+    uid: "KimDogCat",
+    bank: {
+      name: "Techcombank",
+      account: "9919891995",
+      owner: "Nguyễn Vinh Luân",
+      qr: "/images/topup/qr-kimdogcat.png"
     }
   }
 
