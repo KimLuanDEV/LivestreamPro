@@ -591,6 +591,227 @@ button {
   }
 }
 
+
+
+
+/* ==========================================
+   REGISTER STATUS - PREMIUM BLACK GOLD
+========================================== */
+
+.register-status-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.register-status-overlay.hidden {
+  display: none !important;
+}
+
+.register-status-backdrop {
+  position: absolute;
+  inset: 0;
+
+  background: rgba(3, 4, 7, .94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.register-status-card {
+  position: relative;
+  z-index: 1;
+
+  width: 100%;
+  max-width: 350px;
+
+  padding: 38px 24px 30px;
+  text-align: center;
+
+  border: 1px solid rgba(222, 181, 111, .48);
+  border-radius: 20px;
+
+  background: linear-gradient(
+    155deg,
+    #2b251e,
+    #17191d 60%,
+    #101115
+  );
+
+  box-shadow:
+    0 25px 70px rgba(0,0,0,.65),
+    inset 0 1px rgba(255,255,255,.06);
+
+  animation: registerAppear .25s ease-out;
+}
+
+.register-status-brand {
+  color: #cba86f;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 2.5px;
+  margin-bottom: 29px;
+}
+
+.register-status-icon {
+  width: 82px;
+  height: 82px;
+
+  margin: 0 auto 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 2px solid rgba(215,174,104,.3);
+  border-radius: 50%;
+
+  background: rgba(202,158,88,.08);
+}
+
+.register-status-icon.success {
+  border-color: #76c992;
+  background: rgba(70,180,110,.1);
+}
+
+.register-status-icon.error {
+  border-color: #e07777;
+  background: rgba(210,65,65,.1);
+}
+
+.register-status-spinner {
+  width: 45px;
+  height: 45px;
+
+  border: 3px solid rgba(213,174,108,.16);
+  border-top-color: #e9c387;
+  border-radius: 50%;
+
+  animation: registerSpin .8s linear infinite;
+}
+
+.register-status-icon.success::after {
+  content: "✓";
+  color: #88e4aa;
+  font-size: 44px;
+  font-weight: 900;
+}
+
+.register-status-icon.error::after {
+  content: "×";
+  color: #ff9292;
+  font-size: 50px;
+  font-weight: 700;
+}
+
+#registerStatusTitle {
+  color: #f0dbb8;
+  font-size: 21px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  margin: 0 0 12px;
+}
+
+#registerStatusText {
+  color: #b9b1a5;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-line;
+}
+
+.register-status-progress {
+  height: 4px;
+  margin-top: 28px;
+
+  overflow: hidden;
+  border-radius: 20px;
+
+  background: rgba(218,180,119,.13);
+}
+
+.register-status-progress span {
+  display: block;
+  width: 35%;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: linear-gradient(
+    90deg,
+    #86623a,
+    #f5d69e,
+    #bb8849
+  );
+
+  animation: registerProgress 1.3s ease-in-out infinite;
+}
+
+.register-status-close {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 25px;
+
+  border: 1px solid #d6b47b;
+  border-radius: 9px;
+
+  background: linear-gradient(
+    135deg,
+    #f0d7a7,
+    #c39a60
+  );
+
+  color: #282016;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+@keyframes registerSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes registerProgress {
+  from {
+    transform: translateX(-110%);
+  }
+
+  to {
+    transform: translateX(310%);
+  }
+}
+
+@keyframes registerAppear {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .register-status-spinner,
+  .register-status-progress span,
+  .register-status-card {
+    animation: none;
+  }
+}
+
+
+
+
 </style>
 
 
@@ -809,6 +1030,60 @@ button {
 </main>
 
 
+
+
+<!-- ==========================================
+     REGISTER STATUS OVERLAY
+========================================== -->
+
+<div
+  id="registerStatusOverlay"
+  class="register-status-overlay hidden"
+  role="status"
+  aria-live="polite"
+  aria-atomic="true">
+
+  <div class="register-status-backdrop"></div>
+
+  <div class="register-status-card">
+
+    <div class="register-status-brand">
+      LIVESTREAM PRO
+    </div>
+
+    <div
+      id="registerStatusIcon"
+      class="register-status-icon loading">
+      <span class="register-status-spinner"></span>
+    </div>
+
+    <h2 id="registerStatusTitle">
+      CREATING ACCOUNT
+    </h2>
+
+    <p id="registerStatusText">
+      Setting up your account. Please wait...
+    </p>
+
+    <div
+      id="registerStatusProgress"
+      class="register-status-progress">
+      <span></span>
+    </div>
+
+    <button
+      id="registerStatusClose"
+      type="button"
+      class="register-status-close hidden"
+      onclick="hideRegisterStatus()">
+      TRY AGAIN
+    </button>
+
+  </div>
+</div>
+
+
+
 <!-- ==========================================
      GLOBAL NOTIFICATION MODAL
 ========================================== -->
@@ -843,26 +1118,155 @@ button {
 
 <script>
 
+
 /* ==========================================
-   ACCOUNT REGISTRATION
-   ENGLISH NOTIFICATIONS
+   LIVESTREAM PRO
+   REGISTRATION STATUS SYSTEM V2
+========================================== */
+
+let registerBusy = false;
+
+const REGISTER_SUCCESS_DELAY = 1800;
+
+const registerSleep = ms =>
+  new Promise(resolve => setTimeout(resolve, ms));
+
+function showRegisterStatus(type, message) {
+
+  const overlay = document.getElementById(
+    "registerStatusOverlay"
+  );
+
+  const icon = document.getElementById(
+    "registerStatusIcon"
+  );
+
+  const title = document.getElementById(
+    "registerStatusTitle"
+  );
+
+  const text = document.getElementById(
+    "registerStatusText"
+  );
+
+  const progress = document.getElementById(
+    "registerStatusProgress"
+  );
+
+  const close = document.getElementById(
+    "registerStatusClose"
+  );
+
+  overlay.classList.remove("hidden");
+
+  icon.className =
+    "register-status-icon " + type;
+
+  icon.replaceChildren();
+
+  progress.classList.toggle(
+    "hidden",
+    type !== "loading"
+  );
+
+  close.classList.toggle(
+    "hidden",
+    type !== "error"
+  );
+
+  if (type === "loading") {
+
+    title.textContent = "CREATING ACCOUNT";
+
+    text.textContent =
+      message ||
+      "Setting up your account. Please wait...";
+
+    const spinner = document.createElement("span");
+
+    spinner.className =
+      "register-status-spinner";
+
+    icon.appendChild(spinner);
+
+  } else if (type === "success") {
+
+    title.textContent =
+      "REGISTRATION SUCCESSFUL";
+
+    text.textContent =
+      message ||
+      "Your account has been created successfully. Redirecting to Sign In...";
+
+  } else {
+
+    title.textContent =
+      "REGISTRATION FAILED";
+
+    text.textContent =
+      message ||
+      "Unable to create your account. Please try again.";
+
+  }
+
+}
+
+function hideRegisterStatus() {
+
+  document.getElementById(
+    "registerStatusOverlay"
+  ).classList.add("hidden");
+
+}
+
+function getRegisterError(error) {
+
+  switch (error) {
+
+    case "exists":
+      return "This username is already registered. Please choose another username.";
+
+    case "missing":
+      return "Please fill in all required fields.";
+
+    default:
+      return "Unable to create your account. Please try again.";
+
+  }
+
+}
+
+/* ==========================================
+   ACCOUNT REGISTRATION - SECURE FLOW
 ========================================== */
 
 async function register() {
 
-  const u = document.getElementById("username").value.trim();
+  // Prevent duplicate registration requests
+  if (registerBusy) return;
 
-  const name = document.getElementById("name").value.trim();
+  const u = document.getElementById(
+    "username"
+  ).value.trim();
 
-  const p = document.getElementById("password").value;
+  const name = document.getElementById(
+    "name"
+  ).value.trim();
 
-  const p2 = document.getElementById("password2").value;
+  const p = document.getElementById(
+    "password"
+  ).value;
 
-  const sec = document.getElementById("securityCode").value;
+  const p2 = document.getElementById(
+    "password2"
+  ).value;
 
+  const sec = document.getElementById(
+    "securityCode"
+  ).value;
 
-  // CHECK REQUIRED FIELDS
-  if (!u || !p || !p2 || !name || !sec) {
+  // Check required fields
+  if (!u || !name || !p || !p2 || !sec) {
 
     showMsg(
       "Please fill in all required fields."
@@ -871,9 +1275,7 @@ async function register() {
     return;
   }
 
-
-  // VALIDATE USERNAME
-  // Minimum 6 characters, letters, numbers, underscores
+  // Validate username
   const usernameRegex = /^[a-zA-Z0-9_]{6,}$/;
 
   if (!usernameRegex.test(u)) {
@@ -885,8 +1287,7 @@ async function register() {
     return;
   }
 
-
-  // CONFIRM PASSWORD
+  // Confirm password
   if (p !== p2) {
 
     showMsg(
@@ -896,47 +1297,111 @@ async function register() {
     return;
   }
 
+  registerBusy = true;
 
-  // SEND REGISTRATION REQUEST
-  const res = await fetch("/api/register", {
+  const button = document.querySelector(
+    ".register-btn"
+  );
 
-    method: "POST",
-
-    headers: {
-      "Content-Type": "application/json"
-    },
-
-    body: JSON.stringify({
-
-      username: u,
-
-      password: p,
-
-      name,
-
-      securityCode: sec
-
-    })
-
-  });
-
-
-  const data = await res.json();
-
-
-  // REGISTRATION FAILED
-  if (data.error) {
-
-    showMsg(
-      "Account already exists."
-    );
-
-    return;
+  if (button) {
+    button.disabled = true;
   }
 
+  const startTime = Date.now();
 
-  // REGISTRATION SUCCESS
-  location.href = "/login.html";
+  // Show loading immediately
+  showRegisterStatus(
+    "loading",
+    "Creating your account. Please wait..."
+  );
+
+  const controller = new AbortController();
+
+  const timer = setTimeout(() => {
+    controller.abort();
+  }, 20000);
+
+  try {
+
+    const res = await fetch("/api/register", {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      credentials: "same-origin",
+
+      signal: controller.signal,
+
+      body: JSON.stringify({
+        username: u,
+        password: p,
+        name: name,
+        securityCode: sec
+      })
+
+    });
+
+    const data = await res.json();
+
+    // Keep loading visible for at least 600ms
+    const elapsed = Date.now() - startTime;
+
+    if (elapsed < 600) {
+      await registerSleep(600 - elapsed);
+    }
+
+    // Registration failed
+    if (!res.ok || data?.ok !== true) {
+
+      showRegisterStatus(
+        "error",
+        getRegisterError(data?.error)
+      );
+
+      return;
+    }
+
+    // Registration confirmed by server
+    showRegisterStatus(
+      "success",
+      "Your account has been created successfully. Redirecting to Sign In..."
+    );
+
+    // Show success before navigation
+    await registerSleep(
+      REGISTER_SUCCESS_DELAY
+    );
+
+    window.location.replace("/login.html");
+
+  } catch (error) {
+
+    console.error(
+      "[REGISTER] Request failed:",
+      error
+    );
+
+    showRegisterStatus(
+      "error",
+      error?.name === "AbortError"
+        ? "The request timed out. Please check whether your account was created before trying again."
+        : "Connection error. Please check your account status before trying again."
+    );
+
+  } finally {
+
+    clearTimeout(timer);
+
+    registerBusy = false;
+
+    if (button) {
+      button.disabled = false;
+    }
+
+  }
 
 }
 
