@@ -1946,11 +1946,66 @@ socket.on("w8share:paused", () => {
 
 });
 
-// The broadcaster has returned.
-socket.on("w8share:resumed", () => {
+/* ==========================================
+   MILITARY LIVE - VIEWER AUTO RECONNECT
+========================================== */
+
+socket.on("w8share:resumed", async () => {
 
   setStatus(
     "Broadcaster reconnected. Restoring LIVE..."
+  );
+
+  if (!socket.connected) return;
+
+  // Keep an already-working LiveKit connection
+  if (
+    w8ViewerSfuRoom?.state === "connected"
+  ) {
+    setStatus("WATCHING LIVE · SFU");
+    return;
+  }
+
+  if (w8ViewerSfuConnecting) return;
+
+  // Rejoin to receive a fresh SFU proof
+  socket.timeout(10000).emit(
+    "w8share:join",
+    { token },
+
+    async (error, reply) => {
+
+      if (error || !reply?.ok) {
+
+        setStatus(
+          reply?.error ||
+          "Unable to restore LIVE."
+        );
+
+        return;
+      }
+
+      if (reply.paused) {
+
+        setStatus(
+          "Waiting for broadcaster..."
+        );
+
+        return;
+      }
+
+      if (
+        reply.mode === "sfu" &&
+        reply.proof
+      ) {
+
+        await w8ConnectViewerSFU(
+          reply.proof
+        );
+
+      }
+
+    }
   );
 
 });

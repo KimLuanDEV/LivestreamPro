@@ -19501,13 +19501,25 @@ socket.on("w8share:resume", (data, ack) => {
   clearTimeout(session.releaseTimer);
   session.releaseTimer = null;
 
-  session.hostId = socket.id;
-  socket.data.w8Hosting = token;
-  emitW8ShareDirectory();
-  ack({
-    ok: true,
-    count: session.viewers.size
-  });
+/* ==========================================
+   W8 SHARE - RESTORE HOST SESSION
+========================================== */
+
+session.hostId = socket.id;
+
+socket.data.w8Hosting = token;
+
+// Generate a new proof for the reconnected socket
+socket.data.w8SfuProof =
+  crypto.randomBytes(24).toString("hex");
+
+emitW8ShareDirectory();
+
+ack({
+  ok: true,
+  count: session.viewers.size,
+  proof: socket.data.w8SfuProof
+});
 
   // Tell existing viewers that the broadcaster is back.
   for (const viewerId of session.viewers) {

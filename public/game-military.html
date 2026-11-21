@@ -11412,11 +11412,13 @@ async function w8PrepareMobileSfuCapture() {
   // Chụp một khung hình và vẽ vào canvas video.
   async function paintFrame() {
 
-    const frame = await html2canvas(app, {
-      backgroundColor: "#000",
-      width: 430,
-      height: 870,
-      scale: 1,
+const frame = await html2canvas(app, {
+  backgroundColor: "#000",
+  width: 430,
+  height: 870,
+
+  // Reduce CPU and memory usage
+  scale: 0.7,
 
       useCORS: true,
       allowTaint: false,
@@ -11533,7 +11535,8 @@ async function w8PrepareMobileSfuCapture() {
       w8MobileSfuCanvas === output &&
       w8ShareToken
     ) {
-      w8MobileTimer = setTimeout(renderLoop, 120);
+    // Prevent excessive DOM capture on mobile
+w8MobileTimer = setTimeout(renderLoop, 700);
     }
   }
 
@@ -12075,13 +12078,148 @@ socket.on("w8share:left", ({ viewerId, count }) => {
 
 });
 
-// Mất kết nối hoặc thoát trang
-socket.on("disconnect", w8StopShare);
+/* ==========================================
+   MILITARY SHARE - SAFE DISCONNECT
+========================================== */
 
-window.addEventListener("pagehide", w8StopShare);
+socket.on("disconnect", () => {
+
+  if (!w8ShareToken) return;
+
+  console.warn(
+    "[MILITARY SHARE] Socket disconnected"
+  );
+
+  const tip = document.getElementById(
+    "w8ShareTip"
+  );
+
+  if (tip) {
+    tip.textContent =
+      "Connection lost. Reconnecting...";
+  }
+
+  // Do not stop LiveKit
+  // Do not clear the share token
+  // Do not destroy the video capture
+});
 
 
+/* ==========================================
+   MILITARY SHARE - AUTO RESUME
+========================================== */
 
+let w8ResumePending = false;
+
+socket.on("connect", async () => {
+
+  if (!w8ShareToken) return;
+  if (w8ResumePending) return;
+
+  w8ResumePending = true;
+
+  try {
+
+    const reply = await new Promise(resolve => {
+
+      socket.timeout(10000).emit(
+        "w8share:resume",
+        {
+          token: w8ShareToken
+        },
+        (error, data) => {
+
+          resolve(
+            error
+              ? { ok: false, error: "TIMEOUT" }
+              : data
+          );
+
+        }
+      );
+
+    });
+
+    if (!reply?.ok) {
+
+      console.warn(
+        "[MILITARY SHARE] Resume failed",
+        reply?.error
+      );
+
+      if (reply?.expired) {
+        w8StopShare();
+      }
+
+      return;
+    }
+
+    // New server-side proof for this Socket.IO connection
+    if (reply.proof) {
+      w8SfuProof = reply.proof;
+    }
+
+    w8MobileWatchers = reply.count || 0;
+
+    const count = document.getElementById(
+      "w8ShareCount"
+    );
+
+    if (count) {
+      count.textContent =
+        w8MobileWatchers + " viewer";
+    }
+
+    const tip = document.getElementById(
+      "w8ShareTip"
+    );
+
+    if (tip) {
+      tip.textContent =
+        "LIVE reconnected successfully.";
+    }
+
+    // Reconnect LiveKit only if the original room
+    // is no longer connected.
+    if (
+      w8Capture?.getVideoTracks()[0]?.readyState === "live" &&
+      (
+        !w8SfuRoom ||
+        w8SfuRoom.state !== "connected"
+      )
+    ) {
+
+      if (w8SfuRoom) {
+
+        const oldRoom = w8SfuRoom;
+        w8SfuRoom = null;
+
+        await oldRoom.disconnect().catch(() => {});
+
+      }
+
+      await w8ConnectSfuHost();
+
+    }
+
+    console.log(
+      "[MILITARY SHARE] Session restored"
+    );
+
+  } catch (error) {
+
+    console.warn(
+      "[MILITARY SHARE] Reconnect error",
+      error
+    );
+
+  } finally {
+
+    w8ResumePending = false;
+
+  }
+
+});
 
 /* ======================================
    RECEIVE LIVE COMMENTS - HOST
