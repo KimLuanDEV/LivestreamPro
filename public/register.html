@@ -888,21 +888,6 @@ button {
       </div>
 
 
-      <!-- DISPLAY NAME -->
-      <div class="register-field">
-
-        <label for="name">
-          DISPLAY NAME
-        </label>
-
-        <input
-          id="name"
-          type="text"
-          placeholder="Enter your display name"
-          autocomplete="nickname"
-        >
-
-      </div>
 
 
       <!-- PASSWORD -->
@@ -1249,10 +1234,6 @@ async function register() {
     "username"
   ).value.trim();
 
-  const name = document.getElementById(
-    "name"
-  ).value.trim();
-
   const p = document.getElementById(
     "password"
   ).value;
@@ -1266,7 +1247,7 @@ async function register() {
   ).value;
 
   // Check required fields
-  if (!u || !name || !p || !p2 || !sec) {
+  if (!u || !p || !p2 || !sec) {
 
     showMsg(
       "Please fill in all required fields."
@@ -1335,12 +1316,11 @@ async function register() {
 
       signal: controller.signal,
 
-      body: JSON.stringify({
-        username: u,
-        password: p,
-        name: name,
-        securityCode: sec
-      })
+body: JSON.stringify({
+  username: u,
+  password: p,
+  securityCode: sec
+})
 
     });
 

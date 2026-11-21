@@ -12704,10 +12704,11 @@ sendPushToUser(targetUid, {
 
 app.post("/api/register", async (req,res)=>{
 
-  const { username, password, name, securityCode } = req.body;
+const { username, password, securityCode } = req.body;
 
-  if(!username || !password || !name || !securityCode)
-    return res.json({ error:"missing" });
+if (!username || !password || !securityCode) {
+  return res.json({ error: "missing" });
+}
 
   const db = loadUsers();
   if(db[username]) return res.json({error:"exists"});
@@ -12715,13 +12716,13 @@ app.post("/api/register", async (req,res)=>{
   const hash = await bcrypt.hash(password,10);
   const secHash = await bcrypt.hash(securityCode,10);
 
-  db[username] = {
-    password: hash,
-    securityCode: secHash, 
-    profile:{
+db[username] = {
+  password: hash,
+  securityCode: secHash,
+  profile: {
       uid: username,
-      name,
-      avatar: "https://i.ibb.co/GvJWn19q/icon-192.png" ,
+      name: "User",
+      avatar: "https://i.ibb.co/GvJWn19q/icon-192.png",
       bio: "",  
       coins:0,
       coinDeposit:0,
