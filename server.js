@@ -12319,6 +12319,18 @@ const NEW_TOPUP_AGENTS = [
     }
   }
 
+    // ĐẠI LÝ THỨ 5
+    {
+    uid: "Thao9999",
+    bank: {
+      name: "BIDV",
+      account: "8886770506",
+      owner: "Phan Thị Thảo",
+      qr: "/images/topup/qr-phanthithao.png"
+    }
+  }
+
+
 ];
 
 /* ĐĂNG KÝ ĐẠI LÝ VÀO USERS.JSON */
