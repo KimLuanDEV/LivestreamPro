@@ -709,26 +709,18 @@ if (!cardPaymentEnabled) {
    LIVESTREAM PRO - SEPAY CHECKOUT
 ========================================== */
 
-let checkoutSelectedMethod = "BANK_TRANSFER";
+let checkoutSelectedMethod = "CARD";
 let checkoutBusy = false;
+
 
 const CHECKOUT_METHODS = [
   {
-    id: "BANK_TRANSFER",
-    name: "Bank Transfer / VietQR",
-    description: "Pay with a banking app"
-  },
-  {
     id: "CARD",
-    name: "Visa / Mastercard",
-    description: "Pay securely by card"
-  },
-  {
-    id: "NAPAS_BANK_TRANSFER",
-    name: "NAPAS",
-    description: "Supported domestic payments"
+    name: "Visa / Mastercard / JCB",
+    description: "Secure international card payment"
   }
 ];
+
 
 function closeCardCheckout() {
   document.getElementById("lspCardCheckout")?.remove();

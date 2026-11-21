@@ -13167,20 +13167,18 @@ app.post(
       req.body?.paymentMethod || ""
     );
 
-    if (
-      !uid ||
-      !pkg ||
-      ![
-        "CARD",
-        "BANK_TRANSFER",
-        "NAPAS_BANK_TRANSFER"
-      ].includes(method)
-    ) {
-      return res.status(400).json({
-        ok: false,
-        message: "Invalid payment request."
-      });
-    }
+
+if (
+  !uid ||
+  !pkg ||
+  method !== "CARD"
+) {
+  return res.status(400).json({
+    ok: false,
+    message: "Only card payments are supported."
+  });
+}
+
 
     const now = Date.now();
 
