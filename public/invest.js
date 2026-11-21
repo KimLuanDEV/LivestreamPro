@@ -7,13 +7,32 @@ if (!deviceId) {
   localStorage.setItem("device_id", deviceId);
 }
 
-// 🔥 CONNECT SOCKET CÓ AUTH
-const socket = io({
+
+/* ==========================================
+   INVEST - SHARED SOCKET.IO CONNECTION
+========================================== */
+
+window.socket = window.socket || io({
   auth: {
-    uid: me.uid,
     deviceId
-  }
+  },
+  reconnection: true,
+  reconnectionAttempts: Infinity,
+  reconnectionDelay: 1000,
+  reconnectionDelayMax: 5000,
+  timeout: 20000
 });
+
+const socket = window.socket;
+
+socket.on("connect", () => {
+  console.log("[INVEST] Connected:", socket.id);
+});
+
+socket.on("disconnect", reason => {
+  console.log("[INVEST] Disconnected:", reason);
+});
+
 
 
 function goInvest(asset){
