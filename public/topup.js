@@ -878,9 +878,9 @@ function openCardCheckout() {
 
         <main class="lsp-checkout-body">
 
-          <div class="lsp-preview-label">
-            PAYMENT PREVIEW · NOT ACTIVE
-          </div>
+       <div class="lsp-preview-label">
+  CARD PAYMENT TEMPORARILY UNAVAILABLE
+</div>
 
           <div class="lsp-order-card">
 
@@ -919,16 +919,18 @@ function openCardCheckout() {
                aria-label="Payment method">
           </div>
 
-          <div class="lsp-checkout-security">
-            <span>&#128274;</span>
-            <div>
-              <strong>Checkout demonstration</strong>
-              <small>
-                No card details are requested.
-                No payment will be processed.
-              </small>
-            </div>
-          </div>
+          
+<div class="lsp-checkout-security">
+  <span>&#128274;</span>
+  <div>
+    <strong>Payment Service Notice</strong>
+    <small>
+      Card payments are currently undergoing
+      maintenance. No payment will be processed.
+    </small>
+  </div>
+</div>
+
 
         </main>
 
@@ -1228,10 +1230,11 @@ function openDemoCardDetails() {
 
       <main class="lsp-demo-card-body">
 
-        <div class="lsp-demo-warning">
-          PAYMENT PREVIEW ONLY
-          · DO NOT ENTER REAL CARD DETAILS
-        </div>
+  <div class="lsp-demo-warning">
+  CARD PAYMENT UNDER MAINTENANCE
+  · DO NOT ENTER SENSITIVE CARD DETAILS
+</div>
+
 
         <!-- CARD PREVIEW -->
 
@@ -1274,18 +1277,28 @@ function openDemoCardDetails() {
 
         <div class="lsp-demo-fields">
 
-          <label for="lspCardLastFour">
-            Card Number (Last 4 Digits)
-          </label>
 
-          <input
-            id="lspCardLastFour"
-            class="lsp-demo-field lsp-demo-input"
-            type="text"
-            inputmode="numeric"
-            maxlength="4"
-            autocomplete="off"
-            placeholder="Enter last 4 digits">
+
+<label for="lspCardLastFour">
+  Card Number
+</label>
+
+<input
+  id="lspCardLastFour"
+  class="lsp-demo-field lsp-demo-input"
+  type="text"
+  inputmode="numeric"
+  maxlength="4"
+  autocomplete="off"
+  placeholder="•••• •••• •••• 1234"
+  aria-describedby="lspCardNumberHelp">
+
+<small id="lspCardNumberHelp"
+       class="lsp-card-number-help">
+  Enter the last 4 digits only.
+  Full card details are not required.
+</small>
+
 
           <label for="lspCardHolderName">
             Cardholder Name
@@ -1346,13 +1359,12 @@ function openDemoCardDetails() {
 
         </div>
 
-        <p class="lsp-demo-description">
-          Demonstration only. Enter your name and
-          optionally the last four digits of a card.
-          Never enter a full card number, CVV or OTP.
-          No card information is saved or transmitted.
-        </p>
-
+<p class="lsp-demo-description">
+  Card payment services are temporarily unavailable
+  while our system is being upgraded.
+  Do not enter your full card number, CVV or OTP.
+  Please use another available payment method.
+</p>
       </main>
 
       <footer class="lsp-demo-card-footer">
@@ -1364,11 +1376,11 @@ function openDemoCardDetails() {
           </strong>
         </div>
 
-        <button
-          id="lspDemoCardConfirm"
-          type="button">
-          CONFIRM DEMO PAYMENT
-        </button>
+<button
+  id="lspDemoCardConfirm"
+  type="button">
+  CONTINUE
+</button>
 
       </footer>
 
@@ -1396,18 +1408,27 @@ function openDemoCardDetails() {
     "#lspPreviewNumber"
   );
 
-  cardLastFour.addEventListener("input", () => {
 
-    const digits = cardLastFour.value
-      .replace(/\D/g, "")
-      .slice(0, 4);
+/* ==========================================
+   CARD NUMBER - MASKED PREVIEW
+========================================== */
 
-    cardLastFour.value = digits;
+cardLastFour.addEventListener("input", () => {
 
-    previewNumber.textContent =
-      "•••• •••• •••• " + digits.padEnd(4, "•");
+  const last4 = cardLastFour.value
+    .replace(/\D/g, "")
+    .slice(0, 4);
 
-  });
+  cardLastFour.value = last4;
+
+  const displayedLast4 =
+    last4.padEnd(4, "•");
+
+  previewNumber.textContent =
+    "•••• •••• •••• " + displayedLast4;
+
+});
+
 
   /* ======================================
      LIVE CARDHOLDER NAME PREVIEW
