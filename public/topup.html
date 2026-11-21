@@ -747,6 +747,272 @@ button:disabled { opacity: .5; cursor: not-allowed; }
     transition-duration: .01ms !important;
   }
 }
+
+
+
+/* ==========================================
+   CARD TOP-UP - MAINTENANCE MODAL
+========================================== */
+
+.card-maintenance-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(0,0,0,.86);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.card-maintenance-modal.show {
+  display: flex;
+}
+
+.card-maintenance-box {
+  width: 100%;
+  max-width: 370px;
+  padding: 30px 23px 24px;
+
+  text-align: center;
+
+  border-radius: 23px;
+  border: 1px solid rgba(230,191,116,.46);
+
+  background:
+    radial-gradient(
+      circle at top,
+      rgba(215,164,74,.16),
+      transparent 60%
+    ),
+    linear-gradient(145deg,#25231f,#12141a);
+
+  box-shadow:
+    0 25px 75px rgba(0,0,0,.75),
+    0 0 35px rgba(211,159,71,.07);
+
+  animation: cardMaintenanceIn .25s ease-out;
+}
+
+.card-maintenance-symbol {
+  width: 82px;
+  height: 82px;
+  margin: 0 auto 19px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+  border: 1px solid rgba(230,191,116,.45);
+
+  background: rgba(213,170,89,.09);
+  color: #e8c486;
+
+  box-shadow: 0 0 28px rgba(222,175,86,.12);
+}
+
+.card-maintenance-tag {
+  display: inline-block;
+  padding: 7px 12px;
+
+  border-radius: 30px;
+  border: 1px solid rgba(233,190,94,.3);
+
+  background: rgba(214,160,60,.1);
+  color: #ebbd6f;
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+}
+
+.card-maintenance-box h2 {
+  margin: 18px 0 16px;
+
+  font: 700 22px Georgia,serif;
+  letter-spacing: .5px;
+  color: #f6e3b9;
+}
+
+.card-maintenance-box p {
+  margin: 11px 0;
+
+  font-size: 12px;
+  line-height: 1.8;
+  color: #b3b4bd;
+}
+
+#cardMaintenanceClose {
+  width: 100%;
+  min-height: 49px;
+  margin-top: 24px;
+
+  border: 1px solid #edce96;
+  border-radius: 12px;
+
+  background: linear-gradient(
+    135deg,#f4dfaf,#c89b55
+  );
+
+  color: #241b10;
+  font-size: 13px;
+  font-weight: 850;
+  letter-spacing: .5px;
+}
+
+#cardMaintenanceClose:active {
+  transform: scale(.98);
+}
+
+@keyframes cardMaintenanceIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-maintenance-box {
+    animation: none;
+  }
+}
+
+
+
+/* =========================================
+   LIVESTREAM PRO - CARD PAYMENT V1
+========================================= */
+
+.card-payment {
+  padding: 8px 2px 12px;
+}
+
+.card-payment-title {
+  margin-bottom: 15px;
+  text-align: center;
+  color: var(--gold-light);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+}
+
+.card-package-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.card-package {
+  min-width: 0;
+  min-height: 108px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 7px;
+  border: 1px solid rgba(219,188,131,.22);
+  border-radius: 15px;
+  color: #f6e3b9;
+  background: linear-gradient(
+    145deg, #29251e, #14161c
+  );
+  transition: border-color .2s, transform .2s;
+}
+
+.card-package.selected {
+  border-color: #f5d18b;
+  background: linear-gradient(
+    145deg, #45351f, #211c19
+  );
+  box-shadow: inset 0 0 15px rgba(222,172,79,.1);
+}
+
+.card-package:active {
+  transform: scale(.98);
+}
+
+.card-package-icon {
+  font-size: 23px;
+}
+
+.card-package-diamonds {
+  font-size: 19px;
+  font-weight: 850;
+  overflow-wrap: anywhere;
+}
+
+.card-package-price {
+  font-size: 12px;
+  color: #b6b3ae;
+}
+
+.card-payment-summary {
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #101217;
+}
+
+.card-payment-summary > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 11px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.card-payment-summary > div:last-child {
+  margin-bottom: 0;
+}
+
+.card-payment-summary strong {
+  color: var(--gold-light);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.card-payment-note {
+  margin: 14px 5px 0;
+  text-align: center;
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+#cardPayBtn {
+  margin-top: 15px;
+}
+
+@media (max-width: 360px) {
+  .card-package-list {
+    gap: 7px;
+  }
+
+  .card-package {
+    padding: 10px 5px;
+  }
+
+  .card-package-diamonds {
+    font-size: 16px;
+  }
+}
+
+
+
 </style>
 </head>
 
@@ -885,6 +1151,8 @@ button:disabled { opacity: .5; cursor: not-allowed; }
       <h2>Top-Up Methods</h2>
     </div>
 
+
+    
     <!-- NẠP QUA ĐẠI LÝ -->
    <section class="topup-option" id="agentOption">
 
@@ -953,20 +1221,62 @@ button:disabled { opacity: .5; cursor: not-allowed; }
       </button>
 
       <div class="option-content hidden">
-<div class="card-coming">
 
-  Card top-up is coming soon.
 
-  <small>
-    Please use an authorized top-up agent for now.
-  </small>
+<div class="card-payment">
+
+  <div class="card-payment-title">
+    SELECT DIAMOND PACKAGE
+  </div>
+
+  <div id="cardPackageList" class="card-package-list">
+    Loading packages...
+  </div>
+
+  <div class="card-payment-summary">
+    <div>
+      <span>Diamonds</span>
+      <strong id="cardSelectedDiamonds">—</strong>
+    </div>
+
+    <div>
+      <span>Total Payment</span>
+      <strong id="cardSelectedAmount">—</strong>
+    </div>
+  </div>
+
+  <button
+    id="cardPayBtn"
+    class="btn-confirm"
+    type="button"
+    disabled>
+    PAY SECURELY
+  </button>
+
+  <div id="cardPaymentStatus"
+       class="transfer-status hidden"
+       role="status"
+       aria-live="polite"></div>
+
+<p class="card-payment-note">
+  Card payment is temporarily unavailable
+  while we upgrade our payment system.
+  Please use another available top-up method.
+</p>
 
 </div>
+
+
       </div>
 
     </section>
 
-<div class="topup-note">
+
+
+
+<div
+
+class="topup-note">
 
   <svg class="icon">
     <use href="#tp-info"/>

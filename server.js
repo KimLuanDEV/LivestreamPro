@@ -12274,6 +12274,10 @@ function loadUsers(){
   if(!fs.existsSync(USERS_FILE)) return {};
   return JSON.parse(fs.readFileSync(USERS_FILE,"utf8"));
 }
+
+
+
+
 function saveUsers(db){
   fs.writeFileSync(USERS_FILE, JSON.stringify(db,null,2));
 }
@@ -13013,6 +13017,66 @@ const blockedByYou =
 
   res.json({
     profile: target.profile
+  });
+});
+
+
+
+
+
+/* ==========================================
+   LIVESTREAM PRO - CARD TOP-UP MAINTENANCE
+   NO REAL PAYMENTS
+========================================== */
+
+const CARD_TOPUP_PACKAGES = Object.freeze([
+  { id: "p1", amountVnd: 10000,  diamonds: 100 },
+  { id: "p2", amountVnd: 20000,  diamonds: 200 },
+  { id: "p3", amountVnd: 50000,  diamonds: 500 },
+  { id: "p4", amountVnd: 100000, diamonds: 1000 },
+  { id: "p5", amountVnd: 200000, diamonds: 2000 },
+  { id: "p6", amountVnd: 500000, diamonds: 5000 }
+]);
+
+// Return packages for display only.
+app.get("/api/card-topup/packages", (req, res) => {
+  res.set("Cache-Control", "no-store");
+
+  res.json({
+    ok: true,
+    maintenance: true,
+    packages: CARD_TOPUP_PACKAGES
+  });
+});
+
+// Disable payment creation on the server.
+app.post("/api/card-topup/create", (req, res) => {
+  res.status(503).json({
+    ok: false,
+    maintenance: true,
+    message: "Card payment is under maintenance."
+  });
+});
+
+// Disable gateway callbacks.
+app.get("/api/card-topup/ipn", (req, res) => {
+  res.status(503).json({
+    RspCode: "99",
+    Message: "Payment integration disabled"
+  });
+});
+
+// Disable payment return processing.
+app.get("/api/card-topup/return", (req, res) => {
+  res.redirect(303, "/topup.html");
+});
+
+// Disable payment status processing.
+app.get("/api/card-topup/status/:id", (req, res) => {
+  res.status(503).json({
+    ok: false,
+    maintenance: true,
+    message: "Card payment is under maintenance."
   });
 });
 

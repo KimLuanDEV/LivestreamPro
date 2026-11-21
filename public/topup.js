@@ -576,3 +576,234 @@ socket.on("force-logout", data => {
 /* ===== KHỞI TẠO ===== */
 
 loadAgents();
+
+
+
+
+/* =========================================
+   CARD TOP-UP - LIVESTREAM PRO
+========================================= */
+
+let cardPackages = [];
+let selectedCardPackage = null;
+let cardPaymentPending = false;
+
+const cardPackageList =
+  document.getElementById("cardPackageList");
+
+const cardPayBtn =
+  document.getElementById("cardPayBtn");
+
+const cardSelectedDiamonds =
+  document.getElementById("cardSelectedDiamonds");
+
+const cardSelectedAmount =
+  document.getElementById("cardSelectedAmount");
+
+const cardPaymentStatus =
+  document.getElementById("cardPaymentStatus");
+
+const formatCardNumber = value =>
+  Number(value).toLocaleString("en-US");
+
+const formatCardVnd = value =>
+  Number(value).toLocaleString("en-US") + " VND";
+
+function showCardStatus(message) {
+  cardPaymentStatus.textContent = message;
+  cardPaymentStatus.classList.remove("hidden");
+}
+
+function renderCardPackages() {
+  cardPackageList.replaceChildren();
+
+  for (const pkg of cardPackages) {
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "card-package";
+
+    if (selectedCardPackage?.id === pkg.id) {
+      button.classList.add("selected");
+    }
+
+    const icon = document.createElement("span");
+    icon.className = "card-package-icon";
+    icon.textContent = "💎";
+
+    const diamonds = document.createElement("strong");
+    diamonds.className = "card-package-diamonds";
+    diamonds.textContent = formatCardNumber(pkg.diamonds);
+
+    const price = document.createElement("span");
+    price.className = "card-package-price";
+    price.textContent = formatCardVnd(pkg.amountVnd);
+
+    button.append(icon, diamonds, price);
+
+    button.addEventListener("click", () => {
+      selectedCardPackage = pkg;
+      renderCardPackages();
+
+      cardSelectedDiamonds.textContent =
+        formatCardNumber(pkg.diamonds) + " Diamonds";
+
+      cardSelectedAmount.textContent =
+        formatCardVnd(pkg.amountVnd);
+
+      cardPayBtn.disabled = false;
+      cardPaymentStatus.classList.add("hidden");
+    });
+
+    cardPackageList.appendChild(button);
+  }
+}
+
+async function loadCardPackages() {
+  try {
+    const response = await fetch(
+      "/api/card-topup/packages",
+      { credentials: "same-origin", cache: "no-store" }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+      throw new Error(
+        data.message || "Unable to load packages."
+      );
+    }
+
+    cardPackages = data.packages;
+    renderCardPackages();
+
+  } catch (error) {
+    cardPackageList.textContent = error.message;
+    cardPayBtn.disabled = true;
+  }
+}
+
+
+
+/* ==========================================
+   CARD TOP-UP - MAINTENANCE MODE
+========================================== */
+
+function showCardMaintenance() {
+
+  let modal = document.getElementById(
+    "cardMaintenanceModal"
+  );
+
+  if (!modal) {
+
+    modal = document.createElement("div");
+
+    modal.id = "cardMaintenanceModal";
+
+    modal.className = "card-maintenance-modal";
+
+    modal.innerHTML = `
+      <div class="card-maintenance-box"
+           role="dialog"
+           aria-modal="true"
+           aria-labelledby="cardMaintenanceTitle">
+
+        <div class="card-maintenance-symbol">
+          <svg viewBox="0 0 24 24"
+               width="38"
+               height="38"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="1.6"
+               stroke-linecap="round"
+               stroke-linejoin="round">
+            <path d="M14.7 6.3a4 4 0 0 0-5 5L3 18l3 3 6.7-6.7a4 4 0 0 0 5-5L15 12l-3-3z"/>
+            <path d="M18 3v3M16.5 4.5h3"/>
+          </svg>
+        </div>
+
+        <div class="card-maintenance-tag">
+          TEMPORARILY UNAVAILABLE
+        </div>
+
+        <h2 id="cardMaintenanceTitle">
+          SYSTEM MAINTENANCE
+        </h2>
+
+        <p>
+          Card payment is currently undergoing
+          maintenance and upgrades.
+        </p>
+
+        <p>
+          Please use another available top-up method.
+          Thank you for your patience.
+        </p>
+
+        <button
+          type="button"
+          id="cardMaintenanceClose">
+          UNDERSTOOD
+        </button>
+
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.querySelector(
+      "#cardMaintenanceClose"
+    ).addEventListener("click", () => {
+      modal.classList.remove("show");
+    });
+
+    modal.addEventListener("click", e => {
+      if (e.target === modal) {
+        modal.classList.remove("show");
+      }
+    });
+
+    document.addEventListener("keydown", e => {
+      if (
+        e.key === "Escape" &&
+        modal.classList.contains("show")
+      ) {
+        modal.classList.remove("show");
+      }
+    });
+
+  }
+
+  modal.classList.add("show");
+
+  modal.querySelector(
+    "#cardMaintenanceClose"
+  ).focus();
+}
+
+/* ==========================================
+   PAY BUTTON
+========================================== */
+
+cardPayBtn.addEventListener("click", () => {
+
+  if (!selectedCardPackage) {
+    showToast(
+      "Please select a diamond package.",
+      "error"
+    );
+    return;
+  }
+
+  // No payment request is created.
+  // No diamonds are credited.
+  showCardMaintenance();
+
+});
+
+/* ==========================================
+   INITIALIZE PACKAGES
+========================================== */
+
+loadCardPackages();
