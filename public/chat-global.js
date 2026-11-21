@@ -11,11 +11,61 @@ function getChatKey(a, b) {
   const auth = JSON.parse(localStorage.getItem("user_profile") || "{}");
   if (!auth?.uid) return;
 
-  window.socket = window.socket || io();
-  const socket = window.socket;
 
- // 🔥 Always register UID with the socket
-  socket.emit("auth-login", { uid: auth.uid });
+/* ==========================================
+   LIVESTREAM PRO - SOCKET AUTH RECOVERY
+========================================== */
+
+window.socket = window.socket || io({
+  reconnection: true,
+  reconnectionAttempts: Infinity,
+  reconnectionDelay: 1000,
+  reconnectionDelayMax: 5000,
+  timeout: 20000
+});
+
+const socket = window.socket;
+
+// Register on every successful connection.
+// Server derives the UID from its verified session.
+function registerVerifiedSocket() {
+  if (!socket.connected) return;
+
+  socket.emit("auth-login");
+}
+
+socket.on("connect", () => {
+  console.log("[SOCKET] Connected:", socket.id);
+
+  registerVerifiedSocket();
+});
+
+socket.on("disconnect", reason => {
+  console.log("[SOCKET] Disconnected:", reason);
+});
+
+socket.on("connect_error", error => {
+  console.warn("[SOCKET] Connection error:", error.message);
+});
+
+// Handle an already connected shared socket.
+registerVerifiedSocket();
+
+/* ==========================================
+   BACK-FORWARD CACHE RECOVERY
+========================================== */
+
+window.addEventListener("pagehide", () => {
+  socket.disconnect();
+});
+
+window.addEventListener("pageshow", () => {
+  if (!socket.connected) {
+    socket.connect();
+  }
+});
+
+
 
 socket.on("offline-messages", msgs => {
   if (!Array.isArray(msgs) || !msgs.length) return;
@@ -47,9 +97,14 @@ if (!location.pathname.includes("messages.html") && notifyCount > 0) {
 
 
 
-  setInterval(() => {
-    socket.emit("auth-ping", { uid: auth.uid });
-  }, 15000);
+setInterval(() => {
+  if (!socket.connected) return;
+
+  socket.emit("auth-ping", {
+    uid: auth.uid
+  });
+}, 15000);
+
 
   // ===== RECEIVE PRIVATE MESSAGE ANYWHERE =====
   socket.on("private-message", ({ from, text, msgId }) => {

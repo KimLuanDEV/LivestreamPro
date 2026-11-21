@@ -5,12 +5,6 @@
 const params = new URLSearchParams(location.search);
 const viewUid = params.get("uid"); // uid đang xem (có thể null)
 
-// 🔁 giữ socket sống để server không mất uid
-setInterval(() => {
-  if (socket.connected && __profileAuth.uid) {
-    socket.emit("auth-ping", { uid: __profileAuth.uid });
-  }
-}, 4000);
 
 
 // 🔐 AUTH ACCOUNT – bắt buộc
@@ -314,11 +308,7 @@ if (__profileAuth.uid) {
   localStorage.removeItem("isGuest");
 }
 
-if (__profileAuth.uid) {
-  socket.emit("socket-login", {
-  uid: __profileAuth.uid
-});
-}
+
 
 
 // 🔔 REALTIME: BẬT CHAT KHI ACCEPT KẾT BẠN
@@ -722,11 +712,16 @@ const defaultProfile = {
 };
 
 
-// 🔥 SAFETY RESET – tránh treo event mobile
+/* ==========================================
+   PROFILE - PAGE RESTORE
+========================================== */
+
 window.addEventListener("pageshow", () => {
+
   if (typeof __coverUploading !== "undefined") {
     __coverUploading = false;
   }
+
 });
 
 
