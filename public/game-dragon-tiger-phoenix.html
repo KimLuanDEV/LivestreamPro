@@ -5994,9 +5994,9 @@ body.dtp-debug .dtp-chip {
         MY BET HISTORY
       </h2>
 
-      <div class="my-history-subtitle">
-        PERSONAL BATTLE RECORD
-      </div>
+     <div class="my-history-subtitle">
+  TODAY'S BATTLE RECORD · GMT+7
+</div>
 
       <button type="button"
               class="my-history-x"
@@ -6955,14 +6955,27 @@ betRestored = true; // 🔥 thêm dòng này
 
 
 
-function openMyHistory(){
 
-socket.emit("dtp-get-my-history");
+function openMyHistory() {
 
-document.getElementById("myHistoryModal")
-.style.display = "flex";
+  // Reset old display
+  document.getElementById("myHistoryList")
+    .innerHTML = "";
+
+  document.getElementById("historyProfit")
+    .textContent = "0";
+
+  document.getElementById("historyWinrate")
+    .textContent = "0%";
+
+  // Request today's records
+  socket.emit("dtp-get-my-history");
+
+  document.getElementById("myHistoryModal")
+    .style.display = "flex";
 
 }
+
 
 function closeMyHistory(){
 

@@ -307,6 +307,36 @@ function getTodayStartTsVN() {
 
 
 
+/* ==========================================
+   TIME RACE - DAILY BET HISTORY
+   Vietnam Time GMT+7
+========================================== */
+
+function filterTimeRaceHistoryToday(list) {
+
+  const todayStart = getTodayStartTsVN();
+  const todayEnd = todayStart + 86400000;
+
+  if (!Array.isArray(list)) {
+    return [];
+  }
+
+  return list.filter(item => {
+
+    const ts = Number(item?.ts);
+
+    return (
+      Number.isFinite(ts) &&
+      ts >= todayStart &&
+      ts < todayEnd
+    );
+
+  }).slice(0, 30);
+
+}
+
+
+
 
 // ================================
 // ✊✋✌️ RPS HISTORY (GLOBAL)
@@ -2044,25 +2074,56 @@ dtpRound.bets.forEach(o=>{
   // SAVE USER HISTORY
   // =====================
 
-me.dtpHistory ||= [];
+/* ==========================================
+   DTP - DAILY BET HISTORY
+   Vietnam Time (GMT+7)
+========================================== */
 
-// tìm round hiện tại
-let row = me.dtpHistory.find(r => r.round === dtpRound.id);
+const dtpTodayStart = getTodayStartTsVN();
+const dtpTodayEnd = dtpTodayStart + 86400000;
 
-if(!row){
+// Only keep records from today
+me.dtpHistory = (
+  Array.isArray(me.dtpHistory)
+    ? me.dtpHistory
+    : []
+).filter(r => {
 
-row = {
-  round: dtpRound.id,
-  dragon:0,
-  tiger:0,
-  phoenix:0,
-  win:0,
-  winner:winner
-};
+  const ts = Number(r?.ts);
+
+  return (
+    Number.isFinite(ts) &&
+    ts >= dtpTodayStart &&
+    ts < dtpTodayEnd
+  );
+
+});
+
+// Find existing record in current round
+let row = me.dtpHistory.find(r =>
+  r.round === dtpRound.id &&
+  r.ts >= dtpTodayStart
+);
+
+
+
+
+if (!row) {
+
+  row = {
+    round: dtpRound.id,
+    ts: Date.now(),
+    dragon: 0,
+    tiger: 0,
+    phoenix: 0,
+    win: 0,
+    winner: winner
+  };
 
   me.dtpHistory.unshift(row);
 
 }
+
 
 // cộng bet theo cửa
 row[o.side] += o.bet;
@@ -2732,23 +2793,28 @@ if(multiplier >= timeRaceRound.crashPoint){
         crashPoint: timeRaceRound.crashPoint
       });
 
-      // ============================
-      // 📜 LƯU LỊCH SỬ THUA
-      // ============================
-      me.timeRaceHistory ||= [];
 
-      me.timeRaceHistory.unshift({
-        roundId: timeRaceRound.id,
-        ts: Date.now(),
-        bet: b.bet,
-        stopMultiplier: timeRaceRound.crashPoint,
-        win: 0,
-        result: "lose"
-      });
+/* ==========================================
+   TIME RACE - SAVE LOSS HISTORY
+========================================== */
 
-      if(me.timeRaceHistory.length > 30){
-        me.timeRaceHistory.length = 30;
-      }
+me.timeRaceHistory = filterTimeRaceHistoryToday(
+  me.timeRaceHistory
+);
+
+me.timeRaceHistory.unshift({
+  roundId: timeRaceRound.id,
+  ts: Date.now(),
+  bet: b.bet,
+  stopMultiplier: timeRaceRound.crashPoint,
+  win: 0,
+  result: "lose"
+});
+
+me.timeRaceHistory =
+  filterTimeRaceHistoryToday(me.timeRaceHistory);
+
+      
 
       // 🔥 cập nhật realtime cho user
       emitToUser(
@@ -3653,15 +3719,46 @@ dtpRound.bets.forEach(b=>{
 
 
 
-socket.on("dtp-get-my-history",()=>{
 
-const uid = socket.data.uid;
+/* ==========================================
+   DTP - GET TODAY'S BET HISTORY
+========================================== */
 
-const users = loadUsers();
+socket.on("dtp-get-my-history", () => {
 
-const list = users[uid]?.dtpHistory || [];
+  const uid = socket.data.uid;
 
-socket.emit("dtp-my-history", list);
+  if (!socket.data.authenticated || !uid) {
+    socket.emit("dtp-my-history", []);
+    return;
+  }
+
+  const users = loadUsers();
+  const user = users[uid];
+
+  if (!user) {
+    socket.emit("dtp-my-history", []);
+    return;
+  }
+
+  const todayStart = getTodayStartTsVN();
+  const todayEnd = todayStart + 86400000;
+
+  const list = Array.isArray(user.dtpHistory)
+    ? user.dtpHistory.filter(r => {
+
+        const ts = Number(r?.ts);
+
+        return (
+          Number.isFinite(ts) &&
+          ts >= todayStart &&
+          ts < todayEnd
+        );
+
+      }).slice(0, 30)
+    : [];
+
+  socket.emit("dtp-my-history", list);
 
 });
 
@@ -3823,25 +3920,44 @@ socket.emit("time-race-history",
 );
 
 
-// ================================
-// 📜 SEND MY TIME RACE HISTORY
-// ================================
-socket.emit("time-race-my-history",
-  me?.timeRaceHistory || []
+socket.emit(
+  "time-race-my-history",
+  filterTimeRaceHistoryToday(
+    me?.timeRaceHistory
+  )
 );
 
-socket.on("time-race-get-my-history", ()=>{
+
+/* ==========================================
+   TIME RACE - GET TODAY'S HISTORY
+========================================== */
+
+socket.on("time-race-get-my-history", () => {
 
   const uid = socket.data.uid;
-  if(!uid) return;
+
+  if (!socket.data.authenticated || !uid) {
+    socket.emit("time-race-my-history", []);
+    return;
+  }
 
   const users = loadUsers();
-  const meNow = users[uid];
+  const me = users[uid];
 
-  socket.emit("time-race-my-history",
-    meNow?.timeRaceHistory || []
+  if (!me) {
+    socket.emit("time-race-my-history", []);
+    return;
+  }
+
+  const history = filterTimeRaceHistoryToday(
+    me.timeRaceHistory
   );
+
+  socket.emit("time-race-my-history", history);
+
 });
+
+
 
 socket.emit("time-race-round-count",{
   roundCountToday: timeRaceRoundCount + 1
@@ -4281,10 +4397,14 @@ emitTimeRacePlayers();
 );
 
 
-  // ============================
-// 📜 LƯU LỊCH SỬ TIME RACE USER
-// ============================
-me.timeRaceHistory ||= [];
+
+/* ==========================================
+   TIME RACE - SAVE WIN HISTORY
+========================================== */
+
+me.timeRaceHistory = filterTimeRaceHistoryToday(
+  me.timeRaceHistory
+);
 
 me.timeRaceHistory.unshift({
   roundId: timeRaceRound.id,
@@ -4295,9 +4415,9 @@ me.timeRaceHistory.unshift({
   result: "win"
 });
 
-if(me.timeRaceHistory.length > 30){
-  me.timeRaceHistory.length = 30;
-}
+me.timeRaceHistory =
+  filterTimeRaceHistoryToday(me.timeRaceHistory);
+
 
 
 socket.emit("time-race-my-history",
@@ -5521,7 +5641,11 @@ app.get("/api/time-race/my-history",(req,res)=>{
   const users = loadUsers();
   const me = users[uid];
 
-  res.json(me?.timeRaceHistory || []);
+  res.json(
+  filterTimeRaceHistoryToday(
+    me?.timeRaceHistory
+  )
+);
 });
 
 
@@ -9023,6 +9147,64 @@ function cleanupDailyTransferHistory() {
       if (!user || typeof user !== "object") {
         continue;
       }
+
+
+/* ==========================================
+   TIME RACE - DAILY HISTORY CLEANUP
+========================================== */
+
+if (Array.isArray(user.timeRaceHistory)) {
+
+  const before = user.timeRaceHistory.length;
+
+  user.timeRaceHistory =
+    filterTimeRaceHistoryToday(
+      user.timeRaceHistory
+    );
+
+  const deleted =
+    before - user.timeRaceHistory.length;
+
+  if (deleted > 0) {
+    removed += deleted;
+    changed = true;
+  }
+
+}
+
+
+/* ==========================================
+   DTP - DAILY HISTORY CLEANUP
+========================================== */
+
+if (Array.isArray(user.dtpHistory)) {
+
+  const before = user.dtpHistory.length;
+
+  user.dtpHistory = user.dtpHistory.filter(r => {
+
+    const ts = Number(r?.ts);
+
+    return (
+      Number.isFinite(ts) &&
+      ts >= todayStart &&
+      ts < todayEnd
+    );
+
+  }).slice(0, 30);
+
+  const deleted =
+    before - user.dtpHistory.length;
+
+  if (deleted > 0) {
+
+    removed += deleted;
+    changed = true;
+
+  }
+
+}
+
 
 
 

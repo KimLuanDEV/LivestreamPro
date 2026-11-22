@@ -3570,9 +3570,9 @@ body.crash-dark{
           BET HISTORY
         </div>
 
-        <div class="tr-sheet-subtitle">
-          Your recent game transactions
-        </div>
+<div class="tr-sheet-subtitle">
+  Today's Bet History · GMT+7
+</div>
 
       </div>
 
@@ -4133,17 +4133,47 @@ function renderTimeRaceHistory(list){
 
 
 
-function openTimeRaceHistory(){
+
+function openTimeRaceHistory() {
 
   logSound.currentTime = 0;
-  logSound.play().catch(()=>{});
+  logSound.play().catch(() => {});
 
-  document
-    .getElementById("timeRaceHistorySheet")
-    .classList.remove("hidden");
+  const sheet = document.getElementById(
+    "timeRaceHistorySheet"
+  );
 
+  const list = document.getElementById(
+    "timeRaceHistoryList"
+  );
+
+  // Reset previous records
+  list.innerHTML = `
+    <div class="tr-history-empty">
+      Loading today's history...
+    </div>
+  `;
+
+  // Reset summary
+  document.getElementById(
+    "trTotalBets"
+  ).textContent = "0";
+
+  document.getElementById(
+    "trTotalWins"
+  ).textContent = "0";
+
+  document.getElementById(
+    "trTotalLosses"
+  ).textContent = "0";
+
+  sheet.classList.remove("hidden");
+
+  // Request today's records
   socket.emit("time-race-get-my-history");
+
 }
+
 
 
 function closeTimeRaceHistory(){
