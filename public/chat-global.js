@@ -17,12 +17,17 @@ function getChatKey(a, b) {
    LIVESTREAM PRO - SHARED SOCKET CONNECTION
 ========================================== */
 
+
+/* ==========================================
+   LIVESTREAM PRO - WEBSOCKET DIRECT
+========================================== */
+
 window.socket = window.socket || io({
   autoConnect: true,
 
-  // Keep polling fallback for compatibility
-  transports: ["polling", "websocket"],
-  upgrade: true,
+  // Connect directly without HTTP polling
+  transports: ["websocket"],
+  upgrade: false,
 
   reconnection: true,
   reconnectionAttempts: Infinity,
@@ -34,6 +39,7 @@ window.socket = window.socket || io({
 });
 
 const socket = window.socket;
+
 
 
 // Register on every successful connection.
@@ -94,48 +100,53 @@ registerVerifiedSocket();
 
 
 
+
 /* ==========================================
-   LIVESTREAM PRO - SOCKET BFCACHE FIX
+   LIVESTREAM PRO - SAFE SOCKET LIFECYCLE
 ========================================== */
 
 let socketPageLeaving = false;
 
-// Disconnect cleanly before page enters BFCache.
+function restorePageSocket() {
+
+  if (socketPageLeaving) return;
+
+  if (socket.connected) return;
+
+  // Do not restart an active connection attempt
+  if (socket.active) return;
+
+  socket.connect();
+}
+
+// Close the connection before page navigation
 window.addEventListener("pagehide", () => {
 
   socketPageLeaving = true;
 
-  if (socket.connected || socket.active) {
+  if (socket.active || socket.connected) {
     socket.disconnect();
   }
 
 });
 
-// Restore connection when page returns.
+// Restore the page from BFCache
 window.addEventListener("pageshow", () => {
 
   socketPageLeaving = false;
 
-  if (!socket.connected) {
-    socket.connect();
-  }
+  restorePageSocket();
 
 });
 
-// Recover after returning to a background tab.
+// Recover when returning to the tab
 document.addEventListener("visibilitychange", () => {
 
   if (document.visibilityState !== "visible") {
     return;
   }
 
-  if (socketPageLeaving) {
-    return;
-  }
-
-  if (!socket.connected) {
-    socket.connect();
-  }
+  restorePageSocket();
 
 });
 
