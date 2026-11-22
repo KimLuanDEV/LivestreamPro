@@ -13,6 +13,29 @@ if (!auth.uid) {
 
 const socket = io();
 
+
+/* ==========================================
+   TOPUP - SOCKET PAGE LIFECYCLE
+========================================== */
+
+window.addEventListener("pagehide", () => {
+
+  if (socket.connected || socket.active) {
+    socket.disconnect();
+  }
+
+});
+
+window.addEventListener("pageshow", () => {
+
+  if (!socket.connected) {
+    socket.connect();
+  }
+
+});
+
+
+
 const $ = id => document.getElementById(id);
 
 const myCoinEl = $("myCoin");
@@ -187,20 +210,45 @@ card.querySelector(".agent-bank").textContent =
     /* Avatar */
     const avatarSrc = safeImageUrl(agent.avatar);
 
-    if (avatarSrc) {
-      const img = new Image();
 
-      img.className = "agent-avatar";
-      img.alt = "Profile picture of " + name;
-      img.loading = "lazy";
 
-      img.onload = () => {
-        card.querySelector(".agent-avatar-placeholder")
-          ?.replaceWith(img);
-      };
+/* ==========================================
+   TOPUP - AGENT AVATAR LOADING FIX
+========================================== */
 
-      img.src = avatarSrc;
-    }
+if (avatarSrc) {
+
+  const img = document.createElement("img");
+
+  img.className = "agent-avatar";
+  img.alt = "Profile picture of " + name;
+
+  // Load immediately
+  img.loading = "eager";
+  img.decoding = "async";
+
+  // Keep placeholder until image is ready
+  const placeholder =
+    card.querySelector(".agent-avatar-placeholder");
+
+  img.style.display = "none";
+
+  img.onload = () => {
+    img.style.display = "";
+    placeholder?.remove();
+  };
+
+  img.onerror = () => {
+    img.remove();
+  };
+
+  img.src = avatarSrc;
+
+  // Add to DOM so loading is not delayed
+  placeholder?.after(img);
+
+}
+
 
     card.onclick = () => openAgent(agent);
 

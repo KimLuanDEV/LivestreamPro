@@ -51,15 +51,23 @@ socket.on("connect", () => {
 });
 
 
+
 socket.on("disconnect", reason => {
 
-  // Normal browser/navigation disconnect
   if (
-    reason === "io client disconnect" ||
-    reason === "transport close"
+    socketPageLeaving ||
+    reason === "io client disconnect"
+  ) {
+    return;
+  }
+
+  if (
+    reason === "transport close" ||
+    reason === "transport error" ||
+    reason === "ping timeout"
   ) {
     console.debug(
-      "[SOCKET] Disconnected:",
+      "[SOCKET] Connection interrupted:",
       reason
     );
 
@@ -67,7 +75,7 @@ socket.on("disconnect", reason => {
   }
 
   console.warn(
-    "[SOCKET] Unexpected disconnect:",
+    "[SOCKET] Disconnected:",
     reason
   );
 
@@ -85,30 +93,52 @@ registerVerifiedSocket();
 
 
 
+
 /* ==========================================
-   SOCKET - PAGE RESTORE / BFCACHE
+   LIVESTREAM PRO - SOCKET BFCACHE FIX
 ========================================== */
 
-window.addEventListener("pageshow", event => {
+let socketPageLeaving = false;
 
-  // Recover a page restored from browser cache
-  if (event.persisted && !socket.connected) {
+// Disconnect cleanly before page enters BFCache.
+window.addEventListener("pagehide", () => {
+
+  socketPageLeaving = true;
+
+  if (socket.connected || socket.active) {
+    socket.disconnect();
+  }
+
+});
+
+// Restore connection when page returns.
+window.addEventListener("pageshow", () => {
+
+  socketPageLeaving = false;
+
+  if (!socket.connected) {
     socket.connect();
   }
 
 });
 
+// Recover after returning to a background tab.
 document.addEventListener("visibilitychange", () => {
 
-  // Recover when user returns to the tab
-  if (
-    document.visibilityState === "visible" &&
-    !socket.connected
-  ) {
+  if (document.visibilityState !== "visible") {
+    return;
+  }
+
+  if (socketPageLeaving) {
+    return;
+  }
+
+  if (!socket.connected) {
     socket.connect();
   }
 
 });
+
 
 
 
