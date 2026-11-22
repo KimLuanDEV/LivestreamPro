@@ -11330,27 +11330,45 @@ io.to(roomId).emit("viewer-count", {
 }
 
 
-/* ===== LOBBY (SẢNH CHỜ) ===== */
+
 function getLobbyList() {
   const list = [];
-  for (const [roomId, room] of rooms.entries()) {
-    // điều kiện "đang live": có host + đã live-start
-    if (room.broadcasterId && room.liveStartTs) {
-      list.push({
-  roomId,
-  viewers: safeSet(room.viewers).size,
-  liveStartTs: room.liveStartTs,
-  host: room.hostProfile || null, // 👈 thêm
-  mediaMode: room.mediaMode || "p2p",
-});
 
+  for (const [roomId, room] of rooms.entries()) {
+
+    if (!room.broadcasterId || !room.liveStartTs) {
+      continue;
     }
+
+    // Verify that the host socket is connected.
+    const hostSocket = io.sockets.sockets.get(
+      room.broadcasterId
+    );
+
+    if (
+      !hostSocket?.connected ||
+      hostSocket.data.roomId !== roomId ||
+      hostSocket.data.role !== "broadcaster"
+    ) {
+      continue;
+    }
+
+    list.push({
+      roomId,
+      viewers: safeSet(room.viewers).size,
+      liveStartTs: room.liveStartTs,
+      host: room.hostProfile || null,
+      mediaMode: room.mediaMode || "p2p"
+    });
   }
-  // ưu tiên phòng đông người xem
-  list.sort((a, b) => (b.viewers - a.viewers) || (b.liveStartTs - a.liveStartTs));
+
+  list.sort((a, b) =>
+    (b.viewers - a.viewers) ||
+    (b.liveStartTs - a.liveStartTs)
+  );
+
   return list;
 }
-
 
 
 
@@ -11402,6 +11420,18 @@ function closeRoom(roomId, reason = "host_left") {
   const room = rooms.get(roomId);   // 🔥 LẤY ROOM TRƯỚC
   if (!room) return;
 
+
+// Cancel any pending room release.
+if (room.releaseTimer) {
+  clearTimeout(room.releaseTimer);
+  room.releaseTimer = null;
+}
+
+room.pendingRelease = false;
+room.streamReady = false;
+
+
+
 clearSfuVoiceRoom(roomId);
 
 
@@ -11433,10 +11463,17 @@ clearSfuVoiceRoom(roomId);
 
   emitLobbyUpdate();
 
-  // xoá room sau 1 chút cho client kịp nhận event
-  setTimeout(() => {
+
+setTimeout(() => {
+
+  // Do not delete a newly created room
+  // that happens to use the same room ID.
+  if (rooms.get(roomId) === room) {
     rooms.delete(roomId);
-  }, 1000);
+  }
+
+}, 1000);
+
 }
 
 
@@ -13832,7 +13869,12 @@ socket.on("host-reconnect", ({ roomId } = {}) => {
     )
   });
 
-  io.to(roomId).emit("host-back-online");
+
+io.to(roomId).emit("host-back-online");
+
+// Restore the room in lobby after reconnection.
+emitLobbyUpdate();
+
 });
 
 
@@ -14545,6 +14587,7 @@ room.hostProfile = {
       socket.emit("room-viewers", Array.from(room.viewers));
       socket.to(roomId).emit("broadcaster-online");
       emitViewerCount(roomId);
+      emitLobbyUpdate();
     }
 
     if (role === "viewer") {
@@ -15060,24 +15103,64 @@ for (const v of list) {
 
 
 
-  /* ========= HOST ========= */
-  if (role === "broadcaster") {
-    room.streamReady = false;
-    room.pendingRelease = true;
 
- room.releaseTimer = setTimeout(() => {
-  // ⛔ CHỈ đóng room nếu host KHÔNG quay lại
-  if (room.pendingRelease && !room.broadcasterId) {
+/* ========= HOST ========= */
+if (role === "broadcaster") {
+
+  // Ignore disconnects from outdated host sockets.
+  if (room.broadcasterId !== socket.id) {
+    return;
+  }
+
+  // Mark the host as offline immediately.
+  room.broadcasterId = null;
+  room.streamReady = false;
+  room.pendingRelease = true;
+
+  // Prevent multiple release timers.
+  if (room.releaseTimer) {
+    clearTimeout(room.releaseTimer);
+    room.releaseTimer = null;
+  }
+
+  // Remove the room from lobby immediately.
+  emitLobbyUpdate();
+
+  // Notify viewers about temporary interruption.
+  io.to(roomId).emit("host-temp-offline");
+
+  console.log(
+    "[LIVE] Host disconnected:",
+    roomId
+  );
+
+  // Keep the room temporarily for host reconnection.
+  room.releaseTimer = setTimeout(() => {
+
+    // The room may have been closed or replaced.
+    if (rooms.get(roomId) !== room) {
+      return;
+    }
+
+    room.releaseTimer = null;
+
+    // Check whether the host has reconnected.
+    if (
+      !room.pendingRelease ||
+      room.broadcasterId
+    ) {
+      return;
+    }
+
+    console.log(
+      "[LIVE] Host timeout - closing room:",
+      roomId
+    );
+
     closeRoom(roomId, "host_timeout");
-  }
-}, ROOM_RELEASE_DELAY);
 
-
-    io.to(roomId).emit("host-temp-offline");
-
-  
-
-  }
+  }, ROOM_RELEASE_DELAY);
+}
 
 
 
