@@ -8930,70 +8930,132 @@ function pkRequest(event, payload) {
   });
 }
 
+
+/* ==========================================
+   SFU PK - INVITATION STATUS
+========================================== */
+
 pkConfirm.addEventListener("click", async () => {
+
   if (pkConfirm.disabled) return;
+
+  const isRematch = !!pkRematchInvite;
+  const isIncomingInvite = !!pkInvite;
+  const targetRoomId = pkRoomInput.value.trim();
+
+  if (!isRematch && !isIncomingInvite) {
+
+    if (!/^[0-9]{1,15}$/.test(targetRoomId)) {
+      showMessage(
+        "INVALID ROOM ID - Enter a valid numeric Room ID.",
+        "error"
+      );
+      return;
+    }
+
+    if (targetRoomId === String(roomId)) {
+      showMessage(
+        "You cannot challenge your own room.",
+        "error"
+      );
+      return;
+    }
+  }
 
   pkConfirm.disabled = true;
 
   try {
 
+    let response;
 
-let response;
+    if (isRematch) {
 
-if (pkRematchInvite) {
+      response = await pkRequest(
+        "sfu:pk:rematch-respond",
+        {
+          roomId,
+          inviteId: pkRematchInvite.inviteId,
+          accept: true
+        }
+      );
 
-  response = await pkRequest(
-    "sfu:pk:rematch-respond",
-    {
-      roomId,
-      inviteId: pkRematchInvite.inviteId,
-      accept: true
-    }
-  );
+    } else if (isIncomingInvite) {
 
-} else if (pkInvite) {
+      response = await pkRequest(
+        "sfu:pk:respond",
+        {
+          roomId,
+          inviteId: pkInvite.inviteId,
+          accept: true
+        }
+      );
 
-  response = await pkRequest(
-    "sfu:pk:respond",
-    {
-      roomId,
-      inviteId: pkInvite.inviteId,
-      accept: true
-    }
-  );
+    } else {
 
-} else {
-
-      const targetRoomId = pkRoomInput.value.trim();
-
-      if (!/^[0-9]{1,15}$/.test(targetRoomId)) {
-        showMessage("Enter a valid numeric Room ID.");
-        return;
-      }
-
-      response = await pkRequest("sfu:pk:invite", {
-        roomId,
-        targetRoomId
-      });
+      response = await pkRequest(
+        "sfu:pk:invite",
+        {
+          roomId,
+          targetRoomId
+        }
+      );
     }
 
     if (!response?.ok) {
-      showMessage(response?.error || "PK request failed.");
+
+      const error = String(
+        response?.message ||
+        response?.error ||
+        "PK request failed."
+      );
+
+      showMessage(error, "error");
       return;
     }
 
-  pkInvite = null;
-pkRematchInvite = null;
+    pkInvite = null;
+    pkRematchInvite = null;
 
-pkCloseDialog();
+    pkCloseDialog();
 
-    showMessage("PK request completed.");
+    if (isRematch) {
 
-  } catch {
-    showMessage("PK connection timeout.");
+      showMessage(
+        "REMATCH ACCEPTED - Preparing the next round.",
+        "success"
+      );
+
+    } else if (isIncomingInvite) {
+
+      showMessage(
+        "PK INVITATION ACCEPTED - Starting battle.",
+        "success"
+      );
+
+    } else {
+
+      showMessage(
+        `PK INVITATION SENT - Room ${targetRoomId}. Waiting for host response (up to 60 seconds).`,
+        "success"
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error("[PK INVITE]", error);
+
+    showMessage(
+      "PK REQUEST TIMEOUT - Unable to confirm delivery. Please check the connection.",
+      "error"
+    );
+
   } finally {
+
     pkConfirm.disabled = false;
+
   }
+
 });
 
 
@@ -9097,9 +9159,16 @@ socket.on("sfu:pk:invite", data => {
   );
 });
 
+
 socket.on("sfu:pk:declined", () => {
-  showMessage("The host declined your PK invitation.");
+
+  showMessage(
+    "PK INVITATION DECLINED - The host rejected your challenge.",
+    "error"
+  );
+
 });
+
 
 socket.on("sfu:pk:cancelled", () => {
 
@@ -9109,9 +9178,12 @@ socket.on("sfu:pk:cancelled", () => {
   }
 
   showMessage(
-    "PK invitation was cancelled or expired."
+    "PK INVITATION EXPIRED OR CANCELLED - The host may be offline or unavailable.",
+    "error"
   );
+
 });
+
 
 
 
@@ -9367,7 +9439,18 @@ pkRematchBtn.classList.add("hidden");
   showMessage(text);
 }
 
-socket.on("sfu:pk:started", pkBegin);
+
+socket.on("sfu:pk:started", async (state) => {
+
+  showMessage(
+    "PK BATTLE STARTED - Both hosts are connected.",
+    "success"
+  );
+
+  await pkBegin(state);
+
+});
+
 
 
 /* ==========================================

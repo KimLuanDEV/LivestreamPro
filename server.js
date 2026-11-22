@@ -15546,7 +15546,11 @@ socket.on("sfu:pk:invite", (data, ack) => {
   );
 
   if (!target) {
-    return ack({ ok: false, error: "Target host is not live." });
+    return ack({
+  ok: false,
+  error: "HOST NOT FOUND",
+  message: "This room does not exist or the host is not live."
+});
   }
 
 pkPruneInvites();
@@ -15594,8 +15598,19 @@ if (
     fromName: name
   });
 
-  ack({ ok: true });
+  
+ack({
+  ok: true,
+  status: "sent",
+  inviteId: invite.id,
+  targetRoomId: targetId,
+  expiresAt: invite.expiresAt,
+  message: "PK invitation sent successfully."
 });
+
+});
+
+
 
 socket.on("sfu:pk:respond", (data, ack) => {
   if (typeof ack !== "function") return;
