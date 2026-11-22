@@ -5183,13 +5183,30 @@ user.profile.coins =
 user.profile.coinDeposit =
 (user.profile.coinDeposit || 0) + add
 
-// 🧾 log nạp (khuyên dùng)
-user.profile.depositLogs ||= []
+
+
+const depositTodayStart = getTodayStartTsVN();
+const depositTodayEnd = depositTodayStart + 86400000;
+
+user.profile.depositLogs = (
+  Array.isArray(user.profile.depositLogs)
+    ? user.profile.depositLogs
+    : []
+).filter(item => {
+  const ts = Number(item?.time);
+
+  return Number.isFinite(ts) &&
+    ts >= depositTodayStart &&
+    ts < depositTodayEnd;
+});
+
 user.profile.depositLogs.unshift({
-amount:add,
-time:Date.now(),
-type:"deposit"
-})
+  amount: add,
+  time: Date.now(),
+  type: "deposit"
+});
+
+
 
 saveUsers(users)
 
@@ -5355,9 +5372,26 @@ app.get("/api/deposit-history",(req,res)=>{
 
   if(!user) return res.json({history:[]});
 
-  res.json({
-    history: user.profile.depositLogs || []
-  });
+  
+const todayStart = getTodayStartTsVN();
+const todayEnd = todayStart + 86400000;
+
+const history = Array.isArray(user.profile?.depositLogs)
+  ? user.profile.depositLogs.filter(item => {
+
+      const ts = Number(item?.time);
+
+      return (
+        Number.isFinite(ts) &&
+        ts >= todayStart &&
+        ts < todayEnd
+      );
+
+    })
+  : [];
+
+return res.json({ history });
+
 
 });
 
@@ -7880,11 +7914,27 @@ app.post("/api/admin/transfer-action", (req, res) => {
       time: now
     });
 
-    sender.transferHistory =
-      sender.transferHistory.slice(0, 50);
+    
+const todayStart = getTodayStartTsVN();
+const todayEnd = todayStart + 86400000;
 
-    recipient.transferHistory =
-      recipient.transferHistory.slice(0, 50);
+sender.transferHistory =
+  sender.transferHistory
+    .filter(t => {
+      const time = Number(t.time || t.createdAt || 0);
+
+      return time >= todayStart && time < todayEnd;
+    })
+    .slice(0, 50);
+
+recipient.transferHistory =
+  recipient.transferHistory
+    .filter(t => {
+      const time = Number(t.time || t.createdAt || 0);
+
+      return time >= todayStart && time < todayEnd;
+    })
+    .slice(0, 50);
 
     request.status = "approved";
 
@@ -8951,6 +9001,179 @@ function saveUsers(db){
 }
 
 
+/* ==========================================
+   DIAMOND TRANSFER - DAILY CLEANUP
+   Reset at 00:00 Vietnam time
+========================================== */
+
+function cleanupDailyTransferHistory() {
+
+  const todayStart = getTodayStartTsVN();
+  const todayEnd = todayStart + 86400000;
+
+  let removed = 0;
+  let changed = false;
+
+  try {
+
+    const users = loadUsers();
+
+    for (const user of Object.values(users)) {
+
+      if (!user || typeof user !== "object") {
+        continue;
+      }
+
+
+
+/* ==========================================
+   DEPOSIT HISTORY - DAILY CLEANUP
+========================================== */
+
+if (
+  user.profile &&
+  Array.isArray(user.profile.depositLogs)
+) {
+
+  const oldCount =
+    user.profile.depositLogs.length;
+
+  user.profile.depositLogs =
+    user.profile.depositLogs.filter(item => {
+
+      const ts = Number(item?.time);
+
+      return (
+        Number.isFinite(ts) &&
+        ts >= todayStart &&
+        ts < todayEnd
+      );
+
+    });
+
+  const removedCount =
+    oldCount - user.profile.depositLogs.length;
+
+  if (removedCount > 0) {
+    removed += removedCount;
+    changed = true;
+  }
+
+}
+
+
+
+      // 1. Clean completed transfer history
+      if (Array.isArray(user.transferHistory)) {
+
+        const before = user.transferHistory.length;
+
+        user.transferHistory =
+          user.transferHistory.filter(t => {
+
+            const ts = Number(
+              t.time || t.createdAt || 0
+            );
+
+            return (
+              Number.isFinite(ts) &&
+              ts >= todayStart &&
+              ts < todayEnd
+            );
+
+          }).slice(0, 50);
+
+        if (before !== user.transferHistory.length) {
+          removed += before - user.transferHistory.length;
+          changed = true;
+        }
+      }
+
+      // 2. Clean processed requests only
+      if (Array.isArray(user.transferRequests)) {
+
+        const before = user.transferRequests.length;
+
+        user.transferRequests =
+          user.transferRequests.filter(r => {
+
+            // NEVER delete pending transfers
+            if (r.status === "pending") {
+              return true;
+            }
+
+            // Preserve unknown states for safety
+            if (
+              r.status !== "approved" &&
+              r.status !== "rejected"
+            ) {
+              return true;
+            }
+
+            const ts = Number(
+              r.processedAt || r.createdAt || 0
+            );
+
+            return (
+              Number.isFinite(ts) &&
+              ts >= todayStart &&
+              ts < todayEnd
+            );
+
+          });
+
+        if (before !== user.transferRequests.length) {
+          removed += before - user.transferRequests.length;
+          changed = true;
+        }
+      }
+    }
+
+    // Avoid unnecessary disk writes
+    if (changed) {
+      saveUsers(users);
+    }
+
+    console.log(
+      `[TRANSFER CLEANUP] Removed ${removed} old records`
+    );
+
+  } catch (error) {
+
+    console.error(
+      "[TRANSFER CLEANUP ERROR]",
+      error
+    );
+
+  }
+}
+
+// Run when the server starts
+cleanupDailyTransferHistory();
+
+// Schedule cleanup for every Vietnam midnight
+function scheduleTransferCleanup() {
+
+  const nextMidnight =
+    getTodayStartTsVN() + 86400000;
+
+  const delay = Math.max(
+    1000,
+    nextMidnight - Date.now() + 1000
+  );
+
+  setTimeout(() => {
+
+    cleanupDailyTransferHistory();
+    scheduleTransferCleanup();
+
+  }, delay);
+}
+
+scheduleTransferCleanup();
+
+
+
 /* =========================================
    BỔ SUNG ĐẠI LÝ NẠP KIM CƯƠNG
    LIVESTREAM PRO
@@ -9201,8 +9424,21 @@ app.post("/api/admin/topup", (req, res) => {
 
 
   
-// 📜 lịch sử nạp
-user.profile.depositLogs ||= [];
+
+const depositTodayStart = getTodayStartTsVN();
+const depositTodayEnd = depositTodayStart + 86400000;
+
+user.profile.depositLogs = (
+  Array.isArray(user.profile.depositLogs)
+    ? user.profile.depositLogs
+    : []
+).filter(item => {
+  const ts = Number(item?.time);
+
+  return Number.isFinite(ts) &&
+    ts >= depositTodayStart &&
+    ts < depositTodayEnd;
+});
 
 user.profile.depositLogs.unshift({
   amount: add,
@@ -9210,6 +9446,7 @@ user.profile.depositLogs.unshift({
   by: adminUid,
   note: note || ""
 });
+
 
 
 
@@ -11836,13 +12073,40 @@ socket.on("coin-transfer-history", () => {
     });
   }
 
-  const history = Array.isArray(me.transferHistory)
-    ? me.transferHistory
-    : [];
 
-  const requests = Array.isArray(me.transferRequests)
-    ? me.transferRequests
-    : [];
+const todayStart = getTodayStartTsVN();
+const todayEnd = todayStart + 86400000;
+
+const history = Array.isArray(me.transferHistory)
+  ? me.transferHistory.filter(t => {
+
+      const ts = Number(
+        t.time || t.createdAt || 0
+      );
+
+      return ts >= todayStart && ts < todayEnd;
+
+    })
+  : [];
+
+const requests = Array.isArray(me.transferRequests)
+  ? me.transferRequests.filter(r => {
+
+      // Keep unresolved requests visible
+      if (r.status === "pending") {
+        return true;
+      }
+
+      const ts = Number(
+        r.processedAt || r.createdAt || 0
+      );
+
+      return ts >= todayStart && ts < todayEnd;
+
+    })
+  : [];
+
+
 
   // Các bản ghi chuyển cũ có thể không có ID.
   // Mặc định approved vì đã được chuyển trước đây.
@@ -11871,7 +12135,7 @@ socket.on("coin-transfer-history", () => {
       avatar: users[r.toUid]?.profile?.avatar || "",
       amount: r.amount,
       status: r.status,
-      time: Number(r.createdAt || 0),
+      time: Number(r.processedAt || r.createdAt || 0),
       processedAt: r.processedAt || null,
       note: r.note || ""
     }));
