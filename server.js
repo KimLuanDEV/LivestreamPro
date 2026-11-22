@@ -2500,12 +2500,6 @@ const bot = {
     }
   }
 
-  console.log(
-    "[TIME RACE] Round",
-    roundId,
-    "- Simulated bots:",
-    botCount
-  );
 
   // Bắt đầu tạo bot sau 3 giây kể từ đầu phiên
 setTimeout(() => {
@@ -4489,11 +4483,6 @@ set.add(socket.id);
     account.profile.role ||
     "user";
 
-  console.log(
-    "[SOCKET] VERIFIED BIND:",
-    verifiedUid,
-    socket.id
-  );
 
   return true;
 }
@@ -11159,11 +11148,7 @@ socket.on("disconnect", () => {
     emitActiveUsers();
   }
 
-  console.log(
-    "[SOCKET] DISCONNECTED:",
-    uid,
-    socket.id
-  );
+
 });
 
 

@@ -40,9 +40,31 @@ socket.on("connect", () => {
   registerVerifiedSocket();
 });
 
+
 socket.on("disconnect", reason => {
-  console.log("[SOCKET] Disconnected:", reason);
+
+  // Normal browser/navigation disconnect
+  if (
+    reason === "io client disconnect" ||
+    reason === "transport close"
+  ) {
+    console.debug(
+      "[SOCKET] Disconnected:",
+      reason
+    );
+
+    return;
+  }
+
+  console.warn(
+    "[SOCKET] Unexpected disconnect:",
+    reason
+  );
+
 });
+
+
+
 
 socket.on("connect_error", error => {
   console.warn("[SOCKET] Connection error:", error.message);
@@ -51,18 +73,34 @@ socket.on("connect_error", error => {
 // Handle an already connected shared socket.
 registerVerifiedSocket();
 
+
 /* ==========================================
-   BACK-FORWARD CACHE RECOVERY
+   SOCKET.IO - SAFE PAGE LIFECYCLE
 ========================================== */
 
-window.addEventListener("pagehide", () => {
-  socket.disconnect();
-});
+// Do not forcibly disconnect a shared socket.
+// The browser handles normal page navigation.
 
 window.addEventListener("pageshow", () => {
+
   if (!socket.connected) {
     socket.connect();
   }
+
+});
+
+// Recover connection when tab becomes visible.
+
+document.addEventListener("visibilitychange", () => {
+
+  if (document.visibilityState !== "visible") {
+    return;
+  }
+
+  if (!socket.connected) {
+    socket.connect();
+  }
+
 });
 
 
