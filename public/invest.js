@@ -35,11 +35,6 @@ socket.on("disconnect", reason => {
 
 
 
-function goInvest(asset){
-  location.href = `/invest-detail.html?asset=${asset}`;
-}
-
-
 
 
 
@@ -221,77 +216,6 @@ function closeGameHub() {
 
 
 
-// ==========================================
-// TRADE CENTER - MULTI PAGE CONTROLLER
-// ==========================================
-
-let currentTradePage = 1;
-
-// Get all showroom pages
-function getTradePages() {
-  const sheet = document.getElementById("portfolioSheet");
-
-  if (!sheet) return [];
-
-  return Array.from(
-    sheet.querySelectorAll(".trade-showroom-page")
-  );
-}
-
-// Activate page
-function setTradePage(pageNumber) {
-  const pages = getTradePages();
-  const total = pages.length;
-
-  if (!total) return;
-
-  const page = Math.max(
-    1,
-    Math.min(total, pageNumber)
-  );
-
-  currentTradePage = page;
-
-  pages.forEach((element, index) => {
-    const active = index + 1 === page;
-
-    element.hidden = !active;
-    element.classList.toggle("is-active", active);
-
-    element.querySelectorAll("button").forEach(button => {
-      button.tabIndex = active ? 0 : -1;
-    });
-  });
-
-  // Page counter
-  const counter =
-    document.getElementById("tradePageCounter");
-
-  if (counter) {
-    counter.textContent =
-      String(page).padStart(2, "0") +
-      " / " +
-      String(total).padStart(2, "0");
-  }
-
-  // Navigation status
-  const prev =
-    document.getElementById("tradePagePrev");
-
-  const next =
-    document.getElementById("tradePageNext");
-
-  if (prev) prev.disabled = page === 1;
-  if (next) next.disabled = page === total;
-}
-
-// Previous / next
-function changeTradePage(direction) {
-  if (direction !== -1 && direction !== 1) return;
-
-  setTradePage(currentTradePage + direction);
-}
-
 
 
 // ==========================================
@@ -331,18 +255,33 @@ function openTradeSlot(slot) {
 }
 
 
-// Open Trade Center
+
+/* ==========================================
+   TRADE CENTER - SINGLE SHOWROOM
+========================================== */
+
 function openPortfolio() {
+
   const sheet =
     document.getElementById("portfolioSheet");
 
   if (!sheet) return;
 
-  setTradePage(1);
-
+  // Open the single Trade Center showroom
   sheet.classList.remove("hidden");
+
   document.body.classList.add("sheet-open");
+
+  const box =
+    sheet.querySelector(".trade-showroom-box");
+
+  if (box) {
+    box.scrollTop = 0;
+  }
+
 }
+
+
 
 // Close Trade Center
 function closePortfolio() {

@@ -3089,107 +3089,6 @@ body.page-invest #portfolioSheet
     );
 }
 
-/* Shared navigation */
-body.page-invest #portfolioSheet
-.trade-page-navigation {
-  position: absolute;
-  z-index: 110;
-
-  left: 50%;
-  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
-
-  transform: translateX(-50%);
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-
-  width: min(82%, 330px);
-  min-height: 52px;
-  padding: 7px 9px;
-
-  border: 1px solid rgba(224, 177, 91, .42);
-  border-radius: 15px;
-
-  background: rgba(12, 11, 10, .94);
-  box-shadow:
-    0 8px 28px rgba(0, 0, 0, .5),
-    inset 0 1px 0 rgba(255, 232, 180, .12);
-
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-/* Navigation buttons */
-body.page-invest #portfolioSheet
-.trade-page-button {
-  appearance: none;
-
-  min-width: 68px;
-  height: 36px;
-  padding: 0 12px;
-
-  border: 1px solid rgba(220, 173, 88, .4);
-  border-radius: 9px;
-
-  background: linear-gradient(
-    145deg,
-    #392b19,
-    #17130f
-  );
-
-  color: #f1d29b;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 1px;
-
-  cursor: pointer;
-  touch-action: manipulation;
-}
-
-body.page-invest #portfolioSheet
-.trade-page-button:active:not(:disabled) {
-  transform: scale(.96);
-}
-
-body.page-invest #portfolioSheet
-.trade-page-button:disabled {
-  opacity: .3;
-  cursor: default;
-}
-
-body.page-invest #portfolioSheet
-.trade-page-button:focus-visible {
-  outline: 2px solid #f1d29b;
-  outline-offset: 2px;
-}
-
-/* Page counter */
-body.page-invest #portfolioSheet
-.trade-page-counter {
-  color: #f6dfb3;
-  font-size: 12px;
-  font-weight: 850;
-  letter-spacing: 2px;
-  white-space: nowrap;
-}
-
-/* Keep navigation readable on small phones */
-@media (max-width: 360px) {
-  body.page-invest #portfolioSheet
-  .trade-page-navigation {
-    width: 90%;
-    gap: 6px;
-  }
-
-  body.page-invest #portfolioSheet
-  .trade-page-button {
-    min-width: 60px;
-    padding: 0 8px;
-  }
-}
-
 
 
 /* ==========================================
@@ -3364,195 +3263,119 @@ body.page-invest #portfolioSheet
 
 
 
-<!-- ===== TRADE SHOWROOM - TWO PAGES ===== -->
+
+<!-- ======================================
+     TRADE CENTER - SINGLE SHOWROOM
+     SHOWROOM 02 IS NOW MAIN SHOWROOM
+====================================== -->
+
 <div id="portfolioSheet" class="sheet hidden">
 
   <div class="sheet-backdrop"
-       onclick="closePortfolio()"></div>
+       onclick="closePortfolio()">
+  </div>
 
   <div class="sheet-box trade-showroom-box">
 
-    <!-- PAGE 01: CURRENT SHOWROOM -->
+    <!-- MAIN SHOWROOM -->
     <div class="trade-showroom-page is-active"
-         data-trade-page="1">
+         data-trade-page="2">
 
-      <div class="trade-showroom-map">
+      <div class="trade-showroom-map trade-showroom-empty">
 
+        <!-- MAIN BACKGROUND -->
         <img
-          src="/assets/bg/trade-showroom.jpg"
+          src="/assets/bg/trade-showroom-2.jpg"
           class="trade-showroom-background"
-          alt="Trade Center Page 1"
-          draggable="false">
+          alt="Trade Center Showroom"
+          draggable="false"
+        >
 
         <!-- ROW 01 -->
-        <button type="button"
-                class="trade-hitbox trade-silver"
-                onclick="goInvest('silver')"
-                aria-label="Silver"></button>
 
-        <button type="button"
-                class="trade-hitbox trade-gold"
-                onclick="goInvest('gold')"
-                aria-label="Gold"></button>
+        <button
+          type="button"
+          class="trade-hitbox trade2-slot-1"
+          onclick="openTradeSlot(1)"
+          aria-label="Future Investment 1">
+        </button>
+
+        <button
+          type="button"
+          class="trade-hitbox trade2-slot-2"
+          onclick="openTradeSlot(2)"
+          aria-label="Future Investment 2">
+        </button>
 
         <!-- ROW 02 -->
-        <button type="button"
-                class="trade-hitbox trade-diamond"
-                onclick="goInvest('diamond')"
-                aria-label="Diamond"></button>
 
-        <button type="button"
-                class="trade-hitbox trade-oil"
-                onclick="goInvest('oil')"
-                aria-label="Oil"></button>
+        <button
+          type="button"
+          class="trade-hitbox trade2-slot-3"
+          onclick="openTradeSlot(3)"
+          aria-label="Future Investment 3">
+        </button>
+
+        <button
+          type="button"
+          class="trade-hitbox trade2-slot-4"
+          onclick="openTradeSlot(4)"
+          aria-label="Future Investment 4">
+        </button>
 
         <!-- ROW 03 -->
-        <button type="button"
-                class="trade-hitbox trade-estate"
-                onclick="goInvest('estate')"
-                aria-label="Real Estate"></button>
 
-        <button type="button"
-                class="trade-hitbox trade-atomic"
-                onclick="goInvest('atomic')"
-                aria-label="Atomic"></button>
+        <button
+          type="button"
+          class="trade-hitbox trade2-slot-5"
+          onclick="openTradeSlot(5)"
+          aria-label="Future Investment 5">
+        </button>
+
+        <button
+          type="button"
+          class="trade-hitbox trade2-slot-6"
+          onclick="openTradeSlot(6)"
+          aria-label="Future Investment 6">
+        </button>
 
       </div>
+
     </div>
 
-
-
-<!-- ======================================
-     TRADE SHOWROOM - PAGE 02
-     6 FUTURE GAME HITBOXES
-====================================== -->
-
-<div class="trade-showroom-page"
-     data-trade-page="2"
-     hidden>
-
-  <div class="trade-showroom-map trade-showroom-empty">
-
-    <!-- BACKGROUND SHOWROOM 02 -->
-    <img
-      src="/assets/bg/trade-showroom-2.jpg"
-      class="trade-showroom-background"
-      alt="Trade Center Showroom 2"
-      draggable="false"
-    >
-
-    <!-- ========== ROW 01 ========== -->
-
-    <!-- SLOT 01 - TOP LEFT -->
+    <!-- EXIT BUTTON -->
     <button
       type="button"
-      class="trade-hitbox trade2-slot-1"
-      onclick="openTradeSlot(1)"
-      aria-label="Future Investment 1">
-    </button>
+      class="trade-showroom-close"
+      onclick="closePortfolio()"
+      aria-label="Exit Trade Center">
 
-    <!-- SLOT 02 - TOP RIGHT -->
-    <button
-      type="button"
-      class="trade-hitbox trade2-slot-2"
-      onclick="openTradeSlot(2)"
-      aria-label="Future Investment 2">
-    </button>
+      <svg
+        viewBox="0 0 24 24"
+        width="19"
+        height="19"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true">
 
-    <!-- ========== ROW 02 ========== -->
-
-    <!-- SLOT 03 - MIDDLE LEFT -->
-    <button
-      type="button"
-      class="trade-hitbox trade2-slot-3"
-      onclick="openTradeSlot(3)"
-      aria-label="Future Investment 3">
-    </button>
-
-    <!-- SLOT 04 - MIDDLE RIGHT -->
-    <button
-      type="button"
-      class="trade-hitbox trade2-slot-4"
-      onclick="openTradeSlot(4)"
-      aria-label="Future Investment 4">
-    </button>
-
-    <!-- ========== ROW 03 ========== -->
-
-    <!-- SLOT 05 - BOTTOM LEFT -->
-    <button
-      type="button"
-      class="trade-hitbox trade2-slot-5"
-      onclick="openTradeSlot(5)"
-      aria-label="Future Investment 5">
-    </button>
-
-    <!-- SLOT 06 - BOTTOM RIGHT -->
-    <button
-      type="button"
-      class="trade-hitbox trade2-slot-6"
-      onclick="openTradeSlot(6)"
-      aria-label="Future Investment 6">
-    </button>
-
-  </div>
-
-</div>
-
-
-    <!-- EXIT - SHARED BY BOTH PAGES -->
-    <button type="button"
-            class="trade-showroom-close"
-            onclick="closePortfolio()"
-            aria-label="Exit Trade Center">
-
-      <svg viewBox="0 0 24 24"
-           width="19" height="19"
-           fill="none"
-           stroke="currentColor"
-           stroke-width="2"
-           stroke-linecap="round"
-           stroke-linejoin="round"
-           aria-hidden="true">
         <path d="M9 18l-6-6 6-6"/>
         <path d="M3 12h12"/>
         <path d="M15 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/>
+
       </svg>
 
       <span>EXIT</span>
+
     </button>
 
-    <!-- PAGE NAVIGATION -->
-    <div class="trade-page-navigation">
-
-      <button type="button"
-              id="tradePagePrev"
-              class="trade-page-button"
-              onclick="changeTradePage(-1)"
-              aria-label="Previous page">
-        PREV
-      </button>
-
-      <span id="tradePageCounter"
-            class="trade-page-counter"
-            aria-live="polite">
-        01 / 02
-      </span>
-
-      <button type="button"
-              id="tradePageNext"
-              class="trade-page-button"
-              onclick="changeTradePage(1)"
-              aria-label="Next page">
-        NEXT
-      </button>
-
-    </div>
-
   </div>
-</div>
-<!-- ===== END TRADE SHOWROOM ===== -->
 
+</div>
+
+<!-- ===== END TRADE SHOWROOM ===== -->
 
 
 
