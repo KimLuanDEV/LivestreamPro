@@ -11672,15 +11672,18 @@ if (needFriendCheck) {
 
   if(sockets){
     for(const sid of sockets){
-      io.to(sid).emit("private-message",{
-        from:{
-          uid:fromUid,
-          name:fromAcc.profile.name,
-          avatar:fromAcc.profile.avatar
-        },
-        text:msg.text,
-        msgId:msg.id
-      })
+
+      
+io.to(sid).emit("private-message", {
+  from: {
+    uid: fromUid,
+    name: fromAcc.profile.name,
+    avatar: fromAcc.profile.avatar
+  },
+  text: msg.text,
+  msgId: msg.id,
+  time: msg.time
+});
     }
   }
 
@@ -13443,11 +13446,14 @@ if (type === "video" && media) {
     };
 
     for (const sid of sockets) {
-      io.to(sid).emit("private-message", {
-        from: fromProfile,
-        text: payloadText,
-        msgId: id
-      });
+
+io.to(sid).emit("private-message", {
+  from: fromProfile,
+  text: payloadText,
+  msgId: id,
+  time: msg.time
+});
+
       io.to(sid).emit("inbox-new");
     }
 

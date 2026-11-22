@@ -197,14 +197,17 @@ arr.forEach(m => {
   const isMe = m.from === auth.uid;
   const text = m.revoked ? "__REVOKED__" : m.text;
 
-  pushMsg(
-    isMe ? "You" : currentTarget.name,
-    text,
-    isMe,
-    m.id,
-    "",
-    isMe ? auth.avatar : currentTarget.avatar
-  );
+pushMsg(
+  isMe ? "You" : currentTarget.name,
+  text,
+  isMe,
+  m.id,
+  "",
+  isMe ? auth.avatar : currentTarget.avatar,
+  m.time
+);
+
+  
 });
 
 }
@@ -352,7 +355,7 @@ saveChat({
 };
 
 
-socket.on("private-message", ({ from, text, msgId }) => {
+socket.on("private-message", ({ from, text, msgId, time }) => {
 
   const peer = from.uid;
 
@@ -376,19 +379,20 @@ socket.on("private-message", ({ from, text, msgId }) => {
     from: peer,
     to: auth.uid,
     text,
-    time: Date.now(),
+    time: time ?? Date.now(),
     peer,
     seen: true
   });
 
-  pushMsg(
-    from.name,
-    text,
-    false,
-    msgId,
-    "",
-    from.avatar
-  );
+pushMsg(
+  from.name,
+  text,
+  false,
+  msgId,
+  "",
+  from.avatar,
+  time
+);
 
   socket.emit("msg-seen", { to: peer, msgId });
   return;
@@ -405,7 +409,7 @@ if (chatModal.classList.contains("hidden")) {
     from: peer,
     to: auth.uid,
     text,
-    time: Date.now(),
+    time: time ?? Date.now(),
     peer,
     seen: false
   });
@@ -440,7 +444,15 @@ socket.on("msg-status", ({ msgId, status }) => {
 
 
 
-function pushMsg(name, text, isMe=false, msgId=null, status="", avatar="") {
+function pushMsg(
+  name,
+  text,
+  isMe = false,
+  msgId = null,
+  status = "",
+  avatar = "",
+  time = null
+) {
 
 
 
@@ -576,17 +588,54 @@ else if (text?.startsWith("/location ")) {
     `;
   }
 
-  div.innerHTML = `
-    ${html}
-    <div class="chat-time">
-      ${new Date().toLocaleTimeString("en-GB",{
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false
-})}
-      ${isMe ? `<span class="msg-status">${status}</span>` : ""}
-    </div>
-  `;
+// ==========================================
+// CHAT - ORIGINAL MESSAGE TIMESTAMP
+// ==========================================
+
+// Ưu tiên timestamp đã lưu.
+// Tin nhắn cũ thiếu time: thử lấy timestamp từ msgId.
+const idTimestamp =
+  typeof msgId === "string"
+    ? msgId.split("_")[0]
+    : null;
+
+const rawTimestamp = time ?? idTimestamp;
+
+const timestamp =
+  rawTimestamp === null || rawTimestamp === ""
+    ? NaN
+    : Number(rawTimestamp);
+
+const validTime =
+  Number.isFinite(timestamp) &&
+  timestamp > 946684800000 &&
+  timestamp <= Date.now() + 300000;
+
+const formattedTime = validTime
+  ? new Date(timestamp).toLocaleString("en-GB", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    })
+  : "--";
+
+div.innerHTML = `
+  ${html}
+
+  <div class="chat-time">
+    ${formattedTime}
+
+    ${
+      isMe
+        ? `<span class="msg-status">${status}</span>`
+        : ""
+    }
+  </div>
+`;
 
 
 
@@ -1335,14 +1384,15 @@ socket.on("peer-cleared-my-messages", ({ by }) => {
 
     arr.forEach(m => {
       const isMe = m.from === me;
-      pushMsg(
-        isMe ? "You" : currentTarget.name,
-        m.revoked ? "__REVOKED__" : m.text,
-        isMe,
-        m.id,
-        "",
-        isMe ? auth.avatar : currentTarget.avatar
-      );
+pushMsg(
+  isMe ? "You" : currentTarget.name,
+  m.revoked ? "__REVOKED__" : m.text,
+  isMe,
+  m.id,
+  "",
+  isMe ? auth.avatar : currentTarget.avatar,
+  m.time
+);
     });
   }
 
