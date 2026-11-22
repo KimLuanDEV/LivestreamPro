@@ -2613,6 +2613,393 @@ body.lobby-page
 
 
 
+
+/* ==========================================
+   LIVESTREAM PRO
+   LUXURY ERROR MODAL V2
+   BLACK & CHAMPAGNE GOLD
+========================================== */
+
+/* OVERLAY */
+
+body.lobby-page #errModal {
+  position: fixed !important;
+  inset: 0;
+  z-index: 50000 !important;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-height: 100dvh;
+
+  margin: 0;
+  padding:
+    calc(18px + env(safe-area-inset-top, 0px))
+    16px
+    calc(18px + env(safe-area-inset-bottom, 0px));
+
+  isolation: isolate;
+}
+
+body.lobby-page #errModal.hidden {
+  display: none !important;
+}
+
+/* BACKDROP */
+
+body.lobby-page #errModal .modal-backdrop {
+  position: absolute;
+  inset: 0;
+
+  background: rgba(0, 0, 0, .86);
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* MAIN PANEL */
+
+body.lobby-page #errModal .lsp-error-modal {
+  position: relative;
+  z-index: 1;
+
+  width: 100%;
+  max-width: 390px;
+  max-height: 100%;
+
+  margin: 0;
+  padding: 0;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  border: 1px solid rgba(218, 183, 115, .38);
+  border-radius: 22px;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgba(208, 151, 64, .13),
+      transparent 58%
+    ),
+    linear-gradient(
+      160deg,
+      #252329 0%,
+      #17181e 54%,
+      #101116 100%
+    );
+
+  color: #f5e5c7;
+
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, .75),
+    inset 0 1px rgba(255, 255, 255, .05);
+
+  animation: lspErrorAppear .24s ease-out both;
+}
+
+/* TOP GOLD LINE */
+
+body.lobby-page #errModal .lsp-error-topline {
+  position: absolute;
+  top: 0;
+  left: 18%;
+  right: 18%;
+
+  height: 2px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #e9c78b,
+    transparent
+  );
+
+  pointer-events: none;
+}
+
+/* HEADER */
+
+body.lobby-page #errModal .lsp-error-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 18px 19px 4px;
+}
+
+/* BRAND LABEL */
+
+body.lobby-page #errModal .lsp-error-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  color: #d3b47d;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+}
+
+body.lobby-page #errModal .lsp-error-label-dot {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+  background: #d7b77b;
+
+  box-shadow: 0 0 8px rgba(215,183,123,.3);
+}
+
+/* CLOSE BUTTON */
+
+body.lobby-page #errModal .lsp-error-close {
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 35px;
+  width: 35px;
+  height: 35px;
+
+  padding: 0;
+  margin: 0;
+
+  border: 1px solid rgba(218,183,115,.3);
+  border-radius: 10px;
+
+  background: #292620;
+  color: #dfc392;
+
+  cursor: pointer;
+}
+
+body.lobby-page #errModal .lsp-error-close:active {
+  transform: scale(.95);
+}
+
+/* WARNING ICON */
+
+body.lobby-page #errModal .lsp-error-icon {
+  display: grid;
+  place-items: center;
+
+  width: 76px;
+  height: 76px;
+
+  margin: 15px auto 17px;
+
+  border: 1px solid rgba(227,178,108,.43);
+  border-radius: 22px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(106,72,38,.42),
+    rgba(46,35,29,.55)
+  );
+
+  color: #f1c981;
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,.22),
+    inset 0 1px rgba(255,255,255,.05);
+}
+
+body.lobby-page #errModal .lsp-error-icon svg {
+  filter: drop-shadow(
+    0 2px 7px rgba(220,169,83,.25)
+  );
+}
+
+/* CONTENT */
+
+body.lobby-page #errModal .lsp-error-content {
+  padding: 0 24px 22px;
+  text-align: center;
+}
+
+body.lobby-page #errModal .lsp-error-kicker {
+  display: block;
+
+  margin-bottom: 10px;
+
+  color: #c3a16d;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.7px;
+}
+
+body.lobby-page #errModal #errTitle {
+  margin: 0 0 12px;
+  padding: 0;
+
+  color: #f4dfb6;
+
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* SERVER ERROR MESSAGE */
+
+body.lobby-page #errModal #errText {
+  max-width: 310px;
+
+  margin: 0 auto;
+
+  color: #b7b0a8;
+
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.65;
+
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* FOOTER */
+
+body.lobby-page #errModal .lsp-error-footer {
+  padding: 18px 21px 20px;
+
+  border-top: 1px solid rgba(218,183,115,.14);
+
+  background: rgba(10,11,15,.25);
+}
+
+/* CONFIRM BUTTON */
+
+body.lobby-page #errModal .lsp-error-confirm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-height: 48px;
+
+  margin: 0;
+  padding: 12px 20px;
+
+  border: 1px solid #efd29a;
+  border-radius: 12px;
+
+  background: linear-gradient(
+    135deg,
+    #f6e0b4 0%,
+    #d8b57a 52%,
+    #ba8e51 100%
+  );
+
+  color: #261b0f;
+
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 1.2px;
+
+  box-shadow:
+    0 5px 17px rgba(188,138,65,.15),
+    inset 0 1px rgba(255,255,255,.25);
+
+  cursor: pointer;
+
+  transition:
+    transform .15s ease,
+    filter .15s ease;
+}
+
+body.lobby-page #errModal .lsp-error-confirm:hover {
+  filter: brightness(1.07);
+}
+
+body.lobby-page #errModal .lsp-error-confirm:active {
+  transform: scale(.98);
+}
+
+/* FOOTER BRANDING */
+
+body.lobby-page #errModal .lsp-error-footer-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  margin-top: 17px;
+
+  color: #827562;
+
+  font-size: 8px;
+  font-weight: 750;
+  letter-spacing: 1.2px;
+}
+
+body.lobby-page #errModal .lsp-error-footer-note span {
+  width: 3px;
+  height: 3px;
+
+  border-radius: 50%;
+  background: #af905e;
+}
+
+/* ANIMATION */
+
+@keyframes lspErrorAppear {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* MOBILE */
+
+@media (max-width: 430px) {
+  body.lobby-page #errModal {
+    padding-left: 17px;
+    padding-right: 17px;
+  }
+
+  body.lobby-page #errModal .lsp-error-modal {
+    border-radius: 19px;
+  }
+
+  body.lobby-page #errModal #errTitle {
+    font-size: 21px;
+  }
+
+  body.lobby-page #errModal .lsp-error-content {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+}
+
+/* ACCESSIBILITY */
+
+body.lobby-page #errModal button:focus-visible {
+  outline: 2px solid #f3d49c;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.lobby-page #errModal .lsp-error-modal {
+    animation: none;
+  }
+
+  body.lobby-page #errModal button {
+    transition: none;
+  }
+}
+
+
+
 </style>
 
 
@@ -2940,35 +3327,112 @@ body.lobby-page
 
 
 
-<!-- ERROR MODAL (NEON) -->
-<div id="errModal" class="modal hidden" role="dialog" aria-modal="true">
+
+<!-- ==========================================
+     LIVESTREAM PRO - LUXURY ERROR MODAL
+     BLACK & CHAMPAGNE GOLD
+========================================== -->
+
+<div
+  id="errModal"
+  class="modal hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="errTitle"
+  aria-describedby="errText">
+
   <div class="modal-backdrop modal-backdrop--neon"></div>
 
-  <div class="neon-modal" tabindex="-1" style="max-width:520px">
-    <div class="neon-frame"></div>
-    <div class="neon-scan"></div>
+  <div class="neon-modal lsp-error-modal" tabindex="-1">
 
-    <div class="neon-top">
-      <div class="neon-livePill">
-        <span class="neon-dot"></span>
-        <span>LỖI TẠO PHÒNG</span>
+    <div class="lsp-error-topline"></div>
+
+    <!-- HEADER -->
+    <div class="lsp-error-header">
+
+      <span class="lsp-error-label">
+        <span class="lsp-error-label-dot"></span>
+        LIVESTREAM PRO
+      </span>
+
+      <button
+        id="errX"
+        class="lsp-error-close"
+        type="button"
+        aria-label="Close">
+
+        <svg viewBox="0 0 24 24"
+             width="19"
+             height="19"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="1.8"
+             stroke-linecap="round">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+
+      </button>
+
+    </div>
+
+    <!-- ERROR ICON -->
+    <div class="lsp-error-icon">
+
+      <svg viewBox="0 0 24 24"
+           width="32"
+           height="32"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="1.7"
+           stroke-linecap="round"
+           stroke-linejoin="round">
+
+        <path d="M10.3 3.9 2.2 18a2 2 0 0 0 1.7 3h16.2a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>
+        <path d="M12 9v4"/>
+        <path d="M12 17h.01"/>
+
+      </svg>
+
+    </div>
+
+    <!-- CONTENT -->
+    <div class="lsp-error-content">
+
+      <span class="lsp-error-kicker">
+        ROOM CREATION FAILED
+      </span>
+
+      <h3 id="errTitle">
+        Unable to Create Room
+      </h3>
+
+      <p id="errText" class="lsp-error-message"></p>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="lsp-error-footer">
+
+      <button
+        id="errOk"
+        class="lsp-error-confirm"
+        type="button">
+        GOT IT
+      </button>
+
+      <div class="lsp-error-footer-note">
+        LIVESTREAM PRO
+        <span></span>
+        SECURE PLATFORM
       </div>
-      <button id="errX" class="neon-x" type="button" aria-label="Đóng">✕</button>
+
     </div>
 
-    <div style="padding:14px 2px 6px">
-      <h3 style="margin:0 0 6px">⚠️ Không tạo được</h3>
-      <div id="errText" style="opacity:.9; line-height:1.4"></div>
-    </div>
-
-    <div class="neon-actions" style="border-top:0; padding-top:6px">
-      <div></div>
-      <div class="neon-btns">
-        <button id="errOk" class="neon-btn neon-btn--main" type="button">OK</button>
-      </div>
-    </div>
   </div>
+
 </div>
+
+
 
 <!-- WELCOME MODAL (NEON v2) -->
 <div id="welcomeModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
