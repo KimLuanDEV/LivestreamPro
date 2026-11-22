@@ -9074,14 +9074,10 @@ if (newQr && acc.profile.bank.qr !== newQr) {
   acc.profile.bank.qr = newQr;
   changed = true;
 }
-
-
-    console.log("[TOPUP] Đại lý đã được đăng ký:", uid);
   }
 
   if (changed) {
     saveUsers(db);
-    console.log("[TOPUP] Đã cập nhật danh sách đại lý");
   }
 }
 
