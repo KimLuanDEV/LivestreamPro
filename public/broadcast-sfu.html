@@ -5067,6 +5067,25 @@ body {
 
 
 
+/* ==========================================
+   FRONT CAMERA - MIRROR MODE
+========================================== */
+
+/* Camera trước: hiển thị giống soi gương */
+#localVideo.sfu-front-camera {
+  transform: scaleX(-1) !important;
+  -webkit-transform: scaleX(-1) !important;
+}
+
+/* Camera sau: hiển thị đúng chiều */
+#localVideo.sfu-back-camera {
+  transform: none !important;
+  -webkit-transform: none !important;
+}
+
+
+
+
 </style>
 
 
@@ -6140,6 +6159,21 @@ let stopping = false;
 let cameraOn = true;
 let micOn = true;
 let cameraFacing = "user"; // Camera trước
+
+
+
+function updateCameraMirror() {
+  const video = document.getElementById("localVideo");
+  if (!video) return;
+
+  const isFront = cameraFacing === "user";
+
+  video.classList.toggle("sfu-front-camera", isFront);
+  video.classList.toggle("sfu-back-camera", !isFront);
+}
+
+
+
 let cameraSwitching = false;
 let viewerConnecting = false;
 let viewerConnected = false;
@@ -8110,6 +8144,8 @@ function attachLocalCamera() {
   const video = $("localVideo");
 
   track.attach(video);
+  updateCameraMirror();
+
   video.muted = true;
   video.classList.remove("hidden");
 
@@ -8342,6 +8378,7 @@ async function flipCamera() {
 
     cameraFacing = nextFacing;
 
+    updateCameraMirror();
     // Gắn lại hình ảnh xem trước.
     attachLocalCamera();
 
