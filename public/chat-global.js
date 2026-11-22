@@ -12,19 +12,29 @@ function getChatKey(a, b) {
   if (!auth?.uid) return;
 
 
+
 /* ==========================================
-   LIVESTREAM PRO - SOCKET AUTH RECOVERY
+   LIVESTREAM PRO - SHARED SOCKET CONNECTION
 ========================================== */
 
 window.socket = window.socket || io({
+  autoConnect: true,
+
+  // Keep polling fallback for compatibility
+  transports: ["polling", "websocket"],
+  upgrade: true,
+
   reconnection: true,
   reconnectionAttempts: Infinity,
-  reconnectionDelay: 1000,
-  reconnectionDelayMax: 5000,
+  reconnectionDelay: 1500,
+  reconnectionDelayMax: 10000,
+  randomizationFactor: 0.5,
+
   timeout: 20000
 });
 
 const socket = window.socket;
+
 
 // Register on every successful connection.
 // Server derives the UID from its verified session.
@@ -74,30 +84,27 @@ socket.on("connect_error", error => {
 registerVerifiedSocket();
 
 
+
 /* ==========================================
-   SOCKET.IO - SAFE PAGE LIFECYCLE
+   SOCKET - PAGE RESTORE / BFCACHE
 ========================================== */
 
-// Do not forcibly disconnect a shared socket.
-// The browser handles normal page navigation.
+window.addEventListener("pageshow", event => {
 
-window.addEventListener("pageshow", () => {
-
-  if (!socket.connected) {
+  // Recover a page restored from browser cache
+  if (event.persisted && !socket.connected) {
     socket.connect();
   }
 
 });
 
-// Recover connection when tab becomes visible.
-
 document.addEventListener("visibilitychange", () => {
 
-  if (document.visibilityState !== "visible") {
-    return;
-  }
-
-  if (!socket.connected) {
+  // Recover when user returns to the tab
+  if (
+    document.visibilityState === "visible" &&
+    !socket.connected
+  ) {
     socket.connect();
   }
 

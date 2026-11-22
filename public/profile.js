@@ -2762,7 +2762,7 @@ const PROFILE_ENGLISH = new Map(Object.entries({
   "Chuyển kim cương": "Transfer Diamonds",
   "LỊCH SỬ": "HISTORY",
   "Lịch sử giao dịch": "Transaction History",
-  "Thư viện": "Library",
+ 
 
   "💾 Lưu": "💾 Save",
   "🔐 Đổi mật khẩu": "🔐 Change Password",

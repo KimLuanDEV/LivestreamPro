@@ -646,6 +646,25 @@ function saveSocial() {
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
+
+
+/* ==========================================
+   SOCKET.IO - ENGINE ERROR DIAGNOSTICS
+========================================== */
+
+io.engine.on("connection_error", err => {
+
+  console.warn("[ENGINE.IO] Connection error", {
+    code: err.code,
+    message: err.message,
+    context: err.context,
+    transport: err.req?._query?.transport
+  });
+
+});
+
+
+
 const activeUsers = new Map();
 
 
