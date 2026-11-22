@@ -313,21 +313,6 @@ html, body {
 
 
 
-.invest-card.wheel{
-  background-image:
-    linear-gradient(180deg, rgba(255,200,0,.35), rgba(0,0,0,.95)),
-    url("/assets/bg/wheel.jpg");
-
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-
-  box-shadow:
-    0 0 45px rgba(255,200,0,.3),
-    0 12px 30px rgba(0,0,0,.7);
-}
-
-
 
 /* ===== GAME HUB HEADER ===== */
 .gamehub-head{
@@ -665,20 +650,6 @@ body.sheet-open{
 
 
 
-.invest-card.animal{
-  background-image:
-    linear-gradient(180deg, rgba(0,255,150,.35), rgba(0,0,0,.95)),
-    url("/assets/bg/animal.jpg");
-
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-
-  box-shadow:
-    0 0 45px rgba(0,255,150,.25),
-    0 12px 30px rgba(0,0,0,.7);
-}
-
 #gameHubSheet .invest-card{
   aspect-ratio: 3 / 5;
   min-height: 240px;
@@ -754,41 +725,6 @@ body.sheet-open{
   100%{opacity:.4}
 }
 
-
-
-/* 🏭 DIAMOND FACTORY */
-.invest-card.diamond-factory{
-  background-image:
-    linear-gradient(180deg, rgba(0,255,255,.35), rgba(0,0,0,.95)),
-    url("/assets/bg/star-war-thumb.jpg"); /* bạn thêm ảnh sau */
-
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-
-  box-shadow:
-    0 0 60px rgba(0,255,255,.45),
-    0 12px 30px rgba(0,0,0,.8);
-}
-
-/* hiệu ứng ánh sáng công nghiệp */
-.invest-card.diamond-factory::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:
-    radial-gradient(circle at 30% 40%, rgba(0,255,255,.25), transparent 50%),
-    radial-gradient(circle at 70% 60%, rgba(0,200,255,.25), transparent 50%);
-  mix-blend-mode: screen;
-  animation: pulseFactory 2.8s ease-in-out infinite;
-  pointer-events:none;
-}
-
-@keyframes pulseFactory{
-  0%{opacity:.4}
-  50%{opacity:.9}
-  100%{opacity:.4}
-}
 
 
 

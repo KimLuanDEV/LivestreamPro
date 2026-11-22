@@ -219,10 +219,6 @@ function closeGameHub() {
 
 
 
-function openWheelGame(){
-  location.href = "/game-wheel.html";
-}
-
 
 
 // ==========================================
@@ -386,10 +382,6 @@ function openTimeRaceGame(){
   location.href = "/game-time-race.html";
 }
 
-
-function openDiamondFactoryGame(){
-  location.href = "/game-starwar.html";
-}
 
 
 
