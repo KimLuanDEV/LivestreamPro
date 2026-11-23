@@ -2,268 +2,1043 @@
 <html>
 <head>
 <meta charset="utf-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1, viewport-fit=cover"
+>
+
+<meta name="theme-color" content="#090b0e">
+
 <title>Admin - Time Race Control</title>
 <script src="/socket.io/socket.io.js"></script>
 
 <style>
-body{
-  background:#111;
-  color:#fff;
-  font-family:system-ui;
-  padding:20px;
+
+:root {
+  --bg: #090b0e;
+  --panel: #15181d;
+  --panel2: #1c2026;
+  --gold: #e9c88b;
+  --gold-dark: #a78247;
+  --text: #f5f2eb;
+  --muted: #92959d;
+  --line: rgba(233, 200, 139, .16);
+  --green: #62d5a3;
+  --red: #f47f87;
 }
 
-.card{
-  background:#1b1b1b;
-  padding:20px;
-  border-radius:14px;
-  margin-bottom:20px;
-  box-shadow:0 0 30px rgba(255,0,0,.2);
+* {
+  box-sizing: border-box;
 }
 
-.big{
-  font-size:32px;
-  font-weight:800;
-  color:#ff2d2d;
+html {
+  background: var(--bg);
 }
 
-.label{
-  opacity:.6;
-  font-size:13px;
+body {
+  margin: 0;
+  min-height: 100dvh;
+  padding: 0;
+  color: var(--text);
+  font-family: system-ui, -apple-system, sans-serif;
+  background:
+    radial-gradient(
+      ellipse at 85% 0%,
+      rgba(206, 158, 85, .11),
+      transparent 45%
+    ),
+    var(--bg);
 }
 
-.player-row{
-  display:flex;
-  justify-content:space-between;
-  padding:8px 0;
-  border-bottom:1px solid rgba(255,255,255,.08);
+button, input {
+  font: inherit;
 }
 
-.player-name{
-  font-weight:600;
+button {
+  cursor: pointer;
 }
 
-.player-bet{
-  color:#ffd54a;
+button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
 }
 
-.player-stop{
-  color:#4caf50;
+.admin-shell {
+  max-width: 1380px;
+  margin: auto;
+  padding: 25px 24px 60px;
 }
+
+/* HEADER */
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-icon {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: var(--gold);
+  font-size: 23px;
+  background: linear-gradient(145deg, #403520, #17191d);
+  border: 1px solid var(--line);
+}
+
+.brand-title {
+  font-size: 13px;
+  font-weight: 850;
+  letter-spacing: 2px;
+}
+
+.brand-sub {
+  margin-top: 5px;
+  color: var(--gold-dark);
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+
+.connection-badge {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 15px;
+  border-radius: 30px;
+  border: 1px solid var(--line);
+  background: #191c20;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.connection-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #777;
+}
+
+.connection-badge.online .connection-dot {
+  background: var(--green);
+  box-shadow: 0 0 12px var(--green);
+}
+
+/* PAGE HEADING */
+
+.admin-hero {
+  margin: 38px 0 28px;
+}
+
+.kicker {
+  color: var(--gold-dark);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 3px;
+}
+
+.admin-hero h1 {
+  margin: 10px 0;
+  font-size: clamp(28px, 4vw, 43px);
+  letter-spacing: -1.5px;
+}
+
+.admin-hero h1 span {
+  color: var(--gold);
+  font-weight: 400;
+}
+
+.admin-hero p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* CARDS */
+
+.card {
+  min-width: 0;
+  padding: 24px;
+  border-radius: 20px;
+  background: linear-gradient(
+    150deg,
+    var(--panel2),
+    var(--panel)
+  );
+  border: 1px solid var(--line);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  min-height: 145px;
+}
+
+.label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+.stat-value {
+  margin-top: 22px;
+  font-size: clamp(25px, 3vw, 36px);
+  font-weight: 800;
+  letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.gold {
+  color: var(--gold);
+}
+
+.stat-note {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #777e87;
+}
+
+/* MAIN GRID */
+
+.admin-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: 20px;
+}
+
+.section-kicker {
+  color: var(--gold-dark);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.section-title {
+  margin: 9px 0 25px;
+  font-size: 21px;
+  letter-spacing: -.5px;
+}
+
+/* OVERRIDE INPUT */
+
+.input-label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.override-input-wrap {
+  display: flex;
+  align-items: center;
+  padding: 7px 16px;
+  background: #0b0e12;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+}
+
+.override-input-wrap:focus-within {
+  border-color: var(--gold);
+}
+
+#overrideInput {
+  width: 100%;
+  min-width: 0;
+  padding: 13px 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: white;
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.override-unit {
+  color: var(--gold);
+  font-weight: 800;
+}
+
+.helper {
+  margin: 13px 0 22px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.gold-button {
+  width: 100%;
+  min-height: 53px;
+  border: 1px solid #e8c78d;
+  border-radius: 13px;
+  background: linear-gradient(110deg, #f2d9a8, #c99b58);
+  color: #292014;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+}
+
+.gold-button:active {
+  transform: scale(.99);
+}
+
+/* TIMELINE */
+
+.admin-divider {
+  height: 1px;
+  margin: 26px 0;
+  background: var(--line);
+}
+
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.time-item {
+  min-width: 0;
+  padding: 17px 13px;
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 13px;
+}
+
+.time-value {
+  margin-top: 12px;
+  font-size: 19px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* PLAYERS */
+
+.players-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.player-count {
+  color: var(--gold);
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+#playerList {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  max-height: 560px;
+  overflow-y: auto;
+}
+
+.player-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 13px;
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(255,255,255,.05);
+  border-radius: 13px;
+}
+
+.player-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.player-avatar {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: var(--gold);
+  background: #342b20;
+  font-weight: 850;
+}
+
+.player-name {
+  font-size: 13px;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.player-bet {
+  color: var(--gold);
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.player-stop {
+  color: var(--green);
+}
+
+.player-status {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.empty-players {
+  padding: 80px 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* LOGIN */
+
+#adminLoginPanel {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0,0,0,.85);
+  backdrop-filter: blur(15px);
+}
+
+.login-box {
+  width: min(100%, 430px);
+  padding: 34px;
+  border: 1px solid rgba(233,200,139,.3);
+  border-radius: 24px;
+  background: linear-gradient(145deg, #24231f, #121417);
+  box-shadow: 0 25px 90px #0009;
+}
+
+.login-box h2 {
+  margin: 13px 0;
+  font-size: 26px;
+}
+
+.login-box p {
+  margin-bottom: 25px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+#adminPassword {
+  width: 100%;
+  height: 52px;
+  padding: 0 15px;
+  margin-bottom: 13px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  outline: none;
+  background: #090b0e;
+  color: white;
+}
+
+#adminPassword:focus {
+  border-color: var(--gold);
+}
+
+#adminLoginStatus {
+  margin-top: 13px;
+  font-size: 12px;
+  color: var(--red);
+}
+
+/* NOTIFICATION */
+
+.admin-toast {
+  position: fixed;
+  z-index: 200;
+  right: 20px;
+  bottom: 20px;
+  max-width: 360px;
+  padding: 16px 22px;
+  color: white;
+  background: #24231f;
+  border: 1px solid var(--gold-dark);
+  border-radius: 13px;
+  box-shadow: 0 15px 50px #0008;
+}
+
+.admin-toast[hidden] {
+  display: none;
+}
+
+/* MOBILE */
+
+@media(max-width: 900px) {
+  .admin-main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media(max-width: 600px) {
+  .admin-shell {
+    padding: 18px 14px 45px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 10px;
+  }
+
+  .card {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  .stat-card {
+    min-height: 125px;
+  }
+
+  .stat-value {
+    font-size: 27px;
+  }
+
+  .admin-hero {
+    margin: 29px 0 22px;
+  }
+
+  .brand-title {
+    font-size: 11px;
+  }
+
+  .brand-sub {
+    font-size: 9px;
+  }
+
+  .connection-badge {
+    padding: 9px;
+    font-size: 9px;
+  }
+
+  .time-value {
+    font-size: 15px;
+  }
+
+  .login-box {
+    padding: 25px;
+  }
+}
+
 
 </style>
+
+
 </head>
+
 <body>
 
-<h2>💣 Time Race Admin Control</h2>
 
-<div class="card">
-  <div class="label">Round ID</div>
-  <div id="roundId"></div>
+<main class="admin-shell">
+
+  <!-- HEADER -->
+  <header class="admin-header">
+
+    <div class="admin-brand">
+      <div class="brand-icon">✦</div>
+
+      <div>
+        <div class="brand-title">
+          LIVESTREAM PRO
+        </div>
+        <div class="brand-sub">
+          ADMIN COMMAND CENTER
+        </div>
+      </div>
+    </div>
+
+    <div class="connection-badge"
+         id="connectionBadge">
+      <span class="connection-dot"></span>
+      <span id="connectionText">
+        CONNECTING
+      </span>
+    </div>
+
+  </header>
+
+  <!-- PAGE HEADING -->
+  <section class="admin-hero">
+
+    <div class="kicker">
+      TIME RACE / MANAGEMENT
+    </div>
+
+    <h1>
+      Command <span>Center.</span>
+    </h1>
+
+    <p>
+      Realtime round monitoring and administrative controls.
+    </p>
+
+  </section>
+
+  <!-- STATISTICS -->
+  <section class="stats-grid">
+
+    <div class="card stat-card">
+      <div class="label">Current Round</div>
+      <div class="stat-value" id="roundId">—</div>
+      <div class="stat-note">Round identifier</div>
+    </div>
+
+    <div class="card stat-card">
+      <div class="label">Crash Point</div>
+      <div class="stat-value gold"
+           id="crashPoint">—</div>
+      <div class="stat-note">Current result</div>
+    </div>
+
+    <div class="card stat-card">
+      <div class="label">Players</div>
+      <div class="stat-value"
+           id="playerTotal">0</div>
+      <div class="stat-note">Players in round</div>
+    </div>
+
+    <div class="card stat-card">
+      <div class="label">Total Bets</div>
+      <div class="stat-value gold"
+           id="betTotal">0</div>
+      <div class="stat-note">Diamonds wagered</div>
+    </div>
+
+  </section>
+
+  <!-- MAIN CONTENT -->
+  <section class="admin-main-grid">
+
+    <!-- LEFT: CONTROL -->
+    <div class="card">
+
+      <div class="section-kicker">
+        ROUND MANAGEMENT
+      </div>
+
+      <h2 class="section-title">
+        Crash Point Control
+      </h2>
+
+      <label class="input-label"
+             for="overrideInput">
+        Target Multiplier
+      </label>
+
+      <div class="override-input-wrap">
+
+        <input
+          type="number"
+          id="overrideInput"
+          min="1"
+          step="0.01"
+          placeholder="1.00"
+          inputmode="decimal"
+        >
+
+        <span class="override-unit">×</span>
+
+      </div>
+
+      <p class="helper">
+        Administrative crash-point controls.
+        Changes are subject to server validation.
+      </p>
+
+      <button
+        class="gold-button"
+        id="overrideButton"
+        type="button">
+        APPLY OVERRIDE
+      </button>
+
+      <div class="admin-divider"></div>
+
+      <div class="section-kicker">
+        ROUND TIMELINE
+      </div>
+
+      <h2 class="section-title">
+        Session Schedule
+      </h2>
+
+      <div class="time-grid">
+
+        <div class="time-item">
+          <div class="label">Bet Ends At</div>
+          <div class="time-value"
+               id="betEnd">
+            --:--:--
+          </div>
+        </div>
+
+        <div class="time-item">
+          <div class="label">Round Ends At</div>
+          <div class="time-value"
+               id="endAt">
+            --:--:--
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- RIGHT: PLAYERS -->
+    <div class="card">
+
+      <div class="players-heading">
+
+        <div>
+          <div class="section-kicker">
+            REALTIME ACTIVITY
+          </div>
+
+          <h2 class="section-title">
+            Players in Round
+          </h2>
+        </div>
+
+        <span class="player-count"
+              id="playersCount">
+          0 PLAYERS
+        </span>
+
+      </div>
+
+      <div id="playerList">
+
+        <div class="empty-players">
+          No players in this round.
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+</main>
+
+<!-- ADMIN LOGIN -->
+<div id="adminLoginPanel">
+
+  <div class="login-box">
+
+    <div class="kicker">
+      SECURE ACCESS
+    </div>
+
+    <h2>
+      Administrator Login
+    </h2>
+
+    <p>
+      Enter your administrator password
+      to access the command center.
+    </p>
+
+    <form id="adminLoginForm">
+
+      <label class="input-label"
+             for="adminPassword">
+        ADMIN PASSWORD
+      </label>
+
+      <input
+        id="adminPassword"
+        type="password"
+        placeholder="Enter password"
+        autocomplete="current-password"
+        required
+      >
+
+      <button
+        class="gold-button"
+        id="adminLoginButton"
+        type="submit">
+        UNLOCK DASHBOARD
+      </button>
+
+    </form>
+
+    <div id="adminLoginStatus"></div>
+
+  </div>
+
 </div>
 
-<div class="card">
-  <div class="label">Crash Point</div>
-  <div id="crashPoint" class="big"></div>
-</div>
-
-
-<div class="card">
-  <div class="label">Override Crash Point</div>
-
-  <input id="overrideInput"
-         type="number"
-         step="0.01"
-         min="1"
-         placeholder="Enter new crash x"
-         style="padding:10px;width:100%;border-radius:8px;margin-top:10px">
-
-  <button onclick="overrideCrash()"
-          style="margin-top:10px;padding:10px 20px;border:none;border-radius:8px;background:#ff2d2d;color:#fff;font-weight:700">
-    OVERRIDE
-  </button>
-</div>
-
-<div class="card">
-  <div class="label">Bet End At</div>
-  <div id="betEnd"></div>
-</div>
-
-<div class="card">
-  <div class="label">Round End At</div>
-  <div id="endAt"></div>
-</div>
-
-
-<div class="card">
-  <div class="label">Players In Round</div>
-  <div id="playerList"></div>
-</div>
-
-
-
-<div class="card" id="adminLoginPanel">
-  <div class="label">ADMIN AUTHENTICATION</div>
-
-  <input
-    id="adminPassword"
-    type="password"
-    placeholder="Enter admin password"
-    autocomplete="current-password"
-    style="padding:12px;width:100%;box-sizing:border-box;margin-top:12px"
-  >
-
-  <button
-    type="button"
-    onclick="adminLogin()"
-    style="margin-top:12px;padding:12px;background:#d4af37;border:0;border-radius:8px;font-weight:700"
-  >
-    LOGIN
-  </button>
-
-  <div id="adminLoginStatus"
-       style="margin-top:12px"></div>
+<!-- NOTIFICATION -->
+<div class="admin-toast"
+     id="adminToast"
+     role="status"
+     aria-live="polite"
+     hidden>
 </div>
 
 
 <script>
 
+"use strict";
+
+const $ = id => document.getElementById(id);
+
+let adminAuthenticated = false;
+let toastTimer = null;
+
 const socket = io({
-  auth:{
+  auth: {
     uid: localStorage.getItem("uid"),
     deviceId: localStorage.getItem("deviceId")
   }
 });
 
-socket.on("admin-time-race-secret-update",data=>{
-  document.getElementById("roundId").textContent = data.roundId;
-  document.getElementById("crashPoint").textContent = "x" + data.crashPoint;
-  document.getElementById("betEnd").textContent =
-    new Date(data.betEndAt).toLocaleTimeString();
+/* =====================================
+   NOTIFICATION
+===================================== */
 
-  document.getElementById("endAt").textContent =
-    new Date(data.endAt).toLocaleTimeString();
-});
+function showAdminToast(message, error = false) {
+  const toast = $("adminToast");
 
+  clearTimeout(toastTimer);
 
+  toast.textContent = String(message);
+  toast.style.borderColor = error
+    ? "#f47f87"
+    : "#a78247";
 
-socket.on("admin-time-race-players", data=>{
+  toast.hidden = false;
 
-  const wrap = document.getElementById("playerList");
-  wrap.innerHTML = "";
-
-  if(!data.players.length){
-    wrap.innerHTML = "<div style='opacity:.5'>No players</div>";
-    return;
-  }
-
-  data.players.forEach(p=>{
-
-    const div = document.createElement("div");
-    div.className = "player-row";
-
-    div.innerHTML = `
-      <div class="player-name">
-        ${p.name}
-        ${p.stopped ? "<span class='player-stop'> (STOP)</span>" : ""}
-      </div>
-      <div class="player-bet">
-        ${p.bet} 💎
-      </div>
-    `;
-
-    wrap.appendChild(div);
-  });
-
-});
-
-
-function overrideCrash(){
-
-  const value = Number(
-    document.getElementById("overrideInput").value
-  );
-
-  if(!value || value < 1){
-    alert("Invalid crash value");
-    return;
-  }
-
-  fetch("/api/admin/time-race/override",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "x-uid": localStorage.getItem("uid")
-    },
-    body: JSON.stringify({
-      crashPoint:value
-    })
-  })
-
-.then(async response => {
-  const data = await response.json();
-
-  if (!response.ok || !data.ok) {
-    console.error("Override API error:", {
-      status: response.status,
-      error: data.error,
-      message: data.message
-    });
-
-    alert(
-      data.message ||
-      data.error ||
-      `Request failed (${response.status})`
-    );
-  }
-})
-.catch(error => {
-  console.error("Override request error:", error);
-  alert("Unable to contact server");
-});
-
-
+  toastTimer = setTimeout(() => {
+    toast.hidden = true;
+  }, 4500);
 }
 
+/* =====================================
+   CONNECTION STATUS
+===================================== */
 
-async function adminLogin() {
-  const password =
-    document.getElementById("adminPassword").value;
+function updateConnection(connected) {
+  const badge = $("connectionBadge");
 
-  const status =
-    document.getElementById("adminLoginStatus");
+  badge.classList.toggle("online", connected);
+
+  $("connectionText").textContent =
+    connected ? "CONNECTED" : "OFFLINE";
+}
+
+socket.on("connect", () => {
+  updateConnection(true);
+});
+
+socket.on("disconnect", () => {
+  updateConnection(false);
+});
+
+socket.on("connect_error", () => {
+  updateConnection(false);
+});
+
+updateConnection(socket.connected);
+
+/* =====================================
+   FORMAT HELPERS
+===================================== */
+
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString("en-US");
+}
+
+function formatTime(value) {
+  const date = new Date(value);
+
+  if (!value || Number.isNaN(date.getTime())) {
+    return "--:--:--";
+  }
+
+  return date.toLocaleTimeString("en-GB", {
+    hour12: false
+  });
+}
+
+/* =====================================
+   REALTIME ROUND UPDATE
+===================================== */
+
+socket.on("admin-time-race-secret-update", data => {
+  if (!adminAuthenticated || !data) return;
+
+  $("roundId").textContent =
+    data.roundId ?? "—";
+
+  const crash = Number(data.crashPoint);
+
+  $("crashPoint").textContent =
+    Number.isFinite(crash)
+      ? "×" + crash.toFixed(2)
+      : "—";
+
+  $("betEnd").textContent =
+    formatTime(data.betEndAt);
+
+  $("endAt").textContent =
+    formatTime(data.endAt);
+});
+
+/* =====================================
+   REALTIME PLAYERS
+===================================== */
+
+socket.on("admin-time-race-players", data => {
+  if (!adminAuthenticated) return;
+
+  const players = Array.isArray(data?.players)
+    ? data.players
+    : [];
+
+  const wrap = $("playerList");
+
+  wrap.replaceChildren();
+
+  $("playerTotal").textContent =
+    formatNumber(players.length);
+
+  $("playersCount").textContent =
+    players.length + " PLAYERS";
+
+  const totalBet = players.reduce((total, p) => {
+    return total + (Number(p.bet) || 0);
+  }, 0);
+
+  $("betTotal").textContent =
+    formatNumber(totalBet);
+
+  if (!players.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty-players";
+    empty.textContent = "No players in this round.";
+    wrap.appendChild(empty);
+    return;
+  }
+
+  players.forEach(p => {
+
+    const row = document.createElement("div");
+    row.className = "player-row";
+
+    const info = document.createElement("div");
+    info.className = "player-info";
+
+    const avatar = document.createElement("div");
+    avatar.className = "player-avatar";
+
+    const nameText = String(p.name || "Player");
+
+    avatar.textContent =
+      nameText.charAt(0).toUpperCase();
+
+    const details = document.createElement("div");
+
+    const name = document.createElement("div");
+    name.className = "player-name";
+    name.textContent = nameText;
+
+    const status = document.createElement("div");
+
+    status.className =
+      "player-status" +
+      (p.stopped ? " player-stop" : "");
+
+    status.textContent =
+      p.stopped ? "● STOPPED" : "● PLAYING";
+
+    details.append(name, status);
+    info.append(avatar, details);
+
+    const bet = document.createElement("div");
+    bet.className = "player-bet";
+
+    bet.textContent =
+      formatNumber(p.bet) + " 💎";
+
+    row.append(info, bet);
+    wrap.appendChild(row);
+
+  });
+});
+
+/* =====================================
+   API HELPER
+===================================== */
+
+async function adminRequest(url, options = {}) {
+  const response = await fetch(url, {
+    credentials: "same-origin",
+    cache: "no-store",
+    ...options
+  });
+
+  const raw = await response.text();
+
+  let data;
 
   try {
-    const response = await fetch(
-      "/api/admin/auth/login",
-      {
-        method: "POST",
-        credentials: "same-origin",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ password })
-      }
+    data = raw ? JSON.parse(raw) : {};
+  } catch {
+    throw new Error(
+      "Invalid server response (" + response.status + ")"
     );
-
-    const data = await response.json();
-
-    if (!response.ok || !data.ok) {
-      status.textContent =
-        data.message || data.error || "Login failed";
-      return;
-    }
-
-    document.getElementById("adminPassword").value = "";
-
-    status.textContent = "Admin authenticated";
-
-    document.getElementById("adminLoginPanel")
-      .style.display = "none";
-
-  } catch (error) {
-    status.textContent = error.message;
   }
+
+  if (!response.ok || data.ok === false) {
+    throw new Error(
+      data.message ||
+      data.error ||
+      "Request failed (" + response.status + ")"
+    );
+  }
+
+  return data;
+}
+
+/* =====================================
+   ADMIN SESSION
+===================================== */
+
+function showAdminLogin(show) {
+  $("adminLoginPanel").style.display =
+    show ? "flex" : "none";
 }
 
 async function checkAdminSession() {
@@ -276,16 +1051,154 @@ async function checkAdminSession() {
       }
     );
 
+    if (!response.ok) {
+      throw new Error("Session check failed");
+    }
+
     const data = await response.json();
 
-    document.getElementById("adminLoginPanel")
-      .style.display =
-        data.authenticated ? "none" : "block";
+    adminAuthenticated =
+      data.authenticated === true;
 
   } catch (error) {
-    console.error("Admin session check:", error);
+    adminAuthenticated = false;
+    console.error("Admin session:", error);
+  }
+
+  showAdminLogin(!adminAuthenticated);
+
+  return adminAuthenticated;
+}
+
+/* =====================================
+   ADMIN LOGIN
+===================================== */
+
+async function adminLogin() {
+  const password = $("adminPassword").value;
+  const status = $("adminLoginStatus");
+  const button = $("adminLoginButton");
+
+  if (!password) return;
+
+  button.disabled = true;
+  button.textContent = "AUTHENTICATING...";
+  status.textContent = "";
+
+  try {
+    await adminRequest("/api/admin/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ password })
+    });
+
+    $("adminPassword").value = "";
+
+    const authenticated =
+      await checkAdminSession();
+
+    if (!authenticated) {
+      throw new Error(
+        "Admin session could not be verified"
+      );
+    }
+
+    showAdminToast("Admin authentication successful");
+
+  } catch (error) {
+    status.textContent = error.message;
+    showAdminLogin(true);
+
+  } finally {
+    button.disabled = false;
+    button.textContent = "UNLOCK DASHBOARD";
   }
 }
+
+$("adminLoginForm").addEventListener(
+  "submit",
+  event => {
+    event.preventDefault();
+    adminLogin();
+  }
+);
+
+/* =====================================
+   OVERRIDE ACTION
+===================================== */
+
+async function overrideCrash() {
+  if (!adminAuthenticated) {
+    showAdminLogin(true);
+    showAdminToast(
+      "Admin authentication required",
+      true
+    );
+    return;
+  }
+
+  const input = $("overrideInput");
+  const button = $("overrideButton");
+
+  const value = Number(input.value);
+
+  if (
+    !input.value.trim() ||
+    !Number.isFinite(value) ||
+    value < 1
+  ) {
+    showAdminToast("Invalid crash value", true);
+    input.focus();
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "SUBMITTING...";
+
+  try {
+    await adminRequest(
+      "/api/admin/time-race/override",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-uid": localStorage.getItem("uid") || ""
+        },
+        body: JSON.stringify({
+          crashPoint: value
+        })
+      }
+    );
+
+    showAdminToast(
+      "Override request accepted by server"
+    );
+
+  } catch (error) {
+    console.error("Override error:", error);
+
+    showAdminToast(error.message, true);
+
+    if (/auth|session|unauthorized/i.test(error.message)) {
+      await checkAdminSession();
+    }
+
+  } finally {
+    button.disabled = false;
+    button.textContent = "APPLY OVERRIDE";
+  }
+}
+
+$("overrideButton").addEventListener(
+  "click",
+  overrideCrash
+);
+
+/* =====================================
+   INITIALIZE
+===================================== */
 
 checkAdminSession();
 
@@ -293,4 +1206,6 @@ checkAdminSession();
 </script>
 
 </body>
+
+
 </html>
