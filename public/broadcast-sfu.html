@@ -5086,6 +5086,108 @@ body {
 
 
 
+/* ==========================================
+   SFU - VIEWER CONNECTION RECOVERY
+========================================== */
+
+.sfu-recovery-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99990;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgba(0, 0, 0, .82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.sfu-recovery-overlay.hidden {
+  display: none !important;
+}
+
+.sfu-recovery-card {
+  width: min(100%, 360px);
+  padding: 30px 24px;
+
+  text-align: center;
+
+  border: 1px solid rgba(223,190,131,.35);
+  border-radius: 22px;
+
+  background: linear-gradient(
+    145deg,
+    #202127,
+    #101115
+  );
+
+  box-shadow: 0 20px 70px rgba(0,0,0,.6);
+}
+
+.sfu-recovery-icon {
+  font-size: 42px;
+  margin-bottom: 15px;
+}
+
+.sfu-recovery-title {
+  color: #f4dfb7;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.sfu-recovery-description {
+  margin-top: 12px;
+
+  color: #aeb0b8;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.sfu-recovery-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 25px;
+}
+
+.sfu-recovery-actions button {
+  flex: 1;
+  min-height: 46px;
+
+  border-radius: 11px;
+  border: 1px solid rgba(223,190,131,.3);
+
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+#sfuRecoveryRetry {
+  background: linear-gradient(
+    135deg,
+    #f1d9ad,
+    #c89d61
+  );
+
+  color: #21180d;
+}
+
+#sfuRecoveryExit {
+  background: #292b31;
+  color: #f4dfb7;
+}
+
+#sfuRecoveryRetry:disabled {
+  opacity: .5;
+  cursor: wait;
+}
+
+
+
 </style>
 
 
@@ -6115,6 +6217,10 @@ body {
 
 
 </main>
+
+
+
+
 
 <script src="/socket.io/socket.io.js"></script>
 
@@ -8208,12 +8314,59 @@ lkRoom = new Room({
     track.detach().forEach(el => el.remove());
   });
 
-  lkRoom.on(RoomEvent.Disconnected, () => {
-    setStatus("DISCONNECTED");
-    if (isViewer) {
-      setPlaceholder(true, "Connection lost");
-    }
-  });
+
+/* ==========================================
+   SFU - LIVEKIT CONNECTION MONITOR
+========================================== */
+
+const monitoredRoom = lkRoom;
+
+lkRoom.on(RoomEvent.Reconnecting, () => {
+
+  if (!isViewer || viewerLeaving || sfuEndStarted) {
+    return;
+  }
+
+  if (lkRoom !== monitoredRoom) return;
+
+  showViewerRecovery(
+    "Video connection interrupted. Reconnecting..."
+  );
+});
+
+lkRoom.on(RoomEvent.Reconnected, () => {
+
+  if (!isViewer || viewerLeaving || sfuEndStarted) {
+    return;
+  }
+
+  if (lkRoom !== monitoredRoom) return;
+
+  // LiveKit is connected again.
+  // Socket.IO may still require restoration.
+  scheduleViewerRecovery(0);
+});
+
+lkRoom.on(RoomEvent.Disconnected, () => {
+
+  if (lkRoom !== monitoredRoom) return;
+
+  setStatus("DISCONNECTED");
+
+  if (!isViewer || viewerLeaving || sfuEndStarted) {
+    return;
+  }
+
+  // Allow a fresh LiveKit connection.
+  viewerConnected = false;
+
+  showViewerRecovery(
+    "Video connection lost. Trying to reconnect..."
+  );
+
+  scheduleViewerRecovery(3000);
+});
+
 
   await lkRoom.connect(
     credentials.url,
@@ -8487,14 +8640,26 @@ async function joinAsViewer() {
       }
     }
 
-    viewerConnected = true;
+
+viewerConnected = true;
+viewerHadSession = true;
+
+// Restore the voice UI.
 voiceUI.toggle.classList.remove("hidden");
 syncSfuVoice();
+
+// Close recovery dialog if connection is restored.
+if (socket.connected && viewerLiveKitConnected()) {
+  hideViewerRecovery();
+}
+
+
     setStatus("WATCHING", true);
     $("videoBadge").textContent = "LIVE · SFU";
     showMessage("Connected to livestream.");
 
   } catch (error) {
+    viewerConnected = false;
     console.error("[SFU VIEWER]", error);
 
     if (lkRoom) {
@@ -8513,13 +8678,367 @@ syncSfuVoice();
 
 
 
-async function exitViewer() {
-  if (lkRoom) {
-    await lkRoom.disconnect();
+
+/* ==========================================
+   SFU - VIEWER AUTO RECOVERY V2
+========================================== */
+
+let viewerLeaving = false;
+let viewerRecoveryBusy = false;
+let viewerRecoveryTimer = null;
+let viewerRecoveryAttempts = 0;
+let viewerHadSession = false;
+
+function viewerLiveKitConnected() {
+  return !!lkRoom &&
+    lkRoom.state === "connected";
+}
+
+function showViewerRecovery(message) {
+  if (!isViewer || viewerLeaving || sfuEndStarted) {
+    return;
   }
+
+  const overlay = $("sfuRecoveryOverlay");
+  const description = $("sfuRecoveryDescription");
+
+  if (!overlay || !description) return;
+
+  description.textContent = message;
+  overlay.classList.remove("hidden");
+
+  // Prevent interactions while connection is lost.
+  setChatReady(false);
+
+  giftConfirm.disabled = true;
+  giftToggle.disabled = true;
+
+  setStatus("DISCONNECTED");
+}
+
+function hideViewerRecovery() {
+  const overlay = $("sfuRecoveryOverlay");
+
+  overlay?.classList.add("hidden");
+
+  giftToggle.disabled = false;
+
+  updateLiveGiftButton();
+
+  viewerRecoveryAttempts = 0;
+
+  if (viewerRecoveryTimer) {
+    clearTimeout(viewerRecoveryTimer);
+    viewerRecoveryTimer = null;
+  }
+}
+
+function scheduleViewerRecovery(delay = 5000) {
+
+  if (!isViewer || viewerLeaving || sfuEndStarted) {
+    return;
+  }
+
+  if (viewerRecoveryTimer) {
+    clearTimeout(viewerRecoveryTimer);
+  }
+
+  viewerRecoveryTimer = setTimeout(() => {
+    viewerRecoveryTimer = null;
+    recoverViewerConnection();
+  }, delay);
+}
+
+async function recoverViewerConnection() {
+
+  if (
+    !isViewer ||
+    viewerLeaving ||
+    sfuEndStarted ||
+    viewerRecoveryBusy ||
+    viewerConnecting
+  ) {
+    return;
+  }
+
+  viewerRecoveryBusy = true;
+  viewerRecoveryAttempts++;
+
+  const retryButton = $("sfuRecoveryRetry");
+
+  if (retryButton) {
+    retryButton.disabled = true;
+    retryButton.textContent = "CONNECTING...";
+  }
+
+  try {
+
+    if (!navigator.onLine) {
+      throw new Error("No internet connection.");
+    }
+
+    if (!socket.connected) {
+      socket.connect();
+      throw new Error("Connecting to server...");
+    }
+
+    // If LiveKit is still connected, only
+    // restore Socket.IO room membership.
+    if (viewerLiveKitConnected()) {
+
+      await joinSignalingRoom();
+
+      viewerConnected = true;
+
+    } else {
+
+      // Do not interrupt LiveKit's own
+      // ongoing reconnection procedure.
+      if (lkRoom?.state === "reconnecting") {
+        throw new Error(
+          "Video connection is recovering..."
+        );
+      }
+
+      // Clean up a disconnected LiveKit room.
+      const oldRoom = lkRoom;
+      lkRoom = null;
+      viewerConnected = false;
+
+      if (oldRoom) {
+        await oldRoom.disconnect().catch(() => {});
+      }
+
+      // Clear stale video/audio elements.
+      $("remoteMedia").replaceChildren();
+
+      await joinAsViewer();
+
+      if (!viewerLiveKitConnected() || !viewerConnected) {
+        throw new Error(
+          "Unable to restore livestream."
+        );
+      }
+    }
+
+    // A successful video connection alone
+    // is not enough. Signaling must also work.
+    if (!socket.connected) {
+      throw new Error(
+        "Signaling connection was lost."
+      );
+    }
+
+    viewerConnected = true;
+    viewerHadSession = true;
+
+    setStatus("WATCHING", true);
+
+    // joinSignalingRoom() reloads chat history.
+    // Chat becomes enabled after server ACK.
+    hideViewerRecovery();
+
+    showMessage(
+      "Livestream connection restored."
+    );
+
+    console.log(
+      "[SFU VIEWER] Reconnected successfully"
+    );
+
+  } catch (error) {
+
+    console.warn(
+      "[SFU VIEWER RECOVERY]",
+      viewerRecoveryAttempts,
+      error
+    );
+
+    showViewerRecovery(
+      "Connection interrupted. Retrying automatically..."
+    );
+
+    scheduleViewerRecovery(
+      Math.min(
+        5000 * viewerRecoveryAttempts,
+        15000
+      )
+    );
+
+  } finally {
+
+    viewerRecoveryBusy = false;
+
+    if (retryButton) {
+      retryButton.disabled = false;
+      retryButton.textContent = "RETRY NOW";
+    }
+  }
+}
+
+
+/* ==========================================
+   SOCKET.IO CONNECTION MONITOR
+========================================== */
+
+socket.on("disconnect", () => {
+
+  if (!isViewer || viewerLeaving || sfuEndStarted) {
+    return;
+  }
+
+  showViewerRecovery(
+    "Server connection lost. Reconnecting..."
+  );
+
+  // LiveKit may continue playing video.
+  // Do not disconnect it unnecessarily.
+  scheduleViewerRecovery(5000);
+});
+
+socket.on("connect", () => {
+
+  if (!isViewer || viewerLeaving || sfuEndStarted) {
+    return;
+  }
+
+  // Do not duplicate the initial join.
+  if (!viewerHadSession && !viewerConnected) {
+    return;
+  }
+
+  scheduleViewerRecovery(300);
+});
+
+
+/* ==========================================
+   CONNECTION WATCHDOG
+========================================== */
+
+setInterval(() => {
+
+  if (
+    !isViewer ||
+    viewerLeaving ||
+    sfuEndStarted ||
+    viewerRecoveryBusy ||
+    viewerConnecting
+  ) {
+    return;
+  }
+
+  const socketOK = socket.connected;
+  const livekitOK = viewerLiveKitConnected();
+
+  if (socketOK && livekitOK && viewerConnected) {
+    return;
+  }
+
+  showViewerRecovery(
+    "Connection interrupted. Restoring livestream..."
+  );
+
+  if (!viewerRecoveryTimer) {
+    scheduleViewerRecovery(1000);
+  }
+
+}, 5000);
+
+
+/* ==========================================
+   NETWORK CONNECTION EVENTS
+========================================== */
+
+window.addEventListener("offline", () => {
+
+  if (!isViewer || viewerLeaving || sfuEndStarted) {
+    return;
+  }
+
+  showViewerRecovery(
+    "No internet connection. Please check your network."
+  );
+});
+
+window.addEventListener("online", () => {
+
+  if (!isViewer || viewerLeaving || sfuEndStarted) {
+    return;
+  }
+
+  scheduleViewerRecovery(300);
+});
+
+
+/* ==========================================
+   RECOVERY BUTTONS
+========================================== */
+
+$("sfuRecoveryRetry").addEventListener(
+  "click",
+  () => {
+
+    if (!navigator.onLine) {
+      showViewerRecovery(
+        "No internet connection. Please check your network."
+      );
+      return;
+    }
+
+    scheduleViewerRecovery(0);
+  }
+);
+
+$("sfuRecoveryExit").addEventListener(
+  "click",
+  () => {
+    viewerLeaving = true;
+
+    if (viewerRecoveryTimer) {
+      clearTimeout(viewerRecoveryTimer);
+    }
+
+    goLobby();
+  }
+);
+
+// A genuinely closed live must not reconnect.
+socket.on("room-closed", () => {
+
+  if (!isViewer) return;
+
+  viewerLeaving = true;
+  hideViewerRecovery();
+
+});
+
+
+
+
+async function exitViewer() {
+
+  viewerLeaving = true;
+  viewerConnected = false;
+
+  if (viewerRecoveryTimer) {
+    clearTimeout(viewerRecoveryTimer);
+    viewerRecoveryTimer = null;
+  }
+
+  try {
+    if (lkRoom) {
+      await lkRoom.disconnect();
+      lkRoom = null;
+    }
+  } catch (error) {
+    console.warn("[SFU EXIT]", error);
+  }
+
   socket.disconnect();
+
   goLobby();
 }
+
 
 $("startBtn").onclick = startLive;
 $("cameraBtn").onclick = toggleCamera;
@@ -10073,5 +10592,68 @@ updateVoiceViewerUI();
 
 
 </script>
+
+
+
+
+
+
+<!-- ==========================================
+     SFU VIEWER CONNECTION RECOVERY
+========================================== -->
+
+<div
+  id="sfuRecoveryOverlay"
+  class="sfu-recovery-overlay hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="sfuRecoveryTitle"
+>
+  <div class="sfu-recovery-card">
+
+    <div class="sfu-recovery-icon">
+      📡
+    </div>
+
+    <div
+      id="sfuRecoveryTitle"
+      class="sfu-recovery-title"
+    >
+      CONNECTION LOST
+    </div>
+
+    <div
+      id="sfuRecoveryDescription"
+      class="sfu-recovery-description"
+      aria-live="polite"
+    >
+      Connection interrupted.
+      Reconnecting automatically...
+    </div>
+
+    <div class="sfu-recovery-actions">
+
+      <button
+        id="sfuRecoveryRetry"
+        type="button"
+      >
+        RETRY NOW
+      </button>
+
+      <button
+        id="sfuRecoveryExit"
+        type="button"
+      >
+        BACK TO LOBBY
+      </button>
+
+    </div>
+
+  </div>
+</div>
+
+
+
+
 </body>
 </html>
