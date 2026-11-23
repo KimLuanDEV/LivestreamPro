@@ -3947,7 +3947,7 @@ const VIRTUAL_ROOMS = [
 
   // YOUTUBE LIVE ROOM 3
   {
-    roomId: "Damit2k",
+    roomId: "Youtube3",
     title: "Valorant",
     viewers: 0,
     avatar: "/assets/live-avatar/Damit2k.jpg",
@@ -4361,9 +4361,23 @@ a.href = r.__virtual
       ${
 
 
+
 r.__virtual
-  ? `<span class="badge badge--virtual">YOUTUBE</span>`
+  ? `<span class="badge badge--virtual">${
+      r.roomId === "Youtube3"
+        ? (
+            window.__yt3RoomStatus === "live"
+              ? "● LIVE"
+              : window.__yt3RoomStatus === "offline"
+                ? "OFFLINE"
+                : window.__yt3RoomStatus === "unconfigured"
+                  ? "SETUP REQUIRED"
+                  : "CHECKING"
+          )
+        : "YOUTUBE"
+    }</span>`
   : `<span class="lobby-livePill"><span class="lobby-liveDot"></span>LIVE</span>`
+
 
 
       }
@@ -4460,6 +4474,47 @@ socket.on("connect", () => {
   socket.emit("virtual-live:get-counts");
 
 });
+
+
+
+/* ==========================================
+   YOUTUBE3 - LIVE STATUS IN LOBBY
+========================================== */
+
+window.__yt3RoomStatus = "checking";
+
+async function updateYoutube3Lobby() {
+  try {
+    const response = await fetch(
+      "/api/virtual-live/rooms/Youtube3",
+      { cache: "no-store" }
+    );
+
+    if (!response.ok) return;
+
+    const room = await response.json();
+
+    window.__yt3RoomStatus =
+      room.status || "checking";
+
+    render(__rooms);
+
+  } catch (error) {
+    console.warn("[YOUTUBE3 LOBBY]", error);
+  }
+}
+
+socket.on("virtual-live:yt3-status", state => {
+  window.__yt3RoomStatus =
+    state.status || "checking";
+
+  render(__rooms);
+});
+
+updateYoutube3Lobby();
+
+setInterval(updateYoutube3Lobby, 60000);
+
 
 socket.emit("virtual-live:get-counts");
 

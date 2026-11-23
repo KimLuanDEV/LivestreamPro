@@ -272,6 +272,8 @@ body {
 
   const roomId = params.get("room") || "Youtube";
 
+  let youtube3ActiveVideoId = null;
+
   const roomTitle =
     document.getElementById("roomTitle");
 
@@ -370,6 +372,60 @@ body {
 
       roomAvatar.src =
         room.avatar || "/icons/icon-192.png";
+
+
+
+/* ==========================================
+   YOUTUBE3 - AUTOMATIC LIVE PLAYER
+========================================== */
+
+if (roomId === "Youtube3") {
+
+  const isLive =
+    room.status === "live" &&
+    /^[a-zA-Z0-9_-]{11}$/.test(
+      String(room.videoId || "")
+    );
+
+  const badge =
+    document.querySelector(".live-badge");
+
+  if (badge) {
+    badge.textContent = isLive
+      ? "● LIVE"
+      : "OFFLINE";
+
+    badge.style.background = isLive
+      ? "#9e212a"
+      : "#444";
+  }
+
+  // Remove previous player when source changes.
+  videoStage
+    .querySelectorAll("iframe, video")
+    .forEach(player => player.remove());
+
+  youtube3ActiveVideoId = isLive
+    ? room.videoId
+    : "";
+
+  if (!isLive) {
+
+    const message =
+      room.status === "unconfigured"
+        ? "YouTube API is not configured."
+        : room.status === "error"
+          ? "Unable to check livestream status."
+          : "Channel is offline. Waiting for the next livestream...";
+
+    showError(message);
+
+    return;
+  }
+
+}
+
+
 
 
 
@@ -799,6 +855,75 @@ else {
 
 
   loadVideo();
+
+
+
+/* ==========================================
+   YOUTUBE3 - AUTO REFRESH VIDEO SOURCE
+========================================== */
+
+if (roomId === "Youtube3") {
+
+  let checkingSource = false;
+
+  async function checkYoutube3Source() {
+
+    if (checkingSource) return;
+
+    checkingSource = true;
+
+    try {
+
+      const response = await fetch(
+        "/api/virtual-live/rooms/Youtube3",
+        { cache: "no-store" }
+      );
+
+      if (!response.ok) return;
+
+      const room = await response.json();
+
+      const nextId =
+        room.status === "live"
+          ? String(room.videoId || "")
+          : "";
+
+      // Only recreate player when source changes.
+      if (nextId !== youtube3ActiveVideoId) {
+        await loadVideo();
+      }
+
+    } catch (error) {
+
+      console.warn(
+        "[YOUTUBE3 SOURCE]",
+        error
+      );
+
+    } finally {
+
+      checkingSource = false;
+
+    }
+  }
+
+  // Realtime notification from server.
+  socket.on(
+    "virtual-live:yt3-status",
+    checkYoutube3Source
+  );
+
+  // Recovery check for missed socket events.
+  const sourceTimer = setInterval(
+    checkYoutube3Source,
+    60000
+  );
+
+  window.addEventListener("pagehide", () => {
+    clearInterval(sourceTimer);
+  });
+
+}
 
 
   // Leave Room

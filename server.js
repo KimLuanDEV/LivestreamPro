@@ -18561,17 +18561,184 @@ const VIRTUAL_LIVE_ROOMS = Object.freeze({
   },
 
 
-  // YOUTUBE LIVE ROOM 3
-  Youtube3: {
-    roomId: "Damit2k",
-    title: "Valorant",
-    avatar: "/assets/live-avatar/Youtube.jpg",
-    type: "youtube",
-    videoId: "ifuRZZXE8JY"
-  }
+
+Youtube3: {
+  roomId: "Youtube3",
+  title: "Valorant",
+  avatar: "/assets/live-avatar/Damit2k.jpg",
+  type: "youtube",
+  videoId: "ifuRZZXE8JY"
+}
+
 
 
 });
+
+
+
+/* ==========================================
+   YOUTUBE3 - AUTOMATIC LIVE DETECTION
+========================================== */
+
+const YT3_API_KEY =
+  String(process.env.YOUTUBE_DATA_API_KEY || "").trim();
+
+const YT3_INTERVAL = 20 * 60 * 1000;
+
+let yt3ChannelId =
+  String(process.env.YOUTUBE3_CHANNEL_ID || "").trim();
+
+let yt3LastCheck = 0;
+let yt3Checking = null;
+
+let yt3State = {
+  status: "checking",
+  live: false,
+  videoId: "",
+  liveTitle: "",
+  checkedAt: null
+};
+
+async function yt3Api(endpoint, params) {
+  const url = new URL(
+    `https://www.googleapis.com/youtube/v3/${endpoint}`
+  );
+
+  for (const [key, value] of Object.entries({
+    ...params,
+    key: YT3_API_KEY
+  })) {
+    url.searchParams.set(key, String(value));
+  }
+
+  const response = await fetch(url, {
+    signal: AbortSignal.timeout(10000)
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `YouTube ${endpoint} HTTP ${response.status}`
+    );
+  }
+
+  return response.json();
+}
+
+async function refreshYoutube3() {
+
+  if (!YT3_API_KEY) {
+    yt3State = {
+      ...yt3State,
+      status: "unconfigured",
+      live: false,
+      videoId: ""
+    };
+    return yt3State;
+  }
+
+  // Prevent overlapping requests.
+  if (yt3Checking) return yt3Checking;
+
+  // Global cache: one YouTube check per interval.
+  if (Date.now() - yt3LastCheck < YT3_INTERVAL) {
+    return yt3State;
+  }
+
+  yt3LastCheck = Date.now();
+
+  yt3Checking = (async () => {
+
+    try {
+
+      // Resolve channel from original video once.
+      if (!yt3ChannelId) {
+
+        const videoData = await yt3Api("videos", {
+          part: "snippet",
+          id: "ifuRZZXE8JY"
+        });
+
+        const channelId =
+          videoData.items?.[0]?.snippet?.channelId;
+
+        if (!/^UC[\w-]{22}$/.test(channelId || "")) {
+          throw new Error("YouTube channel not found");
+        }
+
+        yt3ChannelId = channelId;
+      }
+
+      // Find current live broadcast of this channel.
+      const data = await yt3Api("search", {
+        part: "snippet",
+        channelId: yt3ChannelId,
+        eventType: "live",
+        type: "video",
+        videoEmbeddable: "true",
+        maxResults: 5
+      });
+
+      const stream = (data.items || []).find(item =>
+        /^[a-zA-Z0-9_-]{11}$/.test(
+          item.id?.videoId || ""
+        )
+      );
+
+      const next = {
+        status: stream ? "live" : "offline",
+        live: Boolean(stream),
+        videoId: stream?.id?.videoId || "",
+        liveTitle: stream?.snippet?.title || "",
+        checkedAt: Date.now()
+      };
+
+      const changed =
+        yt3State.status !== next.status ||
+        yt3State.videoId !== next.videoId;
+
+      yt3State = next;
+
+      if (changed) {
+        io.emit("virtual-live:yt3-status", yt3State);
+      }
+
+    } catch (error) {
+
+      console.warn(
+        "[YOUTUBE3 LIVE CHECK]",
+        error.message
+      );
+
+      yt3State = {
+        status: "error",
+        live: false,
+        videoId: "",
+        liveTitle: "",
+        checkedAt: Date.now()
+      };
+
+      io.emit("virtual-live:yt3-status", yt3State);
+    }
+
+    return yt3State;
+
+  })();
+
+  try {
+    return await yt3Checking;
+  } finally {
+    yt3Checking = null;
+  }
+}
+
+// Periodic timer; API cache prevents excessive calls.
+const yt3Timer = setInterval(() => {
+  refreshYoutube3().catch(error => {
+    console.warn("[YOUTUBE3 TIMER]", error.message);
+  });
+}, 60000);
+
+yt3Timer.unref?.();
 
 
 /* ==========================================
@@ -18641,7 +18808,7 @@ function broadcastVirtualLiveCounts() {
 
 // 5. API lấy thông tin video
 
-app.get("/api/virtual-live/rooms/:roomId", (req, res) => {
+app.get("/api/virtual-live/rooms/:roomId", async (req, res) => {
 
   const roomId = String(req.params.roomId || "");
 
@@ -18660,6 +18827,22 @@ app.get("/api/virtual-live/rooms/:roomId", (req, res) => {
 
   
 const room = VIRTUAL_LIVE_ROOMS[roomId];
+
+
+// Dynamic YouTube3 livestream source
+if (roomId === "Youtube3") {
+
+  const state = await refreshYoutube3();
+
+  return res.json({
+    ...room,
+    ...state,
+    serverNow: Date.now(),
+    startedAt: null
+  });
+
+}
+
 
 res.json({
 
