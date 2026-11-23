@@ -21,7 +21,7 @@ const {
   TrackSource
 } = require("livekit-server-sdk");
 
-const twilio = require("twilio");
+
 
 
 const fs = require("fs");
@@ -11376,21 +11376,6 @@ console.log("♻️ Restored live rooms:", Object.keys(persisted));
 
 
 
-// ===== GIFT ENGINE (coins) =====
-const GIFT_CATALOG = {
-  heart:      { emoji: "❤️", cost: 50, title: "Heart" },
-  flower:     { emoji: "🌸", cost: 100, title: "Flower" },
-  rocket:     { emoji: "🚀", cost: 200, title: "Rocket" },
-  coin:       { emoji: "💰", cost: 500, title: "Money Bag" },
-  king:       { emoji: "👑", cost: 1000, title: "Crown" },
-  galaxy:     { emoji: "🌌", cost: 2000, title: "Galaxy" },
-  meteor:     { emoji: "☄️", cost: 5000, title: "Meteor" },
-  dragon:     { emoji: "🐉", cost: 10000, title: "Dragon" },
-  phoenix:    { emoji: "🦅", cost: 10000, title: "Phoenix" },
-  dragonking: { emoji: "🐲", cost: 10000, title: "Dragon King" },
-  supernova:  { emoji: "🌠", cost: 10000, title: "Supernova" }
-};
-
 
 
 const START_COINS = 0; // coin mặc định cho mỗi người (demo)
@@ -11426,14 +11411,7 @@ function normRoomId(roomId) {
 function safeMap(m){ return m instanceof Map ? m : new Map(); }
 function safeSet(s){ return s instanceof Set ? s : new Set(); }
 
-function calcBitrate(viewerCount) {
-  const count = Math.max(0, Number(viewerCount) || 0);
 
-  if (count <= 2) return 1500;
-  if (count <= 4) return 1200;
-
-  return 900;
-}
 
 
 function getRoom(roomId) {
@@ -11938,27 +11916,6 @@ io.to(roomId).emit("viewer-count", {
 });
 
 
-
-  const bitrate = calcBitrate(profiles.length);
-
-  if (!room.broadcasterId) {
-    room.lastVideoBitrate = null;
-    room.lastBitrateHostId = null;
-    return;
-  }
-
-  const changed =
-    room.lastVideoBitrate !== bitrate ||
-    room.lastBitrateHostId !== room.broadcasterId;
-
-  if (!changed) return;
-
-  room.lastVideoBitrate = bitrate;
-  room.lastBitrateHostId = room.broadcasterId;
-
-  io.to(room.broadcasterId).emit("set-bitrate", {
-    bitrate
-  });
 }
 
 
@@ -11990,7 +11947,7 @@ function getLobbyList() {
       viewers: safeSet(room.viewers).size,
       liveStartTs: room.liveStartTs,
       host: room.hostProfile || null,
-      mediaMode: room.mediaMode || "p2p"
+      mediaMode: room.mediaMode || "sfu"
     });
   }
 
@@ -12008,25 +11965,6 @@ function emitLobbyUpdate() {
   io.emit("lobby-update", { rooms: getLobbyList(), ts: Date.now() });
 }
 
-
-// ICE servers from Twilio (TURN). Client will filter invalid STUN urls if any.
-app.get("/ice", async (_req, res) => {
-  try {
-    const accountSid = process.env.TWILIO_ACCOUNT_SID;
-    const authToken = process.env.TWILIO_AUTH_TOKEN;
-
-    if (!accountSid || !authToken) {
-      return res.status(500).json({ error: "Missing TWILIO_ACCOUNT_SID or TWILIO_AUTH_TOKEN" });
-    }
-
-    const client = twilio(accountSid, authToken);
-    const token = await client.tokens.create();
-
-    return res.json({ iceServers: token.iceServers });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
-});
 
 
 async function sendPushToUser(uid, payload) {
@@ -14894,13 +14832,6 @@ socket.on("lobby-get", () => {
   socket.emit("lobby-update", { rooms: getLobbyList(), ts: Date.now() });
 });
 
-  // ===== ICE RESTART RELAY =====
-  // Any peer can ask another peer to perform ICE restart
-  socket.on("request-ice-restart", ({ to, reason }) => {
-    if (!to) return;
-    io.to(to).emit("request-ice-restart", { from: socket.id, reason: String(reason || "") });
-  });
-
 
 
 // ===== LIVE TIMER (server-side source of truth) =====
@@ -15077,8 +15008,9 @@ socket.on("join-room", ({ roomId, role, profile }) => {
     const uid = socket.data.uid;
 
 
-    if (!room.mediaMode) {
-  room.mediaMode = "p2p";
+
+if (!room.mediaMode) {
+  room.mediaMode = "sfu";
 }
 
 
@@ -15257,424 +15189,10 @@ room.hostProfile = {
       socket.emit("live-start", { startTs: room.liveStartTs });
     }
 
-    // If has pinned note, send to late joiner
-    if (room.pinnedNote) {
-      socket.emit("pin-note-update", room.pinnedNote);
-    }
-  
-
-    // Gift stats for late joiners
-    try{
-      socket.emit("gift-stats", {
-        totalCoins: room.giftTotal || 0,
-        topDonors: roomGiftTop(room, 5)
-      });
-    }catch{}
 
 });
 
- socket.on("chat", ({ roomId, text }) => {
-
-  if (blockIfLocked(socket)) return;
-
-  if (!roomId || !text) return;
-
-  const room = getRoom(roomId);
-
-
-  
-if (!room) return;
-
-// Verify that the socket has actually joined this room
-if (!socket.rooms.has(roomId)) {
-  return;
-}
-
-// Only the verified broadcaster can send host chat
-if (
-  socket.data.role === "broadcaster" &&
-  (
-    !socket.data.authenticated ||
-    room.ownerUid !== socket.data.uid ||
-    room.broadcasterId !== socket.id
-  )
-) {
-  socket.emit("room-error", {
-    message: "Unauthorized livestream chat."
-  });
-  return;
-}
-
-
-  if (!room) return;
-
-  const r = String(socket.data.role || "").toLowerCase();
-  const role = (r === "broadcaster") ? "host" : "viewer";
-
-  let profile = null;
-
-  // 👑 HOST
-  if (role === "host") {
-    profile = room.hostProfile;
-  }
-
-  // 👀 VIEWER / GUEST → TÌM THEO socketId
-  if (role !== "host") {
-    for (const p of safeMap(room.viewerProfiles).values()) {
-    if (p.socketId === socket.id) {
-    profile = p;
-    break;
-  }
-}
-  }
-
-  const msg = {
-    role,
-    name: profile?.name || "Anonymous",
-    avatar: profile?.avatar,
-    level: Number(profile?.level) || 1,
-    text: String(text).slice(0, 300),
-    ts: Date.now(),
-  };
-
-for (const v of safeMap(room.viewerProfiles).values()) {
-  if (!v.mini) io.to(v.socketId).emit("chat", msg);
-}
-
-// host vẫn nhận
-if (room.broadcasterId) io.to(room.broadcasterId).emit("chat", msg);
-
-});
-
-
-
-
-// ===== REACTIONS (emoji/hearts) =====
-// client emits: { roomId, emoji, x, y }
-socket.on("reaction", ({ roomId, emoji, x, y }) => {
-  if(blockGuest(socket,"reaction")) return;   // 🔒
-
-
-
-  if (!roomId) return;
-  const em = String(emoji || "❤️").slice(0, 4);
-  const msg = {
-    emoji: em,
-    x: typeof x === "number" ? x : Number(x),
-    y: typeof y === "number" ? y : Number(y),
-    ts: Date.now(),
-  };
-
-const room = getRoom(roomId);
-if (!room) return;
-
-for (const v of safeMap(room.viewerProfiles).values()) {
-  if (!v.mini) io.to(v.socketId).emit("reaction", msg);
-}
-
-if (room.broadcasterId) io.to(room.broadcasterId).emit("reaction", msg);
-
-});
-
-  // ===== PIN NOTE (host creates custom pinned content + draggable position) =====
-  function __clamp01(n){ n = Number(n); if (!isFinite(n)) return 0.5; return Math.max(0, Math.min(1, n)); }
-
-  socket.on("pin-note-set", ({ roomId, text, x, y }) => {
-if(blockGuest(socket,"pin")) return;
-
-
-    if (!roomId) return;
-    const room = getRoom(roomId);
-    if (room.broadcasterId !== socket.id) return; // host only
-    const t = String(text || "").trim().slice(0, 220);
-    if (!t) return;
-    const note = { text: t, x: __clamp01(x), y: __clamp01(y), ts: Date.now() };
-    room.pinnedNote = note;
-
- for (const v of safeMap(room.viewerProfiles).values()) {
-  if (!v.mini) io.to(v.socketId).emit("pin-note-update", note);
-}
-
-if (room.broadcasterId) io.to(room.broadcasterId).emit("pin-note-update", note);
-
-  });
-
-socket.on("pin-note-move", ({ roomId, x, y }) => {
-  if(blockGuest(socket,"pin")) return;
-
-  if (!roomId) return;
-  const room = getRoom(roomId);
-  if (!room || room.broadcasterId !== socket.id) return;
-  if (!room.pinnedNote) return;
-
-  room.pinnedNote.x = __clamp01(x);
-  room.pinnedNote.y = __clamp01(y);
-  room.pinnedNote.ts = Date.now();
-
-  for (const v of safeMap(room.viewerProfiles).values()) {
-  if (!v.mini) io.to(v.socketId).emit("pin-note-update", room.pinnedNote);
-}
-
-
-  if (room.broadcasterId) io.to(room.broadcasterId).emit("pin-note-update", room.pinnedNote);
-});
-
- socket.on("pin-note-clear", ({ roomId }) => {
-  if(blockGuest(socket,"pin")) return;
-
-  if (!roomId) return;
-  const room = getRoom(roomId);
-  if (!room || room.broadcasterId !== socket.id) return;
-
-  room.pinnedNote = null;
-
- for (const v of safeMap(room.viewerProfiles).values()) {
-  if (!v.mini) io.to(v.socketId).emit("pin-note-update", null);
-}
-
-
-
-  if (room.broadcasterId) io.to(room.broadcasterId).emit("pin-note-update", null);
-});
-
-  // ===== /PIN NOTE =====
-
-
-// ===== ANTI SPAM GIFT =====
-const GIFT_COOLDOWN_MS = 1500; // 1.5s / lần gửi
-
-const giftCooldown = new Map(); // key: socket.id
-
-function canSendGift(socket) {
-  const now = Date.now();
-  const last = giftCooldown.get(socket.id) || 0;
-  if (now - last < GIFT_COOLDOWN_MS) return false;
-  giftCooldown.set(socket.id, now);
-  return true;
-}
-
-
-
-// ===== GIFT ENGINE (paid gifts) =====
-socket.on("send-gift", ({ roomId, gift, name }) => {
-
-  if (blockIfLocked(socket)) return;   // 🚫 THÊM DÒNG NÀY
-
-  if (blockGuest(socket, "gift")) return;
-
-  roomId = normRoomId(roomId);
-  if (!roomId || !gift) return;
-
-  // 🚫 CHẶN SPAM
-  if (!canSendGift(socket)) {
-    socket.emit("gift-failed", {
-      reason: "spam",
-      	message: "You are sending gifts too quickly"
-    });
-    return;
-  }
-
-  const room = getRoom(roomId);
-  if (!room?.broadcasterId || !room.liveStartTs) return;
-
-  const type = String(gift.type || "").toLowerCase();
-  const catalog = GIFT_CATALOG[type];
-  if (!catalog) return;
-
-  const qty = clampInt(gift.qty ?? 1, 1, 999);
-  const cost = catalog.cost * qty;
-
-  // ===== WALLET CHECK (PERSIST users.json) =====
-  const senderUid = socket.data.uid;
-  if (!senderUid) return;
-
-  const db = loadUsers();
-  const sender = db[senderUid];
-  if (!sender?.profile) return;
-
-  const curCoins = clampInt(sender.profile.coins ?? 0, 0, 1_000_000_000);
-  if (curCoins < cost) {
-    socket.emit("gift-failed", {
-      reason: "no_coins",
-      need: cost,
-      coins: curCoins
-    });
-    return;
-  }
-
-  // 🔥 TRỪ COIN THẬT
-  sender.profile.coins = curCoins - cost;
-  sender.profile.coinSent =
-    (sender.profile.coinSent || 0) + cost;
-
-  const hostUid = room.hostProfile?.uid;
-  if (hostUid && db[hostUid]?.profile) {
-    db[hostUid].profile.coinReceived =
-      (db[hostUid].profile.coinReceived || 0) + cost;
-  }
-
-  // ===== 🎯 CỘNG EXP + LEVEL CHO NGƯỜI NHẬN QUÀ =====
-if (hostUid && db[hostUid]?.profile) {
-  const hp = db[hostUid].profile;
-
-  // + EXP (1 coin = 1 exp)
-  hp.exp = (hp.exp || 0) + cost;
-
-  // ⬆️ LEVEL UP (loop để tránh miss nhiều level)
-  let leveledUp = false;
-  while (hp.exp >= (hp.level || 1) * 100) {
-    hp.exp -= (hp.level || 1) * 100;
-    hp.level = (hp.level || 1) + 1;
-    leveledUp = true;
-  }
-
-  // 🔔 realtime sync cho host
-  emitCoinUpdate(hostUid);
-
-  // (optional) notify level up
-  if (leveledUp) {
-    pushNotify(hostUid, {
-      type: "level-up",
-      text: `You have reached level ${hp.level}!`
-    });
-  }
-}
-
-// ===== 💎 CỘNG EXP x2 CHO NGƯỜI TẶNG =====
-if (senderUid && db[senderUid]?.profile) {
-  const sp = db[senderUid].profile;
-
-  // 🎁 donor nhận EXP gấp đôi
-  sp.exp = (sp.exp || 0) + cost * 1.5;
-
-  // ⬆️ LEVEL UP donor
-  while (sp.exp >= (sp.level || 1) * 100) {
-    sp.exp -= (sp.level || 1) * 100;
-    sp.level = (sp.level || 1) + 1;
-  }
-
-  // 🔔 realtime sync cho donor
-  emitCoinUpdate(senderUid);
-}
-
-
-  saveUsers(db);
-
-  // 🔔 REALTIME WALLET
-  emitCoinUpdate(senderUid);
-  if (hostUid) emitCoinUpdate(hostUid);
-
-  socket.data.coins = sender.profile.coins;
-  socket.emit("wallet-update", { coins: sender.profile.coins });
-
-
-  // ===== TÌM DONOR PROFILE =====
-  let donorProfile = null;
-  for (const p of safeMap(room.viewerProfiles).values()) {
-    if (p.socketId === socket.id) {
-      donorProfile = p;
-      break;
-    }
-  }
-
-
-  // ✅ SYNC COIN VÀO VIEWER PROFILE (để viewer list/mini profile đúng)
-if (donorProfile) {
-  donorProfile.coins = sender.profile.coins;
-  donorProfile.coinSentRoom = (donorProfile.coinSentRoom || 0) + cost;
-}
-
-
-  const donorName = safeName(
-    name || donorProfile?.name || socket.data.userName || "Anonymous"
-  );
-
-  // 🔒 SYNC DONOR PROFILE (RẤT QUAN TRỌNG)
-  if (donorProfile) {
-    donorProfile.coins = sender.profile.coins;
-    donorProfile.coinSentRoom =
-      (donorProfile.coinSentRoom || 0) + cost;
-  }
-
-  // 🔔 Notify host
-  if (hostUid) {
-    pushNotify(hostUid, {
-      type: "gift",
-      text: `${donorName} gifted ${cost} coins`
-    });
-
-    const sockets = activeUsers.get(hostUid);
-    if (sockets) {
-      for (const sid of sockets) {
-        io.to(sid).emit("inbox-new");
-      }
-    }
-  }
-
-  // ===== UPDATE ROOM STATS =====
-  room.giftTotal = clampInt(
-    (room.giftTotal || 0) + cost,
-    0,
-    1_000_000_000
-  );
-
-  if (donorProfile?.uid) {
-    room.giftByUser.set(
-      donorProfile.uid,
-      (room.giftByUser.get(donorProfile.uid) || 0) + cost
-    );
-  }
-
-  // ===== SYNC VIEWER LIST =====
-  const list = Array.from(safeMap(room.viewerProfiles).values());
-  for (const v of list) {
-    if (!v.mini) {
-      io.to(v.socketId).emit("viewer-list", {
-        viewers: list.filter(x => !x.mini)
-      });
-    }
-  }
-
-  // ===== EMIT GIFT EVENT =====
-  const payload = {
-    gift: {
-      type,
-      emoji: catalog.emoji,
-      cost: catalog.cost,
-      qty,
-      coins: cost
-    },
-    donor: donorName,
-    uid: donorProfile?.uid || senderUid,
-    totalCoins: room.giftTotal,
-    ts: Date.now()
-  };
-
-  for (const v of list) {
-    if (!v.mini) io.to(v.socketId).emit("gift", payload);
-  }
-  if (room.broadcasterId) {
-    io.to(room.broadcasterId).emit("gift", payload);
-  }
-
-  // stats
-  for (const v of list) {
-    if (!v.mini) {
-      io.to(v.socketId).emit("gift-stats", {
-        totalCoins: room.giftTotal,
-        topDonors: roomGiftTop(room, 5)
-      });
-    }
-  }
-  if (room.broadcasterId) {
-    io.to(room.broadcasterId).emit("gift-stats", {
-      totalCoins: room.giftTotal,
-      topDonors: roomGiftTop(room, 5)
-    });
-  }
-
-});
-
+ 
 
 
 socket.on("host-stream-ready", (data = {}, ack) => {
@@ -15717,25 +15235,9 @@ socket.on("host-stream-ready", (data = {}, ack) => {
 });
 
 
-  // WebRTC signaling passthrough
-  socket.on("offer", ({ to, description }) => {
-    io.to(to).emit("offer", { from: socket.id, description });
-  });
 
-  socket.on("answer", ({ to, description }) => {
-    io.to(to).emit("answer", { from: socket.id, description });
-  });
-
-  socket.on("candidate", ({ to, candidate }) => {
-    io.to(to).emit("candidate", { from: socket.id, candidate });
-  });
 
   socket.on("disconnect", () => {
-
-
-
-
-
 
   const roomId = socket.data.roomId;
   const role = socket.data.role;
