@@ -1192,13 +1192,14 @@ const time = `
 
 <div class="lp-post-head">
 
-<img class="lp-ava" src="${fixMedia(p.avatar)}"
-
-     onclick="openUserProfile('${p.uid}')"
-     style="cursor:pointer">
-
-<div>
-
+<img
+  class="lp-ava"
+  src="${fixMedia(p.avatar)}"
+  loading="eager"
+  decoding="async"
+  onclick="openUserProfile('${p.uid}')"
+  style="cursor:pointer"
+>
 
 <div class="lp-post-name"
      onclick="openUserProfile('${p.uid}')"
@@ -1247,7 +1248,12 @@ ${(p.images && p.images.length) ? `
   ${p.images.slice(0,5).map((url, index) => `
     <div class="fb-img img-${index}"
          onclick='openFeedLightbox(${JSON.stringify(p.images)}, ${index})'>
-      <img src="${fixMedia(url)}">
+      <img
+  src="${fixMedia(url)}"
+  loading="lazy"
+  decoding="async"
+  alt="Post image"
+>
 
       ${
         index === 4 && p.images.length > 5

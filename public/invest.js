@@ -306,10 +306,6 @@ function openRPSGame(){
   location.href = "/game-rps.html"; // trang game sau này
 }
 
-function openDiamondHunter(){
-
-  location.href = "/game-diamond-hunter.html";
-}
 
 
 function openKingSlaveGame(){
