@@ -3936,19 +3936,21 @@ const VIRTUAL_ROOMS = [
     link: "/virtual-room.html?room=Youtube1"
   },
 
-  {
-    roomId: "Youtube2",
-    title: "50 NĂM VỀ SAU",
-    viewers: 0,
-    avatar: "/assets/live-avatar/Youtube.jpg",
-    link: "/virtual-room.html?room=Youtube2"
-  },
+
+{
+  roomId: "Youtube2",
+  title: "Độ Mixi",
+  viewers: 0,
+  avatar: "/assets/live-avatar/Mixi.jpg",
+  link: "/virtual-room.html?room=Youtube2"
+},
+
 
 
   // YOUTUBE LIVE ROOM 3
   {
     roomId: "Youtube3",
-    title: "Valorant",
+    title: "Damit2k",
     viewers: 0,
     avatar: "/assets/live-avatar/Damit2k.jpg",
     link: "/virtual-room.html?room=Youtube3"
@@ -4339,6 +4341,15 @@ a.href = r.__virtual
 
     const liveFor = (typeof r.liveStartTs === "number") ? (Date.now() - r.liveStartTs) : 0;
 
+
+const youtubeRoomStatus =
+  r.roomId === "Youtube2"
+    ? window.__yt2RoomStatus
+    : r.roomId === "Youtube3"
+      ? window.__yt3RoomStatus
+      : null;
+
+
    a.innerHTML = `
    
 <div class="lobby-cardBg">
@@ -4362,17 +4373,21 @@ a.href = r.__virtual
 
 
 
+
 r.__virtual
   ? `<span class="badge badge--virtual">${
+      r.roomId === "Youtube2" ||
       r.roomId === "Youtube3"
         ? (
-            window.__yt3RoomStatus === "live"
+            youtubeRoomStatus === "live"
               ? "● LIVE"
-              : window.__yt3RoomStatus === "offline"
+              : youtubeRoomStatus === "offline"
                 ? "OFFLINE"
-                : window.__yt3RoomStatus === "unconfigured"
+                : youtubeRoomStatus === "unconfigured"
                   ? "SETUP REQUIRED"
-                  : "CHECKING"
+                  : youtubeRoomStatus === "error"
+                    ? "UNAVAILABLE"
+                    : "CHECKING"
           )
         : "YOUTUBE"
     }</span>`
@@ -4474,6 +4489,62 @@ socket.on("connect", () => {
   socket.emit("virtual-live:get-counts");
 
 });
+
+
+
+
+/* ==========================================
+   YOUTUBE2 - LOBBY LIVE STATUS
+========================================== */
+
+window.__yt2RoomStatus = "checking";
+
+async function updateYoutube2Lobby() {
+
+  try {
+
+    const response = await fetch(
+      "/api/virtual-live/rooms/Youtube2",
+      { cache: "no-store" }
+    );
+
+    if (!response.ok) return;
+
+    const data = await response.json();
+
+    window.__yt2RoomStatus =
+      data.status || "checking";
+
+    render(__rooms);
+
+  } catch (error) {
+
+    console.warn(
+      "[YOUTUBE2 LOBBY]",
+      error
+    );
+
+  }
+}
+
+socket.on(
+  "virtual-live:yt2-status",
+  state => {
+
+    window.__yt2RoomStatus =
+      state.status || "checking";
+
+    render(__rooms);
+
+  }
+);
+
+updateYoutube2Lobby();
+
+setInterval(
+  updateYoutube2Lobby,
+  60000
+);
 
 
 

@@ -272,7 +272,7 @@ body {
 
   const roomId = params.get("room") || "Youtube";
 
-  let youtube3ActiveVideoId = null;
+  let activeAutoYoutubeVideoId = null;
 
   const roomTitle =
     document.getElementById("roomTitle");
@@ -379,7 +379,10 @@ body {
    YOUTUBE3 - AUTOMATIC LIVE PLAYER
 ========================================== */
 
-if (roomId === "Youtube3") {
+if (
+  roomId === "Youtube2" ||
+  roomId === "Youtube3"
+) {
 
   const isLive =
     room.status === "live" &&
@@ -405,9 +408,9 @@ if (roomId === "Youtube3") {
     .querySelectorAll("iframe, video")
     .forEach(player => player.remove());
 
-  youtube3ActiveVideoId = isLive
-    ? room.videoId
-    : "";
+activeAutoYoutubeVideoId = isLive
+  ? room.videoId
+  : "";
 
   if (!isLive) {
 
@@ -859,14 +862,18 @@ else {
 
 
 /* ==========================================
-   YOUTUBE3 - AUTO REFRESH VIDEO SOURCE
+   YOUTUBE2 + YOUTUBE3
+   AUTOMATIC LIVE SOURCE UPDATES
 ========================================== */
 
-if (roomId === "Youtube3") {
+if (
+  roomId === "Youtube2" ||
+  roomId === "Youtube3"
+) {
 
   let checkingSource = false;
 
-  async function checkYoutube3Source() {
+  async function checkAutoYoutubeSource() {
 
     if (checkingSource) return;
 
@@ -875,7 +882,8 @@ if (roomId === "Youtube3") {
     try {
 
       const response = await fetch(
-        "/api/virtual-live/rooms/Youtube3",
+        "/api/virtual-live/rooms/" +
+        encodeURIComponent(roomId),
         { cache: "no-store" }
       );
 
@@ -888,15 +896,19 @@ if (roomId === "Youtube3") {
           ? String(room.videoId || "")
           : "";
 
-      // Only recreate player when source changes.
-      if (nextId !== youtube3ActiveVideoId) {
+      // Refresh only when live source changes.
+      if (
+        nextId !== activeAutoYoutubeVideoId
+      ) {
+
         await loadVideo();
+
       }
 
     } catch (error) {
 
       console.warn(
-        "[YOUTUBE3 SOURCE]",
+        "[AUTO YOUTUBE SOURCE]",
         error
       );
 
@@ -905,25 +917,54 @@ if (roomId === "Youtube3") {
       checkingSource = false;
 
     }
+
   }
 
-  // Realtime notification from server.
+  // Each room listens to its own socket event.
+  const statusEvent =
+    roomId === "Youtube2"
+      ? "virtual-live:yt2-status"
+      : "virtual-live:yt3-status";
+
   socket.on(
-    "virtual-live:yt3-status",
-    checkYoutube3Source
+    statusEvent,
+    checkAutoYoutubeSource
   );
 
-  // Recovery check for missed socket events.
+  // Recover from missed socket updates.
   const sourceTimer = setInterval(
-    checkYoutube3Source,
+    checkAutoYoutubeSource,
     60000
   );
 
-  window.addEventListener("pagehide", () => {
-    clearInterval(sourceTimer);
-  });
+  // Check again when returning to this page.
+  document.addEventListener(
+    "visibilitychange",
+    () => {
+
+      if (!document.hidden) {
+        checkAutoYoutubeSource();
+      }
+
+    }
+  );
+
+  window.addEventListener(
+    "pagehide",
+    () => {
+
+      clearInterval(sourceTimer);
+
+      socket.off(
+        statusEvent,
+        checkAutoYoutubeSource
+      );
+
+    }
+  );
 
 }
+
 
 
   // Leave Room
