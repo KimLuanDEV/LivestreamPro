@@ -9240,17 +9240,25 @@ const SFU_IS_MOBILE =
     navigator.maxTouchPoints > 1
   );
 
+
+/* ==========================================
+   SFU - HD VIDEO QUALITY PROFILE
+========================================== */
+
 const SFU_VIDEO_PROFILE = SFU_IS_MOBILE
   ? {
-      resolution: VideoPresets.h540.resolution,
-      fps: 24,
-      bitrate: 850000
+      // MOBILE - HD QUALITY
+      resolution: VideoPresets.h720.resolution,
+      fps: 30,
+      bitrate: 2000000
     }
   : {
-      resolution: VideoPresets.h540.resolution,
+      // DESKTOP - HD QUALITY
+      resolution: VideoPresets.h720.resolution,
       fps: 30,
-      bitrate: 1200000
+      bitrate: 2000000
     };
+
 
 console.log(
   "[SFU VIDEO PROFILE]",
