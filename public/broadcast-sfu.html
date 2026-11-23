@@ -6765,16 +6765,6 @@ body.sfu-role-host
     <!-- HOST CONTROLS -->
     <section class="controls" id="hostControls">
 
-      <button
-        class="control primary"
-        id="startBtn">
-
-        <svg class="studio-icon">
-          <use href="#ico-play"></use>
-        </svg>
-
-        <span>START LIVE</span>
-      </button>
 
 
 <!-- PK BATTLE CONTROL -->
@@ -8973,13 +8963,28 @@ function setPlaceholder(visible, text = "") {
   if (text) $("placeholderText").textContent = text;
 }
 
+
+/* ==========================================
+   SFU - HOST CONTROLS
+   AUTO START MODE
+========================================== */
+
 function setHostButtons(live) {
-  $("startBtn").disabled = live;
+
+  document.body.classList.toggle(
+    "sfu-live-active",
+    !isViewer && Boolean(live)
+  );
+
   $("cameraBtn").disabled = !live;
+
   $("flipCameraBtn").disabled =
     !live || !cameraOn || cameraSwitching;
+
   $("micBtn").disabled = !live;
+
   $("stopBtn").disabled = !live;
+
 }
 
 function goLobby() {
@@ -10495,13 +10500,20 @@ socket.on("room-closed", () => {
 
 
 
-async function startLive() {
-  if (started || stopping) return;
 
-  $("startBtn").disabled = true;
-  showMessage("Connecting to SFU...");
+async function startLive() {
+
+  if (
+    isViewer ||
+    started ||
+    stopping ||
+    hostSessionEnded
+  ) return;
+
+  showMessage("Starting livestream...");
 
   try {
+
     await joinSignalingRoom();
     await connectSFU();
 
@@ -10590,18 +10602,30 @@ socket.emit("live-start", { roomId });
 
     showMessage("Your livestream is now active.");
 
-  } catch (error) {
-    console.error("[SFU HOST]", error);
 
-    if (lkRoom) {
-      await lkRoom.disconnect().catch(() => {});
-      lkRoom = null;
-    }
+} catch (error) {
 
-    setHostButtons(false);
-    setStatus("OFFLINE");
-    showMessage(error.message || "Unable to start livestream.");
+  console.error("[SFU HOST]", error);
+
+  if (lkRoom) {
+    await lkRoom.disconnect().catch(() => {});
+    lkRoom = null;
   }
+
+  started = false;
+  cameraOn = false;
+  micOn = false;
+
+  setHostButtons(false);
+  setStatus("OFFLINE");
+
+  showMessage(
+    error.message ||
+    "Unable to start livestream."
+  );
+
+}
+
 }
 
 async function toggleCamera() {
@@ -11261,7 +11285,7 @@ async function exitViewer() {
 }
 
 
-$("startBtn").onclick = startLive;
+
 $("cameraBtn").onclick = toggleCamera;
 $("flipCameraBtn").onclick = flipCamera;
 $("micBtn").onclick = toggleMic;
@@ -11342,29 +11366,61 @@ socket.on("room-closed", () => {
 });
 
 
-if (
-  !roomId ||
-  roomId.length > 64 ||
-  !/^[a-z0-9_.-]+$/.test(roomId)
-) {
+
+/* ==========================================
+   SFU - AUTO START ON PAGE ENTRY
+========================================== */
+
+const sfuRoomIdValid =
+  Boolean(roomId) &&
+  roomId.length <= 64 &&
+  /^[a-z0-9_.-]+$/.test(roomId);
+
+if (!sfuRoomIdValid) {
+
   showMessage("Invalid room ID.");
-  $("startBtn").disabled = true;
+
+  setStatus("OFFLINE");
 
 } else {
+
   $("roomLabel").textContent = roomId;
 
   if (isViewer) {
+
     $("pageTitle").textContent = "Live Viewer";
+
     $("hostControls").classList.add("hidden");
     $("viewerControls").classList.remove("hidden");
+
     $("localVideo").classList.add("hidden");
 
     joinAsViewer();
+
   } else {
+
     $("pageTitle").textContent = "Live Studio";
-    showMessage("Press START LIVE to begin broadcasting.");
+
+    showMessage("Starting livestream...");
+
+    // Run after the current module finishes
+    // initializing all PK, chat and gift handlers.
+    setTimeout(() => {
+
+      if (
+        !started &&
+        !stopping &&
+        !hostSessionEnded
+      ) {
+        startLive();
+      }
+
+    }, 0);
+
   }
+
 }
+
 
 
 
