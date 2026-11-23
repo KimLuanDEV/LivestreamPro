@@ -5903,6 +5903,126 @@ body.sfu-role-host
 
 
 
+/* ==========================================
+   SFU - ROCKET VIDEO GIFT EFFECT
+========================================== */
+
+.sfu-rocket-effect {
+  position: fixed;
+  inset: 0;
+
+  z-index: 100;
+
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+
+  overflow: hidden;
+  pointer-events: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sfu-rocket-effect.hidden {
+  display: none !important;
+}
+
+.sfu-rocket-video {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  pointer-events: none;
+}
+
+.sfu-rocket-sender {
+  position: absolute;
+  left: 50%;
+  bottom: calc(
+    17% + env(safe-area-inset-bottom, 0px)
+  );
+
+  transform: translateX(-50%);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+
+  width: max-content;
+  max-width: 88%;
+
+  padding: 13px 25px;
+
+  border: 1px solid rgba(255, 215, 145, .55);
+  border-radius: 20px;
+
+  background: linear-gradient(
+    135deg,
+    rgba(40, 26, 8, .92),
+    rgba(11, 12, 18, .93)
+  );
+
+  box-shadow:
+    0 0 32px rgba(255, 167, 44, .32),
+    inset 0 0 15px rgba(255, 195, 96, .08);
+
+  text-align: center;
+
+  animation: rocketSenderEnter .5s ease-out both;
+}
+
+.sfu-rocket-sender strong {
+  color: #ffe0a0;
+
+  font-size: 17px;
+  font-weight: 900;
+
+  text-shadow: 0 0 14px rgba(255, 166, 36, .6);
+
+  overflow-wrap: anywhere;
+}
+
+.sfu-rocket-sender span {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+@keyframes rocketSenderEnter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 25px) scale(.85);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+@media (max-width: 480px) {
+  .sfu-rocket-sender {
+    bottom: calc(
+      19% + env(safe-area-inset-bottom, 0px)
+    );
+
+    padding: 11px 18px;
+  }
+
+  .sfu-rocket-sender strong {
+    font-size: 14px;
+  }
+}
+
+
 
 </style>
 
@@ -6551,6 +6671,28 @@ body.sfu-role-host
   aria-live="polite">
 </div>
 
+
+<!-- ROCKET FULLSCREEN GIFT EFFECT -->
+<div
+  id="sfuRocketEffect"
+  class="sfu-rocket-effect hidden"
+  aria-hidden="true">
+
+  <video
+    id="sfuRocketVideo"
+    class="sfu-rocket-video"
+    playsinline
+    webkit-playsinline
+    muted
+    preload="none">
+  </video>
+
+  <div class="sfu-rocket-sender">
+    <strong id="sfuRocketSender"></strong>
+    <span id="sfuRocketQuantity"></span>
+  </div>
+
+</div>
 
 
 
@@ -8216,10 +8358,145 @@ socket.on("coin-update", data => {
   }
 });
 
+
+/* ==========================================
+   SFU ROCKET GIFT - VIDEO EFFECT
+========================================== */
+
+const rocketEffect = $("sfuRocketEffect");
+const rocketVideo = $("sfuRocketVideo");
+const rocketSender = $("sfuRocketSender");
+const rocketQuantity = $("sfuRocketQuantity");
+
+const rocketQueue = [];
+
+let rocketPlaying = false;
+
+function stopRocketEffect() {
+  rocketVideo.pause();
+  rocketVideo.removeAttribute("src");
+  rocketVideo.load();
+
+  rocketEffect.classList.add("hidden");
+
+  rocketPlaying = false;
+
+  // Phát quà tiếp theo nếu có
+  playNextRocket();
+}
+
+function playNextRocket() {
+
+  if (rocketPlaying) return;
+  if (!rocketQueue.length) return;
+
+  const gift = rocketQueue.shift();
+
+  rocketPlaying = true;
+
+  rocketSender.textContent = gift.donor;
+
+  rocketQuantity.textContent =
+    `🚀 ROCKET ×${gift.quantity}`;
+
+  rocketEffect.classList.remove("hidden");
+
+  let finished = false;
+  let fallbackTimer = null;
+
+  function finish() {
+
+    if (finished) return;
+
+    finished = true;
+
+    clearTimeout(fallbackTimer);
+
+    rocketVideo.removeEventListener("ended", finish);
+    rocketVideo.removeEventListener("error", finish);
+
+    stopRocketEffect();
+  }
+
+  rocketVideo.addEventListener(
+    "ended",
+    finish,
+    { once: true }
+  );
+
+  rocketVideo.addEventListener(
+    "error",
+    finish,
+    { once: true }
+  );
+
+  // Giới hạn thời gian để tránh kẹt hiệu ứng
+  fallbackTimer = setTimeout(finish, 8000);
+
+  rocketVideo.pause();
+
+  const canHEVC = rocketVideo.canPlayType(
+    'video/mp4; codecs="hvc1"'
+  );
+
+  const canWebM = rocketVideo.canPlayType(
+    'video/webm; codecs="vp9"'
+  );
+
+  // iPhone ưu tiên HEVC, trình duyệt khác dùng WebM
+  if (canHEVC) {
+    rocketVideo.src =
+      "/assets/live-gifts/rocket-effect-hevc.mp4";
+  } else if (canWebM) {
+    rocketVideo.src =
+      "/assets/live-gifts/rocket-effect.webm";
+  } else {
+    finish();
+    return;
+  }
+
+  rocketVideo.currentTime = 0;
+
+  rocketVideo.play().catch(finish);
+}
+
+function enqueueRocketGift(data) {
+
+  if (data?.giftId !== "rocket") return;
+
+  const donor = String(
+    data.donor || "Viewer"
+  ).slice(0, 50);
+
+  const quantity = Number.isSafeInteger(data.quantity)
+    ? Math.max(1, Math.min(data.quantity, 50))
+    : 1;
+
+  // Tránh danh sách hiệu ứng quá dài
+  if (rocketQueue.length >= 10) {
+    rocketQueue.shift();
+  }
+
+  rocketQueue.push({
+    donor,
+    quantity
+  });
+
+  playNextRocket();
+}
+
+
 // Show successful gifts to everyone in this room.
 socket.on("sfu:gift:new", data => {
 
   if (data?.roomId !== roomId) return;
+
+  // Rocket special animation
+if (data.giftId === "rocket") {
+  enqueueRocketGift(data);
+}
+
+
   // Server là nguồn xác thực tổng kim cương.
 updateSfuLiveEarnings(data.totalCoins);
 
