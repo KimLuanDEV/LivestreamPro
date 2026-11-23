@@ -8943,6 +8943,166 @@ element.style.objectPosition = "center center";
   }
 }
 
+
+
+/* ==========================================
+   SFU - VIDEO TRANSPORT DIAGNOSTICS
+   HOST + VIEWER
+========================================== */
+
+const sfuVideoStatsCache = new WeakMap();
+
+let sfuVideoStatsBusy = false;
+
+async function inspectSfuVideoTrack(track, side) {
+
+  if (!track?.getRTCStatsReport) return;
+
+  const report = await track.getRTCStatsReport();
+  if (!report) return;
+
+  const now = performance.now();
+
+  const stats = [];
+
+  report.forEach(s => {
+
+    if (
+      s.type !== (
+        side === "HOST"
+          ? "outbound-rtp"
+          : "inbound-rtp"
+      )
+    ) return;
+
+    if (
+      s.kind !== "video" &&
+      s.mediaType !== "video"
+    ) return;
+
+    if (s.isRemote) return;
+
+    stats.push(s);
+
+  });
+
+  if (!stats.length) return;
+
+  const bytes = stats.reduce(
+    (n, s) => n + (s.bytesSent ?? s.bytesReceived ?? 0),
+    0
+  );
+
+  const frames = stats.reduce(
+    (n, s) => n + (
+      side === "HOST"
+        ? (s.framesEncoded ?? 0)
+        : (s.framesDecoded ?? 0)
+    ),
+    0
+  );
+
+  const lost = stats.reduce(
+    (n, s) => n + (s.packetsLost ?? 0),
+    0
+  );
+
+  const previous = sfuVideoStatsCache.get(track);
+
+  sfuVideoStatsCache.set(track, {
+    now,
+    bytes,
+    frames,
+    lost
+  });
+
+  if (!previous) return;
+
+  const seconds = (now - previous.now) / 1000;
+
+  if (seconds <= 0) return;
+
+  const bitrate = Math.max(
+    0,
+    (bytes - previous.bytes) * 8 / seconds / 1000
+  );
+
+  const fps = Math.max(
+    0,
+    (frames - previous.frames) / seconds
+  );
+
+  const lossDelta = Math.max(
+    0,
+    lost - previous.lost
+  );
+
+  const jitterMs = stats.length === 1 &&
+    Number.isFinite(stats[0].jitter)
+      ? Math.round(stats[0].jitter * 1000)
+      : null;
+
+  console.log(`[SFU ${side} VIDEO]`, {
+    fps: Number(fps.toFixed(1)),
+    bitrateKbps: Math.round(bitrate),
+    lostPackets: lossDelta,
+    jitterMs
+  });
+
+}
+
+setInterval(async () => {
+
+  if (!lkRoom || sfuVideoStatsBusy) return;
+
+  sfuVideoStatsBusy = true;
+
+  try {
+
+    if (!isViewer) {
+
+      const publication = lkRoom.localParticipant
+        .getTrackPublication(Track.Source.Camera);
+
+      if (publication?.videoTrack) {
+        await inspectSfuVideoTrack(
+          publication.videoTrack,
+          "HOST"
+        );
+      }
+
+    } else {
+
+      for (const participant of lkRoom.remoteParticipants.values()) {
+
+        const publication = participant
+          .getTrackPublication(Track.Source.Camera);
+
+        if (!publication?.videoTrack) continue;
+
+        await inspectSfuVideoTrack(
+          publication.videoTrack,
+          "VIEWER"
+        );
+
+      }
+
+    }
+
+  } catch (error) {
+
+    console.warn("[SFU VIDEO DIAGNOSTICS]", error);
+
+  } finally {
+
+    sfuVideoStatsBusy = false;
+
+  }
+
+}, 5000);
+
+
+
 function attachLocalCamera() {
   const pub = lkRoom?.localParticipant
     .getTrackPublication(Track.Source.Camera);
@@ -9014,27 +9174,27 @@ lkRoom = new Room({
 
   },
 
-  publishDefaults: {
+publishDefaults: {
 
-    videoCodec: "h264",
+  videoCodec: "h264",
 
-    simulcast: true,
+  // Mobile: chỉ mã hóa một luồng video.
+  // Desktop: giữ nguyên nhiều lớp chất lượng.
+  simulcast: !SFU_IS_MOBILE,
 
-    videoEncoding: {
+  videoEncoding: {
 
-      maxBitrate:
-        SFU_VIDEO_PROFILE.bitrate,
+    maxBitrate:
+      SFU_VIDEO_PROFILE.bitrate,
 
-      maxFramerate:
-        SFU_VIDEO_PROFILE.fps
+    maxFramerate:
+      SFU_VIDEO_PROFILE.fps
 
-    },
+  },
 
-    degradationPreference:
-      "maintain-framerate"
+  degradationPreference: "maintain-framerate"
 
-  }
-
+}
 });
 
 
