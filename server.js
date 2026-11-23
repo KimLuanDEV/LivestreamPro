@@ -18556,7 +18556,7 @@ const VIRTUAL_LIVE_ROOMS = Object.freeze({
 Youtube2: {
   roomId: "Youtube2",
   title: "Độ Mixi",
-  avatar: "/assets/live-avatar/Youtube.jpg",
+  avatar: "/assets/live-avatar/Mixi.jpg",
   type: "youtube",
   videoId: "pCRHYXz0lfE"
 },
