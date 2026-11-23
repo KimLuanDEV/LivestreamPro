@@ -6054,6 +6054,26 @@ body.sfu-role-host
 }
 
 
+/* ==========================================
+   ROCKET - SAFARI BLACK BACKGROUND FIX
+========================================== */
+
+#sfuRocketVideo.rocket-screen-blend {
+  mix-blend-mode: screen !important;
+  background: transparent !important;
+  opacity: 1 !important;
+}
+
+#sfuRocketEffect {
+  background: transparent !important;
+}
+
+#sfuRocketEffect .sfu-rocket-sender {
+  isolation: isolate;
+}
+
+
+
 
 </style>
 
@@ -8396,6 +8416,43 @@ socket.on("coin-update", data => {
 
 const rocketEffect = $("sfuRocketEffect");
 const rocketVideo = $("sfuRocketVideo");
+
+/* ==========================================
+   ROCKET - DETECT IOS / SAFARI
+========================================== */
+
+const rocketUseScreenBlend = (() => {
+
+  const ua = navigator.userAgent || "";
+
+  const isiOS =
+    /iPhone|iPad|iPod/i.test(ua) ||
+    (
+      navigator.platform === "MacIntel" &&
+      navigator.maxTouchPoints > 1
+    );
+
+  const isSafari =
+    /Safari/i.test(ua) &&
+    !/Chrome|Chromium|Edg|OPR|Firefox/i.test(ua);
+
+  return isiOS || isSafari;
+
+})();
+
+if (rocketUseScreenBlend) {
+
+  rocketVideo.classList.add(
+    "rocket-screen-blend"
+  );
+
+  console.log(
+    "[ROCKET] Safari/iOS screen blend enabled"
+  );
+
+}
+
+
 const rocketSender = $("sfuRocketSender");
 const rocketQuantity = $("sfuRocketQuantity");
 
