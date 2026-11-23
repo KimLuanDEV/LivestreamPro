@@ -7035,6 +7035,65 @@ function updateCameraMirror() {
 
 
 
+/* ==========================================
+   SFU - RELIABLE CAMERA SYNC
+========================================== */
+
+async function syncCameraFacingToServer() {
+
+  if (isViewer || !socket.connected) {
+    return false;
+  }
+
+  const facingMode =
+    cameraFacing === "environment"
+      ? "environment"
+      : "user";
+
+  try {
+
+    const response = await new Promise(
+      (resolve, reject) => {
+
+        socket.timeout(5000).emit(
+          "sfu:camera-facing",
+          {
+            roomId,
+            facingMode
+          },
+          (error, result) => {
+
+            if (error) {
+              return reject(error);
+            }
+
+            resolve(result);
+
+          }
+        );
+
+      }
+    );
+
+    return response?.ok === true;
+
+  } catch (error) {
+
+    console.warn(
+      "[SFU CAMERA SYNC]",
+      error
+    );
+
+    return false;
+
+  }
+
+}
+
+
+
+
+
 let cameraSwitching = false;
 let viewerConnecting = false;
 let viewerConnected = false;
@@ -8927,6 +8986,23 @@ if (!response?.ok) {
   throw new Error("Room access was not authorized.");
 }
 
+
+// Synchronize viewer with current host camera
+if (
+  isViewer &&
+  (
+    response.cameraFacing === "user" ||
+    response.cameraFacing === "environment"
+  )
+) {
+
+  remoteCameraFacing = response.cameraFacing;
+
+  updateViewerCameraMirror();
+
+}
+
+
 // Show the authenticated host's public profile.
 updateSfuHostBadge(response.host);
 
@@ -9672,6 +9748,9 @@ async function recoverHostConnection() {
       );
     }
 
+    // Restore camera orientation after reconnect
+await syncCameraFacingToServer();
+
     // Restore chat and PK state.
     loadSfuChatHistory();
     await syncPK();
@@ -9861,8 +9940,42 @@ updateCameraMirror();
 
     $("videoBadge").textContent = "LIVE · SFU";
 
-    socket.emit("host-stream-ready", { roomId });
-    socket.emit("live-start", { roomId });
+ 
+// Confirm livestream readiness first
+const ready = await new Promise((resolve, reject) => {
+
+  socket.timeout(6000).emit(
+    "host-stream-ready",
+    { roomId },
+    (error, result) => {
+
+      if (error) return reject(error);
+
+      resolve(result);
+
+    }
+  );
+
+});
+
+if (!ready?.ok) {
+  throw new Error(
+    ready?.error || "Stream initialization failed."
+  );
+}
+
+// Synchronize camera before announcing live
+const cameraSynced =
+  await syncCameraFacingToServer();
+
+if (!cameraSynced) {
+  console.warn(
+    "[SFU] Initial camera sync failed."
+  );
+}
+
+socket.emit("live-start", { roomId });
+
 
     showMessage("Your livestream is now active.");
 

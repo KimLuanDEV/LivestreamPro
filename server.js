@@ -15195,51 +15195,80 @@ room.hostProfile = {
  
 
 
+
 /* ==========================================
-   SFU - CAMERA FACING SYNCHRONIZATION
+   SFU - RELIABLE CAMERA FACING SYNC
 ========================================== */
 
-socket.on("sfu:camera-facing", (data = {}) => {
+socket.on(
+  "sfu:camera-facing",
+  (data = {}, ack) => {
 
-  const targetRoomId =
-    normRoomId(data?.roomId);
+    const reply = result => {
+      if (typeof ack === "function") {
+        ack(result);
+      }
+    };
 
-  const room = rooms.get(targetRoomId);
+    const targetRoomId =
+      normRoomId(data?.roomId);
 
-  if (!room) return;
+    const room = rooms.get(targetRoomId);
 
-  // Only the authenticated room host can update
-  if (
-    !socket.data.authenticated ||
-    String(room.ownerUid) !==
-      String(socket.data.uid) ||
-    room.broadcasterId !== socket.id
-  ) {
-    return;
-  }
-
-  const facingMode = data?.facingMode;
-
-  if (
-    facingMode !== "user" &&
-    facingMode !== "environment"
-  ) {
-    return;
-  }
-
-  // Store current orientation for late viewers
-  room.sfuCameraFacing = facingMode;
-
-  // Synchronize all viewers in this room
-  io.to(targetRoomId).emit(
-    "sfu:camera-facing",
-    {
-      roomId: targetRoomId,
-      facingMode
+    if (!room) {
+      return reply({
+        ok: false,
+        error: "Room not found."
+      });
     }
-  );
 
-});
+    // Only the verified broadcaster can update
+    if (
+      !socket.data.authenticated ||
+      String(room.ownerUid) !==
+        String(socket.data.uid) ||
+      room.broadcasterId !== socket.id ||
+      !socket.rooms.has(targetRoomId)
+    ) {
+      return reply({
+        ok: false,
+        error: "Unauthorized host."
+      });
+    }
+
+    const facingMode = data?.facingMode;
+
+    if (
+      facingMode !== "user" &&
+      facingMode !== "environment"
+    ) {
+      return reply({
+        ok: false,
+        error: "Invalid camera orientation."
+      });
+    }
+
+    // Save latest orientation
+    room.sfuCameraFacing = facingMode;
+
+    // Broadcast to all participants
+    io.to(targetRoomId).emit(
+      "sfu:camera-facing",
+      {
+        roomId: targetRoomId,
+        facingMode
+      }
+    );
+
+    // Confirm synchronization
+    reply({
+      ok: true,
+      facingMode
+    });
+
+  }
+);
+
 
 
 
@@ -15729,16 +15758,22 @@ host: sfuHostInfo
       room.viewers.has(socket.id);
 
 
+
 return cb({
   ok: authorized,
   ...(authorized
     ? {
-viewerCount: currentViewerCount,
-viewers: currentViewers,
-host: sfuHostInfo
+        viewerCount: currentViewerCount,
+        viewers: currentViewers,
+        host: sfuHostInfo,
+
+        cameraFacing:
+          room.sfuCameraFacing || "environment"
       }
     : {})
 });
+
+
 
   }
 
