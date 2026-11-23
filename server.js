@@ -5232,6 +5232,30 @@ app.use("/api/admin", (req, res, next) => {
 
 
 
+
+/* ==========================================
+   LEGACY VIEWER REDIRECT TO LIVEKIT SFU
+========================================== */
+
+app.get("/viewer.html", (req, res) => {
+
+  const roomId = String(
+    req.query.room || req.query.roomId || ""
+  ).trim();
+
+  if (!/^[0-9]{1,15}$/.test(roomId)) {
+    return res.redirect(302, "/lobby.html");
+  }
+
+  return res.redirect(
+    302,
+    "/broadcast-sfu.html?room=" +
+      encodeURIComponent(roomId)
+  );
+
+});
+
+
 app.use(express.static(path.join(__dirname, "public")));
 
 
@@ -14757,47 +14781,7 @@ for (const v of safeMap(room.viewerProfiles).values()) {
 
 
 
-socket.on("resume-viewers", ({ roomId }) => {
-  if (!roomId) return;
-  const room = rooms.get(roomId);
-  if (!room) return;
-  if (room.broadcasterId !== socket.id) return;
 
-  // gửi danh sách viewer hiện tại cho host
- socket.emit("resume-viewers-list", {
-  viewers: Array.from(safeSet(room.viewers))
-});
-
-});
-
-
-
-
-socket.on("host-start-live", ({ roomId }) => {
-
-
-  const room = getRoom(roomId);
-  if (!room) return;
-  if (room.broadcasterId !== socket.id) return;
-
-  room.streamReady = false;
-
-  if (!room.liveStartTs) {
-    room.liveStartTs = Date.now();
-  }
-
- // gửi cho toàn phòng (viewer)
-io.to(roomId).emit("host-live", {
-  liveStartTs: room.liveStartTs
-});
-
-// 🔥 gửi riêng cho host (chắc chắn nhận được)
-io.to(socket.id).emit("host-live", {
-  liveStartTs: room.liveStartTs
-});
-
-  emitLobbyUpdate();
-});
 
 
 
