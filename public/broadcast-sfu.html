@@ -5188,6 +5188,156 @@ body {
 
 
 
+/* ==========================================
+   SFU PK - PREMIUM RESULT MODAL
+========================================== */
+
+.sfu-pk-result-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100100;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 20px;
+
+  background: rgba(0,0,0,.86);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+.sfu-pk-result-overlay.hidden {
+  display: none !important;
+}
+
+.sfu-pk-result-card {
+  width: min(100%, 370px);
+  padding: 33px 24px 25px;
+
+  text-align: center;
+
+  border: 1px solid rgba(223,190,131,.35);
+  border-radius: 22px;
+
+  background:
+    radial-gradient(
+      ellipse at top,
+      rgba(203,153,76,.13),
+      transparent 65%
+    ),
+    linear-gradient(145deg,#202127,#101115);
+
+  box-shadow: 0 25px 90px rgba(0,0,0,.6);
+
+  animation: sfuPkResultIn .25s ease-out;
+}
+
+.sfu-pk-result-icon {
+  display: grid;
+  place-items: center;
+
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 22px;
+
+  border: 1px solid rgba(223,190,131,.4);
+  border-radius: 50%;
+
+  background: rgba(223,190,131,.09);
+  color: #e9c991;
+
+  font-size: 33px;
+  font-weight: 800;
+}
+
+.sfu-pk-result-kicker {
+  margin-bottom: 12px;
+
+  color: #be9b65;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+#sfuPkResultTitle {
+  margin: 0 0 13px;
+
+  color: #f4dfb7;
+  font: 700 25px Georgia, serif;
+}
+
+#sfuPkResultText {
+  margin: 0 auto;
+  max-width: 290px;
+
+  color: #c4c0b9;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.sfu-pk-result-status {
+  margin: 22px 0;
+  padding: 12px;
+
+  border: 1px solid rgba(223,190,131,.16);
+  border-radius: 11px;
+
+  background: rgba(255,255,255,.035);
+  color: #e5c48d;
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+#sfuPkResultOK {
+  display: block;
+  width: 100%;
+  min-height: 49px;
+
+  border: none;
+  border-radius: 11px;
+
+  background: linear-gradient(
+    135deg,
+    #f4dfb7,
+    #d9b97d,
+    #b98c4d
+  );
+
+  color: #21180d;
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: .5px;
+}
+
+.sfu-pk-result-overlay.is-error
+.sfu-pk-result-icon {
+  border-color: rgba(255,105,115,.4);
+  background: rgba(255,105,115,.1);
+  color: #ff929a;
+}
+
+.sfu-pk-result-overlay.is-error
+.sfu-pk-result-status {
+  color: #ff9fa5;
+  border-color: rgba(255,105,115,.2);
+}
+
+@keyframes sfuPkResultIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px) scale(.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+
 </style>
 
 
@@ -5320,6 +5470,58 @@ body {
   </div>
 
 </div>
+
+
+
+<!-- ==========================================
+     SFU PK - RESULT MODAL
+========================================== -->
+
+<div
+  id="sfuPkResultOverlay"
+  class="sfu-pk-result-overlay hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="sfuPkResultTitle"
+>
+  <div class="sfu-pk-result-card">
+
+    <div
+      id="sfuPkResultIcon"
+      class="sfu-pk-result-icon"
+    >
+      ✓
+    </div>
+
+    <div class="sfu-pk-result-kicker">
+      LIVESTREAM PRO · PK BATTLE
+    </div>
+
+    <h2 id="sfuPkResultTitle">
+      INVITATION SENT
+    </h2>
+
+    <p id="sfuPkResultText">
+      Your PK invitation has been sent.
+    </p>
+
+    <div
+      id="sfuPkResultStatus"
+      class="sfu-pk-result-status"
+    >
+      Waiting for host response...
+    </div>
+
+    <button
+      id="sfuPkResultOK"
+      type="button"
+    >
+      OK, GOT IT
+    </button>
+
+  </div>
+</div>
+
 
 <!-- SFU PK - INVITE DIALOG -->
 <div id="sfuPkOverlay" class="sfu-pk-overlay hidden">
@@ -9162,6 +9364,59 @@ const pkRoomInput = $("sfuPkRoomInput");
 const pkConfirm = $("sfuPkConfirm");
 const pkCancel = $("sfuPkCancel");
 
+
+
+/* ==========================================
+   SFU PK - RESULT MODAL CONTROLLER
+========================================== */
+
+const pkResultOverlay = $("sfuPkResultOverlay");
+const pkResultTitle = $("sfuPkResultTitle");
+const pkResultText = $("sfuPkResultText");
+const pkResultStatus = $("sfuPkResultStatus");
+const pkResultIcon = $("sfuPkResultIcon");
+const pkResultOK = $("sfuPkResultOK");
+
+function showPkResultModal({
+  type = "success",
+  title = "NOTIFICATION",
+  message = "",
+  status = ""
+} = {}) {
+
+  pkResultTitle.textContent = title;
+  pkResultText.textContent = message;
+  pkResultStatus.textContent = status;
+
+  pkResultStatus.classList.toggle(
+    "hidden",
+    !status
+  );
+
+  pkResultOverlay.classList.toggle(
+    "is-error",
+    type === "error"
+  );
+
+  pkResultIcon.textContent =
+    type === "error" ? "!" :
+    type === "waiting" ? "…" : "✓";
+
+  pkResultOverlay.classList.remove("hidden");
+  pkResultOK.focus();
+}
+
+function closePkResultModal() {
+  pkResultOverlay.classList.add("hidden");
+}
+
+pkResultOK.addEventListener(
+  "click",
+  closePkResultModal
+);
+
+
+
 const pkBoard = $("sfuPkBoard");
 const pkPeer = $("sfuPkPeer");
 const pkPeerMedia = $("sfuPkPeerMedia");
@@ -9465,18 +9720,25 @@ pkConfirm.addEventListener("click", async () => {
   if (!isRematch && !isIncomingInvite) {
 
     if (!/^[0-9]{1,15}$/.test(targetRoomId)) {
-      showMessage(
-        "INVALID ROOM ID - Enter a valid numeric Room ID.",
-        "error"
-      );
+
+showPkResultModal({
+  type: "error",
+  title: "INVALID ROOM ID",
+  message: "Please enter a valid numeric Room ID.",
+  status: "Check the Room ID and try again."
+});
       return;
     }
 
     if (targetRoomId === String(roomId)) {
-      showMessage(
-        "You cannot challenge your own room.",
-        "error"
-      );
+
+showPkResultModal({
+  type: "error",
+  title: "INVALID CHALLENGE",
+  message: "You cannot challenge your own room.",
+  status: "Enter another host's Room ID."
+});
+
       return;
     }
   }
@@ -9520,17 +9782,27 @@ pkConfirm.addEventListener("click", async () => {
       );
     }
 
-    if (!response?.ok) {
 
-      const error = String(
-        response?.message ||
-        response?.error ||
-        "PK request failed."
-      );
+if (!response?.ok) {
 
-      showMessage(error, "error");
-      return;
-    }
+  const error = String(
+    response?.message ||
+    response?.error ||
+    "PK request failed."
+  );
+
+  pkCloseDialog();
+
+  showPkResultModal({
+    type: "error",
+    title: "INVITATION FAILED",
+    message: error,
+    status: "Please check the host Room ID and try again."
+  });
+
+  return;
+}
+
 
     pkInvite = null;
     pkRematchInvite = null;
@@ -9553,10 +9825,16 @@ pkConfirm.addEventListener("click", async () => {
 
     } else {
 
-      showMessage(
-        `PK INVITATION SENT - Room ${targetRoomId}. Waiting for host response (up to 60 seconds).`,
-        "success"
-      );
+
+showPkResultModal({
+  type: "waiting",
+  title: "INVITATION SENT",
+  message:
+    `Your PK invitation has been sent to Room ${targetRoomId}.`,
+  status:
+    "Waiting for the host to accept or decline your challenge."
+});
+
 
     }
 
@@ -9564,10 +9842,17 @@ pkConfirm.addEventListener("click", async () => {
 
     console.error("[PK INVITE]", error);
 
-    showMessage(
-      "PK REQUEST TIMEOUT - Unable to confirm delivery. Please check the connection.",
-      "error"
-    );
+
+pkCloseDialog();
+
+showPkResultModal({
+  type: "error",
+  title: "REQUEST FAILED",
+  message:
+    "Unable to confirm whether the PK invitation was delivered.",
+  status:
+    "Check your connection before trying again."
+});
 
   } finally {
 
@@ -9679,12 +9964,17 @@ socket.on("sfu:pk:invite", data => {
 });
 
 
+
 socket.on("sfu:pk:declined", () => {
 
-  showMessage(
-    "PK INVITATION DECLINED - The host rejected your challenge.",
-    "error"
-  );
+  showPkResultModal({
+    type: "error",
+    title: "INVITATION DECLINED",
+    message:
+      "The host has declined your PK challenge.",
+    status:
+      "You can invite another host."
+  });
 
 });
 
@@ -9696,10 +9986,16 @@ socket.on("sfu:pk:cancelled", () => {
     pkCloseDialog();
   }
 
-  showMessage(
-    "PK INVITATION EXPIRED OR CANCELLED - The host may be offline or unavailable.",
-    "error"
-  );
+
+showPkResultModal({
+  type: "error",
+  title: "INVITATION CANCELLED",
+  message:
+    "The PK invitation has expired or was cancelled.",
+  status:
+    "The other host may be unavailable."
+});
+
 
 });
 
@@ -9959,16 +10255,27 @@ pkRematchBtn.classList.add("hidden");
 }
 
 
+
 socket.on("sfu:pk:started", async (state) => {
 
-  showMessage(
-    "PK BATTLE STARTED - Both hosts are connected.",
-    "success"
-  );
+  closePkResultModal();
 
-  await pkBegin(state);
+  try {
+    await pkBegin(state);
+  } catch (error) {
+    console.error("[PK START]", error);
 
+    showPkResultModal({
+      type: "error",
+      title: "PK CONNECTION FAILED",
+      message:
+        "The PK battle was accepted, but the video connection could not be completed.",
+      status:
+        "Please check your connection."
+    });
+  }
 });
+
 
 
 
