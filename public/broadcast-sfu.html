@@ -5798,6 +5798,66 @@ body.sfu-role-host
 
 
 
+/* ==========================================
+   SFU - BEAUTY FILTER UI
+========================================== */
+
+/* Four camera control buttons */
+.studio-control-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.sfu-beauty-panel {
+  margin: 12px 0 5px;
+  padding: 15px;
+  border: 1px solid rgba(223,190,131,.3);
+  border-radius: 16px;
+  background: #1c2028;
+}
+
+.sfu-beauty-heading {
+  color: #f4dfb7;
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 1px;
+  margin-bottom: 7px;
+}
+
+.sfu-beauty-hint {
+  margin: 0 0 13px;
+  color: #aeb1b9;
+  font-size: 11px;
+}
+
+.sfu-beauty-presets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.sfu-beauty-preset {
+  min-height: 46px;
+  padding: 9px 5px;
+  border: 1px solid rgba(223,190,131,.22);
+  border-radius: 11px;
+  background: #292c34;
+  color: #e1d7c7;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.sfu-beauty-preset.active {
+  border-color: #e9c48a;
+  background: #4b3b28;
+  color: #ffe1ac;
+}
+
+.sfu-beauty-preset:disabled {
+  opacity: .5;
+}
+
+
+
 </style>
 
 
@@ -6761,6 +6821,9 @@ body.sfu-role-host
 
 
 
+
+
+
 <!-- FLIP FRONT / BACK CAMERA -->
 <button
   type="button"
@@ -6805,7 +6868,84 @@ body.sfu-role-host
           <span>MICROPHONE ON</span>
         </button>
 
+
+
+<!-- BEAUTY FILTER BUTTON -->
+<button
+  type="button"
+  class="control"
+  id="sfuBeautyToggle"
+  aria-controls="sfuBeautyPanel"
+  aria-expanded="false">
+
+  <svg
+    class="studio-icon"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round">
+
+    <path d="m12 3 1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7L12 3Z"/>
+    <path d="m19 17 .7 1.3L21 19l-1.3.7L19 21l-.7-1.3L17 19l1.3-.7L19 17Z"/>
+
+  </svg>
+
+  <span id="sfuBeautyButtonText">
+    BEAUTY: OFF
+  </span>
+
+</button>
+
+
+
       </div>
+
+
+<!-- BEAUTY FILTER PANEL -->
+<div
+  id="sfuBeautyPanel"
+  class="sfu-beauty-panel hidden">
+
+  <div class="sfu-beauty-heading">
+    BEAUTY FILTER
+  </div>
+
+  <p class="sfu-beauty-hint">
+    Enhance your live camera appearance.
+  </p>
+
+  <div class="sfu-beauty-presets">
+
+    <button class="sfu-beauty-preset active"
+            type="button"
+            data-beauty="off">OFF</button>
+
+    <button class="sfu-beauty-preset"
+            type="button"
+            data-beauty="natural">NATURAL</button>
+
+    <button class="sfu-beauty-preset"
+            type="button"
+            data-beauty="bright">BRIGHT</button>
+
+    <button class="sfu-beauty-preset"
+            type="button"
+            data-beauty="warm">WARM</button>
+
+    <button class="sfu-beauty-preset"
+            type="button"
+            data-beauty="soft">SOFT</button>
+
+    <button class="sfu-beauty-preset"
+            type="button"
+            data-beauty="studio">STUDIO</button>
+
+  </div>
+
+</div>
+
 
       <div class="studio-control-bottom">
 
@@ -9284,6 +9424,462 @@ setInterval(async () => {
 
 
 
+
+/* ==========================================
+   SFU - BEAUTY FILTER ENGINE
+   Apply filters to outgoing LiveKit video
+========================================== */
+
+const SFU_BEAUTY_PRESETS = {
+
+  off: {
+    filter: "none",
+    overlay: null,
+    soft: 0
+  },
+
+  natural: {
+    filter:
+      "brightness(1.035) contrast(1.015) saturate(1.075)",
+    overlay: null,
+    soft: 0
+  },
+
+  bright: {
+    filter:
+      "brightness(1.095) contrast(1.015) saturate(1.055)",
+    overlay: null,
+    soft: 0
+  },
+
+  warm: {
+    filter:
+      "brightness(1.045) contrast(1.02) saturate(1.10)",
+    overlay: "rgba(255,181,115,.065)",
+    soft: 0
+  },
+
+  soft: {
+    filter:
+      "brightness(1.055) contrast(.99) saturate(1.065)",
+    overlay: null,
+    soft: .12
+  },
+
+  studio: {
+    filter:
+      "brightness(1.045) contrast(1.075) saturate(1.12)",
+    overlay: null,
+    soft: 0
+  }
+
+};
+
+let sfuBeautyMode = "off";
+let sfuBeautyBusy = false;
+
+
+/* ==========================================
+   LIVEKIT VIDEO PROCESSOR
+========================================== */
+
+class SfuBeautyVideoProcessor {
+
+  constructor(mode) {
+
+    this.name = "livestreampro-beauty";
+    this.mode = mode;
+
+    this.processedTrack = undefined;
+
+    this.video = null;
+    this.canvas = null;
+    this.ctx = null;
+    this.stream = null;
+
+    this.raf = 0;
+    this.lastDraw = 0;
+    this.destroyed = false;
+
+  }
+
+  async init(options) {
+
+    this.destroyed = false;
+
+    const video = document.createElement("video");
+
+    video.autoplay = true;
+    video.muted = true;
+    video.playsInline = true;
+
+    video.setAttribute("playsinline", "");
+
+    this.video = video;
+
+    const settings = options.track.getSettings?.() || {};
+
+    const canvas = document.createElement("canvas");
+
+    canvas.width = settings.width || 1280;
+    canvas.height = settings.height || 720;
+
+    if (typeof canvas.captureStream !== "function") {
+      throw new Error("Canvas capture is unsupported.");
+    }
+
+    this.canvas = canvas;
+
+    this.ctx = canvas.getContext("2d", {
+      alpha: false
+    });
+
+    if (!this.ctx) {
+      throw new Error("Cannot initialize beauty canvas.");
+    }
+
+    await this.restart(options);
+
+    if (this.destroyed) return;
+
+    // Canvas output is sent to LiveKit
+    this.stream = canvas.captureStream(30);
+
+    this.processedTrack =
+      this.stream.getVideoTracks()[0];
+
+    if (!this.processedTrack) {
+      throw new Error("Cannot create filtered track.");
+    }
+
+    const draw = timestamp => {
+
+      if (this.destroyed) return;
+
+      if (timestamp - this.lastDraw >= 1000 / 30) {
+
+        this.lastDraw = timestamp;
+
+        const v = this.video;
+        const c = this.canvas;
+        const ctx = this.ctx;
+
+        if (
+          v &&
+          c &&
+          ctx &&
+          v.readyState >= 2 &&
+          v.videoWidth > 0
+        ) {
+
+          if (
+            c.width !== v.videoWidth ||
+            c.height !== v.videoHeight
+          ) {
+            c.width = v.videoWidth;
+            c.height = v.videoHeight;
+          }
+
+          const preset =
+            SFU_BEAUTY_PRESETS[this.mode] ||
+            SFU_BEAUTY_PRESETS.natural;
+
+          ctx.globalAlpha = 1;
+
+          ctx.filter = preset.filter;
+
+          ctx.drawImage(
+            v,
+            0,
+            0,
+            c.width,
+            c.height
+          );
+
+          ctx.filter = "none";
+
+          // Gentle full-frame softening
+          if (preset.soft > 0) {
+
+            ctx.globalAlpha = preset.soft;
+            ctx.filter = "blur(1.5px)";
+
+            ctx.drawImage(
+              v,
+              0,
+              0,
+              c.width,
+              c.height
+            );
+
+            ctx.filter = "none";
+            ctx.globalAlpha = 1;
+
+          }
+
+          // Warm color overlay
+          if (preset.overlay) {
+
+            ctx.fillStyle = preset.overlay;
+
+            ctx.fillRect(
+              0,
+              0,
+              c.width,
+              c.height
+            );
+
+          }
+
+        }
+
+      }
+
+      this.raf = requestAnimationFrame(draw);
+
+    };
+
+    this.raf = requestAnimationFrame(draw);
+
+  }
+
+  async restart(options) {
+
+    if (!this.video) return;
+
+    this.video.srcObject =
+      new MediaStream([options.track]);
+
+    try {
+
+      await this.video.play();
+
+    } catch (error) {
+
+      console.warn(
+        "[SFU BEAUTY] Video playback:",
+        error
+      );
+
+    }
+
+  }
+
+  async destroy() {
+
+    this.destroyed = true;
+
+    cancelAnimationFrame(this.raf);
+
+    if (this.video) {
+      this.video.pause();
+      this.video.srcObject = null;
+    }
+
+    this.stream
+      ?.getTracks()
+      .forEach(track => track.stop());
+
+    this.processedTrack = undefined;
+
+    this.video = null;
+    this.canvas = null;
+    this.ctx = null;
+    this.stream = null;
+
+  }
+
+}
+
+
+/* ==========================================
+   BEAUTY UI STATE
+========================================== */
+
+function syncSfuBeautyUI() {
+
+  const label =
+    document.getElementById("sfuBeautyButtonText");
+
+  if (label) {
+
+    label.textContent =
+      "BEAUTY: " + sfuBeautyMode.toUpperCase();
+
+  }
+
+  document.querySelectorAll("[data-beauty]")
+    .forEach(button => {
+
+      button.classList.toggle(
+        "active",
+        button.dataset.beauty === sfuBeautyMode
+      );
+
+      button.disabled = sfuBeautyBusy;
+
+    });
+
+}
+
+
+/* ==========================================
+   APPLY BEAUTY TO LIVEKIT CAMERA
+========================================== */
+
+async function applySfuBeautyFilter() {
+
+  if (
+    isViewer ||
+    !lkRoom ||
+    !cameraOn
+  ) return;
+
+  const publication =
+    lkRoom.localParticipant
+      .getTrackPublication(Track.Source.Camera);
+
+  const track = publication?.videoTrack;
+
+  if (!track) return;
+
+  const existing = track.getProcessor?.();
+
+  // Original camera
+  if (sfuBeautyMode === "off") {
+
+    if (
+      existing?.name === "livestreampro-beauty"
+    ) {
+
+      await track.stopProcessor();
+
+      attachLocalCamera();
+
+    }
+
+    return;
+
+  }
+
+  // Switch preset without re-creating the track
+  if (
+    existing?.name === "livestreampro-beauty"
+  ) {
+
+    existing.mode = sfuBeautyMode;
+
+    return;
+
+  }
+
+  const processor =
+    new SfuBeautyVideoProcessor(sfuBeautyMode);
+
+  try {
+
+    await track.setProcessor(processor, true);
+
+    attachLocalCamera();
+
+  } catch (error) {
+
+    console.warn(
+      "[SFU BEAUTY] Filter unavailable:",
+      error
+    );
+
+    try {
+      await track.stopProcessor();
+    } catch {}
+
+    sfuBeautyMode = "off";
+
+    syncSfuBeautyUI();
+
+    showMessage(
+      "Beauty filter unavailable. Original camera restored."
+    );
+
+  }
+
+}
+
+
+/* ==========================================
+   BEAUTY BUTTON EVENTS
+========================================== */
+
+if (!isViewer) {
+
+  const beautyToggle =
+    document.getElementById("sfuBeautyToggle");
+
+  const beautyPanel =
+    document.getElementById("sfuBeautyPanel");
+
+  beautyToggle?.addEventListener("click", () => {
+
+    const opened =
+      beautyPanel.classList.toggle("hidden") === false;
+
+    beautyToggle.setAttribute(
+      "aria-expanded",
+      String(opened)
+    );
+
+  });
+
+  beautyPanel?.addEventListener(
+    "click",
+    async event => {
+
+      const button =
+        event.target.closest("[data-beauty]");
+
+      if (!button || sfuBeautyBusy) return;
+
+      const nextMode = button.dataset.beauty;
+
+      if (!(nextMode in SFU_BEAUTY_PRESETS)) return;
+
+      sfuBeautyBusy = true;
+
+      const previousMode = sfuBeautyMode;
+      sfuBeautyMode = nextMode;
+
+      syncSfuBeautyUI();
+
+      try {
+
+        await applySfuBeautyFilter();
+
+      } catch (error) {
+
+        console.warn("[SFU BEAUTY]", error);
+
+        sfuBeautyMode = previousMode;
+
+        showMessage("Unable to apply beauty filter.");
+
+      } finally {
+
+        sfuBeautyBusy = false;
+
+        syncSfuBeautyUI();
+
+      }
+
+    }
+  );
+
+  syncSfuBeautyUI();
+
+}
+
+
+
+
 function attachLocalCamera() {
   const pub = lkRoom?.localParticipant
     .getTrackPublication(Track.Source.Camera);
@@ -9717,10 +10313,17 @@ async function recoverHostConnection() {
       await lkRoom.localParticipant
         .setMicrophoneEnabled(micOn);
 
-      if (cameraOn) {
-        attachLocalCamera();
-        updateCameraMirror();
-      }
+ 
+if (cameraOn) {
+
+  await applySfuBeautyFilter();
+
+  attachLocalCamera();
+
+  updateCameraMirror();
+
+}
+
     }
 
     if (!socket.connected || !hostLiveKitOK()) {
@@ -9902,14 +10505,22 @@ async function startLive() {
     await joinSignalingRoom();
     await connectSFU();
 
-    await lkRoom.localParticipant.setCameraEnabled(true);
-    await lkRoom.localParticipant.setMicrophoneEnabled(true);
 
-    attachLocalCamera();
+await lkRoom.localParticipant.setCameraEnabled(true);
+await lkRoom.localParticipant.setMicrophoneEnabled(true);
 
-    started = true;
-    cameraOn = true;
-    micOn = true;
+started = true;
+cameraOn = true;
+micOn = true;
+
+// Apply selected beauty preset
+await applySfuBeautyFilter();
+
+// Show filtered local camera
+attachLocalCamera();
+
+
+
 voiceUI.toggle.classList.remove("hidden");
 syncSfuVoice();
 pkStartBtn.disabled = false;
@@ -10013,12 +10624,24 @@ setStudioButtonText(
 
     $("cameraBtn").classList.toggle("active", !cameraOn);
 
-    if (cameraOn) {
-      attachLocalCamera();
-    } else {
-      $("localVideo").classList.add("hidden");
-      setPlaceholder(true, "Camera is disabled");
-    }
+
+if (cameraOn) {
+
+  await applySfuBeautyFilter();
+
+  attachLocalCamera();
+
+} else {
+
+  $("localVideo").classList.add("hidden");
+
+  setPlaceholder(
+    true,
+    "Camera is disabled"
+  );
+
+}
+
 
   } catch (error) {
     showMessage(error.message);
