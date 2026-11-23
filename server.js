@@ -7877,6 +7877,123 @@ emitCoinUpdate(uid);    // 🔁 realtime coin
    ADMIN - DIAMOND TRANSFER APPROVAL
 ========================================== */
 
+
+
+/* ==========================================
+   DIAMOND TRANSFER - AUTO APPROVAL SETTINGS
+========================================== */
+
+const TRANSFER_AUTO_FILE = path.join(
+  "/opt/render/project/data",
+  "transfer_auto_settings.json"
+);
+
+const TRANSFER_AUTO_DELAY = 60 * 1000;
+
+function loadTransferAutoSettings() {
+  try {
+    if (!fs.existsSync(TRANSFER_AUTO_FILE)) {
+      return { enabled: false };
+    }
+
+    const data = JSON.parse(
+      fs.readFileSync(TRANSFER_AUTO_FILE, "utf8")
+    );
+
+    return {
+      enabled: data.enabled === true
+    };
+  } catch (err) {
+    console.error("[TRANSFER AUTO LOAD]", err);
+    return { enabled: false };
+  }
+}
+
+let transferAutoSettings = loadTransferAutoSettings();
+
+function saveTransferAutoSettings(settings) {
+  const tempFile = TRANSFER_AUTO_FILE + ".tmp";
+
+  fs.writeFileSync(
+    tempFile,
+    JSON.stringify(settings, null, 2)
+  );
+
+  fs.renameSync(tempFile, TRANSFER_AUTO_FILE);
+}
+
+/* ==========================================
+   ADMIN - READ AUTO APPROVAL CONFIG
+========================================== */
+
+app.get("/api/admin/transfer-auto", (req, res) => {
+  if (!req.lspAdminActorUid) {
+    return res.status(403).json({
+      ok: false,
+      error: "NOT_ADMIN"
+    });
+  }
+
+  res.set("Cache-Control", "no-store");
+
+  res.json({
+    ok: true,
+    enabled: transferAutoSettings.enabled,
+    delaySeconds: 60
+  });
+});
+
+/* ==========================================
+   ADMIN - UPDATE AUTO APPROVAL CONFIG
+========================================== */
+
+app.post("/api/admin/transfer-auto", (req, res) => {
+  if (!req.lspAdminActorUid) {
+    return res.status(403).json({
+      ok: false,
+      error: "NOT_ADMIN"
+    });
+  }
+
+  const enabled = req.body?.enabled;
+
+  if (typeof enabled !== "boolean") {
+    return res.status(400).json({
+      ok: false,
+      error: "INVALID_SETTING"
+    });
+  }
+
+  const nextSettings = { enabled };
+
+  try {
+    saveTransferAutoSettings(nextSettings);
+  } catch (err) {
+    console.error("[TRANSFER AUTO SAVE]", err);
+
+    return res.status(500).json({
+      ok: false,
+      error: "SAVE_FAILED"
+    });
+  }
+
+  transferAutoSettings = nextSettings;
+
+  io.emit("diamond-transfer-auto-update", {
+    enabled,
+    delaySeconds: 60,
+    ts: Date.now()
+  });
+
+  res.json({
+    ok: true,
+    enabled,
+    delaySeconds: 60
+  });
+});
+
+
+
 // Lấy danh sách yêu cầu chuyển
 app.get("/api/admin/transfer-requests", (req, res) => {
 
@@ -7912,8 +8029,8 @@ app.get("/api/admin/transfer-requests", (req, res) => {
 });
 
 
-// Admin duyệt / từ chối
-app.post("/api/admin/transfer-action", (req, res) => {
+// Shared handler: manual approval and automatic approval
+function handleDiamondTransferAction(req, res) {
 
   const adminUid = req.lspAdminActorUid;
 
@@ -8123,11 +8240,138 @@ recipient.transferHistory =
     });
   }
 
-  res.json({
+  return res.json({
     ok: true,
     status: request.status
   });
-});
+}
+
+app.post(
+  "/api/admin/transfer-action",
+  handleDiamondTransferAction
+);
+
+
+/* ==========================================
+   DIAMOND TRANSFER - AUTO APPROVAL ENGINE
+========================================== */
+
+let transferAutoProcessing = false;
+
+function runTransferAutoApproval() {
+  if (!transferAutoSettings.enabled) return;
+  if (transferAutoProcessing) return;
+
+  transferAutoProcessing = true;
+
+  try {
+    const users = loadUsers();
+    const now = Date.now();
+    const expired = [];
+
+    // Find pending requests older than 60 seconds
+    for (const user of Object.values(users)) {
+      if (!Array.isArray(user?.transferRequests)) {
+        continue;
+      }
+
+      for (const request of user.transferRequests) {
+        if (request.status !== "pending") continue;
+
+        const createdAt = Number(request.createdAt);
+
+        if (
+          !Number.isFinite(createdAt) ||
+          createdAt <= 0 ||
+          createdAt > now
+        ) {
+          continue;
+        }
+
+        if (
+          now - createdAt >= TRANSFER_AUTO_DELAY &&
+          typeof request.id === "string"
+        ) {
+          expired.push({
+            id: request.id,
+            createdAt
+          });
+        }
+      }
+    }
+
+    // Process oldest requests first
+    expired.sort(
+      (a, b) => a.createdAt - b.createdAt
+    );
+
+    for (const item of expired) {
+      if (!transferAutoSettings.enabled) break;
+
+      let result = null;
+      let statusCode = 200;
+
+      const internalResponse = {
+        status(code) {
+          statusCode = code;
+          return this;
+        },
+
+        json(data) {
+          result = data;
+          return this;
+        }
+      };
+
+      try {
+        handleDiamondTransferAction(
+          {
+            lspAdminActorUid: "SYSTEM_AUTO",
+            body: {
+              id: item.id,
+              action: "approve"
+            }
+          },
+          internalResponse
+        );
+
+        if (result?.ok && result.status === "approved") {
+          console.log(
+            "[TRANSFER AUTO APPROVED]",
+            item.id
+          );
+        } else if (
+          statusCode !== 409 &&
+          statusCode !== 404
+        ) {
+          console.warn(
+            "[TRANSFER AUTO FAILED]",
+            item.id,
+            result?.error || statusCode
+          );
+        }
+      } catch (err) {
+        console.error(
+          "[TRANSFER AUTO ERROR]",
+          item.id,
+          err
+        );
+      }
+    }
+  } catch (err) {
+    console.error("[TRANSFER AUTO SCAN]", err);
+  } finally {
+    transferAutoProcessing = false;
+  }
+}
+
+// Check every 5 seconds.
+// Each request becomes eligible after 60 seconds.
+setInterval(runTransferAutoApproval, 5000);
+
+// Recover overdue pending requests after restart.
+setTimeout(runTransferAutoApproval, 5000);
+
 
 
 

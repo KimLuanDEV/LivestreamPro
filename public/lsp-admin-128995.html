@@ -2647,6 +2647,180 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
 
 
 
+/* ==========================================
+   ADMIN - AUTO TRANSFER APPROVAL
+========================================== */
+
+.transfer-auto-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+
+  margin: 16px 0 8px;
+  padding: 17px;
+
+  background: linear-gradient(
+    135deg,
+    #22201d,
+    #121315
+  );
+
+  border: 1px solid rgba(225,188,126,.28);
+  border-radius: 14px;
+}
+
+.transfer-auto-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.transfer-auto-icon {
+  flex: 0 0 42px;
+
+  display: grid;
+  place-items: center;
+
+  height: 42px;
+  border-radius: 12px;
+
+  background: rgba(225,188,126,.1);
+  border: 1px solid rgba(225,188,126,.2);
+
+  color: #e1bc7e;
+  font-size: 23px;
+}
+
+.transfer-auto-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.transfer-auto-copy strong {
+  color: #efd3a1;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .8px;
+}
+
+.transfer-auto-copy span {
+  color: #a99b86;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* Toggle switch */
+
+.transfer-auto-switch {
+  position: relative;
+  flex: 0 0 52px;
+  width: 52px;
+  height: 29px;
+  cursor: pointer;
+}
+
+.transfer-auto-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.transfer-auto-slider {
+  position: absolute;
+  inset: 0;
+
+  border-radius: 30px;
+  background: #33343b;
+  border: 1px solid #52515a;
+
+  transition: .25s;
+}
+
+.transfer-auto-slider::before {
+  content: "";
+  position: absolute;
+
+  width: 21px;
+  height: 21px;
+  left: 3px;
+  top: 3px;
+
+  border-radius: 50%;
+  background: #a5a5aa;
+
+  transition: .25s;
+}
+
+.transfer-auto-switch input:checked
++ .transfer-auto-slider {
+  background: linear-gradient(
+    135deg,
+    #edcf94,
+    #b88b4d
+  );
+  border-color: #f1d5a2;
+}
+
+.transfer-auto-switch input:checked
++ .transfer-auto-slider::before {
+  transform: translateX(23px);
+  background: #20170c;
+}
+
+.transfer-auto-switch input:disabled
++ .transfer-auto-slider {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.transfer-auto-switch input:focus-visible
++ .transfer-auto-slider {
+  outline: 2px solid #fff1d1;
+  outline-offset: 3px;
+}
+
+.transfer-auto-status {
+  margin: 0 0 16px;
+  padding: 0 5px;
+
+  color: #a99b86;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.transfer-auto-status.enabled {
+  color: #69d5a2;
+}
+
+.transfer-auto-status.error {
+  color: #ff9292;
+}
+
+@media (max-width: 480px) {
+  .transfer-auto-control {
+    padding: 13px 11px;
+    gap: 9px;
+  }
+
+  .transfer-auto-icon {
+    flex-basis: 36px;
+    height: 36px;
+  }
+
+  .transfer-auto-copy strong {
+    font-size: 11px;
+  }
+
+  .transfer-auto-copy span {
+    font-size: 10px;
+  }
+}
+
 
 
   </style>
@@ -3044,6 +3218,52 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
         class="transfer-pending-count">0 Pending</span>
     </div>
 
+
+
+<!-- ==========================================
+     TRANSFER AUTO APPROVAL CONTROL
+========================================== -->
+
+<div class="transfer-auto-control">
+
+  <div class="transfer-auto-info">
+
+    <div class="transfer-auto-icon">
+      &#9201;
+    </div>
+
+    <div class="transfer-auto-copy">
+      <strong>AUTO APPROVAL</strong>
+
+      <span id="transferAutoDescription">
+        Automatically approve after 60 seconds
+      </span>
+    </div>
+
+  </div>
+
+  <label class="transfer-auto-switch">
+
+    <input
+      type="checkbox"
+      id="transferAutoToggle"
+      disabled
+    >
+
+    <span class="transfer-auto-slider"></span>
+
+  </label>
+
+</div>
+
+<div
+  id="transferAutoStatus"
+  class="transfer-auto-status">
+  Loading auto approval settings...
+</div>
+
+
+
     <div class="transfer-admin-filters">
       <button class="active"
               data-transfer-filter="pending">
@@ -3249,6 +3469,150 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
   };
 
   checkSession();
+})();
+</script>
+
+
+
+<script>
+/* ==========================================
+   ADMIN TRANSFER - AUTO APPROVAL UI
+========================================== */
+
+(() => {
+  const toggle = document.getElementById(
+    "transferAutoToggle"
+  );
+
+  const status = document.getElementById(
+    "transferAutoStatus"
+  );
+
+  const description = document.getElementById(
+    "transferAutoDescription"
+  );
+
+  if (!toggle || !status || !description) return;
+
+  let saving = false;
+  let ready = false;
+
+  function renderAutoState(enabled) {
+    toggle.checked = enabled;
+
+    description.textContent = enabled
+      ? "Pending transfers auto-approve after 60 seconds"
+      : "Manual approval only";
+
+    status.textContent = enabled
+      ? "AUTO APPROVAL ENABLED · 60 SECONDS"
+      : "AUTO APPROVAL DISABLED";
+
+    status.classList.toggle("enabled", enabled);
+    status.classList.remove("error");
+  }
+
+  async function loadAutoSettings() {
+    if (saving) return;
+
+    try {
+      const response = await fetch(
+        "/api/admin/transfer-auto",
+        {
+          credentials: "same-origin",
+          cache: "no-store"
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Session unavailable");
+      }
+
+      const data = await response.json();
+
+      if (!data.ok) {
+        throw new Error("Unable to load settings");
+      }
+
+      ready = true;
+      renderAutoState(data.enabled === true);
+      toggle.disabled = false;
+
+    } catch (err) {
+      ready = false;
+      toggle.disabled = true;
+
+      status.textContent =
+        "Unable to load auto approval settings";
+
+      status.classList.remove("enabled");
+      status.classList.add("error");
+    }
+  }
+
+  toggle.addEventListener("change", async () => {
+    if (!ready || saving) return;
+
+    const enabled = toggle.checked;
+    const previous = !enabled;
+
+    saving = true;
+    toggle.disabled = true;
+
+    status.textContent = "Saving settings...";
+
+    try {
+      const response = await fetch(
+        "/api/admin/transfer-auto",
+        {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ enabled })
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        throw new Error(
+          data.error || "Unable to save settings"
+        );
+      }
+
+      renderAutoState(data.enabled === true);
+
+    } catch (err) {
+      renderAutoState(previous);
+
+      status.textContent =
+        "Failed to update auto approval. Please retry.";
+
+      status.classList.remove("enabled");
+      status.classList.add("error");
+
+    } finally {
+      saving = false;
+      toggle.disabled = !ready;
+    }
+  });
+
+  // Reload after login or when returning to the tab
+  document.addEventListener(
+    "visibilitychange",
+    () => {
+      if (!document.hidden) loadAutoSettings();
+    }
+  );
+
+  // Keep multiple admin tabs synchronized
+  setInterval(() => {
+    if (!document.hidden) loadAutoSettings();
+  }, 15000);
+
+  loadAutoSettings();
 })();
 </script>
 
