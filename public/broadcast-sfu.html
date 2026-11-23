@@ -5858,6 +5858,52 @@ body.sfu-role-host
 
 
 
+/* ==========================================
+   SFU - AUDIO UNLOCK FALLBACK
+========================================== */
+
+.sfu-audio-unlock {
+  position: fixed;
+  z-index: 16;
+
+  left: 50%;
+  top: 50%;
+
+  transform: translate(-50%, -50%);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  width: max-content;
+  max-width: calc(100vw - 40px);
+  min-height: 52px;
+
+  padding: 12px 18px;
+
+  border: 1px solid #e9c48a;
+  border-radius: 14px;
+
+  background: rgba(24, 22, 19, .93);
+  color: #f5dfb3;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  box-shadow: 0 8px 35px rgba(0,0,0,.5);
+  backdrop-filter: blur(12px);
+
+  cursor: pointer;
+}
+
+.sfu-audio-unlock.hidden {
+  display: none !important;
+}
+
+
+
+
 </style>
 
 
@@ -5926,6 +5972,34 @@ body.sfu-role-host
   </video>
 
   <div id="remoteMedia" class="hidden"></div>
+
+
+<!-- AUDIO AUTOPLAY FALLBACK -->
+<button
+  type="button"
+  id="sfuAudioUnlock"
+  class="sfu-audio-unlock hidden">
+
+  <svg
+    viewBox="0 0 24 24"
+    width="21"
+    height="21"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round">
+
+    <path d="M11 5 6 9H3v6h3l5 4V5Z"/>
+    <path d="M15 9a5 5 0 0 1 0 6"/>
+    <path d="M18 6a9 9 0 0 1 0 12"/>
+
+  </svg>
+
+  <span>TAP TO ENABLE SOUND</span>
+
+</button>
+
 
   <!-- Giữ ID để JavaScript hoạt động -->
   <div id="placeholder" class="placeholder">
@@ -6971,16 +7045,6 @@ body.sfu-role-host
       class="controls hidden"
       id="viewerControls">
 
-      <button
-        class="control primary"
-        id="soundBtn">
-
-        <svg class="studio-icon">
-          <use href="#ico-audio"></use>
-        </svg>
-
-        <span>ENABLE AUDIO</span>
-      </button>
 
       <button
         class="control back"
@@ -9263,10 +9327,23 @@ $("remoteMedia").classList.remove("hidden");
 setPlaceholder(false);
 
 
-  } else {
-    element.style.display = "none";
-    $("remoteMedia").appendChild(element);
+
+} else {
+
+  element.style.display = "none";
+
+  element.autoplay = true;
+  element.muted = false;
+
+  $("remoteMedia").appendChild(element);
+
+  // A new audio track may arrive after joining.
+  if (isViewer) {
+    void enableViewerAudioAutomatically();
   }
+
+}
+
 }
 
 
@@ -9986,6 +10063,29 @@ publishDefaults: {
 
 }
 });
+
+
+
+
+/* ==========================================
+   SFU - AUDIO PLAYBACK STATUS
+========================================== */
+
+lkRoom.on(
+  RoomEvent.AudioPlaybackStatusChanged,
+  () => {
+
+    if (!isViewer) return;
+
+    if (lkRoom.canPlaybackAudio) {
+      hideViewerAudioUnlock();
+    } else {
+      showViewerAudioUnlock();
+    }
+
+  }
+);
+
 
 
  lkRoom.on(
@@ -10830,6 +10930,119 @@ async function stopLive() {
 }
 
 
+
+/* ==========================================
+   SFU - VIEWER AUTO AUDIO V1
+========================================== */
+
+let sfuAudioUnlockBusy = false;
+
+async function enableViewerAudioAutomatically() {
+
+  if (!isViewer || !lkRoom) return false;
+
+  if (sfuAudioUnlockBusy) return false;
+
+  sfuAudioUnlockBusy = true;
+
+  try {
+
+    // Enable LiveKit audio playback.
+    await lkRoom.startAudio();
+
+    // Unmute and play received audio elements.
+    const audioElements =
+      document.querySelectorAll(
+        "#remoteMedia audio"
+      );
+
+    for (const audio of audioElements) {
+
+      audio.muted = false;
+      audio.volume = 1;
+      audio.autoplay = true;
+
+      await audio.play().catch(error => {
+        console.warn(
+          "[SFU AUTO AUDIO] Element playback:",
+          error
+        );
+      });
+
+    }
+
+    const allowed =
+      lkRoom.canPlaybackAudio !== false;
+
+    if (allowed) {
+      hideViewerAudioUnlock();
+    } else {
+      showViewerAudioUnlock();
+    }
+
+    return allowed;
+
+  } catch (error) {
+
+    console.warn(
+      "[SFU AUTO AUDIO]",
+      error
+    );
+
+    showViewerAudioUnlock();
+
+    return false;
+
+  } finally {
+
+    sfuAudioUnlockBusy = false;
+
+  }
+
+}
+
+
+/* ==========================================
+   FALLBACK WHEN BROWSER BLOCKS AUTOPLAY
+========================================== */
+
+function showViewerAudioUnlock() {
+
+  if (!isViewer) return;
+
+  const button =
+    document.getElementById(
+      "sfuAudioUnlock"
+    );
+
+  button?.classList.remove("hidden");
+
+}
+
+function hideViewerAudioUnlock() {
+
+  document.getElementById(
+    "sfuAudioUnlock"
+  )?.classList.add("hidden");
+
+}
+
+
+/* ==========================================
+   UNLOCK AUDIO WITH USER GESTURE
+========================================== */
+
+document.getElementById(
+  "sfuAudioUnlock"
+)?.addEventListener("click", async () => {
+
+  await enableViewerAudioAutomatically();
+
+});
+
+
+
+
 async function joinAsViewer() {
   if (!isViewer || viewerConnecting || viewerConnected) {
     return;
@@ -10853,8 +11066,13 @@ async function joinAsViewer() {
     }
 
 
+
 viewerConnected = true;
 viewerHadSession = true;
+
+// Automatically enable received audio.
+void enableViewerAudioAutomatically();
+
 
 // Restore the voice UI.
 voiceUI.toggle.classList.remove("hidden");
@@ -11296,15 +11514,7 @@ $("backBtn").onclick = () => {
   else goLobby();
 };
 
-$("soundBtn").onclick = async () => {
-  try {
-    await lkRoom?.startAudio();
-    setStudioButtonText("soundBtn", "AUDIO ENABLED");
-    showMessage("Audio playback enabled.");
-  } catch (error) {
-    showMessage(error.message);
-  }
-};
+
 
 $("viewerExitBtn").onclick = exitViewer;
 
