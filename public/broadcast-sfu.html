@@ -6023,6 +6023,37 @@ body.sfu-role-host
 }
 
 
+/* ROCKET - HOST & VIEWER OVERLAY */
+
+#sfuRocketEffect {
+  position: fixed !important;
+  inset: 0 !important;
+
+  z-index: 99990 !important;
+
+  width: 100vw !important;
+  height: 100dvh !important;
+
+  overflow: hidden;
+  pointer-events: none !important;
+}
+
+#sfuRocketEffect.hidden {
+  display: none !important;
+}
+
+#sfuRocketVideo {
+  position: absolute !important;
+  inset: 0 !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  object-fit: contain !important;
+  background: transparent !important;
+}
+
+
 
 </style>
 
@@ -8385,79 +8416,97 @@ function stopRocketEffect() {
   playNextRocket();
 }
 
-function playNextRocket() {
 
-  if (rocketPlaying) return;
-  if (!rocketQueue.length) return;
+
+function playNextRocket() {
+  if (rocketPlaying || !rocketQueue.length) return;
 
   const gift = rocketQueue.shift();
-
   rocketPlaying = true;
 
   rocketSender.textContent = gift.donor;
-
   rocketQuantity.textContent =
     `🚀 ROCKET ×${gift.quantity}`;
 
   rocketEffect.classList.remove("hidden");
 
+  const sources = [
+    "/assets/live-gifts/rocket-effect.webm"
+  ];
+
+  let sourceIndex = 0;
   let finished = false;
   let fallbackTimer = null;
 
+  function cleanup() {
+    clearTimeout(fallbackTimer);
+    rocketVideo.removeEventListener("ended", finish);
+    rocketVideo.removeEventListener("error", tryNextSource);
+  }
+
   function finish() {
-
     if (finished) return;
-
     finished = true;
 
-    clearTimeout(fallbackTimer);
-
-    rocketVideo.removeEventListener("ended", finish);
-    rocketVideo.removeEventListener("error", finish);
-
+    cleanup();
     stopRocketEffect();
   }
 
-  rocketVideo.addEventListener(
-    "ended",
-    finish,
-    { once: true }
-  );
+  function tryNextSource() {
+    if (finished) return;
 
-  rocketVideo.addEventListener(
-    "error",
-    finish,
-    { once: true }
-  );
+    sourceIndex++;
 
-  // Giới hạn thời gian để tránh kẹt hiệu ứng
-  fallbackTimer = setTimeout(finish, 8000);
+    if (sourceIndex >= sources.length) {
+      console.warn(
+        "[ROCKET] No playable video source"
+      );
+      finish();
+      return;
+    }
 
-  rocketVideo.pause();
-
-  const canHEVC = rocketVideo.canPlayType(
-    'video/mp4; codecs="hvc1"'
-  );
-
-  const canWebM = rocketVideo.canPlayType(
-    'video/webm; codecs="vp9"'
-  );
-
-  // iPhone ưu tiên HEVC, trình duyệt khác dùng WebM
-  if (canHEVC) {
-    rocketVideo.src = "/assets/live-gifts/rocket-effect-transparent.webm";
-  } else if (canWebM) {
-    rocketVideo.src =
-      "/assets/live-gifts/rocket-effect.webm";
-  } else {
-    finish();
-    return;
+    startSource();
   }
 
-  rocketVideo.currentTime = 0;
+  function startSource() {
+    if (finished) return;
 
-  rocketVideo.play().catch(finish);
+    rocketVideo.pause();
+    rocketVideo.muted = true;
+    rocketVideo.defaultMuted = true;
+    rocketVideo.playsInline = true;
+    rocketVideo.loop = false;
+
+    rocketVideo.src = sources[sourceIndex];
+    rocketVideo.load();
+
+    const playPromise = rocketVideo.play();
+
+    if (playPromise?.catch) {
+      playPromise.catch(error => {
+        console.warn(
+          "[ROCKET] Playback failed:",
+          error
+        );
+        tryNextSource();
+      });
+    }
+  }
+
+  rocketVideo.addEventListener(
+    "ended", finish
+  );
+
+  rocketVideo.addEventListener(
+    "error", tryNextSource
+  );
+
+  fallbackTimer = setTimeout(finish, 8000);
+
+  startSource();
 }
+
+
 
 function enqueueRocketGift(data) {
 
