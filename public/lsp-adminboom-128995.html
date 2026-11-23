@@ -100,6 +100,32 @@ body{
   <div id="playerList"></div>
 </div>
 
+
+
+<div class="card" id="adminLoginPanel">
+  <div class="label">ADMIN AUTHENTICATION</div>
+
+  <input
+    id="adminPassword"
+    type="password"
+    placeholder="Enter admin password"
+    autocomplete="current-password"
+    style="padding:12px;width:100%;box-sizing:border-box;margin-top:12px"
+  >
+
+  <button
+    type="button"
+    onclick="adminLogin()"
+    style="margin-top:12px;padding:12px;background:#d4af37;border:0;border-radius:8px;font-weight:700"
+  >
+    LOGIN
+  </button>
+
+  <div id="adminLoginStatus"
+       style="margin-top:12px"></div>
+</div>
+
+
 <script>
 
 const socket = io({
@@ -173,13 +199,95 @@ function overrideCrash(){
       crashPoint:value
     })
   })
-  .then(r=>r.json())
-  .then(d=>{
-    if(!d.ok){
-      alert("Override failed");
-    }
-  });
+
+.then(async response => {
+  const data = await response.json();
+
+  if (!response.ok || !data.ok) {
+    console.error("Override API error:", {
+      status: response.status,
+      error: data.error,
+      message: data.message
+    });
+
+    alert(
+      data.message ||
+      data.error ||
+      `Request failed (${response.status})`
+    );
+  }
+})
+.catch(error => {
+  console.error("Override request error:", error);
+  alert("Unable to contact server");
+});
+
+
 }
+
+
+async function adminLogin() {
+  const password =
+    document.getElementById("adminPassword").value;
+
+  const status =
+    document.getElementById("adminLoginStatus");
+
+  try {
+    const response = await fetch(
+      "/api/admin/auth/login",
+      {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ password })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+      status.textContent =
+        data.message || data.error || "Login failed";
+      return;
+    }
+
+    document.getElementById("adminPassword").value = "";
+
+    status.textContent = "Admin authenticated";
+
+    document.getElementById("adminLoginPanel")
+      .style.display = "none";
+
+  } catch (error) {
+    status.textContent = error.message;
+  }
+}
+
+async function checkAdminSession() {
+  try {
+    const response = await fetch(
+      "/api/admin/auth/status",
+      {
+        credentials: "same-origin",
+        cache: "no-store"
+      }
+    );
+
+    const data = await response.json();
+
+    document.getElementById("adminLoginPanel")
+      .style.display =
+        data.authenticated ? "none" : "block";
+
+  } catch (error) {
+    console.error("Admin session check:", error);
+  }
+}
+
+checkAdminSession();
 
 
 </script>
