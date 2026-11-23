@@ -120,7 +120,10 @@ wdRenderIcons();
 let socket = null;
 
 const params = new URLSearchParams(location.search);
-const received = Number(params.get("received") || 0);
+let received = Math.max(
+  0,
+  Math.floor(Number(params.get("received") || 0))
+);
 
 // 🔁 TỶ GIÁ (bạn chỉnh tùy ý)
 const RATE = 0.0116; // 1 kim cương = 100đ / giá đô $
@@ -786,5 +789,317 @@ if (typeof io === "function" && me?.uid) {
 
 
 
+
+/* ==========================================
+   LIVESTREAM PRO - DIAMOND CONVERSION
+   WALLET 100% -> GAME 75%
+========================================== */
+
+const WD_CONVERT_RATE = 75;
+
+const wdConvertAmount =
+  document.getElementById("wdConvertAmount");
+
+const wdConvertButton =
+  document.getElementById("wdConvertButton");
+
+const wdConvertStatus =
+  document.getElementById("wdConvertStatus");
+
+const wdConvertModal =
+  document.getElementById("wdConvertSecurityModal");
+
+let wdConvertGameBalance = 0;
+let wdConvertPending = false;
+let wdConvertRequestId = null;
+
+const wdConvertFormat = n =>
+  Number(n || 0).toLocaleString("en-US");
+
+function wdConvertCalculate(amount) {
+  const receive = Math.floor(
+    amount * WD_CONVERT_RATE / 100
+  );
+
+  return {
+    receive,
+    fee: amount - receive
+  };
+}
+
+function wdConvertUpdatePreview() {
+
+  const amount = Number(wdConvertAmount.value);
+
+  const valid =
+    Number.isSafeInteger(amount) &&
+    amount > 0 &&
+    amount <= received;
+
+  const safeAmount = valid ? amount : 0;
+
+  const result = wdConvertCalculate(safeAmount);
+
+  document.getElementById(
+    "wdConvertOriginal"
+  ).textContent = wdConvertFormat(safeAmount);
+
+  document.getElementById(
+    "wdConvertFee"
+  ).textContent = "-" + wdConvertFormat(result.fee);
+
+  document.getElementById(
+    "wdConvertReceive"
+  ).textContent = "+" + wdConvertFormat(result.receive);
+
+  wdConvertButton.disabled =
+    !valid ||
+    result.receive < 1 ||
+    wdConvertPending;
+}
+
+function wdConvertSyncBalances(wallet, game) {
+
+  received = Math.max(0, Math.floor(Number(wallet)));
+
+  wdConvertGameBalance =
+    Math.max(0, Math.floor(Number(game)));
+
+  receivedVal.textContent = wdConvertFormat(received);
+
+  document.getElementById(
+    "wdConvertWallet"
+  ).textContent = wdConvertFormat(received);
+
+  document.getElementById(
+    "wdConvertGame"
+  ).textContent = wdConvertFormat(wdConvertGameBalance);
+
+  withdrawInput.max = received;
+
+  if (Number(withdrawInput.value) > received) {
+    withdrawInput.value = received;
+  }
+
+  updateMoney();
+  wdConvertUpdatePreview();
+}
+
+async function wdConvertLoadBalance() {
+
+  try {
+
+    const response = await fetch(
+      "/api/diamonds/convert/state",
+      {
+        credentials: "same-origin",
+        cache: "no-store"
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+      throw new Error(
+        data.message || "Unable to load wallet."
+      );
+    }
+
+    wdConvertSyncBalances(
+      data.walletDiamonds,
+      data.gameDiamonds
+    );
+
+    wdConvertStatus.textContent = "";
+
+  } catch (error) {
+
+    wdConvertStatus.textContent =
+      error.message || "Unable to load wallet.";
+
+    wdConvertButton.disabled = true;
+  }
+}
+
+function wdConvertCloseModal() {
+
+  if (wdConvertPending) return;
+
+  wdConvertModal.classList.add("hidden");
+
+  document.getElementById(
+    "wdConvertSecurityCode"
+  ).value = "";
+
+  wdConvertRequestId = null;
+}
+
+function wdConvertOpenModal() {
+
+  const amount = Number(wdConvertAmount.value);
+
+  const valid =
+    Number.isSafeInteger(amount) &&
+    amount > 0 &&
+    amount <= received;
+
+  if (!valid || wdConvertPending) {
+    return;
+  }
+
+  const { receive, fee } =
+    wdConvertCalculate(amount);
+
+  if (receive < 1) return;
+
+  wdConvertRequestId = crypto.randomUUID();
+
+  document.getElementById(
+    "wdConvertConfirmText"
+  ).textContent =
+    `Convert ${wdConvertFormat(amount)} wallet diamonds ` +
+    `into ${wdConvertFormat(receive)} game diamonds? ` +
+    `A fee of ${wdConvertFormat(fee)} diamonds applies.`;
+
+  wdConvertModal.classList.remove("hidden");
+
+  const input = document.getElementById(
+    "wdConvertSecurityCode"
+  );
+
+  input.value = "";
+  input.focus();
+}
+
+async function wdConvertConfirm() {
+
+  if (wdConvertPending || !wdConvertRequestId) {
+    return;
+  }
+
+  const codeInput = document.getElementById(
+    "wdConvertSecurityCode"
+  );
+
+  const securityCode = codeInput.value;
+
+  if (!securityCode) {
+    showNotifyModal(
+      "Please enter your security code.",
+      "warn",
+      "Security Code Required"
+    );
+    return;
+  }
+
+  const amount = Number(wdConvertAmount.value);
+  const requestId = wdConvertRequestId;
+
+  wdConvertPending = true;
+  wdConvertButton.disabled = true;
+
+  const confirmButton = document.getElementById(
+    "wdConvertConfirm"
+  );
+
+  confirmButton.disabled = true;
+
+  try {
+
+    const response = await fetch(
+      "/api/diamonds/convert",
+      {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          amount,
+          requestId,
+          securityCode
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+      throw new Error(
+        data.message || "Conversion failed."
+      );
+    }
+
+    wdConvertSyncBalances(
+      data.walletDiamonds,
+      data.gameDiamonds
+    );
+
+    wdConvertAmount.value = "";
+
+    wdConvertModal.classList.add("hidden");
+    codeInput.value = "";
+    wdConvertRequestId = null;
+
+    wdConvertStatus.textContent =
+      "Conversion completed successfully.";
+
+    wdConvertUpdatePreview();
+
+    showNotifyModal(
+      `${wdConvertFormat(data.received)} game diamonds added to your balance.`,
+      "success",
+      "Conversion Successful"
+    );
+
+  } catch (error) {
+
+    wdConvertStatus.textContent =
+      "Conversion was not confirmed. " +
+      "Please check your balance before retrying.";
+
+    showNotifyModal(
+      error.message || "Conversion failed.",
+      "error",
+      "Conversion Status"
+    );
+
+    // Keep requestId for retrying the same operation.
+    await wdConvertLoadBalance();
+
+  } finally {
+
+    wdConvertPending = false;
+    confirmButton.disabled = false;
+    wdConvertUpdatePreview();
+
+  }
+}
+
+wdConvertAmount.addEventListener(
+  "input",
+  wdConvertUpdatePreview
+);
+
+wdConvertButton.addEventListener(
+  "click",
+  wdConvertOpenModal
+);
+
+document.getElementById(
+  "wdConvertCancel"
+).addEventListener(
+  "click",
+  wdConvertCloseModal
+);
+
+document.getElementById(
+  "wdConvertConfirm"
+).addEventListener(
+  "click",
+  wdConvertConfirm
+);
+
+wdConvertLoadBalance();
 
 

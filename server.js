@@ -7765,6 +7765,351 @@ app.post("/api/upload-post-video",
   res.json({ url });
 });
 
+
+
+
+/* ==========================================
+   LIVESTREAM PRO - CONVERT DIAMONDS
+   RECEIVED WALLET -> GAME WALLET
+   25% CONVERSION FEE
+========================================== */
+
+const DIAMOND_CONVERT_RATE = 75;
+const DIAMOND_CONVERT_MAX = 1000000000;
+
+function diamondConvertResult(amount) {
+
+  const received = Math.floor(
+    amount * DIAMOND_CONVERT_RATE / 100
+  );
+
+  return {
+    received,
+    fee: amount - received
+  };
+}
+
+function diamondConvertIsValidNumber(value) {
+  return (
+    typeof value === "number" &&
+    Number.isSafeInteger(value) &&
+    value > 0 &&
+    value <= DIAMOND_CONVERT_MAX
+  );
+}
+
+/* ==========================================
+   READ ACTUAL WALLET BALANCES
+========================================== */
+
+app.get(
+  "/api/diamonds/convert/state",
+  spiritAuth,
+  (req, res) => {
+
+    res.set("Cache-Control", "no-store");
+
+    const db = loadUsers();
+    const user = db[req.spiritUid];
+
+    if (!user?.profile) {
+      return res.status(404).json({
+        ok: false,
+        message: "Account not found."
+      });
+    }
+
+    const walletDiamonds = Number(
+      user.profile.coinReceived ?? 0
+    );
+
+    const gameDiamonds = Number(
+      user.profile.coins ?? 0
+    );
+
+    if (
+      !Number.isSafeInteger(walletDiamonds) ||
+      !Number.isSafeInteger(gameDiamonds) ||
+      walletDiamonds < 0 ||
+      gameDiamonds < 0
+    ) {
+      return res.status(409).json({
+        ok: false,
+        message: "Invalid wallet balance."
+      });
+    }
+
+    return res.json({
+      ok: true,
+      walletDiamonds,
+      gameDiamonds,
+      conversionRate: DIAMOND_CONVERT_RATE,
+      feePercent: 25
+    });
+  }
+);
+
+/* ==========================================
+   CONVERT WALLET DIAMONDS
+========================================== */
+
+app.post(
+  "/api/diamonds/convert",
+  spiritAuth,
+  async (req, res) => {
+
+    res.set("Cache-Control", "no-store");
+
+    // Browser requests must originate from this site.
+    const origin = req.get("origin");
+
+    const publicUrl = String(
+      process.env.LSP_PUBLIC_URL || ""
+    ).replace(/\/$/, "");
+
+    if (
+      !publicUrl ||
+      origin !== publicUrl
+    ) {
+      return res.status(403).json({
+        ok: false,
+        message: "Invalid request origin."
+      });
+    }
+
+    const uid = req.spiritUid;
+
+    const amount = req.body?.amount;
+    const requestId = String(
+      req.body?.requestId || ""
+    );
+
+    const securityCode = req.body?.securityCode;
+
+    if (!diamondConvertIsValidNumber(amount)) {
+      return res.status(400).json({
+        ok: false,
+        message: "Invalid conversion amount."
+      });
+    }
+
+    if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+        .test(requestId)
+    ) {
+      return res.status(400).json({
+        ok: false,
+        message: "Invalid transaction ID."
+      });
+    }
+
+    if (
+      typeof securityCode !== "string" ||
+      !securityCode ||
+      securityCode.length > 128
+    ) {
+      return res.status(400).json({
+        ok: false,
+        message: "Security code required."
+      });
+    }
+
+    try {
+
+      // Step 1: Read the current account.
+      let db = loadUsers();
+      let user = db[uid];
+
+      if (!user?.profile) {
+        return res.status(404).json({
+          ok: false,
+          message: "Account not found."
+        });
+      }
+
+      if (typeof user.securityCode !== "string") {
+        return res.status(403).json({
+          ok: false,
+          message: "Security code not configured."
+        });
+      }
+
+      const originalHash = user.securityCode;
+
+      // Step 2: Verify security code.
+      const validSecurity = await bcrypt.compare(
+        securityCode,
+        originalHash
+      );
+
+      if (!validSecurity) {
+        return res.status(403).json({
+          ok: false,
+          message: "Invalid security code."
+        });
+      }
+
+      // Step 3: Reload data after bcrypt await.
+      // This prevents using a stale balance.
+      db = loadUsers();
+      user = db[uid];
+
+      if (
+        !user?.profile ||
+        user.profile.accountBlocked ||
+        user.securityCode !== originalHash
+      ) {
+        return res.status(409).json({
+          ok: false,
+          message: "Account state changed."
+        });
+      }
+
+      const profile = user.profile;
+
+      const history = Array.isArray(
+        profile.diamondConversionHistory
+      )
+        ? profile.diamondConversionHistory
+        : [];
+
+      // Step 4: Idempotency.
+      const previous = history.find(
+        item => item.id === requestId
+      );
+
+      if (previous) {
+
+        if (previous.amount !== amount) {
+          return res.status(409).json({
+            ok: false,
+            message: "Transaction ID already used."
+          });
+        }
+
+        return res.json({
+          ok: true,
+          duplicate: true,
+          received: previous.received,
+          fee: previous.fee,
+          walletDiamonds:
+            Number(profile.coinReceived),
+          gameDiamonds:
+            Number(profile.coins)
+        });
+      }
+
+      const walletDiamonds = Number(
+        profile.coinReceived ?? 0
+      );
+
+      const gameDiamonds = Number(
+        profile.coins ?? 0
+      );
+
+      if (
+        !Number.isSafeInteger(walletDiamonds) ||
+        !Number.isSafeInteger(gameDiamonds) ||
+        walletDiamonds < 0 ||
+        gameDiamonds < 0
+      ) {
+        return res.status(409).json({
+          ok: false,
+          message: "Invalid wallet data."
+        });
+      }
+
+      if (walletDiamonds < amount) {
+        return res.status(400).json({
+          ok: false,
+          message: "Insufficient wallet diamonds."
+        });
+      }
+
+      const result = diamondConvertResult(amount);
+
+      if (
+        result.received < 1 ||
+        !Number.isSafeInteger(
+          gameDiamonds + result.received
+        )
+      ) {
+        return res.status(400).json({
+          ok: false,
+          message: "Conversion amount not supported."
+        });
+      }
+
+      // Step 5: Update both wallets together.
+      profile.coinReceived =
+        walletDiamonds - amount;
+
+      profile.coins =
+        gameDiamonds + result.received;
+
+      profile.diamondConversionHistory = [
+        {
+          id: requestId,
+          amount,
+          fee: result.fee,
+          received: result.received,
+          createdAt: Date.now(),
+          type: "wallet_to_game"
+        },
+        ...history
+      ];
+
+      // Step 6: Atomic file replacement.
+      // Suitable as a single-process interim measure.
+      const tempFile =
+        USERS_FILE + ".convert." +
+        process.pid + "." +
+        crypto.randomBytes(6).toString("hex");
+
+      try {
+        fs.writeFileSync(
+          tempFile,
+          JSON.stringify(db, null, 2),
+          { mode: 0o600 }
+        );
+
+        fs.renameSync(tempFile, USERS_FILE);
+
+      } finally {
+        try {
+          if (fs.existsSync(tempFile)) {
+            fs.unlinkSync(tempFile);
+          }
+        } catch (_) {}
+      }
+
+      // Step 7: Notify the user's clients.
+      emitCoinUpdate(uid);
+
+      return res.json({
+        ok: true,
+        received: result.received,
+        fee: result.fee,
+        walletDiamonds: profile.coinReceived,
+        gameDiamonds: profile.coins
+      });
+
+    } catch (error) {
+
+      console.error(
+        "[DIAMOND CONVERSION]",
+        error.message
+      );
+
+      return res.status(500).json({
+        ok: false,
+        message: "Conversion could not be confirmed."
+      });
+    }
+  }
+);
+
+
 app.post("/api/withdraw-request", async (req, res) => {
   const uid = req.headers["x-uid"];
   const { amount, bank, securityCode } = req.body || {};

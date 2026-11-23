@@ -1148,6 +1148,101 @@ body.page-withdraw .wd-transaction-note {
 
 
 
+
+/* ==========================================
+   DIAMOND CONVERSION - BLACK & GOLD
+========================================== */
+
+.wd-convert-balances {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.wd-convert-balances > div {
+  min-width: 0;
+  padding: 15px 12px;
+  border: 1px solid rgba(217,189,131,.22);
+  border-radius: 13px;
+  background: #0b0e15;
+}
+
+.wd-convert-balances small {
+  display: block;
+  color: #a5a7b0;
+  font-size: 9px;
+  letter-spacing: .5px;
+}
+
+.wd-convert-balances strong {
+  display: block;
+  margin-top: 9px;
+  color: #f4dfb3;
+  font-size: 19px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.wd-convert-summary {
+  margin-top: 17px;
+  padding: 17px 14px;
+  border: 1px solid rgba(217,189,131,.2);
+  border-radius: 13px;
+  background: #0c1018;
+}
+
+.wd-convert-summary > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  color: #aab0bd;
+  font-size: 12px;
+}
+
+.wd-convert-summary strong {
+  color: #f4dfb3;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.wd-convert-summary .wd-convert-fee {
+  color: #f09a9a;
+}
+
+.wd-convert-summary .wd-convert-total {
+  margin-top: 7px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(217,189,131,.2);
+  color: #f4dfb3;
+  font-weight: 700;
+}
+
+.wd-convert-total strong {
+  color: #83dfb2;
+  font-size: 20px;
+}
+
+.wd-convert-note {
+  color: #a7abb5;
+  font-size: 11px;
+  line-height: 1.7;
+  text-align: center;
+  margin: 16px 2px;
+}
+
+#wdConvertButton:not(:disabled) {
+  opacity: 1;
+  box-shadow: 0 8px 24px rgba(217,189,131,.17);
+}
+
+#wdConvertStatus {
+  min-height: 18px;
+}
+
+
 </style>
 </head>
 
@@ -1207,6 +1302,150 @@ body.page-withdraw .wd-transaction-note {
     </div>
 
   </section>
+
+
+
+<!-- ==========================================
+     DIAMOND CONVERSION - WALLET TO GAME
+========================================== -->
+
+<section class="wd-panel" id="wdConvertPanel">
+
+  <div class="wd-section-head">
+    <div class="wd-section-icon">
+      <span data-wd-icon="gem"></span>
+    </div>
+
+    <div>
+      <h2 class="wd-section-title">
+        Convert Diamonds
+      </h2>
+      <div class="wd-section-sub">
+        Transfer wallet diamonds to your game balance
+      </div>
+    </div>
+  </div>
+
+  <div class="wd-convert-balances">
+    <div>
+      <small>WALLET DIAMONDS</small>
+      <strong id="wdConvertWallet">0</strong>
+    </div>
+
+    <div>
+      <small>GAME DIAMONDS</small>
+      <strong id="wdConvertGame">0</strong>
+    </div>
+  </div>
+
+  <div class="wd-field">
+    <label for="wdConvertAmount">
+      AMOUNT TO CONVERT
+    </label>
+
+    <input
+      id="wdConvertAmount"
+      class="wd-input"
+      type="number"
+      min="1"
+      step="1"
+      inputmode="numeric"
+      placeholder="Enter diamond amount"
+      autocomplete="off">
+  </div>
+
+  <div class="wd-convert-summary">
+
+    <div>
+      <span>Conversion Amount</span>
+      <strong id="wdConvertOriginal">0</strong>
+    </div>
+
+    <div>
+      <span>Conversion Fee (25%)</span>
+      <strong class="wd-convert-fee"
+              id="wdConvertFee">0</strong>
+    </div>
+
+    <div class="wd-convert-total">
+      <span>You Will Receive (75%)</span>
+      <strong id="wdConvertReceive">0</strong>
+    </div>
+
+  </div>
+
+  <p class="wd-convert-note">
+    A 25% conversion fee applies.
+    Converted diamonds are added to your game wallet.
+    This transaction cannot be reversed.
+  </p>
+
+  <button
+    id="wdConvertButton"
+    class="wd-submit"
+    type="button"
+    disabled>
+    CONVERT DIAMONDS
+  </button>
+
+  <p id="wdConvertStatus"
+     class="wd-security-hint"
+     role="status"
+     aria-live="polite">
+  </p>
+
+</section>
+
+<!-- SECURITY CONFIRMATION -->
+
+<div id="wdConvertSecurityModal"
+     class="lp-modal hidden"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="wdConvertModalTitle">
+
+  <div class="lp-modal-backdrop"></div>
+
+  <div class="lp-modal-box">
+
+    <div class="lp-modal-icon">
+      <span data-wd-icon="lock"></span>
+    </div>
+
+    <h3 id="wdConvertModalTitle">
+      Confirm Conversion
+    </h3>
+
+    <p id="wdConvertConfirmText"></p>
+
+    <input
+      id="wdConvertSecurityCode"
+      type="password"
+      maxlength="128"
+      placeholder="Enter security code"
+      autocomplete="off">
+
+    <div class="lp-modal-actions">
+
+      <button
+        type="button"
+        class="btn-secondary"
+        id="wdConvertCancel">
+        CANCEL
+      </button>
+
+      <button
+        type="button"
+        class="btn-primary"
+        id="wdConvertConfirm">
+        CONFIRM
+      </button>
+
+    </div>
+
+  </div>
+</div>
+
 
   <!-- FORM -->
   <section class="wd-panel">
