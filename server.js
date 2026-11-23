@@ -18560,14 +18560,16 @@ const VIRTUAL_LIVE_ROOMS = Object.freeze({
     videoId: "k7YJHCR9JBE"
   },
 
-  // BIGO LIVE
-  Bigo692057933: {
-    roomId: "Bigo692057933",
-    title: "BIGO LIVE · 692057933",
-    avatar: "/icons/icon-192.png",
-    type: "bigo",
-    url: "https://www.bigo.tv/692057933"
+
+  // YOUTUBE LIVE ROOM 3
+  Youtube3: {
+    roomId: "Damit2k",
+    title: "Valorant",
+    avatar: "/assets/live-avatar/Youtube.jpg",
+    type: "youtube",
+    videoId: "ifuRZZXE8JY"
   }
+
 
 });
 
