@@ -7860,22 +7860,65 @@ app.post(
 
     res.set("Cache-Control", "no-store");
 
-    // Browser requests must originate from this site.
-    const origin = req.get("origin");
 
-    const publicUrl = String(
-      process.env.LSP_PUBLIC_URL || ""
-    ).replace(/\/$/, "");
+
+
+/* ==========================================
+   DIAMOND CONVERSION - ORIGIN SECURITY FIX
+========================================== */
+
+// The browser's actual origin
+const requestOrigin = req.get("origin") || "";
+
+// Approved website origins
+const configuredOrigins = [
+  process.env.LSP_PUBLIC_URL || "",
+  ...(process.env.LSP_ALLOWED_ORIGINS || "")
+    .split(",")
+];
+
+// Normalize and validate configured URLs
+const allowedOrigins = new Set();
+
+for (const value of configuredOrigins) {
+  const raw = String(value).trim();
+
+  if (!raw) continue;
+
+  try {
+    const url = new URL(raw);
 
     if (
-      !publicUrl ||
-      origin !== publicUrl
+      url.protocol === "https:" &&
+      url.username === "" &&
+      url.password === "" &&
+      url.pathname === "/" &&
+      url.search === "" &&
+      url.hash === ""
     ) {
-      return res.status(403).json({
-        ok: false,
-        message: "Invalid request origin."
-      });
+      allowedOrigins.add(url.origin);
     }
+  } catch (_) {}
+}
+
+// Same-origin validation
+if (
+  !requestOrigin ||
+  !allowedOrigins.has(requestOrigin)
+) {
+  console.warn("[DIAMOND CONVERT] Origin rejected", {
+    origin: requestOrigin || "(missing)",
+    allowedOrigins: [...allowedOrigins]
+  });
+
+  return res.status(403).json({
+    ok: false,
+    message: "Invalid request origin."
+  });
+}
+
+
+
 
     const uid = req.spiritUid;
 

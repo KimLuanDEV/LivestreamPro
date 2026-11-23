@@ -521,55 +521,75 @@ const btnWithdraw = document.getElementById("btnWithdraw");
 const btnWithdrawFromSheet =
   document.getElementById("btnWithdrawFromSheet");
 
+
+/* ==========================================
+   PROFILE SHEET - OPEN DIAMOND WALLET
+   ALLOW ZERO BALANCE
+========================================== */
+
 if (btnWithdrawFromSheet) {
+
   btnWithdrawFromSheet.onclick = () => {
+
     closeProfileSheet();
 
-    // 🚫 chỉ cho rút tiền của chính mình
-    if (viewUid && viewUid !== __profileAuth.uid) {
-      showMsg("🚫 Bạn không thể rút tiền từ tài khoản này");
+    // Only allow access to your own wallet
+    if (
+      viewUid &&
+      viewUid !== __profileAuth.uid
+    ) {
+      showMsg("You cannot access this wallet.");
       return;
     }
 
-    const received =
-      Number(document.getElementById("coinReceivedVal")?.textContent || 0);
+    const received = Math.max(
+      0,
+      Number(coinReceivedVal?.textContent || 0)
+    );
 
-    if (received <= 0) {
-      showMsg("💎 Bạn chưa có kim cương để rút");
-      return;
-    }
-
-    // 👉 chuyển sang trang rút tiền
     navigateProfilePage(
-  `/withdraw.html?received=${received}`,
-  "Đang mở trang Rút kim cương..."
-);
+      `/withdraw.html?received=${received}`,
+      "Opening Diamond Wallet..."
+    );
+
   };
+
 }
 
 
 
+
+
+/* ==========================================
+   PROFILE - OPEN WALLET / WITHDRAW
+   ALLOW ZERO BALANCE
+========================================== */
+
 if (btnWithdraw) {
+
   btnWithdraw.onclick = () => {
-    // 🚫 chỉ cho rút profile của chính mình
-    if (viewUid && viewUid !== __profileAuth.uid) {
-      showMsg("🚫 Bạn không thể rút tiền từ tài khoản này");
+
+    // Only allow access to your own wallet
+    if (
+      viewUid &&
+      viewUid !== __profileAuth.uid
+    ) {
+      showMsg("You cannot access this wallet.");
       return;
     }
 
-    const received = Number(coinReceivedVal.textContent || 0);
+    const received = Math.max(
+      0,
+      Number(coinReceivedVal?.textContent || 0)
+    );
 
-    if (received <= 0) {
-      showMsg("💎 Bạn chưa có kim cương để rút");
-      return;
-    }
-
-    // 👉 mở trang rút tiền
     navigateProfilePage(
-  `/withdraw.html?received=${received}`,
-  "Đang mở trang Rút kim cương..."
-);
+      `/withdraw.html?received=${received}`,
+      "Opening Diamond Wallet..."
+    );
+
   };
+
 }
 
 
