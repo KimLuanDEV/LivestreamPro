@@ -7010,6 +7010,12 @@ body.sfu-role-host
 
   <div id="remoteMedia" class="hidden"></div>
 
+  <!-- HOST VOICE CHAT AUDIO OUTPUT -->
+<div
+  id="sfuHostVoiceAudio"
+  aria-hidden="true">
+</div>
+
 
 <!-- AUDIO AUTOPLAY FALLBACK -->
 <button
@@ -10884,22 +10890,54 @@ setPlaceholder(false);
 
 } else {
 
+  // AUDIO TRACK
   element.style.display = "none";
-
   element.autoplay = true;
   element.muted = false;
+  element.volume = 1;
 
-  $("remoteMedia").appendChild(element);
-
-  // A new audio track may arrive after joining.
   if (isViewer) {
+
+    // VIEWER: giữ nguyên luồng âm thanh
+    $("remoteMedia").appendChild(element);
+
     void enableViewerAudioAutomatically();
+
+  } else {
+
+    // HOST: vùng phát Voice Chat riêng
+    const hostAudioRoot =
+      document.getElementById(
+        "sfuHostVoiceAudio"
+      );
+
+    if (hostAudioRoot) {
+
+      element.classList.add(
+        "sfu-host-voice-track"
+      );
+
+      hostAudioRoot.appendChild(element);
+
+      // Thử kích hoạt âm thanh ngay khi
+      // nhận microphone của viewer.
+      void enableHostVoiceAudio();
+
+    } else {
+
+      console.warn(
+        "[HOST VOICE] Audio container missing"
+      );
+
+      element.remove();
+
+    }
+
   }
 
 }
 
 }
-
 
 
 /* ==========================================
@@ -11578,6 +11616,17 @@ console.log(
 async function connectSFU() {
   const credentials = await getToken();
 
+    // Clear audio elements from an old room.
+  if (!isViewer) {
+
+    document.getElementById(
+      "sfuHostVoiceAudio"
+    )?.replaceChildren();
+
+    hideHostVoiceAudioUnlock();
+
+  }
+  
 
 lkRoom = new Room({
 
@@ -11625,16 +11674,40 @@ publishDefaults: {
    SFU - AUDIO PLAYBACK STATUS
 ========================================== */
 
+const audioStatusRoom = lkRoom;
+
 lkRoom.on(
   RoomEvent.AudioPlaybackStatusChanged,
   () => {
 
-    if (!isViewer) return;
+    if (lkRoom !== audioStatusRoom) {
+      return;
+    }
 
+    if (isViewer) {
+
+      if (lkRoom.canPlaybackAudio) {
+        hideViewerAudioUnlock();
+      } else {
+        showViewerAudioUnlock();
+      }
+
+      return;
+    }
+
+    // HOST
     if (lkRoom.canPlaybackAudio) {
-      hideViewerAudioUnlock();
-    } else {
-      showViewerAudioUnlock();
+
+      void enableHostVoiceAudio();
+
+    } else if (
+      document.querySelector(
+        "#sfuHostVoiceAudio audio"
+      )
+    ) {
+
+      showHostVoiceAudioUnlock();
+
     }
 
   }
@@ -11661,9 +11734,21 @@ lkRoom.on(
   }
 );
 
-  lkRoom.on(RoomEvent.TrackUnsubscribed, track => {
-    track.detach().forEach(el => el.remove());
-  });
+lkRoom.on(RoomEvent.TrackUnsubscribed, track => {
+
+  track.detach().forEach(el => el.remove());
+
+  if (
+    !isViewer &&
+    track.kind === Track.Kind.Audio &&
+    !document.querySelector(
+      "#sfuHostVoiceAudio audio"
+    )
+  ) {
+    hideHostVoiceAudioUnlock();
+  }
+
+});
 
 
 /* ==========================================
@@ -11704,8 +11789,17 @@ lkRoom.on(RoomEvent.Reconnected, () => {
 
 if (!isViewer) {
 
-  if (started && !stopping && !hostSessionEnded) {
+  if (
+    started &&
+    !stopping &&
+    !hostSessionEnded
+  ) {
+
+    // Restore host incoming voice playback.
+    void enableHostVoiceAudio();
+
     scheduleHostRecovery(0);
+
   }
 
   return;
@@ -12582,15 +12676,181 @@ function hideViewerAudioUnlock() {
 }
 
 
+
+/* ==========================================
+   SFU - HOST VOICE AUDIO RECOVERY
+========================================== */
+
+let sfuHostVoiceAudioBusy = false;
+
+/* SHOW UNLOCK BUTTON */
+
+function showHostVoiceAudioUnlock() {
+
+  if (isViewer) return;
+
+  const audioExists =
+    document.querySelector(
+      "#sfuHostVoiceAudio audio"
+    );
+
+  if (!audioExists) return;
+
+  const button =
+    document.getElementById("sfuAudioUnlock");
+
+  if (!button) return;
+
+  const label = button.querySelector("span");
+
+  if (label) {
+    label.textContent =
+      "TAP TO HEAR VOICE CHAT";
+  }
+
+  button.classList.remove("hidden");
+}
+
+
+/* HIDE UNLOCK BUTTON */
+
+function hideHostVoiceAudioUnlock() {
+
+  if (isViewer) return;
+
+  document.getElementById(
+    "sfuAudioUnlock"
+  )?.classList.add("hidden");
+
+}
+
+
+/* RESTORE INCOMING VOICE AUDIO */
+
+async function enableHostVoiceAudio() {
+
+  if (
+    isViewer ||
+    !lkRoom ||
+    sfuHostVoiceAudioBusy
+  ) {
+    return false;
+  }
+
+  const currentRoom = lkRoom;
+
+  const audioElements = Array.from(
+    document.querySelectorAll(
+      "#sfuHostVoiceAudio audio"
+    )
+  );
+
+  if (audioElements.length === 0) {
+
+    hideHostVoiceAudioUnlock();
+
+    return true;
+  }
+
+  sfuHostVoiceAudioBusy = true;
+
+  try {
+
+    // Request browser audio playback.
+    // Safari may require a direct user tap.
+    await currentRoom.startAudio();
+
+    let playSucceeded = true;
+
+    for (const audio of audioElements) {
+
+      if (
+        !audio.isConnected ||
+        currentRoom !== lkRoom
+      ) {
+        continue;
+      }
+
+      audio.muted = false;
+      audio.volume = 1;
+      audio.autoplay = true;
+
+      try {
+
+        await audio.play();
+
+      } catch (error) {
+
+        playSucceeded = false;
+
+        console.warn(
+          "[HOST VOICE] Audio playback blocked",
+          error
+        );
+
+      }
+
+    }
+
+    if (currentRoom !== lkRoom) {
+      return false;
+    }
+
+    const playable =
+      playSucceeded &&
+      currentRoom.canPlaybackAudio !== false;
+
+    if (playable) {
+
+      hideHostVoiceAudioUnlock();
+
+    } else {
+
+      showHostVoiceAudioUnlock();
+
+    }
+
+    return playable;
+
+  } catch (error) {
+
+    console.warn(
+      "[HOST VOICE] Audio recovery failed",
+      error
+    );
+
+    if (currentRoom === lkRoom) {
+      showHostVoiceAudioUnlock();
+    }
+
+    return false;
+
+  } finally {
+
+    sfuHostVoiceAudioBusy = false;
+
+  }
+
+}
+
+
+
 /* ==========================================
    UNLOCK AUDIO WITH USER GESTURE
 ========================================== */
-
 document.getElementById(
   "sfuAudioUnlock"
 )?.addEventListener("click", async () => {
 
-  await enableViewerAudioAutomatically();
+  if (isViewer) {
+
+    await enableViewerAudioAutomatically();
+
+  } else {
+
+    await enableHostVoiceAudio();
+
+  }
 
 });
 
@@ -14913,9 +15173,18 @@ async function syncSfuVoice() {
 ========================================== */
 
 voiceUI.toggle.onclick = () => {
+
+  // Host tap can unlock Safari audio.
+  if (!isViewer) {
+    void enableHostVoiceAudio();
+  }
+
   voiceUI.overlay.classList.remove("hidden");
+
   voiceFeedback("");
+
   syncSfuVoice();
+
 };
 
 voiceUI.close.onclick = () => {
