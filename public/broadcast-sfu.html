@@ -5087,6 +5087,24 @@ body {
 
 
 /* ==========================================
+   SFU VIEWER - AUTO CAMERA MIRROR
+========================================== */
+
+/* Front camera: match the host's mirrored preview */
+#remoteMedia.sfu-viewer-mirror video {
+  transform: scaleX(-1) !important;
+  -webkit-transform: scaleX(-1) !important;
+}
+
+/* Back camera: preserve the original orientation */
+#remoteMedia:not(.sfu-viewer-mirror) video {
+  transform: none !important;
+  -webkit-transform: none !important;
+}
+
+
+
+/* ==========================================
    SFU - VIEWER CONNECTION RECOVERY
 ========================================== */
 
@@ -6971,15 +6989,49 @@ let cameraFacing = "user"; // Camera trước
 
 
 
+
+/* ==========================================
+   SFU HOST - CAMERA MIRROR SYNC
+========================================== */
+
 function updateCameraMirror() {
-  const video = document.getElementById("localVideo");
+
+  const video =
+    document.getElementById("localVideo");
+
   if (!video) return;
 
-  const isFront = cameraFacing === "user";
+  const isFront =
+    cameraFacing === "user";
 
-  video.classList.toggle("sfu-front-camera", isFront);
-  video.classList.toggle("sfu-back-camera", !isFront);
+  // Host preview
+  video.classList.toggle(
+    "sfu-front-camera",
+    isFront
+  );
+
+  video.classList.toggle(
+    "sfu-back-camera",
+    !isFront
+  );
+
+  // Broadcast camera orientation to viewers
+  if (
+    socket.connected &&
+    !isViewer &&
+    lkRoom &&
+    lkRoom.state === "connected"
+  ) {
+
+    socket.emit("sfu:camera-facing", {
+      roomId,
+      facingMode: cameraFacing
+    });
+
+  }
+
 }
+
 
 
 
@@ -8912,6 +8964,53 @@ async function getToken() {
   return data;
 }
 
+
+
+/* ==========================================
+   SFU VIEWER - CAMERA MIRROR SYNC
+========================================== */
+
+let remoteCameraFacing = "environment";
+
+function updateViewerCameraMirror() {
+
+  const container =
+    document.getElementById("remoteMedia");
+
+  if (!container) return;
+
+  container.classList.toggle(
+    "sfu-viewer-mirror",
+    remoteCameraFacing === "user"
+  );
+
+}
+
+socket.on("sfu:camera-facing", data => {
+
+  if (!isViewer) return;
+
+  if (String(data?.roomId) !== String(roomId)) {
+    return;
+  }
+
+  const facing = data?.facingMode;
+
+  if (
+    facing !== "user" &&
+    facing !== "environment"
+  ) {
+    return;
+  }
+
+  remoteCameraFacing = facing;
+
+  updateViewerCameraMirror();
+
+});
+
+
+
 function addRemoteTrack(track) {
   if (
     track.kind !== Track.Kind.Video &&
@@ -8933,9 +9032,15 @@ element.style.objectPosition = "center center";
     $("remoteMedia").querySelectorAll("video")
       .forEach(video => video.remove());
 
-    $("remoteMedia").appendChild(element);
-    $("remoteMedia").classList.remove("hidden");
-    setPlaceholder(false);
+
+$("remoteMedia").appendChild(element);
+
+updateViewerCameraMirror();
+
+$("remoteMedia").classList.remove("hidden");
+
+setPlaceholder(false);
+
 
   } else {
     element.style.display = "none";
@@ -9722,14 +9827,26 @@ voiceUI.toggle.classList.remove("hidden");
 syncSfuVoice();
 pkStartBtn.disabled = false;
 
-    cameraFacing =
+
+const detectedFacing =
   lkRoom.localParticipant
     .getTrackPublication(Track.Source.Camera)
     ?.videoTrack
     ?.mediaStreamTrack
-    ?.getSettings?.().facingMode || "user";
+    ?.getSettings?.().facingMode;
+
+if (
+  detectedFacing === "user" ||
+  detectedFacing === "environment"
+) {
+  cameraFacing = detectedFacing;
+}
 
 cameraSwitching = false;
+
+// Update local preview and synchronize viewers
+updateCameraMirror();
+
 
     setHostButtons(true);
     setStatus("LIVE", true);

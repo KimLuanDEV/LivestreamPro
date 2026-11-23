@@ -15084,6 +15084,22 @@ if (role === "viewer" && room.hostProfile) {
 }
 
 
+/* ==========================================
+   SFU - SYNC CAMERA FOR NEW VIEWERS
+========================================== */
+
+if (role === "viewer") {
+
+  socket.emit("sfu:camera-facing", {
+    roomId,
+    facingMode:
+      room.sfuCameraFacing || "environment"
+  });
+
+}
+
+
+
 
     if (role === "broadcaster") {
 
@@ -15177,6 +15193,54 @@ room.hostProfile = {
 });
 
  
+
+
+/* ==========================================
+   SFU - CAMERA FACING SYNCHRONIZATION
+========================================== */
+
+socket.on("sfu:camera-facing", (data = {}) => {
+
+  const targetRoomId =
+    normRoomId(data?.roomId);
+
+  const room = rooms.get(targetRoomId);
+
+  if (!room) return;
+
+  // Only the authenticated room host can update
+  if (
+    !socket.data.authenticated ||
+    String(room.ownerUid) !==
+      String(socket.data.uid) ||
+    room.broadcasterId !== socket.id
+  ) {
+    return;
+  }
+
+  const facingMode = data?.facingMode;
+
+  if (
+    facingMode !== "user" &&
+    facingMode !== "environment"
+  ) {
+    return;
+  }
+
+  // Store current orientation for late viewers
+  room.sfuCameraFacing = facingMode;
+
+  // Synchronize all viewers in this room
+  io.to(targetRoomId).emit(
+    "sfu:camera-facing",
+    {
+      roomId: targetRoomId,
+      facingMode
+    }
+  );
+
+});
+
 
 
 socket.on("host-stream-ready", (data = {}, ack) => {
