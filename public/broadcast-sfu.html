@@ -8961,33 +8961,77 @@ function attachLocalCamera() {
   setPlaceholder(false);
 }
 
+
+/* ==========================================
+   SFU - DEVICE VIDEO OPTIMIZATION
+========================================== */
+
+const SFU_IS_MOBILE =
+  /Android|iPhone|iPad|iPod/i.test(
+    navigator.userAgent
+  ) ||
+  (
+    navigator.userAgent.includes("Macintosh") &&
+    navigator.maxTouchPoints > 1
+  );
+
+const SFU_VIDEO_PROFILE = SFU_IS_MOBILE
+  ? {
+      resolution: VideoPresets.h540.resolution,
+      fps: 24,
+      bitrate: 850000
+    }
+  : {
+      resolution: VideoPresets.h540.resolution,
+      fps: 30,
+      bitrate: 1200000
+    };
+
+console.log(
+  "[SFU VIDEO PROFILE]",
+  SFU_IS_MOBILE ? "MOBILE" : "DESKTOP",
+  SFU_VIDEO_PROFILE
+);
+
+
 async function connectSFU() {
   const credentials = await getToken();
 
 
 lkRoom = new Room({
 
-  // Automatically select an appropriate video layer.
   adaptiveStream: true,
 
-  // Stop sending unused simulcast layers.
   dynacast: true,
 
-  // Mobile-friendly capture.
   videoCaptureDefaults: {
-    resolution: VideoPresets.h540.resolution,
-    frameRate: 30
+
+    resolution:
+      SFU_VIDEO_PROFILE.resolution,
+
+    frameRate:
+      SFU_VIDEO_PROFILE.fps
+
   },
 
   publishDefaults: {
 
-    // Keep multi-quality streaming enabled.
+    videoCodec: "h264",
+
     simulcast: true,
 
     videoEncoding: {
-      maxBitrate: 1200000,
-      maxFramerate: 30
-    }
+
+      maxBitrate:
+        SFU_VIDEO_PROFILE.bitrate,
+
+      maxFramerate:
+        SFU_VIDEO_PROFILE.fps
+
+    },
+
+    degradationPreference:
+      "maintain-framerate"
 
   }
 
@@ -9627,10 +9671,16 @@ async function flipCamera() {
     }
 
     // LiveKit thay nguồn camera trên track hiện tại.
- await cameraTrack.restartTrack({
+await cameraTrack.restartTrack({
+
   facingMode: nextFacing,
-  resolution: VideoPresets.h540.resolution,
-  frameRate: 30
+
+  resolution:
+    SFU_VIDEO_PROFILE.resolution,
+
+  frameRate:
+    SFU_VIDEO_PROFILE.fps
+
 });
     // Kiểm tra camera được trình duyệt chọn.
     const actualFacing =
