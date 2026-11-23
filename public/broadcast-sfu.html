@@ -5606,6 +5606,180 @@ body.sfu-role-host
 
 
 
+/* ==========================================
+   SFU PK - BOTTOM OPPONENT PROFILE V2
+========================================== */
+
+.studio.sfu-pk-active .sfu-pk-peer {
+  position: absolute;
+}
+
+/* LEFT BOTTOM - AVATAR AND NAME */
+
+.studio.sfu-pk-active .sfu-pk-opponent-info {
+  position: absolute;
+  z-index: 12;
+
+  left: 10px;
+  bottom: 10px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  max-width: calc(100% - 68px);
+  min-width: 0;
+
+  padding: 5px 11px 5px 5px;
+
+  border: 1px solid rgba(233,199,137,.32);
+  border-radius: 999px;
+
+  background: rgba(9,12,19,.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  box-shadow: 0 4px 15px rgba(0,0,0,.28);
+}
+
+/* AVATAR */
+
+.studio.sfu-pk-active .sfu-pk-avatar-wrap {
+  position: relative;
+
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+
+  overflow: hidden;
+  border-radius: 50%;
+
+  border: 1px solid rgba(247,215,153,.65);
+  background: #292e38;
+}
+
+.studio.sfu-pk-active .sfu-pk-peer-avatar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.studio.sfu-pk-active .sfu-pk-peer-avatar[hidden] {
+  display: none !important;
+}
+
+.studio.sfu-pk-active .sfu-pk-avatar-fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+
+  color: #f2d59f;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+/* OVERRIDE OLD NAME POSITION */
+
+.studio.sfu-pk-active .sfu-pk-opponent-info
+.sfu-pk-peer-name {
+  position: static !important;
+
+  display: block;
+  width: auto;
+  max-width: 120px;
+  min-width: 0;
+
+  padding: 0;
+  margin: 0;
+
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+
+  color: #f8dfb1;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: left;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-wrap: normal;
+}
+
+/* RIGHT BOTTOM - AUDIO ICON */
+
+.studio.sfu-pk-active #sfuPkAudioBtn {
+  position: absolute;
+  z-index: 13;
+
+  top: auto;
+  left: auto;
+  right: 10px;
+  bottom: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  max-width: none;
+
+  padding: 0;
+
+  border: 1px solid rgba(236,197,125,.48);
+  border-radius: 50%;
+
+  background: rgba(10,13,20,.85);
+  color: #e8c891;
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  box-shadow: 0 4px 18px rgba(0,0,0,.3);
+  transition: background .2s, transform .2s;
+}
+
+.studio.sfu-pk-active #sfuPkAudioBtn:active {
+  transform: scale(.92);
+}
+
+.studio.sfu-pk-active #sfuPkAudioBtn[aria-pressed="true"] {
+  background: rgba(50,43,27,.92);
+  color: #ffe5a6;
+  border-color: #ebc27e;
+}
+
+.studio.sfu-pk-active .sfu-pk-audio-icon {
+  flex-shrink: 0;
+}
+
+/* MOBILE */
+
+@media (max-width: 430px) {
+  .studio.sfu-pk-active .sfu-pk-opponent-info {
+    left: 7px;
+    bottom: 8px;
+  }
+
+  .studio.sfu-pk-active #sfuPkAudioBtn {
+    right: 7px;
+    bottom: 8px;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+  }
+}
+
+
+
 </style>
 
 
@@ -5694,13 +5868,28 @@ body.sfu-role-host
     class="sfu-pk-peer-media">
   </div>
 
-  <button
-    type="button"
-    id="sfuPkAudioBtn"
-    class="sfu-pk-audio"
-    aria-pressed="false">
-    UNMUTE OPPONENT
-  </button>
+
+<!-- SFU PK - OPPONENT PROFILE -->
+<div class="sfu-pk-opponent-info">
+
+  <div class="sfu-pk-avatar-wrap">
+
+    <img
+      id="sfuPkPeerAvatar"
+      class="sfu-pk-peer-avatar"
+      alt="Opponent avatar"
+      loading="eager"
+      decoding="async"
+      hidden
+    >
+
+    <span
+      id="sfuPkPeerAvatarFallback"
+      class="sfu-pk-avatar-fallback">
+      O
+    </span>
+
+  </div>
 
   <span
     id="sfuPkPeerName"
@@ -5708,7 +5897,51 @@ body.sfu-role-host
     OPPONENT
   </span>
 
+</div>
+
+<!-- SFU PK - OPPONENT AUDIO -->
+<button
+  type="button"
+  id="sfuPkAudioBtn"
+  class="sfu-pk-audio"
+  aria-label="Unmute opponent"
+  title="Unmute opponent"
+  aria-pressed="false">
+
+  <svg
+    class="sfu-pk-audio-icon"
+    viewBox="0 0 24 24"
+    width="21"
+    height="21"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true">
+
+    <path d="M11 5 6 9H3v6h3l5 4V5z"/>
+
+    <path
+      class="pk-audio-on"
+      d="M15.5 8.5a5 5 0 0 1 0 7M18 5a10 10 0 0 1 0 14"
+      style="display:none"
+    />
+
+    <path
+      class="pk-audio-off"
+      d="m16 9 5 6m0-6-5 6"
+    />
+
+  </svg>
+
+</button>
+
+
 </section>
+
+
+
 
 <!-- SFU PK - SCOREBOARD -->
 <div id="sfuPkBoard" class="sfu-pk-board hidden">
@@ -10074,6 +10307,108 @@ const pkEndBtn = $("sfuPkEndBtn");
 const pkRematchBtn = $("sfuPkRematchBtn");
 
 const pkAudioBtn = $("sfuPkAudioBtn");
+
+
+/* ==========================================
+   SFU PK - OPPONENT PROFILE AND AUDIO ICON
+========================================== */
+
+const pkPeerAvatar = $("sfuPkPeerAvatar");
+const pkPeerAvatarFallback = $("sfuPkPeerAvatarFallback");
+const pkPeerName = $("sfuPkPeerName");
+
+function pkUpdateOpponentProfile(state) {
+
+  const index = state?.rooms?.findIndex(
+    id => String(id) === String(roomId)
+  ) ?? -1;
+
+  if (index < 0) return;
+
+  const otherIndex = index === 0 ? 1 : 0;
+
+  const name = String(
+    state.names?.[otherIndex] || "OPPONENT"
+  );
+
+  const avatar = String(
+    state.avatars?.[otherIndex] || ""
+  ).trim();
+
+  pkPeerName.textContent = name;
+
+  const fallback = () => {
+    pkPeerAvatar.hidden = true;
+    pkPeerAvatarFallback.hidden = false;
+    pkPeerAvatarFallback.textContent =
+      name.charAt(0).toUpperCase() || "O";
+  };
+
+  pkPeerAvatar.onload = () => {
+    pkPeerAvatar.hidden = false;
+    pkPeerAvatarFallback.hidden = true;
+  };
+
+  pkPeerAvatar.onerror = fallback;
+
+  if (!avatar) {
+    pkPeerAvatar.removeAttribute("src");
+    fallback();
+    return;
+  }
+
+  // Allow local image paths and HTTPS images only.
+  if (
+    !avatar.startsWith("/") &&
+    !avatar.startsWith("https://")
+  ) {
+    pkPeerAvatar.removeAttribute("src");
+    fallback();
+    return;
+  }
+
+  fallback();
+  pkPeerAvatar.src = avatar;
+}
+
+function pkUpdateAudioIcon() {
+
+  pkAudioBtn.setAttribute(
+    "aria-pressed",
+    String(pkAudioEnabled)
+  );
+
+  pkAudioBtn.setAttribute(
+    "aria-label",
+    pkAudioEnabled
+      ? "Mute opponent"
+      : "Unmute opponent"
+  );
+
+  pkAudioBtn.title = pkAudioEnabled
+    ? "Mute opponent"
+    : "Unmute opponent";
+
+  const onIcon = pkAudioBtn.querySelector(
+    ".pk-audio-on"
+  );
+
+  const offIcon = pkAudioBtn.querySelector(
+    ".pk-audio-off"
+  );
+
+  if (onIcon) {
+    onIcon.style.display =
+      pkAudioEnabled ? "" : "none";
+  }
+
+  if (offIcon) {
+    offIcon.style.display =
+      pkAudioEnabled ? "none" : "";
+  }
+}
+
+
 const pkOverlay = $("sfuPkOverlay");
 const pkRoomInput = $("sfuPkRoomInput");
 const pkConfirm = $("sfuPkConfirm");
@@ -10549,14 +10884,7 @@ pkAudioBtn.addEventListener("click", async () => {
 
   pkAudioEnabled = !pkAudioEnabled;
 
-  pkAudioBtn.textContent = pkAudioEnabled
-    ? "MUTE OPPONENT"
-    : "UNMUTE OPPONENT";
-
-  pkAudioBtn.setAttribute(
-    "aria-pressed",
-    String(pkAudioEnabled)
-  );
+pkUpdateAudioIcon();
 
   for (
     const audio of pkPeerMedia.querySelectorAll("audio")
@@ -11054,11 +11382,11 @@ loadSfuChatHistory();
   document.querySelector(".studio")
     .classList.add("sfu-pk-active");
 
-  const index = state.rooms.indexOf(roomId);
-  const otherIndex = index === 0 ? 1 : 0;
+ // Refresh opponent name and avatar
+pkUpdateOpponentProfile(state);
 
-  $("sfuPkPeerName").textContent =
-    state.names?.[otherIndex] || "OPPONENT";
+// Refresh sound icon
+pkUpdateAudioIcon();
 
   pkStartBtn.disabled = true;
 
@@ -11122,13 +11450,7 @@ if (socket.connected && sfuChatLive) {
   pkConnectEpoch++;
 
 pkAudioEnabled = false;
-
-pkAudioBtn.textContent = "UNMUTE OPPONENT";
-
-pkAudioBtn.setAttribute(
-  "aria-pressed",
-  "false"
-);
+pkUpdateAudioIcon();
 
 pkAudioBtn.classList.add("hidden");
 pkEndBtn.classList.add("hidden");

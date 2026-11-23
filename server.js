@@ -9251,24 +9251,24 @@ function pkHost(roomId, socketId) {
 }
 
 
+
 function pkPublicState(match) {
   return {
     id: match.id,
 
     rooms: [...match.rooms],
     names: [...match.names],
+    avatars: [...(match.avatars || ["", ""])],
     scores: [...match.scores],
 
     endAt: match.endAt,
 
-    // playing = đang đếm ngược
-    // finished = hết giờ, vẫn giữ kết nối PK
     phase: match.phase,
-
     round: match.round,
     winnerRoom: match.winnerRoom
   };
 }
+
 
 
 function pkBroadcast(match, event, data) {
@@ -15825,11 +15825,22 @@ pkPruneInvites();
   const match = {
     id: crypto.randomUUID(),
     rooms: [from.id, target.id],
-
     names: [
       String(users[from.room.ownerUid]?.profile?.name || "Host A").slice(0, 50),
       String(users[target.room.ownerUid]?.profile?.name || "Host B").slice(0, 50)
     ],
+
+avatars: [
+  normalizeAvatar(
+    users[from.room.ownerUid]?.profile?.avatar || ""
+  ),
+
+  normalizeAvatar(
+    users[target.room.ownerUid]?.profile?.avatar || ""
+  )
+],
+
+
     scores: [0, 0],
 
 endAt: Date.now() + PK_DURATION,
