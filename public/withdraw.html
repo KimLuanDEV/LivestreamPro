@@ -1305,6 +1305,124 @@ body.page-withdraw .wd-transaction-note {
 
 
 
+
+  <!-- FORM -->
+  <section class="wd-panel">
+
+    <div class="wd-section-head">
+      <div class="wd-section-icon">
+  <span data-wd-icon="wallet"></span>
+</div>
+      <div>
+        <h2 class="wd-section-title">Create Withdrawal Request</h2>
+        <div class="wd-section-sub">
+          Enter the amount of diamonds you wish to withdraw
+        </div>
+      </div>
+    </div>
+
+    <div class="wd-field">
+      <label for="withdrawInput">DIAMOND WITHDRAWAL AMOUNT</label>
+      <input
+        class="wd-input"
+        type="number"
+        id="withdrawInput"
+        min="0"
+        step="1"
+        inputmode="numeric"
+        	placeholder="Enter diamond amount"
+      >
+    </div>
+
+<p class="wd-min-note" id="minWithdrawNote">
+  <span data-wd-icon="warning" data-wd-size="sm"></span>
+  Minimum withdrawal:
+  <b id="minWithdrawVal"></b> diamonds
+</p>
+
+<div class="wd-bank-title">
+  <span data-wd-icon="bank"></span>
+  RECIPIENT BANK DETAILS
+</div>
+
+
+<div class="wd-field">
+  <label for="bankName">BANK</label>
+
+  <select class="wd-select" id="bankName">
+    <option value="">Select your bank</option>
+    <option value="Vietcombank">Vietcombank</option>
+    <option value="Techcombank">Techcombank</option>
+    <option value="BIDV">BIDV</option>
+    <option value="VietinBank">VietinBank</option>
+    <option value="MB Bank">MB Bank</option>
+    <option value="ACB">ACB</option>
+    <option value="Other">Other Bank</option>
+  </select>
+</div>
+
+<!-- CUSTOM BANK NAME -->
+<div class="wd-field hidden" id="otherBankField">
+  <label for="otherBankName">BANK NAME</label>
+
+  <input
+    class="wd-input"
+    id="otherBankName"
+    type="text"
+    maxlength="100"
+    autocomplete="off"
+    placeholder="Enter your bank name"
+  >
+</div>
+
+<!-- BANK LOGO -->
+<div class="wd-bank-preview">
+  <img
+    id="bankLogo"
+    class="bank-logo hidden"
+    alt="Bank logo"
+  >
+</div>
+
+
+    <div class="wd-field">
+      <label for="bankAccount">	ACCOUNT NUMBER</label>
+      <input
+        class="wd-input"
+        id="bankAccount"
+        type="text"
+        inputmode="numeric"
+        autocomplete="off"
+        	placeholder="Enter bank account number"
+      >
+    </div>
+
+    <div class="wd-field">
+      <label for="bankOwner">ACCOUNT HOLDER NAME</label>
+      <input
+        class="wd-input"
+        id="bankOwner"
+        type="text"
+        autocomplete="off"
+        	placeholder="Enter account holder name"
+      >
+    </div>
+
+<button id="btnSubmitWithdraw" class="wd-submit">
+  <span data-wd-icon="send"></span>
+  <span>	SUBMIT WITHDRAWAL REQUEST</span>
+</button>
+
+<p class="wd-security-hint">
+  <span data-wd-icon="shield" data-wd-size="sm"></span>
+  Withdrawal requests require security code verification
+</p>
+
+  </section>
+
+
+
+  
 <!-- ==========================================
      DIAMOND CONVERSION - WALLET TO GAME
 ========================================== -->
@@ -1446,120 +1564,6 @@ body.page-withdraw .wd-transaction-note {
   </div>
 </div>
 
-
-  <!-- FORM -->
-  <section class="wd-panel">
-
-    <div class="wd-section-head">
-      <div class="wd-section-icon">
-  <span data-wd-icon="wallet"></span>
-</div>
-      <div>
-        <h2 class="wd-section-title">Create Withdrawal Request</h2>
-        <div class="wd-section-sub">
-          Enter the amount of diamonds you wish to withdraw
-        </div>
-      </div>
-    </div>
-
-    <div class="wd-field">
-      <label for="withdrawInput">DIAMOND WITHDRAWAL AMOUNT</label>
-      <input
-        class="wd-input"
-        type="number"
-        id="withdrawInput"
-        min="0"
-        step="1"
-        inputmode="numeric"
-        	placeholder="Enter diamond amount"
-      >
-    </div>
-
-<p class="wd-min-note" id="minWithdrawNote">
-  <span data-wd-icon="warning" data-wd-size="sm"></span>
-  Minimum withdrawal:
-  <b id="minWithdrawVal"></b> diamonds
-</p>
-
-<div class="wd-bank-title">
-  <span data-wd-icon="bank"></span>
-  RECIPIENT BANK DETAILS
-</div>
-
-
-<div class="wd-field">
-  <label for="bankName">BANK</label>
-
-  <select class="wd-select" id="bankName">
-    <option value="">Select your bank</option>
-    <option value="Vietcombank">Vietcombank</option>
-    <option value="Techcombank">Techcombank</option>
-    <option value="BIDV">BIDV</option>
-    <option value="VietinBank">VietinBank</option>
-    <option value="MB Bank">MB Bank</option>
-    <option value="ACB">ACB</option>
-    <option value="Other">Other Bank</option>
-  </select>
-</div>
-
-<!-- CUSTOM BANK NAME -->
-<div class="wd-field hidden" id="otherBankField">
-  <label for="otherBankName">BANK NAME</label>
-
-  <input
-    class="wd-input"
-    id="otherBankName"
-    type="text"
-    maxlength="100"
-    autocomplete="off"
-    placeholder="Enter your bank name"
-  >
-</div>
-
-<!-- BANK LOGO -->
-<div class="wd-bank-preview">
-  <img
-    id="bankLogo"
-    class="bank-logo hidden"
-    alt="Bank logo"
-  >
-</div>
-
-
-    <div class="wd-field">
-      <label for="bankAccount">	ACCOUNT NUMBER</label>
-      <input
-        class="wd-input"
-        id="bankAccount"
-        type="text"
-        inputmode="numeric"
-        autocomplete="off"
-        	placeholder="Enter bank account number"
-      >
-    </div>
-
-    <div class="wd-field">
-      <label for="bankOwner">ACCOUNT HOLDER NAME</label>
-      <input
-        class="wd-input"
-        id="bankOwner"
-        type="text"
-        autocomplete="off"
-        	placeholder="Enter account holder name"
-      >
-    </div>
-
-<button id="btnSubmitWithdraw" class="wd-submit">
-  <span data-wd-icon="send"></span>
-  <span>	SUBMIT WITHDRAWAL REQUEST</span>
-</button>
-
-<p class="wd-security-hint">
-  <span data-wd-icon="shield" data-wd-size="sm"></span>
-  Withdrawal requests require security code verification
-</p>
-
-  </section>
 
   <!-- HISTORY -->
   <section class="wd-history">
