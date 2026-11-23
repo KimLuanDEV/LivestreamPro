@@ -6074,6 +6074,44 @@ body.sfu-role-host
 
 
 
+/* ==========================================
+   ROCKET MOBILE - TRANSPARENT WEBP
+========================================== */
+
+#sfuRocketMobile {
+  position: absolute;
+  inset: 0;
+
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  background: transparent !important;
+  pointer-events: none;
+
+  z-index: 1;
+}
+
+#sfuRocketVideo {
+  z-index: 1;
+}
+
+#sfuRocketMobile.hidden,
+#sfuRocketVideo.hidden {
+  display: none !important;
+}
+
+#sfuRocketEffect {
+  background: transparent !important;
+}
+
+#sfuRocketEffect .sfu-rocket-sender {
+  z-index: 2;
+}
+
 
 </style>
 
@@ -6737,6 +6775,15 @@ body.sfu-role-host
     muted
     preload="none">
   </video>
+
+  <!-- ROCKET MOBILE TRANSPARENT ANIMATION -->
+<img
+  id="sfuRocketMobile"
+  class="sfu-rocket-mobile hidden"
+  alt=""
+  aria-hidden="true"
+  decoding="async"
+>
 
   <div class="sfu-rocket-sender">
     <strong id="sfuRocketSender"></strong>
@@ -8416,42 +8463,20 @@ socket.on("coin-update", data => {
 
 const rocketEffect = $("sfuRocketEffect");
 const rocketVideo = $("sfuRocketVideo");
-
 /* ==========================================
-   ROCKET - DETECT IOS / SAFARI
+   ROCKET - MOBILE DETECTION
 ========================================== */
 
-const rocketUseScreenBlend = (() => {
-
-  const ua = navigator.userAgent || "";
-
-  const isiOS =
-    /iPhone|iPad|iPod/i.test(ua) ||
-    (
-      navigator.platform === "MacIntel" &&
-      navigator.maxTouchPoints > 1
-    );
-
-  const isSafari =
-    /Safari/i.test(ua) &&
-    !/Chrome|Chromium|Edg|OPR|Firefox/i.test(ua);
-
-  return isiOS || isSafari;
-
-})();
-
-if (rocketUseScreenBlend) {
-
-  rocketVideo.classList.add(
-    "rocket-screen-blend"
+const rocketMobileMode =
+  /Android|iPhone|iPad|iPod|Mobile/i.test(
+    navigator.userAgent
+  ) ||
+  (
+    navigator.platform === "MacIntel" &&
+    navigator.maxTouchPoints > 1
   );
 
-  console.log(
-    "[ROCKET] Safari/iOS screen blend enabled"
-  );
-
-}
-
+let rocketMobileImage = $("sfuRocketMobile");
 
 const rocketSender = $("sfuRocketSender");
 const rocketQuantity = $("sfuRocketQuantity");
@@ -8460,109 +8485,175 @@ const rocketQueue = [];
 
 let rocketPlaying = false;
 
+
+/* ==========================================
+   ROCKET GIFT - MOBILE & DESKTOP V2
+========================================== */
+
 function stopRocketEffect() {
+
   rocketVideo.pause();
   rocketVideo.removeAttribute("src");
   rocketVideo.load();
+
+  rocketVideo.classList.add("hidden");
+
+  if (rocketMobileImage) {
+
+    rocketMobileImage.classList.add("hidden");
+
+    rocketMobileImage.removeAttribute("src");
+
+  }
 
   rocketEffect.classList.add("hidden");
 
   rocketPlaying = false;
 
-  // Phát quà tiếp theo nếu có
+  // Play the next gift in the queue
   playNextRocket();
 }
 
 
+/* ==========================================
+   PLAY NEXT ROCKET
+========================================== */
 
 function playNextRocket() {
-  if (rocketPlaying || !rocketQueue.length) return;
+
+  if (rocketPlaying) return;
+  if (!rocketQueue.length) return;
 
   const gift = rocketQueue.shift();
+
   rocketPlaying = true;
 
   rocketSender.textContent = gift.donor;
+
   rocketQuantity.textContent =
     `🚀 ROCKET ×${gift.quantity}`;
 
   rocketEffect.classList.remove("hidden");
 
-  const sources = [
-    "/assets/live-gifts/rocket-effect.webm"
-  ];
 
-  let sourceIndex = 0;
-  let finished = false;
-  let fallbackTimer = null;
+  /* ========================================
+     MOBILE: ANIMATED WEBP WITH ALPHA
+  ======================================== */
 
-  function cleanup() {
-    clearTimeout(fallbackTimer);
-    rocketVideo.removeEventListener("ended", finish);
-    rocketVideo.removeEventListener("error", tryNextSource);
+  if (rocketMobileMode) {
+
+    rocketVideo.pause();
+    rocketVideo.classList.add("hidden");
+
+    const img = document.createElement("img");
+
+    img.id = "sfuRocketMobile";
+    img.className = "sfu-rocket-mobile";
+
+    img.alt = "";
+    img.setAttribute("aria-hidden", "true");
+
+    img.decoding = "async";
+
+    // Replace image to restart animation
+    if (rocketMobileImage) {
+      rocketMobileImage.replaceWith(img);
+    } else {
+      rocketEffect.insertBefore(
+        img,
+        rocketSender.parentElement || null
+      );
+    }
+
+    rocketMobileImage = img;
+
+    let done = false;
+    let timer = null;
+
+    function finish() {
+
+      if (done) return;
+
+      done = true;
+
+      clearTimeout(timer);
+
+      img.onerror = null;
+
+      stopRocketEffect();
+    }
+
+    img.onerror = finish;
+
+    timer = setTimeout(finish, 4200);
+
+    img.src =
+      "/assets/live-gifts/rocket-effect-mobile.webp";
+
+    return;
   }
 
-  function finish() {
-    if (finished) return;
-    finished = true;
 
-    cleanup();
+  /* ========================================
+     DESKTOP: WEBM ALPHA VIDEO
+  ======================================== */
+
+  if (rocketMobileImage) {
+    rocketMobileImage.classList.add("hidden");
+  }
+
+  rocketVideo.classList.remove("hidden");
+
+  rocketVideo.muted = true;
+  rocketVideo.defaultMuted = true;
+  rocketVideo.playsInline = true;
+  rocketVideo.loop = false;
+
+  let done = false;
+  let timer = null;
+
+  function finish() {
+
+    if (done) return;
+
+    done = true;
+
+    clearTimeout(timer);
+
+    rocketVideo.removeEventListener(
+      "ended",
+      finish
+    );
+
+    rocketVideo.removeEventListener(
+      "error",
+      finish
+    );
+
     stopRocketEffect();
   }
 
-  function tryNextSource() {
-    if (finished) return;
-
-    sourceIndex++;
-
-    if (sourceIndex >= sources.length) {
-      console.warn(
-        "[ROCKET] No playable video source"
-      );
-      finish();
-      return;
-    }
-
-    startSource();
-  }
-
-  function startSource() {
-    if (finished) return;
-
-    rocketVideo.pause();
-    rocketVideo.muted = true;
-    rocketVideo.defaultMuted = true;
-    rocketVideo.playsInline = true;
-    rocketVideo.loop = false;
-
-    rocketVideo.src = sources[sourceIndex];
-    rocketVideo.load();
-
-    const playPromise = rocketVideo.play();
-
-    if (playPromise?.catch) {
-      playPromise.catch(error => {
-        console.warn(
-          "[ROCKET] Playback failed:",
-          error
-        );
-        tryNextSource();
-      });
-    }
-  }
-
   rocketVideo.addEventListener(
-    "ended", finish
+    "ended",
+    finish,
+    { once: true }
   );
 
   rocketVideo.addEventListener(
-    "error", tryNextSource
+    "error",
+    finish,
+    { once: true }
   );
 
-  fallbackTimer = setTimeout(finish, 8000);
+  timer = setTimeout(finish, 8000);
 
-  startSource();
+  rocketVideo.src =
+    "/assets/live-gifts/rocket-effect.webm";
+
+  rocketVideo.load();
+
+  rocketVideo.play().catch(finish);
 }
-
 
 
 function enqueueRocketGift(data) {
