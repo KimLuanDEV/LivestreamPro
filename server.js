@@ -18537,6 +18537,11 @@ setInterval(() => {
 // 1. Danh sách phòng ảo
 
 
+
+/* ==========================================
+   VIRTUAL LIVE ROOMS
+========================================== */
+
 const VIRTUAL_LIVE_ROOMS = Object.freeze({
 
   Youtube1: {
@@ -18554,6 +18559,15 @@ const VIRTUAL_LIVE_ROOMS = Object.freeze({
     type: "youtube",
     videoId: "k7YJHCR9JBE"
   },
+
+  // BIGO LIVE
+  Bigo692057933: {
+    roomId: "Bigo692057933",
+    title: "BIGO LIVE · 692057933",
+    avatar: "/icons/icon-192.png",
+    type: "bigo",
+    url: "https://www.bigo.tv/692057933"
+  }
 
 });
 

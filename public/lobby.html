@@ -3925,6 +3925,7 @@ if (profile.uid) {
 
 
 
+
 const VIRTUAL_ROOMS = [
 
   {
@@ -3942,6 +3943,16 @@ const VIRTUAL_ROOMS = [
     avatar: "/assets/live-avatar/Youtube.jpg",
     link: "/virtual-room.html?room=Youtube2"
   },
+
+  // BIGO LIVE
+  {
+    roomId: "Bigo692057933",
+    title: "BIGO LIVE · 692057933",
+    viewers: 0,
+    avatar: "/icons/icon-192.png",
+    link: "/bigo-room.html?room=Bigo692057933"
+  }
+
 ];
 
 
@@ -4311,9 +4322,14 @@ const viewerURL = r.mediaMode === "sfu"
   ? `/broadcast-sfu.html?mode=viewer&room=${encodeURIComponent(r.roomId)}`
   : `/viewer.html?room=${encodeURIComponent(r.roomId)}`;
 
+
 a.href = r.__virtual
-  ? `/virtual-room.html?room=${encodeURIComponent(r.roomId)}`
+  ? (
+      r.__link ||
+      `/virtual-room.html?room=${encodeURIComponent(r.roomId)}`
+    )
   : viewerURL;
+
 
     const hostName   = r.host?.name   || (r.__virtual ? "Virtual Room" : "Host");
     const verified = r.host?.verified;
@@ -4342,9 +4358,15 @@ a.href = r.__virtual
 
     <div class="lobby-badges">
       ${
-        r.__virtual
-          ? `<span class="badge badge--virtual">Live</span>`
-          : `<span class="lobby-livePill"><span class="lobby-liveDot"></span>LIVE</span>`
+
+r.__virtual
+  ? `<span class="badge badge--virtual">${
+      r.roomId === "Bigo692057933"
+        ? "BIGO"
+        : "Live"
+    }</span>`
+  : `<span class="lobby-livePill"><span class="lobby-liveDot"></span>LIVE</span>`
+
       }
       ${(!r.__virtual && r.hasGuest) ? `<span class="badge badge--info">Co-host</span>` : ``}
     </div>
