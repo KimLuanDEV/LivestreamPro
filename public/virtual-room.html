@@ -375,14 +375,17 @@ body {
 
 
 
+
 /* ==========================================
-   YOUTUBE3 - AUTOMATIC LIVE PLAYER
+   YOUTUBE1/2/3 - AUTOMATIC LIVE PLAYER
 ========================================== */
 
 if (
+  roomId === "Youtube1" ||
   roomId === "Youtube2" ||
   roomId === "Youtube3"
 ) {
+
 
   const isLive =
     room.status === "live" &&
@@ -861,12 +864,14 @@ else {
 
 
 
+
 /* ==========================================
-   YOUTUBE2 + YOUTUBE3
+   YOUTUBE1 + YOUTUBE2 + YOUTUBE3
    AUTOMATIC LIVE SOURCE UPDATES
 ========================================== */
 
 if (
+  roomId === "Youtube1" ||
   roomId === "Youtube2" ||
   roomId === "Youtube3"
 ) {
@@ -921,10 +926,14 @@ if (
   }
 
   // Each room listens to its own socket event.
-  const statusEvent =
-    roomId === "Youtube2"
+
+const statusEvent =
+  roomId === "Youtube1"
+    ? "virtual-live:yt1-status"
+    : roomId === "Youtube2"
       ? "virtual-live:yt2-status"
       : "virtual-live:yt3-status";
+
 
   socket.on(
     statusEvent,

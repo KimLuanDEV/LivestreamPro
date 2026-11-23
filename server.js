@@ -18544,13 +18544,15 @@ setInterval(() => {
 
 const VIRTUAL_LIVE_ROOMS = Object.freeze({
 
-  Youtube1: {
-    roomId: "Youtube1",
-    title: "CỎ DẠI VÀ HOA DÀNH DÀNH",
-    avatar: "/assets/live-avatar/Youtube.jpg",
-    type: "youtube",
-    videoId: "Zb6zrxrHv14"
-  },
+
+Youtube1: {
+  roomId: "Youtube1",
+  title: "Rambo",
+  avatar: "/assets/live-avatar/Rambo.jpg",
+  type: "youtube",
+  videoId: "9FSuVZKDG1A"
+},
+
 
 
 Youtube2: {
@@ -18585,7 +18587,7 @@ Youtube3: {
 const YT3_API_KEY =
   String(process.env.YOUTUBE_DATA_API_KEY || "").trim();
 
-const YT3_INTERVAL = 40 * 60 * 1000;
+const YT3_INTERVAL = 60 * 60 * 1000;
 
 let yt3ChannelId =
   String(process.env.YOUTUBE3_CHANNEL_ID || "").trim();
@@ -18749,7 +18751,7 @@ yt3Timer.unref?.();
    YOUTUBE2 - AUTOMATIC LIVE DETECTION
 ========================================== */
 
-const YT2_INTERVAL = 40 * 60 * 1000;
+const YT2_INTERVAL = 60 * 60 * 1000;
 
 let yt2ChannelId = String(
   process.env.YOUTUBE2_CHANNEL_ID || ""
@@ -18928,6 +18930,154 @@ yt2Timer.unref?.();
 
 
 /* ==========================================
+   YOUTUBE1 - AUTOMATIC LIVE DETECTION
+========================================== */
+
+const YT1_INTERVAL = 60 * 60 * 1000;
+
+let yt1ChannelId = String(
+  process.env.YOUTUBE1_CHANNEL_ID || ""
+).trim();
+
+let yt1LastCheck = 0;
+let yt1Checking = null;
+
+let yt1State = {
+  status: "checking",
+  live: false,
+  videoId: "",
+  liveTitle: "",
+  checkedAt: null
+};
+
+async function refreshYoutube1() {
+
+  // Reuse the API key already used by Youtube2/3.
+  if (!YT3_API_KEY) {
+    yt1State = {
+      status: "unconfigured",
+      live: false,
+      videoId: "",
+      liveTitle: "",
+      checkedAt: Date.now()
+    };
+
+    return yt1State;
+  }
+
+  if (yt1Checking) {
+    return yt1Checking;
+  }
+
+  if (Date.now() - yt1LastCheck < YT1_INTERVAL) {
+    return yt1State;
+  }
+
+  yt1LastCheck = Date.now();
+
+  yt1Checking = (async () => {
+
+    try {
+
+      // Detect channel from the supplied video.
+      if (!yt1ChannelId) {
+
+        const videoData = await yt3Api("videos", {
+          part: "snippet",
+          id: "9FSuVZKDG1A"
+        });
+
+        const channelId =
+          videoData.items?.[0]?.snippet?.channelId;
+
+        if (!/^UC[\w-]{22}$/.test(channelId || "")) {
+          throw new Error("Youtube1 channel not found");
+        }
+
+        yt1ChannelId = channelId;
+      }
+
+      // Find the latest active livestream.
+      const data = await yt3Api("search", {
+        part: "snippet",
+        channelId: yt1ChannelId,
+        eventType: "live",
+        type: "video",
+        videoEmbeddable: "true",
+        maxResults: 5
+      });
+
+      const stream = (data.items || []).find(item =>
+        /^[a-zA-Z0-9_-]{11}$/.test(
+          item.id?.videoId || ""
+        )
+      );
+
+      const nextState = {
+        status: stream ? "live" : "offline",
+        live: Boolean(stream),
+        videoId: stream?.id?.videoId || "",
+        liveTitle: stream?.snippet?.title || "",
+        checkedAt: Date.now()
+      };
+
+      const changed =
+        yt1State.status !== nextState.status ||
+        yt1State.videoId !== nextState.videoId;
+
+      yt1State = nextState;
+
+      if (changed) {
+        io.emit("virtual-live:yt1-status", yt1State);
+      }
+
+    } catch (error) {
+
+      console.warn(
+        "[YOUTUBE1 LIVE CHECK]",
+        error.message
+      );
+
+      yt1State = {
+        status: "error",
+        live: false,
+        videoId: "",
+        liveTitle: "",
+        checkedAt: Date.now()
+      };
+
+      io.emit("virtual-live:yt1-status", yt1State);
+    }
+
+    return yt1State;
+
+  })();
+
+  try {
+    return await yt1Checking;
+  } finally {
+    yt1Checking = null;
+  }
+}
+
+// Timer checks cache first; does not call
+// YouTube every 60 seconds.
+const yt1Timer = setInterval(() => {
+
+  refreshYoutube1().catch(error => {
+    console.warn(
+      "[YOUTUBE1 TIMER]",
+      error.message
+    );
+  });
+
+}, 60000);
+
+yt1Timer.unref?.();
+
+
+
+/* ==========================================
    VIRTUAL LIVE - SHARED PLAYBACK CLOCK
 ========================================== */
 
@@ -19016,15 +19166,19 @@ const room = VIRTUAL_LIVE_ROOMS[roomId];
 
 
 
-// Dynamic livestream source for Youtube2 and Youtube3
+
+// Dynamic livestream source for Youtube1/2/3
 if (
+  roomId === "Youtube1" ||
   roomId === "Youtube2" ||
   roomId === "Youtube3"
 ) {
 
-  const state = roomId === "Youtube2"
-    ? await refreshYoutube2()
-    : await refreshYoutube3();
+  const state = roomId === "Youtube1"
+    ? await refreshYoutube1()
+    : roomId === "Youtube2"
+      ? await refreshYoutube2()
+      : await refreshYoutube3();
 
   return res.json({
     ...room,
@@ -19034,6 +19188,7 @@ if (
   });
 
 }
+
 
 
 

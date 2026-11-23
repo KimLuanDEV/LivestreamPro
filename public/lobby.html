@@ -3928,13 +3928,15 @@ if (profile.uid) {
 
 const VIRTUAL_ROOMS = [
 
-  {
-    roomId: "Youtube1",
-    title: "CỎ DẠI VÀ HOA DÀNH DÀNH",
-    viewers: 0,
-    avatar: "/assets/live-avatar/Youtube.jpg",
-    link: "/virtual-room.html?room=Youtube1"
-  },
+
+{
+  roomId: "Youtube1",
+  title: "Rambo",
+  viewers: 0,
+  avatar: "/assets/live-avatar/Rambo.jpg",
+  link: "/virtual-room.html?room=Youtube1"
+},
+
 
 
 {
@@ -4342,12 +4344,16 @@ a.href = r.__virtual
     const liveFor = (typeof r.liveStartTs === "number") ? (Date.now() - r.liveStartTs) : 0;
 
 
+
 const youtubeRoomStatus =
-  r.roomId === "Youtube2"
-    ? window.__yt2RoomStatus
-    : r.roomId === "Youtube3"
-      ? window.__yt3RoomStatus
-      : null;
+  r.roomId === "Youtube1"
+    ? window.__yt1RoomStatus
+    : r.roomId === "Youtube2"
+      ? window.__yt2RoomStatus
+      : r.roomId === "Youtube3"
+        ? window.__yt3RoomStatus
+        : null;
+
 
 
    a.innerHTML = `
@@ -4376,8 +4382,11 @@ const youtubeRoomStatus =
 
 r.__virtual
   ? `<span class="badge badge--virtual">${
-      r.roomId === "Youtube2" ||
-      r.roomId === "Youtube3"
+   
+r.roomId === "Youtube1" ||
+r.roomId === "Youtube2" ||
+r.roomId === "Youtube3"
+
         ? (
             youtubeRoomStatus === "live"
               ? "● LIVE"
@@ -4490,6 +4499,61 @@ socket.on("connect", () => {
 
 });
 
+
+
+
+/* ==========================================
+   YOUTUBE1 - LIVE STATUS IN LOBBY
+========================================== */
+
+window.__yt1RoomStatus = "checking";
+
+async function updateYoutube1Lobby() {
+
+  try {
+
+    const response = await fetch(
+      "/api/virtual-live/rooms/Youtube1",
+      { cache: "no-store" }
+    );
+
+    if (!response.ok) return;
+
+    const room = await response.json();
+
+    window.__yt1RoomStatus =
+      room.status || "checking";
+
+    render(__rooms);
+
+  } catch (error) {
+
+    console.warn(
+      "[YOUTUBE1 LOBBY]",
+      error
+    );
+
+  }
+}
+
+// Receive status updates from the server.
+socket.on("virtual-live:yt1-status", state => {
+
+  window.__yt1RoomStatus =
+    state.status || "checking";
+
+  render(__rooms);
+
+});
+
+// Initial load.
+updateYoutube1Lobby();
+
+// Fallback polling.
+setInterval(
+  updateYoutube1Lobby,
+  60000
+);
 
 
 
