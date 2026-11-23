@@ -1190,53 +1190,75 @@ const time = `
 
  <div class="lp-post-inner">
 
+
 <div class="lp-post-head">
 
-<img
-  class="lp-ava"
-  src="${fixMedia(p.avatar)}"
-  loading="eager"
-  decoding="async"
-  onclick="openUserProfile('${p.uid}')"
-  style="cursor:pointer"
->
+  <!-- AVATAR -->
+  <img
+    class="lp-ava"
+    src="${fixMedia(p.avatar)}"
+    loading="eager"
+    decoding="async"
+    onclick="openUserProfile('${p.uid}')"
+    style="cursor:pointer"
+  >
 
-<div class="lp-post-name"
-     onclick="openUserProfile('${p.uid}')"
-     style="cursor:pointer">
-  ${p.name}
-  ${isAdmin ? `<span class="lp-verified" title="Verified Admin">✔︎</span>` : ``}
-</div>
+  <!-- AUTHOR INFORMATION -->
+  <div class="lp-post-author">
 
+    <div
+      class="lp-post-name"
+      onclick="openUserProfile('${p.uid}')"
+      style="cursor:pointer"
+    >
+      ${p.name}
 
-  <div class="lp-post-time">${time}</div>
-</div>
+      ${isAdmin
+        ? `<span class="lp-verified"
+                 title="Verified Admin">✔︎</span>`
+        : ``
+      }
+    </div>
 
-
-${
-  p.uid === auth.uid || isAdminUser(auth.uid)
-  ? `
-  <div class="lp-post-tools">
-
-    ${p.uid === auth.uid ? `
-      <span class="lp-edit" onclick="editPost('${p.id}')">✏️</span>
-    ` : ``}
-
-    <span class="lp-del"
-      onclick="${
-        isAdminUser(auth.uid) && p.uid !== auth.uid
-          ? `adminDeletePost('${p.id}')`
-          : `deletePost('${p.id}')`
-      }"
-    >🗑</span>
+    <div class="lp-post-time">
+      ${time}
+    </div>
 
   </div>
-` : ``}
 
+  <!-- EDIT / DELETE -->
+  ${
+    p.uid === auth.uid || isAdminUser(auth.uid)
+    ? `
+      <div class="lp-post-tools">
 
+        ${p.uid === auth.uid
+          ? `
+            <span
+              class="lp-edit"
+              onclick="editPost('${p.id}')"
+            >✏️</span>
+          `
+          : ``
+        }
 
+        <span
+          class="lp-del"
+          onclick="${
+            isAdminUser(auth.uid) &&
+            p.uid !== auth.uid
+              ? `adminDeletePost('${p.id}')`
+              : `deletePost('${p.id}')`
+          }"
+        >🗑</span>
+
+      </div>
+    `
+    : ``
+  }
 
 </div>
+
 
 
 <div class="lp-post-text">${p.text.replace(/\n/g, "<br>")}</div>
