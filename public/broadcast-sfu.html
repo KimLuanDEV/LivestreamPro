@@ -5338,6 +5338,37 @@ body {
 
 
 
+
+/* ==========================================
+   SFU - HOST CONNECTION ALERT
+========================================== */
+
+body.sfu-role-host
+.sfu-recovery-overlay {
+  z-index: 100200;
+}
+
+body.sfu-role-host
+.sfu-recovery-card {
+  border-color: rgba(255, 128, 128, .4);
+
+  background:
+    radial-gradient(
+      ellipse at top,
+      rgba(160, 49, 49, .14),
+      transparent 65%
+    ),
+    linear-gradient(145deg, #202127, #101115);
+}
+
+body.sfu-role-host
+.sfu-recovery-title {
+  color: #ffb3b3;
+}
+
+
+
+
 </style>
 
 
@@ -8525,6 +8556,20 @@ const monitoredRoom = lkRoom;
 
 lkRoom.on(RoomEvent.Reconnecting, () => {
 
+
+if (!isViewer) {
+
+  if (!stopping && started && !hostSessionEnded) {
+    showHostRecovery(
+      "Video connection interrupted. LiveKit is reconnecting..."
+    );
+  }
+
+  return;
+}
+
+
+
   if (!isViewer || viewerLeaving || sfuEndStarted) {
     return;
   }
@@ -8537,6 +8582,17 @@ lkRoom.on(RoomEvent.Reconnecting, () => {
 });
 
 lkRoom.on(RoomEvent.Reconnected, () => {
+
+
+if (!isViewer) {
+
+  if (started && !stopping && !hostSessionEnded) {
+    scheduleHostRecovery(0);
+  }
+
+  return;
+}
+
 
   if (!isViewer || viewerLeaving || sfuEndStarted) {
     return;
@@ -8552,6 +8608,23 @@ lkRoom.on(RoomEvent.Reconnected, () => {
 lkRoom.on(RoomEvent.Disconnected, () => {
 
   if (lkRoom !== monitoredRoom) return;
+
+
+
+if (!isViewer) {
+
+  if (started && !stopping && !hostSessionEnded) {
+
+    showHostRecovery(
+      "Video connection lost. Reconnecting..."
+    );
+
+    scheduleHostRecovery(1000);
+  }
+
+  return;
+}
+
 
   setStatus("DISCONNECTED");
 
@@ -8580,6 +8653,378 @@ lkRoom.on(RoomEvent.Disconnected, () => {
 
   setStatus("CONNECTED", true);
 }
+
+
+
+/* ==========================================
+   SFU - HOST CONNECTION RECOVERY
+========================================== */
+
+let hostRecoveryBusy = false;
+let hostRecoveryTimer = null;
+let hostRecoveryAttempts = 0;
+let hostSessionEnded = false;
+
+function hostLiveKitOK() {
+  return !!lkRoom && lkRoom.state === "connected";
+}
+
+function showHostRecovery(message) {
+  if (isViewer || !started || stopping || hostSessionEnded) {
+    return;
+  }
+
+  const overlay = $("sfuRecoveryOverlay");
+  const title = $("sfuRecoveryTitle");
+  const description = $("sfuRecoveryDescription");
+
+  title.textContent = "CONNECTION LOST";
+  description.textContent = message;
+
+  overlay.classList.remove("hidden");
+
+  setStatus("DISCONNECTED");
+  setChatReady(false);
+}
+
+function hideHostRecovery() {
+  $("sfuRecoveryOverlay").classList.add("hidden");
+
+  if (hostRecoveryTimer) {
+    clearTimeout(hostRecoveryTimer);
+    hostRecoveryTimer = null;
+  }
+
+  hostRecoveryAttempts = 0;
+}
+
+function scheduleHostRecovery(delay = 2000) {
+  if (
+    isViewer ||
+    !started ||
+    stopping ||
+    hostSessionEnded
+  ) return;
+
+  if (hostRecoveryTimer) {
+    clearTimeout(hostRecoveryTimer);
+  }
+
+  hostRecoveryTimer = setTimeout(() => {
+    hostRecoveryTimer = null;
+    void recoverHostConnection();
+  }, delay);
+}
+
+function showHostSessionEnded(message) {
+  hostSessionEnded = true;
+
+  if (hostRecoveryTimer) {
+    clearTimeout(hostRecoveryTimer);
+    hostRecoveryTimer = null;
+  }
+
+  setStatus("ENDED");
+  setChatReady(false);
+
+  $("sfuRecoveryTitle").textContent =
+    "LIVESTREAM ENDED";
+
+  $("sfuRecoveryDescription").textContent =
+    message;
+
+  $("sfuRecoveryRetry").disabled = true;
+  $("sfuRecoveryRetry").textContent =
+    "SESSION ENDED";
+
+  $("sfuRecoveryOverlay").classList.remove("hidden");
+}
+
+/* ==========================================
+   HOST RECOVERY ENGINE
+========================================== */
+
+async function recoverHostConnection() {
+
+  if (
+    isViewer ||
+    !started ||
+    stopping ||
+    hostSessionEnded ||
+    hostRecoveryBusy
+  ) return;
+
+  hostRecoveryBusy = true;
+  hostRecoveryAttempts++;
+
+  const retryBtn = $("sfuRecoveryRetry");
+  retryBtn.disabled = true;
+  retryBtn.textContent = "CONNECTING...";
+
+  try {
+
+    await waitSocket();
+
+    // Verify that this host still owns
+    // an existing, active livestream.
+    const resume = await new Promise((resolve, reject) => {
+
+      socket.timeout(6000).emit(
+        "host-reconnect",
+        { roomId },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result);
+        }
+      );
+
+    });
+
+    if (!resume?.ok) {
+
+      if (
+        resume?.code === "ROOM_ENDED" ||
+        resume?.code === "UNAUTHORIZED" ||
+        resume?.code === "HOST_ACTIVE"
+      ) {
+        showHostSessionEnded(
+          resume.error ||
+          "Your livestream cannot be restored."
+        );
+        return;
+      }
+
+      throw new Error(
+        resume?.error || "Unable to restore host session."
+      );
+    }
+
+    // Confirm Socket.IO room authorization.
+    const signaling = await new Promise((resolve, reject) => {
+
+      socket.timeout(6000).emit(
+        "sfu:join-ack",
+        { roomId, role: "host" },
+        (error, response) => {
+          if (error) return reject(error);
+          resolve(response);
+        }
+      );
+
+    });
+
+    if (!signaling?.ok) {
+      throw new Error(
+        "Host signaling authorization failed."
+      );
+    }
+
+    if (!socket.connected) {
+      throw new Error("Server connection lost again.");
+    }
+
+    updateSfuHostBadge(signaling.host);
+    updateSfuViewerCount(signaling.viewerCount);
+    updateSfuViewerDirectory(signaling.viewers);
+
+    // Preserve LiveKit if it is already connected.
+    if (!hostLiveKitOK()) {
+
+      // Do not interrupt LiveKit's native recovery.
+      if (lkRoom?.state === "reconnecting") {
+        throw new Error(
+          "LiveKit is still reconnecting."
+        );
+      }
+
+      const oldRoom = lkRoom;
+      lkRoom = null;
+
+      if (oldRoom) {
+        await oldRoom.disconnect().catch(() => {});
+      }
+
+      // Create a fresh media connection.
+      await connectSFU();
+
+      // Restore previous camera / microphone state.
+      await lkRoom.localParticipant
+        .setCameraEnabled(cameraOn);
+
+      await lkRoom.localParticipant
+        .setMicrophoneEnabled(micOn);
+
+      if (cameraOn) {
+        attachLocalCamera();
+        updateCameraMirror();
+      }
+    }
+
+    if (!socket.connected || !hostLiveKitOK()) {
+      throw new Error("Connection is not ready.");
+    }
+
+    // Confirm that the host's media session
+    // has been restored on the server.
+    const ready = await new Promise((resolve, reject) => {
+
+      socket.timeout(6000).emit(
+        "host-stream-ready",
+        { roomId },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result);
+        }
+      );
+
+    });
+
+    if (!ready?.ok) {
+      throw new Error(
+        ready?.error || "Unable to confirm stream readiness."
+      );
+    }
+
+    // Restore chat and PK state.
+    loadSfuChatHistory();
+    await syncPK();
+
+    hideHostRecovery();
+
+    setStatus("LIVE", true);
+    setHostButtons(true);
+
+    $("videoBadge").textContent = "LIVE · SFU";
+
+    showMessage(
+      "Livestream connection restored.",
+      "success"
+    );
+
+    console.log("[HOST RECOVERY] Restored");
+
+  } catch (error) {
+
+    console.warn(
+      "[HOST RECOVERY]",
+      hostRecoveryAttempts,
+      error
+    );
+
+    showHostRecovery(
+      "Connection interrupted. Trying to restore your livestream..."
+    );
+
+    scheduleHostRecovery(
+      Math.min(hostRecoveryAttempts * 2000, 5000)
+    );
+
+  } finally {
+
+    hostRecoveryBusy = false;
+
+    retryBtn.disabled = hostSessionEnded;
+    retryBtn.textContent = hostSessionEnded
+      ? "SESSION ENDED"
+      : "RETRY NOW";
+  }
+}
+
+
+
+
+/* ==========================================
+   HOST SOCKET CONNECTION MONITOR
+========================================== */
+
+socket.on("disconnect", () => {
+
+  if (isViewer || !started || stopping || hostSessionEnded) {
+    return;
+  }
+
+  showHostRecovery(
+    "Server connection lost. Reconnecting..."
+  );
+
+  scheduleHostRecovery(1000);
+});
+
+socket.on("connect", () => {
+
+  if (isViewer || !started || stopping || hostSessionEnded) {
+    return;
+  }
+
+  scheduleHostRecovery(0);
+});
+
+/* ==========================================
+   HOST NETWORK MONITOR
+========================================== */
+
+window.addEventListener("offline", () => {
+
+  if (isViewer || !started || stopping || hostSessionEnded) {
+    return;
+  }
+
+  showHostRecovery(
+    "No internet connection. Please check your network."
+  );
+});
+
+window.addEventListener("online", () => {
+
+  if (isViewer || !started || stopping || hostSessionEnded) {
+    return;
+  }
+
+  scheduleHostRecovery(0);
+});
+
+/* ==========================================
+   HOST WATCHDOG
+========================================== */
+
+setInterval(() => {
+
+  if (
+    isViewer ||
+    !started ||
+    stopping ||
+    hostSessionEnded ||
+    hostRecoveryBusy
+  ) return;
+
+  if (socket.connected && hostLiveKitOK()) {
+    return;
+  }
+
+  showHostRecovery(
+    "Livestream connection interrupted. Reconnecting..."
+  );
+
+  if (!hostRecoveryTimer) {
+    scheduleHostRecovery(1000);
+  }
+
+}, 5000);
+
+/* ==========================================
+   HOST SESSION CLOSED
+========================================== */
+
+socket.on("room-closed", () => {
+
+  if (isViewer || !started || stopping) return;
+
+  showHostSessionEnded(
+    "Your livestream session has ended. Please return to the lobby."
+  );
+});
+
+
 
 async function startLive() {
   if (started || stopping) return;
@@ -9176,33 +9621,66 @@ window.addEventListener("online", () => {
    RECOVERY BUTTONS
 ========================================== */
 
+
 $("sfuRecoveryRetry").addEventListener(
   "click",
   () => {
 
     if (!navigator.onLine) {
-      showViewerRecovery(
-        "No internet connection. Please check your network."
-      );
+
+      if (isViewer) {
+        showViewerRecovery(
+          "No internet connection. Please check your network."
+        );
+      } else {
+        showHostRecovery(
+          "No internet connection. Please check your network."
+        );
+      }
+
       return;
     }
 
-    scheduleViewerRecovery(0);
+    if (isViewer) {
+      scheduleViewerRecovery(0);
+    } else {
+      scheduleHostRecovery(0);
+    }
+
   }
 );
+
+
+
 
 $("sfuRecoveryExit").addEventListener(
   "click",
-  () => {
-    viewerLeaving = true;
+  async () => {
 
-    if (viewerRecoveryTimer) {
-      clearTimeout(viewerRecoveryTimer);
+    if (isViewer) {
+      await exitViewer();
+      return;
     }
 
-    goLobby();
+    // Stop recovery before leaving.
+    hostSessionEnded = true;
+
+    if (hostRecoveryTimer) {
+      clearTimeout(hostRecoveryTimer);
+      hostRecoveryTimer = null;
+    }
+
+    // If the host is still connected,
+    // end the broadcast normally.
+    if (socket.connected && started) {
+      await stopLive();
+    } else {
+      goLobby();
+    }
+
   }
 );
+
 
 // A genuinely closed live must not reconnect.
 socket.on("room-closed", () => {

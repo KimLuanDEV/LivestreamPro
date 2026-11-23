@@ -7,7 +7,7 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 
 
-const ROOM_RELEASE_DELAY = 15000; // 15 giây (tuỳ bạn)
+const ROOM_RELEASE_DELAY = 30000; // 30 giây (tuỳ bạn)
 
 const multer = require("multer");
 const express = require("express");
@@ -13811,29 +13811,39 @@ emitAllUsers();
 
 
 
-socket.on("host-reconnect", ({ roomId } = {}) => {
+socket.on("host-reconnect", (data = {}, ack) => {
 
-  roomId = normRoomId(roomId);
-  if (!roomId) return;
+  const reply = (result) => {
+    if (typeof ack === "function") {
+      ack(result);
+    }
+  };
 
+  const roomId = normRoomId(data?.roomId);
   const room = rooms.get(roomId);
-  if (!room) return;
+
+  if (!room || !room.liveStartTs) {
+    return reply({
+      ok: false,
+      code: "ROOM_ENDED",
+      error: "Your livestream session has ended."
+    });
+  }
 
   const uid = socket.data.uid;
 
   if (
     !socket.data.authenticated ||
     !uid ||
-    !room.ownerUid ||
     String(room.ownerUid) !== String(uid)
   ) {
-    socket.emit("room-error", {
-      message: "Unauthorized host reconnect."
+    return reply({
+      ok: false,
+      code: "UNAUTHORIZED",
+      error: "Host authorization failed."
     });
-    return;
   }
 
-  // A different active host cannot be replaced
   if (
     room.broadcasterId &&
     room.broadcasterId !== socket.id
@@ -13843,15 +13853,17 @@ socket.on("host-reconnect", ({ roomId } = {}) => {
     );
 
     if (activeHost?.connected) {
-      socket.emit("room-error", {
-        message: "The host is already connected."
+      return reply({
+        ok: false,
+        code: "HOST_ACTIVE",
+        error: "Another host connection is active."
       });
-      return;
     }
   }
 
   room.broadcasterId = socket.id;
   room.pendingRelease = false;
+  room.streamReady = false;
 
   if (room.releaseTimer) {
     clearTimeout(room.releaseTimer);
@@ -13869,14 +13881,17 @@ socket.on("host-reconnect", ({ roomId } = {}) => {
     )
   });
 
+  reply({
+    ok: true,
+    roomId,
+    liveStartTs: room.liveStartTs
+  });
 
-io.to(roomId).emit("host-back-online");
+  io.to(roomId).emit("host-back-online");
 
-// Restore the room in lobby after reconnection.
-emitLobbyUpdate();
-
+  emitViewerCount(roomId);
+  emitLobbyUpdate();
 });
-
 
 
 socket.on("host-profile-update", ({ roomId, level }) => {
@@ -15029,15 +15044,44 @@ if (donorProfile) {
 });
 
 
-socket.on("host-stream-ready", ({ roomId }) => {
-  const room = getRoom(roomId);
-  if (!room) return;
-  if (room.broadcasterId !== socket.id) return;
+
+socket.on("host-stream-ready", (data = {}, ack) => {
+
+  const roomId = normRoomId(data?.roomId);
+  const room = rooms.get(roomId);
+
+  const reply = result => {
+    if (typeof ack === "function") {
+      ack(result);
+    }
+  };
+
+  if (!room) {
+    return reply({
+      ok: false,
+      error: "Room not found."
+    });
+  }
+
+  if (
+    !socket.data.authenticated ||
+    String(room.ownerUid) !== String(socket.data.uid) ||
+    room.broadcasterId !== socket.id
+  ) {
+    return reply({
+      ok: false,
+      error: "Unauthorized host."
+    });
+  }
 
   room.streamReady = true;
 
-  // 🔔 báo cho viewer đang đợi
   io.to(roomId).emit("host-stream-ready");
+
+  reply({
+    ok: true,
+    roomId
+  });
 });
 
 
