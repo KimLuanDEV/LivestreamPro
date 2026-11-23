@@ -726,6 +726,35 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 
 
 
+
+/* TEST HAND SELECTED */
+
+.override-option.selected {
+  border-color: #e9c88b;
+  background: linear-gradient(
+    145deg,
+    rgba(233,200,139,.2),
+    rgba(233,200,139,.04)
+  );
+  box-shadow:
+    0 0 25px rgba(233,200,139,.14),
+    inset 0 0 0 1px rgba(233,200,139,.14);
+}
+
+.override-option.selected span {
+  color: #e9c88b;
+}
+
+.override-option.selected img {
+  transform: scale(1.08);
+  filter: drop-shadow(
+    0 0 12px rgba(233,200,139,.45)
+  );
+}
+
+
+
+
 </style>
 </head>
 
@@ -1180,20 +1209,44 @@ async function checkAdminSession() {
   }
 }
 
+
 async function adminGet(url) {
+
   const response = await fetch(url, {
+    method: "GET",
     credentials: "same-origin",
-    cache: "no-store"
+    cache: "no-store",
+    headers: {
+      "Accept": "application/json"
+    }
   });
 
-  const data = await response.json();
+  let data;
 
-  if (!response.ok || !data.ok) {
+  try {
+    data = await response.json();
+  } catch {
     throw new Error(
-      data.message ||
-      data.error ||
-      `Request failed (${response.status})`
+      `Invalid server response (HTTP ${response.status})`
     );
+  }
+
+  if (!response.ok || data.ok === false) {
+
+    const code =
+      data.error ||
+      data.message ||
+      `HTTP_${response.status}`;
+
+    if (response.status === 401) {
+      adminAuthenticated = false;
+      setRpsLoginVisible(true);
+    }
+
+    const error = new Error(code);
+    error.status = response.status;
+
+    throw error;
   }
 
   return data;
@@ -1450,22 +1503,74 @@ function showModal({
 
 /* HAND SELECTION - UI ONLY */
 
+
+/* ==========================================
+   RPS - INDEPENDENT TEST RESULT SELECTOR
+   No live betting or wallet modifications
+========================================== */
+
+let testSelectedHand = null;
+
 function override(hand) {
+
   if (!adminAuthenticated) {
+    setRpsLoginVisible(true);
+    return;
+  }
+
+  const validHands = [
+    "rock",
+    "paper",
+    "scissors"
+  ];
+
+  if (!validHands.includes(hand)) {
     showModal({
-      title: "Authentication Required",
-      content: "Sign in to the admin dashboard first."
+      title: "Invalid Selection",
+      content: "Please select a valid hand."
     });
     return;
   }
 
   showModal({
-    title: "Result Control",
+    title: "Confirm Test Result",
     content:
-      getHandName(hand) +
-      " selected. Result changes are disabled for live wager rounds."
+      `Select ${hand.toUpperCase()} for the independent test preview?`,
+    showCancel: true,
+
+    onOk: () => {
+
+      testSelectedHand = hand;
+
+      document.querySelectorAll(
+        ".override-option"
+      ).forEach(button => {
+
+        const selected =
+          button.dataset.hand === hand;
+
+        button.classList.toggle(
+          "selected",
+          selected
+        );
+
+        button.setAttribute(
+          "aria-pressed",
+          String(selected)
+        );
+
+      });
+
+      showModal({
+        title: "Test Selection Saved",
+        content:
+          `${hand.toUpperCase()} is selected for testing. ` +
+          "The live round and player balances are unchanged."
+      });
+    }
   });
 }
+
 
 document.querySelectorAll("[data-hand]").forEach(button => {
   button.addEventListener("click", () => {

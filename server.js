@@ -2414,12 +2414,15 @@ rpsRound = {
 };
 
 
-// 🔔 ADMIN REALTIME – ROUND MỚI
-io.emit("admin-rps-secret-update", {
+
+/* ==========================================
+   RPS - PUBLIC ROUND UPDATE
+   Do not expose secretHand
+========================================== */
+
+io.emit("rps-round-new", {
   roundId: rpsRound.id,
-  secretHand: rpsRound.secretHand,
-  endAt: rpsRound.endAt,
-  overridden: false
+  endAt: rpsRound.endAt
 });
 
 
