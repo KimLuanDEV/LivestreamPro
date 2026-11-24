@@ -9001,6 +9001,62 @@ body.sfu-role-viewer #sfuPkRematchBtn,
 
 
 
+/* ==========================================
+   SFU - IOS PWA FULLSCREEN FIX V5.0
+========================================== */
+
+html.ios-pwa-height-fix,
+html.ios-pwa-height-fix body {
+  height: var(--sfu-screen-height) !important;
+  min-height: var(--sfu-screen-height) !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow: hidden;
+}
+
+
+/* FULL HEIGHT STUDIO */
+
+html.ios-pwa-height-fix .studio {
+  position: absolute !important;
+
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: auto !important;
+
+  height: var(--sfu-screen-height) !important;
+  min-height: var(--sfu-screen-height) !important;
+  max-height: none !important;
+
+  overflow: hidden;
+}
+
+
+/* ANCHOR TOOLBAR TO STUDIO */
+
+html.ios-pwa-height-fix #sfuBottomToolbar {
+  position: absolute !important;
+
+  bottom: calc(
+    12px + env(safe-area-inset-bottom, 0px)
+  ) !important;
+}
+
+
+/* ANCHOR CHAT TO STUDIO */
+
+html.ios-pwa-height-fix #sfuChatPanel {
+  position: absolute !important;
+
+  bottom: calc(
+    58px + env(safe-area-inset-bottom, 0px)
+  ) !important;
+}
+
+
 
 
 </style>
@@ -18388,58 +18444,121 @@ if (watchPlayButton) {
 
 
 
-<script>
-(function checkIOSFullscreen() {
 
-  const probe = document.createElement("div");
 
-  probe.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    padding-top: env(safe-area-inset-top, 0px);
-    visibility: hidden;
-    pointer-events: none;
-  `;
 
-  document.body.appendChild(probe);
-
-  const safeTop = getComputedStyle(probe).paddingTop;
-
-  probe.remove();
-
-  const studio = document.querySelector(".studio");
-  const video = document.querySelector(".video-area");
-
-  const info = {
-    standalone:
-      navigator.standalone === true ||
-      matchMedia("(display-mode: standalone)").matches,
-
-    screenHeight: screen.height,
-
-    viewportHeight: window.innerHeight,
-
-    safeAreaTop: safeTop,
-
-    studioTop: studio?.getBoundingClientRect().top,
-
-    studioHeight: studio?.getBoundingClientRect().height,
-
-    videoTop: video?.getBoundingClientRect().top,
-
-    videoHeight: video?.getBoundingClientRect().height
-  };
-
-  console.log("[SFU FULLSCREEN]", info);
-
-  alert(JSON.stringify(info, null, 2));
-
-})();
 </script>
 
 
 
+<script>
+/* ==========================================
+   SFU - IOS PWA HEIGHT CORRECTION
+========================================== */
+
+(function initSfuIOSFullscreen() {
+
+  const root = document.documentElement;
+
+  const isIOS =
+    /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    (
+      navigator.platform === "MacIntel" &&
+      navigator.maxTouchPoints > 1
+    );
+
+  const isStandalone =
+    navigator.standalone === true ||
+    window.matchMedia(
+      "(display-mode: standalone)"
+    ).matches;
+
+  if (!isIOS || !isStandalone) return;
+
+
+  function syncFullscreenHeight() {
+
+    const probe = document.createElement("div");
+
+    probe.style.cssText = `
+      position: fixed;
+      visibility: hidden;
+      pointer-events: none;
+      padding-top: env(safe-area-inset-top, 0px);
+    `;
+
+    document.body.appendChild(probe);
+
+    const safeTop = parseFloat(
+      getComputedStyle(probe).paddingTop
+    ) || 0;
+
+    probe.remove();
+
+
+    const screenHeight = window.screen.height;
+    const viewportHeight = window.innerHeight;
+
+    const missingHeight =
+      screenHeight - viewportHeight;
+
+
+    // Only correct the iOS status-bar height bug.
+
+    const needsCorrection =
+      safeTop > 0 &&
+      missingHeight > 0 &&
+      Math.abs(missingHeight - safeTop) <= 3;
+
+
+    if (needsCorrection) {
+
+      root.style.setProperty(
+        "--sfu-screen-height",
+        `${screenHeight}px`
+      );
+
+      root.classList.add(
+        "ios-pwa-height-fix"
+      );
+
+    } else {
+
+      root.classList.remove(
+        "ios-pwa-height-fix"
+      );
+
+      root.style.removeProperty(
+        "--sfu-screen-height"
+      );
+
+    }
+
+  }
+
+
+  syncFullscreenHeight();
+
+  window.addEventListener(
+    "resize",
+    syncFullscreenHeight
+  );
+
+  window.addEventListener(
+    "pageshow",
+    syncFullscreenHeight
+  );
+
+  window.addEventListener(
+    "orientationchange",
+    () => {
+      setTimeout(syncFullscreenHeight, 300);
+    }
+  );
+
+  setTimeout(syncFullscreenHeight, 500);
+
+})();
 </script>
 
 
