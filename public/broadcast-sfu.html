@@ -7560,6 +7560,211 @@ body:has(#sfuChatPanel.hidden)
 
 
 
+/* ==========================================
+   SFU - PREMIUM VIEWER AVATAR STACK V1.0
+   LIVESTREAM PRO
+========================================== */
+
+#sfuViewerBadge {
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+  gap: 7px;
+
+  width: auto;
+  min-width: 32px;
+  height: 34px;
+
+  margin: 0;
+  padding: 3px 8px 3px 3px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+
+  background: rgba(0,0,0,.38);
+  color: #FFFFFF;
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  pointer-events: auto;
+  cursor: pointer;
+
+  box-shadow: none;
+}
+
+
+/* AVATAR GROUP */
+
+#sfuViewerAvatars {
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
+
+  flex-shrink: 0;
+
+  padding: 0;
+  margin: 0;
+}
+
+#sfuViewerAvatars:empty {
+  display: none;
+}
+
+
+/* INDIVIDUAL AVATAR */
+
+.sfu-viewer-stack-avatar {
+
+  position: relative;
+
+  display: block;
+
+  flex: 0 0 28px;
+
+  width: 28px;
+  height: 28px;
+
+  margin: 0;
+  padding: 0;
+
+  object-fit: cover;
+
+  border-radius: 50%;
+  border: 1.5px solid rgba(240,210,155,.9);
+
+  background: #292B31;
+
+  box-shadow:
+    0 2px 6px rgba(0,0,0,.3);
+
+  pointer-events: none;
+}
+
+
+/* SLIGHT AVATAR OVERLAP */
+
+.sfu-viewer-stack-avatar
++ .sfu-viewer-stack-avatar {
+
+  margin-left: -7px;
+}
+
+
+/* AVATAR LAYER ORDER */
+
+.sfu-viewer-stack-avatar:nth-child(1) {
+  z-index: 3;
+}
+
+.sfu-viewer-stack-avatar:nth-child(2) {
+  z-index: 2;
+}
+
+.sfu-viewer-stack-avatar:nth-child(3) {
+  z-index: 1;
+}
+
+
+/* VIEWER COUNT */
+
+#sfuViewerCount {
+
+  display: block;
+
+  flex-shrink: 0;
+
+  min-width: 15px;
+
+  color: #FFFFFF;
+
+  font-size: 12px;
+  font-weight: 850;
+
+  line-height: 1;
+
+  text-align: center;
+  white-space: nowrap;
+
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* ACTIVE EFFECT */
+
+#sfuViewerBadge:active {
+  transform: scale(.95);
+}
+
+#sfuViewerBadge[aria-expanded="true"] {
+
+  border-color: rgba(223,190,131,.55);
+
+  background: rgba(45,35,23,.75);
+}
+
+
+/* MOBILE OPTIMIZATION */
+
+@media (max-width: 480px) {
+
+  #sfuViewerBadge {
+
+    height: 32px;
+    gap: 5px;
+
+    padding: 3px 7px 3px 3px;
+  }
+
+  .sfu-viewer-stack-avatar {
+
+    flex-basis: 25px;
+
+    width: 25px;
+    height: 25px;
+  }
+
+  .sfu-viewer-stack-avatar
+  + .sfu-viewer-stack-avatar {
+
+    margin-left: -6px;
+  }
+
+  #sfuViewerCount {
+
+    font-size: 11px;
+  }
+
+}
+
+
+/* SMALL MOBILE */
+
+@media (max-width: 360px) {
+
+  .sfu-viewer-stack-avatar {
+
+    flex-basis: 22px;
+
+    width: 22px;
+    height: 22px;
+  }
+
+  #sfuViewerBadge {
+
+    gap: 4px;
+    padding-right: 5px;
+  }
+
+}
+
+
+
 </style>
 
 
@@ -7958,7 +8163,10 @@ body:has(#sfuChatPanel.hidden)
   <div class="studio-top-actions">
 
 
-<!-- REALTIME VIEWERS - CLICKABLE -->
+<!-- ==========================================
+     SFU - VIEWER AVATAR STACK V1.0
+========================================== -->
+
 <button
   type="button"
   id="sfuViewerBadge"
@@ -7968,32 +8176,19 @@ body:has(#sfuChatPanel.hidden)
   aria-expanded="false"
   title="View live viewers">
 
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.8"
-    stroke-linecap="round"
-    stroke-linejoin="round"
+  <!-- FIRST 3 VIEWERS -->
+
+  <span
+    id="sfuViewerAvatars"
+    class="sfu-viewer-avatar-stack"
     aria-hidden="true">
-    <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12Z"/>
-    <circle cx="12" cy="12" r="3"/>
-  </svg>
+  </span>
+
+  <!-- REALTIME VIEWER COUNT -->
 
   <span id="sfuViewerCount">0</span>
 
-  <svg
-    class="sfu-viewer-chevron"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    aria-hidden="true">
-    <path d="m7 10 5 5 5-5"/>
-  </svg>
-
 </button>
-
 <!-- SFU - TOP EXIT BUTTON -->
 
 <button
@@ -9531,21 +9726,141 @@ function renderSfuViewerList() {
   sfuViewerList.appendChild(fragment);
 }
 
+/* ==========================================
+   SFU - FIRST 3 VIEWER AVATARS
+========================================== */
+
+let sfuViewerAvatarSignature = null;
+
+function renderSfuViewerAvatarStack() {
+
+  const container =
+    $("sfuViewerAvatars");
+
+  if (!container) return;
+
+
+  // FIRST 3 ACTIVE VIEWERS
+
+  const firstViewers =
+    currentSfuViewers.slice(0, 3);
+
+
+  // PREVENT UNNECESSARY IMAGE RE-RENDER
+
+  const signature = JSON.stringify(
+    firstViewers.map(viewer => [
+      viewer.name,
+      viewer.avatar
+    ])
+  );
+
+  if (
+    signature === sfuViewerAvatarSignature
+  ) {
+    return;
+  }
+
+  sfuViewerAvatarSignature = signature;
+
+
+  const fragment =
+    document.createDocumentFragment();
+
+
+  for (const viewer of firstViewers) {
+
+    const avatar =
+      document.createElement("img");
+
+    avatar.className =
+      "sfu-viewer-stack-avatar";
+
+    avatar.alt = "";
+
+    avatar.title =
+      viewer.name || "Viewer";
+
+    avatar.decoding = "async";
+
+    avatar.draggable = false;
+
+
+    // FALLBACK AVATAR
+
+    avatar.onerror = () => {
+
+      avatar.onerror = null;
+
+      avatar.src =
+        SFU_DEFAULT_AVATAR;
+
+    };
+
+
+    avatar.src =
+      safeSfuViewerAvatar(
+        viewer.avatar
+      );
+
+
+    fragment.appendChild(avatar);
+
+  }
+
+
+  container.replaceChildren(fragment);
+
+}
+
+
+/* ==========================================
+   SFU - UPDATE VIEWER DIRECTORY
+========================================== */
+
 function updateSfuViewerDirectory(viewers) {
 
   if (!Array.isArray(viewers)) return;
 
+
   currentSfuViewers = viewers
-    .filter(v => v && typeof v === "object")
+
+    .filter(v =>
+      v && typeof v === "object"
+    )
+
     .map(v => ({
-      name: String(v.name || "Player"),
-      avatar: String(v.avatar || "")
+
+      name: String(
+        v.name || "Player"
+      ),
+
+      avatar: String(
+        v.avatar || ""
+      )
+
     }));
 
-  if (!sfuViewerOverlay.classList.contains("hidden")) {
+
+  // UPDATE TOP AVATARS
+
+  renderSfuViewerAvatarStack();
+
+
+  // UPDATE VIEWER LIST IF OPEN
+
+  if (
+    !sfuViewerOverlay.classList.contains(
+      "hidden"
+    )
+  ) {
+
     renderSfuViewerList();
+
   }
+
 }
+
 
 function openSfuViewerList() {
 
