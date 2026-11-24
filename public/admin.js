@@ -1712,3 +1712,434 @@ if (typeof io === "function") {
 }
 
 
+/* ==========================================
+   LIVESTREAM PRO
+   AUTH PERFORMANCE MONITOR V1.1
+========================================== */
+
+(() => {
+
+  const panel = document.getElementById(
+    "authPerformancePanel"
+  );
+
+  if (!panel) return;
+
+  // Prevent duplicate initialization
+  if (panel.dataset.initialized === "true") {
+    return;
+  }
+
+  panel.dataset.initialized = "true";
+
+  const $ = id => document.getElementById(id);
+
+  const refreshBtn = $("authPerfRefreshBtn");
+  const statusEl = $("authPerfStatus");
+
+  let loading = false;
+  let refreshTimer = null;
+  let sessionExpired = false;
+
+  const REFRESH_INTERVAL = 10000;
+
+
+  /* ========================================
+     NUMBER FORMATTING
+  ======================================== */
+
+  function formatNumber(value) {
+
+    if (value === null ||
+        value === undefined) {
+      return "--";
+    }
+
+    const number = Number(value);
+
+    if (!Number.isFinite(number)) {
+      return "--";
+    }
+
+    return number.toLocaleString("en-US");
+
+  }
+
+
+  function setText(id, value) {
+
+    const element = $(id);
+
+    if (element) {
+      element.textContent = value;
+    }
+
+  }
+
+
+  /* ========================================
+     STATUS
+  ======================================== */
+
+  function setStatus(text, state) {
+
+    if (!statusEl) return;
+
+    statusEl.textContent = text;
+
+    statusEl.classList.toggle(
+      "is-active",
+      state === "active"
+    );
+
+    statusEl.classList.toggle(
+      "is-error",
+      state === "error"
+    );
+
+  }
+
+
+  /* ========================================
+     RENDER AUTH STATISTICS
+  ======================================== */
+
+  function renderStats(data) {
+
+    const errors = Number(data.errors || 0);
+
+    const hits = Number(data.hits || 0);
+    const misses = Number(data.misses || 0);
+
+    const hasSamples = hits + misses > 0;
+
+    const hitRate = Math.max(
+      0,
+      Math.min(100, Number(data.hitRate) || 0)
+    );
+
+    setText(
+      "authPerfHitRate",
+      hasSamples
+        ? `${hitRate.toFixed(2)}%`
+        : "--"
+    );
+
+    const progress =
+      $("authPerfProgressFill");
+
+    if (progress) {
+
+      progress.style.width =
+        `${hasSamples ? hitRate : 0}%`;
+
+      progress.parentElement?.setAttribute(
+        "aria-valuenow",
+        String(hasSamples ? hitRate : 0)
+      );
+
+    }
+
+    setText(
+      "authPerfAccounts",
+      formatNumber(data.cachedAccounts)
+    );
+
+    setText(
+      "authPerfHits",
+      formatNumber(data.hits)
+    );
+
+    setText(
+      "authPerfMisses",
+      formatNumber(data.misses)
+    );
+
+    setText(
+      "authPerfRefreshes",
+      formatNumber(data.refreshes)
+    );
+
+    setText(
+      "authPerfDenied",
+      formatNumber(data.denied)
+    );
+
+    setText(
+      "authPerfErrors",
+      formatNumber(data.errors)
+    );
+
+    const ttl = Number(data.cacheTTL);
+
+    setText(
+      "authPerfTTL",
+      Number.isFinite(ttl)
+        ? `${ttl / 1000}s`
+        : "--"
+    );
+
+    setText(
+      "authPerfVersion",
+      String(data.version || "--")
+    );
+
+    const errorsEl = $("authPerfErrors");
+
+    if (errorsEl) {
+
+      errorsEl.classList.toggle(
+        "is-danger",
+        errors > 0
+      );
+
+      errorsEl.classList.toggle(
+        "is-success",
+        errors === 0
+      );
+
+    }
+
+    setStatus(
+      data.status === "ACTIVE"
+        ? "ACTIVE"
+        : "UNKNOWN",
+      data.status === "ACTIVE"
+        ? "active"
+        : "error"
+    );
+
+    setText(
+      "authPerfUpdated",
+      "Updated: " +
+        new Date().toLocaleTimeString("en-GB")
+    );
+
+  }
+
+
+  /* ========================================
+     FETCH LIVE SERVER DATA
+  ======================================== */
+
+  async function loadAuthPerformance() {
+
+    if (
+      loading ||
+      sessionExpired ||
+      document.hidden
+    ) {
+      return;
+    }
+
+    loading = true;
+
+    if (refreshBtn) {
+
+      refreshBtn.disabled = true;
+
+      refreshBtn.classList.add(
+        "is-loading"
+      );
+
+    }
+
+    const controller = new AbortController();
+
+    const timeout = setTimeout(
+      () => controller.abort(),
+      8000
+    );
+
+    try {
+
+      const response = await fetch(
+
+        "/api/admin/security-auth/stats",
+
+        {
+          method: "GET",
+
+          credentials: "same-origin",
+
+          cache: "no-store",
+
+          signal: controller.signal
+        }
+
+      );
+
+      // Admin session is no longer valid
+      if (
+        response.status === 401 ||
+        response.status === 403
+      ) {
+
+        sessionExpired = true;
+
+        stopAutoRefresh();
+
+        setStatus(
+          "ACCESS DENIED",
+          "error"
+        );
+
+        setText(
+          "authPerfUpdated",
+          "Admin authorization required."
+        );
+
+        return;
+
+      }
+
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+
+        throw new Error(
+          "Unable to load auth statistics"
+        );
+
+      }
+
+      renderStats(data);
+
+    } catch (error) {
+
+      setStatus(
+        "UNAVAILABLE",
+        "error"
+      );
+
+      setText(
+        "authPerfUpdated",
+        "Update failed. Retrying..."
+      );
+
+      console.warn(
+        "[AUTH PERFORMANCE]",
+        error.message
+      );
+
+    } finally {
+
+      clearTimeout(timeout);
+
+      loading = false;
+
+      if (refreshBtn) {
+
+        refreshBtn.disabled = false;
+
+        refreshBtn.classList.remove(
+          "is-loading"
+        );
+
+      }
+
+    }
+
+  }
+
+
+  /* ========================================
+     AUTO REFRESH
+  ======================================== */
+
+  function startAutoRefresh() {
+
+    if (
+      refreshTimer !== null ||
+      sessionExpired ||
+      document.hidden
+    ) {
+      return;
+    }
+
+    refreshTimer = setInterval(
+      loadAuthPerformance,
+      REFRESH_INTERVAL
+    );
+
+  }
+
+
+  function stopAutoRefresh() {
+
+    if (refreshTimer !== null) {
+
+      clearInterval(refreshTimer);
+
+      refreshTimer = null;
+
+    }
+
+  }
+
+
+  /* ========================================
+     MANUAL REFRESH
+  ======================================== */
+
+  refreshBtn?.addEventListener(
+    "click",
+    () => {
+
+      sessionExpired = false;
+
+      loadAuthPerformance();
+
+      startAutoRefresh();
+
+    }
+  );
+
+
+  /* ========================================
+     SAVE SERVER RESOURCES
+  ======================================== */
+
+  document.addEventListener(
+    "visibilitychange",
+    () => {
+
+      if (document.hidden) {
+
+        stopAutoRefresh();
+
+      } else {
+
+        loadAuthPerformance();
+
+        startAutoRefresh();
+
+      }
+
+    }
+  );
+
+  window.addEventListener(
+    "pagehide",
+    stopAutoRefresh
+  );
+
+  window.addEventListener(
+    "pageshow",
+    () => {
+
+      loadAuthPerformance();
+
+      startAutoRefresh();
+
+    }
+  );
+
+
+  // INITIAL LOAD
+
+  loadAuthPerformance();
+
+  startAutoRefresh();
+
+})();

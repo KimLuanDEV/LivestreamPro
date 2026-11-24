@@ -3156,6 +3156,373 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
 
 
 
+/* ==========================================
+   LSP AUTH PERFORMANCE MONITOR
+   BLACK OBSIDIAN + CHAMPAGNE GOLD
+========================================== */
+
+.auth-perf-panel {
+  position: relative;
+
+  width: 100%;
+  margin: 0 0 24px;
+  padding: 20px;
+
+  border: 1px solid rgba(225,188,126,.22);
+  border-radius: 18px;
+
+  background:
+    radial-gradient(
+      ellipse at top right,
+      rgba(225,188,126,.08),
+      transparent 55%
+    ),
+    linear-gradient(
+      145deg,
+      #1c1c20,
+      #111215
+    );
+
+  box-shadow:
+    0 15px 35px rgba(0,0,0,.25);
+
+  overflow: hidden;
+}
+
+
+/* HEADER */
+
+.auth-perf-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+
+  margin-bottom: 18px;
+}
+
+.auth-perf-heading {
+  min-width: 0;
+}
+
+.auth-perf-kicker {
+  display: block;
+  margin-bottom: 6px;
+
+  color: #b69b73;
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.7px;
+}
+
+.auth-perf-heading h2 {
+  margin: 0 0 5px;
+
+  color: #f1dbb7;
+
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: .5px;
+}
+
+.auth-perf-heading p {
+  margin: 0;
+
+  color: #948c80;
+  font-size: 11px;
+}
+
+
+/* STATUS */
+
+.auth-perf-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 7px 10px;
+
+  border: 1px solid rgba(225,188,126,.2);
+  border-radius: 20px;
+
+  background: rgba(225,188,126,.07);
+  color: #e1bc7e;
+
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.auth-perf-status::before {
+  content: "";
+
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.auth-perf-status.is-active {
+  color: #82d6a2;
+  background: rgba(76,175,110,.08);
+  border-color: rgba(76,175,110,.25);
+}
+
+.auth-perf-status.is-error {
+  color: #ff9292;
+  background: rgba(255,80,80,.07);
+  border-color: rgba(255,80,80,.2);
+}
+
+
+/* CACHE EFFICIENCY */
+
+.auth-perf-primary {
+  padding: 18px;
+  margin-bottom: 14px;
+
+  border: 1px solid rgba(225,188,126,.18);
+  border-radius: 14px;
+
+  background: rgba(0,0,0,.22);
+}
+
+.auth-perf-label {
+  display: block;
+
+  color: #ad9878;
+
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+}
+
+#authPerfHitRate {
+  display: block;
+
+  margin: 8px 0 12px;
+
+  color: #f0d5a1;
+
+  font-size: clamp(30px,7vw,42px);
+  font-weight: 800;
+
+  font-variant-numeric: tabular-nums;
+}
+
+.auth-perf-primary small {
+  display: block;
+
+  margin-top: 10px;
+
+  color: #8f887e;
+  font-size: 10px;
+}
+
+.auth-perf-progress {
+  width: 100%;
+  height: 7px;
+
+  border-radius: 20px;
+  background: #302c26;
+
+  overflow: hidden;
+}
+
+#authPerfProgressFill {
+  width: 0;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: linear-gradient(
+    90deg,
+    #a8814f,
+    #efcf96
+  );
+
+  transition: width .5s ease;
+}
+
+
+/* STATISTICS GRID */
+
+.auth-perf-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4,minmax(0,1fr));
+
+  gap: 10px;
+}
+
+.auth-perf-cell {
+  min-width: 0;
+
+  padding: 14px;
+
+  border: 1px solid rgba(225,188,126,.14);
+  border-radius: 12px;
+
+  background: rgba(0,0,0,.18);
+}
+
+.auth-perf-cell span {
+  display: block;
+
+  margin-bottom: 9px;
+
+  color: #9b8c77;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .7px;
+}
+
+.auth-perf-cell strong {
+  display: block;
+
+  color: #efd9b2;
+
+  font-size: clamp(17px,4vw,24px);
+  font-weight: 750;
+
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.auth-perf-cell strong.is-danger {
+  color: #ff9292;
+}
+
+.auth-perf-cell strong.is-success {
+  color: #82d6a2;
+}
+
+
+/* FOOTER */
+
+.auth-perf-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  margin-top: 16px;
+  padding-top: 14px;
+
+  border-top: 1px solid rgba(225,188,126,.12);
+}
+
+.auth-perf-footer span {
+  display: block;
+
+  color: #b2a28b;
+  font-size: 11px;
+}
+
+.auth-perf-footer small {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #77736c;
+  font-size: 10px;
+}
+
+.auth-perf-refresh {
+  display: grid;
+  place-items: center;
+
+  width: 37px;
+  height: 37px;
+
+  flex-shrink: 0;
+
+  padding: 0;
+
+  border: 1px solid rgba(225,188,126,.2);
+  border-radius: 10px;
+
+  background: rgba(225,188,126,.06);
+  color: #e1bc7e;
+
+  cursor: pointer;
+}
+
+.auth-perf-refresh svg {
+  width: 19px;
+  height: 19px;
+}
+
+.auth-perf-refresh:hover {
+  background: rgba(225,188,126,.12);
+}
+
+.auth-perf-refresh:disabled {
+  opacity: .5;
+  cursor: wait;
+}
+
+.auth-perf-refresh.is-loading svg {
+  animation: authPerfSpin 1s linear infinite;
+}
+
+@keyframes authPerfSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* MOBILE */
+
+@media (max-width: 768px) {
+
+  .auth-perf-panel {
+    padding: 14px;
+    border-radius: 15px;
+  }
+
+  .auth-perf-grid {
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+
+    gap: 8px;
+  }
+
+  .auth-perf-heading h2 {
+    font-size: 16px;
+  }
+
+  .auth-perf-cell {
+    padding: 12px;
+  }
+
+  .auth-perf-primary {
+    padding: 15px;
+  }
+
+  .auth-perf-status {
+    padding: 6px 8px;
+    font-size: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  #authPerfProgressFill {
+    transition: none;
+  }
+
+  .auth-perf-refresh.is-loading svg {
+    animation: none;
+  }
+}
+
+
 
   </style>
 
@@ -3360,6 +3727,148 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
 
 </a>
 
+
+<!-- ==========================================
+     LSP AUTH PERFORMANCE MONITOR
+========================================== -->
+
+<section id="authPerformancePanel"
+         class="auth-perf-panel">
+
+  <div class="auth-perf-header">
+
+    <div class="auth-perf-heading">
+
+      <span class="auth-perf-kicker">
+        LIVESTREAM PRO / SECURITY
+      </span>
+
+      <h2>AUTH PERFORMANCE</h2>
+
+      <p>High Performance Authentication</p>
+
+    </div>
+
+    <span id="authPerfStatus"
+          class="auth-perf-status">
+      CONNECTING
+    </span>
+
+  </div>
+
+  <!-- CACHE HIT RATE -->
+
+  <div class="auth-perf-primary">
+
+    <span class="auth-perf-label">
+      RAM CACHE HIT RATE
+    </span>
+
+    <strong id="authPerfHitRate">
+      --
+    </strong>
+
+    <div class="auth-perf-progress"
+         role="progressbar"
+         aria-label="Cache hit rate"
+         aria-valuemin="0"
+         aria-valuemax="100"
+         aria-valuenow="0">
+
+      <div id="authPerfProgressFill"></div>
+
+    </div>
+
+    <small>
+      Authentication cache efficiency
+    </small>
+
+  </div>
+
+  <!-- STATISTICS -->
+
+  <div class="auth-perf-grid">
+
+    <div class="auth-perf-cell">
+      <span>CACHED ACCOUNTS</span>
+      <strong id="authPerfAccounts">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>RAM CACHE HITS</span>
+      <strong id="authPerfHits">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>CACHE MISSES</span>
+      <strong id="authPerfMisses">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>CACHE REFRESHES</span>
+      <strong id="authPerfRefreshes">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>AUTH DENIED</span>
+      <strong id="authPerfDenied">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>CACHE ERRORS</span>
+      <strong id="authPerfErrors">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>CACHE TTL</span>
+      <strong id="authPerfTTL">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>AUTH VERSION</span>
+      <strong id="authPerfVersion">--</strong>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+
+  <div class="auth-perf-footer">
+
+    <div>
+
+      <span id="authPerfUpdated">
+        Waiting for server...
+      </span>
+
+      <small>Auto refresh every 10 seconds</small>
+
+    </div>
+
+    <button type="button"
+            id="authPerfRefreshBtn"
+            class="auth-perf-refresh"
+            aria-label="Refresh authentication statistics">
+
+      <svg viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="1.7"
+           stroke-linecap="round"
+           stroke-linejoin="round">
+
+        <path d="M20 7v5h-5"/>
+        <path d="M4 17v-5h5"/>
+        <path d="M6.1 8a7 7 0 0 1 11.5-2L20 12"/>
+        <path d="M4 12l2.4 6A7 7 0 0 0 18 16"/>
+
+      </svg>
+
+    </button>
+
+  </div>
+
+</section>
 
 <div class="admin-tabs">
   <button type="button"
