@@ -6939,131 +6939,297 @@ body.sfu-role-host
 }
 
 
-
 /* ==========================================
-   SFU - COMPACT BOTTOM COMMENT BAR V1.0
+   SFU - UNIFIED BOTTOM TOOLBAR V2.0
 ========================================== */
+
+#sfuBottomToolbar {
+  --btn-size: 36px;
+  --btn-gap: 5px;
+
+  position: fixed;
+  z-index: 17;
+
+  left: calc(10px + env(safe-area-inset-left, 0px));
+  right: calc(10px + env(safe-area-inset-right, 0px));
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: var(--btn-gap);
+
+  min-width: 0;
+  padding: 0;
+
+  background: transparent;
+  pointer-events: none;
+}
+
 
 /* COMMENT FORM */
 
-#sfuChatForm {
+#sfuBottomToolbar #sfuChatForm {
+  position: relative;
+
   display: flex;
+  flex: 1 1 0;
   align-items: center;
-  gap: 6px;
 
-  width: calc(
-    100% - 120px - env(safe-area-inset-right, 0px)
-  );
+  gap: var(--btn-gap);
 
+  width: auto;
+  min-width: 0;
   max-width: none;
 
   margin: 0;
+  padding: 0;
 
-  padding:
-    6px
-    6px
-    calc(18px + env(safe-area-inset-bottom, 0px))
-    calc(12px + env(safe-area-inset-left, 0px));
+  border: none;
+  background: transparent;
 
   pointer-events: auto;
 }
 
+
 /* COMMENT INPUT */
 
-#sfuChatInput {
+#sfuBottomToolbar #sfuChatInput {
   flex: 1 1 0;
 
   width: 0;
   min-width: 0;
+  height: var(--btn-size);
 
-  height: 36px;
-  padding: 0 12px;
+  margin: 0;
+  padding: 0 10px;
 
   border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.22);
 
-  background: rgba(20, 22, 27, .68);
-  border: 1px solid rgba(255, 255, 255, .2);
+  background: rgba(20,22,27,.65);
+  color: #fff;
 
   font-size: 16px;
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
-/* COMMENT PLACEHOLDER */
-
-#sfuChatInput::placeholder {
-  font-size: 12px;
-  color: rgba(255, 255, 255, .65);
+#sfuBottomToolbar #sfuChatInput::placeholder {
+  color: rgba(255,255,255,.65);
+  font-size: 11px;
 }
 
-/* SEND COMMENT BUTTON */
 
-#sfuChatSend {
-  flex: 0 0 36px;
+/* UNIFORM FUNCTION BUTTONS */
 
-  width: 36px;
-  min-width: 36px;
-  height: 36px;
+#sfuBottomToolbar #sfuChatSend,
+#sfuBottomToolbar #sfuChatToggle,
+#sfuBottomToolbar #sfuVoiceToggle,
+#sfuBottomToolbar #sfuGiftToggle,
+#sfuBottomToolbar #studioSettingsBtn {
 
-  padding: 0;
-  border-radius: 50%;
-}
-
-#sfuChatSend .sfu-send-icon {
-  width: 17px;
-  height: 17px;
-}
-
-/* SETTINGS - BOTTOM POSITION */
-
-#studioSettingsBtn {
-  position: fixed;
-  z-index: 16;
-
-  right: calc(
-    78px + env(safe-area-inset-right, 0px)
-  );
-
-  bottom: calc(
-    18px + env(safe-area-inset-bottom, 0px)
-  );
+  position: relative !important;
+  inset: auto !important;
 
   display: grid;
   place-items: center;
 
-  width: 36px;
-  min-width: 36px;
-  height: 36px;
+  flex: 0 0 var(--btn-size);
 
+  width: var(--btn-size);
+  min-width: var(--btn-size);
+  max-width: var(--btn-size);
+
+  height: var(--btn-size);
+  min-height: var(--btn-size);
+  max-height: var(--btn-size);
+
+  margin: 0;
   padding: 0;
 
   border-radius: 50%;
-  border: 1px solid rgba(223, 190, 131, .45);
+  border: 1px solid rgba(223,190,131,.38);
 
-  background: rgba(20, 22, 27, .78);
+  background: rgba(20,22,27,.78);
   color: #F0D49C;
 
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 3px 12px rgba(0,0,0,.25);
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  pointer-events: auto;
+
+  transition: transform .15s ease;
+}
+
+
+/* SEND BUTTON */
+
+#sfuBottomToolbar #sfuChatSend {
+  border-color: rgba(240,211,156,.65);
+
+  background: linear-gradient(
+    145deg,
+    #F5DDAF,
+    #DFBB7E,
+    #C79A56
+  );
+
+  color: #21180E;
+}
+
+
+/* ICON SIZE */
+
+#sfuBottomToolbar button svg {
+  width: 19px;
+  height: 19px;
+
+  margin: 0;
+  flex-shrink: 0;
+}
+
+#sfuBottomToolbar #sfuChatSend svg {
+  width: 17px;
+  height: 17px;
+}
+
+
+/* GIFT IMAGE */
+
+#sfuBottomToolbar .sfu-gift-toggle-image {
+  width: 26px;
+  height: 26px;
+
+  object-fit: contain;
+  pointer-events: none;
+}
+
+
+/* ACTIVE BUTTON */
+
+#sfuBottomToolbar #sfuChatToggle.active,
+#sfuBottomToolbar #sfuVoiceToggle.active {
+  background: rgba(70,52,30,.9);
+  border-color: #E5C184;
+  color: #F5DDAF;
+}
+
+#sfuBottomToolbar button:active:not(:disabled) {
+  transform: scale(.92);
+}
+
+
+/* KEEP EXISTING HIDDEN STATES */
+
+#sfuBottomToolbar .hidden,
+#sfuBottomToolbar [hidden] {
+  display: none !important;
+}
+
+
+/* HIDE INPUT WHEN COMMENTS ARE CLOSED */
+
+body:has(#sfuChatPanel.hidden)
+#sfuBottomToolbar #sfuChatForm {
+  display: none !important;
+}
+
+
+/* CHAT MESSAGES ABOVE TOOLBAR */
+
+#sfuChatPanel {
+  bottom: calc(
+    58px + env(safe-area-inset-bottom, 0px)
+  );
+
+  height: min(270px, 38dvh);
+
+  pointer-events: none;
+}
+
+#sfuChatMessages {
+  width: min(350px, calc(100vw - 24px));
+  max-height: 220px;
+
+  margin-bottom: 0;
 
   pointer-events: auto;
 }
 
-#studioSettingsBtn .studio-icon {
-  width: 19px;
-  height: 19px;
+#sfuChatError {
+  bottom: 0;
 }
 
-/* MOBILE ALIGNMENT */
 
-@media (max-width: 480px) {
+/* NOTIFICATION BADGES */
 
-  #sfuChatForm {
-    padding-bottom: calc(
-      28px + env(safe-area-inset-bottom, 0px)
-    );
+#sfuBottomToolbar #sfuChatUnread,
+#sfuBottomToolbar #sfuVoiceBadge {
+  top: -5px;
+  right: -3px;
+
+  min-width: 16px;
+  height: 16px;
+
+  padding: 0 3px;
+
+  font-size: 9px;
+  line-height: 16px;
+
+  border-radius: 999px;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 430px) {
+
+  #sfuBottomToolbar {
+    --btn-size: 34px;
+    --btn-gap: 5px;
+
+    left: calc(8px + env(safe-area-inset-left, 0px));
+    right: calc(8px + env(safe-area-inset-right, 0px));
+  }
+
+  #sfuBottomToolbar button svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  #sfuBottomToolbar .sfu-gift-toggle-image {
+    width: 24px;
+    height: 24px;
   }
 
 }
 
+
+/* SMALL SCREEN */
+
+@media (max-width: 360px) {
+
+  #sfuBottomToolbar {
+    --btn-size: 32px;
+    --btn-gap: 4px;
+  }
+
+  #sfuBottomToolbar #sfuChatInput {
+    padding: 0 8px;
+  }
+
+  #sfuBottomToolbar #sfuChatInput::placeholder {
+    font-size: 10px;
+  }
+
+}
 
 
 </style>
@@ -15839,6 +16005,101 @@ const GAMES = Object.freeze({
 </div>
 
 
+
+
+<script>
+/* ==========================================
+   SFU - INITIALIZE UNIFIED BOTTOM TOOLBAR
+========================================== */
+
+(function initSfuBottomToolbar() {
+
+  function initialize() {
+
+    // Prevent duplicate toolbar
+    if (
+      document.getElementById("sfuBottomToolbar")
+    ) {
+      return;
+    }
+
+    const chatForm =
+      document.getElementById("sfuChatForm");
+
+    const chatPanel =
+      document.getElementById("sfuChatPanel");
+
+    const chatToggle =
+      document.getElementById("sfuChatToggle");
+
+    const voiceToggle =
+      document.getElementById("sfuVoiceToggle");
+
+    const giftToggle =
+      document.getElementById("sfuGiftToggle");
+
+    const settingsButton =
+      document.getElementById("studioSettingsBtn");
+
+    if (!chatForm || !chatPanel || !settingsButton) {
+      return;
+    }
+
+    // Create bottom toolbar
+    const toolbar = document.createElement("div");
+
+    toolbar.id = "sfuBottomToolbar";
+
+    toolbar.setAttribute(
+      "role",
+      "group"
+    );
+
+    toolbar.setAttribute(
+      "aria-label",
+      "Livestream controls"
+    );
+
+    // Insert outside chat panel
+    chatPanel.insertAdjacentElement(
+      "afterend",
+      toolbar
+    );
+
+    // Move original elements into toolbar
+    [
+      chatForm,
+      chatToggle,
+      voiceToggle,
+      giftToggle,
+      settingsButton
+
+    ].forEach(element => {
+
+      if (element) {
+        toolbar.appendChild(element);
+      }
+
+    });
+
+  }
+
+  if (document.readyState === "loading") {
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      initialize,
+      { once: true }
+    );
+
+  } else {
+
+    initialize();
+
+  }
+
+})();
+</script>
 
 
 </body>
