@@ -8317,24 +8317,6 @@ body.sfu-role-host
 
   </button>
 
-  <!-- ROCK PAPER SCISSORS -->
-  <button
-    type="button"
-    class="sfu-game-option sfu-game-rps"
-    data-game="rps">
-
-    <img
-      class="sfu-game-cover"
-      src="/assets/game-covers/rps.webp"
-      alt=""
-      loading="lazy">
-
-    <span class="sfu-game-info">
-      <strong>ROCK PAPER SCISSORS</strong>
-      <small>RPS</small>
-    </span>
-
-  </button>
 
   <!-- TIME RACE -->
   <button
@@ -15354,29 +15336,24 @@ updateVoiceViewerUI();
   // GAME CONFIGURATION
   // =====================================
 
-  const GAMES = Object.freeze({
+const GAMES = Object.freeze({
 
-    military: {
-      name: "MILITARY",
-      url: "/game-military.html"
-    },
+  military: {
+    name: "MILITARY",
+    url: "/game-military.html"
+  },
 
-    rps: {
-      name: "ROCK PAPER SCISSORS",
-      url: "/game-rps.html"
-    },
+  timeRace: {
+    name: "TIME RACE",
+    url: "/game-time-race.html"
+  },
 
-    timeRace: {
-      name: "TIME RACE",
-      url: "/game-time-race.html"
-    },
+  dtp: {
+    name: "DRAGON TIGER PHOENIX",
+    url: "/game-dragon-tiger-phoenix.html"
+  }
 
-    dtp: {
-      name: "DRAGON TIGER PHOENIX",
-      url: "/game-dragon-tiger-phoenix.html"
-    }
-
-  });
+});
 
   let currentGame = null;
   let gameOpened = false;

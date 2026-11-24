@@ -246,45 +246,6 @@ if (!fs.existsSync(HEALTH_DIR)) {
 const ONE_DAY = 24 * 60 * 60 * 1000; // 🔥 24h
 
 
-// ================================
-// 🔢 RPS ROUND COUNT PERSIST (24H)
-// ================================
-const RPS_ROUND_COUNT_FILE =
-  "/opt/render/project/data/rps_round_count.json";
-
-function loadRpsRoundCount(){
-  try{
-    if (!fs.existsSync(RPS_ROUND_COUNT_FILE)) {
-      return {
-        dayTs: getTodayStartTsVN(),
-        count: 0
-      };
-    }
-    return JSON.parse(
-      fs.readFileSync(RPS_ROUND_COUNT_FILE, "utf8")
-    );
-  }catch(e){
-    console.error("❌ Load RPS round count failed", e);
-    return {
-      dayTs: getTodayStartTsVN(),
-      count: 0
-    };
-  }
-}
-
-function saveRpsRoundCount(data){
-  try{
-    fs.writeFileSync(
-      RPS_ROUND_COUNT_FILE,
-      JSON.stringify(data, null, 2)
-    );
-  }catch(e){
-    console.error("❌ Save RPS round count failed", e);
-  }
-}
-
-
-
 
 
 
@@ -337,37 +298,6 @@ function filterTimeRaceHistoryToday(list) {
 
 
 
-
-// ================================
-// ✊✋✌️ RPS HISTORY (GLOBAL)
-// ================================
-const RPS_HISTORY_FILE =
-  "/opt/render/project/data/rps_history.json";
-
-const MAX_RPS_HISTORY = 20;
-
-function loadRpsHistory(){
-  try{
-    if(!fs.existsSync(RPS_HISTORY_FILE)) return [];
-    return JSON.parse(fs.readFileSync(RPS_HISTORY_FILE,"utf8"));
-  }catch(e){
-    console.error("❌ Load RPS history failed", e);
-    return [];
-  }
-}
-
-function saveRpsHistory(list){
-  try{
-    fs.writeFileSync(
-      RPS_HISTORY_FILE,
-      JSON.stringify(list,null,2)
-    );
-  }catch(e){
-    console.error("❌ Save RPS history failed", e);
-  }
-}
-
-let rpsHistoryGlobal = loadRpsHistory();
 
 
 
@@ -2228,221 +2158,6 @@ setInterval(()=>{
 
 
 
-// ================================
-// 🔢 RPS ROUND COUNT STATE
-// ================================
-const rpsRoundState = loadRpsRoundCount();
-
-let rpsRoundCount = rpsRoundState.count || 0;
-let rpsRoundDayTs = rpsRoundState.dayTs || getTodayStartTsVN();
-
-
-
-
-
-
-
-const RPS_BET_LOCK_BEFORE_MS = 5000; // 🔒 khóa trước 5s
-
-
-// ================================
-// ✊✋✌️ RPS ROUND STATE (GLOBAL)
-// ================================
-const todayStart = getTodayStartTsVN();
-if (todayStart !== rpsRoundDayTs) {
-  rpsRoundCount = 0;
-  rpsRoundDayTs = todayStart;
-
-  saveRpsRoundCount({
-    dayTs: rpsRoundDayTs,
-    count: rpsRoundCount
-  });
-}
-
-rpsRoundCount++;
-
-let rpsRound = {
-  id: rpsRoundCount,          // ✅ round trong ngày
-  startAt: Date.now(),
-  endAt: Date.now() + 60000,
-  secretHand: pickRpsHand(),
-  bets: []
-};
-
-
-function pickRpsHand(){
-  return ["rock","paper","scissors"][
-    Math.floor(Math.random()*3)
-  ];
-}
-
-function calcRps(me, enemy){
-  if(me === enemy) return "draw";
-  if(
-    (me==="rock" && enemy==="scissors") ||
-    (me==="paper" && enemy==="rock") ||
-    (me==="scissors" && enemy==="paper")
-  ) return "win";
-  return "lose";
-}
-
-
-
-
-
-
-// ================================
-// ⏱️ AUTO RPS RESULT EVERY 60s
-// ================================
-setInterval(() => {
-  try {
-    const users = loadUsers();
-    const enemy = rpsRound.secretHand;
-
-    // =========================
-    // 1️⃣ TÍNH KẾT QUẢ & CẬP NHẬT COIN
-    // =========================
-rpsRound.bets.forEach(o => {
-  const me = users[o.uid];
-  if (!me?.profile) return;
-
-  const result = calcRps(o.hand, enemy);
-  let win = 0;
-
-  if (result === "win") {
-    win = o.bet * 2;           // 🔥 thắng x2
-    me.profile.coins = Math.floor(
-  Number(me.profile.coins || 0) + win
-);
-  } else if (result === "draw") {
-    me.profile.coins += o.bet; // 🔄 hoàn tiền
-  }
-  // ❌ lose: không cộng gì
-
-  me.rpsHistory ||= [];
-
-  // ✅ TẠO 1 OBJECT DUY NHẤT
-  const historyItem = {
-    roundId: rpsRound.id,
-    ts: Date.now(),
-    myHand: o.hand,
-    enemy,
-    bet: o.bet,
-    result,
-    win
-  };
-
-  // 📜 LƯU VÀO USER
-  me.rpsHistory.unshift(historyItem);
-
-  // 🔒 GIỚI HẠN LỊCH SỬ (VD 30)
-  if (me.rpsHistory.length > 30) {
-    me.rpsHistory.length = 30;
-  }
-
-  // 🔥 REALTIME APPEND CHO RIÊNG USER
-  emitToUser(o.uid, "rps-my-history-append", historyItem);
-});
-
-
-    // =========================
-    // 2️⃣ LƯU USER TRƯỚC
-    // =========================
-    saveUsers(users);
-
-    // =========================
-    // 3️⃣ EMIT COIN REALTIME (SAU KHI SAVE)
-    // =========================
-    rpsRound.bets.forEach(o=>{
-      emitCoinUpdate(o.uid);
-    });
-
-    // =========================
-    // 4️⃣ EMIT KẾT QUẢ ROUND
-    // =========================
-    io.emit("rps-round-result",{
-      roundId: rpsRound.id,
-      enemyHand: enemy
-    });
-
-
-// =========================
-// 📜 LƯU LỊCH SỬ ROUND (DÙ CÓ BET HAY KHÔNG)
-// =========================
-rpsHistoryGlobal.unshift({
-  roundId: rpsRound.id,
-  ts: Date.now(),
-  enemy: enemy,
-  betCount: rpsRound.bets.length,
-  hasBet: rpsRound.bets.length > 0
-});
-
-
-// chỉ giữ N round
-rpsHistoryGlobal = rpsHistoryGlobal.slice(0, MAX_RPS_HISTORY);
-
-// 💾 lưu file
-saveRpsHistory(rpsHistoryGlobal);
-
-// 🔔 realtime push cho client
-io.emit("rps-history-update", rpsHistoryGlobal);
-
-
-
-
-// 🔁 RESET ROUND KHI QUA NGÀY MỚI (0H VN)
-const todayStart = getTodayStartTsVN();
-if (todayStart !== rpsRoundDayTs) {
-  rpsRoundCount = 0;
-  rpsRoundDayTs = todayStart;
-}
-
-// ➕ ROUND MỚI
-rpsRoundCount++;
-
-saveRpsRoundCount({
-  dayTs: rpsRoundDayTs,
-  count: rpsRoundCount
-});
-
-rpsRound = {
-  id: rpsRoundCount,          // ✅ #1 → #N trong ngày
-  startAt: Date.now(),
-  endAt: Date.now() + 60000,
-  secretHand: pickRpsHand(),
-  bets: []
-};
-
-
-
-/* ==========================================
-   RPS - PUBLIC ROUND UPDATE
-   Do not expose secretHand
-========================================== */
-
-io.emit("rps-round-new", {
-  roundId: rpsRound.id,
-  endAt: rpsRound.endAt
-});
-
-
-io.emit("admin-rps-bet-reset", {
-  roundId: rpsRound.id
-});
-
-
-
-
-
-
-  } catch(e){
-    console.error("❌ RPS ROUND ERROR", e);
-  }
-}, 60000);
-
-
-
-
 
 // ================================
 // 🔢 TIME RACE ROUND COUNT (24H)
@@ -3961,13 +3676,6 @@ socket.emit("time-race-round-count",{
 });
 
 
-// ✊✋✌️ gửi lịch sử RPS cho user mới vào
-socket.emit("rps-history", rpsHistoryGlobal);
-
-// ✊✋✌️ gửi lịch sử RPS của RIÊNG USER
-socket.emit("rps-my-history", me?.rpsHistory || []);
-
-
 
 
 
@@ -4434,18 +4142,6 @@ socket.emit("time-race-my-history",
 
 
   
-// ✊✋✌️ RPS ROUND INFO
-
-const myBet = rpsRound.bets.find(b => b.uid === uid);
-
-socket.emit("rps-round-state",{
-  roundId: rpsRound.id,
-  endAt: rpsRound.endAt,
-
-  hasBet: !!myBet,
-  myHand: myBet?.hand || null,
-  bet: myBet?.bet || 0
-});
 
 
 
@@ -5364,72 +5060,6 @@ message:"Successfully added " + add + " diamonds"
 
 
 
-
-app.post("/api/rps/bet",(req,res)=>{
-  const uid = req.headers["x-uid"];
-  const { bet, hand } = req.body;
-
-// ⏱️ SERVER-SIDE TIME CHECK (ANTI-LAG)
-const now = Date.now();
-const remainMs = rpsRound.endAt - now;
-
-if (remainMs <= RPS_BET_LOCK_BEFORE_MS) {
-  return res.json({
-    ok: false,
-    message: "The betting period has ended"
-  });
-}
-
-
-  if(!uid || !hand)
-    return res.json({ ok:false });
-
-  const users = loadUsers();
-  const me = users[uid];
-  if(!me?.profile)
-    return res.json({ ok:false });
-
-  const coin = Math.floor(Number(bet));
-  if(!coin || coin <= 0)
-    return res.json({ ok:false });
-
-  if(me.profile.coins < coin)
-    return res.json({ ok:false, message:"NOT_ENOUGH_COIN" });
-
-  // ⛔ mỗi round chỉ 1 lệnh
-  if (rpsRound.bets.some(b => b.uid === uid))
-    return res.json({ ok:false, message:"ALREADY_BET" });
-
-  // 🔻 trừ coin NGAY
-  me.profile.coins -= coin;
-  saveUsers(users);
-  emitCoinUpdate(uid);
-
-  rpsRound.bets.push({
-    uid,
-    hand,
-    bet: coin
-  });
-
-// 🔔 REALTIME PUSH CHO ADMIN
-io.emit("admin-rps-bet-new", {
-  roundId: rpsRound.id,
-  uid,
-  hand,
-  bet: coin,
-  name: me.profile.name || "Player"
-});
-
-
-
-  return res.json({
-    ok:true,
-    roundId: rpsRound.id,
-    endAt: rpsRound.endAt
-  });
-});
-
-
 app.post("/api/admin/time-race/override", (req, res) => {
 
   const uid = req.headers["x-uid"];
@@ -5670,70 +5300,6 @@ app.get("/api/time-race/my-history",(req,res)=>{
 });
 
 
-// 🔐 ADMIN – GET CURRENT RPS BETS
-app.get("/api/admin/rps/bets", (req, res) => {
-
-  const uid = req.headers["x-uid"];
-  if (!uid) return res.status(401).json({ ok:false });
-
-  const users = loadUsers();
-  const me = users[uid];
-
-  if (me?.role !== "admin")
-    return res.status(403).json({ ok:false });
-
-  if (!rpsRound || !Array.isArray(rpsRound.bets)) {
-    return res.json({ ok:true, list: [] });
-  }
-
-  const list = rpsRound.bets.map(b => {
-    const u = users[b.uid];
-    return {
-      uid: b.uid,
-      name: u?.profile?.name || "Player",
-      bet: b.bet,
-      hand: b.hand
-    };
-  });
-
-  res.json({
-    ok:true,
-    roundId: rpsRound.id,
-    list
-  });
-});
-
-
-
-
-// ================================
-// 🔐 ADMIN – XEM TRƯỚC KẾT QUẢ RPS
-// ================================
-app.get("/api/admin/rps/secret", (req, res) => {
-
-  const uid = req.headers["x-uid"];
-  if (!uid) return res.status(401).json({ ok:false });
-
-  const users = loadUsers();
-  const me = users[uid];
-
-  if (me?.role !== "admin") {
-    return res.status(403).json({ ok:false });
-  }
-
-  if (!rpsRound) {
-    return res.json({ ok:false, message:"NO_ACTIVE_ROUND" });
-  }
-
-  return res.json({
-    ok: true,
-    roundId: rpsRound.id,
-    endAt: rpsRound.endAt,
-    secretHand: rpsRound.secretHand
-  });
-});
-
-
 
 app.get("/api/admin/dtp-bets",(req,res)=>{
 
@@ -5785,64 +5351,6 @@ res.json({
   pool: pool   // 🔥 THÊM DÒNG NÀY
 });
 
-});
-
-
-
-// 🛑 ADMIN OVERRIDE RPS RESULT (DANGEROUS)
-app.post("/api/admin/rps/override", (req, res) => {
-
-  const uid = req.headers["x-uid"];
-  const { hand } = req.body;
-
-  if (!uid) return res.status(401).json({ ok:false });
-
-  const users = loadUsers();
-  const me = users[uid];
-
-  if (me?.role !== "admin") {
-    return res.status(403).json({ ok:false });
-  }
-
-  if (!rpsRound) {
-    return res.json({ ok:false, message:"NO_ACTIVE_ROUND" });
-  }
-
-  // ⛔ Không cho override khi round đã kết thúc
-  if (Date.now() >= rpsRound.endAt) {
-    return res.json({ ok:false, message:"ROUND_ENDED" });
-  }
-
-  const allowed = ["rock","paper","scissors"];
-  if (!allowed.includes(hand)) {
-    return res.json({ ok:false, message:"INVALID_HAND" });
-  }
-
-  // 🔥 OVERRIDE THẲNG
-  rpsRound.secretHand = hand;
-
-// 🔔 REALTIME PUSH CHO ADMIN
-io.emit("admin-rps-secret-update", {
-  roundId: rpsRound.id,
-  secretHand: rpsRound.secretHand,
-  endAt: rpsRound.endAt,
-  overridden: true
-});
-
-
-
-  console.warn(
-    "🛑 [RPS OVERRIDE]",
-    "round", rpsRound.id,
-    "→", hand,
-    "by", uid
-  );
-
-  res.json({
-    ok:true,
-    roundId: rpsRound.id,
-    secretHand: rpsRound.secretHand
-  });
 });
 
 

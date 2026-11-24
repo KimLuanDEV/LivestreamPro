@@ -332,10 +332,9 @@ button {
 
 .tabs {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0,1fr));
+  grid-template-columns: repeat(3, minmax(0,1fr));
   gap: 8px;
 }
-
 .tab {
   position: relative;
 
@@ -585,7 +584,7 @@ button {
   }
 
 .tabs {
-  grid-template-columns: repeat(2,minmax(0,1fr));
+  grid-template-columns: repeat(3,minmax(0,1fr));
   gap: 7px;
 }
 
@@ -758,10 +757,10 @@ button {
 
     <div class="module-box">
 
-      <div class="module-heading">
-        <strong>Game Modules</strong>
-        <span>04 MODULES</span>
-      </div>
+<div class="module-heading">
+  <strong>Game Modules</strong>
+  <span>03 MODULES</span>
+</div>
 
    
 <nav class="tabs"
@@ -769,15 +768,8 @@ button {
 
   <button class="tab active"
           type="button"
-          data-type="rps"
-          aria-pressed="true">
-    RPS
-  </button>
-
-  <button class="tab"
-          type="button"
           data-type="boom"
-          aria-pressed="false">
+          aria-pressed="true">
     BOOM
   </button>
 
@@ -812,7 +804,7 @@ button {
 
     <div class="workspace-title">
 <strong id="activeModuleTitle">
-  RPS Management
+  Boom Management
 </strong>
 
       <small id="activeModuleSubtitle">
@@ -848,7 +840,7 @@ button {
 <iframe
   id="frame"
   title="Game administration workspace"
-  src="/lsp-adminrps-128995.html">
+  src="/lsp-adminboom-128995.html">
 </iframe>
     </div>
 
@@ -897,11 +889,6 @@ const activeModuleSubtitle =
 
 const ADMIN_MODULES = {
 
-  rps: {
-    title: "RPS Management",
-    url: "/lsp-adminrps-128995.html"
-  },
-
   boom: {
     title: "Boom Management",
     url: "/lsp-adminboom-128995.html"
@@ -936,7 +923,7 @@ document.getElementById("adminUid").textContent =
 
 /* MODULE SELECTION */
 
-let activeModule = "rps";
+let activeModule = "boom";
 
 function loadTab(type) {
 
