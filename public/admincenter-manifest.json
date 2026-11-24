@@ -1,0 +1,27 @@
+{
+  "id": "/lsp-admincenter-128995.html",
+  "name": "Livestream Pro Executive Admin Center",
+  "short_name": "Admin Center",
+  "description": "Livestream Pro Unified Administration Center",
+  "start_url": "/lsp-admincenter-128995.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0c10",
+  "theme_color": "#0b0c10",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/assets/admincenter-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/admincenter-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

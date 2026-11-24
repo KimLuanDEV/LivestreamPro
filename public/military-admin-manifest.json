@@ -1,0 +1,27 @@
+{
+  "id": "/lsp-adminwheel8-128995.html",
+  "name": "Military Command Center",
+  "short_name": "Military Admin",
+  "description": "Livestream Pro Military Administration",
+  "start_url": "/lsp-adminwheel8-128995.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#090d0b",
+  "theme_color": "#090d0b",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/assets/military-admin-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/military-admin-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

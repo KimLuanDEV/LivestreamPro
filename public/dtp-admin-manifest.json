@@ -1,0 +1,27 @@
+{
+  "id": "/lsp-admindtp-128995.html",
+  "name": "Dragon Tiger Phoenix Admin",
+  "short_name": "DTP Admin",
+  "description": "Livestream Pro Royal Administration",
+  "start_url": "/lsp-admindtp-128995.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#09090d",
+  "theme_color": "#09090d",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/assets/dtp-admin-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/dtp-admin-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
