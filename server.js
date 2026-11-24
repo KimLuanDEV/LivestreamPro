@@ -5277,19 +5277,38 @@ app.get("/api/inbox", (req, res) => {
 
 
 app.get("/api/withdraw-history", (req, res) => {
-  const uid = req.headers["x-uid"];
-  if (!uid) return res.status(403).json({ error: "no_auth" });
 
-  const list = loadWithdraws();
+  const uid = mhVerifiedUid(req.headers.cookie);
 
-  // 🔒 chỉ trả về của chính user
-  const mine = list.filter(w => w.uid === uid);
+  if (!uid) {
+    return res.status(401).json({
+      ok: false,
+      error: "AUTH_REQUIRED"
+    });
+  }
 
-  res.json({
+  const users = loadUsers();
+
+  if (!Object.hasOwn(users, uid)) {
+    return res.status(401).json({
+      ok: false,
+      error: "INVALID_ACCOUNT"
+    });
+  }
+
+  res.setHeader("Cache-Control", "no-store");
+
+  const mine = loadWithdraws().filter(
+    item => item.uid === uid
+  );
+
+  return res.json({
     ok: true,
     list: mine
   });
+
 });
+
 
 
 // 🔐 BẢO VỆ TRANG ADMIN
@@ -9065,10 +9084,45 @@ function loadUsers(){
 
 
 
-function saveUsers(db){
-  fs.writeFileSync(USERS_FILE, JSON.stringify(db,null,2));
-}
+function saveUsers(db) {
 
+  const tempFile =
+    USERS_FILE + "." + crypto.randomUUID() + ".tmp";
+
+  let fd;
+
+  try {
+
+    fd = fs.openSync(tempFile, "wx", 0o600);
+
+    fs.writeFileSync(
+      fd,
+      JSON.stringify(db, null, 2),
+      "utf8"
+    );
+
+    fs.fsyncSync(fd);
+    fs.closeSync(fd);
+
+    fd = undefined;
+
+    fs.renameSync(tempFile, USERS_FILE);
+
+  } finally {
+
+    if (fd !== undefined) {
+      try {
+        fs.closeSync(fd);
+      } catch {}
+    }
+
+    try {
+      fs.unlinkSync(tempFile);
+    } catch {}
+
+  }
+
+}
 
 
 /* ==========================================
