@@ -7764,6 +7764,223 @@ body:has(#sfuChatPanel.hidden)
 }
 
 
+/* ==========================================
+   SFU - MINIMAL EXIT BUTTON V2.0
+========================================== */
+
+#sfuTopExitBtn {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0;
+
+  box-shadow: none !important;
+
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+
+  color: #FFFFFF;
+
+  width: 30px;
+  min-width: 30px;
+  height: 32px;
+
+  flex: 0 0 30px;
+
+  padding: 0;
+  margin: 0;
+}
+
+#sfuTopExitBtn svg {
+  width: 25px;
+  height: 25px;
+
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,.65));
+}
+
+#sfuTopExitBtn:active {
+  background: transparent !important;
+  transform: scale(.85);
+}
+
+
+
+/* ==========================================
+   SFU - SEPARATED VIEWER AVATARS V2.0
+========================================== */
+
+/* REMOVE COMMON BACKGROUND */
+
+#sfuViewerBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  width: auto;
+  min-width: 0;
+  height: 34px;
+
+  margin: 0;
+  padding: 0;
+
+  background: transparent !important;
+  border: none !important;
+
+  border-radius: 0;
+  box-shadow: none !important;
+
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+
+/* INDEPENDENT AVATAR GROUP */
+
+#sfuViewerAvatars {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  flex-wrap: nowrap;
+
+  gap: 3px;
+
+  padding: 0;
+  margin: 0;
+
+  background: transparent;
+}
+
+#sfuViewerAvatars:empty {
+  display: none;
+}
+
+
+/* INDIVIDUAL AVATAR */
+
+.sfu-viewer-stack-avatar {
+  flex: 0 0 28px;
+
+  width: 28px;
+  height: 28px;
+
+  border: 1px solid rgba(255,255,255,.65);
+  border-radius: 50%;
+
+  object-fit: cover;
+}
+
+
+/* REMOVE AVATAR OVERLAP */
+
+.sfu-viewer-stack-avatar
++ .sfu-viewer-stack-avatar {
+  margin-left: 0;
+}
+
+
+/* INDEPENDENT VIEWER COUNT */
+
+#sfuViewerCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  min-width: 32px;
+  height: 26px;
+
+  padding: 0 9px;
+
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px;
+
+  background: rgba(0,0,0,.42);
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  color: #FFFFFF;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* ACTIVE VIEWER LIST */
+
+#sfuViewerBadge[aria-expanded="true"]
+#sfuViewerCount {
+  border-color: rgba(223,190,131,.65);
+  background: rgba(45,35,23,.75);
+}
+
+
+/* TOPBAR SPACING */
+
+.studio-top-actions {
+  gap: 7px;
+}
+
+
+/* MOBILE OPTIMIZATION */
+
+@media (max-width: 480px) {
+
+  #sfuViewerBadge {
+    gap: 6px;
+  }
+
+  #sfuViewerAvatars {
+    gap: 2px;
+  }
+
+  .sfu-viewer-stack-avatar {
+    flex-basis: 25px;
+
+    width: 25px;
+    height: 25px;
+  }
+
+  #sfuViewerCount {
+    min-width: 28px;
+    height: 24px;
+
+    padding: 0 7px;
+    font-size: 11px;
+  }
+
+  #sfuTopExitBtn svg {
+    width: 23px;
+    height: 23px;
+  }
+
+}
+
+
+@media (max-width: 360px) {
+
+  .sfu-viewer-stack-avatar {
+    flex-basis: 22px;
+
+    width: 22px;
+    height: 22px;
+  }
+
+  #sfuViewerBadge {
+    gap: 5px;
+  }
+
+  .studio-top-actions {
+    gap: 4px;
+  }
+
+}
+
 
 </style>
 
