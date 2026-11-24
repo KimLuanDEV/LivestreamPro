@@ -5,20 +5,6 @@
 <meta charset="UTF-8">
 <meta name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover">
-
- <meta name="apple-mobile-web-app-capable"
-      content="yes">
-
-<meta name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent">
-
-<meta name="mobile-web-app-capable"
-      content="yes">
-
-<meta name="theme-color"
-      content="#000000">
-      
-      
 <title>SFU Live Studio | LivestreamPro</title>
 
 
@@ -8248,149 +8234,415 @@ body:not(.sfu-role-viewer) #sfuWatchPlayBtn {
 }
 
 
-
 /* ==========================================
-   SFU - EDGE TO EDGE FULLSCREEN V2.0
+   SFU - CONTROL CENTER GRID V3.0
    LIVESTREAM PRO
 ========================================== */
 
-html,
-body {
-  position: fixed;
+#studioSettingsPanel {
 
-  inset: 0;
+  --tool-size: 52px;
+  --tool-bg: #292B32;
+  --tool-color: #E9CB96;
+
+  width: min(100%, 480px);
+
+  padding:
+    10px
+    14px
+    calc(24px + env(safe-area-inset-bottom, 0px));
+
+  background: #17191F;
+
+  border-radius: 24px 24px 0 0;
+
+  border-top: 1px solid rgba(223,190,131,.22);
+  border-left: none;
+  border-right: none;
+
+  box-shadow: 0 -15px 60px rgba(0,0,0,.35);
+}
+
+
+/* ==========================================
+   CONTROL CENTER HEADER
+========================================== */
+
+#studioSettingsPanel .studio-sheet-handle {
+
+  width: 34px;
+  height: 4px;
+
+  margin: 0 auto 18px;
+
+  background: rgba(255,255,255,.18);
+}
+
+#studioSettingsPanel .studio-sheet-header {
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  text-align: left;
+
+  margin: 0 0 22px;
+  padding: 0 5px;
+}
+
+#studioSettingsPanel .studio-sheet-kicker {
+
+  color: #E9CB96;
+
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+}
+
+
+/* ==========================================
+   FIVE COLUMN TOOL GRID
+========================================== */
+
+#studioSettingsPanel .studio-control-grid {
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(5, minmax(0, 1fr));
+
+  align-items: start;
+
+  column-gap: 5px;
+  row-gap: 24px;
 
   width: 100%;
-  height: 100%;
 
-  margin: 0 !important;
-  padding: 0 !important;
-
-  overflow: hidden;
-  overscroll-behavior: none;
-
-  background: #000;
+  margin: 0;
+  padding: 0;
 }
 
 
-/* FULL VIEWPORT STUDIO */
+/* ==========================================
+   REMOVE RECTANGULAR BUTTON BACKGROUND
+========================================== */
 
-.studio {
-  position: fixed !important;
+#studioSettingsPanel .studio-control-grid > .control {
 
-  inset: 0 !important;
+  display: flex;
 
-  width: 100% !important;
-  height: 100% !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
 
-  max-width: none !important;
-  max-height: none !important;
+  gap: 9px;
 
-  margin: 0 !important;
-  padding: 0 !important;
+  width: 100%;
+  min-width: 0;
+  min-height: 86px;
 
-  border: none !important;
-  border-radius: 0 !important;
+  padding: 0;
+  margin: 0;
 
-  overflow: hidden;
+  border: none;
+  border-radius: 0;
 
-  background: #000;
+  background: transparent;
+
+  box-shadow: none;
+
+  color: #D6D7DC;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+
+  line-height: 1.3;
+  text-align: center;
+
+  transition: opacity .15s ease;
+
+  -webkit-tap-highlight-color: transparent;
 }
 
 
-/* FULL SCREEN VIDEO AREA
-   Exclude PK and Watch & Play
-*/
+/* ==========================================
+   CIRCULAR TOOL ICON
+========================================== */
 
-.studio:not(.sfu-pk-active):not(.sfu-watch-playing)
-.video-area {
+#studioSettingsPanel
+.studio-control-grid > .control > .studio-icon {
 
-  position: absolute !important;
+  display: block;
 
-  inset: 0 !important;
+  flex: 0 0 var(--tool-size);
 
-  width: 100% !important;
-  height: 100% !important;
+  width: var(--tool-size);
+  height: var(--tool-size);
 
-  max-width: none !important;
-  max-height: none !important;
+  padding: 14px;
 
-  margin: 0 !important;
-  padding: 0 !important;
+  margin: 0;
 
-  border: none !important;
-  border-radius: 0 !important;
+  border: 1px solid rgba(255,255,255,.04);
+  border-radius: 50%;
 
-  overflow: hidden;
+  background: var(--tool-bg);
+
+  color: var(--tool-color);
+
+  fill: none;
+  stroke: currentColor;
+
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  transition:
+    transform .18s ease,
+    background .18s ease,
+    color .18s ease;
 }
 
 
-/* FULL REMOTE MEDIA CONTAINER */
+/* ==========================================
+   LABEL UNDER ICON
+========================================== */
 
-.studio:not(.sfu-pk-active):not(.sfu-watch-playing)
-#remoteMedia {
+#studioSettingsPanel
+.studio-control-grid > .control > span {
 
-  position: absolute !important;
+  display: block;
 
-  inset: 0 !important;
+  width: 100%;
+  min-width: 0;
 
-  width: 100% !important;
-  height: 100% !important;
+  padding: 0 1px;
+  margin: 0;
 
-  margin: 0 !important;
-  padding: 0 !important;
+  color: #CFD0D5;
 
-  overflow: hidden;
+  font-size: 11px;
+  font-weight: 500;
+
+  line-height: 1.4;
+
+  white-space: normal;
+  overflow-wrap: anywhere;
+
+  text-align: center;
+  text-transform: capitalize;
 }
 
 
-/* HOST AND VIEWER VIDEO */
+/* ==========================================
+   TOUCH EFFECT
+========================================== */
 
-.studio:not(.sfu-pk-active):not(.sfu-watch-playing)
-#localVideo,
+#studioSettingsPanel
+.studio-control-grid > .control:active:not(:disabled)
+> .studio-icon {
 
-.studio:not(.sfu-pk-active):not(.sfu-watch-playing)
-#remoteMedia video {
+  transform: scale(.88);
 
-  position: absolute !important;
-
-  inset: 0 !important;
-
-  width: 100% !important;
-  height: 100% !important;
-
-  min-width: 0 !important;
-  min-height: 0 !important;
-
-  max-width: none !important;
-  max-height: none !important;
-
-  margin: 0 !important;
-  padding: 0 !important;
-
-  border: none !important;
-  border-radius: 0 !important;
-
-  object-fit: cover !important;
-  object-position: center center !important;
-
-  background: #000;
+  background: #493C29;
 }
 
 
-/* PRESERVE HIDDEN STATE */
+/* ==========================================
+   ACTIVE STATE
+========================================== */
 
-.studio .hidden {
+#studioSettingsPanel
+.studio-control-grid > .control.active
+> .studio-icon {
+
+  background: #493C29;
+
+  color: #F5D69E;
+
+  border-color: rgba(229,193,132,.55);
+}
+
+
+/* CAMERA / MIC DISABLED STATE */
+
+#studioSettingsPanel
+#cameraBtn.active > .studio-icon,
+
+#studioSettingsPanel
+#micBtn.active > .studio-icon {
+
+  background: #3C252B;
+
+  color: #FF929B;
+
+  border-color: rgba(255,110,120,.22);
+}
+
+
+/* ==========================================
+   PK BATTLE COLOR
+========================================== */
+
+#studioSettingsPanel
+#sfuPkStartBtn > .studio-icon {
+
+  background: linear-gradient(
+    145deg,
+    #493128,
+    #302631
+  );
+
+  color: #F3C88C;
+}
+
+
+/* END PK - RED ICON */
+
+#studioSettingsPanel
+#sfuPkEndBtn > .studio-icon {
+
+  background: #41262C;
+
+  color: #FF929B;
+}
+
+
+/* REMATCH - GOLD ICON */
+
+#studioSettingsPanel
+#sfuPkRematchBtn > .studio-icon {
+
+  background: #463A27;
+
+  color: #F2CF90;
+}
+
+
+/* DISABLED BUTTON */
+
+#studioSettingsPanel
+.studio-control-grid > .control:disabled {
+
+  opacity: .38;
+  cursor: not-allowed;
+}
+
+
+/* ==========================================
+   BEAUTY PANEL
+========================================== */
+
+#studioSettingsPanel #sfuBeautyPanel {
+
+  margin: 10px 0 0;
+
+  padding: 14px;
+
+  border-radius: 16px;
+
+  background: #20232A;
+
+  border: 1px solid rgba(223,190,131,.12);
+}
+
+
+/* ==========================================
+   REMOVE OLD SETTINGS ELEMENTS
+========================================== */
+
+#studioSettingsPanel .info,
+#studioSettingsPanel #pageTitle,
+#studioSettingsPanel .studio-sheet-header p,
+#studioSettingsPanel #studioSettingsClose,
+#studioSettingsPanel .studio-control-bottom,
+#studioSettingsPanel #viewerControls {
+
   display: none !important;
 }
 
 
-/* PREVENT IOS PAGE SCROLL */
+/* KEEP HIDDEN BUTTONS HIDDEN */
 
-html,
-body,
-.studio {
-  overscroll-behavior-y: none;
+#studioSettingsPanel .hidden {
+
+  display: none !important;
+}
+
+
+/* ==========================================
+   MOBILE OPTIMIZATION
+========================================== */
+
+@media (max-width: 430px) {
+
+  #studioSettingsPanel {
+
+    --tool-size: 48px;
+
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  #studioSettingsPanel .studio-control-grid {
+
+    column-gap: 4px;
+    row-gap: 22px;
+  }
+
+  #studioSettingsPanel
+  .studio-control-grid > .control > .studio-icon {
+
+    padding: 12px;
+  }
+
+  #studioSettingsPanel
+  .studio-control-grid > .control > span {
+
+    font-size: 10px;
+  }
+
+}
+
+
+/* SMALL SCREEN */
+
+@media (max-width: 360px) {
+
+  #studioSettingsPanel {
+
+    --tool-size: 44px;
+
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
+  #studioSettingsPanel
+  .studio-control-grid > .control > .studio-icon {
+
+    padding: 11px;
+  }
+
+  #studioSettingsPanel
+  .studio-control-grid > .control > span {
+
+    font-size: 9px;
+  }
+
+}
+
+
+/* REDUCED MOTION */
+
+@media (prefers-reduced-motion: reduce) {
+
+  #studioSettingsPanel .control,
+  #studioSettingsPanel .studio-icon {
+
+    transition: none;
+  }
+
 }
 
 
@@ -9390,32 +9642,6 @@ body,
 
 
 
-<!-- PK BATTLE CONTROL -->
-<button
-  type="button"
-  id="sfuPkStartBtn"
-  class="control sfu-pk-start"
-  disabled>
-  <span>PK BATTLE · CHALLENGE HOST</span>
-</button>
-
-<button
-  type="button"
-  id="sfuPkEndBtn"
-  class="control sfu-pk-end hidden">
-  END PK · KEEP LIVE
-</button>
-
-
-<!-- PK REMATCH CONTROL -->
-<button
-  type="button"
-  id="sfuPkRematchBtn"
-  class="control sfu-pk-rematch hidden">
-  REMATCH · NEXT ROUND
-</button>
-
-
 
 
       <div class="studio-control-grid">
@@ -9511,6 +9737,69 @@ body,
 
 </button>
 
+
+<!-- PK BATTLE -->
+
+<button
+  type="button"
+  id="sfuPkStartBtn"
+  class="control sfu-pk-start"
+  disabled>
+
+  <svg class="studio-icon" viewBox="0 0 24 24">
+
+    <path d="m14.5 17.5 3 3 3-3-3-3"/>
+    <path d="m13 19 6-6"/>
+    <path d="M3 3l6 2 12 12-4 4L5 9 3 3Z"/>
+    <path d="m14 10 5-5 2-2-1 6-3 3"/>
+    <path d="m3 21 5-5"/>
+    <path d="m3 17 4 4"/>
+
+  </svg>
+
+  <span>PK BATTLE</span>
+
+</button>
+
+
+<!-- END PK -->
+
+<button
+  type="button"
+  id="sfuPkEndBtn"
+  class="control sfu-pk-end hidden">
+
+  <svg class="studio-icon" viewBox="0 0 24 24">
+
+    <circle cx="12" cy="12" r="9"/>
+    <rect x="9" y="9" width="6" height="6" rx="1"/>
+
+  </svg>
+
+  <span>END PK</span>
+
+</button>
+
+
+<!-- PK REMATCH -->
+
+<button
+  type="button"
+  id="sfuPkRematchBtn"
+  class="control sfu-pk-rematch hidden">
+
+  <svg class="studio-icon" viewBox="0 0 24 24">
+
+    <path d="M20 7v5h-5"/>
+    <path d="M4 17v-5h5"/>
+    <path d="M6 6a8 8 0 0 1 14 6"/>
+    <path d="M18 18a8 8 0 0 1-14-6"/>
+
+  </svg>
+
+  <span>REMATCH</span>
+
+</button>
 
 
       </div>
