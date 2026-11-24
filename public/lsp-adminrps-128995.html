@@ -163,6 +163,43 @@ body{
 }
 
 
+.rps-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: 30px;
+  background: rgba(255,180,0,.08);
+  border: 1px solid rgba(255,180,0,.3);
+  color: #ffb400;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin-bottom: 15px;
+}
+
+.rps-status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.rps-status.online {
+  color: #00ffb0;
+  background: rgba(0,255,176,.08);
+  border-color: rgba(0,255,176,.3);
+}
+
+.rps-status.offline {
+  color: #ff4444;
+  background: rgba(255,68,68,.08);
+  border-color: rgba(255,68,68,.3);
+}
+
+
 </style>
 </head>
 
@@ -172,6 +209,10 @@ body{
 
   <div class="card">
     <div class="title">✊ RPS Round Control</div>
+
+    <div id="rpsConnectionStatus" class="rps-status">
+  CONNECTING
+</div>
 
     <div>Round: <b id="roundId">--</b></div>
     <div>Kết thúc lúc: <b id="endAt">--</b></div>
@@ -384,7 +425,44 @@ imgEl.src =
 
 loadSecret();
 
+function syncRpsRound(data) {
 
+  if (!data || !Number.isFinite(Number(data.endAt))) {
+    return;
+  }
+
+  currentRoundId = data.roundId;
+
+  document.getElementById("roundId").textContent =
+    "#" + data.roundId;
+
+  document.getElementById("endAt").textContent =
+    new Date(Number(data.endAt)).toLocaleTimeString();
+
+  startCountdown(Number(data.endAt));
+}
+
+// Khi bắt đầu phiên mới
+socket.on("rps-round-new", syncRpsRound);
+
+// Khi nhận trạng thái phiên hiện tại
+socket.on("rps-round-state", syncRpsRound);
+
+// Theo dõi kết nối
+socket.on("connect", () => {
+  console.log("[RPS] Connected");
+});
+
+socket.on("disconnect", () => {
+  clearInterval(countdownInterval);
+
+  document.getElementById("countdown").textContent =
+    "Disconnected";
+});
+
+socket.on("connect_error", error => {
+  console.error("[RPS] Connection error:", error.message);
+});
 
 async function override(hand){
 
@@ -576,6 +654,35 @@ function showModal({
   };
 }
 
+
+
+function updateRpsConnection(online) {
+
+  const el = document.getElementById(
+    "rpsConnectionStatus"
+  );
+
+  el.classList.toggle("online", online);
+  el.classList.toggle("offline", !online);
+
+  el.textContent = online
+    ? "SYSTEM ONLINE"
+    : "CONNECTION LOST";
+}
+
+socket.on("connect", () => {
+  updateRpsConnection(true);
+});
+
+socket.on("disconnect", () => {
+  updateRpsConnection(false);
+});
+
+socket.on("connect_error", () => {
+  updateRpsConnection(false);
+});
+
+updateRpsConnection(socket.connected);
 
 
 </script>

@@ -2433,12 +2433,6 @@ io.emit("admin-rps-bet-reset", {
 
 
 
-io.emit("rps-round-new",{
-  roundId: rpsRound.id,
-  endAt: rpsRound.endAt
-});
-
-
 
 
   } catch(e){
