@@ -537,10 +537,88 @@ function saveSocial() {
 }
 
 
+/* ==========================================
+   LIVESTREAM PRO - GLOBAL DOMAIN CONFIG
+========================================== */
+
+const LSP_SITE_DEFAULT = "https://livestreampro.tv";
+
+function normalizeLspOrigin(value) {
+  try {
+    const url = new URL(String(value || "").trim());
+
+    if (
+      url.protocol !== "https:" ||
+      url.username ||
+      url.password ||
+      url.pathname !== "/" ||
+      url.search ||
+      url.hash
+    ) {
+      return "";
+    }
+
+    return url.origin;
+
+  } catch {
+    return "";
+  }
+}
+
+// Main website domain
+const LSP_PUBLIC_URL =
+  normalizeLspOrigin(process.env.LSP_PUBLIC_URL) ||
+  LSP_SITE_DEFAULT;
+
+// Approved domains
+const LSP_ALLOWED_ORIGINS = new Set(
+  [
+    LSP_PUBLIC_URL,
+
+    "https://livestreampro.tv",
+    "https://www.livestreampro.tv",
+
+    // Keep old Render domain during migration
+    "https://livestreampro.onrender.com",
+
+    ...String(process.env.LSP_ALLOWED_ORIGINS || "")
+      .split(",")
+  ]
+    .map(normalizeLspOrigin)
+    .filter(Boolean)
+);
+
+function isLspAllowedOrigin(origin) {
+  return (
+    typeof origin === "string" &&
+    LSP_ALLOWED_ORIGINS.has(origin)
+  );
+}
+
+console.log("[LSP DOMAIN] Primary:", LSP_PUBLIC_URL);
+console.log("[LSP DOMAIN] Allowed:", [...LSP_ALLOWED_ORIGINS]);
+
+
+
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+
+c/* ==========================================
+   SOCKET.IO - DOMAIN CONFIGURATION
+========================================== */
+
+const io = new Server(server, {
+
+  cors: {
+
+    origin: [...LSP_ALLOWED_ORIGINS],
+
+    methods: ["GET", "POST"]
+
+  }
+
+});
 
 
 /* ==========================================
@@ -6973,60 +7051,24 @@ app.post(
 
 
 /* ==========================================
-   DIAMOND CONVERSION - ORIGIN SECURITY FIX
+   DIAMOND CONVERSION - DOMAIN SECURITY
 ========================================== */
 
-// The browser's actual origin
 const requestOrigin = req.get("origin") || "";
 
-// Approved website origins
-const configuredOrigins = [
-  process.env.LSP_PUBLIC_URL || "",
-  ...(process.env.LSP_ALLOWED_ORIGINS || "")
-    .split(",")
-];
+if (!isLspAllowedOrigin(requestOrigin)) {
 
-// Normalize and validate configured URLs
-const allowedOrigins = new Set();
-
-for (const value of configuredOrigins) {
-  const raw = String(value).trim();
-
-  if (!raw) continue;
-
-  try {
-    const url = new URL(raw);
-
-    if (
-      url.protocol === "https:" &&
-      url.username === "" &&
-      url.password === "" &&
-      url.pathname === "/" &&
-      url.search === "" &&
-      url.hash === ""
-    ) {
-      allowedOrigins.add(url.origin);
-    }
-  } catch (_) {}
-}
-
-// Same-origin validation
-if (
-  !requestOrigin ||
-  !allowedOrigins.has(requestOrigin)
-) {
   console.warn("[DIAMOND CONVERT] Origin rejected", {
     origin: requestOrigin || "(missing)",
-    allowedOrigins: [...allowedOrigins]
+    allowedOrigins: [...LSP_ALLOWED_ORIGINS]
   });
 
   return res.status(403).json({
     ok: false,
     message: "Invalid request origin."
   });
+
 }
-
-
 
 
     const uid = req.spiritUid;
@@ -9930,9 +9972,7 @@ const PG_MODE =
     ? "production"
     : "sandbox";
 
-const PG_PUBLIC_URL = String(
-  process.env.LSP_PUBLIC_URL || ""
-).replace(/\/$/, "");
+const PG_PUBLIC_URL = LSP_PUBLIC_URL;
 
 const PG_ORDERS_FILE = path.join(
   "/opt/render/project/data",
@@ -10021,16 +10061,24 @@ app.post(
       });
     }
 
-    // Same-origin protection.
-    const origin = req.headers.origin;
+/* ==========================================
+   PAYMENT - DOMAIN SECURITY
+========================================== */
 
-    if (origin && origin !== PG_PUBLIC_URL) {
-      return res.status(403).json({
-        ok: false,
-        message: "Invalid request origin."
-      });
-    }
+const origin = req.get("origin") || "";
 
+if (!isLspAllowedOrigin(origin)) {
+
+  console.warn("[PAYMENT] Origin rejected", {
+    origin: origin || "(missing)"
+  });
+
+  return res.status(403).json({
+    ok: false,
+    message: "Invalid request origin."
+  });
+
+}
     const uid = String(req.spiritUid || "");
 
     const pkg = CARD_TOPUP_PACKAGES.find(
