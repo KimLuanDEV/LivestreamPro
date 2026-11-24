@@ -18381,5 +18381,57 @@ if (watchPlayButton) {
 </div>
 
 
+
+<script>
+(function checkIOSFullscreen() {
+
+  const probe = document.createElement("div");
+
+  probe.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding-top: env(safe-area-inset-top, 0px);
+    visibility: hidden;
+    pointer-events: none;
+  `;
+
+  document.body.appendChild(probe);
+
+  const safeTop = getComputedStyle(probe).paddingTop;
+
+  probe.remove();
+
+  const studio = document.querySelector(".studio");
+  const video = document.querySelector(".video-area");
+
+  const info = {
+    standalone:
+      navigator.standalone === true ||
+      matchMedia("(display-mode: standalone)").matches,
+
+    screenHeight: screen.height,
+
+    viewportHeight: window.innerHeight,
+
+    safeAreaTop: safeTop,
+
+    studioTop: studio?.getBoundingClientRect().top,
+
+    studioHeight: studio?.getBoundingClientRect().height,
+
+    videoTop: video?.getBoundingClientRect().top,
+
+    videoHeight: video?.getBoundingClientRect().height
+  };
+
+  console.log("[SFU FULLSCREEN]", info);
+
+  alert(JSON.stringify(info, null, 2));
+
+})();
+</script>
+
+
 </body>
 </html>
