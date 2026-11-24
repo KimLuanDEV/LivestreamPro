@@ -302,11 +302,6 @@ function closePortfolio() {
 }
 
 
-function openRPSGame(){
-  location.href = "/game-rps.html"; // trang game sau này
-}
-
-
 
 function openKingSlaveGame(){
   location.href = "/game-king-slave.html";
@@ -319,16 +314,10 @@ function openTimeRaceGame(){
 
 
 
-
-
 function openDragonTigerGame(){
   location.href = "/game-dragon-tiger-phoenix.html";
 }
 
-
-function openTimeStopGame(){
-  location.href = "/game-time-stop.html";
-}
 
 
 function openWheel8Game(){
