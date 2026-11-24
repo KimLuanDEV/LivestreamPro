@@ -3017,6 +3017,72 @@ body.lobby-page .lobby-linked-label {
 }
 
 
+
+/* ==========================================
+   LOBBY - IOS PWA SAFE AREA FIX V1.0
+   LIVESTREAM PRO
+========================================== */
+
+/* SAFE AREA HEADER */
+
+body.lobby-page .lobby-header-inner {
+  padding-top: calc(
+    6px + env(safe-area-inset-top, 0px)
+  ) !important;
+}
+
+
+/* IOS PWA HEIGHT CORRECTION */
+
+html.ios-lobby-height-fix,
+html.ios-lobby-height-fix body.lobby-page {
+
+  min-height: var(--lobby-screen-height) !important;
+
+  margin: 0 !important;
+
+}
+
+
+/* ANCHOR NAVIGATION TO REAL SCREEN BOTTOM */
+
+html.ios-lobby-height-fix
+body.lobby-page .mobile-tabbar {
+
+  bottom: calc(
+    0px - var(--lobby-height-gap, 0px)
+  ) !important;
+
+}
+
+
+/* KEEP GRID CONTENT ABOVE NAVIGATION */
+
+html.ios-lobby-height-fix
+body.lobby-page #grid.lobby-grid,
+
+html.ios-lobby-height-fix
+body.lobby-page #skeleton.lobby-grid {
+
+  padding-bottom: calc(
+    105px + env(safe-area-inset-bottom, 0px)
+  ) !important;
+
+}
+
+
+/* SAFE AREA FOR MEMBER DIRECTORY */
+
+html.ios-lobby-height-fix
+body.lobby-page #playerLobby {
+
+  bottom: calc(
+    0px - var(--lobby-height-gap, 0px)
+  ) !important;
+
+}
+
+
 </style>
 
 
@@ -6406,6 +6472,125 @@ playerSearch?.addEventListener("input", e=>{
 
 })();
 </script>
+
+
+<script>
+/* ==========================================
+   LOBBY - IOS PWA VIEWPORT CORRECTION V1.0
+========================================== */
+
+(function initLobbyIOSFullscreen() {
+
+  const root = document.documentElement;
+
+  const isIOS =
+    /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    (
+      navigator.platform === "MacIntel" &&
+      navigator.maxTouchPoints > 1
+    );
+
+  const isStandalone =
+    navigator.standalone === true ||
+    matchMedia("(display-mode: standalone)").matches;
+
+  if (!isIOS || !isStandalone) return;
+
+
+  function syncLobbyHeight() {
+
+    const probe = document.createElement("div");
+
+    probe.style.cssText = `
+      position: fixed;
+      visibility: hidden;
+      pointer-events: none;
+      padding-top: env(safe-area-inset-top, 0px);
+    `;
+
+    document.body.appendChild(probe);
+
+    const safeTop =
+      parseFloat(
+        getComputedStyle(probe).paddingTop
+      ) || 0;
+
+    probe.remove();
+
+
+    const screenHeight = screen.height;
+
+    const viewportHeight = window.innerHeight;
+
+    const missingHeight =
+      screenHeight - viewportHeight;
+
+
+    const needsCorrection =
+      safeTop > 0 &&
+      missingHeight > 0 &&
+      Math.abs(missingHeight - safeTop) <= 3;
+
+
+    if (needsCorrection) {
+
+      root.style.setProperty(
+        "--lobby-screen-height",
+        `${screenHeight}px`
+      );
+
+      root.style.setProperty(
+        "--lobby-height-gap",
+        `${missingHeight}px`
+      );
+
+      root.classList.add(
+        "ios-lobby-height-fix"
+      );
+
+    } else {
+
+      root.classList.remove(
+        "ios-lobby-height-fix"
+      );
+
+      root.style.removeProperty(
+        "--lobby-screen-height"
+      );
+
+      root.style.removeProperty(
+        "--lobby-height-gap"
+      );
+
+    }
+
+  }
+
+
+  syncLobbyHeight();
+
+  window.addEventListener(
+    "resize",
+    syncLobbyHeight
+  );
+
+  window.addEventListener(
+    "pageshow",
+    syncLobbyHeight
+  );
+
+  window.addEventListener(
+    "orientationchange",
+    () => {
+      setTimeout(syncLobbyHeight, 300);
+    }
+  );
+
+  setTimeout(syncLobbyHeight, 500);
+
+})();
+</script>
+
 
 
 </body>

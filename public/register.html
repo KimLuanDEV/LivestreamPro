@@ -811,6 +811,131 @@ button {
 
 
 
+/* ==========================================
+   LIVESTREAM PRO
+   IOS PWA AUTH FULLSCREEN FIX V1.0
+   LOGIN + REGISTER
+========================================== */
+
+/* CORRECT ROOT HEIGHT */
+
+html.ios-auth-height-fix {
+
+  height: var(--auth-screen-height) !important;
+  min-height: var(--auth-screen-height) !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow: hidden;
+}
+
+
+/* CORRECT LOGIN AND REGISTER BODY */
+
+html.ios-auth-height-fix body.auth-page,
+html.ios-auth-height-fix body.register-page {
+
+  width: 100% !important;
+
+  height: var(--auth-screen-height) !important;
+  min-height: var(--auth-screen-height) !important;
+  max-height: none !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  display: flex;
+
+  justify-content: center;
+  align-items: stretch;
+
+  overflow: hidden;
+}
+
+
+/* LOGIN MAIN SCREEN */
+
+html.ios-auth-height-fix
+body.auth-page .auth-stage {
+
+  height: 100% !important;
+
+  min-height: 0 !important;
+  max-height: none !important;
+
+  margin: 0 auto !important;
+
+  box-sizing: border-box;
+}
+
+
+/* REGISTER MAIN SCREEN */
+
+html.ios-auth-height-fix
+body.register-page .register-shell {
+
+  height: 100% !important;
+
+  min-height: 0 !important;
+  max-height: none !important;
+
+  margin: 0 auto !important;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  box-sizing: border-box;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+
+/* LOGIN MODAL FULLSCREEN */
+
+html.ios-auth-height-fix
+body.auth-page .modal {
+
+  top: 0 !important;
+  bottom: auto !important;
+
+  left: 50% !important;
+
+  height: var(--auth-screen-height) !important;
+  max-height: none !important;
+
+  transform: translateX(-50%) !important;
+}
+
+
+/* REGISTER MODAL FULLSCREEN */
+
+html.ios-auth-height-fix
+body.register-page .modal,
+
+html.ios-auth-height-fix
+body.register-page .register-status-overlay {
+
+  top: 0 !important;
+  bottom: auto !important;
+
+  height: var(--auth-screen-height) !important;
+  max-height: none !important;
+
+  box-sizing: border-box;
+}
+
+
+/* SAFE SCROLL WHEN ENTERING TEXT */
+
+body.auth-page .auth-main,
+body.register-page .register-shell {
+
+  overscroll-behavior: contain;
+
+  -webkit-overflow-scrolling: touch;
+}
+
 
 </style>
 
@@ -1475,6 +1600,150 @@ function closeMsg(){
   document.getElementById("msgModal").classList.add("hidden");
 }
 
+</script>
+
+
+
+<script>
+/* ==========================================
+   LIVESTREAM PRO
+   IOS AUTH VIEWPORT CORRECTION V1.0
+========================================== */
+
+(function initIOSAuthFullscreen() {
+
+  const root = document.documentElement;
+
+  const isIOS =
+    /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    (
+      navigator.platform === "MacIntel" &&
+      navigator.maxTouchPoints > 1
+    );
+
+  const isStandalone =
+    navigator.standalone === true ||
+    window.matchMedia(
+      "(display-mode: standalone)"
+    ).matches;
+
+  if (!isIOS || !isStandalone) return;
+
+
+  /* SAFE AREA MEASUREMENT */
+
+  const probe = document.createElement("div");
+
+  probe.style.cssText = `
+    position: fixed;
+    visibility: hidden;
+    pointer-events: none;
+    padding-top: env(safe-area-inset-top, 0px);
+  `;
+
+  document.body.appendChild(probe);
+
+
+  function syncAuthHeight() {
+
+    const safeTop = parseFloat(
+      getComputedStyle(probe).paddingTop
+    ) || 0;
+
+    const screenHeight = window.screen.height;
+
+    const viewportHeight = window.innerHeight;
+
+    const missingHeight =
+      screenHeight - viewportHeight;
+
+
+    /* DETECT VIRTUAL KEYBOARD */
+
+    const visualHeight =
+      window.visualViewport?.height ||
+      viewportHeight;
+
+    const keyboardOpen =
+      viewportHeight - visualHeight > 100;
+
+
+    /* DETECT IOS HEIGHT BUG */
+
+    const needsCorrection =
+      !keyboardOpen &&
+      safeTop > 0 &&
+      missingHeight > 0 &&
+      Math.abs(missingHeight - safeTop) <= 3;
+
+
+    if (needsCorrection) {
+
+      root.style.setProperty(
+        "--auth-screen-height",
+        `${screenHeight}px`
+      );
+
+      root.classList.add(
+        "ios-auth-height-fix"
+      );
+
+    } else {
+
+      root.classList.remove(
+        "ios-auth-height-fix"
+      );
+
+      root.style.removeProperty(
+        "--auth-screen-height"
+      );
+
+    }
+
+  }
+
+
+  /* INITIALIZE */
+
+  syncAuthHeight();
+
+
+  /* RESIZE */
+
+  window.addEventListener(
+    "resize",
+    syncAuthHeight
+  );
+
+  window.addEventListener(
+    "pageshow",
+    syncAuthHeight
+  );
+
+
+  /* KEYBOARD VIEWPORT */
+
+  window.visualViewport?.addEventListener(
+    "resize",
+    syncAuthHeight
+  );
+
+
+  /* ORIENTATION CHANGE */
+
+  window.addEventListener(
+    "orientationchange",
+    () => {
+      setTimeout(syncAuthHeight, 300);
+    }
+  );
+
+
+  /* RECALCULATE AFTER IOS LAYOUT */
+
+  setTimeout(syncAuthHeight, 500);
+
+})();
 </script>
 
 
