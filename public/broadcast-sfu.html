@@ -7384,6 +7384,182 @@ body:has(#sfuChatPanel.hidden)
 }
 
 
+
+/* REMOVE OLD HOST EXIT CONTROLS */
+
+.studio-control-bottom {
+  display: none !important;
+}
+
+#stopBtn {
+  display: none !important;
+}
+
+
+
+/* ==========================================
+   SFU - HOST END LIVE CONFIRMATION V1.0
+========================================== */
+
+#sfuHostEndOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgba(0,0,0,.72);
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.sfu-host-end-modal {
+  width: 100%;
+  max-width: 350px;
+
+  padding: 28px 22px 22px;
+
+  border-radius: 24px;
+  border: 1px solid rgba(223,190,131,.35);
+
+  background:
+    radial-gradient(
+      ellipse at top,
+      rgba(190,140,70,.09),
+      transparent 70%
+    ),
+    linear-gradient(145deg,#1C1E25,#101116);
+
+  text-align: center;
+
+  box-shadow:
+    0 20px 70px rgba(0,0,0,.55);
+
+  animation: sfuHostEndAppear .22s ease-out;
+}
+
+.sfu-host-end-icon {
+  display: grid;
+  place-items: center;
+
+  width: 68px;
+  height: 68px;
+
+  margin: 0 auto 20px;
+
+  border-radius: 50%;
+  border: 1px solid rgba(255,100,110,.35);
+
+  background: rgba(180,50,60,.13);
+  color: #FF858D;
+}
+
+.sfu-host-end-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.sfu-host-end-kicker {
+  margin-bottom: 12px;
+
+  color: #C5A16A;
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 2.5px;
+}
+
+.sfu-host-end-modal h2 {
+  margin: 0 0 12px;
+
+  color: #F2DDB7;
+
+  font-family: Georgia, serif;
+  font-size: 27px;
+}
+
+.sfu-host-end-modal p {
+  margin: 0 auto 24px;
+
+  color: #A8ABB3;
+
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.sfu-host-end-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.sfu-host-end-actions button {
+  min-height: 46px;
+
+  padding: 10px;
+
+  border-radius: 12px;
+
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .5px;
+
+  transition: transform .15s ease;
+}
+
+#sfuHostEndCancel {
+  border: 1px solid rgba(255,255,255,.12);
+
+  background: #292C34;
+  color: #E3E4E8;
+}
+
+#sfuHostEndConfirm {
+  border: 1px solid rgba(255,120,130,.35);
+
+  background: linear-gradient(
+    145deg,
+    #BA414C,
+    #8C2832
+  );
+
+  color: #FFFFFF;
+}
+
+.sfu-host-end-actions button:active:not(:disabled) {
+  transform: scale(.96);
+}
+
+.sfu-host-end-actions button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+@keyframes sfuHostEndAppear {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sfu-host-end-modal {
+    animation: none;
+  }
+}
+
+
+
 </style>
 
 
@@ -13788,36 +13964,88 @@ $("viewerExitBtn").onclick = exitViewer;
 
 
 /* ==========================================
-   SFU - UNIFIED TOP EXIT CONTROL
+   SFU - HOST EXIT CONFIRMATION V2.0
 ========================================== */
+
+let sfuHostEndBusy = false;
+
+
+/* OPEN CONFIRMATION MODAL */
+
+function openSfuHostEndConfirm() {
+
+  if (isViewer || !started || stopping) {
+    return;
+  }
+
+  const overlay = $("sfuHostEndOverlay");
+
+  if (!overlay) return;
+
+  overlay.classList.remove("hidden");
+
+  $("sfuHostEndConfirm").disabled = false;
+  $("sfuHostEndConfirm").textContent = "END LIVE";
+
+  $("sfuHostEndCancel").disabled = false;
+  $("sfuHostEndCancel").focus();
+
+}
+
+
+/* CLOSE CONFIRMATION MODAL */
+
+function closeSfuHostEndConfirm() {
+
+  if (sfuHostEndBusy) return;
+
+  $("sfuHostEndOverlay")
+    ?.classList.add("hidden");
+
+  $("sfuTopExitBtn").disabled = false;
+  $("sfuTopExitBtn").focus();
+
+}
+
+
+/* TOP EXIT BUTTON */
 
 $("sfuTopExitBtn").onclick = async () => {
 
   const exitBtn = $("sfuTopExitBtn");
 
-  if (exitBtn.disabled) return;
+  if (
+    exitBtn.disabled ||
+    sfuHostEndBusy
+  ) {
+    return;
+  }
+
+  // HOST IS LIVE
+  // Require confirmation before ending.
+
+  if (!isViewer && started) {
+
+    openSfuHostEndConfirm();
+
+    return;
+
+  }
+
+  // VIEWER OR HOST BEFORE LIVE
 
   exitBtn.disabled = true;
 
   try {
 
-    // VIEWER
     if (isViewer) {
 
       await exitViewer();
+
       return;
 
     }
 
-    // HOST IS LIVE
-    if (started) {
-
-      await stopLive();
-      return;
-
-    }
-
-    // HOST BEFORE LIVE
     goLobby();
 
   } catch (error) {
@@ -13838,6 +14066,133 @@ $("sfuTopExitBtn").onclick = async () => {
 };
 
 
+/* ==========================================
+   HOST CONFIRMATION EVENTS
+========================================== */
+
+function initSfuHostEndConfirm() {
+
+  const overlay =
+    $("sfuHostEndOverlay");
+
+  const cancelBtn =
+    $("sfuHostEndCancel");
+
+  const confirmBtn =
+    $("sfuHostEndConfirm");
+
+  if (!overlay || !cancelBtn || !confirmBtn) {
+    return;
+  }
+
+
+  // CANCEL - CONTINUE LIVESTREAM
+
+  cancelBtn.onclick = () => {
+
+    closeSfuHostEndConfirm();
+
+  };
+
+
+  // CONFIRM - END LIVESTREAM
+
+  confirmBtn.onclick = async () => {
+
+    if (
+      isViewer ||
+      sfuHostEndBusy ||
+      stopping
+    ) {
+      return;
+    }
+
+    sfuHostEndBusy = true;
+
+    confirmBtn.disabled = true;
+    cancelBtn.disabled = true;
+
+    $("sfuTopExitBtn").disabled = true;
+
+    confirmBtn.textContent = "ENDING...";
+
+    try {
+
+      // Use existing LiveKit cleanup.
+
+      await stopLive();
+
+    } catch (error) {
+
+      console.error(
+        "[SFU HOST END LIVE]",
+        error
+      );
+
+      sfuHostEndBusy = false;
+
+      confirmBtn.disabled = false;
+      cancelBtn.disabled = false;
+
+      $("sfuTopExitBtn").disabled = false;
+
+      confirmBtn.textContent = "END LIVE";
+
+      showMessage(
+        "Unable to end livestream."
+      );
+
+    }
+
+  };
+
+
+  // TAP OUTSIDE TO CANCEL
+
+  overlay.addEventListener("click", event => {
+
+    if (event.target === overlay) {
+
+      closeSfuHostEndConfirm();
+
+    }
+
+  });
+
+
+  // ESCAPE KEY TO CANCEL
+
+  document.addEventListener("keydown", event => {
+
+    if (
+      event.key === "Escape" &&
+      !overlay.classList.contains("hidden")
+    ) {
+
+      closeSfuHostEndConfirm();
+
+    }
+
+  });
+
+}
+
+
+/* INITIALIZE AFTER HTML IS READY */
+
+if (document.readyState === "loading") {
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    initSfuHostEndConfirm,
+    { once: true }
+  );
+
+} else {
+
+  initSfuHostEndConfirm();
+
+}
 
 socket.on("room-error", data => {
   showMessage(data?.message || "Room error.");
@@ -16331,6 +16686,78 @@ const GAMES = Object.freeze({
 
 })();
 </script>
+
+
+
+
+<!-- ==========================================
+     SFU - HOST END LIVE CONFIRMATION
+========================================== -->
+
+<div
+  id="sfuHostEndOverlay"
+  class="hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="sfuHostEndTitle">
+
+  <div class="sfu-host-end-modal">
+
+    <div class="sfu-host-end-icon">
+
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round">
+
+        <path d="M3 3l18 18"/>
+        <path d="M10 8h3a2 2 0 0 1 2 2v3"/>
+        <path d="M15 10l6-4v12l-3-2"/>
+        <path d="M3 8v8a2 2 0 0 0 2 2h8"/>
+
+      </svg>
+
+    </div>
+
+    <div class="sfu-host-end-kicker">
+      LIVESTREAM PRO
+    </div>
+
+    <h2 id="sfuHostEndTitle">
+      End livestream?
+    </h2>
+
+    <p>
+      Are you sure you want to end your livestream?
+      All viewers will be disconnected from this room.
+    </p>
+
+    <div class="sfu-host-end-actions">
+
+      <button
+        type="button"
+        id="sfuHostEndCancel">
+
+        CANCEL
+
+      </button>
+
+      <button
+        type="button"
+        id="sfuHostEndConfirm">
+
+        END LIVE
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
 
 
 </body>
