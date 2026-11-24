@@ -2180,3 +2180,740 @@ setText(
   startAutoRefresh();
 
 })();
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   TRANSACTION SECURITY MONITOR V1.0
+========================================== */
+
+(() => {
+
+  const panel = document.getElementById(
+    "transactionSecurityPanel"
+  );
+
+  if (!panel) return;
+
+  if (panel.dataset.initialized === "true") {
+    return;
+  }
+
+  panel.dataset.initialized = "true";
+
+  const $ = id => document.getElementById(id);
+
+  const refreshBtn = $("txSecRefreshBtn");
+  const statusEl = $("txSecStatus");
+
+  const REFRESH_INTERVAL = 10000;
+
+  let loading = false;
+  let refreshTimer = null;
+  let sessionExpired = false;
+
+
+  /* ========================================
+     NUMBER FORMATTING
+  ======================================== */
+
+  function formatNumber(value) {
+
+    if (
+      value === null ||
+      value === undefined
+    ) {
+      return "--";
+    }
+
+    const number = Number(value);
+
+    return Number.isFinite(number)
+      ? number.toLocaleString("en-US")
+      : "--";
+
+  }
+
+
+  function setText(id, value) {
+
+    const element = $(id);
+
+    if (element) {
+      element.textContent = value;
+    }
+
+  }
+
+
+  /* ========================================
+     MODULE STATUS
+  ======================================== */
+
+  function setStatus(text, state) {
+
+    if (!statusEl) return;
+
+    statusEl.textContent = text;
+
+    statusEl.classList.toggle(
+      "is-active",
+      state === "active"
+    );
+
+    statusEl.classList.toggle(
+      "is-error",
+      state === "error"
+    );
+
+  }
+
+
+  /* ========================================
+     SECURITY COUNTERS
+  ======================================== */
+
+  function renderCounter(id, value, alert = false) {
+
+    const element = $(id);
+
+    if (!element) return;
+
+    element.textContent =
+      formatNumber(value);
+
+    const valid =
+      value !== null &&
+      value !== undefined &&
+      Number.isFinite(Number(value));
+
+    element.classList.toggle(
+
+      "is-danger",
+
+      valid &&
+      alert &&
+      Number(value) > 0
+
+    );
+
+    element.classList.toggle(
+
+      "is-success",
+
+      valid &&
+      alert &&
+      Number(value) === 0
+
+    );
+
+  }
+
+
+  /* ========================================
+     RECENT SECURITY EVENTS
+  ======================================== */
+
+  const EVENT_TYPES = {
+
+    successfulTransactions: {
+      title: "Transaction operation recorded",
+      state: "success"
+    },
+
+    duplicateRequests: {
+      title: "Duplicate transaction detected",
+      state: "warning"
+    },
+
+    invalidAmounts: {
+      title: "Invalid transaction amount",
+      state: "danger"
+    },
+
+    invalidBalances: {
+      title: "Invalid wallet balance",
+      state: "danger"
+    },
+
+    securityFailures: {
+      title: "Security code verification failed",
+      state: "danger"
+    },
+
+    securityBlocked: {
+      title: "Transaction security blocked",
+      state: "danger"
+    },
+
+    concurrentBlocked: {
+      title: "Concurrent security check blocked",
+      state: "warning"
+    },
+
+    storageErrors: {
+      title: "Transaction storage or processing error",
+      state: "danger"
+    }
+
+  };
+
+
+  function renderEvents(events) {
+
+    const list = $("txSecEventList");
+
+    if (!list) return;
+
+    const records = Array.isArray(events)
+      ? events
+      : [];
+
+    // Display only 20 recent events
+    const visibleRecords = records.slice(0, 20);
+
+    setText(
+      "txSecEventCount",
+      `${visibleRecords.length} / ${records.length}`
+    );
+
+    list.replaceChildren();
+
+    if (!visibleRecords.length) {
+
+      const empty =
+        document.createElement("div");
+
+      empty.className = "tx-sec-empty";
+
+      empty.textContent =
+        "No security events recorded.";
+
+      list.appendChild(empty);
+
+      return;
+
+    }
+
+    const fragment =
+      document.createDocumentFragment();
+
+    for (const event of visibleRecords) {
+
+      if (!event || typeof event !== "object") {
+        continue;
+      }
+
+      const meta = Object.hasOwn(
+        EVENT_TYPES,
+        event.type
+      )
+        ? EVENT_TYPES[event.type]
+        : {
+            title: "Security event",
+            state: "warning"
+          };
+
+      const row =
+        document.createElement("div");
+
+      row.className =
+        `tx-sec-event is-${meta.state}`;
+
+      const dot =
+        document.createElement("span");
+
+      dot.className = "tx-sec-event-dot";
+
+      const info =
+        document.createElement("div");
+
+      info.className = "tx-sec-event-info";
+
+      const title =
+        document.createElement("strong");
+
+      title.textContent = meta.title;
+
+      const uid =
+        document.createElement("small");
+
+      uid.textContent = event.uid
+        ? `UID: ${String(event.uid)}`
+        : "SYSTEM";
+
+      const time =
+        document.createElement("time");
+
+      const date = new Date(event.time);
+
+      time.textContent =
+        Number.isFinite(date.getTime())
+
+          ? date.toLocaleTimeString("en-GB")
+
+          : "--";
+
+      info.append(title, uid);
+
+      row.append(dot, info, time);
+
+      fragment.appendChild(row);
+
+    }
+
+    list.appendChild(fragment);
+
+  }
+
+
+  /* ========================================
+     RENDER TRANSACTION STATISTICS
+  ======================================== */
+
+  function renderStats(data) {
+
+    setText(
+      "txSecSuccess",
+      formatNumber(
+        data.successfulTransactions
+      )
+    );
+
+    renderCounter(
+      "txSecDuplicates",
+      data.duplicateRequests,
+      true
+    );
+
+    renderCounter(
+      "txSecInvalidAmounts",
+      data.invalidAmounts,
+      true
+    );
+
+    renderCounter(
+      "txSecFailures",
+      data.securityFailures,
+      true
+    );
+
+    renderCounter(
+      "txSecLocked",
+      data.lockedAccounts,
+      true
+    );
+
+    renderCounter(
+      "txSecStorageErrors",
+      data.storageErrors,
+      true
+    );
+
+    renderCounter(
+      "txSecConcurrent",
+      data.concurrentBlocked,
+      true
+    );
+
+    renderCounter(
+      "txSecInvalidBalances",
+      data.invalidBalances,
+      true
+    );
+
+    renderCounter(
+      "txSecBlocked",
+      data.securityBlocked,
+      true
+    );
+
+    renderCounter(
+      "txSecActiveChecks",
+      data.activeChecks
+    );
+
+    renderCounter(
+      "txSecTracked",
+      data.trackedAccounts
+    );
+
+
+    /* SECURITY CONFIGURATION */
+
+    setText(
+
+      "txSecLimit",
+
+      `${formatNumber(data.securityLimit)} attempts`
+
+    );
+
+    setText(
+
+      "txSecLockTime",
+
+      `${formatNumber(data.securityLockMinutes)} minutes`
+
+    );
+
+    setText(
+
+      "txSecMaxAmount",
+
+      `${formatNumber(data.maxAmount)} 💎`
+
+    );
+
+    setText(
+
+      "txSecVersion",
+
+      `Transaction Protection V${data.version || "--"}`
+
+    );
+
+    const startedAt = new Date(
+      Number(data.startedAt)
+    );
+
+    setText(
+
+      "txSecStarted",
+
+      Number.isFinite(startedAt.getTime())
+
+        ? startedAt.toLocaleString("en-GB")
+
+        : "--"
+
+    );
+
+
+    /* RECENT EVENTS */
+
+    renderEvents(data.recentEvents);
+
+
+    /* STATUS */
+
+    const active =
+      data.status === "ACTIVE";
+
+    setStatus(
+
+      active ? "ACTIVE" : "UNKNOWN",
+
+      active ? "active" : "error"
+
+    );
+
+    setText(
+
+      "txSecUpdated",
+
+      "Updated: " +
+        new Date().toLocaleTimeString("en-GB")
+
+    );
+
+  }
+
+
+  /* ========================================
+     FETCH LIVE TRANSACTION DATA
+  ======================================== */
+
+  async function loadTransactionSecurity() {
+
+    if (
+      loading ||
+      sessionExpired ||
+      document.hidden
+    ) {
+      return;
+    }
+
+    loading = true;
+
+    if (refreshBtn) {
+
+      refreshBtn.disabled = true;
+
+      refreshBtn.classList.add(
+        "is-loading"
+      );
+
+    }
+
+    const controller =
+      new AbortController();
+
+    const timeout = setTimeout(
+
+      () => controller.abort(),
+
+      8000
+
+    );
+
+    try {
+
+      const response = await fetch(
+
+        "/api/admin/security-transaction/stats",
+
+        {
+
+          method: "GET",
+
+          credentials: "same-origin",
+
+          cache: "no-store",
+
+          signal: controller.signal
+
+        }
+
+      );
+
+
+      /* ADMIN AUTHORIZATION */
+
+      if (
+        response.status === 401 ||
+        response.status === 403
+      ) {
+
+        sessionExpired = true;
+
+        stopAutoRefresh();
+
+        setStatus(
+          "ACCESS DENIED",
+          "error"
+        );
+
+        setText(
+
+          "txSecUpdated",
+
+          "Admin authorization required."
+
+        );
+
+        // Remove previous sensitive event details
+        $("txSecEventList")?.replaceChildren();
+
+        setText("txSecEventCount", "--");
+
+        return;
+
+      }
+
+
+      /* VERIFY API RESPONSE */
+
+      const contentType =
+        response.headers.get("content-type") || "";
+
+      if (
+        !contentType.includes("application/json")
+      ) {
+
+        throw new Error(
+
+          `Invalid API response (HTTP ${response.status})`
+
+        );
+
+      }
+
+      const data = await response.json();
+
+      if (!response.ok || data.ok !== true) {
+
+        throw new Error(
+
+          data.error ||
+          `HTTP ${response.status}`
+
+        );
+
+      }
+
+      renderStats(data);
+
+    } catch (error) {
+
+      setStatus(
+        "UNAVAILABLE",
+        "error"
+      );
+
+      setText(
+
+        "txSecUpdated",
+
+        "Update failed: " +
+          error.message +
+          " — Previous data may be outdated."
+
+      );
+
+      console.warn(
+
+        "[TRANSACTION SECURITY]",
+
+        error.message
+
+      );
+
+    } finally {
+
+      clearTimeout(timeout);
+
+      loading = false;
+
+      if (refreshBtn) {
+
+        refreshBtn.disabled = false;
+
+        refreshBtn.classList.remove(
+          "is-loading"
+        );
+
+      }
+
+    }
+
+  }
+
+
+  /* ========================================
+     AUTO REFRESH
+  ======================================== */
+
+  function startAutoRefresh() {
+
+    if (
+
+      refreshTimer !== null ||
+
+      sessionExpired ||
+
+      document.hidden
+
+    ) {
+      return;
+    }
+
+    refreshTimer = setInterval(
+
+      loadTransactionSecurity,
+
+      REFRESH_INTERVAL
+
+    );
+
+  }
+
+
+  function stopAutoRefresh() {
+
+    if (refreshTimer !== null) {
+
+      clearInterval(refreshTimer);
+
+      refreshTimer = null;
+
+    }
+
+  }
+
+
+  /* ========================================
+     MANUAL REFRESH
+  ======================================== */
+
+  refreshBtn?.addEventListener(
+
+    "click",
+
+    () => {
+
+      sessionExpired = false;
+
+      loadTransactionSecurity();
+
+      startAutoRefresh();
+
+    }
+
+  );
+
+
+  /* ========================================
+     SAVE SERVER RESOURCES
+  ======================================== */
+
+  document.addEventListener(
+
+    "visibilitychange",
+
+    () => {
+
+      if (document.hidden) {
+
+        stopAutoRefresh();
+
+      } else {
+
+        loadTransactionSecurity();
+
+        startAutoRefresh();
+
+      }
+
+    }
+
+  );
+
+  window.addEventListener(
+
+    "pagehide",
+
+    stopAutoRefresh
+
+  );
+
+  window.addEventListener(
+
+    "pageshow",
+
+    () => {
+
+      loadTransactionSecurity();
+
+      startAutoRefresh();
+
+    }
+
+  );
+
+
+  /* ========================================
+     INITIAL LOAD
+  ======================================== */
+
+  console.log(
+
+    "[TRANSACTION SECURITY] Monitor V1.0 initialized"
+
+  );
+
+  loadTransactionSecurity();
+
+  startAutoRefresh();
+
+})();

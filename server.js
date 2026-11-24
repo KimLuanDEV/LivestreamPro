@@ -6,6 +6,17 @@ const SOFT_CAP = 4;
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 
+/* ==========================================
+   LIVESTREAM PRO - TRANSACTION SECURITY
+========================================== */
+
+const securityTransaction =
+  require("./security-transaction");
+
+console.log(
+  "[TRANSACTION SECURITY] V1.0 enabled"
+);
+
 
 const ROOM_RELEASE_DELAY = 30000; // 30 giây (tuỳ bạn)
 
@@ -541,22 +552,106 @@ function cleanupExpiredBooths(){
 
 const WITHDRAW_FILE = "/opt/render/project/data/withdraw_requests.json";
 
-function loadWithdraws(){
-  if(!fs.existsSync(WITHDRAW_FILE)) return [];
-  try {
-    return JSON.parse(fs.readFileSync(WITHDRAW_FILE, "utf8"));
-  } catch {
+/* ==========================================
+   WITHDRAWAL STORAGE PROTECTION
+========================================== */
+
+function loadWithdraws() {
+
+  if (!fs.existsSync(WITHDRAW_FILE)) {
     return [];
   }
+
+  const raw = fs.readFileSync(
+    WITHDRAW_FILE,
+    "utf8"
+  );
+
+  const list = JSON.parse(raw);
+
+  if (!Array.isArray(list)) {
+
+    throw new Error(
+      "Invalid withdrawal database"
+    );
+
+  }
+
+  return list;
+
 }
 
 
-function saveWithdraws(list){
-  fs.writeFileSync(WITHDRAW_FILE, JSON.stringify(list, null, 2));
+function saveWithdraws(list) {
+
+  if (!Array.isArray(list)) {
+
+    throw new Error(
+      "Invalid withdrawal records"
+    );
+
+  }
+
+  const tempFile =
+
+    WITHDRAW_FILE +
+
+    "." +
+
+    crypto.randomUUID() +
+
+    ".tmp";
+
+  let fd;
+
+  try {
+
+    fd = fs.openSync(
+      tempFile,
+      "wx",
+      0o600
+    );
+
+    fs.writeFileSync(
+
+      fd,
+
+      JSON.stringify(list, null, 2),
+
+      "utf8"
+
+    );
+
+    fs.fsyncSync(fd);
+
+    fs.closeSync(fd);
+
+    fd = undefined;
+
+    fs.renameSync(
+      tempFile,
+      WITHDRAW_FILE
+    );
+
+  } finally {
+
+    if (fd !== undefined) {
+
+      try {
+        fs.closeSync(fd);
+      } catch {}
+
+    }
+
+    try {
+
+      fs.unlinkSync(tempFile);
+
+    } catch {}
+
+  }
+
 }
-
-
-
 
 
 function saveInbox(db){
@@ -5109,6 +5204,46 @@ app.get(
 );
 
 
+/* ==========================================
+   ADMIN - TRANSACTION SECURITY MONITOR
+========================================== */
+
+app.get(
+
+  "/api/admin/security-transaction/stats",
+
+  (req, res) => {
+
+    if (!req.lspAdminActorUid) {
+
+      return res.status(403).json({
+
+        ok: false,
+
+        error: "ADMIN_AUTH_REQUIRED"
+
+      });
+
+    }
+
+    res.setHeader(
+      "Cache-Control",
+      "no-store"
+    );
+
+    return res.json({
+
+      ok: true,
+
+      ...securityTransaction.getStats()
+
+    });
+
+  }
+
+);
+
+
 
 /* ==========================================
    ADMIN - FIREWALL MONITORING
@@ -7807,17 +7942,73 @@ if (!isLspAllowedOrigin(requestOrigin)) {
       const originalHash = user.securityCode;
 
       // Step 2: Verify security code.
-      const validSecurity = await bcrypt.compare(
-        securityCode,
-        originalHash
-      );
+const verification =
+  await securityTransaction.verifySecurityCode(
 
-      if (!validSecurity) {
-        return res.status(403).json({
-          ok: false,
-          message: "Invalid security code."
-        });
-      }
+    uid,
+
+    securityCode,
+
+    originalHash,
+
+    (code, hash) =>
+      bcrypt.compare(code, hash)
+
+  );
+
+if (!verification.ok) {
+
+  if (verification.retryAfter) {
+
+    res.setHeader(
+      "Retry-After",
+      String(verification.retryAfter)
+    );
+
+  }
+
+  return res.status(
+
+    [
+      "SECURITY_CODE_LOCKED",
+      "TRANSACTION_BUSY",
+      "SECURITY_BUSY"
+    ].includes(verification.error)
+      ? 429
+      : 403
+
+  ).json({
+
+    ok: false,
+
+    error: verification.error,
+
+    message: "Transaction verification failed."
+
+  });
+
+}
+
+const currentIdentity =
+  securityAuth.getIdentity(
+    req.headers.cookie
+  );
+
+if (
+  !currentIdentity ||
+  currentIdentity.uid !== uid ||
+  currentIdentity.sessionId !== req.auth.sessionId
+) {
+
+  return res.status(401).json({
+
+    ok: false,
+
+    error: "SESSION_EXPIRED"
+
+  });
+
+}
 
       // Step 3: Reload data after bcrypt await.
       // This prevents using a stale balance.
@@ -7856,6 +8047,13 @@ if (!isLspAllowedOrigin(requestOrigin)) {
             message: "Transaction ID already used."
           });
         }
+
+
+        securityTransaction.record(
+  "duplicateRequests",
+  uid
+);
+
 
         return res.json({
           ok: true,
@@ -7945,6 +8143,12 @@ if (!isLspAllowedOrigin(requestOrigin)) {
 
         fs.renameSync(tempFile, USERS_FILE);
 
+        securityTransaction.record(
+  "successfulTransactions",
+  uid
+);
+
+
         try {
 
   securityAuth.syncAccounts(db);
@@ -7962,7 +8166,8 @@ if (!isLspAllowedOrigin(requestOrigin)) {
           if (fs.existsSync(tempFile)) {
             fs.unlinkSync(tempFile);
           }
-        } catch (_) {}
+} catch (_) {}
+          
       }
 
       // Step 7: Notify the user's clients.
@@ -7976,128 +8181,477 @@ if (!isLspAllowedOrigin(requestOrigin)) {
         gameDiamonds: profile.coins
       });
 
+} catch (error) {
+
+  securityTransaction.record(
+    "storageErrors",
+    uid
+  );
+
+  console.error(
+    "[DIAMOND CONVERSION]",
+    error.message
+  );
+
+  return res.status(500).json({
+    ok: false,
+    message: "Conversion could not be confirmed."
+  });
+}
+
+  }
+);
+
+/* ==========================================
+   SECURE WITHDRAWAL REQUEST V1.0
+========================================== */
+
+app.post("/api/withdraw-request", async (req, res) => {
+
+  const uid = req.auth?.uid;
+
+  if (!uid) {
+
+    return res.status(401).json({
+      ok: false,
+      error: "AUTH_REQUIRED"
+    });
+
+  }
+
+  const {
+    amount,
+    bank,
+    securityCode,
+    requestId
+  } = req.body || {};
+
+  const amt =
+    securityTransaction.parseAmount(
+      amount,
+      uid
+    );
+
+if (amt === null || amt < 5000) {
+
+  return res.status(400).json({
+    ok: false,
+    error: "invalid_amount"
+  });
+
+}
+  if (
+    !securityTransaction.isValidRequestId(
+      requestId
+    )
+  ) {
+
+    return res.status(400).json({
+      ok: false,
+      error: "INVALID_TRANSACTION_ID"
+    });
+
+  }
+
+if (
+  typeof bank !== "string" ||
+  !bank.trim() ||
+  Buffer.byteLength(bank, "utf8") > 512 ||
+  /[\x00-\x1F\x7F]/.test(bank)
+) {
+
+  return res.status(400).json({
+
+    ok: false,
+
+    error: "INVALID_BANK"
+
+  });
+
+}
+
+  try {
+
+    let db = loadUsers();
+
+    let user = db[uid];
+
+    if (
+      !user?.profile ||
+      user.profile.accountBlocked
+    ) {
+
+      return res.status(403).json({
+        ok: false,
+        error: "ACCOUNT_UNAVAILABLE"
+      });
+
+    }
+
+    const originalHash =
+      user.securityCode;
+
+    /* VERIFY SECURITY CODE */
+
+    const verification =
+      await securityTransaction.verifySecurityCode(
+
+        uid,
+
+        securityCode,
+
+        originalHash,
+
+        (code, hash) =>
+          bcrypt.compare(code, hash)
+
+      );
+
+    if (!verification.ok) {
+
+      if (verification.retryAfter) {
+
+        res.setHeader(
+          "Retry-After",
+          String(verification.retryAfter)
+        );
+
+      }
+
+      return res.status(
+
+        [
+          "SECURITY_CODE_LOCKED",
+          "TRANSACTION_BUSY",
+          "SECURITY_BUSY"
+        ].includes(verification.error)
+          ? 429
+          : 403
+
+      ).json({
+        ok: false,
+        error: verification.error
+      });
+
+    }
+
+    /* RECHECK SESSION AFTER AWAIT */
+
+    const identity =
+      securityAuth.getIdentity(
+        req.headers.cookie
+      );
+
+    if (
+      !identity ||
+      identity.uid !== uid ||
+      identity.sessionId !== req.auth.sessionId
+    ) {
+
+      return res.status(401).json({
+        ok: false,
+        error: "SESSION_EXPIRED"
+      });
+
+    }
+
+    /* RELOAD CURRENT DATABASE */
+
+    db = loadUsers();
+
+    user = db[uid];
+
+    if (
+      !user?.profile ||
+      user.profile.accountBlocked ||
+      user.securityCode !== originalHash
+    ) {
+
+      return res.status(409).json({
+        ok: false,
+        error: "ACCOUNT_STATE_CHANGED"
+      });
+
+    }
+
+    const profile = user.profile;
+
+    const transactionId =
+      uid + "_" + requestId.toLowerCase();
+
+    profile.withdrawHold ||= [];
+
+    const list = loadWithdraws();
+
+    /* DUPLICATE TRANSACTION PROTECTION */
+
+    const previousHold =
+      profile.withdrawHold.find(
+        item => item.id === transactionId
+      );
+
+    const previousRequest =
+      list.find(
+        item => item.id === transactionId
+      );
+
+    if (previousHold || previousRequest) {
+
+      const previous =
+        previousRequest ||
+        previousHold.request;
+
+      if (
+        !previous ||
+        previous.amount !== amt ||
+        JSON.stringify(previous.bank) !==
+          JSON.stringify(bank)
+      ) {
+
+        return res.status(409).json({
+          ok: false,
+          error: "TRANSACTION_ID_ALREADY_USED"
+        });
+
+      }
+
+      // Repair missing request record if
+      // the wallet debit was already saved.
+      if (!previousRequest && previousHold?.request) {
+
+        list.unshift(previousHold.request);
+
+        saveWithdraws(list);
+
+      }
+
+      securityTransaction.record(
+        "duplicateRequests",
+        uid
+      );
+
+      return res.json({
+        ok: true,
+        duplicate: true,
+        id: transactionId
+      });
+
+    }
+
+
+
+    /* ==========================================
+   PENDING WITHDRAWAL PROTECTION
+========================================== */
+
+const hasPendingWithdrawal = list.some(
+  item =>
+
+    item?.uid === uid &&
+
+    ["pending", "processing"].includes(
+      String(item.status || "pending")
+        .toLowerCase()
+    )
+);
+
+if (hasPendingWithdrawal) {
+
+  return res.status(409).json({
+
+    ok: false,
+
+    error: "WITHDRAWAL_ALREADY_PENDING",
+
+    message:
+      "You already have a pending withdrawal request."
+
+  });
+
+}
+
+
+/* CHECK UNRECOVERED WALLET DEBITS */
+
+const hasUnrecoveredWithdrawal =
+  profile.withdrawHold.some(hold =>
+
+    hold?.request &&
+
+    !list.some(
+      item => item.id === hold.id
+    )
+
+  );
+
+if (hasUnrecoveredWithdrawal) {
+
+  return res.status(409).json({
+
+    ok: false,
+
+    error: "WITHDRAWAL_RECOVERY_REQUIRED",
+
+    message:
+      "A previous withdrawal requires reconciliation."
+
+  });
+
+}
+
+    /* BALANCE PROTECTION */
+
+    const balance =
+      securityTransaction.parseBalance(
+        profile.coinReceived,
+        uid
+      );
+
+    if (balance === null) {
+
+      return res.status(409).json({
+        ok: false,
+        error: "INVALID_WALLET_BALANCE"
+      });
+
+    }
+
+    if (balance < amt) {
+
+      return res.status(400).json({
+        ok: false,
+        error: "not_enough_received"
+      });
+
+    }
+
+    const now = Date.now();
+
+    const request = {
+
+      id: transactionId,
+
+      uid,
+
+      name: profile.name,
+
+      amount: amt,
+
+      bank,
+
+      status: "pending",
+
+      createdAt: now
+
+    };
+
+    /* SAVE DEBIT AND RECOVERY RECORD TOGETHER */
+
+    profile.coinReceived = balance - amt;
+
+    profile.withdrawHold.unshift({
+
+      id: transactionId,
+
+      amount: amt,
+
+      ts: now,
+
+      status: "pending",
+
+      request
+
+    });
+
+    // No await between loading, updating,
+    // and saving the balance.
+    saveUsers(db);
+
+    /* SAVE WITHDRAWAL REQUEST */
+
+    list.unshift(request);
+
+    saveWithdraws(list);
+
+    securityTransaction.record(
+      "successfulTransactions",
+      uid
+    );
+
+    /* NOTIFICATIONS */
+
+    try {
+
+      emitWithdrawUpdate();
+
+      emitCoinUpdate(uid);
+
+      if (!userInbox.has(uid)) {
+        userInbox.set(uid, []);
+      }
+
+      userInbox.get(uid).unshift({
+
+        type: "withdraw-request",
+
+        text:
+          `Withdrawal request submitted for ${amt.toLocaleString()} 💎`,
+
+        time: now,
+
+        read: false
+
+      });
+
+      saveInbox(
+        Object.fromEntries(userInbox)
+      );
+
     } catch (error) {
 
       console.error(
-        "[DIAMOND CONVERSION]",
+        "[WITHDRAW NOTIFICATION]",
         error.message
       );
 
-      return res.status(500).json({
-        ok: false,
-        message: "Conversion could not be confirmed."
-      });
     }
-  }
-);
 
+    return res.json({
 
-app.post("/api/withdraw-request", async (req, res) => {
-  const uid = req.headers["x-uid"];
-  const { amount, bank, securityCode } = req.body || {};
+      ok: true,
 
+      id: transactionId,
 
-  if (!securityCode) {
-  return res.status(400).json({
-    error: "missing_security_code"
-  });
-}
+      status: "pending"
 
+    });
 
-if (!uid || !bank || amount == null) {
-  return res.status(400).json({ error: "missing" });
-}
+  } catch (error) {
 
-const amt = Number(amount);
-if (!Number.isFinite(amt) || amt <= 0) {
-  return res.status(400).json({ error: "invalid_amount" });
-}
+    securityTransaction.record(
+      "storageErrors",
+      uid
+    );
 
+    console.error(
+      "[SECURE WITHDRAW]",
+      error.message
+    );
 
-  const db = loadUsers();
+    return res.status(503).json({
 
+      ok: false,
 
-  const user = db[uid];
+      error: "TRANSACTION_UNCONFIRMED",
 
-  if (!user || !user.profile) {
-    return res.status(404).json({ error: "user_not_found" });
-  }
+      message:
+        "Retry using the same transaction ID."
 
+    });
 
-  
-// 🔐 KIỂM TRA MÃ BẢO MẬT
-const okSec = await bcrypt.compare(
-  String(securityCode),
-  user.securityCode
-);
-
-if (!okSec) {
-  return res.status(403).json({
-    error: "invalid_security_code"
-  });
-}
-
-
-
-  const canWithdraw = Number(user.profile.coinReceived || 0);
-
-  if (amount > canWithdraw) {
-    return res.status(400).json({ error: "not_enough_received" });
   }
 
-  if (amount < 100) {
-  return res.status(400).json({ error: "min_withdraw" });
-}
-
-
-  const list = loadWithdraws();
-
-
-
-// ➖ TRỪ KIM CƯƠNG NGAY KHI GỬI
-user.profile.coinReceived -= amt;
-
-
-// 🧾 LOG (rất nên có)
-user.profile.withdrawHold ||= [];
-user.profile.withdrawHold.unshift({
-  amount: amt,
-  ts: Date.now(),
-  status: "pending"
 });
-
-list.unshift({
-  id: Date.now() + "_" + uid,
-  uid,
-  name: user.profile.name,
-  amount: amt,
-  bank,
-  status: "pending",
-  createdAt: Date.now()
-});
-
-saveUsers(db);          // 🔥 LƯU USER NGAY
-saveWithdraws(list);
-emitWithdrawUpdate();
-emitCoinUpdate(uid);    // 🔁 realtime coin
-
-
-  // 🔔 thông báo cho user
-  const text = `Withdrawal request submitted for ${Number(amount).toLocaleString()} 💎`;
-
-  if (!userInbox.has(uid)) userInbox.set(uid, []);
-  userInbox.get(uid).unshift({
-    type: "withdraw-request",
-    text,
-    time: Date.now(),
-    read: false
-  });
-  saveInbox(Object.fromEntries(userInbox));
-
-  res.json({ ok: true });
-});
-
-
 
 
 /* ==========================================
@@ -8692,7 +9246,7 @@ app.post("/api/admin/withdraw-action", (req, res) => {
 
   const amount = Number(reqItem.amount);
 
-  if (!Number.isFinite(amount) || amount <= 0) {
+ if (!Number.isSafeInteger(amount) || amount <= 0) {
     return res.status(400).json({
       ok: false,
       error: "invalid_withdraw_amount"
@@ -8709,6 +9263,31 @@ app.post("/api/admin/withdraw-action", (req, res) => {
   };
 
   const now = Date.now();
+
+
+/* ==========================================
+   REFUND IDEMPOTENCY PROTECTION
+========================================== */
+
+user.withdrawRefundRecords ||= [];
+
+const existingRefund =
+  user.withdrawRefundRecords.find(
+    item => item.id === wid
+  );
+
+if (existingRefund && action !== "reject") {
+
+  return res.status(409).json({
+
+    ok: false,
+
+    error: "REFUND_ALREADY_COMMITTED"
+
+  });
+
+}
+
 
   // Chỉ cập nhật ghi chú, không thay đổi trạng thái
   if (action === "note") {
@@ -8744,29 +9323,136 @@ app.post("/api/admin/withdraw-action", (req, res) => {
     });
   }
 
+
   // Từ chối: hoàn lại số kim cương đã giữ
-  if (action === "reject") {
+ if (action === "reject") {
+
+  try {
+
+    if (existingRefund) {
+
+      if (existingRefund.amount !== amount) {
+
+        return res.status(409).json({
+          ok: false,
+          error: "REFUND_AMOUNT_MISMATCH"
+        });
+
+      }
+
+      securityTransaction.record(
+        "duplicateRequests",
+        reqItem.uid
+      );
+
+    } else {
+
+      const balance =
+        securityTransaction.parseBalance(
+          user.profile.coinReceived,
+          reqItem.uid
+        );
+
+      if (
+
+        balance === null ||
+
+        !securityTransaction.canCredit(
+          balance,
+          amount,
+          reqItem.uid
+        )
+
+      ) {
+
+        return res.status(409).json({
+          ok: false,
+          error: "INVALID_REFUND_BALANCE"
+        });
+
+      }
+
+      user.profile.coinReceived =
+        balance + amount;
+
+      user.withdrawRefundRecords.unshift({
+
+        id: wid,
+
+        amount,
+
+        adminUid,
+
+        createdAt: now
+
+      });
+
+      // Balance and refund marker are
+      // committed in the same JSON file.
+      saveUsers(db);
+
+    }
+
     reqItem.status = "rejected";
-    reqItem.note = customNote || defaultNotes.rejected;
+
+    reqItem.note =
+      customNote || defaultNotes.rejected;
+
     reqItem.handledBy = adminUid;
+
     reqItem.handledAt = now;
 
-    user.profile.coinReceived =
-      Number(user.profile.coinReceived || 0) + amount;
-
-    // Lưu dữ liệu người dùng và giao dịch
-    saveUsers(db);
     saveWithdraws(list);
 
+    if (!existingRefund) {
+
+      securityTransaction.record(
+        "successfulTransactions",
+        reqItem.uid
+      );
+
+    }
+
     emitCoinUpdate(reqItem.uid);
+
     emitWithdrawUpdate();
 
     return res.json({
+
       ok: true,
+
       status: "rejected",
+
       note: reqItem.note
+
     });
+
+  } catch (error) {
+
+    securityTransaction.record(
+      "storageErrors",
+      reqItem.uid
+    );
+
+    console.error(
+      "[WITHDRAW REFUND]",
+      error.message
+    );
+
+    return res.status(503).json({
+
+      ok: false,
+
+      error: "REFUND_UNCONFIRMED"
+
+    });
+
   }
+
+}
+
+
+
 
   // Phê duyệt: không trừ kim cương thêm lần nữa
   if (action === "approve") {
@@ -10165,7 +10851,13 @@ const pushSubs = new Map();
 
 // ===== ADMIN TOPUP COIN =====
 app.post("/api/admin/topup", (req, res) => {
-  const { adminUid, targetUid, amount, note } = req.body;
+  const adminUid = req.lspAdminActorUid;
+
+const {
+  targetUid,
+  amount,
+  note
+} = req.body || {};
 
   if (!adminUid || !targetUid || !amount) {
     return res.status(400).json({ error: "missing" });
@@ -10184,15 +10876,59 @@ app.post("/api/admin/topup", (req, res) => {
     return res.status(404).json({ error: "user_not_found" });
   }
 
-  const add = Math.max(0, Number(amount) || 0);
+const add =
+  securityTransaction.parseAmount(
+    amount,
+    targetUid
+  );
 
-  user.profile.coins = (user.profile.coins || 0) + add;
+const current =
+  securityTransaction.parseBalance(
+    user.profile.coins,
+    targetUid
+  );
 
-  // 💳 tổng kim cương đã nạp
-  user.profile.coinDeposit =
-  (user.profile.coinDeposit || 0) + add;
+const deposited =
+  securityTransaction.parseBalance(
+    user.profile.coinDeposit,
+    targetUid
+  );
 
+if (add === null) {
 
+  return res.status(400).json({
+    ok: false,
+    error: "INVALID_AMOUNT"
+  });
+
+}
+
+if (
+  current === null ||
+  deposited === null ||
+  !securityTransaction.canCredit(
+    current,
+    add,
+    targetUid
+  ) ||
+  !securityTransaction.canCredit(
+    deposited,
+    add,
+    targetUid
+  )
+) {
+
+  return res.status(409).json({
+    ok: false,
+    error: "INVALID_BALANCE"
+  });
+
+}
+
+user.profile.coins = current + add;
+
+user.profile.coinDeposit =
+  deposited + add;
   
 
 const depositTodayStart = getTodayStartTsVN();
@@ -10231,6 +10967,11 @@ user.profile.depositLogs.unshift({
   });
 
   saveUsers(db);
+
+securityTransaction.record(
+  "successfulTransactions",
+  targetUid
+);
 
   // 🔁 realtime sync
   emitCoinUpdate(targetUid);
@@ -10283,7 +11024,13 @@ sendPushToUser(targetUid, {
 
 // ===== ADMIN WITHDRAW COIN =====
 app.post("/api/admin/withdraw", (req, res) => {
-  const { adminUid, targetUid, amount, note } = req.body || {};
+  const adminUid = req.lspAdminActorUid;
+
+const {
+  targetUid,
+  amount,
+  note
+} = req.body || {};
 
   if (!adminUid || !targetUid || !amount) {
     return res.status(400).json({ error: "missing" });
@@ -10302,8 +11049,29 @@ app.post("/api/admin/withdraw", (req, res) => {
     return res.status(404).json({ error: "user_not_found" });
   }
 
-const sub = Math.max(0, Number(amount) || 0);
-const cur = Number(user.profile.coins || 0);
+const sub =
+  securityTransaction.parseAmount(
+    amount,
+    targetUid
+  );
+
+const cur =
+  securityTransaction.parseBalance(
+    user.profile.coins,
+    targetUid
+  );
+
+if (sub === null || cur === null) {
+
+  return res.status(400).json({
+
+    ok: false,
+
+    error: "INVALID_TRANSACTION"
+
+  });
+
+}
 
 if (sub <= 0) {
   return res.status(400).json({ error: "invalid_amount" });
@@ -10314,7 +11082,7 @@ if (cur < sub) {
 }
 
 // ➖ TRỪ COIN (không cho âm)
-user.profile.coins = Math.max(0, cur - sub);
+user.profile.coins = cur - sub;
 
 // 🧾 LOG ADMIN
 user.profile.adminLogs ||= [];
@@ -10329,6 +11097,11 @@ user.profile.adminLogs.unshift({
 });
 
   saveUsers(db);
+
+securityTransaction.record(
+  "successfulTransactions",
+  targetUid
+);
 
   // 🔁 realtime sync
   emitCoinUpdate(targetUid);
@@ -12652,7 +13425,8 @@ socket.on("coin-transfer", async (payload = {}, ack) => {
     if (typeof ack === "function") ack(data);
   };
 
-  const fromUid = getVerifiedTransferUid(socket);
+ const fromUid =
+  securityAuth.getSocketIdentity(socket)?.uid;
 
   if (!fromUid) {
     return respond({
@@ -12662,7 +13436,11 @@ socket.on("coin-transfer", async (payload = {}, ack) => {
   }
 
   const target = String(payload.target || "").trim();
-  const rawAmount = Number(payload.amount);
+ const rawAmount =
+  securityTransaction.parseAmount(
+    payload.amount,
+    fromUid
+  );
 
   if (
     !target ||
@@ -12684,14 +13462,7 @@ const securityCode =
     ? payload.securityCode
     : "";
 
-// Rate-limit before verifying the code
-if (isTransferSecurityLocked(fromUid)) {
-  return respond({
-    ok: false,
-    message:
-      "Too many failed attempts. Please try again in 15 minutes."
-  });
-}
+
 
 if (!securityCode || securityCode.length > 128) {
   return respond({
@@ -12720,36 +13491,61 @@ if (typeof from.securityCode !== "string") {
 
 const securityHashAtVerification = from.securityCode;
 
-// Verify the bcrypt hash stored on the server
-let verified = false;
+const verification =
+  await securityTransaction.verifySecurityCode(
 
-try {
-  verified = await bcrypt.compare(
+    fromUid,
+
     securityCode,
-    from.securityCode
+
+    securityHashAtVerification,
+
+    (code, hash) =>
+      bcrypt.compare(code, hash)
+
   );
-} catch (error) {
-  console.error("[TRANSFER SECURITY]", error);
+
+if (!verification.ok) {
 
   return respond({
+
     ok: false,
-    message: "Security verification is unavailable."
+
+    error: verification.error,
+
+    message:
+      verification.error === "SECURITY_CODE_LOCKED"
+
+        ? "Too many failed attempts. Please try again later."
+
+        : "Transaction verification failed."
+
   });
+
 }
 
-if (!verified) {
+/* RECHECK SOCKET SESSION */
 
-  const locked = recordTransferSecurityFailure(fromUid);
+const currentIdentity =
+  securityAuth.getSocketIdentity(socket);
+
+if (
+  !socket.connected ||
+  !currentIdentity ||
+  currentIdentity.uid !== fromUid
+) {
 
   return respond({
-    ok: false,
-    message: locked
-      ? "Too many failed attempts. Please try again in 15 minutes."
-      : "Incorrect security code. Please try again."
-  });
-}
 
-transferSecurityAttempts.delete(fromUid);
+    ok: false,
+
+    error: "SESSION_EXPIRED",
+
+    message: "Please sign in again."
+
+  });
+
+}
 
 // Reload the latest account data after bcrypt verification.
 // This prevents using the balance snapshot taken before await.
@@ -12851,17 +13647,33 @@ if (
     note: ""
   });
 
-  // Lưu yêu cầu và số dư trong cùng users.json
-  try {
-    saveUsers(users);
-  } catch (err) {
-    console.error("[TRANSFER REQUEST SAVE]", err);
+ try {
 
-    return respond({
-      ok: false,
-      message: "Unable to save transfer request."
-    });
-  }
+  saveUsers(users);
+
+  securityTransaction.record(
+    "successfulTransactions",
+    fromUid
+  );
+
+} catch (err) {
+
+  securityTransaction.record(
+    "storageErrors",
+    fromUid
+  );
+
+  console.error(
+    "[TRANSFER REQUEST SAVE]",
+    err
+  );
+
+  return respond({
+    ok: false,
+    message: "Unable to save transfer request."
+  });
+
+}
 
   emitCoinUpdate(fromUid);
 

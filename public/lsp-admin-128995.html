@@ -3524,6 +3524,221 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
 
 
 
+/* ==========================================
+   TRANSACTION SECURITY MONITOR V1.0
+========================================== */
+
+#txSecSuccess {
+  display: block;
+  margin: 8px 0 12px;
+
+  color: #82d6a2;
+
+  font-size: clamp(30px, 7vw, 42px);
+  font-weight: 800;
+
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* SECURITY CONFIGURATION */
+
+.tx-sec-config {
+  margin-top: 16px;
+  padding: 6px 15px;
+
+  border: 1px solid rgba(225,188,126,.14);
+  border-radius: 12px;
+
+  background: rgba(0,0,0,.18);
+}
+
+.tx-sec-config-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+  padding: 12px 0;
+
+  border-bottom:
+    1px solid rgba(225,188,126,.09);
+}
+
+.tx-sec-config-row:last-child {
+  border-bottom: none;
+}
+
+.tx-sec-config-row span {
+  color: #a79b88;
+  font-size: 11px;
+}
+
+.tx-sec-config-row strong {
+  color: #e8d0a5;
+  font-size: 12px;
+  font-weight: 700;
+
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+
+/* SECURITY EVENTS */
+
+.tx-sec-events {
+  margin-top: 18px;
+  padding: 15px;
+
+  border: 1px solid rgba(225,188,126,.15);
+  border-radius: 12px;
+
+  background: rgba(0,0,0,.22);
+}
+
+.tx-sec-events-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.tx-sec-events-heading h3 {
+  margin: 0;
+
+  color: #d9ba88;
+
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+#txSecEventCount {
+  color: #a79b88;
+  font-size: 10px;
+}
+
+.tx-sec-event-list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+  max-height: 280px;
+
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.tx-sec-event {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 10px;
+  padding: 11px;
+
+  border: 1px solid rgba(225,188,126,.08);
+  border-radius: 9px;
+
+  background: rgba(255,255,255,.018);
+}
+
+.tx-sec-event-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+
+  margin-top: 5px;
+
+  border-radius: 50%;
+  background: #e1bc7e;
+}
+
+.tx-sec-event.is-success .tx-sec-event-dot {
+  background: #82d6a2;
+}
+
+.tx-sec-event.is-danger .tx-sec-event-dot {
+  background: #ff9292;
+}
+
+.tx-sec-event-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.tx-sec-event-info strong {
+  display: block;
+
+  color: #e8d9bf;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  overflow-wrap: anywhere;
+}
+
+.tx-sec-event-info small {
+  display: block;
+  margin-top: 4px;
+
+  color: #898278;
+  font-size: 10px;
+
+  overflow-wrap: anywhere;
+}
+
+.tx-sec-event time {
+  color: #a99c87;
+
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.tx-sec-empty {
+  padding: 24px 10px;
+  text-align: center;
+
+  color: #91887a;
+  font-size: 11px;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 768px) {
+
+  .tx-sec-config {
+    padding: 4px 10px;
+  }
+
+  .tx-sec-config-row span {
+    font-size: 10px;
+  }
+
+  .tx-sec-config-row strong {
+    font-size: 11px;
+  }
+
+  .tx-sec-events {
+    padding: 11px;
+  }
+
+  .tx-sec-events-heading h3 {
+    font-size: 10px;
+    letter-spacing: .5px;
+  }
+
+  .tx-sec-event {
+    padding: 9px;
+    gap: 7px;
+  }
+
+}
+
+
+
   </style>
 
 
@@ -3869,6 +4084,201 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
   </div>
 
 </section>
+
+
+<!-- ==========================================
+     LSP TRANSACTION SECURITY MONITOR V1.0
+========================================== -->
+
+<section id="transactionSecurityPanel"
+         class="auth-perf-panel">
+
+  <div class="auth-perf-header">
+
+    <div class="auth-perf-heading">
+
+      <span class="auth-perf-kicker">
+        LIVESTREAM PRO / FINANCIAL SECURITY
+      </span>
+
+      <h2>TRANSACTION SECURITY</h2>
+
+      <p id="txSecVersion">
+        Transaction Protection V1.0
+      </p>
+
+    </div>
+
+    <span id="txSecStatus"
+          class="auth-perf-status">
+      CONNECTING
+    </span>
+
+  </div>
+
+  <!-- SUCCESSFUL TRANSACTIONS -->
+
+  <div class="auth-perf-primary">
+
+    <span class="auth-perf-label">
+      SUCCESSFUL TRANSACTION OPERATIONS
+    </span>
+
+    <strong id="txSecSuccess">--</strong>
+
+    <small>
+      Recorded operations since server startup
+    </small>
+
+  </div>
+
+  <!-- SECURITY STATISTICS -->
+
+  <div class="auth-perf-grid">
+
+    <div class="auth-perf-cell">
+      <span>DUPLICATE REQUESTS</span>
+      <strong id="txSecDuplicates">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>INVALID AMOUNTS</span>
+      <strong id="txSecInvalidAmounts">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>SECURITY FAILURES</span>
+      <strong id="txSecFailures">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>LOCKED ACCOUNTS</span>
+      <strong id="txSecLocked">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>STORAGE ERRORS</span>
+      <strong id="txSecStorageErrors">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>CONCURRENT BLOCKED</span>
+      <strong id="txSecConcurrent">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>INVALID BALANCES</span>
+      <strong id="txSecInvalidBalances">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>SECURITY BLOCKED</span>
+      <strong id="txSecBlocked">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>ACTIVE CHECKS</span>
+      <strong id="txSecActiveChecks">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>TRACKED ACCOUNTS</span>
+      <strong id="txSecTracked">--</strong>
+    </div>
+
+  </div>
+
+  <!-- SECURITY CONFIGURATION -->
+
+  <div class="tx-sec-config">
+
+    <div class="tx-sec-config-row">
+      <span>Security code limit</span>
+      <strong id="txSecLimit">--</strong>
+    </div>
+
+    <div class="tx-sec-config-row">
+      <span>Transaction lock duration</span>
+      <strong id="txSecLockTime">--</strong>
+    </div>
+
+    <div class="tx-sec-config-row">
+      <span>Maximum transaction</span>
+      <strong id="txSecMaxAmount">--</strong>
+    </div>
+
+    <div class="tx-sec-config-row">
+      <span>Server started</span>
+      <strong id="txSecStarted">--</strong>
+    </div>
+
+  </div>
+
+  <!-- RECENT SECURITY EVENTS -->
+
+  <div class="tx-sec-events">
+
+    <div class="tx-sec-events-heading">
+
+      <h3>RECENT SECURITY EVENTS</h3>
+
+      <span id="txSecEventCount">--</span>
+
+    </div>
+
+    <div id="txSecEventList"
+         class="tx-sec-event-list">
+
+      <div class="tx-sec-empty">
+        Waiting for server...
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+
+  <div class="auth-perf-footer">
+
+    <div>
+
+      <span id="txSecUpdated"
+            role="status">
+        Waiting for server...
+      </span>
+
+      <small>
+        Auto refresh every 10 seconds
+      </small>
+
+    </div>
+
+    <button type="button"
+            id="txSecRefreshBtn"
+            class="auth-perf-refresh"
+            aria-label="Refresh transaction security">
+
+      <svg viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="1.7"
+           stroke-linecap="round"
+           stroke-linejoin="round">
+
+        <path d="M20 7v5h-5"/>
+        <path d="M4 17v-5h5"/>
+        <path d="M6.1 8a7 7 0 0 1 11.5-2L20 12"/>
+        <path d="M4 12l2.4 6A7 7 0 0 0 18 16"/>
+
+      </svg>
+
+    </button>
+
+  </div>
+
+</section>
+
 
 <div class="admin-tabs">
   <button type="button"
@@ -4255,7 +4665,7 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
 
   const script = document.createElement("script");
 
-script.src = "/admin.js?v=20261125-auth-v11";
+script.src = "/admin.js?v=20261125-transaction-v10";
 
     script.onload = () => {
       document.body.classList.remove("lsp-admin-locked");

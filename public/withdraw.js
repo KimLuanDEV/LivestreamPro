@@ -118,6 +118,9 @@ wdRenderIcons();
 
 
 let socket = null;
+let withdrawRequestId = null;
+let withdrawSubmitting = false;
+let withdrawRequestPayload = null;
 
 const params = new URLSearchParams(location.search);
 let received = Math.max(
@@ -184,6 +187,18 @@ function updateBankLogo(bankName){
 
 function updateMoney() {
 
+  if (withdrawSubmitting) {
+
+  btnSubmit.disabled = true;
+
+  btnSubmit.innerHTML =
+    wdIcon("clock") +
+    "<span>PROCESSING...</span>";
+
+  return;
+
+}
+
   const val = Math.min(
     received,
     Number(withdrawInput.value || 0)
@@ -235,94 +250,296 @@ btnSubmit.onclick = () => {
   openSecurityModal();
 };
 
+/* ==========================================
+   SECURE WITHDRAWAL CLIENT V1.0
+========================================== */
 
-async function submitWithdraw(securityCode){
-  const amount = Number(withdrawInput.value || 0);
 
 
-const selectedBank = document.getElementById("bankName").value;
+async function submitWithdraw(securityCode) {
 
-const customBankName = document
-  .getElementById("otherBankName")
-  .value.trim();
+  if (withdrawSubmitting) return;
 
-const bankName = selectedBank === "Other"
-  ? customBankName
-  : selectedBank;
-
-const bankAccount = document
-  .getElementById("bankAccount")
-  .value.trim();
-
-const bankOwner = document
-  .getElementById("bankOwner")
-  .value.trim();
-
-if (selectedBank === "Other" && !customBankName) {
-  showNotifyModal(
-    "Please enter your bank name.",
-    "warn",
-    "Bank Name Required"
+  const amount = Number(
+    withdrawInput.value || 0
   );
-  return;
-}
 
+  const selectedBank =
+    document.getElementById("bankName").value;
+
+  const customBankName =
+    document.getElementById("otherBankName")
+      .value.trim();
+
+  const bankName =
+    selectedBank === "Other"
+      ? customBankName
+      : selectedBank;
+
+  const bankAccount =
+    document.getElementById("bankAccount")
+      .value.trim();
+
+  const bankOwner =
+    document.getElementById("bankOwner")
+      .value.trim();
+
+
+  /* VALIDATE BANK DETAILS */
 
   if (!bankName || !bankAccount || !bankOwner) {
-showNotifyModal(
-  "Please complete all required bank details.",
-  "error"
-);
-    return;
-  }
 
-  if (amount < MIN_WITHDRAW) {
-showNotifyModal(
-  `The minimum withdrawal amount is ${MIN_WITHDRAW.toLocaleString("en-US")} diamonds.`,
-  "warn",
-  "Minimum Not Met"
-);
+    showNotifyModal(
+      "Please complete all required bank details.",
+      "error",
+      "Bank Details Required"
+    );
 
     return;
+
   }
 
-  const bank = `${bankName} | STK: ${bankAccount} | ${bankOwner}`;
 
-  const me = JSON.parse(localStorage.getItem("user_profile") || "{}");
+  /* VALIDATE AMOUNT */
+
+  if (
+    !Number.isSafeInteger(amount) ||
+    amount < MIN_WITHDRAW ||
+    amount > 1000000000
+  ) {
+
+    showNotifyModal(
+      `Please enter a valid withdrawal amount of at least ${MIN_WITHDRAW.toLocaleString()} diamonds.`,
+      "warn",
+      "Invalid Amount"
+    );
+
+    return;
+
+  }
+
+
+  const me = JSON.parse(
+    localStorage.getItem("user_profile") || "{}"
+  );
+
   if (!me.uid) {
-showNotifyModal(
-  "Your session is not valid. Please sign in again.",
-  "error"
-);
+
+    showNotifyModal(
+      "Please sign in again.",
+      "error",
+      "Session Required"
+    );
 
     return;
+
   }
 
-  const res = await fetch("/api/withdraw-request", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-uid": me.uid
-    },
-    body: JSON.stringify({
-      amount,
-      bank,
-      securityCode
-    })
+
+  const bank =
+    `${bankName} | STK: ${bankAccount} | ${bankOwner}`;
+
+  const payloadKey = JSON.stringify({
+    uid: me.uid,
+    amount,
+    bank
   });
 
-  const data = await res.json();
-  if (data.ok) {
-    openWithdrawModal();
-  } else {
-showNotifyModal(
-  data.error || "Something went wrong. Please try again.",
-  "error"
-);
+
+  /* PREVENT DUPLICATE WITHDRAWALS */
+
+  if (
+    withdrawRequestId &&
+    withdrawRequestPayload !== payloadKey
+  ) {
+
+    showNotifyModal(
+      "A previous withdrawal has not been confirmed. Retry the original request before changing its details.",
+      "warn",
+      "Pending Transaction"
+    );
+
+    return;
 
   }
-}
 
+  if (!withdrawRequestId) {
+
+    withdrawRequestId =
+      crypto.randomUUID();
+
+    withdrawRequestPayload =
+      payloadKey;
+
+  }
+
+
+  withdrawSubmitting = true;
+
+  btnSubmit.disabled = true;
+
+  btnSubmit.innerHTML =
+    wdIcon("clock") +
+    "<span>PROCESSING...</span>";
+
+
+  /* SEND VERIFIED REQUEST */
+
+  try {
+
+    const res = await fetch(
+      "/api/withdraw-request",
+      {
+
+        method: "POST",
+
+        credentials: "same-origin",
+
+        cache: "no-store",
+
+        headers: {
+          "Content-Type": "application/json",
+          "x-uid": me.uid
+        },
+
+        body: JSON.stringify({
+
+          amount,
+
+          bank,
+
+          securityCode,
+
+          requestId: withdrawRequestId
+
+        })
+
+      }
+    );
+
+    const data = await res.json();
+
+
+    /* TRANSACTION SUCCESS */
+
+    if (res.ok && data.ok) {
+
+      withdrawRequestId = null;
+
+      withdrawRequestPayload = null;
+
+      withdrawInput.disabled = true;
+
+      openWithdrawModal();
+
+      await loadWithdrawHistory();
+
+      return;
+
+    }
+
+
+    /* TRANSACTION ERROR */
+
+    const messages = {
+
+      WITHDRAWAL_ALREADY_PENDING:
+  "You already have a pending withdrawal request.",
+
+WITHDRAWAL_RECOVERY_REQUIRED:
+  "A previous transaction requires verification. Please contact support.",
+
+INVALID_BANK:
+  "Invalid bank information.",
+
+ACCOUNT_STATE_CHANGED:
+  "Your account information has changed. Please sign in again.",
+
+INVALID_WALLET_BALANCE:
+  "Unable to verify your wallet balance.",
+
+SECURITY_UNAVAILABLE:
+  "Security verification is temporarily unavailable.",
+
+  
+      AUTH_REQUIRED:
+        "Please sign in again.",
+
+      SESSION_EXPIRED:
+        "Your session has expired.",
+
+      INVALID_SECURITY_CODE:
+        "Incorrect security code.",
+
+      SECURITY_CODE_LOCKED:
+        "Too many failed attempts. Please try again later.",
+
+      TRANSACTION_BUSY:
+        "Another transaction is being processed.",
+
+      SECURITY_BUSY:
+        "The system is busy. Please try again.",
+
+      INVALID_TRANSACTION_ID:
+        "Invalid transaction reference.",
+
+      TRANSACTION_UNCONFIRMED:
+        "The transaction could not be confirmed. Retry the same request.",
+
+      TRANSACTION_ID_ALREADY_USED:
+        "This transaction reference is already in use.",
+
+      not_enough_received:
+        "Insufficient wallet diamonds.",
+
+      invalid_amount:
+        "Invalid withdrawal amount."
+
+    };
+
+
+    showNotifyModal(
+
+      messages[data.error] ||
+
+      data.message ||
+
+      data.error ||
+
+      "Unable to process withdrawal.",
+
+      "error",
+
+      "Transaction Failed"
+
+    );
+
+  } catch (error) {
+
+    console.error(
+      "[SECURE WITHDRAW]",
+      error.message
+    );
+
+    showNotifyModal(
+
+      "Connection interrupted. Retry the same withdrawal request.",
+
+      "error",
+
+      "Transaction Unconfirmed"
+
+    );
+
+  } finally {
+
+    withdrawSubmitting = false;
+
+    updateMoney();
+
+  }
+
+}
 
 
 async function loadBankDefault(){
@@ -502,10 +719,20 @@ function renderWithdrawPage(){
       <td>${w.amount.toLocaleString("en-US")}</td>
       <td>
         <img
-          src="${BANK_LOGOS[w.bank.split(" | ")[0]] || ""}"
+          src="${wdEscapeHTML(
+  BANK_LOGOS[
+    String(w.bank || "").split(" | ")[0]
+  ] || ""
+)}"
           style="height:18px;vertical-align:middle;margin-right:6px"
         >
-        ${String(w.bank || "").replace(" | STK: ", " | Account No.: ")}
+        ${wdEscapeHTML(
+  String(w.bank || "")
+    .replace(
+      " | STK: ",
+      " | Account No.: "
+    )
+)}
       </td>
       <td class="st-${w.status}">
         ${statusText(w.status)}
