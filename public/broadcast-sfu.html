@@ -7232,6 +7232,51 @@ body:has(#sfuChatPanel.hidden)
 }
 
 
+
+/* ==========================================
+   SFU - KEYBOARD COMMENT SEND V3.0
+========================================== */
+
+/* Hide standalone send button */
+
+#sfuBottomToolbar #sfuChatSend {
+  display: none !important;
+}
+
+/* Expand comment input */
+
+#sfuBottomToolbar #sfuChatForm {
+  flex: 1 1 0;
+  min-width: 0;
+  gap: 0;
+}
+
+#sfuBottomToolbar #sfuChatInput {
+  flex: 1 1 100%;
+  width: 100%;
+  min-width: 0;
+
+  padding: 0 13px;
+
+  font-size: 16px;
+}
+
+#sfuBottomToolbar #sfuChatInput::placeholder {
+  font-size: 12px;
+}
+
+/* Input focus effect */
+
+#sfuBottomToolbar #sfuChatInput:focus {
+  border-color: rgba(223,190,131,.75);
+
+  background: rgba(20,22,27,.9);
+
+  box-shadow:
+    0 0 0 2px rgba(223,190,131,.08);
+}
+
+
 </style>
 
 
@@ -7978,14 +8023,16 @@ body:has(#sfuChatPanel.hidden)
 
   <form id="sfuChatForm" class="sfu-chat-form">
 
-    <input
-      type="text"
-      id="sfuChatInput"
-      maxlength="300"
-      autocomplete="off"
-      placeholder="Write a comment..."
-      aria-label="Comment text"
-      required>
+<input
+  type="text"
+  id="sfuChatInput"
+  maxlength="300"
+  autocomplete="off"
+  inputmode="text"
+  enterkeyhint="send"
+  placeholder="Write a comment..."
+  aria-label="Comment text"
+  required>
 
  
 <!-- PREMIUM SEND COMMENT BUTTON -->
@@ -16066,21 +16113,21 @@ const GAMES = Object.freeze({
       toolbar
     );
 
-    // Move original elements into toolbar
-    [
-      chatForm,
-      chatToggle,
-      voiceToggle,
-      giftToggle,
-      settingsButton
+// Move original elements into toolbar
+[
+  chatForm,
+  chatToggle,
+  voiceToggle,
+  settingsButton,
+  giftToggle
 
-    ].forEach(element => {
+].forEach(element => {
 
-      if (element) {
-        toolbar.appendChild(element);
-      }
+  if (element) {
+    toolbar.appendChild(element);
+  }
 
-    });
+});
 
   }
 
