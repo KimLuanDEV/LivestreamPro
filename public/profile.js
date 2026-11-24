@@ -1651,7 +1651,7 @@ if (coverPreview){
   coverPreview.src =
     p.cover
       ? fixMedia(p.cover)
-      : "/assets/ui/default-cover.jpg";
+      : "/assets/default-cover.jpg";
 }
 
   // ===== BASIC STATS =====
