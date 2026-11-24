@@ -329,23 +329,102 @@ function normalizeAvatar(url) {
 }
 
 
+/* ==========================================
+   SECURITY - MEDIA FILE FILTER
+========================================== */
 
+const LSP_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif"
+]);
+
+const LSP_VIDEO_TYPES = new Set([
+  "video/mp4",
+  "video/webm",
+  "video/quicktime"
+]);
+
+function lspMediaFilter(req, file, cb) {
+
+  const type = String(
+    file.mimetype || ""
+  ).toLowerCase();
+
+  if (
+    LSP_IMAGE_TYPES.has(type) ||
+    LSP_VIDEO_TYPES.has(type)
+  ) {
+    return cb(null, true);
+  }
+
+  return cb(
+    new Error("INVALID_MEDIA_TYPE")
+  );
+
+}
+
+function lspImageFilter(req, file, cb) {
+
+  const type = String(
+    file.mimetype || ""
+  ).toLowerCase();
+
+  if (LSP_IMAGE_TYPES.has(type)) {
+    return cb(null, true);
+  }
+
+  return cb(
+    new Error("INVALID_MEDIA_TYPE")
+  );
+
+}
 
 const chatUpload = multer({
+
   storage: multer.memoryStorage(),
-  limits: { fileSize: 500 * 1024 * 1024 }
+
+  fileFilter: lspMediaFilter,
+
+  limits: {
+    fileSize: 20 * 1024 * 1024,
+    files: 1,
+    fields: 10,
+    parts: 12
+  }
+
 });
 
 const avatarCoverUpload = multer({
+
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+
+  fileFilter: lspImageFilter,
+
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+    files: 1,
+    fields: 5,
+    parts: 7
+  }
+
 });
 
 const postMediaUpload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 500 * 1024 * 1024 } // 500MB (video)
-});
 
+  storage: multer.memoryStorage(),
+
+  fileFilter: lspMediaFilter,
+
+  limits: {
+    fileSize: 30 * 1024 * 1024,
+    files: 1,
+    fields: 10,
+    parts: 12
+  }
+
+});
 
 
 const LIVE_STATE_FILE = path.join("/opt/render/project/data", "live_state.json");
@@ -601,20 +680,61 @@ const app = express();
 const server = http.createServer(app);
 
 /* ==========================================
+   LIVESTREAM PRO - SECURITY FIREWALL
+========================================== */
+
+const securityFirewall =
+  require("./security-firewall");
+
+// Render reverse proxy
+app.set("trust proxy", 1);
+
+securityFirewall.installHttp(app, {
+  allowedOrigins: [...LSP_ALLOWED_ORIGINS]
+});
+
+console.log("[FIREWALL] HTTP protection enabled");
+
+/* ==========================================
    SOCKET.IO - DOMAIN CONFIGURATION
+========================================== */
+
+/* ==========================================
+   SECURE SOCKET.IO SERVER
 ========================================== */
 
 const io = new Server(server, {
 
   cors: {
-
     origin: [...LSP_ALLOWED_ORIGINS],
-
     methods: ["GET", "POST"]
+  },
+
+  // Maximum incoming message: 1 MB
+  maxHttpBufferSize: 1024 * 1024,
+
+  pingInterval: 25000,
+  pingTimeout: 20000,
+
+  allowRequest: (req, callback) => {
+
+    const origin = req.headers.origin;
+
+    const allowed =
+      !origin ||
+      isLspAllowedOrigin(origin);
+
+    callback(null, allowed);
 
   }
 
 });
+
+securityFirewall.installSocket(io);
+
+console.log(
+  "[FIREWALL] Socket.IO protection enabled"
+);
 
 
 /* ==========================================
@@ -4294,8 +4414,7 @@ const LSP_ADMIN_TTL = 8 * 60 * 60 * 1000;
 const lspAdminSessions = new Map();
 const lspAdminAttempts = new Map();
 
-// Render sử dụng reverse proxy
-app.set("trust proxy", 1);
+
 
 function getLspAdminActorUid() {
   const users = loadUsers();
@@ -4572,6 +4691,34 @@ app.use("/api/admin", (req, res, next) => {
 
 
 
+/* ==========================================
+   ADMIN - FIREWALL MONITORING
+========================================== */
+
+app.get(
+  "/api/admin/firewall/status",
+  (req, res) => {
+
+    res.set("Cache-Control", "no-store");
+
+    return res.json({
+      ok: true,
+      status: "ACTIVE",
+      firewall: securityFirewall.getStats(),
+      memory: {
+        rss: Math.round(
+          process.memoryUsage().rss / 1048576
+        ),
+        heapUsed: Math.round(
+          process.memoryUsage().heapUsed / 1048576
+        )
+      }
+    });
+
+  }
+);
+
+
 
 /* ==========================================
    LEGACY VIEWER REDIRECT TO LIVEKIT SFU
@@ -4604,23 +4751,24 @@ app.get(["/poster", "/poster.html"], (req, res) => {
   return res.redirect(301, "/social.html");
 });
 
+
+/* ==========================================
+   PRIVATE DATA FIREWALL
+========================================== */
+
+app.use("/data", (req, res) => {
+
+  return res.status(403).json({
+    ok: false,
+    error: "ACCESS_DENIED"
+  });
+
+});
+
+
+
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/data", (req, res, next) => {
-  const blockedFiles = new Set([
-    "users.json",
-    "social_posts.json",
-    "inbox.json"
-  ]);
-
-  const fileName = path.posix.basename(req.path).toLowerCase();
-
-  if (blockedFiles.has(fileName)) {
-    return res.sendStatus(403);
-  }
-
-  next();
-}, express.static(path.join(__dirname, "data")));
 
 
 
@@ -5549,7 +5697,10 @@ if (!["done", "cancelled", "refunded"].includes(order.status)) {
 
 
 // 📎 UPLOAD BẰNG CHỨNG KHIẾU NẠI (ảnh / video)
-app.post("/api/upload-dispute-media", postMediaUpload.single("file"), async (req, res) => {
+app.post("/api/upload-dispute-media",
+  spiritAuth,
+  postMediaUpload.single("file"),
+  async (req, res) => {
 
     if (!req.file)
       return res.status(400).json({ error: "NO_FILE" });
@@ -5876,6 +6027,7 @@ io.emit("order-updated", {
 
 
 app.post("/api/upload-product-image",
+  spiritAuth,
   postMediaUpload.single("image"),
   async (req, res) => {
 
@@ -6809,7 +6961,10 @@ const msg = reason
 
 
 
-app.post("/api/upload-chat-image", chatUpload.single("image"), async (req, res) => {
+app.post("/api/upload-chat-image",
+  spiritAuth,
+  chatUpload.single("image"),
+  async (req, res) => {
 
   if (!req.file) return res.status(400).json({ error: "No file" });
 
@@ -6831,7 +6986,10 @@ const key = `chat/images/${Date.now()}_${safeName}`;
   res.json({ url });
 });
 
-app.post("/api/upload-chat-video", chatUpload.single("video"), async (req, res) => {
+app.post("/api/upload-chat-video",
+  spiritAuth,
+  chatUpload.single("video"),
+  async (req, res) => {
 
   if (!req.file) return res.status(400).json({ error: "No file" });
 
@@ -6858,7 +7016,10 @@ app.get("/", (_, res) => {
 
 
 
-app.post("/api/upload-avatar", avatarCoverUpload.single("avatar"), async (req, res) => {
+app.post("/api/upload-avatar",
+  spiritAuth,
+  avatarCoverUpload.single("avatar"),
+  async (req, res) => {
 
     if (!req.file) return res.status(400).json({ error: "No file" });
 
@@ -6867,7 +7028,7 @@ app.post("/api/upload-avatar", avatarCoverUpload.single("avatar"), async (req, r
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-zA-Z0-9._-]/g, "_");
 
-    const uid = req.headers["x-uid"] || "guest";
+    const uid = req.spiritUid;
 
     const key = `avatars/${uid}_${Date.now()}_${safeName}`;
 
@@ -6881,7 +7042,10 @@ app.post("/api/upload-avatar", avatarCoverUpload.single("avatar"), async (req, r
   }
 );
 
-app.post("/api/upload-cover", avatarCoverUpload.single("cover"), async (req, res) => {
+app.post("/api/upload-cover",
+  spiritAuth,
+  avatarCoverUpload.single("cover"),
+  async (req, res) => {
 
     if (!req.file) return res.status(400).json({ error: "No file" });
 
@@ -6890,7 +7054,7 @@ app.post("/api/upload-cover", avatarCoverUpload.single("cover"), async (req, res
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-zA-Z0-9._-]/g, "_");
 
-    const uid = req.headers["x-uid"] || "guest";
+    const uid = req.spiritUid;
 
     const key = `covers/${uid}_${Date.now()}_${safeName}`;
 
@@ -6905,6 +7069,7 @@ app.post("/api/upload-cover", avatarCoverUpload.single("cover"), async (req, res
 );
 
 app.post("/api/upload-post-image",
+  spiritAuth,
   postMediaUpload.single("image"),
   async (req, res) => {
 
@@ -6927,6 +7092,7 @@ app.post("/api/upload-post-image",
 });
 
 app.post("/api/upload-post-video",
+  spiritAuth,
   postMediaUpload.single("video"),
   async (req, res) => {
 
@@ -18990,6 +19156,54 @@ io.on("connection", socket => {
     broadcastVirtualLiveCounts();
 
   });
+
+});
+
+
+
+/* ==========================================
+   SECURITY - UPLOAD ERROR HANDLER
+========================================== */
+
+app.use((err, req, res, next) => {
+
+  if (res.headersSent) {
+    return next(err);
+  }
+
+
+  if (err.message === "INVALID_MEDIA_TYPE") {
+
+  return res.status(415).json({
+    ok: false,
+    error: "INVALID_MEDIA_TYPE",
+    message: "Unsupported file format."
+  });
+
+}
+
+
+  if (err instanceof multer.MulterError) {
+
+    if (err.code === "LIMIT_FILE_SIZE") {
+
+      return res.status(413).json({
+        ok: false,
+        error: "FILE_TOO_LARGE",
+        message: "File exceeds the maximum allowed size."
+      });
+
+    }
+
+    return res.status(400).json({
+      ok: false,
+      error: "INVALID_UPLOAD",
+      message: "Invalid upload request."
+    });
+
+  }
+
+  next(err);
 
 });
 
