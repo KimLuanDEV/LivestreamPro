@@ -3016,9 +3016,8 @@ body.lobby-page .lobby-linked-label {
 
 }
 
-
 /* ==========================================
-   LOBBY - IOS BOTTOM NAVIGATION FIX V2.0
+   LOBBY - STABLE BOTTOM TABBAR V3.0
    LIVESTREAM PRO
 ========================================== */
 
@@ -3029,72 +3028,136 @@ body.lobby-page .lobby-header-inner {
 }
 
 
-/* CORRECT IOS PAGE HEIGHT */
+/* DISABLE TABBAR MOVEMENT */
 
-html.ios-lobby-height-fix,
-html.ios-lobby-height-fix body.lobby-page {
+body.lobby-page .mobile-tabbar,
+body.lobby-page .mobile-tabbar.hide {
 
-  min-height: var(--lobby-screen-height) !important;
+  transform: none !important;
 
-  margin: 0 !important;
+  transition: none !important;
+  animation: none !important;
+
+  opacity: 1 !important;
+  visibility: visible !important;
+
+  pointer-events: auto !important;
+
+  box-sizing: border-box;
 }
 
 
-/* ANCHOR MENU TO REAL SCREEN HEIGHT */
+/* IOS STANDALONE SCREEN */
 
-html.ios-lobby-height-fix
+html.ios-lobby-stable {
+
+  height: var(--lobby-screen-height) !important;
+  min-height: 0 !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow: hidden !important;
+
+  overscroll-behavior: none;
+}
+
+
+/* STABLE LOBBY CONTAINER */
+
+html.ios-lobby-stable body.lobby-page {
+
+  position: relative !important;
+
+  width: 100% !important;
+
+  height: var(--lobby-screen-height) !important;
+
+  min-height: 0 !important;
+  max-height: none !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow: hidden !important;
+}
+
+
+/* INDEPENDENT SCROLLING CONTENT */
+
+html.ios-lobby-stable #lobbyScrollArea {
+
+  position: absolute;
+
+  top: 0;
+  left: 0;
+  right: 0;
+
+  bottom: var(--lobby-tabbar-height);
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  overscroll-behavior: contain;
+
+  -webkit-overflow-scrolling: touch;
+
+  scrollbar-width: none;
+}
+
+#lobbyScrollArea::-webkit-scrollbar {
+  display: none;
+}
+
+
+/* TABBAR - ANCHORED TO BODY */
+
+html.ios-lobby-stable
 body.lobby-page .mobile-tabbar {
 
-  position: fixed !important;
+  position: absolute !important;
 
-  top: calc(
-    var(--lobby-screen-height)
-    - 72px
-    - env(safe-area-inset-bottom, 0px)
-  ) !important;
-
-  bottom: auto !important;
+  top: auto !important;
+  bottom: 0 !important;
 
   left: 0 !important;
   right: 0 !important;
 
   width: 100% !important;
 
-  height: calc(
-    72px + env(safe-area-inset-bottom, 0px)
-  ) !important;
+  height: var(--lobby-tabbar-height) !important;
 
   margin: 0 auto !important;
 
-  box-sizing: border-box;
-
-  z-index: 9999 !important;
-}
-
-
-/* RESERVE SPACE FOR BOTTOM NAVIGATION */
-
-html.ios-lobby-height-fix
-body.lobby-page #grid.lobby-grid,
-
-html.ios-lobby-height-fix
-body.lobby-page #skeleton.lobby-grid {
+  padding-top: 9px !important;
 
   padding-bottom: calc(
-    105px + env(safe-area-inset-bottom, 0px)
+    8px + env(safe-area-inset-bottom, 0px)
   ) !important;
 
+  z-index: 9999 !important;
+
+  transform: none !important;
+
+  transition: none !important;
+  animation: none !important;
+
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+
+  background: #111216;
 }
 
 
-/* KEEP MEMBER DIRECTORY AT BOTTOM */
+/* REMOVE UNNECESSARY GRID BOTTOM GAP */
 
-html.ios-lobby-height-fix
-body.lobby-page #playerLobby {
+html.ios-lobby-stable
+body.lobby-page #grid.lobby-grid,
 
-  bottom: auto !important;
+html.ios-lobby-stable
+body.lobby-page #skeleton.lobby-grid {
 
-  height: var(--lobby-screen-height) !important;
+  padding-bottom: 20px !important;
 }
 
 </style>
@@ -5523,43 +5586,6 @@ function openPrivateChat(uid, name){
 
 
 
-let lastScroll = 0;
-
-const tabbar =
-  document.querySelector(".mobile-tabbar") ||
-  document.querySelector(".lp-tabbar");
-
-function isNearBottom(){
-  const scrollY = window.scrollY;
-  const winH = window.innerHeight;
-  const docH = document.body.scrollHeight;
-
-  return scrollY + winH >= docH - 120; // cách đáy 120px
-}
-
-window.addEventListener("scroll", ()=>{
-  if(!tabbar) return;
-
-  const cur = window.scrollY;
-
-  // 🔽 Vuốt xuống → ẩn
-  if(cur > lastScroll + 10){
-    tabbar.classList.add("hide");
-  }
-  // 🔼 Vuốt lên → hiện
-  else if(cur < lastScroll - 10){
-    tabbar.classList.remove("hide");
-  }
-
-  // 🧲 Gần đáy → ép hiện lại
-  if(isNearBottom()){
-    tabbar.classList.remove("hide");
-  }
-
-  lastScroll = cur;
-},{ passive:true });
-
-
 
 
 const btnToggleSearch = document.getElementById("btnToggleSearch");
@@ -6487,15 +6513,15 @@ playerSearch?.addEventListener("input", e=>{
 })();
 </script>
 
-
 <script>
 /* ==========================================
-   LOBBY - IOS SCREEN CORRECTION V2.0
+   LOBBY - STABLE IOS SCREEN V3.0
 ========================================== */
 
-(function initLobbyIOSFullscreen() {
+(function initLobbyStableScreen() {
 
   const root = document.documentElement;
+  const body = document.body;
 
   const isIOS =
     /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
@@ -6511,110 +6537,112 @@ playerSearch?.addEventListener("input", e=>{
   if (!isIOS || !isStandalone) return;
 
 
+  const tabbar =
+    document.querySelector(".mobile-tabbar");
+
+  const header =
+    document.querySelector(".lobby-header-full");
+
+  if (!tabbar || !header) return;
+
+
+  /* MEASURE SAFE AREA */
+
   const probe = document.createElement("div");
 
   probe.style.cssText = `
-    position: fixed;
+    position: absolute;
     visibility: hidden;
     pointer-events: none;
     padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   `;
 
-  document.body.appendChild(probe);
+  body.appendChild(probe);
+
+  const computed = getComputedStyle(probe);
+
+  const safeTop =
+    parseFloat(computed.paddingTop) || 0;
+
+  const safeBottom =
+    parseFloat(computed.paddingBottom) || 0;
+
+  probe.remove();
 
 
-  function syncLobbyHeight() {
+  /* DETERMINE INITIAL SCREEN HEIGHT */
 
-    const screenHeight = window.screen.height;
+  const viewportHeight = window.innerHeight;
 
-    const viewportHeight = window.innerHeight;
+  const missingHeight =
+    screen.height - viewportHeight;
 
-    const safeTop = parseFloat(
-      getComputedStyle(probe).paddingTop
-    ) || 0;
+  const needsCorrection =
+    safeTop > 0 &&
+    missingHeight > 0 &&
+    Math.abs(missingHeight - safeTop) <= 3;
 
-    const missingHeight =
-      screenHeight - viewportHeight;
-
-
-    const visualHeight =
-      window.visualViewport?.height ||
-      viewportHeight;
-
-    const keyboardOpen =
-      viewportHeight - visualHeight > 100;
+  const stableHeight = needsCorrection
+    ? screen.height
+    : viewportHeight;
 
 
-    const needsCorrection =
-      !keyboardOpen &&
-      safeTop > 0 &&
-      missingHeight > 0 &&
-      Math.abs(missingHeight - safeTop) <= 3;
+  /* LOCK HEIGHT ONCE */
+
+  root.style.setProperty(
+    "--lobby-screen-height",
+    `${stableHeight}px`
+  );
+
+  root.style.setProperty(
+    "--lobby-tabbar-height",
+    `${72 + safeBottom}px`
+  );
 
 
-    root.classList.toggle(
-      "ios-lobby-height-fix",
-      needsCorrection
-    );
+  /* CREATE INDEPENDENT SCROLL AREA */
+
+  const scrollArea = document.createElement("div");
+
+  scrollArea.id = "lobbyScrollArea";
+
+  header.parentNode.insertBefore(
+    scrollArea,
+    header
+  );
 
 
-    if (needsCorrection) {
+  /* MOVE ONLY MAIN LOBBY CONTENT */
 
-      root.style.setProperty(
-        "--lobby-screen-height",
-        `${screenHeight}px`
-      );
+  const elements = [
+    header,
+    document.querySelector(".lobby-filter-bar"),
+    document.querySelector(".lobby-section-heading"),
+    document.getElementById("skeleton"),
+    document.getElementById("grid"),
+    document.getElementById("empty")
+  ];
 
-    } else {
+  elements.forEach(element => {
 
-      root.style.removeProperty(
-        "--lobby-screen-height"
-      );
-
+    if (element) {
+      scrollArea.appendChild(element);
     }
 
-  }
+  });
 
 
-  syncLobbyHeight();
+  /* KEEP TABBAR OUTSIDE SCROLL AREA */
 
-  window.addEventListener(
-    "resize",
-    syncLobbyHeight
-  );
+  body.appendChild(tabbar);
 
-  window.addEventListener(
-    "pageshow",
-    syncLobbyHeight
-  );
+  tabbar.classList.remove("hide");
 
-  window.visualViewport?.addEventListener(
-    "resize",
-    syncLobbyHeight
-  );
 
-  document.addEventListener(
-    "visibilitychange",
-    () => {
+  /* ENABLE STABLE LAYOUT */
 
-      if (!document.hidden) {
-        syncLobbyHeight();
-      }
-
-    }
-  );
-
-  window.addEventListener(
-    "orientationchange",
-    () => {
-
-      setTimeout(syncLobbyHeight, 300);
-
-    }
-  );
-
-  setTimeout(syncLobbyHeight, 300);
-  setTimeout(syncLobbyHeight, 1000);
+  root.classList.add("ios-lobby-stable");
 
 })();
 </script>
