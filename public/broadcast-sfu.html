@@ -7982,6 +7982,258 @@ body:has(#sfuChatPanel.hidden)
 }
 
 
+/* ==========================================
+   SFU - MINIMAL CONTROL CENTER V1.0
+========================================== */
+
+/* Hide room information */
+
+#studioSettingsPanel .info {
+  display: none !important;
+}
+
+
+/* Hide title and description */
+
+#studioSettingsPanel #pageTitle,
+#studioSettingsPanel .studio-sheet-header p {
+  display: none !important;
+}
+
+
+/* Compact header */
+
+#studioSettingsPanel .studio-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 8px;
+
+  margin: 0 0 14px;
+  padding: 0;
+}
+
+
+/* CONTROL CENTER text */
+
+#studioSettingsPanel .studio-sheet-kicker {
+  display: block;
+
+  margin: 0;
+  padding: 0;
+
+  color: #DFBE83;
+
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 2px;
+
+  line-height: 1.2;
+}
+
+
+/* Compact close button */
+
+#studioSettingsClose {
+  width: 30px;
+  height: 30px;
+
+  padding: 0;
+
+  background: transparent;
+  border: none;
+  box-shadow: none;
+
+  color: #FFFFFF;
+  font-size: 26px;
+}
+
+
+/* Reduce unnecessary spacing */
+
+#studioSettingsPanel .studio-sheet-handle {
+  width: 34px;
+  height: 3px;
+
+  margin: 0 auto 12px;
+}
+
+#studioSettingsPanel {
+  padding-top: 10px;
+}
+
+
+/* Mobile optimization */
+
+@media (max-width: 430px) {
+
+  #studioSettingsPanel .studio-sheet-header {
+    margin-bottom: 12px;
+  }
+
+  #studioSettingsPanel .studio-sheet-kicker {
+    font-size: 11px;
+    letter-spacing: 1.8px;
+  }
+
+}
+
+
+
+/* ==========================================
+   SFU - MINIMAL CONTROL CENTER V2.0
+========================================== */
+
+/* Hide settings close button */
+
+#studioSettingsClose {
+  display: none !important;
+}
+
+/* Center control center title */
+
+#studioSettingsPanel .studio-sheet-header {
+  justify-content: center;
+  align-items: center;
+
+  margin: 0 0 16px;
+  padding: 0;
+
+  text-align: center;
+}
+
+#studioSettingsPanel .studio-sheet-kicker {
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 2px;
+}
+
+/* Compact sheet handle */
+
+#studioSettingsPanel .studio-sheet-handle {
+  margin-bottom: 12px;
+}
+
+/* Remove empty viewer control area */
+
+#studioSettingsPanel #viewerControls {
+  display: none !important;
+}
+
+
+
+/* ==========================================
+   SFU - WATCH & PLAY TOOLBAR BUTTON V1.0
+========================================== */
+
+#sfuBottomToolbar #sfuWatchPlayBtn {
+  position: relative !important;
+  inset: auto !important;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 var(--btn-size);
+
+  width: var(--btn-size);
+  min-width: var(--btn-size);
+  max-width: var(--btn-size);
+
+  height: var(--btn-size);
+  min-height: var(--btn-size);
+  max-height: var(--btn-size);
+
+  margin: 0;
+  padding: 0;
+
+  border-radius: 50%;
+  border: 1px solid rgba(223,190,131,.38);
+
+  background: rgba(20,22,27,.78);
+  color: #F0D49C;
+
+  box-shadow: 0 3px 12px rgba(0,0,0,.25);
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  pointer-events: auto;
+
+  transition:
+    transform .15s ease,
+    background .15s ease;
+}
+
+
+/* Game controller icon */
+
+#sfuBottomToolbar #sfuWatchPlayBtn svg {
+  display: block;
+
+  width: 21px;
+  height: 21px;
+
+  margin: 0;
+  flex-shrink: 0;
+}
+
+
+/* Hide text - icon only */
+
+#sfuBottomToolbar #sfuWatchPlayBtn span {
+  display: none !important;
+}
+
+
+/* Active game state */
+
+#sfuBottomToolbar #sfuWatchPlayBtn.active {
+  background: rgba(83,60,28,.92);
+
+  border-color: #E5C184;
+  color: #F5DDAF;
+
+  box-shadow:
+    0 0 10px rgba(223,190,131,.25);
+}
+
+
+/* Touch effect */
+
+#sfuBottomToolbar #sfuWatchPlayBtn:active {
+  transform: scale(.92);
+}
+
+
+/* VIEWER ONLY */
+
+body:not(.sfu-role-viewer) #sfuWatchPlayBtn {
+  display: none !important;
+}
+
+
+/* Mobile optimization */
+
+@media (max-width: 430px) {
+
+  #sfuBottomToolbar #sfuWatchPlayBtn svg {
+    width: 19px;
+    height: 19px;
+  }
+
+}
+
+@media (max-width: 360px) {
+
+  #sfuBottomToolbar #sfuWatchPlayBtn svg {
+    width: 17px;
+    height: 17px;
+  }
+
+}
+
+
 </style>
 
 
@@ -8926,16 +9178,18 @@ body:has(#sfuChatPanel.hidden)
     class="studio-settings-panel hidden"
     role="dialog"
     aria-modal="true"
-    aria-labelledby="pageTitle"
+    aria-labelledby="studioControlCenterTitle"
     tabindex="-1">
 
     <div class="studio-sheet-handle"></div>
 
     <div class="studio-sheet-header">
       <div>
-        <span class="studio-sheet-kicker">
-          CONTROL CENTER
-        </span>
+<span
+  class="studio-sheet-kicker"
+  id="studioControlCenterTitle">
+  CONTROL CENTER
+</span>
 
         <h1 id="pageTitle">
           Live Studio
@@ -11579,7 +11833,9 @@ function openStudioSettings() {
   );
 
   document.body.classList.add("settings-open");
-  studioSettingsClose.focus();
+  studioSettingsPanel.focus({
+  preventScroll: true
+});
 }
 
 function closeStudioSettings() {
@@ -17159,6 +17415,22 @@ const GAMES = Object.freeze({
     const settingsButton =
       document.getElementById("studioSettingsBtn");
 
+
+      const watchPlayButton =
+  document.getElementById("sfuWatchPlayBtn");
+
+if (watchPlayButton) {
+
+  watchPlayButton.setAttribute(
+    "aria-label",
+    "Watch & Play"
+  );
+
+  watchPlayButton.title = "Watch & Play";
+
+}
+
+
     if (!chatForm || !chatPanel || !settingsButton) {
       return;
     }
@@ -17189,6 +17461,7 @@ const GAMES = Object.freeze({
   chatForm,
   chatToggle,
   voiceToggle,
+  watchPlayButton,
   settingsButton,
   giftToggle
 
