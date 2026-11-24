@@ -6940,6 +6940,131 @@ body.sfu-role-host
 
 
 
+/* ==========================================
+   SFU - COMPACT BOTTOM COMMENT BAR V1.0
+========================================== */
+
+/* COMMENT FORM */
+
+#sfuChatForm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  width: calc(
+    100% - 120px - env(safe-area-inset-right, 0px)
+  );
+
+  max-width: none;
+
+  margin: 0;
+
+  padding:
+    6px
+    6px
+    calc(18px + env(safe-area-inset-bottom, 0px))
+    calc(12px + env(safe-area-inset-left, 0px));
+
+  pointer-events: auto;
+}
+
+/* COMMENT INPUT */
+
+#sfuChatInput {
+  flex: 1 1 0;
+
+  width: 0;
+  min-width: 0;
+
+  height: 36px;
+  padding: 0 12px;
+
+  border-radius: 999px;
+
+  background: rgba(20, 22, 27, .68);
+  border: 1px solid rgba(255, 255, 255, .2);
+
+  font-size: 16px;
+}
+
+/* COMMENT PLACEHOLDER */
+
+#sfuChatInput::placeholder {
+  font-size: 12px;
+  color: rgba(255, 255, 255, .65);
+}
+
+/* SEND COMMENT BUTTON */
+
+#sfuChatSend {
+  flex: 0 0 36px;
+
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+
+  padding: 0;
+  border-radius: 50%;
+}
+
+#sfuChatSend .sfu-send-icon {
+  width: 17px;
+  height: 17px;
+}
+
+/* SETTINGS - BOTTOM POSITION */
+
+#studioSettingsBtn {
+  position: fixed;
+  z-index: 16;
+
+  right: calc(
+    78px + env(safe-area-inset-right, 0px)
+  );
+
+  bottom: calc(
+    18px + env(safe-area-inset-bottom, 0px)
+  );
+
+  display: grid;
+  place-items: center;
+
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+
+  padding: 0;
+
+  border-radius: 50%;
+  border: 1px solid rgba(223, 190, 131, .45);
+
+  background: rgba(20, 22, 27, .78);
+  color: #F0D49C;
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  pointer-events: auto;
+}
+
+#studioSettingsBtn .studio-icon {
+  width: 19px;
+  height: 19px;
+}
+
+/* MOBILE ALIGNMENT */
+
+@media (max-width: 480px) {
+
+  #sfuChatForm {
+    padding-bottom: calc(
+      28px + env(safe-area-inset-bottom, 0px)
+    );
+  }
+
+}
+
+
 
 </style>
 
@@ -7377,20 +7502,6 @@ body.sfu-role-host
 
 
 
-    <button
-      type="button"
-      id="studioSettingsBtn"
-      class="studio-settings-button"
-      aria-label="Open broadcast controls"
-      aria-controls="studioSettingsPanel"
-      aria-expanded="false">
-
-      <svg class="studio-icon">
-        <use href="#ico-settings"></use>
-      </svg>
-
-    </button>
-
   </div>
 
 </div>
@@ -7743,6 +7854,23 @@ body.sfu-role-host
      role="status"></p>
 
 </section>
+
+
+
+
+    <button
+      type="button"
+      id="studioSettingsBtn"
+      class="studio-settings-button"
+      aria-label="Open broadcast controls"
+      aria-controls="studioSettingsPanel"
+      aria-expanded="false">
+
+      <svg class="studio-icon">
+        <use href="#ico-settings"></use>
+      </svg>
+
+    </button>
 
 
 <!-- ==========================================
