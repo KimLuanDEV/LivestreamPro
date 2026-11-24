@@ -3017,13 +3017,10 @@ body.lobby-page .lobby-linked-label {
 }
 
 
-
 /* ==========================================
-   LOBBY - IOS PWA SAFE AREA FIX V1.0
+   LOBBY - IOS BOTTOM NAVIGATION FIX V2.0
    LIVESTREAM PRO
 ========================================== */
-
-/* SAFE AREA HEADER */
 
 body.lobby-page .lobby-header-inner {
   padding-top: calc(
@@ -3032,7 +3029,7 @@ body.lobby-page .lobby-header-inner {
 }
 
 
-/* IOS PWA HEIGHT CORRECTION */
+/* CORRECT IOS PAGE HEIGHT */
 
 html.ios-lobby-height-fix,
 html.ios-lobby-height-fix body.lobby-page {
@@ -3040,23 +3037,42 @@ html.ios-lobby-height-fix body.lobby-page {
   min-height: var(--lobby-screen-height) !important;
 
   margin: 0 !important;
-
 }
 
 
-/* ANCHOR NAVIGATION TO REAL SCREEN BOTTOM */
+/* ANCHOR MENU TO REAL SCREEN HEIGHT */
 
 html.ios-lobby-height-fix
 body.lobby-page .mobile-tabbar {
 
-  bottom: calc(
-    0px - var(--lobby-height-gap, 0px)
+  position: fixed !important;
+
+  top: calc(
+    var(--lobby-screen-height)
+    - 72px
+    - env(safe-area-inset-bottom, 0px)
   ) !important;
 
+  bottom: auto !important;
+
+  left: 0 !important;
+  right: 0 !important;
+
+  width: 100% !important;
+
+  height: calc(
+    72px + env(safe-area-inset-bottom, 0px)
+  ) !important;
+
+  margin: 0 auto !important;
+
+  box-sizing: border-box;
+
+  z-index: 9999 !important;
 }
 
 
-/* KEEP GRID CONTENT ABOVE NAVIGATION */
+/* RESERVE SPACE FOR BOTTOM NAVIGATION */
 
 html.ios-lobby-height-fix
 body.lobby-page #grid.lobby-grid,
@@ -3071,17 +3087,15 @@ body.lobby-page #skeleton.lobby-grid {
 }
 
 
-/* SAFE AREA FOR MEMBER DIRECTORY */
+/* KEEP MEMBER DIRECTORY AT BOTTOM */
 
 html.ios-lobby-height-fix
 body.lobby-page #playerLobby {
 
-  bottom: calc(
-    0px - var(--lobby-height-gap, 0px)
-  ) !important;
+  bottom: auto !important;
 
+  height: var(--lobby-screen-height) !important;
 }
-
 
 </style>
 
@@ -6476,7 +6490,7 @@ playerSearch?.addEventListener("input", e=>{
 
 <script>
 /* ==========================================
-   LOBBY - IOS PWA VIEWPORT CORRECTION V1.0
+   LOBBY - IOS SCREEN CORRECTION V2.0
 ========================================== */
 
 (function initLobbyIOSFullscreen() {
@@ -6497,39 +6511,51 @@ playerSearch?.addEventListener("input", e=>{
   if (!isIOS || !isStandalone) return;
 
 
+  const probe = document.createElement("div");
+
+  probe.style.cssText = `
+    position: fixed;
+    visibility: hidden;
+    pointer-events: none;
+    padding-top: env(safe-area-inset-top, 0px);
+  `;
+
+  document.body.appendChild(probe);
+
+
   function syncLobbyHeight() {
 
-    const probe = document.createElement("div");
-
-    probe.style.cssText = `
-      position: fixed;
-      visibility: hidden;
-      pointer-events: none;
-      padding-top: env(safe-area-inset-top, 0px);
-    `;
-
-    document.body.appendChild(probe);
-
-    const safeTop =
-      parseFloat(
-        getComputedStyle(probe).paddingTop
-      ) || 0;
-
-    probe.remove();
-
-
-    const screenHeight = screen.height;
+    const screenHeight = window.screen.height;
 
     const viewportHeight = window.innerHeight;
+
+    const safeTop = parseFloat(
+      getComputedStyle(probe).paddingTop
+    ) || 0;
 
     const missingHeight =
       screenHeight - viewportHeight;
 
 
+    const visualHeight =
+      window.visualViewport?.height ||
+      viewportHeight;
+
+    const keyboardOpen =
+      viewportHeight - visualHeight > 100;
+
+
     const needsCorrection =
+      !keyboardOpen &&
       safeTop > 0 &&
       missingHeight > 0 &&
       Math.abs(missingHeight - safeTop) <= 3;
+
+
+    root.classList.toggle(
+      "ios-lobby-height-fix",
+      needsCorrection
+    );
 
 
     if (needsCorrection) {
@@ -6539,27 +6565,10 @@ playerSearch?.addEventListener("input", e=>{
         `${screenHeight}px`
       );
 
-      root.style.setProperty(
-        "--lobby-height-gap",
-        `${missingHeight}px`
-      );
-
-      root.classList.add(
-        "ios-lobby-height-fix"
-      );
-
     } else {
-
-      root.classList.remove(
-        "ios-lobby-height-fix"
-      );
 
       root.style.removeProperty(
         "--lobby-screen-height"
-      );
-
-      root.style.removeProperty(
-        "--lobby-height-gap"
       );
 
     }
@@ -6579,18 +6588,36 @@ playerSearch?.addEventListener("input", e=>{
     syncLobbyHeight
   );
 
-  window.addEventListener(
-    "orientationchange",
+  window.visualViewport?.addEventListener(
+    "resize",
+    syncLobbyHeight
+  );
+
+  document.addEventListener(
+    "visibilitychange",
     () => {
-      setTimeout(syncLobbyHeight, 300);
+
+      if (!document.hidden) {
+        syncLobbyHeight();
+      }
+
     }
   );
 
-  setTimeout(syncLobbyHeight, 500);
+  window.addEventListener(
+    "orientationchange",
+    () => {
+
+      setTimeout(syncLobbyHeight, 300);
+
+    }
+  );
+
+  setTimeout(syncLobbyHeight, 300);
+  setTimeout(syncLobbyHeight, 1000);
 
 })();
 </script>
-
 
 
 </body>
