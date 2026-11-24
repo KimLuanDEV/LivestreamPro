@@ -5721,9 +5721,19 @@ app.get("/api/inbox", (req, res) => {
 
 
 
+/* ==========================================
+   WITHDRAWAL HISTORY - 30 DAYS
+   LIVESTREAM PRO
+========================================== */
+
+const WITHDRAW_HISTORY_DAYS = 30;
+
+const WITHDRAW_HISTORY_TTL =
+  WITHDRAW_HISTORY_DAYS * 24 * 60 * 60 * 1000;
+
 app.get("/api/withdraw-history", (req, res) => {
 
-  const uid = req.auth.uid;
+  const uid = req.auth?.uid;
 
   if (!uid) {
     return res.status(401).json({
@@ -5743,12 +5753,52 @@ app.get("/api/withdraw-history", (req, res) => {
 
   res.setHeader("Cache-Control", "no-store");
 
-  const mine = loadWithdraws().filter(
-    item => item.uid === uid
-  );
+  const now = Date.now();
+  const cutoff = now - WITHDRAW_HISTORY_TTL;
+
+  const mine = loadWithdraws()
+
+    .filter(item => {
+
+      if (!item || item.uid !== uid) {
+        return false;
+      }
+
+      const status = String(
+        item.status || "pending"
+      ).toLowerCase();
+
+      // Always retain unfinished transactions
+      if (
+        status === "pending" ||
+        status === "processing"
+      ) {
+        return true;
+      }
+
+      // Retain completed transactions for 30 days
+      const timestamp = Number(
+        item.handledAt || item.createdAt || 0
+      );
+
+      return (
+        Number.isFinite(timestamp) &&
+        timestamp >= cutoff
+      );
+
+    })
+
+    // Newest transactions first
+    .sort((a, b) =>
+      Number(b.createdAt || 0) -
+      Number(a.createdAt || 0)
+    );
 
   return res.json({
     ok: true,
+    retentionDays: WITHDRAW_HISTORY_DAYS,
+    serverTime: now,
+    total: mine.length,
     list: mine
   });
 

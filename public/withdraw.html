@@ -1565,47 +1565,87 @@ body.page-withdraw .wd-transaction-note {
 </div>
 
 
-  <!-- HISTORY -->
-  <section class="wd-history">
+<!-- ==========================================
+     WITHDRAWAL HISTORY - 30 DAYS
+========================================== -->
 
-    <div class="wd-history-heading">
+<section class="wd-history">
+
+  <div class="wd-history-heading">
+
     <h2>
-  <span data-wd-icon="history"></span>
-  Transaction History
-</h2>
-      <span class="wd-history-tag">TRANSACTIONS</span>
+      <span data-wd-icon="history"></span>
+      Transaction History
+    </h2>
+
+    <span class="wd-history-tag">
+      LAST 30 DAYS
+    </span>
+
+  </div>
+
+  <!-- RETENTION INFORMATION -->
+
+  <div class="wd-history-retention">
+
+    <span
+      data-wd-icon="clock"
+      class="wd-retention-icon">
+    </span>
+
+    <div>
+      <strong>30-Day Transaction Records</strong>
+
+      <p>
+        Completed transactions are available for
+        30 days. Pending and processing requests
+        remain visible until completed.
+      </p>
     </div>
 
-    <div class="wd-history-scroll">
-      <table class="withdraw-table">
-<thead>
-  <tr>
-    <th>Date & Time</th>
-    <th>Diamonds</th>
-    <th>Payout</th>
-    <th>Status</th>
-    <th>Notes</th>
-  </tr>
-</thead>
+  </div>
 
-        <tbody id="withdrawHistoryBody"></tbody>
-      </table>
-    </div>
+  <!-- TRANSACTION TABLE -->
 
-<p
-  class="wd-empty"
-  id="withdrawEmpty"
-  style="display:none">
-  No withdrawal transactions found.
-</p>
+  <div class="wd-history-scroll">
 
-    <div class="withdraw-pagination" id="withdrawPagination"></div>
+    <table class="withdraw-table">
 
-<p class="wd-history-tip">
-  Swipe horizontally to view all transaction details.
-</p>
+      <thead>
+        <tr>
+          <th>Date &amp; Time</th>
+          <th>Diamonds</th>
+          <th>Payout</th>
+          <th>Status</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
 
-  </section>
+      <tbody id="withdrawHistoryBody"></tbody>
+
+    </table>
+
+  </div>
+
+  <p
+    class="wd-empty"
+    id="withdrawEmpty"
+    style="display:none">
+
+    No recent withdrawal transactions found.
+
+  </p>
+
+  <div
+    class="withdraw-pagination"
+    id="withdrawPagination">
+  </div>
+
+  <p class="wd-history-tip">
+    Swipe horizontally to view all transaction details.
+  </p>
+
+</section>
 
 <footer class="wd-footer">
   LIVESTREAM PRO

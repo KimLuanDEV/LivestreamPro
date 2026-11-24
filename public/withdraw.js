@@ -364,23 +364,76 @@ updateBankSelection();
 
 
 
-// ===== 📜 LỊCH SỬ RÚT TIỀN =====
-async function loadWithdrawHistory(page = 1) {
-  const me = JSON.parse(localStorage.getItem("user_profile") || "{}");
-  if (!me.uid) return;
+/* ==========================================
+   WITHDRAW HISTORY - 30 DAY RECORDS
+========================================== */
 
-  withdrawPage = page;
+let withdrawHistoryLoading = false;
 
-  const res = await fetch("/api/withdraw-history", {
-    headers: { "x-uid": me.uid }
-  });
+async function loadWithdrawHistory(
+  page = withdrawPage
+) {
 
-  const data = await res.json();
-  if (!data.ok) return;
+  if (withdrawHistoryLoading) return;
 
-  withdrawCache = data.list || [];
+  withdrawHistoryLoading = true;
 
-  renderWithdrawPage();
+  try {
+
+    const me = JSON.parse(
+      localStorage.getItem("user_profile") || "{}"
+    );
+
+    if (!me.uid) return;
+
+    const res = await fetch("/api/withdraw-history", {
+      method: "GET",
+      cache: "no-store",
+      credentials: "same-origin",
+
+      headers: {
+        "x-uid": me.uid
+      }
+    });
+
+    if (!res.ok) return;
+
+    const data = await res.json();
+
+    if (!data.ok) return;
+
+    withdrawCache = Array.isArray(data.list)
+      ? data.list
+      : [];
+
+    const totalPages = Math.max(
+      1,
+      Math.ceil(
+        withdrawCache.length / WITHDRAW_PAGE_SIZE
+      )
+    );
+
+    // Preserve the current pagination position
+    withdrawPage = Math.min(
+      Math.max(1, page),
+      totalPages
+    );
+
+    renderWithdrawPage();
+
+  } catch (error) {
+
+    console.warn(
+      "[WITHDRAW HISTORY] Refresh failed:",
+      error.message
+    );
+
+  } finally {
+
+    withdrawHistoryLoading = false;
+
+  }
+
 }
 
 
@@ -1103,3 +1156,39 @@ document.getElementById(
 wdConvertLoadBalance();
 
 
+/* ==========================================
+   WITHDRAW HISTORY - AUTO REFRESH
+========================================== */
+
+// Refresh when returning to the page
+
+document.addEventListener(
+  "visibilitychange",
+  () => {
+
+    if (document.visibilityState === "visible") {
+      loadWithdrawHistory();
+    }
+
+  }
+);
+
+// Refresh every 60 seconds while visible
+
+setInterval(() => {
+
+  if (document.visibilityState === "visible") {
+    loadWithdrawHistory();
+  }
+
+}, 60 * 1000);
+
+// Refresh after restoring from browser cache
+
+window.addEventListener("pageshow", event => {
+
+  if (event.persisted) {
+    loadWithdrawHistory();
+  }
+
+});
