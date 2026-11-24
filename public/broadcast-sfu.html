@@ -5,6 +5,20 @@
 <meta charset="UTF-8">
 <meta name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+ <meta name="apple-mobile-web-app-capable"
+      content="yes">
+
+<meta name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent">
+
+<meta name="mobile-web-app-capable"
+      content="yes">
+
+<meta name="theme-color"
+      content="#000000">
+      
+      
 <title>SFU Live Studio | LivestreamPro</title>
 
 
@@ -8232,6 +8246,153 @@ body:not(.sfu-role-viewer) #sfuWatchPlayBtn {
   }
 
 }
+
+
+
+/* ==========================================
+   SFU - EDGE TO EDGE FULLSCREEN V2.0
+   LIVESTREAM PRO
+========================================== */
+
+html,
+body {
+  position: fixed;
+
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow: hidden;
+  overscroll-behavior: none;
+
+  background: #000;
+}
+
+
+/* FULL VIEWPORT STUDIO */
+
+.studio {
+  position: fixed !important;
+
+  inset: 0 !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  max-width: none !important;
+  max-height: none !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border: none !important;
+  border-radius: 0 !important;
+
+  overflow: hidden;
+
+  background: #000;
+}
+
+
+/* FULL SCREEN VIDEO AREA
+   Exclude PK and Watch & Play
+*/
+
+.studio:not(.sfu-pk-active):not(.sfu-watch-playing)
+.video-area {
+
+  position: absolute !important;
+
+  inset: 0 !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  max-width: none !important;
+  max-height: none !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border: none !important;
+  border-radius: 0 !important;
+
+  overflow: hidden;
+}
+
+
+/* FULL REMOTE MEDIA CONTAINER */
+
+.studio:not(.sfu-pk-active):not(.sfu-watch-playing)
+#remoteMedia {
+
+  position: absolute !important;
+
+  inset: 0 !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow: hidden;
+}
+
+
+/* HOST AND VIEWER VIDEO */
+
+.studio:not(.sfu-pk-active):not(.sfu-watch-playing)
+#localVideo,
+
+.studio:not(.sfu-pk-active):not(.sfu-watch-playing)
+#remoteMedia video {
+
+  position: absolute !important;
+
+  inset: 0 !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  min-width: 0 !important;
+  min-height: 0 !important;
+
+  max-width: none !important;
+  max-height: none !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border: none !important;
+  border-radius: 0 !important;
+
+  object-fit: cover !important;
+  object-position: center center !important;
+
+  background: #000;
+}
+
+
+/* PRESERVE HIDDEN STATE */
+
+.studio .hidden {
+  display: none !important;
+}
+
+
+/* PREVENT IOS PAGE SCROLL */
+
+html,
+body,
+.studio {
+  overscroll-behavior-y: none;
+}
+
 
 
 </style>
