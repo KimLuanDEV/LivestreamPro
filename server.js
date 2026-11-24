@@ -822,30 +822,6 @@ securityFirewall.installHttp(app, {
 
 
 
-/* ==========================================
-   TEMPORARY EDGE CONNECTION TEST
-========================================== */
-
-app.get("/api/edge-check", (req, res) => {
-
-  res.setHeader("Cache-Control", "no-store");
-
-  const verified = lspVerifyCloudflare(req);
-
-  const validClientIP = Boolean(
-    verified &&
-    typeof req.headers["cf-connecting-ip"] === "string" &&
-    lspEdgeNet.isIP(req.headers["cf-connecting-ip"])
-  );
-
-  return res.json({
-    ok: verified,
-    cloudflareVerified: verified,
-    clientIpVerified: validClientIP,
-    enforced: LSP_EDGE_REQUIRED
-  });
-
-});
 
 
 console.log(
@@ -4385,82 +4361,142 @@ app.use(express.urlencoded({ extended: true }));
 
 const SPIRIT_SECRET = process.env.SPIRIT_SESSION_SECRET;
 
+
+/* ==========================================
+   LIVESTREAM PRO - AUTH SECURITY
+========================================== */
+
+const securityAuth = require("./security-auth")
+  .createAuth({
+
+    secret: SPIRIT_SECRET,
+
+    loadUsers: () => loadUsers(),
+
+    allowedOrigins: [
+      ...LSP_ALLOWED_ORIGINS
+    ]
+
+  });
+
+console.log(
+  "[SECURITY AUTH] V1.0 enabled"
+);
+
+
+/* ==========================================
+   PROTECTED USER API ROUTES
+========================================== */
+
+app.all([
+
+  "/api/deposit-history",
+
+  "/api/time-race/my-history",
+
+  "/api/inbox",
+
+  "/api/withdraw-history",
+
+  "/api/withdraw-request",
+
+  "/api/me/coin",
+
+  "/api/profile/bank-default",
+
+  "/api/market/order/received",
+
+  "/api/market/order/dispute",
+
+  "/api/market/order/hide",
+
+  "/api/market/order/done",
+
+  "/api/market/order/contact",
+
+  "/api/market/order/cancel",
+
+  "/api/market/product/add",
+
+  "/api/market/product/update",
+
+  "/api/market/product/buy",
+
+  "/api/market/product/delete",
+
+  "/api/market/extend",
+
+  "/api/market/rent"
+
+], securityAuth.requireAuth);
+
+
 function spiritSign(value) {
   return crypto.createHmac("sha256", SPIRIT_SECRET)
     .update(value).digest("base64url");
 }
 
+
+
 function spiritCreateSession(uid) {
-  if (!SPIRIT_SECRET || SPIRIT_SECRET.length < 32) {
-    throw new Error("SPIRIT_SESSION_SECRET is missing");
-  }
 
-  const payload = Buffer.from(JSON.stringify({
-    uid: String(uid),
-    exp: Date.now() + 7 * 86400000,
-    nonce: crypto.randomBytes(16).toString("hex")
-  })).toString("base64url");
+  if (
+    !SPIRIT_SECRET ||
+    SPIRIT_SECRET.length < 32
+  ) {
 
-  return payload + "." + spiritSign(payload);
-}
-
-function spiritAuth(req, res, next) {
-  if (!SPIRIT_SECRET || SPIRIT_SECRET.length < 32) {
-    return res.status(503).json({
-      ok: false, error: "GAME_NOT_CONFIGURED"
-    });
-  }
-
-  try {
-    const raw = (req.headers.cookie || "")
-      .split(";")
-      .map(s => s.trim())
-      .find(s => s.startsWith("lsp_spirit_sid="));
-
-    if (!raw) throw Error("Missing session");
-
-    const token = raw.slice("lsp_spirit_sid=".length);
-    const parts = token.split(".");
-    if (parts.length !== 2) throw Error("Invalid token");
-
-    const [payload, signature] = parts;
-    const expected = spiritSign(payload);
-
-    const a = Buffer.from(signature);
-    const b = Buffer.from(expected);
-
-    if (a.length !== b.length ||
-        !crypto.timingSafeEqual(a, b)) {
-      throw Error("Invalid signature");
-    }
-
-    const session = JSON.parse(
-      Buffer.from(payload, "base64url").toString()
+    throw new Error(
+      "SPIRIT_SESSION_SECRET is missing"
     );
 
-    if (session.exp <= Date.now()) {
-      throw Error("Expired session");
-    }
-
-    const db = loadUsers();
-    const user = db[session.uid];
-
-    if (!user?.profile || user.profile.accountBlocked) {
-      throw Error("Account unavailable");
-    }
-
-    req.spiritUid = session.uid;
-    next();
-
-  } catch {
-    res.status(401).json({
-      ok: false,
-      error: "SESSION_EXPIRED",
-      message: "Please sign in again."
-    });
   }
+
+  const users = loadUsers();
+
+  if (!Object.hasOwn(users, uid)) {
+    throw new Error("Invalid account");
+  }
+
+  const account = users[uid];
+
+  if (
+    !account?.profile ||
+    account.profile.accountBlocked
+  ) {
+    throw new Error("Account unavailable");
+  }
+
+  const payload = Buffer.from(
+    JSON.stringify({
+
+      uid: String(uid),
+
+      exp: Date.now() + 7 * 86400000,
+
+      nonce: crypto
+        .randomBytes(16)
+        .toString("hex"),
+
+      ver: account.authVersion || "legacy"
+
+    })
+  ).toString("base64url");
+
+  return payload + "." + spiritSign(payload);
+
 }
 
+
+
+function spiritAuth(req, res, next) {
+
+  return securityAuth.requireAuth(
+    req,
+    res,
+    next
+  );
+
+}
 
 
 
@@ -4470,60 +4506,24 @@ function spiritAuth(req, res, next) {
 
 function getVerifiedTransferUid(socket) {
 
-  if (!SPIRIT_SECRET || SPIRIT_SECRET.length < 32) {
-    return null;
-  }
-
   try {
-    const cookie = String(
-      socket.handshake.headers.cookie || ""
-    );
 
-    const entry = cookie.split(";")
-      .map(s => s.trim())
-      .find(s => s.startsWith("lsp_spirit_sid="));
+    const identity =
+      securityAuth.getIdentity(
+        socket.handshake.headers.cookie
+      );
 
-    if (!entry) return null;
-
-    const token = entry.slice("lsp_spirit_sid=".length);
-    const parts = token.split(".");
-
-    if (parts.length !== 2) return null;
-
-    const [payload, signature] = parts;
-
-    const expected = spiritSign(payload);
-
-    const a = Buffer.from(signature);
-    const b = Buffer.from(expected);
-
-    if (
-      a.length !== b.length ||
-      !crypto.timingSafeEqual(a, b)
-    ) {
-      return null;
-    }
-
-    const session = JSON.parse(
-      Buffer.from(payload, "base64url").toString("utf8")
-    );
-
-    if (
-      !session.uid ||
-      !Number.isFinite(session.exp) ||
-      session.exp <= Date.now()
-    ) {
-      return null;
-    }
-
-    return String(session.uid);
+    return identity
+      ? identity.uid
+      : null;
 
   } catch {
+
     return null;
+
   }
+
 }
-
-
 
 /* ==========================================
    LIVESTREAMPRO - VERIFIED SOCKET IDENTITY
@@ -4611,6 +4611,95 @@ socket.data.sessionId = crypto
   }
 });
 
+
+/* ==========================================
+   SOCKET SESSION LIFECYCLE PROTECTION
+========================================== */
+
+io.on("connection", socket => {
+
+  if (!socket.data.authenticated) {
+    return;
+  }
+
+  const session =
+    securityAuth.verifySession(
+      socket.handshake.headers.cookie
+    );
+
+  if (!session) {
+
+    socket.disconnect(true);
+    return;
+
+  }
+
+  // Automatically disconnect expired sessions
+  const expiresIn =
+    session.expiresAt - Date.now();
+
+  if (expiresIn <= 0) {
+
+    socket.disconnect(true);
+    return;
+
+  }
+
+  const expiryTimer = setTimeout(() => {
+
+    socket.emit("auth-error", {
+      message: "Session expired. Please sign in again."
+    });
+
+    socket.disconnect(true);
+
+  }, Math.min(expiresIn, 2147483647));
+
+  expiryTimer.unref();
+
+  socket.once("disconnect", () => {
+
+    clearTimeout(expiryTimer);
+
+  });
+
+  socket.use((packet, next) => {
+
+    if (
+      !securityAuth.getSocketIdentity(socket)
+    ) {
+
+      const ack = packet[packet.length - 1];
+
+      if (typeof ack === "function") {
+
+        ack({
+          ok: false,
+          error: "SESSION_EXPIRED"
+        });
+
+      }
+
+      socket.emit("auth-error", {
+
+        message:
+          "Session invalid. Please sign in again."
+
+      });
+
+      next(new Error("SESSION_EXPIRED"));
+
+      socket.disconnect(true);
+
+      return;
+
+    }
+
+    next();
+
+  });
+
+});
 
 
 /* ============================================
@@ -5383,8 +5472,21 @@ endAt: dtpRound.endAt
 // ================================
 // 🧠 HEALTH – GET DATA
 // ================================
-app.get("/api/health/:uid", (req, res) => {
-  const { uid } = req.params;
+app.get(
+  "/api/health/:uid",
+  securityAuth.requireAuth,
+  securityAuth.requireSelf,
+  (req, res) => {
+  const uid = req.auth.uid;
+
+if (!/^[A-Za-z0-9_-]{1,128}$/.test(uid)) {
+
+  return res.status(400).json({
+    ok: false,
+    error: "INVALID_UID"
+  });
+
+}
 
   if (!uid) {
     return res.status(400).json({ ok: false, error: "NO_UID" });
@@ -5423,8 +5525,21 @@ app.get("/api/health/:uid", (req, res) => {
 // ================================
 // 🧠 HEALTH – SAVE DATA
 // ================================
-app.post("/api/health/:uid", (req, res) => {
-  const { uid } = req.params;
+app.post(
+  "/api/health/:uid",
+  securityAuth.requireAuth,
+  securityAuth.requireSelf,
+  (req, res) => {
+  const uid = req.auth.uid;
+
+if (!/^[A-Za-z0-9_-]{1,128}$/.test(uid)) {
+
+  return res.status(400).json({
+    ok: false,
+    error: "INVALID_UID"
+  });
+
+}
   const healthData = req.body;
 
   if (!uid) {
@@ -5487,7 +5602,7 @@ app.get("/api/inbox", (req, res) => {
 
 app.get("/api/withdraw-history", (req, res) => {
 
-  const uid = mhVerifiedUid(req.headers.cookie);
+  const uid = req.auth.uid;
 
   if (!uid) {
     return res.status(401).json({
@@ -10953,7 +11068,36 @@ if(!ok) return res.json({ error:"invalid" });
 
 acc.password = await bcrypt.hash(String(newPassword), 10);
 
+// Revoke all previous account sessions
+securityAuth.revokeAccount(acc);
+
   saveUsers(db);
+
+  // Disconnect existing authenticated sockets
+for (const client of io.sockets.sockets.values()) {
+
+  if (
+    client.data.uid === username &&
+    client.data.authenticated === true
+  ) {
+
+    client.emit("auth-error", {
+      message:
+        "Password changed. Please sign in again."
+    });
+
+    client.disconnect(true);
+
+  }
+
+}
+
+res.clearCookie("lsp_spirit_sid", {
+  httpOnly: true,
+  secure: true,
+  sameSite: "lax",
+  path: "/"
+});
 
   res.json({ ok:true });
 });
