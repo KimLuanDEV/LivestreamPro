@@ -4562,6 +4562,219 @@ body.w8-theme-titanium .wheel8-notice-close {
 
 
 
+/* ==========================================
+   MILITARY - COMPACT CONTROL PANEL V3
+========================================== */
+
+.tactical-card.control-panel {
+  padding: 12px;
+  border-radius: 12px;
+}
+
+/* ===== COMPACT HEADER ===== */
+
+.control-panel .tactical-card-head {
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.control-panel .head-index {
+  margin-bottom: 3px;
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+}
+
+.control-panel .head-text h2 {
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+/* Ẩn dòng mô tả phụ */
+
+.control-panel .head-text p {
+  display: none;
+}
+
+/* Thu nhỏ biểu tượng góc phải */
+
+.control-panel .head-symbol {
+  width: 30px;
+  height: 30px;
+
+  font-size: 19px;
+
+  border-radius: 6px;
+}
+
+/* ===== SECTION LABEL ===== */
+
+.control-panel .control-section-label {
+  margin: 8px 0 6px;
+
+  font-size: 9px;
+  letter-spacing: .8px;
+}
+
+.control-panel .control-section-label span:last-child {
+  font-size: 9px;
+  letter-spacing: .5px;
+}
+
+/* ===== SLOT GRID ===== */
+
+.control-panel .override-grid-img {
+  display: grid;
+
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  gap: 6px;
+  margin: 0;
+}
+
+.control-panel .override-grid-img img {
+  display: block;
+
+  width: 100%;
+  height: 62px;
+
+  padding: 5px;
+  margin: 0;
+
+  object-fit: contain;
+  border-radius: 7px;
+
+  background: linear-gradient(
+    145deg,
+    #233026,
+    #101813
+  );
+
+  border: 1px solid #3c4d40;
+
+  box-shadow: none;
+  filter: none;
+}
+
+/* ===== SPECIAL EVENT SECTION ===== */
+
+.control-panel .special-label {
+  margin-top: 10px;
+  padding-top: 8px;
+
+  border-top: 1px solid #354239;
+}
+
+.control-panel .event-grid {
+  display: grid;
+
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 6px;
+}
+
+/* ===== HORIZONTAL EVENT CARD ===== */
+
+.control-panel .event-option {
+  position: relative;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+  padding: 5px 8px;
+
+  min-height: 56px;
+
+  background: linear-gradient(
+    145deg,
+    #282a1f,
+    #141b15
+  );
+
+  border: 1px solid #71664c;
+  border-radius: 7px;
+}
+
+/* Bỏ chữ EVENT A / EVENT B */
+
+.control-panel .event-tag {
+  display: none;
+}
+
+/* Thu nhỏ hình ảnh Event */
+
+.control-panel .event-option img {
+  display: block;
+
+  width: 46px;
+  height: 46px;
+
+  flex-shrink: 0;
+
+  padding: 2px;
+
+  object-fit: contain;
+  border-radius: 5px;
+}
+
+/* Tên Event nằm cạnh hình ảnh */
+
+.control-panel .event-name {
+  color: #e8d29e;
+
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: .4px;
+
+  white-space: nowrap;
+}
+
+/* ===== FOOTER ===== */
+
+.control-panel .control-note {
+  display: none;
+}
+
+/* ===== MOBILE RESPONSIVE ===== */
+
+@media (max-width: 480px) {
+
+  .tactical-card.control-panel {
+    padding: 10px;
+  }
+
+  .control-panel .override-grid-img {
+    gap: 5px;
+  }
+
+  .control-panel .override-grid-img img {
+    height: 54px;
+    padding: 4px;
+  }
+
+  .control-panel .event-option {
+    min-height: 50px;
+    gap: 5px;
+    padding: 4px 6px;
+  }
+
+  .control-panel .event-option img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .control-panel .event-name {
+    font-size: 11px;
+  }
+
+}
+
 
 </style>
 </head>
@@ -4851,6 +5064,39 @@ body.w8-theme-titanium .wheel8-notice-close {
 
   </div>
 
+
+  
+  <!-- PLAYER BETS -->
+  <section class="tactical-card players-panel">
+
+    <div class="tactical-card-head">
+      <div class="head-text">
+        <span class="head-index">02 / PLAYER ACTIVITY</span>
+        <h2>Danh sách người chơi</h2>
+        <p>Theo dõi hoạt động theo phiên</p>
+      </div>
+
+      <div class="tactical-mini-timer">
+  <span class="mini-timer-label">
+    TIME LEFT
+  </span>
+
+  <strong id="playerTimer"
+          class="mini-timer-value">
+    --s
+  </strong>
+</div>
+    </div>
+
+    <div class="players-table-head">
+      <span>PLAYER / POSITION</span>
+      <span>TOTAL</span>
+    </div>
+
+    <div id="betList" class="bet-list"></div>
+
+  </section>
+
 </section>
 
   <!-- KHU VỰC ĐIỀU KHIỂN -->
@@ -4858,7 +5104,7 @@ body.w8-theme-titanium .wheel8-notice-close {
 
     <div class="tactical-card-head">
       <div class="head-text">
-        <span class="head-index">02 / CONTROL PANEL</span>
+        <span class="head-index">03 / CONTROL PANEL</span>
         <h2>Điều khiển kết quả</h2>
         <p>Chọn mục tiêu điều khiển</p>
       </div>
@@ -4935,12 +5181,14 @@ body.w8-theme-titanium .wheel8-notice-close {
 
   </section>
 
+
+
   <!-- SLOT POOL -->
   <section class="tactical-card pool-panel">
 
     <div class="tactical-card-head">
       <div class="head-text">
-        <span class="head-index">03 / LIVE ANALYTICS</span>
+        <span class="head-index">04 / LIVE ANALYTICS</span>
         <h2>Thống kê Slot Pool</h2>
         <p>Phân bổ giá trị theo từng slot</p>
       </div>
@@ -4966,36 +5214,6 @@ body.w8-theme-titanium .wheel8-notice-close {
 
   </section>
 
-  <!-- PLAYER BETS -->
-  <section class="tactical-card players-panel">
-
-    <div class="tactical-card-head">
-      <div class="head-text">
-        <span class="head-index">04 / PLAYER ACTIVITY</span>
-        <h2>Danh sách người chơi</h2>
-        <p>Theo dõi hoạt động theo phiên</p>
-      </div>
-
-      <div class="tactical-mini-timer">
-  <span class="mini-timer-label">
-    TIME LEFT
-  </span>
-
-  <strong id="playerTimer"
-          class="mini-timer-value">
-    --s
-  </strong>
-</div>
-    </div>
-
-    <div class="players-table-head">
-      <span>PLAYER / POSITION</span>
-      <span>TOTAL</span>
-    </div>
-
-    <div id="betList" class="bet-list"></div>
-
-  </section>
 
 </main>
 
