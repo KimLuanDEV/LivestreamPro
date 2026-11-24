@@ -3,7 +3,8 @@
 
 /* ==========================================
    LIVESTREAM PRO
-   SECURITY FIREWALL V1.1
+   SECURITY FIREWALL V1.2
+   CLOUDFLARE EDGE INTEGRATION
 ========================================== */
 
 const net = require("net");
@@ -179,9 +180,11 @@ function installHttp(app, options = {}) {
 
   app.use((req, res, next) => {
 
-    const ip = normalizeIP(
-      req.ip || req.socket.remoteAddress
-    );
+const ip = normalizeIP(
+  typeof options.getClientIp === "function"
+    ? options.getClientIp(req)
+    : req.ip || req.socket.remoteAddress
+);
 
     const pathname = req.path.toLowerCase();
 
@@ -684,7 +687,7 @@ function getStats() {
 
   return {
 
-    version: "1.1.0",
+    version: "1.2.0",
 
     status: "ACTIVE",
 

@@ -689,9 +689,173 @@ const securityFirewall =
 // Render reverse proxy
 app.set("trust proxy", 1);
 
-securityFirewall.installHttp(app, {
-  allowedOrigins: [...LSP_ALLOWED_ORIGINS]
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   CLOUDFLARE EDGE SECURITY V1.0
+========================================== */
+
+const LSP_EDGE_SECRET =
+  process.env.LSP_EDGE_SECRET || "";
+
+const LSP_EDGE_REQUIRED =
+  process.env.LSP_EDGE_REQUIRED === "true";
+
+const lspEdgeNet = require("net");
+
+if (
+  LSP_EDGE_REQUIRED &&
+  LSP_EDGE_SECRET.length < 32
+) {
+  throw new Error(
+    "[EDGE SECURITY] Invalid LSP_EDGE_SECRET"
+  );
+}
+
+// Precompute expected hash
+const lspEdgeExpectedHash = crypto
+  .createHash("sha256")
+  .update(LSP_EDGE_SECRET, "utf8")
+  .digest();
+
+
+/* ==========================================
+   VERIFY CLOUDFLARE SECRET
+========================================== */
+
+function lspVerifyCloudflare(req) {
+
+  const supplied =
+    req.headers["x-lsp-edge-secret"];
+
+  if (
+    LSP_EDGE_SECRET.length < 32 ||
+    typeof supplied !== "string" ||
+    supplied.length > 256
+  ) {
+    return false;
+  }
+
+  const actual = crypto
+    .createHash("sha256")
+    .update(supplied, "utf8")
+    .digest();
+
+  return crypto.timingSafeEqual(
+    actual,
+    lspEdgeExpectedHash
+  );
+
+}
+
+
+/* ==========================================
+   TRUSTED CLOUDFLARE CLIENT IP
+========================================== */
+
+function lspGetClientIp(req) {
+
+  if (lspVerifyCloudflare(req)) {
+
+    const cfIP =
+      req.headers["cf-connecting-ip"];
+
+    if (
+      typeof cfIP === "string" &&
+      lspEdgeNet.isIP(cfIP)
+    ) {
+      return cfIP;
+    }
+
+  }
+
+  return (
+    req.ip ||
+    req.socket?.remoteAddress ||
+    "unknown"
+  );
+
+}
+
+
+/* ==========================================
+   HTTP EDGE ACCESS CONTROL
+========================================== */
+
+app.use((req, res, next) => {
+
+  // Preserve Render health checks
+  if (
+    req.path === "/healthz" &&
+    ["GET", "HEAD"].includes(req.method)
+  ) {
+    return next();
+  }
+
+  const verified = lspVerifyCloudflare(req);
+
+  if (LSP_EDGE_REQUIRED && !verified) {
+
+    res.setHeader("Cache-Control", "no-store");
+
+    return res.status(403).json({
+      ok: false,
+      error: "EDGE_ACCESS_DENIED",
+      message: "Access denied."
+    });
+
+  }
+
+  next();
+
 });
+
+
+
+
+
+securityFirewall.installHttp(app, {
+  allowedOrigins: [...LSP_ALLOWED_ORIGINS],
+  getClientIp: lspGetClientIp
+});
+
+
+
+/* ==========================================
+   TEMPORARY EDGE CONNECTION TEST
+========================================== */
+
+app.get("/api/edge-check", (req, res) => {
+
+  res.setHeader("Cache-Control", "no-store");
+
+  const verified = lspVerifyCloudflare(req);
+
+  const validClientIP = Boolean(
+    verified &&
+    typeof req.headers["cf-connecting-ip"] === "string" &&
+    lspEdgeNet.isIP(req.headers["cf-connecting-ip"])
+  );
+
+  return res.json({
+    ok: verified,
+    cloudflareVerified: verified,
+    clientIpVerified: validClientIP,
+    enforced: LSP_EDGE_REQUIRED
+  });
+
+});
+
+
+console.log(
+  "[EDGE SECURITY]",
+  LSP_EDGE_REQUIRED
+    ? "ENFORCED"
+    : "TEST MODE"
+);
+
+
 
 console.log("[FIREWALL] HTTP protection enabled");
 
@@ -716,21 +880,66 @@ const io = new Server(server, {
   pingInterval: 25000,
   pingTimeout: 20000,
 
-  allowRequest: (req, callback) => {
+allowRequest: (req, callback) => {
 
-    const origin = req.headers.origin;
-
-    const allowed =
-      !origin ||
-      isLspAllowedOrigin(origin);
-
-    callback(null, allowed);
-
+  // Cloudflare Edge Authentication
+  if (
+    LSP_EDGE_REQUIRED &&
+    !lspVerifyCloudflare(req)
+  ) {
+    return callback(
+      "EDGE_ACCESS_DENIED",
+      false
+    );
   }
+
+  // Origin validation
+  const origin = req.headers.origin;
+
+  const allowed =
+    !origin ||
+    isLspAllowedOrigin(origin);
+
+  return callback(null, allowed);
+
+}
 
 });
 
-securityFirewall.installSocket(io);
+/* ==========================================
+   ENGINE.IO - EDGE REQUEST PROTECTION
+========================================== */
+
+io.engine.use((req, res, next) => {
+
+  if (
+    LSP_EDGE_REQUIRED &&
+    !lspVerifyCloudflare(req)
+  ) {
+
+    return next(
+      new Error("EDGE_ACCESS_DENIED")
+    );
+
+  }
+
+  next();
+
+});
+
+
+/* ==========================================
+   SOCKET.IO FIREWALL
+========================================== */
+
+securityFirewall.installSocket(
+  io,
+  LSP_EDGE_REQUIRED
+    ? {
+        getClientIp: lspGetClientIp
+      }
+    : {}
+);
 
 console.log(
   "[FIREWALL] Socket.IO protection enabled"
