@@ -4155,6 +4155,412 @@ body.w8-theme-titanium .wheel8-notice-close {
 
 
 
+/* ==========================================
+   MILITARY - MINI COUNTDOWN TIMER
+========================================== */
+
+.tactical-mini-timer {
+  position: relative;
+
+  min-width: 76px;
+  padding: 7px 10px;
+  box-sizing: border-box;
+
+  flex-shrink: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+
+  background: linear-gradient(
+    145deg,
+    #192b1c,
+    #071109
+  );
+
+  border: 1px solid #71815b;
+  border-bottom: 2px solid #d4b46b;
+  border-radius: 8px;
+
+  box-shadow:
+    inset 0 0 12px rgba(0,0,0,.65),
+    0 4px 10px rgba(0,0,0,.25);
+}
+
+/* LABEL */
+
+.mini-timer-label {
+  color: #a5b49a;
+
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+
+  white-space: nowrap;
+}
+
+/* COUNTDOWN VALUE */
+
+.mini-timer-value {
+  display: block;
+
+  color: #a8ff70;
+
+  font-family: monospace;
+  font-size: 25px;
+  font-weight: 900;
+  line-height: 1;
+
+  font-variant-numeric: tabular-nums;
+
+  text-shadow:
+    0 0 6px rgba(168,255,112,.6),
+    0 0 14px rgba(168,255,112,.25);
+}
+
+/* LAST 5 SECONDS */
+
+.mini-timer-value.danger {
+  color: #ff5555;
+
+  text-shadow:
+    0 0 8px #ff3333,
+    0 0 16px rgba(255,50,50,.5);
+}
+
+.tactical-mini-timer.danger {
+  border-color: #ff5555;
+
+  background: linear-gradient(
+    145deg,
+    #351a1a,
+    #140606
+  );
+
+  animation: miniTimerDanger .6s infinite alternate;
+}
+
+@keyframes miniTimerDanger {
+  from {
+    box-shadow: 0 0 3px rgba(255,50,50,.2);
+  }
+
+  to {
+    box-shadow: 0 0 14px rgba(255,50,50,.6);
+  }
+}
+
+/* DISCONNECTED */
+
+.tactical-mini-timer.offline {
+  opacity: .55;
+}
+
+.tactical-mini-timer.offline .mini-timer-value {
+  color: #999;
+  text-shadow: none;
+}
+
+/* MOBILE */
+
+@media (max-width: 480px) {
+
+  .tactical-mini-timer {
+    min-width: 65px;
+    padding: 6px 8px;
+  }
+
+  .mini-timer-value {
+    font-size: 22px;
+  }
+
+  .mini-timer-label {
+    font-size: 7px;
+  }
+
+}
+
+
+
+/* ==========================================
+   MILITARY - COMPACT SESSION MONITOR V3
+========================================== */
+
+.tactical-card.compact-session {
+  padding: 12px;
+  border-radius: 12px;
+
+  background: linear-gradient(
+    145deg,
+    #1b2720,
+    #101612
+  );
+}
+
+/* ===== HEADER ===== */
+
+.compact-session-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  margin-bottom: 10px;
+}
+
+.compact-session-title {
+  min-width: 0;
+}
+
+.compact-session-title > span {
+  display: block;
+
+  color: #d9bd82;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+}
+
+.compact-session-title h2 {
+  margin: 3px 0 0;
+
+  color: #f1f1e9;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+/* ===== LIVE BADGE ===== */
+
+.compact-live {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 5px 8px;
+
+  border: 1px solid #354b39;
+  border-radius: 5px;
+  background: #14231a;
+
+  color: #9fcea6;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.compact-live .result-live-dot {
+  width: 5px;
+  height: 5px;
+}
+
+/* ===== 3 COLUMN GRID ===== */
+
+.compact-session-grid {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1fr)
+    minmax(0, 1.2fr);
+
+  gap: 6px;
+}
+
+/* ===== STAT BOX ===== */
+
+.compact-stat {
+  min-width: 0;
+  min-height: 66px;
+
+  padding: 7px 4px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+
+  background: linear-gradient(
+    145deg,
+    #131e17,
+    #0b110d
+  );
+
+  border: 1px solid #35443a;
+  border-radius: 8px;
+}
+
+.compact-stat-label {
+  color: #91a395;
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .7px;
+
+  white-space: nowrap;
+}
+
+/* ===== ROUND NUMBER ===== */
+
+.compact-session #round {
+  margin: 0;
+
+  color: #d9bd82;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== COUNTDOWN ===== */
+
+.compact-session #time {
+  display: block;
+
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+
+  margin: 0;
+  padding: 0;
+
+  background: none;
+  border: none;
+  box-shadow: none;
+
+  color: #a8ff70;
+
+  font-size: 25px;
+  font-family: monospace;
+  font-weight: 900;
+  line-height: 1;
+
+  font-variant-numeric: tabular-nums;
+
+  text-shadow: 0 0 8px #a8ff7033;
+}
+
+/* ===== LAST 5 SECONDS ===== */
+
+.compact-session #time.danger {
+  color: #ff625a;
+
+  text-shadow: 0 0 8px #ff444466;
+
+  animation: compactTimerDanger .6s infinite alternate;
+}
+
+@keyframes compactTimerDanger {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: .55;
+  }
+}
+
+/* ===== RESULT BOX ===== */
+
+.compact-result {
+  border-color: #5b5038;
+
+  background: linear-gradient(
+    145deg,
+    #24271c,
+    #101610
+  );
+}
+
+.compact-result-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  min-width: 0;
+  min-height: 32px;
+}
+
+/* ===== SMALL SLOT IMAGE ===== */
+
+.compact-session #slotImg {
+  display: block;
+
+  width: 34px;
+  height: 34px;
+
+  flex-shrink: 0;
+
+  margin: 0;
+  padding: 0;
+
+  object-fit: contain;
+
+  filter: drop-shadow(
+    0 2px 4px #0008
+  );
+}
+
+/* ===== MULTIPLIER ===== */
+
+.compact-session .multi {
+  margin: 0;
+  padding: 0;
+
+  color: #efcd84;
+
+  font-size: 23px;
+  font-weight: 900;
+  line-height: 1;
+
+  white-space: nowrap;
+  text-shadow: none;
+}
+
+/* ===== SMALL MOBILE ===== */
+
+@media (max-width: 400px) {
+
+  .tactical-card.compact-session {
+    padding: 9px;
+  }
+
+  .compact-stat {
+    min-height: 60px;
+  }
+
+  .compact-session-title h2 {
+    font-size: 15px;
+  }
+
+  .compact-stat-label {
+    font-size: 8px;
+    letter-spacing: .3px;
+  }
+
+  .compact-session #round,
+  .compact-session #time {
+    font-size: 22px;
+  }
+
+  .compact-session #slotImg {
+    width: 29px;
+    height: 29px;
+  }
+
+  .compact-session .multi {
+    font-size: 20px;
+  }
+
+}
+
+
 
 
 </style>
@@ -4372,63 +4778,80 @@ body.w8-theme-titanium .wheel8-notice-close {
 
 <main class="tactical-layout">
 
-  <!-- THÔNG TIN PHIÊN -->
-  <section class="tactical-card session-panel">
+<!-- ==========================================
+     COMPACT SESSION MONITOR
+========================================== -->
 
-    <div class="tactical-card-head">
-      <div class="head-text">
-        <span class="head-index">01 / OVERVIEW</span>
-        <h2>Giám sát phiên</h2>
-        <p>Thông tin thời gian thực</p>
-      </div>
+<section class="tactical-card session-panel compact-session">
 
-      <span class="head-symbol">◈</span>
+  <div class="compact-session-head">
+
+    <div class="compact-session-title">
+      <span>01 / OVERVIEW</span>
+      <h2>Giám sát phiên</h2>
     </div>
 
-    <div class="session-stats">
-
-      <div class="stat-block">
-        <span class="stat-label">CURRENT ROUND</span>
-        <strong id="round" class="stat-round">--</strong>
-      </div>
-
-      <div class="stat-block stat-timer">
-        <span class="stat-label">TIME REMAINING</span>
-        <strong id="time" class="timer">0s</strong>
-      </div>
-
+    <div class="compact-live">
+      <span class="result-live-dot"></span>
+      LIVE
     </div>
 
-    <div class="result-display">
-      <div class="result-topline">
-        <span class="result-live-dot"></span>
-        <span>ROUND RESULT MONITOR</span>
-        <span class="result-corner">W8</span>
-      </div>
+  </div>
 
-      <div class="slot-box">
-        <div class="slot-image-stage">
-          <img
-            id="slotImg"
-            class="slot-img-admin"
-            alt="Wheel8 result"
-          >
-        </div>
-      </div>
+  <div class="compact-session-grid">
 
-      <div class="result-multiplier">
-        <span>MULTIPLIER</span>
-        <strong class="multi">x<span id="multi">0</span></strong>
-      </div>
+    <!-- ROUND -->
+    <div class="compact-stat">
+
+      <span class="compact-stat-label">
+        ROUND
+      </span>
+
+      <strong id="round" class="stat-round">
+        --
+      </strong>
 
     </div>
 
-    <div class="panel-footnote">
-      <span class="footnote-mark">●</span>
-      REAL-TIME MONITORING
+    <!-- TIMER -->
+    <div class="compact-stat">
+
+      <span class="compact-stat-label">
+        TIME LEFT
+      </span>
+
+      <strong id="time" class="timer">
+        0s
+      </strong>
+
     </div>
 
-  </section>
+    <!-- RESULT -->
+    <div class="compact-stat compact-result">
+
+      <span class="compact-stat-label">
+        RESULT
+      </span>
+
+      <div class="compact-result-body">
+
+        <img
+          id="slotImg"
+          class="slot-img-admin"
+          alt="Wheel8 result"
+        >
+
+        <strong class="multi">
+          x<span id="multi">0</span>
+        </strong>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
 
   <!-- KHU VỰC ĐIỀU KHIỂN -->
   <section class="tactical-card control-panel">
@@ -4522,7 +4945,16 @@ body.w8-theme-titanium .wheel8-notice-close {
         <p>Phân bổ giá trị theo từng slot</p>
       </div>
 
-      <span class="head-symbol">▥</span>
+     <div class="tactical-mini-timer">
+  <span class="mini-timer-label">
+    TIME LEFT
+  </span>
+
+  <strong id="poolTimer"
+          class="mini-timer-value">
+    --s
+  </strong>
+</div>
     </div>
 
     <div id="poolList" class="pool-grid"></div>
@@ -4544,7 +4976,16 @@ body.w8-theme-titanium .wheel8-notice-close {
         <p>Theo dõi hoạt động theo phiên</p>
       </div>
 
-      <span class="head-symbol">◎</span>
+      <div class="tactical-mini-timer">
+  <span class="mini-timer-label">
+    TIME LEFT
+  </span>
+
+  <strong id="playerTimer"
+          class="mini-timer-value">
+    --s
+  </strong>
+</div>
     </div>
 
     <div class="players-table-head">
@@ -4778,19 +5219,104 @@ socket.on("admin-wheel8-secret", (data) => {
 
 });
 
-socket.on("wheel8-timer",(remain)=>{
+/* ==========================================
+   WHEEL8 - SYNCHRONIZED ADMIN COUNTDOWN
+========================================== */
 
-  const el = document.getElementById("time")
+function updateWheel8AdminTimers(remain) {
 
-  el.textContent = remain + "s"
+  const seconds = Number(remain);
 
-  if(remain <= 5){
-    el.classList.add("danger")
-  }else{
-    el.classList.remove("danger")
-  }
+  if (!Number.isFinite(seconds)) return;
 
-})
+  const timeLeft = Math.max(
+    0,
+    Math.ceil(seconds)
+  );
+
+  const isDanger = timeLeft <= 5;
+
+  const timerIds = [
+    "time",
+    "poolTimer",
+    "playerTimer"
+  ];
+
+  timerIds.forEach(id => {
+
+    const el = document.getElementById(id);
+
+    if (!el) return;
+
+    // Update countdown
+    el.textContent = timeLeft + "s";
+
+    // Last 5 seconds
+    el.classList.toggle("danger", isDanger);
+
+    // Mini timer container
+    const box = el.closest(
+      ".tactical-mini-timer"
+    );
+
+    if (box) {
+
+      box.classList.remove("offline");
+
+      box.classList.toggle(
+        "danger",
+        isDanger
+      );
+
+    }
+
+  });
+
+}
+
+
+/* REALTIME SERVER TIMER */
+
+socket.on("wheel8-timer", (remain) => {
+
+  updateWheel8AdminTimers(remain);
+
+});
+
+
+/* CONNECTION LOST */
+
+socket.on("disconnect", () => {
+
+  [
+    "time",
+    "poolTimer",
+    "playerTimer"
+  ].forEach(id => {
+
+    const el = document.getElementById(id);
+
+    if (!el) return;
+
+    el.textContent = "--s";
+
+    el.classList.remove("danger");
+
+    const box = el.closest(
+      ".tactical-mini-timer"
+    );
+
+    if (box) {
+
+      box.classList.remove("danger");
+
+      box.classList.add("offline");
+
+    }
+
+  });
+
+});
 
 
 
