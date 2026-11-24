@@ -18433,5 +18433,94 @@ if (watchPlayButton) {
 </script>
 
 
+
+<script>
+(function checkRealDeviceFullscreen() {
+
+  const probe = document.createElement("div");
+
+  probe.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    visibility: hidden;
+    pointer-events: none;
+  `;
+
+  document.body.appendChild(probe);
+
+  const style = getComputedStyle(probe);
+
+  const studio = document.querySelector(".studio");
+  const video = document.querySelector(".video-area");
+
+  const info = {
+    platform: navigator.platform,
+
+    standalone:
+      navigator.standalone === true,
+
+    displayMode:
+      matchMedia("(display-mode: standalone)").matches
+        ? "standalone"
+        : "browser",
+
+    screenWidth: screen.width,
+    screenHeight: screen.height,
+
+    viewportWidth: window.innerWidth,
+    viewportHeight: window.innerHeight,
+
+    visualHeight: window.visualViewport?.height,
+
+    pixelRatio: window.devicePixelRatio,
+
+    safeAreaTop: style.paddingTop,
+    safeAreaBottom: style.paddingBottom,
+
+    studioTop: studio?.getBoundingClientRect().top,
+    studioHeight: studio?.getBoundingClientRect().height,
+
+    videoTop: video?.getBoundingClientRect().top,
+    videoHeight: video?.getBoundingClientRect().height
+  };
+
+  probe.remove();
+
+  console.log("[SFU DEVICE DEBUG]", info);
+
+  const panel = document.createElement("pre");
+
+  panel.style.cssText = `
+    position: fixed;
+    top: 80px;
+    left: 10px;
+    right: 10px;
+    z-index: 999999;
+    padding: 15px;
+    border-radius: 12px;
+    background: rgba(0,0,0,.95);
+    color: #00ff99;
+    font-size: 11px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    border: 1px solid #00ff99;
+  `;
+
+  panel.textContent = JSON.stringify(info, null, 2);
+
+  panel.addEventListener("click", () => {
+    panel.remove();
+  });
+
+  document.body.appendChild(panel);
+
+})();
+</script>
+
+
 </body>
 </html>
