@@ -2,7 +2,8 @@
 
 /* ==========================================
    LIVESTREAM PRO
-   SECURITY AUTH V1.0
+   SECURITY AUTH V1.1
+   HIGH PERFORMANCE AUTHENTICATION
 ========================================== */
 
 const crypto = require("crypto");
@@ -16,6 +17,156 @@ function createAuth(options = {}) {
   );
 
   const COOKIE_NAME = "lsp_spirit_sid";
+
+  /* ==========================================
+   HIGH PERFORMANCE AUTH CACHE
+========================================== */
+
+const AUTH_CACHE_TTL = 3000;
+
+let authCache = new Map();
+let authCacheReady = false;
+let authCacheExpiresAt = 0;
+
+const authStats = {
+  hits: 0,
+  misses: 0,
+  refreshes: 0,
+  errors: 0,
+  denied: 0
+};
+
+
+/* ==========================================
+   REBUILD AUTH CACHE
+========================================== */
+
+function syncAccounts(users) {
+
+  if (
+    !users ||
+    typeof users !== "object" ||
+    Array.isArray(users)
+  ) {
+    throw new Error("Invalid account database");
+  }
+
+  const nextCache = new Map();
+
+  for (const [uid, account] of Object.entries(users)) {
+
+    if (!account?.profile) continue;
+
+    nextCache.set(uid, Object.freeze({
+
+      uid,
+
+      role: account.role || "user",
+
+      blocked: Boolean(
+        account.profile.accountBlocked
+      ),
+
+      authVersion:
+        account.authVersion || "legacy"
+
+    }));
+
+  }
+
+  authCache = nextCache;
+  authCacheReady = true;
+
+  authCacheExpiresAt =
+    Date.now() + AUTH_CACHE_TTL;
+
+  authStats.refreshes++;
+
+}
+
+
+/* ==========================================
+   INVALIDATE AUTH CACHE
+========================================== */
+
+function invalidateCache() {
+
+  authCacheReady = false;
+  authCacheExpiresAt = 0;
+
+}
+
+
+/* ==========================================
+   READ ACCOUNT FROM RAM
+========================================== */
+
+function getCachedAccount(uid) {
+
+  if (
+    !authCacheReady ||
+    Date.now() >= authCacheExpiresAt
+  ) {
+
+    authStats.misses++;
+
+    try {
+
+      syncAccounts(loadUsers());
+
+    } catch (error) {
+
+      authStats.errors++;
+
+      invalidateCache();
+
+      return null;
+
+    }
+
+  } else {
+
+    authStats.hits++;
+
+  }
+
+  return authCache.get(uid) || null;
+
+}
+
+
+/* ==========================================
+   AUTH PERFORMANCE STATISTICS
+========================================== */
+
+function getStats() {
+
+  const total =
+    authStats.hits + authStats.misses;
+
+  return {
+
+    version: "1.1.0",
+
+    status: "ACTIVE",
+
+    cachedAccounts: authCache.size,
+
+    cacheTTL: AUTH_CACHE_TTL,
+
+    ...authStats,
+
+    hitRate: total > 0
+      ? Number(
+          (authStats.hits / total * 100)
+            .toFixed(2)
+        )
+      : 0
+
+  };
+
+}
+
 
   if (secret.length < 32) {
     throw new Error(
@@ -119,49 +270,60 @@ function createAuth(options = {}) {
   }
 
 
-  /* ==========================================
-     SERVER-SIDE ACCOUNT VERIFICATION
-  ========================================== */
+/* ==========================================
+   HIGH PERFORMANCE ACCOUNT VERIFICATION
+========================================== */
 
-  function verifyAccount(session) {
+function verifyAccount(session) {
 
-    if (!session) return null;
+  if (
+    !session ||
+    session.expiresAt <= Date.now()
+  ) {
 
-    const users = loadUsers();
+    authStats.denied++;
 
-    if (!Object.hasOwn(users, session.uid)) {
-      return null;
-    }
-
-    const account = users[session.uid];
-
-    if (
-      !account?.profile ||
-      account.profile.accountBlocked
-    ) {
-      return null;
-    }
-
-    // Existing sessions are accepted only
-    // until the account version changes.
-    const currentVersion =
-      account.authVersion || "legacy";
-
-    const sessionVersion =
-      session.sessionVersion || "legacy";
-
-    if (currentVersion !== sessionVersion) {
-      return null;
-    }
-
-    return {
-      uid: session.uid,
-      role: account.role || "user",
-      expiresAt: session.expiresAt,
-      sessionId: session.sessionId
-    };
+    return null;
 
   }
+
+  const account =
+    getCachedAccount(session.uid);
+
+  if (!account || account.blocked) {
+
+    authStats.denied++;
+
+    return null;
+
+  }
+
+  const sessionVersion =
+    session.sessionVersion || "legacy";
+
+  if (
+    account.authVersion !== sessionVersion
+  ) {
+
+    authStats.denied++;
+
+    return null;
+
+  }
+
+  return {
+
+    uid: session.uid,
+
+    role: account.role,
+
+    expiresAt: session.expiresAt,
+
+    sessionId: session.sessionId
+
+  };
+
+}
 
 
   function getIdentity(cookieHeader) {
@@ -329,14 +491,18 @@ function createAuth(options = {}) {
   }
 
 
-  return {
-    verifySession,
-    getIdentity,
-    requireAuth,
-    requireSelf,
-    getSocketIdentity,
-    revokeAccount
-  };
+return {
+  verifySession,
+  getIdentity,
+  requireAuth,
+  requireSelf,
+  getSocketIdentity,
+  revokeAccount,
+
+  syncAccounts,
+  invalidateCache,
+  getStats
+};
 
 }
 

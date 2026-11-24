@@ -4380,7 +4380,96 @@ const securityAuth = require("./security-auth")
   });
 
 console.log(
-  "[SECURITY AUTH] V1.0 enabled"
+  "[SECURITY AUTH] V1.1 HIGH PERFORMANCE enabled"
+);
+
+
+/* ==========================================
+   SECURE LOGOUT - ALL DEVICES
+========================================== */
+
+app.post(
+  "/api/auth/logout-all",
+
+  securityAuth.requireAuth,
+
+  (req, res) => {
+
+    const uid = req.auth.uid;
+
+    try {
+
+      const db = loadUsers();
+
+      const account = db[uid];
+
+      if (!account) {
+
+        return res.status(401).json({
+          ok: false,
+          error: "AUTH_REQUIRED"
+        });
+
+      }
+
+      // Revoke all existing account sessions
+      securityAuth.revokeAccount(account);
+
+      saveUsers(db);
+
+      // Disconnect authenticated connections
+      for (const client of io.sockets.sockets.values()) {
+
+        if (
+          client.data.authenticated === true &&
+          client.data.uid === uid
+        ) {
+
+          client.emit("auth-error", {
+            message: "You have been signed out."
+          });
+
+          client.disconnect(true);
+
+        }
+
+      }
+
+      // Remove authentication cookies
+      res.clearCookie("lsp_spirit_sid", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        path: "/"
+      });
+
+      res.clearCookie("mh_session", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        path: "/"
+      });
+
+      return res.json({
+        ok: true,
+        message: "Signed out successfully."
+      });
+
+    } catch (error) {
+
+      console.error(
+        "[AUTH LOGOUT]",
+        error.message
+      );
+
+      return res.status(503).json({
+        ok: false,
+        error: "LOGOUT_FAILED"
+      });
+
+    }
+
+  }
 );
 
 
@@ -4822,6 +4911,11 @@ function lspAdminSameOrigin(req) {
   }
 }
 
+
+
+
+
+
 // ĐĂNG NHẬP BẰNG MẬT KHẨU
 app.post("/api/admin/auth/login", (req, res) => {
   if (!lspAdminSameOrigin(req)) {
@@ -4934,7 +5028,6 @@ app.get("/api/admin/auth/status", (req, res) => {
 
 
 
-
 // ĐĂNG XUẤT
 app.post("/api/admin/auth/logout", (req, res) => {
   if (!lspAdminSameOrigin(req)) {
@@ -4951,6 +5044,8 @@ app.post("/api/admin/auth/logout", (req, res) => {
 
   res.json({ ok: true });
 });
+
+
 
 // BẢO VỆ TOÀN BỘ API /api/admin/*
 app.use("/api/admin", (req, res, next) => {
@@ -4986,6 +5081,32 @@ app.use("/api/admin", (req, res, next) => {
 
   next();
 });
+
+
+
+/* ==========================================
+   ADMIN - AUTH SECURITY STATISTICS
+========================================== */
+
+app.get(
+  "/api/admin/security-auth/stats",
+  (req, res) => {
+
+    res.setHeader(
+      "Cache-Control",
+      "no-store"
+    );
+
+    return res.json({
+
+      ok: true,
+
+      ...securityAuth.getStats()
+
+    });
+
+  }
+);
 
 
 
@@ -7774,6 +7895,18 @@ if (!isLspAllowedOrigin(requestOrigin)) {
 
         fs.renameSync(tempFile, USERS_FILE);
 
+        try {
+
+  securityAuth.syncAccounts(db);
+
+} catch {
+
+  securityAuth.invalidateCache();
+
+}
+
+
+
       } finally {
         try {
           if (fs.existsSync(tempFile)) {
@@ -9432,6 +9565,24 @@ function saveUsers(db) {
 
     fs.renameSync(tempFile, USERS_FILE);
 
+
+    // Synchronize authentication state after saving
+try {
+
+  securityAuth.syncAccounts(db);
+
+} catch (error) {
+
+  securityAuth.invalidateCache();
+
+  console.error(
+    "[AUTH CACHE] Synchronization failed:",
+    error.message
+  );
+
+}
+
+
   } finally {
 
     if (fd !== undefined) {
@@ -9478,6 +9629,21 @@ function saveLinkedGiftUsers(db) {
     fd = undefined;
 
     fs.renameSync(tempFile, USERS_FILE);
+
+try {
+
+  securityAuth.syncAccounts(db);
+
+} catch (error) {
+
+  securityAuth.invalidateCache();
+
+  console.error(
+    "[AUTH CACHE] Linked gift sync failed:",
+    error.message
+  );
+
+}
 
   } finally {
 
@@ -10442,40 +10608,136 @@ app.post("/api/check-trusted", (req,res)=>{
 
 
 
+/* ==========================================
+   SECURE PUBLIC / PRIVATE PROFILE
+========================================== */
+
 app.get("/api/me/:uid", (req, res) => {
-  const targetUid = req.params.uid;
-  const viewerUid = req.headers["x-uid"]; // uid người đang xem
 
-  const db = loadUsers();
-  const target = db[targetUid];
-  if (!target || !target.profile) {
-    return res.status(404).json({ error: "User not found" });
-  }
+  res.setHeader("Cache-Control", "no-store");
 
-  // 🚫 BLOCK CHECK (2 CHIỀU)
-  if (viewerUid && db[viewerUid]) {
-    const me = db[viewerUid].profile;
-    const you = target.profile;
+  try {
 
-const blockedByMe =
-  (me.blockedUsers || []).includes(targetUid);
-const blockedByYou =
-  (you.blockedUsers || []).includes(viewerUid);
+    const identity =
+      securityAuth.getIdentity(
+        req.headers.cookie
+      );
 
+    const targetUid =
+      String(req.params.uid || "");
 
-    if (blockedByMe || blockedByYou) {
-      return res.status(403).json({
-        error: "blocked"
+    const viewerUid =
+      identity?.uid || null;
+
+    const db = loadUsers();
+
+    if (!Object.hasOwn(db, targetUid)) {
+
+      return res.status(404).json({
+        error: "User not found"
       });
+
     }
+
+    const target = db[targetUid];
+
+    if (!target?.profile) {
+
+      return res.status(404).json({
+        error: "User not found"
+      });
+
+    }
+
+    const profile = target.profile;
+
+    /* ======================================
+       BLOCK CHECK
+    ====================================== */
+
+    if (viewerUid && db[viewerUid]?.profile) {
+
+      const viewer =
+        db[viewerUid].profile;
+
+      const blockedByMe =
+        (viewer.blockedUsers || [])
+          .includes(targetUid);
+
+      const blockedByTarget =
+        (profile.blockedUsers || [])
+          .includes(viewerUid);
+
+      if (blockedByMe || blockedByTarget) {
+
+        return res.status(403).json({
+          error: "blocked"
+        });
+
+      }
+
+    }
+
+    /* ======================================
+       OWN PROFILE
+    ====================================== */
+
+    if (
+      identity &&
+      identity.uid === targetUid
+    ) {
+
+      return res.json({
+
+        profile: {
+
+          ...profile,
+
+          role: target.role || "user",
+
+          roles: target.roles || []
+
+        }
+
+      });
+
+    }
+
+    /* ======================================
+       PUBLIC PROFILE ONLY
+    ====================================== */
+
+    return res.json({
+
+      profile: {
+
+        uid: targetUid,
+
+        name: profile.name || "User",
+
+        avatar: profile.avatar || "",
+
+        cover: profile.cover || "",
+
+        bio: profile.bio || "",
+
+        level: profile.level || 1,
+
+        verified: Boolean(profile.verified)
+
+      }
+
+    });
+
+  } catch {
+
+    return res.status(503).json({
+      error: "PROFILE_UNAVAILABLE"
+    });
+
   }
 
-  res.json({
-    profile: target.profile
-  });
 });
-
-
 
 
 
@@ -10552,6 +10814,20 @@ function pgAtomicSave(filename, data) {
   );
 
   fs.renameSync(temp, filename);
+
+  if (filename === USERS_FILE) {
+
+  try {
+
+    securityAuth.syncAccounts(data);
+
+  } catch {
+
+    securityAuth.invalidateCache();
+
+  }
+
+}
 }
 
 function pgVerifySecret(actual, expected) {
@@ -11222,7 +11498,10 @@ const SFU_URL = process.env.LIVEKIT_URL;
 const SFU_KEY = process.env.LIVEKIT_API_KEY;
 const SFU_SECRET = process.env.LIVEKIT_API_SECRET;
 
-app.post("/api/sfu/token", async (req, res) => {
+app.post(
+  "/api/sfu/token",
+  securityAuth.requireAuth,
+  async (req, res) => {
   res.set("Cache-Control", "no-store");
 
   try {
@@ -11263,54 +11542,22 @@ app.post("/api/sfu/token", async (req, res) => {
       });
     }
 
-    // Identity from signed HTTP-only session.
-    // Never accept uid from req.body.
-    let uid = null;
-
-    if (SPIRIT_SECRET && SPIRIT_SECRET.length >= 32) {
-      try {
-        const raw = String(req.headers.cookie || "")
-          .split(";")
-          .map(s => s.trim())
-          .find(s => s.startsWith("lsp_spirit_sid="));
-
-        if (raw) {
-          const token = raw.slice("lsp_spirit_sid=".length);
-          const [payload, signature] = token.split(".");
-          const expected = spiritSign(payload);
-
-          const a = Buffer.from(signature || "");
-          const b = Buffer.from(expected);
-
-          if (
-            a.length === b.length &&
-            crypto.timingSafeEqual(a, b)
-          ) {
-            const session = JSON.parse(
-              Buffer.from(payload, "base64url")
-                .toString("utf8")
-            );
-
-            if (
-              session.exp > Date.now() &&
-              session.uid
-            ) {
-              uid = String(session.uid);
-            }
-          }
-        }
-      } catch {
-        uid = null;
-      }
-    }
+ const uid = req.auth.uid;
 
     const db = loadUsers();
     const account = uid ? db[uid] : null;
 
-    if (!account?.profile ||
-        account.profile.accountBlocked) {
-      uid = null;
-    }
+if (
+  !account?.profile ||
+  account.profile.accountBlocked
+) {
+
+  return res.status(403).json({
+    ok: false,
+    error: "ACCOUNT_UNAVAILABLE"
+  });
+
+}
 
 const sessionCookie = String(req.headers.cookie || "")
   .split(";")
@@ -11474,7 +11721,10 @@ grant.addGrant({
    SFU PK - SECURE PEER VIDEO TOKEN
 ========================================== */
 
-app.post("/api/sfu/pk-token", async (req, res) => {
+app.post(
+  "/api/sfu/pk-token",
+  securityAuth.requireAuth,
+  async (req, res) => {
 
 
   res.set("Cache-Control", "no-store");
@@ -11510,22 +11760,25 @@ if (!SFU_URL || !SFU_KEY || !SFU_SECRET) {
       });
     }
 
-    const cookie = String(req.headers.cookie || "")
-      .split(";")
-      .map(x => x.trim())
-      .find(x => x.startsWith("lsp_spirit_sid="));
+/* ==========================================
+   VERIFIED PK SESSION
+========================================== */
 
-    const raw = cookie
-      ? cookie.slice("lsp_spirit_sid=".length)
-      : "";
+const uid = req.auth.uid;
+const sessionId = req.auth.sessionId;
 
-    const sessionId = raw
-      ? crypto.createHash("sha256")
-          .update(raw)
-          .digest("hex")
-      : "";
+if (
+  client.data.authenticated !== true ||
+  client.data.uid !== uid ||
+  client.data.sessionId !== sessionId
+) {
 
-    const uid = String(client.data.uid || "");
+  return res.status(403).json({
+    ok: false,
+    error: "PK_ACCESS_DENIED"
+  });
+
+}
 
     const isHost =
       room.broadcasterId === socketId &&
@@ -13896,8 +14149,12 @@ if (subs && subs.length) {
 
 
 
-app.get("/api/friends/:uid", (req, res) => {
-  const uid = req.params.uid;
+app.get(
+  "/api/friends/:uid",
+  securityAuth.requireAuth,
+  securityAuth.requireSelf,
+  (req, res) => {
+  const uid = req.auth.uid;
   const db = loadUsers();
   const me = db[uid];
   if (!me) return res.json({ friends: [], requests: [] });
@@ -13929,8 +14186,12 @@ app.get("/api/friends/:uid", (req, res) => {
 });
 
 
-app.get("/api/blocked/:uid", (req, res) => {
-  const uid = req.params.uid;
+app.get(
+  "/api/blocked/:uid",
+  securityAuth.requireAuth,
+  securityAuth.requireSelf,
+  (req, res) => {
+  const uid = req.auth.uid;
   const db = loadUsers();
   const me = db[uid];
   if (!me) return res.json({ blocked: [] });

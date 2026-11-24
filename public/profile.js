@@ -1413,27 +1413,100 @@ document.getElementById("sheetLogout")?.addEventListener("click", ()=>{
 
 
 
+/* ==========================================
+   LSP SECURE LOGOUT - V1.1
+========================================== */
+
 function confirmLogoutProfile() {
 
-  // Hiển thị popup và reset mọi sự kiện cũ.
   showMsg(
-    "Bạn có chắc chắn muốn đăng xuất không?",
-    "Xác nhận đăng xuất"
+    "Are you sure you want to sign out of all devices?",
+    "Confirm Logout"
   );
 
-  const okBtn = document.getElementById("msgOk");
+  const okBtn =
+    document.getElementById("msgOk");
 
   if (!okBtn) return;
 
-  // Chỉ popup đăng xuất mới có hành động này.
-  okBtn.onclick = () => {
+  okBtn.onclick = async () => {
 
-    localStorage.removeItem("user_profile");
-    localStorage.removeItem("login_uid");
-    localStorage.removeItem("isGuest");
+    if (okBtn.disabled) return;
 
-    location.href = "/login.html";
+    okBtn.disabled = true;
+
+    const originalText =
+      okBtn.textContent;
+
+    okBtn.textContent = "Signing out...";
+
+    try {
+
+      const response = await fetch(
+        "/api/auth/logout-all",
+        {
+          method: "POST",
+          credentials: "same-origin",
+          cache: "no-store"
+        }
+      );
+
+      const result = await response
+        .json()
+        .catch(() => null);
+
+      if (!response.ok || !result?.ok) {
+
+        throw new Error("LOGOUT_FAILED");
+
+      }
+
+      // Disconnect current socket
+      if (
+        typeof socket !== "undefined" &&
+        socket.connected
+      ) {
+
+        socket.disconnect();
+
+      }
+
+      // Remove local authentication data
+      localStorage.removeItem("user_profile");
+      localStorage.removeItem("login_uid");
+      localStorage.removeItem("isGuest");
+
+      window.location.replace("/login.html");
+
+    } catch (error) {
+
+      console.warn(
+        "[SECURE LOGOUT]",
+        error.message
+      );
+
+      showMsg(
+        "Unable to sign out. Please try again.",
+        "Logout Failed"
+      );
+
+      const retryBtn =
+        document.getElementById("msgOk");
+
+      if (retryBtn) {
+        retryBtn.onclick = closeMsg;
+      }
+
+    } finally {
+
+      okBtn.disabled = false;
+
+      okBtn.textContent = originalText;
+
+    }
+
   };
+
 }
 
 
