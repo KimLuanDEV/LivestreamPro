@@ -9784,6 +9784,56 @@ function saveUsers(db){
 }
 
 
+
+/* ==========================================
+   LINKED LIVE - ATOMIC WALLET SAVE
+========================================== */
+
+function saveLinkedGiftUsers(db) {
+
+  const tempFile =
+    USERS_FILE + ".linked-gift-" +
+    crypto.randomUUID() + ".tmp";
+
+  let fd;
+
+  try {
+
+    fd = fs.openSync(tempFile, "wx", 0o600);
+
+    fs.writeFileSync(
+      fd,
+      JSON.stringify(db, null, 2),
+      "utf8"
+    );
+
+    fs.fsyncSync(fd);
+
+    fs.closeSync(fd);
+
+    fd = undefined;
+
+    fs.renameSync(tempFile, USERS_FILE);
+
+  } finally {
+
+    if (fd !== undefined) {
+      try {
+        fs.closeSync(fd);
+      } catch {}
+    }
+
+    if (fs.existsSync(tempFile)) {
+      try {
+        fs.unlinkSync(tempFile);
+      } catch {}
+    }
+
+  }
+
+}
+
+
 /* ==========================================
    DIAMOND TRANSFER - DAILY CLEANUP
    Reset at 00:00 Vietnam time
@@ -17084,6 +17134,439 @@ const SFU_LIVE_GIFTS = Object.freeze({
 });
 
 
+/* ==========================================
+   LINKED LIVE - GIFT CATALOG
+========================================== */
+
+socket.on("virtual-live:gift:catalog", (data, ack) => {
+
+  if (typeof ack !== "function") return;
+
+  try {
+
+    const roomId = String(data?.roomId || "");
+
+    if (
+      !Object.hasOwn(VIRTUAL_LIVE_ROOMS, roomId) ||
+      !socket.rooms.has(virtualLiveChannel(roomId))
+    ) {
+      return ack({
+        ok: false,
+        error: "Room access required."
+      });
+    }
+
+    const uid = getVerifiedTransferUid(socket);
+
+    const db = loadUsers();
+
+    const owner = getLinkedLiveOwner(roomId, db);
+
+    const account = uid ? db[uid] : null;
+
+    const authenticated = Boolean(
+      uid &&
+      socket.data.authenticated === true &&
+      socket.data.uid === uid &&
+      account?.profile &&
+      !account.profile.accountBlocked
+    );
+
+    ack({
+
+      ok: true,
+
+      owner,
+
+      authenticated,
+
+      enabled: Boolean(
+        authenticated &&
+        owner &&
+        owner.uid !== uid &&
+        isLinkedLiveActive(roomId)
+      ),
+
+      coins: authenticated
+        ? Number(account.profile.coins || 0)
+        : 0,
+
+      gifts: Object.entries(SFU_LIVE_GIFTS)
+        .map(([id, gift]) => ({
+
+          id,
+          name: gift.name,
+          emoji: gift.emoji,
+          cost: gift.cost
+
+        }))
+
+    });
+
+  } catch (error) {
+
+    console.error("[LINKED GIFT CATALOG]", error);
+
+    ack({
+      ok: false,
+      error: "Unable to load gifts."
+    });
+
+  }
+
+});
+
+
+
+/* ==========================================
+   LINKED LIVE - SECURE GIFT TRANSACTION
+========================================== */
+
+socket.on("virtual-live:gift:send", (data, ack) => {
+
+  if (typeof ack !== "function") return;
+
+  const fail = error => ack({
+    ok: false,
+    error
+  });
+
+  let transaction;
+  let coins;
+  let gift;
+  let senderName;
+
+  try {
+
+    /* VERIFIED SESSION */
+
+    const uid = getVerifiedTransferUid(socket);
+
+    if (
+      !uid ||
+      socket.data.authenticated !== true ||
+      socket.data.uid !== uid
+    ) {
+      return fail("Please sign in first.");
+    }
+
+
+    /* VALIDATE ROOM */
+
+    const roomId = String(data?.roomId || "");
+
+    if (
+      !Object.hasOwn(VIRTUAL_LIVE_ROOMS, roomId) ||
+      !socket.rooms.has(virtualLiveChannel(roomId))
+    ) {
+      return fail("Invalid room access.");
+    }
+
+
+    /* VALIDATE GIFT */
+
+    const giftId = String(data?.giftId || "");
+
+    if (!Object.hasOwn(SFU_LIVE_GIFTS, giftId)) {
+      return fail("Invalid gift.");
+    }
+
+    gift = SFU_LIVE_GIFTS[giftId];
+
+    const quantity = Number(data?.quantity ?? 1);
+
+    if (![1, 5, 10, 20, 50].includes(quantity)) {
+      return fail("Invalid gift quantity.");
+    }
+
+    const cost = gift.cost * quantity;
+
+    if (!Number.isSafeInteger(cost) || cost <= 0) {
+      return fail("Invalid gift amount.");
+    }
+
+
+    /* TRANSACTION ID */
+
+    const requestId = String(data?.requestId || "");
+
+    if (
+      !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i
+        .test(requestId)
+    ) {
+      return fail("Invalid transaction ID.");
+    }
+
+
+    /* LOAD ACCOUNTS */
+
+    const db = loadUsers();
+
+    const sender = db[uid];
+
+    if (
+      !sender?.profile ||
+      sender.profile.accountBlocked
+    ) {
+      return fail("Account unavailable.");
+    }
+
+    const sp = sender.profile;
+
+
+    /* PREVENT DUPLICATE PAYMENT */
+
+    sp.linkedGiftReceipts ||= {};
+
+    const previous = sp.linkedGiftReceipts[requestId];
+
+    if (previous) {
+
+      if (
+        previous.roomId !== roomId ||
+        previous.giftId !== giftId ||
+        previous.quantity !== quantity ||
+        previous.toUid !== data?.expectedOwnerUid ||
+        previous.amount !== data?.expectedCost
+      ) {
+        return fail("Transaction ID already used.");
+      }
+
+      return ack({
+        ok: true,
+        duplicate: true,
+        transactionId: requestId,
+        coins: Number(sp.coins || 0)
+      });
+
+    }
+
+
+    /* SERVER CONTROLLED RECIPIENT */
+
+    const owner = getLinkedLiveOwner(roomId, db);
+
+    if (!owner) {
+      return fail("Linked account unavailable.");
+    }
+
+    const hostUid = owner.uid;
+
+    if (hostUid === uid) {
+      return fail("You cannot send gifts to yourself.");
+    }
+
+    // Prevent payment if recipient or price changed
+    // after the gift panel was opened.
+
+    if (
+      data?.expectedOwnerUid !== hostUid ||
+      data?.expectedCost !== cost
+    ) {
+      return fail("Gift details changed. Please reopen gifts.");
+    }
+
+
+    /* LIVE STATUS */
+
+    if (!isLinkedLiveActive(roomId)) {
+      return fail("The livestream is offline.");
+    }
+
+
+    /* RATE LIMIT */
+
+    const now = Date.now();
+
+    if (
+      now - Number(
+        sp.lastLinkedGiftAt || 0
+      ) < 1000
+    ) {
+      return fail("Please wait before sending again.");
+    }
+
+
+    /* WALLET VALIDATION */
+
+    const receiver = db[hostUid];
+
+    const rp = receiver.profile;
+
+    const balance = Number(sp.coins ?? 0);
+
+    const received = Number(rp.coinReceived ?? 0);
+
+    const sent = Number(sp.coinSent ?? 0);
+
+    if (
+      !Number.isSafeInteger(balance) ||
+      balance < cost
+    ) {
+      return fail("Insufficient diamonds.");
+    }
+
+    if (
+      !Number.isSafeInteger(received) ||
+      received < 0 ||
+      !Number.isSafeInteger(received + cost) ||
+      !Number.isSafeInteger(sent) ||
+      sent < 0 ||
+      !Number.isSafeInteger(sent + cost)
+    ) {
+      return fail("Invalid wallet balance.");
+    }
+
+
+    /* TRANSFER REAL DIAMONDS */
+
+    sp.coins = balance - cost;
+
+    sp.coinSent = sent + cost;
+
+    rp.coinReceived = received + cost;
+
+    sp.lastLinkedGiftAt = now;
+
+
+    /* TRANSACTION HISTORY */
+
+    transaction = {
+
+      id: requestId,
+
+      source: "linked-live",
+
+      roomId,
+
+      giftId,
+
+      giftName: gift.name,
+
+      quantity,
+
+      unitCost: gift.cost,
+
+      amount: cost,
+
+      fromUid: uid,
+
+      toUid: hostUid,
+
+      ts: now
+
+    };
+
+
+    sp.linkedGiftReceipts[requestId] = transaction;
+
+
+    sp.liveGiftHistory = [
+
+      ...(Array.isArray(sp.liveGiftHistory)
+        ? sp.liveGiftHistory
+        : []),
+
+      {
+        ...transaction,
+        direction: "sent"
+      }
+
+    ].slice(-200);
+
+
+    rp.liveGiftHistory = [
+
+      ...(Array.isArray(rp.liveGiftHistory)
+        ? rp.liveGiftHistory
+        : []),
+
+      {
+        ...transaction,
+        direction: "received"
+      }
+
+    ].slice(-200);
+
+
+    /* SAVE BOTH WALLETS TOGETHER */
+
+    saveLinkedGiftUsers(db);
+
+    coins = sp.coins;
+
+    senderName = String(
+      sp.name || "Viewer"
+    ).slice(0, 50);
+
+  } catch (error) {
+
+    console.error("[LINKED LIVE GIFT]", error);
+
+    return fail("Unable to process gift.");
+
+  }
+
+
+  /* TRANSACTION SUCCESS */
+
+  ack({
+    ok: true,
+    transactionId: transaction.id,
+    coins
+  });
+
+
+  /* REALTIME ACCOUNT UPDATES */
+
+  try {
+
+    emitCoinUpdate(transaction.fromUid);
+
+    emitCoinUpdate(transaction.toUid);
+
+
+    /* BROADCAST GIFT TO VIEWERS */
+
+    io.to(
+      virtualLiveChannel(transaction.roomId)
+    ).emit("virtual-live:gift:new", {
+
+      roomId: transaction.roomId,
+
+      transactionId: transaction.id,
+
+      donor: senderName,
+
+      giftId: transaction.giftId,
+
+      giftName: transaction.giftName,
+
+      emoji: gift.emoji,
+
+      quantity: transaction.quantity,
+
+      cost: transaction.amount,
+
+      ts: transaction.ts
+
+    });
+
+
+    emitToUser(
+      transaction.toUid,
+      "virtual-live:gift:received",
+      transaction
+    );
+
+  } catch (error) {
+
+    console.error("[LINKED GIFT BROADCAST]", error);
+
+  }
+
+});
+
 // Return authenticated viewer's real balance.
 socket.on("sfu:gift:balance", (data, ack) => {
   if (typeof ack !== "function") return;
@@ -18539,45 +19022,121 @@ setInterval(() => {
 
 
 /* ==========================================
-   VIRTUAL LIVE ROOMS
+   LINKED EXTERNAL LIVE ROOMS
 ========================================== */
 
 const VIRTUAL_LIVE_ROOMS = Object.freeze({
 
+  Youtube1: {
+    roomId: "Youtube1",
+    title: "Rambo",
+    avatar: "/assets/live-avatar/Rambo.jpg",
 
-Youtube1: {
-  roomId: "Youtube1",
-  title: "Rambo",
-  avatar: "/assets/live-avatar/Rambo.jpg",
-  type: "youtube",
-  videoId: "9FSuVZKDG1A"
-},
+    ownerUid: process.env.YOUTUBE1_OWNER_UID || "",
 
+    type: "youtube",
+    videoId: "9FSuVZKDG1A"
+  },
 
+  Youtube2: {
+    roomId: "Youtube2",
+    title: "Độ Mixi",
+    avatar: "/assets/live-avatar/Mixi.jpg",
 
-Youtube2: {
-  roomId: "Youtube2",
-  title: "Độ Mixi",
-  avatar: "/assets/live-avatar/Mixi.jpg",
-  type: "youtube",
-  videoId: "pCRHYXz0lfE"
-},
+    ownerUid: process.env.YOUTUBE2_OWNER_UID || "",
 
+    type: "youtube",
+    videoId: "pCRHYXz0lfE"
+  },
 
+  Youtube3: {
+    roomId: "Youtube3",
+    title: "Damit2k",
+    avatar: "/assets/live-avatar/Damit2k.jpg",
 
+    ownerUid: process.env.YOUTUBE3_OWNER_UID || "",
 
-Youtube3: {
-  roomId: "Youtube3",
-  title: "Damit2k",
-  avatar: "/assets/live-avatar/Damit2k.jpg",
-  type: "youtube",
-  videoId: "ifuRZZXE8JY"
-}
-
-
+    type: "youtube",
+    videoId: "ifuRZZXE8JY"
+  }
 
 });
 
+
+
+/* ==========================================
+   LINKED LIVE - ACCOUNT MANAGEMENT
+========================================== */
+
+function getLinkedLiveOwner(roomId, db = loadUsers()) {
+
+  if (!Object.hasOwn(VIRTUAL_LIVE_ROOMS, roomId)) {
+    return null;
+  }
+
+  const room = VIRTUAL_LIVE_ROOMS[roomId];
+
+  const uid = String(room.ownerUid || "").trim();
+
+  if (!uid || !Object.hasOwn(db, uid)) {
+    return null;
+  }
+
+  const account = db[uid];
+
+  if (
+    !account?.profile ||
+    account.profile.accountBlocked
+  ) {
+    return null;
+  }
+
+  return {
+    uid,
+    name: account.profile.name || "User",
+    avatar: normalizeAvatar(
+      account.profile.avatar || ""
+    ) || "/icons/icon-192.png",
+    verified: Boolean(account.profile.verified)
+  };
+
+}
+
+
+function getLinkedLiveState(roomId) {
+
+  switch (roomId) {
+
+    case "Youtube1":
+      return yt1State;
+
+    case "Youtube2":
+      return yt2State;
+
+    case "Youtube3":
+      return yt3State;
+
+    default:
+      return null;
+
+  }
+
+}
+
+
+function isLinkedLiveActive(roomId) {
+
+  const state = getLinkedLiveState(roomId);
+
+  return Boolean(
+    state?.live === true &&
+    state.status === "live" &&
+    /^[a-zA-Z0-9_-]{11}$/.test(
+      String(state.videoId || "")
+    )
+  );
+
+}
 
 
 /* ==========================================
@@ -19180,13 +19739,28 @@ if (
       ? await refreshYoutube2()
       : await refreshYoutube3();
 
-  return res.json({
-    ...room,
-    ...state,
-    serverNow: Date.now(),
-    startedAt: null
-  });
+const linkedOwner = getLinkedLiveOwner(roomId);
 
+return res.json({
+
+  ...room,
+  ...state,
+
+  linkedOwner,
+
+  giftsEnabled: Boolean(
+    linkedOwner &&
+    state.live &&
+    state.status === "live"
+  ),
+
+  sourceType: "external",
+
+  serverNow: Date.now(),
+
+  startedAt: null
+
+});
 }
 
 

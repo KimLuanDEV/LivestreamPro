@@ -3000,6 +3000,23 @@ body.lobby-page #errModal button:focus-visible {
 
 
 
+/* EXTERNAL LINKED LIVE ROOM */
+
+body.lobby-page .lobby-linked-label {
+
+  margin-top: 4px;
+
+  color: #d6b77f;
+
+  font-size: 8px;
+
+  font-weight: 700;
+
+  letter-spacing: .7px;
+
+}
+
+
 </style>
 
 
@@ -4388,8 +4405,8 @@ r.roomId === "Youtube2" ||
 r.roomId === "Youtube3"
 
         ? (
-            youtubeRoomStatus === "live"
-              ? "● LIVE"
+youtubeRoomStatus === "live"
+  ? "● YOUTUBE LIVE"
               : youtubeRoomStatus === "offline"
                 ? "OFFLINE"
                 : youtubeRoomStatus === "unconfigured"
@@ -4414,10 +4431,18 @@ r.roomId === "Youtube3"
     <div class="lobby-hostRow">
       <img class="lobby-ava mini" src="${hostAvatar}">
       <div class="lobby-hostMeta">
-        <div class="lobby-hostname">
-          ${escapeHtml(hostName)}
-          ${verified ? `<span class="tick-blue">✔</span>` : ``}
-        </div>
+
+<div class="lobby-hostname">
+  ${escapeHtml(hostName)}
+  ${verified ? `<span class="tick-blue">✔</span>` : ``}
+</div>
+
+${r.__virtual ? `
+  <div class="lobby-linked-label">
+    EXTERNAL BROADCAST
+  </div>
+` : ""}
+
       </div>
     </div>
 

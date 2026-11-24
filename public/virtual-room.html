@@ -198,6 +198,416 @@ body {
   text-align: center;
 }
 
+
+/* ==========================================
+   LINKED LIVE - LUXURY BLACK & GOLD
+========================================== */
+
+.linked-live-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 12px 15px
+    calc(12px + env(safe-area-inset-bottom, 0px));
+
+  background: linear-gradient(
+    145deg, #211b14, #111217
+  );
+
+  border-top: 1px solid #725834;
+}
+
+.linked-owner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  text-align: left;
+}
+
+.linked-owner img {
+  width: 43px;
+  height: 43px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border: 1.5px solid #c6a36b;
+  border-radius: 50%;
+}
+
+.linked-owner-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.linked-owner-info small {
+  font-size: 9px;
+  letter-spacing: 1.4px;
+  color: #b99a65;
+}
+
+.linked-owner-info strong {
+  font-size: 14px;
+  color: #f3dab0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.linked-owner-info span {
+  font-size: 10px;
+  color: #a9a39b;
+}
+
+.linked-gift-btn {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+
+  border: 1px solid #f3d29a;
+  border-radius: 14px;
+
+  background: linear-gradient(
+    135deg, #f4ddb0, #b58b50
+  );
+
+  color: #261b10;
+  cursor: pointer;
+}
+
+.linked-gift-btn svg {
+  width: 26px;
+  height: 26px;
+}
+
+
+/* GIFT MODAL */
+
+.lg-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.lg-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.72);
+  backdrop-filter: blur(5px);
+}
+
+.lg-sheet {
+  position: relative;
+  z-index: 1;
+
+  width: 100%;
+  max-width: 650px;
+  max-height: 85dvh;
+
+  padding: 12px 15px
+    calc(16px + env(safe-area-inset-bottom, 0px));
+
+  overflow-y: auto;
+
+  background:
+    radial-gradient(
+      ellipse at top,
+      rgba(191,146,73,.13),
+      transparent 60%
+    ),
+    #151519;
+
+  border: 1px solid #917345;
+  border-bottom: 0;
+  border-radius: 24px 24px 0 0;
+
+  box-shadow: 0 -15px 45px rgba(0,0,0,.65);
+
+  animation: lgSlideUp .24s ease-out;
+}
+
+@keyframes lgSlideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.lg-handle {
+  width: 36px;
+  height: 4px;
+  background: #756348;
+  border-radius: 10px;
+  margin: 0 auto 15px;
+}
+
+.lg-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.lg-header small {
+  color: #b89762;
+  font-size: 9px;
+  letter-spacing: 2px;
+}
+
+.lg-header h3 {
+  margin: 5px 0 0;
+  color: #efd6a8;
+  font-size: 19px;
+}
+
+.lg-close {
+  width: 35px;
+  height: 35px;
+  background: #252222;
+  border: 1px solid #655034;
+  border-radius: 10px;
+  color: #eed4a2;
+  font-size: 23px;
+}
+
+
+/* WALLET */
+
+.lg-wallet {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 12px;
+  background: #211c16;
+  border: 1px solid #55432c;
+  border-radius: 11px;
+}
+
+.lg-wallet span {
+  font-size: 11px;
+  color: #c6ad85;
+}
+
+.lg-wallet strong,
+.lg-wallet strong span {
+  color: #f0d5a2;
+  font-size: 15px;
+}
+
+.lg-recipient {
+  padding: 12px 2px;
+  font-size: 12px;
+  color: #bdb4a6;
+}
+
+.lg-recipient strong {
+  color: #e9c78b;
+}
+
+.lg-recipient small {
+  display: block;
+  margin-top: 5px;
+  color: #a69e92;
+  line-height: 1.4;
+}
+
+
+/* GIFT GRID */
+
+.lg-grid {
+  display: grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: 8px;
+
+  max-height: 32dvh;
+  overflow-y: auto;
+
+  padding: 3px 1px;
+}
+
+.lg-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+
+  min-width: 0;
+  min-height: 94px;
+  padding: 8px 3px;
+
+  border: 1px solid #42372a;
+  border-radius: 12px;
+
+  background: #111216;
+  color: #eee1cc;
+  cursor: pointer;
+}
+
+.lg-item.active {
+  border-color: #e4bd7c;
+
+  background: linear-gradient(
+    145deg, #3d2e1c, #211c16
+  );
+
+  box-shadow: inset 0 0 12px rgba(209,168,99,.12);
+}
+
+.lg-item img {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+}
+
+.lg-item .lg-emoji {
+  font-size: 32px;
+  height: 46px;
+  line-height: 46px;
+}
+
+.lg-item strong {
+  max-width: 100%;
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lg-item small {
+  font-size: 10px;
+  color: #d9b778;
+}
+
+
+/* COMBO */
+
+.lg-combo {
+  display: grid;
+  grid-template-columns: repeat(5,1fr);
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.lg-combo button {
+  padding: 9px 0;
+
+  background: #242327;
+  color: #c8b89e;
+
+  border: 1px solid #55452f;
+  border-radius: 9px;
+}
+
+.lg-combo button.active {
+  background: #674d2b;
+  border-color: #d9b579;
+  color: #ffe4b7;
+}
+
+.lg-message {
+  min-height: 32px;
+  padding: 9px 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #e2c58e;
+  text-align: center;
+}
+
+.lg-send {
+  width: 100%;
+  min-height: 48px;
+
+  border: 1px solid #f0d29b;
+  border-radius: 12px;
+
+  background: linear-gradient(
+    135deg, #f4ddb3, #bd9256
+  );
+
+  color: #281d10;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.lg-send:disabled,
+.linked-gift-btn:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+
+/* REALTIME GIFT ANIMATION */
+
+.lg-effect {
+  position: fixed;
+  left: 50%;
+  top: 22%;
+  transform: translateX(-50%);
+  z-index: 11000;
+
+  width: min(280px, 82vw);
+  padding: 20px;
+
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 9px;
+
+  background: linear-gradient(
+    135deg, #392b18ee, #101116f2
+  );
+
+  border: 1px solid #d9b579;
+  border-radius: 19px;
+
+  color: #f2d7a6;
+  pointer-events: none;
+
+  box-shadow: 0 0 28px rgba(218,170,87,.2);
+
+  animation: lgGiftPop .4s ease-out;
+}
+
+.lg-effect span {
+  font-size: 52px;
+}
+
+.lg-effect strong {
+  font-size: 17px;
+}
+
+.lg-effect small {
+  font-size: 12px;
+  text-align: center;
+}
+
+@keyframes lgGiftPop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px) scale(.8);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-sheet,
+  .lg-effect {
+    animation: none;
+  }
+}
+
 </style>
 
 </head>
@@ -250,13 +660,192 @@ body {
   </main>
 
 
-  <footer class="footer">
+<!-- ======================================
+     LINKED LIVE - GIFT TOOLBAR
+======================================= -->
 
-    VIRTUAL LIVE ROOM
+<footer class="footer linked-live-footer">
 
-  </footer>
+  <div class="linked-owner">
+
+    <img
+      id="linkedOwnerAvatar"
+      src="/icons/icon-192.png"
+      alt="Gift recipient"
+    >
+
+    <div class="linked-owner-info">
+
+      <small>GIFT RECIPIENT</small>
+
+      <strong id="linkedOwnerName">
+        Not linked
+      </strong>
+
+      <span>External broadcast</span>
+
+    </div>
+
+  </div>
+
+  <button
+    type="button"
+    id="linkedGiftBtn"
+    class="linked-gift-btn"
+    aria-label="Send a gift"
+    disabled
+  >
+
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+    >
+      <rect x="3" y="8" width="18" height="4" rx="1"/>
+      <path d="M5 12v9h14v-9M12 8v13"/>
+      <path d="M12 8C2 8 5 0 9 3L12 8"/>
+      <path d="M12 8C22 8 19 0 15 3L12 8"/>
+    </svg>
+
+  </button>
+
+</footer>
 
 </div>
+
+
+<!-- ======================================
+     LINKED LIVE - GIFT MODAL
+======================================= -->
+
+<div
+  id="linkedGiftModal"
+  class="lg-modal hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="lgGiftTitle"
+>
+
+  <div
+    id="lgBackdrop"
+    class="lg-backdrop">
+  </div>
+
+  <div class="lg-sheet">
+
+    <div class="lg-handle"></div>
+
+    <div class="lg-header">
+
+      <div>
+
+        <small>LIVESTREAM PRO</small>
+
+        <h3 id="lgGiftTitle">
+          SEND A GIFT
+        </h3>
+
+      </div>
+
+      <button
+        type="button"
+        id="lgClose"
+        class="lg-close"
+        aria-label="Close"
+      >
+        &times;
+      </button>
+
+    </div>
+
+    <div class="lg-wallet">
+
+      <span>MY DIAMONDS</span>
+
+      <strong>
+        💎 <span id="lgBalance">0</span>
+      </strong>
+
+    </div>
+
+    <div class="lg-recipient">
+
+      Gifts will be credited to
+
+      <strong id="lgRecipient">---</strong>
+
+      <small>
+        This is an app gift, not a YouTube donation.
+      </small>
+
+    </div>
+
+    <div
+      id="lgGiftList"
+      class="lg-grid">
+    </div>
+
+    <div class="lg-combo">
+
+      <button type="button" data-qty="1" class="active">
+        ×1
+      </button>
+
+      <button type="button" data-qty="5">
+        ×5
+      </button>
+
+      <button type="button" data-qty="10">
+        ×10
+      </button>
+
+      <button type="button" data-qty="20">
+        ×20
+      </button>
+
+      <button type="button" data-qty="50">
+        ×50
+      </button>
+
+    </div>
+
+    <div
+      id="lgMessage"
+      class="lg-message"
+      role="status">
+    </div>
+
+    <button
+      type="button"
+      id="lgSend"
+      class="lg-send"
+      disabled
+    >
+      SELECT A GIFT
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- REALTIME GIFT EFFECT -->
+
+<div
+  id="lgGiftEffect"
+  class="lg-effect hidden"
+  aria-live="polite"
+>
+
+  <span id="lgEffectIcon"></span>
+
+  <strong id="lgEffectName"></strong>
+
+  <small id="lgEffectText"></small>
+
+</div>
+
 
 
 <script src="/socket.io/socket.io.js"></script>
@@ -304,25 +893,703 @@ body {
   });
 
 
-  function joinRoom() {
+  /* ==========================================
+   LINKED LIVE - GIFT ENGINE
+========================================== */
 
-    socket.emit(
-      "virtual-live:join",
-      { roomId },
-      response => {
+const lg = id => document.getElementById(id);
 
-        if (!response?.ok) {
+let lgOwner = null;
+let lgCatalog = [];
+let lgSelected = null;
+let lgQuantity = 1;
+let lgCoins = 0;
+let lgEnabled = false;
+let lgSending = false;
+let lgJoined = false;
+let lgSourceLive = false;
+let lgEffectTimer = null;
+let lgPending = null;
 
-          showError(
-            "This virtual room is not available."
-          );
+const lgFormat = value =>
+  Number(value || 0).toLocaleString("en-US");
 
-        }
 
-      }
-    );
+// Restore an unconfirmed transaction after reload.
+
+const lgPendingKey =
+  "lsp_linked_gift_pending_" + roomId;
+
+try {
+
+  lgPending = JSON.parse(
+    sessionStorage.getItem(lgPendingKey) || "null"
+  );
+
+} catch {
+
+  lgPending = null;
+
+}
+
+
+/* ==========================================
+   LINKED ACCOUNT DISPLAY
+========================================== */
+
+function renderLinkedOwner(owner) {
+
+  lgOwner = owner || null;
+
+  lg("linkedOwnerName").textContent =
+    owner?.name || "Not linked";
+
+  lg("linkedOwnerAvatar").src =
+    owner?.avatar || "/icons/icon-192.png";
+
+  lg("lgRecipient").textContent =
+    owner
+      ? `${owner.name} (${owner.uid})`
+      : "Unavailable";
+
+  updateLinkedGiftButton();
+
+}
+
+
+lg("linkedOwnerAvatar").onerror = function() {
+
+  this.onerror = null;
+
+  this.src = "/icons/icon-192.png";
+
+};
+
+
+function updateLinkedGiftButton() {
+
+  lg("linkedGiftBtn").disabled = !(
+    socket.connected &&
+    lgJoined &&
+    (
+      (lgOwner && lgSourceLive) ||
+      lgPending
+    )
+  );
+
+}
+
+
+/* ==========================================
+   SEND BUTTON STATE
+========================================== */
+
+function updateLgSend() {
+
+  const btn = lg("lgSend");
+
+  lg("lgBalance").textContent =
+    lgFormat(lgCoins);
+
+  if (lgSending) {
+
+    btn.disabled = true;
+    btn.textContent = "SENDING...";
+
+    return;
 
   }
+
+  if (lgPending) {
+
+    btn.disabled = !(
+      socket.connected &&
+      lgJoined
+    );
+
+    btn.textContent = "CHECK / RETRY TRANSACTION";
+
+    return;
+
+  }
+
+  if (!lgEnabled || !lgSourceLive) {
+
+    btn.disabled = true;
+    btn.textContent = "GIFTS UNAVAILABLE";
+
+    return;
+
+  }
+
+  if (!lgSelected) {
+
+    btn.disabled = true;
+    btn.textContent = "SELECT A GIFT";
+
+    return;
+
+  }
+
+  const total =
+    lgSelected.cost * lgQuantity;
+
+  btn.disabled = !(
+    socket.connected &&
+    lgJoined &&
+    lgCoins >= total
+  );
+
+  btn.textContent = lgCoins >= total
+    ? `SEND GIFT · 💎 ${lgFormat(total)}`
+    : "INSUFFICIENT DIAMONDS";
+
+}
+
+
+/* ==========================================
+   GIFT IMAGES
+========================================== */
+
+// Adjust this path if your gift assets
+// are stored in another directory.
+
+const LG_GIFT_ASSET_PATH = "/assets/gifts/";
+
+const LG_GIFT_FILES = {
+
+  king: "crown.webp",
+
+  celestialDragon: "celestial-dragon.webp"
+
+};
+
+
+/* ==========================================
+   RENDER GIFT CATALOG
+========================================== */
+
+function renderLgCatalog() {
+
+  const list = lg("lgGiftList");
+
+  list.replaceChildren();
+
+  for (const gift of lgCatalog) {
+
+    const btn = document.createElement("button");
+
+    btn.type = "button";
+
+    btn.className = "lg-item";
+
+    if (lgSelected?.id === gift.id) {
+
+      btn.classList.add("active");
+
+    }
+
+    const img = document.createElement("img");
+
+    img.src = LG_GIFT_ASSET_PATH +
+      (
+        LG_GIFT_FILES[gift.id] ||
+        gift.id + ".webp"
+      );
+
+    img.alt = gift.name;
+
+    img.loading = "lazy";
+
+
+    // Fallback when an asset is missing.
+
+    img.onerror = () => {
+
+      const emoji =
+        document.createElement("span");
+
+      emoji.className = "lg-emoji";
+
+      emoji.textContent =
+        gift.emoji || "🎁";
+
+      img.replaceWith(emoji);
+
+    };
+
+
+    const name =
+      document.createElement("strong");
+
+    name.textContent = gift.name;
+
+
+    const cost =
+      document.createElement("small");
+
+    cost.textContent =
+      "💎 " + lgFormat(gift.cost);
+
+
+    btn.append(img, name, cost);
+
+
+    btn.onclick = () => {
+
+      if (lgSending || lgPending) return;
+
+      lgSelected = gift;
+
+      list.querySelectorAll(".lg-item")
+        .forEach(item =>
+          item.classList.remove("active")
+        );
+
+      btn.classList.add("active");
+
+      lg("lgMessage").textContent = "";
+
+      updateLgSend();
+
+    };
+
+    list.appendChild(btn);
+
+  }
+
+}
+
+
+/* ==========================================
+   LOAD REAL SERVER CATALOG
+========================================== */
+
+function loadLgCatalog() {
+
+  lgEnabled = false;
+
+  updateLgSend();
+
+  socket.timeout(8000).emit(
+
+    "virtual-live:gift:catalog",
+
+    { roomId },
+
+    (error, reply) => {
+
+      if (
+        error ||
+        !reply?.ok ||
+        !socket.connected ||
+        !lgJoined
+      ) {
+
+        lg("lgMessage").textContent =
+          "Unable to load gifts. Please try again.";
+
+        updateLgSend();
+
+        return;
+
+      }
+
+      renderLinkedOwner(reply.owner);
+
+      lgCatalog = Array.isArray(reply.gifts)
+        ? reply.gifts
+        : [];
+
+      lgCoins = Number(reply.coins || 0);
+
+      lgEnabled = Boolean(reply.enabled);
+
+      lgSelected = lgCatalog.find(
+        gift => gift.id === lgSelected?.id
+      ) || lgCatalog[0] || null;
+
+
+      if (lgPending) {
+
+        lg("lgMessage").textContent =
+          "An unconfirmed transaction exists. " +
+          "Retry it to check the previous payment.";
+
+      } else if (!reply.authenticated) {
+
+        lg("lgMessage").textContent =
+          "Please sign in to send gifts.";
+
+      } else if (!lgEnabled) {
+
+        lg("lgMessage").textContent =
+          "Gifts are currently unavailable.";
+
+      } else {
+
+        lg("lgMessage").textContent = "";
+
+      }
+
+
+      renderLgCatalog();
+
+      updateLgSend();
+
+    }
+
+  );
+
+}
+
+
+/* ==========================================
+   OPEN / CLOSE GIFT PANEL
+========================================== */
+
+lg("linkedGiftBtn").onclick = () => {
+
+  lg("linkedGiftModal")
+    .classList.remove("hidden");
+
+  loadLgCatalog();
+
+};
+
+
+function closeLinkedGiftModal() {
+
+  lg("linkedGiftModal")
+    .classList.add("hidden");
+
+}
+
+
+lg("lgClose").onclick =
+  closeLinkedGiftModal;
+
+lg("lgBackdrop").onclick =
+  closeLinkedGiftModal;
+
+
+/* ==========================================
+   GIFT COMBO
+========================================== */
+
+document.querySelectorAll(
+  ".lg-combo button"
+).forEach(btn => {
+
+  btn.onclick = () => {
+
+    if (lgSending || lgPending) return;
+
+    lgQuantity = Number(btn.dataset.qty);
+
+    document.querySelectorAll(
+      ".lg-combo button"
+    ).forEach(item => {
+
+      item.classList.toggle(
+        "active",
+        item === btn
+      );
+
+    });
+
+    updateLgSend();
+
+  };
+
+});
+
+
+/* ==========================================
+   SEND REAL GIFT
+========================================== */
+
+lg("lgSend").onclick = () => {
+
+  if (
+    lgSending ||
+    !socket.connected ||
+    !lgJoined
+  ) return;
+
+
+  if (!lgPending) {
+
+    if (
+      !lgEnabled ||
+      !lgSourceLive ||
+      !lgSelected ||
+      !lgOwner
+    ) return;
+
+    const total =
+      lgSelected.cost * lgQuantity;
+
+    if (lgCoins < total) return;
+
+
+    lgPending = {
+
+      roomId,
+
+      giftId: lgSelected.id,
+
+      quantity: lgQuantity,
+
+      expectedOwnerUid: lgOwner.uid,
+
+      expectedCost: total,
+
+      requestId: crypto.randomUUID()
+
+    };
+
+  }
+
+
+  // Save the same request ID for safe retries.
+
+  try {
+
+    sessionStorage.setItem(
+      lgPendingKey,
+      JSON.stringify(lgPending)
+    );
+
+  } catch {
+
+    lgPending = null;
+
+    lg("lgMessage").textContent =
+      "Unable to secure transaction. Please retry.";
+
+    updateLgSend();
+
+    return;
+
+  }
+
+
+  lgSending = true;
+
+  lg("lgMessage").textContent = "";
+
+  updateLgSend();
+
+
+  socket.timeout(10000).emit(
+
+    "virtual-live:gift:send",
+
+    lgPending,
+
+    (error, reply) => {
+
+      lgSending = false;
+
+
+      // Do not create a new transaction ID
+      // when the server response is lost.
+
+      if (error || !reply) {
+
+        lg("lgMessage").textContent =
+          "Payment status unknown. " +
+          "Retry to check the same transaction.";
+
+        updateLgSend();
+
+        return;
+
+      }
+
+
+      lgPending = null;
+
+      sessionStorage.removeItem(lgPendingKey);
+
+
+      if (!reply.ok) {
+
+        lg("lgMessage").textContent =
+          reply.error || "Unable to send gift.";
+
+        updateLgSend();
+
+        return;
+
+      }
+
+
+      lgCoins = Number(reply.coins || 0);
+
+      lg("lgMessage").textContent =
+        "Gift sent successfully!";
+
+      updateLgSend();
+
+      updateLinkedGiftButton();
+
+    }
+
+  );
+
+};
+
+
+/* ==========================================
+   REALTIME WALLET UPDATE
+========================================== */
+
+socket.on("coin-update", data => {
+
+  if (
+    Number.isSafeInteger(
+      Number(data?.coins)
+    )
+  ) {
+
+    lgCoins = Number(data.coins);
+
+    updateLgSend();
+
+  }
+
+});
+
+
+/* ==========================================
+   REALTIME GIFT EFFECT
+========================================== */
+
+socket.on("virtual-live:gift:new", data => {
+
+  if (data?.roomId !== roomId) return;
+
+  lg("lgEffectIcon").textContent =
+    data.emoji || "🎁";
+
+  lg("lgEffectName").textContent =
+    data.donor || "Viewer";
+
+  lg("lgEffectText").textContent =
+
+    `Sent ${data.giftName} ×${data.quantity}` +
+    ` · 💎 ${lgFormat(data.cost)}`;
+
+
+  const effect = lg("lgGiftEffect");
+
+  effect.classList.add("hidden");
+
+  // Restart CSS animation.
+
+  void effect.offsetWidth;
+
+  effect.classList.remove("hidden");
+
+
+  clearTimeout(lgEffectTimer);
+
+  lgEffectTimer = setTimeout(() => {
+
+    effect.classList.add("hidden");
+
+  }, 3500);
+
+});
+
+
+/* ==========================================
+   CONNECTION PROTECTION
+========================================== */
+
+socket.on("disconnect", () => {
+
+  lgJoined = false;
+
+  lgEnabled = false;
+
+  lg("lgMessage").textContent =
+    "Connection lost. Reconnecting...";
+
+  updateLinkedGiftButton();
+
+  updateLgSend();
+
+});
+
+
+/* ==========================================
+   LINKED LIVE SOURCE STATUS
+========================================== */
+
+function applyLinkedLiveRoom(room) {
+
+  lgSourceLive = Boolean(
+    room?.giftsEnabled &&
+    room?.status === "live"
+  );
+
+  renderLinkedOwner(room?.linkedOwner);
+
+  if (!lgSourceLive) {
+
+    lgEnabled = false;
+
+  }
+
+  updateLgSend();
+
+}
+
+function joinRoom() {
+
+  lgJoined = false;
+
+  socket.timeout(8000).emit(
+
+    "virtual-live:join",
+
+    { roomId },
+
+    (error, response) => {
+
+      if (error || !response?.ok) {
+
+        showError(
+          "This virtual room is not available."
+        );
+
+        updateLinkedGiftButton();
+
+        return;
+
+      }
+
+      lgJoined = true;
+
+      updateLinkedGiftButton();
+
+      if (
+        !lg("linkedGiftModal")
+          .classList.contains("hidden")
+      ) {
+
+        loadLgCatalog();
+
+      }
+
+    }
+
+  );
+
+}
 
 
   socket.on("connect", joinRoom);
@@ -365,10 +1632,12 @@ body {
         throw new Error("Room not found");
       }
 
-      const room = await response.json();
+const room = await response.json();
 
-      roomTitle.textContent =
-        room.title || roomId;
+applyLinkedLiveRoom(room);
+
+roomTitle.textContent =
+  room.title || roomId;
 
       roomAvatar.src =
         room.avatar || "/icons/icon-192.png";
@@ -894,12 +2163,22 @@ if (
 
       if (!response.ok) return;
 
-      const room = await response.json();
+const room = await response.json();
 
-      const nextId =
-        room.status === "live"
-          ? String(room.videoId || "")
-          : "";
+applyLinkedLiveRoom(room);
+
+if (
+  !lg("linkedGiftModal")
+    .classList.contains("hidden") &&
+  !lgSending
+) {
+  loadLgCatalog();
+}
+
+const nextId =
+  room.status === "live"
+    ? String(room.videoId || "")
+    : "";
 
       // Refresh only when live source changes.
       if (
