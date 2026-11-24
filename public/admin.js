@@ -1719,10 +1719,27 @@ if (typeof io === "function") {
 
 (() => {
 
+  console.log(
+    "[AUTH PERFORMANCE] Monitor V1.1 initializing"
+  );
+
   const panel = document.getElementById(
     "authPerformancePanel"
   );
 
+  if (!panel) {
+
+    console.error(
+      "[AUTH PERFORMANCE] Panel not found"
+    );
+
+    return;
+
+  }
+
+  console.log(
+    "[AUTH PERFORMANCE] Panel detected"
+  );
   if (!panel) return;
 
   // Prevent duplicate initialization
@@ -1993,17 +2010,37 @@ if (typeof io === "function") {
 
       }
 
-      const data = await response.json();
+const contentType =
+  response.headers.get("content-type") || "";
 
-      if (!response.ok || !data.ok) {
+if (!contentType.includes("application/json")) {
 
-        throw new Error(
-          "Unable to load auth statistics"
-        );
+  throw new Error(
+    `Invalid API response (HTTP ${response.status})`
+  );
 
-      }
+}
 
-      renderStats(data);
+const data = await response.json();
+
+if (!response.ok || !data.ok) {
+
+  throw new Error(
+    data.error || `HTTP ${response.status}`
+  );
+
+}
+
+console.log("[AUTH PERFORMANCE] Updated", {
+  version: data.version,
+  cachedAccounts: data.cachedAccounts,
+  hits: data.hits,
+  misses: data.misses,
+  hitRate: data.hitRate
+});
+
+renderStats(data);
+
 
     } catch (error) {
 
@@ -2012,10 +2049,10 @@ if (typeof io === "function") {
         "error"
       );
 
-      setText(
-        "authPerfUpdated",
-        "Update failed. Retrying..."
-      );
+setText(
+  "authPerfUpdated",
+  "Update failed: " + error.message
+);
 
       console.warn(
         "[AUTH PERFORMANCE]",
