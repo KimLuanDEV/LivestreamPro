@@ -1,0 +1,1998 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1,
+      viewport-fit=cover">
+
+<meta name="theme-color" content="#0b0d10">
+
+<title>Security Center | Livestream Pro</title>
+
+<style>
+
+/* ==========================================
+   LSP SECURITY CENTER
+   LUXURY BLACK & GOLD
+========================================== */
+
+:root {
+  color-scheme: dark;
+
+  --bg: #0b0d10;
+  --panel: #171a1f;
+  --gold: #d9b879;
+  --gold-light: #f1d9a3;
+  --border: #383126;
+  --text: #f4f1ea;
+  --muted: #979ca5;
+  --green: #65d9a0;
+  --red: #ff8585;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+body {
+  margin: 0;
+
+  background:
+    radial-gradient(
+      ellipse at top,
+      #30251a 0,
+      transparent 450px
+    ),
+    var(--bg);
+
+  color: var(--text);
+
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  min-height: 100dvh;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+/* MAIN CONTAINER */
+
+.security-app {
+  width: 100%;
+  max-width: 960px;
+
+  margin: auto;
+
+  padding:
+    max(18px, env(safe-area-inset-top))
+    14px
+    max(25px, env(safe-area-inset-bottom));
+}
+
+/* HEADER */
+
+.security-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 5px 0 18px;
+}
+
+.back-btn {
+  color: var(--gold);
+
+  text-decoration: none;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  padding: 10px 13px;
+
+  border: 1px solid var(--border);
+  border-radius: 10px;
+
+  background: #1a1814;
+}
+
+.brand {
+  color: var(--gold);
+
+  font-size: 10px;
+  letter-spacing: 2px;
+
+  font-weight: 800;
+}
+
+.page-title {
+  margin: 8px 0 5px;
+
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.page-subtitle {
+  margin: 0 0 20px;
+
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* FIREWALL STATUS */
+
+.firewall-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  padding: 20px 15px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #30271b,
+      #15171b
+    );
+
+  border: 1px solid #766039;
+  border-radius: 18px;
+
+  box-shadow:
+    0 8px 30px #0005;
+}
+
+.shield-icon {
+  width: 58px;
+  height: 64px;
+
+  color: var(--gold);
+
+  flex-shrink: 0;
+}
+
+.hero-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.hero-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+
+  color: var(--gold);
+}
+
+.hero-info h2 {
+  margin: 7px 0;
+
+  font-size: 17px;
+}
+
+.hero-info p {
+  margin: 0;
+
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.status-pill {
+  padding: 7px 10px;
+
+  border: 1px solid currentColor;
+  border-radius: 30px;
+
+  color: var(--muted);
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.status-pill.active {
+  color: var(--green);
+  background: #65d9a012;
+}
+
+.status-pill.offline {
+  color: var(--red);
+  background: #ff858512;
+}
+
+/* TOOLBAR */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 8px;
+
+  margin: 16px 0;
+}
+
+.updated-text {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.action-btn {
+  border: 1px solid #655335;
+
+  color: var(--gold);
+
+  background: #211e19;
+
+  padding: 9px 12px;
+
+  border-radius: 9px;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* METRIC CARDS */
+
+.metrics {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 10px;
+}
+
+.metric {
+  min-width: 0;
+
+  border: 1px solid var(--border);
+
+  background:
+    linear-gradient(
+      145deg,
+      #1e2126,
+      #131519
+    );
+
+  border-radius: 15px;
+
+  padding: 16px;
+}
+
+.metric-symbol {
+  font-size: 18px;
+  color: var(--gold);
+
+  margin-bottom: 12px;
+}
+
+.metric-label {
+  font-size: 9px;
+  font-weight: 700;
+
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+.metric-value {
+  font-size: 27px;
+  font-weight: 800;
+
+  color: var(--gold-light);
+
+  margin: 9px 0;
+
+  font-variant-numeric: tabular-nums;
+
+  overflow-wrap: anywhere;
+}
+
+.metric-desc {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+/* PANEL */
+
+.panel {
+  margin-top: 14px;
+
+  padding: 17px;
+
+  background: var(--panel);
+
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.panel-title {
+  margin: 0 0 16px;
+
+  font-size: 15px;
+  font-weight: 750;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  margin-bottom: 15px;
+}
+
+.panel-head .panel-title {
+  margin: 0;
+}
+
+.data-row {
+  display: flex;
+
+  justify-content: space-between;
+  align-items: center;
+
+  gap: 10px;
+
+  font-size: 12px;
+
+  margin: 10px 0;
+}
+
+.data-row strong {
+  color: var(--gold);
+}
+
+.progress {
+  height: 7px;
+
+  background: #303238;
+
+  border-radius: 20px;
+
+  overflow: hidden;
+}
+
+.progress span {
+  display: block;
+
+  height: 100%;
+  width: 0;
+
+  background:
+    linear-gradient(
+      90deg,
+      #94713c,
+      #efcf92
+    );
+
+  border-radius: 20px;
+
+  transition: width .4s ease;
+}
+
+.progress.blue span {
+  background: #779cbf;
+}
+
+.panel-note {
+  margin-top: 12px;
+
+  color: var(--muted);
+
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+/* CHART */
+
+.activity-chart {
+  width: 100%;
+  height: 115px;
+
+  display: block;
+
+  margin: 15px 0;
+}
+
+.chart-grid {
+  stroke: #ffffff12;
+  fill: none;
+}
+
+.chart-line {
+  stroke: var(--gold);
+  stroke-width: 2;
+  fill: none;
+
+  vector-effect: non-scaling-stroke;
+}
+
+/* SECURITY LOGS */
+
+.log-search {
+  width: 100%;
+
+  padding: 12px;
+
+  color: var(--text);
+
+  border: 1px solid #454039;
+  border-radius: 10px;
+
+  background: #0f1115;
+
+  outline: none;
+
+  margin-bottom: 12px;
+}
+
+.log-search:focus {
+  border-color: var(--gold);
+}
+
+.log-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  padding: 13px 0;
+
+  border-bottom: 1px solid #ffffff0c;
+}
+
+.log-icon {
+  width: 34px;
+  height: 34px;
+
+  flex-shrink: 0;
+
+  display: grid;
+  place-items: center;
+
+  background: #ff858512;
+
+  color: var(--red);
+
+  border: 1px solid #ff858530;
+  border-radius: 10px;
+}
+
+.log-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.log-type {
+  color: var(--gold-light);
+
+  font-size: 10px;
+  font-weight: 750;
+
+  overflow-wrap: anywhere;
+}
+
+.log-ip {
+  color: var(--muted);
+
+  margin-top: 5px;
+
+  font-size: 11px;
+
+  overflow-wrap: anywhere;
+}
+
+.log-time {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.log-empty {
+  text-align: center;
+
+  padding: 25px 8px;
+
+  color: var(--muted);
+
+  font-size: 12px;
+}
+
+/* NOTICE */
+
+.notice {
+  margin: 12px 0;
+
+  padding: 12px;
+
+  background: #33281a;
+
+  color: #e5c58d;
+
+  border: 1px solid #6e5735;
+  border-radius: 10px;
+
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.notice.error {
+  color: var(--red);
+  background: #321e20;
+  border-color: #784346;
+}
+
+/* ADMIN LOGIN */
+
+.login-panel {
+  max-width: 420px;
+
+  margin: 40px auto;
+
+  background:
+    linear-gradient(
+      145deg,
+      #242017,
+      #14161a
+    );
+
+  border: 1px solid #80663c;
+
+  padding: 28px 22px;
+
+  border-radius: 22px;
+
+  text-align: center;
+}
+
+.login-shield {
+  width: 80px;
+  height: 80px;
+
+  margin: 0 auto 20px;
+
+  color: var(--gold);
+}
+
+.login-panel h2 {
+  color: var(--gold-light);
+  font-size: 22px;
+}
+
+.login-panel p {
+  color: var(--muted);
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.password-input {
+  width: 100%;
+
+  margin: 18px 0 12px;
+
+  padding: 15px;
+
+  border: 1px solid #6a5535;
+  border-radius: 12px;
+
+  color: white;
+  background: #0e1013;
+
+  outline: none;
+}
+
+.unlock-btn {
+  width: 100%;
+
+  padding: 14px;
+
+  border: 0;
+  border-radius: 12px;
+
+  color: #18120a;
+
+  background:
+    linear-gradient(
+      135deg,
+      #a78043,
+      #f2d69b
+    );
+
+  font-weight: 800;
+  font-size: 12px;
+
+  letter-spacing: 1px;
+}
+
+.security-footer {
+  padding: 26px 0;
+
+  text-align: center;
+
+  color: #8d816b;
+
+  font-size: 9px;
+  letter-spacing: 2px;
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+
+  .security-app {
+    max-width: 460px;
+  }
+
+  .metrics {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .metric {
+    padding: 14px;
+  }
+
+  .metric-value {
+    font-size: 24px;
+  }
+
+  .page-title {
+    font-size: 27px;
+  }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<main class="security-app">
+
+  <!-- HEADER -->
+
+  <header class="security-header">
+
+<a class="back-btn"
+   href="/lsp-admin-128995.html">
+  ← ADMIN DASHBOARD
+</a>
+
+    <span class="brand">
+      LIVESTREAM PRO
+    </span>
+
+  </header>
+
+  <h1 class="page-title">
+    Security Center
+  </h1>
+
+  <p class="page-subtitle">
+    Application firewall & system monitoring
+  </p>
+
+  <!-- SYSTEM MESSAGE -->
+
+  <div id="systemMessage"
+       class="notice"
+       role="status"
+       aria-live="polite">
+
+    Checking admin session...
+
+  </div>
+
+  <!-- ADMIN AUTHENTICATION -->
+
+  <section id="loginPanel"
+           class="login-panel"
+           hidden>
+
+    <svg class="login-shield"
+         viewBox="0 0 64 72"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="2">
+
+      <path d="M32 3 L59 13 V34
+               Q59 56 32 69
+               Q5 56 5 34 V13 Z"/>
+
+      <path d="M20 34 L28 42 L45 24"
+            stroke-width="4"
+            stroke-linecap="round"/>
+
+    </svg>
+
+    <h2>Restricted Access</h2>
+
+    <p>
+      Enter your administrator password
+      to access the Security Center.
+    </p>
+
+    <form id="loginForm">
+
+      <input
+        type="password"
+        id="adminPassword"
+        class="password-input"
+        placeholder="Admin password"
+        aria-label="Admin password"
+        autocomplete="current-password"
+        maxlength="256"
+        required>
+
+      <button
+        type="submit"
+        class="unlock-btn"
+        id="unlockBtn">
+
+        UNLOCK SECURITY CENTER
+
+      </button>
+
+    </form>
+
+  </section>
+
+  <!-- DASHBOARD -->
+
+  <div id="dashboard" hidden>
+
+    <section class="firewall-hero">
+
+      <svg class="shield-icon"
+           viewBox="0 0 64 72"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="2">
+
+        <path d="M32 3 L59 13 V34
+                 Q59 56 32 69
+                 Q5 56 5 34 V13 Z"/>
+
+        <path d="M20 34 L28 42 L45 24"
+              stroke-width="4"
+              stroke-linecap="round"/>
+
+      </svg>
+
+      <div class="hero-info">
+
+        <div class="hero-label">
+          CYBER DEFENSE SYSTEM
+        </div>
+
+        <h2>Application Firewall</h2>
+
+        <p id="firewallVersion">
+          Version —
+        </p>
+
+      </div>
+
+      <span id="firewallStatus"
+            class="status-pill">
+
+        CONNECTING
+
+      </span>
+
+    </section>
+
+    <!-- TOOLBAR -->
+
+    <div class="toolbar">
+
+      <span id="lastUpdated"
+            class="updated-text">
+
+        Waiting for data
+
+      </span>
+
+      <div>
+
+        <button id="refreshBtn"
+                class="action-btn">
+
+          REFRESH
+
+        </button>
+
+        <button id="logoutBtn"
+                class="action-btn">
+
+          SIGN OUT
+
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- METRICS -->
+
+    <section class="metrics">
+
+      <article class="metric">
+        <div class="metric-symbol">⬡</div>
+        <div class="metric-label">
+          TOTAL BLOCKED
+        </div>
+        <div class="metric-value"
+             id="totalBlocked">—</div>
+        <div class="metric-desc">
+          Since server start
+        </div>
+      </article>
+
+      <article class="metric">
+        <div class="metric-symbol">◎</div>
+        <div class="metric-label">
+          HTTP BLOCKED
+        </div>
+        <div class="metric-value"
+             id="httpBlocked">—</div>
+        <div class="metric-desc">
+          Rejected HTTP requests
+        </div>
+      </article>
+
+      <article class="metric">
+        <div class="metric-symbol">ϟ</div>
+        <div class="metric-label">
+          SOCKET BLOCKED
+        </div>
+        <div class="metric-value"
+             id="socketBlocked">—</div>
+        <div class="metric-desc">
+          Rejected socket operations
+        </div>
+      </article>
+
+      <article class="metric">
+        <div class="metric-symbol">⊘</div>
+        <div class="metric-label">
+          ORIGIN REJECTED
+        </div>
+        <div class="metric-value"
+             id="originBlocked">—</div>
+        <div class="metric-desc">
+          Origin validation
+        </div>
+      </article>
+
+      <article class="metric">
+        <div class="metric-symbol">⌁</div>
+        <div class="metric-label">
+          ACTIVE SOCKETS
+        </div>
+        <div class="metric-value"
+             id="activeConnections">—</div>
+        <div class="metric-desc">
+          Current connections
+        </div>
+      </article>
+
+      <article class="metric">
+        <div class="metric-symbol">◉</div>
+        <div class="metric-label">
+          OBSERVED IPs
+        </div>
+        <div class="metric-value"
+             id="activeIPs">—</div>
+        <div class="metric-desc">
+          May include proxy IPs
+        </div>
+      </article>
+
+      <article class="metric">
+        <div class="metric-symbol">▤</div>
+        <div class="metric-label">
+          SERVER MEMORY
+        </div>
+        <div class="metric-value"
+             id="memoryRSS">—</div>
+        <div class="metric-desc">
+          Process RSS
+        </div>
+      </article>
+
+      <article class="metric">
+        <div class="metric-symbol">▧</div>
+        <div class="metric-label">
+          HEAP USED
+        </div>
+        <div class="metric-value"
+             id="memoryHeap">—</div>
+        <div class="metric-desc">
+          JavaScript memory
+        </div>
+      </article>
+
+      <article class="metric">
+        <div class="metric-symbol">◷</div>
+        <div class="metric-label">
+          FIREWALL UPTIME
+        </div>
+        <div class="metric-value"
+             id="uptime">—</div>
+        <div class="metric-desc">
+          Current process
+        </div>
+      </article>
+
+    </section>
+
+    <!-- BLOCKED TRAFFIC -->
+
+    <section class="panel">
+
+      <h2 class="panel-title">
+        Blocked Traffic
+      </h2>
+
+      <div class="data-row">
+        <span>HTTP Requests</span>
+        <strong id="httpShare">—</strong>
+      </div>
+
+      <div class="progress">
+        <span id="httpProgress"></span>
+      </div>
+
+      <div class="data-row">
+        <span>Socket.IO Events</span>
+        <strong id="socketShare">—</strong>
+      </div>
+
+      <div class="progress blue">
+        <span id="socketProgress"></span>
+      </div>
+
+      <p class="panel-note">
+        Distribution of recorded firewall blocks.
+      </p>
+
+    </section>
+
+    <!-- ACTIVITY CHART -->
+
+    <section class="panel">
+
+      <h2 class="panel-title">
+        Recent Security Activity
+      </h2>
+
+      <svg class="activity-chart"
+           viewBox="0 0 300 100"
+           preserveAspectRatio="none">
+
+        <path class="chart-grid"
+              d="M0 25H300
+                 M0 50H300
+                 M0 75H300
+                 M0 99H300"/>
+
+        <polyline id="activityLine"
+                  class="chart-line"
+                  points=""/>
+
+      </svg>
+
+      <div class="panel-note"
+           id="chartDescription">
+
+        Collecting real-time samples...
+
+      </div>
+
+    </section>
+
+    <!-- RATE LIMIT STORAGE -->
+
+    <section class="panel">
+
+      <h2 class="panel-title">
+        Rate Limit Storage
+      </h2>
+
+      <div class="data-row">
+
+        <span>HTTP buckets</span>
+
+        <strong id="httpTracked">—</strong>
+
+      </div>
+
+      <div class="progress">
+        <span id="httpCapacity"></span>
+      </div>
+
+      <div class="data-row">
+
+        <span>Socket buckets</span>
+
+        <strong id="socketTracked">—</strong>
+
+      </div>
+
+      <div class="progress blue">
+        <span id="socketCapacity"></span>
+      </div>
+
+      <p class="panel-note">
+        Maximum 20,000 entries per store.
+      </p>
+
+    </section>
+
+    <!-- SECURITY CONFIGURATION -->
+
+    <section class="panel">
+
+      <h2 class="panel-title">
+        Protection Configuration
+      </h2>
+
+      <div class="data-row">
+        <span>HTTP Firewall</span>
+        <strong>CONFIGURED</strong>
+      </div>
+
+      <div class="data-row">
+        <span>Socket Anti-Flood</span>
+        <strong>CONFIGURED</strong>
+      </div>
+
+      <div class="data-row">
+        <span>Origin Validation</span>
+        <strong>CONFIGURED</strong>
+      </div>
+
+      <div class="data-row">
+        <span>Private File Protection</span>
+        <strong>CONFIGURED</strong>
+      </div>
+
+      <div class="data-row">
+        <span>Authentication Rate Limits</span>
+        <strong>CONFIGURED</strong>
+      </div>
+
+      <div class="notice">
+
+        Client IP resolution through Render
+        has not been independently verified.
+        Observed addresses may represent proxies.
+
+      </div>
+
+      <p class="panel-note">
+        Configuration overview, not an independent
+        security audit.
+      </p>
+
+    </section>
+
+    <!-- SECURITY LOG -->
+
+    <section class="panel">
+
+      <div class="panel-head">
+
+        <h2 class="panel-title">
+          Security Event Log
+        </h2>
+
+        <button id="exportBtn"
+                class="action-btn"
+                disabled>
+
+          EXPORT JSON
+
+        </button>
+
+      </div>
+
+      <input
+        id="logSearch"
+        class="log-search"
+        type="search"
+        placeholder="Search IP or event..."
+        aria-label="Search security events">
+
+      <div id="logCount"
+           class="updated-text"></div>
+
+      <div id="securityLogs"></div>
+
+      <div id="emptyLogs"
+           class="log-empty">
+
+        Waiting for security events...
+
+      </div>
+
+      <p class="panel-note">
+        Latest sampled warnings.
+        Logs are retained in memory only.
+      </p>
+
+    </section>
+
+  </div>
+
+  <footer class="security-footer">
+
+    LIVESTREAM PRO · SECURITY OPERATIONS
+
+  </footer>
+
+</main>
+
+<script>
+
+"use strict";
+
+/* ==========================================
+   SECURITY CENTER ENGINE
+========================================== */
+
+const $ = id => document.getElementById(id);
+
+const REFRESH_INTERVAL = 10000;
+
+let refreshTimer = null;
+let isAuthenticated = false;
+let isLoading = false;
+let generation = 0;
+
+let recentEvents = [];
+let activitySamples = [];
+
+let previousTotal = null;
+let previousStart = null;
+
+/* ==========================================
+   API REQUEST
+========================================== */
+
+async function adminApi(endpoint, options = {}) {
+
+  const controller = new AbortController();
+
+  const timeout = setTimeout(() => {
+    controller.abort();
+  }, 8000);
+
+  try {
+
+    const response = await fetch(
+      "/api/admin/" + endpoint,
+      {
+        ...options,
+        credentials: "same-origin",
+        cache: "no-store",
+        signal: controller.signal
+      }
+    );
+
+    const data = await response
+      .json()
+      .catch(() => ({}));
+
+    if (!response.ok) {
+
+      const error = new Error(
+        data.message ||
+        data.error ||
+        "HTTP " + response.status
+      );
+
+      error.status = response.status;
+
+      throw error;
+
+    }
+
+    return data;
+
+  } finally {
+
+    clearTimeout(timeout);
+
+  }
+
+}
+
+/* ==========================================
+   HELPERS
+========================================== */
+
+function showMessage(message, error = false) {
+
+  const el = $("systemMessage");
+
+  el.textContent = message;
+
+  el.className =
+    "notice" + (error ? " error" : "");
+
+  el.hidden = !message;
+
+}
+
+function formatNumber(value) {
+
+  return Number.isFinite(value)
+    ? value.toLocaleString("en-US")
+    : "—";
+
+}
+
+function formatUptime(seconds) {
+
+  if (!Number.isFinite(seconds)) return "—";
+
+  const days = Math.floor(seconds / 86400);
+
+  const hours = Math.floor(
+    seconds % 86400 / 3600
+  );
+
+  const minutes = Math.floor(
+    seconds % 3600 / 60
+  );
+
+  return `${days}d ${hours}h ${minutes}m`;
+
+}
+
+function setProgress(id, percentage) {
+
+  const value = Number.isFinite(percentage)
+    ? Math.max(0, Math.min(100, percentage))
+    : 0;
+
+  $(id).style.width = value + "%";
+
+}
+
+/* ==========================================
+   ADMIN ACCESS
+========================================== */
+
+function showLogin(message = "") {
+
+  generation++;
+
+  isAuthenticated = false;
+
+  clearTimeout(refreshTimer);
+
+  $("dashboard").hidden = true;
+  $("loginPanel").hidden = false;
+
+  recentEvents = [];
+  activitySamples = [];
+
+  previousTotal = null;
+  previousStart = null;
+
+  $("securityLogs").replaceChildren();
+  $("activityLine").setAttribute("points", "");
+  $("exportBtn").disabled = true;
+
+  document.querySelectorAll(".metric-value")
+    .forEach(el => {
+      el.textContent = "—";
+    });
+
+  showMessage(message);
+
+}
+
+function showDashboard() {
+
+  isAuthenticated = true;
+
+  $("loginPanel").hidden = true;
+  $("dashboard").hidden = false;
+
+  showMessage("");
+
+  refreshFirewall();
+
+}
+
+async function checkAdminSession() {
+
+  try {
+
+    const data = await adminApi(
+      "auth/status"
+    );
+
+    if (data.authenticated === true) {
+
+      showDashboard();
+
+    } else {
+
+      showLogin("");
+
+    }
+
+  } catch (error) {
+
+    showLogin(
+      "Unable to verify admin session."
+    );
+
+  }
+
+}
+
+/* ==========================================
+   ADMIN LOGIN
+========================================== */
+
+$("loginForm").addEventListener(
+  "submit",
+  async event => {
+
+    event.preventDefault();
+
+    const password =
+      $("adminPassword").value;
+
+    const button = $("unlockBtn");
+
+    if (!password) return;
+
+    button.disabled = true;
+
+    button.textContent = "AUTHENTICATING...";
+
+    try {
+
+      const data = await adminApi(
+        "auth/login",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+            password
+          })
+        }
+      );
+
+      if (!data.ok) {
+
+        throw new Error(
+          "Authentication failed."
+        );
+
+      }
+
+      showDashboard();
+
+    } catch (error) {
+
+      showMessage(error.message, true);
+
+    } finally {
+
+      $("adminPassword").value = "";
+
+      button.disabled = false;
+
+      button.textContent =
+        "UNLOCK SECURITY CENTER";
+
+    }
+
+  }
+);
+
+/* ==========================================
+   RENDER SECURITY METRICS
+========================================== */
+
+function renderFirewall(data) {
+
+  const firewall = data.firewall;
+
+  if (!data.ok || !firewall) {
+
+    throw new Error(
+      "Invalid firewall response."
+    );
+
+  }
+
+  const fields = [
+    "totalBlocked",
+    "httpBlocked",
+    "socketBlocked",
+    "originBlocked",
+    "activeConnections",
+    "activeIPs",
+    "httpTracked",
+    "socketTracked"
+  ];
+
+  for (const key of fields) {
+
+    $(key).textContent =
+      formatNumber(firewall[key]);
+
+  }
+
+  $("firewallVersion").textContent =
+    "Version " +
+    (firewall.version || "Unknown");
+
+  const status = $("firewallStatus");
+
+  const active =
+    firewall.status === "ACTIVE";
+
+  status.textContent =
+    active ? "ACTIVE" : "UNKNOWN";
+
+  status.className =
+    "status-pill" +
+    (active ? " active" : "");
+
+  const rss =
+    firewall.memory?.rss ??
+    data.memory?.rss;
+
+  const heap =
+    firewall.memory?.heapUsed ??
+    data.memory?.heapUsed;
+
+  $("memoryRSS").textContent =
+    Number.isFinite(rss)
+      ? formatNumber(rss) + " MB"
+      : "—";
+
+  $("memoryHeap").textContent =
+    Number.isFinite(heap)
+      ? formatNumber(heap) + " MB"
+      : "—";
+
+  $("uptime").textContent =
+    formatUptime(firewall.uptime);
+
+  $("lastUpdated").textContent =
+    "Updated " +
+    new Date().toLocaleTimeString(
+      "en-GB"
+    );
+
+  /* TRAFFIC DISTRIBUTION */
+
+  const http =
+    Number(firewall.httpBlocked) || 0;
+
+  const socket =
+    Number(firewall.socketBlocked) || 0;
+
+  const total = http + socket;
+
+  const httpPercent =
+    total ? http / total * 100 : 0;
+
+  const socketPercent =
+    total ? socket / total * 100 : 0;
+
+  $("httpShare").textContent =
+    httpPercent.toFixed(1) + "%";
+
+  $("socketShare").textContent =
+    socketPercent.toFixed(1) + "%";
+
+  setProgress(
+    "httpProgress",
+    httpPercent
+  );
+
+  setProgress(
+    "socketProgress",
+    socketPercent
+  );
+
+  /* STORAGE CAPACITY */
+
+  setProgress(
+    "httpCapacity",
+    firewall.httpTracked / 200
+  );
+
+  setProgress(
+    "socketCapacity",
+    firewall.socketTracked / 200
+  );
+
+  /* ACTIVITY CHART */
+
+  updateActivityChart(firewall);
+
+  /* SECURITY LOGS */
+
+  const logsAvailable =
+    Array.isArray(firewall.recentEvents);
+
+  recentEvents = logsAvailable
+    ? firewall.recentEvents.slice(0, 200)
+    : [];
+
+  renderSecurityLogs();
+
+  if (!logsAvailable) {
+
+    $("emptyLogs").hidden = false;
+
+    $("emptyLogs").textContent =
+      "Security log module is not installed.";
+
+  }
+
+  $("exportBtn").disabled =
+    recentEvents.length === 0;
+
+}
+
+/* ==========================================
+   ACTIVITY CHART
+========================================== */
+
+function updateActivityChart(firewall) {
+
+  const total = firewall.totalBlocked;
+
+  if (!Number.isFinite(total)) return;
+
+  if (
+    previousStart !== firewall.startedAt ||
+    (
+      previousTotal !== null &&
+      total < previousTotal
+    )
+  ) {
+
+    activitySamples = [];
+
+    previousTotal = null;
+
+  }
+
+  if (previousTotal !== null) {
+
+    activitySamples.push(
+      Math.max(0, total - previousTotal)
+    );
+
+  }
+
+  previousStart = firewall.startedAt;
+  previousTotal = total;
+
+  activitySamples =
+    activitySamples.slice(-30);
+
+  const max = Math.max(
+    1,
+    ...activitySamples
+  );
+
+  const points = activitySamples.map(
+    (value, index) => {
+
+      const x = index * 300 / 29;
+
+      const y =
+        99 - value / max * 94;
+
+      return `${x},${y}`;
+
+    }
+  );
+
+  $("activityLine").setAttribute(
+    "points",
+    points.join(" ")
+  );
+
+  $("chartDescription").textContent =
+    activitySamples.length
+
+      ? "Latest sample: " +
+        formatNumber(
+          activitySamples[
+            activitySamples.length - 1
+          ]
+        ) +
+        " blocked operations"
+
+      : "Collecting security samples...";
+
+}
+
+/* ==========================================
+   SECURITY EVENT LOG
+========================================== */
+
+function renderSecurityLogs() {
+
+  const container = $("securityLogs");
+
+  const keyword = $("logSearch")
+    .value
+    .trim()
+    .toLowerCase();
+
+  const filtered = recentEvents.filter(
+    event => {
+
+      return [
+        event.type,
+        event.ip
+      ].some(value =>
+        String(value || "")
+          .toLowerCase()
+          .includes(keyword)
+      );
+
+    }
+  );
+
+  container.replaceChildren();
+
+  $("logCount").textContent =
+    filtered.length + " records";
+
+  $("emptyLogs").hidden =
+    filtered.length > 0;
+
+  $("emptyLogs").textContent =
+    recentEvents.length
+      ? "No matching security events."
+      : "No sampled security events recorded.";
+
+  for (const event of filtered) {
+
+    const row = document.createElement("div");
+
+    row.className = "log-item";
+
+    const icon = document.createElement("div");
+
+    icon.className = "log-icon";
+    icon.textContent = "!";
+
+    const info = document.createElement("div");
+
+    info.className = "log-info";
+
+    const type = document.createElement("div");
+
+    type.className = "log-type";
+
+    type.textContent =
+      String(event.type || "UNKNOWN");
+
+    const ip = document.createElement("div");
+
+    ip.className = "log-ip";
+
+    ip.textContent =
+      String(event.ip || "Unknown IP");
+
+    const time = document.createElement("div");
+
+    time.className = "log-time";
+
+    const date = new Date(event.time);
+
+    time.textContent =
+      Number.isFinite(date.getTime())
+        ? date.toLocaleString("en-GB")
+        : "—";
+
+    info.append(type, ip);
+
+    row.append(icon, info, time);
+
+    container.appendChild(row);
+
+  }
+
+}
+
+$("logSearch").addEventListener(
+  "input",
+  renderSecurityLogs
+);
+
+/* ==========================================
+   REFRESH FIREWALL
+========================================== */
+
+async function refreshFirewall() {
+
+  if (
+    !isAuthenticated ||
+    isLoading ||
+    document.hidden
+  ) return;
+
+  clearTimeout(refreshTimer);
+
+  isLoading = true;
+
+  const currentGeneration = generation;
+
+  $("refreshBtn").disabled = true;
+
+  try {
+
+    const data = await adminApi(
+      "firewall/status"
+    );
+
+    if (
+      generation !== currentGeneration
+    ) return;
+
+    renderFirewall(data);
+
+    showMessage("");
+
+  } catch (error) {
+
+    if (
+      generation !== currentGeneration
+    ) return;
+
+    if (
+      error.status === 401 ||
+      error.status === 403
+    ) {
+
+      showLogin(
+        "Admin session expired. Please sign in."
+      );
+
+      return;
+
+    }
+
+    $("firewallStatus").textContent =
+      "STALE";
+
+    $("firewallStatus").className =
+      "status-pill offline";
+
+    showMessage(
+      "Unable to refresh firewall data. " +
+      "Displayed information may be outdated.",
+      true
+    );
+
+  } finally {
+
+    isLoading = false;
+
+    $("refreshBtn").disabled = false;
+
+    if (
+      isAuthenticated &&
+      !document.hidden
+    ) {
+
+      refreshTimer = setTimeout(
+        refreshFirewall,
+        REFRESH_INTERVAL
+      );
+
+    }
+
+  }
+
+}
+
+$("refreshBtn").addEventListener(
+  "click",
+  refreshFirewall
+);
+
+/* ==========================================
+   EXPORT SECURITY LOGS
+========================================== */
+
+$("exportBtn").addEventListener(
+  "click",
+  () => {
+
+    if (
+      !isAuthenticated ||
+      !recentEvents.length
+    ) return;
+
+    const data = {
+
+      exportedAt:
+        new Date().toISOString(),
+
+      source:
+        "LSP Security Firewall",
+
+      events: recentEvents
+
+    };
+
+    const blob = new Blob(
+      [JSON.stringify(data, null, 2)],
+      {
+        type: "application/json"
+      }
+    );
+
+    const url = URL.createObjectURL(blob);
+
+    const link =
+      document.createElement("a");
+
+    link.href = url;
+
+    link.download =
+      "lsp-security-logs-" +
+      Date.now() +
+      ".json";
+
+    document.body.appendChild(link);
+
+    link.click();
+    link.remove();
+
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 1000);
+
+  }
+);
+
+/* ==========================================
+   ADMIN LOGOUT
+========================================== */
+
+$("logoutBtn").addEventListener(
+  "click",
+  async () => {
+
+    $("logoutBtn").disabled = true;
+
+    try {
+
+      const data = await adminApi(
+        "auth/logout",
+        {
+          method: "POST"
+        }
+      );
+
+      if (!data.ok) {
+
+        throw new Error(
+          "Sign out failed."
+        );
+
+      }
+
+      showLogin("Signed out successfully.");
+
+    } catch (error) {
+
+      showMessage(error.message, true);
+
+    } finally {
+
+      $("logoutBtn").disabled = false;
+
+    }
+
+  }
+);
+
+/* ==========================================
+   MOBILE VISIBILITY OPTIMIZATION
+========================================== */
+
+document.addEventListener(
+  "visibilitychange",
+  () => {
+
+    clearTimeout(refreshTimer);
+
+    if (
+      !document.hidden &&
+      isAuthenticated
+    ) {
+
+      refreshFirewall();
+
+    }
+
+  }
+);
+
+window.addEventListener(
+  "pagehide",
+  () => {
+
+    clearTimeout(refreshTimer);
+
+  }
+);
+
+window.addEventListener(
+  "pageshow",
+  event => {
+
+    if (event.persisted) {
+
+      showLogin("");
+      checkAdminSession();
+
+    }
+
+  }
+);
+
+/* START */
+
+checkAdminSession();
+
+</script>
+
+</body>
+</html>

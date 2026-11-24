@@ -100,8 +100,21 @@ function normalizeIP(value) {
 
 const logBuckets = new Map();
 
+/* ==========================================
+   SECURITY EVENT HISTORY
+========================================== */
+
+const MAX_SECURITY_EVENTS = 200;
+
+const securityEvents = [];
+
+/* ==========================================
+   SECURITY EVENT LOGGER
+========================================== */
+
 function securityLog(type, ip) {
 
+  // Limit repeated warnings
   if (!consume(
     logBuckets,
     `${type}:${ip}`,
@@ -109,13 +122,37 @@ function securityLog(type, ip) {
     60000
   )) return;
 
-  console.warn("[LSP FIREWALL]", {
-    type,
-    ip,
-    time: new Date().toISOString()
-  });
-}
+  const entry = {
 
+    type: String(type || "UNKNOWN"),
+
+    ip: normalizeIP(ip),
+
+    time: new Date().toISOString()
+
+  };
+
+  // Newest event first
+  securityEvents.unshift(entry);
+
+  // Protect server memory
+  if (
+    securityEvents.length >
+    MAX_SECURITY_EVENTS
+  ) {
+
+    securityEvents.length =
+      MAX_SECURITY_EVENTS;
+
+  }
+
+  // Render Logs
+  console.warn(
+    "[LSP FIREWALL]",
+    entry
+  );
+
+}
 setInterval(() => {
 
   for (const [key, entry] of logBuckets) {
@@ -664,6 +701,15 @@ function getStats() {
     activeIPs: activeConnections.size,
 
     activeConnections: totalConnections,
+
+// Recent security warnings
+
+recentEvents: securityEvents
+  .slice(0, MAX_SECURITY_EVENTS)
+  .map(event => ({ ...event })),
+
+securityEventCount:
+  securityEvents.length,
 
     memory: {
       rss: Math.round(memory.rss / 1048576),

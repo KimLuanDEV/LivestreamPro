@@ -42,7 +42,7 @@
 <meta name="robots"
       content="noindex, nofollow">
 
-      
+
 
   <meta name="viewport"
 content="width=device-width, initial-scale=1.0,
@@ -2863,6 +2863,300 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
 
 
 
+
+/* ==========================================
+   LSP ADMIN - SECURITY CENTER ACCESS
+   BLACK OBSIDIAN + CHAMPAGNE GOLD
+========================================== */
+
+.lux-security-access {
+
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  gap: 15px;
+
+  width: 100%;
+
+  padding: 17px;
+
+  margin: 0 0 20px;
+
+  box-sizing: border-box;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      ellipse at left top,
+      rgba(225,188,126,.10),
+      transparent 65%
+    ),
+    linear-gradient(
+      135deg,
+      #252019,
+      #151619 75%
+    );
+
+  border: 1px solid rgba(225,188,126,.35);
+  border-radius: 16px;
+
+  color: #f3ddba;
+  text-decoration: none;
+
+  box-shadow:
+    0 8px 25px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.035);
+
+  transition:
+    border-color .2s ease,
+    transform .2s ease,
+    background .2s ease;
+
+  -webkit-tap-highlight-color: transparent;
+
+}
+
+
+/* HOVER */
+
+.lux-security-access:hover {
+
+  border-color: #e1bc7e;
+
+  background:
+    linear-gradient(
+      135deg,
+      #30271b,
+      #17181c
+    );
+
+}
+
+
+/* CLICK EFFECT */
+
+.lux-security-access:active {
+
+  transform: scale(.985);
+
+}
+
+.lux-security-access:focus-visible {
+
+  outline: 2px solid #e1bc7e;
+  outline-offset: 3px;
+
+}
+
+
+/* SHIELD ICON */
+
+.lux-security-access-icon {
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 58px;
+  height: 58px;
+
+  flex: 0 0 58px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #49371f,
+      #211d17
+    );
+
+  border: 1px solid rgba(225,188,126,.40);
+  border-radius: 14px;
+
+  color: #efd394;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 5px 15px rgba(0,0,0,.25);
+
+}
+
+.lux-security-access-icon svg {
+
+  width: 31px;
+  height: 31px;
+
+}
+
+
+/* SECURITY INFORMATION */
+
+.lux-security-access-info {
+
+  flex: 1;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+
+}
+
+.lux-security-access-kicker {
+
+  color: #aa906b;
+
+  font-size: 9px;
+  font-weight: 750;
+
+  letter-spacing: 1.8px;
+
+}
+
+.lux-security-access-info strong {
+
+  color: #f3ddba;
+
+  font-size: 15px;
+  font-weight: 850;
+
+  letter-spacing: 1.2px;
+
+}
+
+.lux-security-access-info small {
+
+  color: #aea497;
+
+  font-size: 11px;
+  font-weight: 500;
+
+  letter-spacing: .2px;
+
+}
+
+
+/* ARROW */
+
+.lux-security-access-arrow {
+
+  display: grid;
+  place-items: center;
+
+  width: 32px;
+  height: 32px;
+
+  flex-shrink: 0;
+
+  border: 1px solid rgba(225,188,126,.16);
+  border-radius: 9px;
+
+  background: rgba(225,188,126,.05);
+
+  color: #e1bc7e;
+
+  transition: transform .2s ease;
+
+}
+
+.lux-security-access-arrow svg {
+
+  width: 20px;
+  height: 20px;
+
+}
+
+.lux-security-access:hover
+.lux-security-access-arrow {
+
+  transform: translateX(3px);
+
+}
+
+
+/* ==========================================
+   MOBILE RESPONSIVE
+========================================== */
+
+@media (max-width: 600px) {
+
+  .lux-security-access {
+
+    gap: 12px;
+
+    padding: 14px;
+
+    margin-bottom: 15px;
+
+    border-radius: 14px;
+
+  }
+
+  .lux-security-access-icon {
+
+    width: 50px;
+    height: 50px;
+
+    flex-basis: 50px;
+
+    border-radius: 12px;
+
+  }
+
+  .lux-security-access-icon svg {
+
+    width: 28px;
+    height: 28px;
+
+  }
+
+  .lux-security-access-info strong {
+
+    font-size: 13px;
+
+    letter-spacing: .8px;
+
+  }
+
+  .lux-security-access-kicker {
+
+    font-size: 8px;
+
+    letter-spacing: 1.2px;
+
+  }
+
+  .lux-security-access-info small {
+
+    font-size: 10px;
+
+  }
+
+  .lux-security-access-arrow {
+
+    width: 28px;
+    height: 28px;
+
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .lux-security-access,
+  .lux-security-access-arrow {
+
+    transition: none;
+
+  }
+
+}
+
+
+
+
   </style>
 
 
@@ -2991,24 +3285,83 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
 
 <div class="admin-shell">
 
-  <!-- DASHBOARD INTRO -->
-  <div class="lux-dashboard-intro">
+<!-- DASHBOARD INTRO -->
+<div class="lux-dashboard-intro">
 
-    <div class="lux-dashboard-eyebrow">
-      LIVESTREAM PRO / ADMINISTRATION
-    </div>
+  <div class="lux-dashboard-eyebrow">
+    LIVESTREAM PRO / ADMINISTRATION
+  </div>
 
-    <h1>Trung tâm quản trị</h1>
+  <h1>Trung tâm quản trị</h1>
 
-    <p>
-      Quản lý và vận hành hệ thống Livestream Pro
-    </p>
+  <p>
+    Quản lý và vận hành hệ thống Livestream Pro
+  </p>
+
+</div>
+
+
+<!-- ==========================================
+     SECURITY CENTER ACCESS
+========================================== -->
+
+<a href="/lsp-security-center.html"
+   class="lux-security-access">
+
+  <div class="lux-security-access-icon">
+
+    <svg viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="1.5"
+         stroke-linecap="round"
+         stroke-linejoin="round">
+
+      <path d="M12 2L21 6V12
+               C21 17 17 21 12 23
+               C7 21 3 17 3 12V6Z"/>
+
+      <path d="M8 12L11 15L16 9"/>
+
+    </svg>
 
   </div>
 
+  <div class="lux-security-access-info">
+
+    <span class="lux-security-access-kicker">
+      SYSTEM PROTECTION
+    </span>
+
+    <strong>
+      SECURITY CENTER
+    </strong>
+
+    <small>
+      Firewall & System Monitor
+    </small>
+
+  </div>
+
+  <div class="lux-security-access-arrow">
+
+    <svg viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="1.8"
+         stroke-linecap="round"
+         stroke-linejoin="round">
+
+      <path d="M9 18L15 12L9 6"/>
+
+    </svg>
+
+  </div>
+
+</a>
+
 
 <div class="admin-tabs">
-
   <button type="button"
           class="tab active"
           data-tab="users">
