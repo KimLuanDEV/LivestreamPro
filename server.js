@@ -570,16 +570,12 @@ const LSP_PUBLIC_URL =
   normalizeLspOrigin(process.env.LSP_PUBLIC_URL) ||
   LSP_SITE_DEFAULT;
 
-// Approved domains
+
 const LSP_ALLOWED_ORIGINS = new Set(
   [
     LSP_PUBLIC_URL,
-
     "https://livestreampro.tv",
     "https://www.livestreampro.tv",
-
-    // Keep old Render domain during migration
-    "https://livestreampro.onrender.com",
 
     ...String(process.env.LSP_ALLOWED_ORIGINS || "")
       .split(",")
@@ -9396,9 +9392,8 @@ const payload = {
 
 
 
-
 webpush.setVapidDetails(
-  "mailto:admin@livestream.pro",
+  "https://livestreampro.tv",
   process.env.VAPID_PUBLIC,
   process.env.VAPID_PRIVATE
 );
