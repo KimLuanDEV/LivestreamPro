@@ -604,7 +604,7 @@ console.log("[LSP DOMAIN] Allowed:", [...LSP_ALLOWED_ORIGINS]);
 const app = express();
 const server = http.createServer(app);
 
-c/* ==========================================
+/* ==========================================
    SOCKET.IO - DOMAIN CONFIGURATION
 ========================================== */
 
