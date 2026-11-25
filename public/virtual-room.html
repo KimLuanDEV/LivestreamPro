@@ -461,16 +461,43 @@ body {
   box-shadow: inset 0 0 12px rgba(209,168,99,.12);
 }
 
-.lg-item img {
-  width: 46px;
-  height: 46px;
+/* ==========================================
+   PREMIUM GIFT IMAGES
+========================================== */
+
+.lg-item .lg-gift-image {
+
+  display: block;
+
+  width: 58px;
+  height: 58px;
+
+  flex-shrink: 0;
+
   object-fit: contain;
+
+  background: transparent;
+
+  filter: drop-shadow(
+    0 3px 6px rgba(0,0,0,.35)
+  );
+
+  pointer-events: none;
+
+  user-select: none;
+
+  transition: transform .2s ease;
+
 }
 
-.lg-item .lg-emoji {
-  font-size: 32px;
-  height: 46px;
-  line-height: 46px;
+.lg-item.active .lg-gift-image {
+
+  transform: scale(1.08);
+
+  filter: drop-shadow(
+    0 0 8px rgba(230,190,120,.35)
+  );
+
 }
 
 .lg-item strong {
@@ -576,8 +603,25 @@ body {
   animation: lgGiftPop .4s ease-out;
 }
 
-.lg-effect span {
-  font-size: 52px;
+.lg-effect .lg-effect-image {
+
+  display: block;
+
+  width: 96px;
+  height: 96px;
+
+  object-fit: contain;
+
+  background: transparent;
+
+  filter: drop-shadow(
+    0 0 15px rgba(232,190,110,.35)
+  );
+
+  pointer-events: none;
+
+  user-select: none;
+
 }
 
 .lg-effect strong {
@@ -838,7 +882,12 @@ body {
   aria-live="polite"
 >
 
-  <span id="lgEffectIcon"></span>
+ <img
+  id="lgEffectIcon"
+  class="lg-effect-image"
+  alt="Gift"
+  draggable="false"
+>
 
   <strong id="lgEffectName"></strong>
 
@@ -1054,16 +1103,44 @@ function updateLgSend() {
 // Adjust this path if your gift assets
 // are stored in another directory.
 
-const LG_GIFT_ASSET_PATH = "/assets/gifts/";
+/* ==========================================
+   GIFT IMAGES - SYNC BROADCAST SFU
+========================================== */
+
+const LG_GIFT_ASSET_PATH = "/assets/live-gifts/";
 
 const LG_GIFT_FILES = {
-
+  rose: "rose.webp",
+  heart: "heart.webp",
+  flower: "flower.webp",
+  cake: "cake.webp",
+  rocket: "rocket.webp",
+  diamond: "diamond.webp",
+  teddy: "teddy.webp",
+  champagne: "champagne.webp",
   king: "crown.webp",
-
-  celestialDragon: "celestial-dragon.webp"
-
+  car: "car.webp",
+  sword: "sword.webp",
+  pegasus: "pegasus.webp",
+  phoenix: "phoenix.webp",
+  dragon: "dragon.webp",
+  castle: "castle.webp",
+  yacht: "yacht.webp",
+  supercar: "supercar.webp",
+  palace: "palace.webp",
+  celestialDragon: "celestial-dragon.webp",
+  universe: "universe.webp"
 };
 
+function getLgGiftImage(giftId) {
+
+  const file = Object.hasOwn(LG_GIFT_FILES, giftId)
+    ? LG_GIFT_FILES[giftId]
+    : "heart.webp";
+
+  return LG_GIFT_ASSET_PATH + file;
+
+}
 
 /* ==========================================
    RENDER GIFT CATALOG
@@ -1089,35 +1166,27 @@ function renderLgCatalog() {
 
     }
 
-    const img = document.createElement("img");
+const img = document.createElement("img");
 
-    img.src = LG_GIFT_ASSET_PATH +
-      (
-        LG_GIFT_FILES[gift.id] ||
-        gift.id + ".webp"
-      );
+img.className = "lg-gift-image";
 
-    img.alt = gift.name;
+img.src = getLgGiftImage(gift.id);
 
-    img.loading = "lazy";
+img.alt = gift.name;
 
+img.loading = "lazy";
 
-    // Fallback when an asset is missing.
+img.decoding = "async";
 
-    img.onerror = () => {
+img.draggable = false;
 
-      const emoji =
-        document.createElement("span");
+img.onerror = function () {
 
-      emoji.className = "lg-emoji";
+  this.onerror = null;
 
-      emoji.textContent =
-        gift.emoji || "🎁";
+  this.src = LG_GIFT_ASSET_PATH + "heart.webp";
 
-      img.replaceWith(emoji);
-
-    };
-
+};
 
     const name =
       document.createElement("strong");
@@ -1471,8 +1540,19 @@ socket.on("virtual-live:gift:new", data => {
 
   if (data?.roomId !== roomId) return;
 
-  lg("lgEffectIcon").textContent =
-    data.emoji || "🎁";
+const giftImage = lg("lgEffectIcon");
+
+giftImage.onerror = function () {
+
+  this.onerror = null;
+
+  this.src = LG_GIFT_ASSET_PATH + "heart.webp";
+
+};
+
+giftImage.src = getLgGiftImage(data.giftId);
+
+giftImage.alt = data.giftName || "Gift";
 
   lg("lgEffectName").textContent =
     data.donor || "Viewer";
