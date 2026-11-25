@@ -2,7 +2,8 @@
 
 /* ==========================================
    LIVESTREAM PRO
-   DATABASE SECURITY & BACKUP V1.0
+   DATABASE SECURITY & BACKUP V1.1
+   RECOVERY & OFFSITE BACKUP
 ========================================== */
 
 const fs = require("fs");
@@ -31,6 +32,9 @@ const MAX_DAILY = 30;
 const MAX_SOURCE_BYTES = 64 * 1024 * 1024;
 
 const BACKUP_MAGIC = Buffer.from("LSPDB1");
+
+const MAX_ENCRYPTED_BYTES =
+  MAX_SOURCE_BYTES * 2;
 
 const REQUIRED_FILES = [
   "users.json"
@@ -472,10 +476,35 @@ async function atomicWrite(filename, buffer) {
    VERIFY ENCRYPTED BACKUP
 ========================================== */
 
+/* ==========================================
+   VERIFY ENCRYPTED BACKUP V1.1
+========================================== */
+
 async function verifyBackup(filename) {
+
+  const info = await fsp.lstat(filename);
+
+  if (
+    !info.isFile() ||
+    info.size > MAX_ENCRYPTED_BYTES
+  ) {
+
+    throw new Error(
+      "Invalid backup file or size"
+    );
+
+  }
 
   const encrypted =
     await fsp.readFile(filename);
+
+  if (encrypted.length > MAX_ENCRYPTED_BYTES) {
+
+    throw new Error(
+      "Backup too large"
+    );
+
+  }
 
   const compressed =
     decryptBackup(encrypted);
@@ -492,9 +521,19 @@ async function verifyBackup(filename) {
   );
 
   if (
+
     snapshot.version !== "1.0.0" ||
+
     !Array.isArray(snapshot.files) ||
-    snapshot.files.length === 0
+
+    snapshot.files.length === 0 ||
+
+    snapshot.files.length > BACKUP_FILES.length ||
+
+    !Number.isSafeInteger(snapshot.createdAt) ||
+
+    snapshot.createdAt <= 0
+
   ) {
 
     throw new Error(
@@ -505,11 +544,24 @@ async function verifyBackup(filename) {
 
   const names = new Set();
 
+  let totalBytes = 0;
+
   for (const item of snapshot.files) {
 
     if (
+
+      !item ||
+
+      typeof item.content !== "string" ||
+
+      !Number.isSafeInteger(item.size) ||
+
+      item.size < 0 ||
+
       !BACKUP_FILES.includes(item.name) ||
+
       names.has(item.name)
+
     ) {
 
       throw new Error(
@@ -521,13 +573,19 @@ async function verifyBackup(filename) {
     names.add(item.name);
 
     const content = Buffer.from(
+
       item.content,
+
       "base64"
+
     );
 
     if (
+
       content.length !== item.size ||
+
       checksum(content) !== item.sha256
+
     ) {
 
       throw new Error(
@@ -536,7 +594,20 @@ async function verifyBackup(filename) {
 
     }
 
-    validateJSON(item.name, content);
+    totalBytes += content.length;
+
+    if (totalBytes > MAX_SOURCE_BYTES) {
+
+      throw new Error(
+        "Snapshot exceeds size limit"
+      );
+
+    }
+
+    validateJSON(
+      item.name,
+      content
+    );
 
   }
 
@@ -556,6 +627,527 @@ async function verifyBackup(filename) {
 
 }
 
+
+/* ==========================================
+   LIVESTREAM PRO
+   OFFSITE BACKUP ENGINE V1.1
+   CLOUDFLARE R2 PRIVATE STORAGE
+========================================== */
+
+const offsite = {
+
+  status: "DISABLED",
+
+  successfulUploads: 0,
+
+  failedUploads: 0,
+
+  lastVerifiedAt: null,
+
+  lastObject: null,
+
+  lastError: null
+
+};
+
+let r2 = null;
+
+let r2Commands = null;
+
+const R2_PREFIX =
+  "livestreampro/database/";
+
+const backupNamePattern =
+  /^(?:hourly-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z|daily-\d{4}-\d{2}-\d{2})\.lspbak$/;
+
+
+/* ==========================================
+   INITIALIZE PRIVATE R2 CONNECTION
+========================================== */
+
+function initOffsite() {
+
+  if (
+    process.env.LSP_R2_BACKUP_ENABLED !== "true"
+  ) {
+
+    return;
+
+  }
+
+  try {
+
+    const account =
+      process.env.LSP_R2_BACKUP_ACCOUNT_ID || "";
+
+    const bucket =
+      process.env.LSP_R2_BACKUP_BUCKET || "";
+
+    const accessKeyId =
+      process.env.LSP_R2_BACKUP_ACCESS_KEY_ID || "";
+
+    const secretAccessKey =
+      process.env.LSP_R2_BACKUP_SECRET_ACCESS_KEY || "";
+
+    if (
+
+      !/^[a-f0-9]{32}$/i.test(account) ||
+
+      !/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(bucket) ||
+
+      !accessKeyId ||
+
+      !secretAccessKey
+
+    ) {
+
+      throw new Error(
+        "Invalid R2 backup configuration"
+      );
+
+    }
+
+    r2Commands =
+      require("@aws-sdk/client-s3");
+
+    r2 = new r2Commands.S3Client({
+
+      region: "auto",
+
+      endpoint:
+        `https://${account}.r2.cloudflarestorage.com`,
+
+      credentials: {
+
+        accessKeyId,
+
+        secretAccessKey
+
+      },
+
+      forcePathStyle: true,
+
+      maxAttempts: 2,
+
+      requestChecksumCalculation:
+        "WHEN_REQUIRED",
+
+      responseChecksumValidation:
+        "WHEN_REQUIRED"
+
+    });
+
+    offsite.status = "WAITING";
+
+    console.log(
+      "[DATABASE OFFSITE] R2 configured"
+    );
+
+  } catch (error) {
+
+    offsite.status = "DEGRADED";
+
+    offsite.lastError =
+      "R2 configuration or SDK unavailable";
+
+    console.error(
+      "[DATABASE OFFSITE] Configuration failed"
+    );
+
+  }
+
+}
+
+
+/* ==========================================
+   PERSISTENT UPLOAD RECEIPT
+========================================== */
+
+function receiptPath(filename) {
+
+  return path.join(
+
+    BACKUP_DIR,
+
+    filename + ".r2-ok"
+
+  );
+
+}
+
+
+/* ==========================================
+   UPLOAD AND VERIFY ENCRYPTED BACKUP
+========================================== */
+
+async function uploadVerifiedBackup(filename) {
+
+  if (!backupNamePattern.test(filename)) {
+
+    throw new Error(
+      "Invalid backup name"
+    );
+
+  }
+
+  const local = path.join(
+    BACKUP_DIR,
+    filename
+  );
+
+  /* VERIFY LOCAL BACKUP FIRST */
+
+  await verifyBackup(local);
+
+  const bytes =
+    await fsp.readFile(local);
+
+  if (bytes.length > MAX_ENCRYPTED_BYTES) {
+
+    throw new Error(
+      "Backup too large"
+    );
+
+  }
+
+  const digest = checksum(bytes);
+
+  const Bucket =
+    process.env.LSP_R2_BACKUP_BUCKET;
+
+  const Key =
+    R2_PREFIX + filename;
+
+  const {
+
+    PutObjectCommand,
+
+    GetObjectCommand
+
+  } = r2Commands;
+
+
+  /* UPLOAD WITHOUT OVERWRITING */
+
+  try {
+
+    await r2.send(
+
+      new PutObjectCommand({
+
+        Bucket,
+
+        Key,
+
+        Body: bytes,
+
+        ContentLength: bytes.length,
+
+        ContentType:
+          "application/octet-stream",
+
+        IfNoneMatch: "*",
+
+        Metadata: {
+
+          sha256: digest
+
+        }
+
+      }),
+
+      {
+
+        abortSignal:
+          AbortSignal.timeout(15000)
+
+      }
+
+    );
+
+  } catch (error) {
+
+    // Existing object: verify its content
+    // instead of overwriting it.
+
+const status =
+  error.$metadata?.httpStatusCode;
+
+const alreadyExists =
+  status === 412;
+
+const objectLocked =
+  status === 409 &&
+  (
+    error.name === "ObjectLockedByBucketPolicy" ||
+    error.Code === "ObjectLockedByBucketPolicy"
+  );
+
+if (!alreadyExists && !objectLocked) {
+
+  throw error;
+
+}
+
+  }
+
+
+  /* DOWNLOAD AND VERIFY R2 COPY */
+
+  const signal =
+    AbortSignal.timeout(15000);
+
+  const result = await r2.send(
+
+    new GetObjectCommand({
+
+      Bucket,
+
+      Key
+
+    }),
+
+    {
+
+      abortSignal: signal
+
+    }
+
+  );
+
+  const hash =
+    crypto.createHash("sha256");
+
+  let count = 0;
+
+  const abortBody = () =>
+    result.Body?.destroy?.();
+
+  signal.addEventListener(
+
+    "abort",
+
+    abortBody,
+
+    { once: true }
+
+  );
+
+  try {
+
+    if (
+
+      signal.aborted ||
+
+      result.ContentLength !== bytes.length
+
+    ) {
+
+      throw new Error(
+        "R2 size mismatch"
+      );
+
+    }
+
+    for await (const chunk of result.Body) {
+
+      if (signal.aborted) {
+
+        throw new Error(
+          "R2 verification timed out"
+        );
+
+      }
+
+      count += chunk.length;
+
+      if (count > bytes.length) {
+
+        throw new Error(
+          "R2 size mismatch"
+        );
+
+      }
+
+      hash.update(chunk);
+
+    }
+
+    if (
+
+      signal.aborted ||
+
+      count !== bytes.length ||
+
+      hash.digest("hex") !== digest
+
+    ) {
+
+      throw new Error(
+        "R2 checksum mismatch"
+      );
+
+    }
+
+  } finally {
+
+    signal.removeEventListener(
+      "abort",
+      abortBody
+    );
+
+    result.Body?.destroy?.();
+
+  }
+
+
+  /* SAVE VERIFIED RECEIPT */
+
+  await atomicWrite(
+
+    receiptPath(filename),
+
+    Buffer.from(digest)
+
+  );
+
+
+  /* UPDATE OFFSITE STATISTICS */
+
+  offsite.successfulUploads++;
+
+  offsite.lastVerifiedAt =
+    Date.now();
+
+  offsite.lastObject = Key;
+
+  console.log(
+
+    "[DATABASE OFFSITE] VERIFIED",
+
+    filename
+
+  );
+
+}
+
+
+/* ==========================================
+   OFFSITE SYNCHRONIZATION
+========================================== */
+
+async function syncOffsite(currentName) {
+
+  if (!r2) return;
+
+  try {
+
+    const entries = await fsp.readdir(
+
+      BACKUP_DIR,
+
+      { withFileTypes: true }
+
+    );
+
+    const pending = entries
+
+      .filter(entry =>
+
+        entry.isFile() &&
+
+        backupNamePattern.test(entry.name) &&
+
+        entry.name !== currentName &&
+
+        !fs.existsSync(
+          receiptPath(entry.name)
+        )
+
+      )
+
+      .map(entry => entry.name)
+
+      .sort()
+
+      .reverse();
+
+    offsite.status = "SYNCING";
+
+    let failed = false;
+
+    // Current backup first.
+    // Retry one older backup per run.
+
+    const queue = [
+
+      currentName,
+
+      ...pending.slice(0, 1)
+
+    ];
+
+    for (const name of queue) {
+
+      try {
+
+        await uploadVerifiedBackup(name);
+
+      } catch (error) {
+
+        failed = true;
+
+        offsite.failedUploads++;
+
+        offsite.lastError =
+          "R2 upload or readback verification failed";
+
+        console.error(
+
+          "[DATABASE OFFSITE] FAILED",
+
+          name,
+
+          String(error.name || "Error"),
+
+          error.$metadata?.httpStatusCode || ""
+
+        );
+
+        if (name === currentName) {
+
+          break;
+
+        }
+
+      }
+
+    }
+
+    offsite.status = failed
+
+      ? "DEGRADED"
+
+      : "ACTIVE";
+
+    if (!failed) {
+
+      offsite.lastError = null;
+
+    }
+
+  } catch (error) {
+
+    offsite.failedUploads++;
+
+    offsite.status = "DEGRADED";
+
+    offsite.lastError =
+      "R2 synchronization failed";
+
+  }
+
+}
 
 /* ==========================================
    BACKUP ROTATION
@@ -582,13 +1174,21 @@ async function rotateBackups(prefix, limit) {
 
     .reverse();
 
-  for (const filename of files.slice(limit)) {
+for (const filename of files.slice(limit)) {
 
-    await fsp.unlink(
-      path.join(BACKUP_DIR, filename)
-    );
+  await fsp.unlink(
 
-  }
+    path.join(BACKUP_DIR, filename)
+
+  );
+
+  await fsp.unlink(
+
+    receiptPath(filename)
+
+  ).catch(() => {});
+
+}
 
 }
 
@@ -725,6 +1325,14 @@ async function createBackup(reason = "automatic") {
 
     }
 
+
+    /* ==========================================
+   OFFSITE BACKUP SYNCHRONIZATION
+========================================== */
+
+await syncOffsite(hourlyName);
+
+
     /* REMOVE OLD BACKUPS */
 
     await rotateBackups(
@@ -758,19 +1366,25 @@ async function createBackup(reason = "automatic") {
 
     });
 
-    return {
+return {
 
-      ok: true,
+  ok: true,
 
-      filename: hourlyName,
+  filename: hourlyName,
 
-      files: snapshot.files.length,
+  files: snapshot.files.length,
 
-      size: encrypted.length,
+  size: encrypted.length,
 
-      createdAt: snapshot.createdAt
+  createdAt: snapshot.createdAt,
 
-    };
+  offsite: {
+
+    ...offsite
+
+  }
+
+};
 
   } catch (error) {
 
@@ -917,11 +1531,17 @@ async function getStats() {
 
   }
 
-  return {
+return {
 
-    version: "1.0.0",
+  version: "1.1.0",
 
-    status: !backupKey
+  offsite: {
+
+    ...offsite
+
+  },
+
+  status: !backupKey
 
       ? "NOT_CONFIGURED"
 
@@ -1017,6 +1637,11 @@ function start() {
 
   }
 
+
+/* INITIALIZE OFFSITE BACKUP */
+
+initOffsite();
+
   backupTimer = setInterval(() => {
 
     void createBackup("automatic");
@@ -1033,10 +1658,9 @@ function start() {
 
   }, 30000).unref();
 
-  console.log(
-    "[DATABASE SECURITY] V1.0 enabled"
-  );
-
+console.log(
+  "[DATABASE SECURITY] V1.1 enabled"
+);
   console.log(
     "[DATABASE BACKUP] AES-256-GCM encryption enabled"
   );
@@ -1063,3 +1687,285 @@ module.exports = {
   getStats
 
 };
+
+/* ==========================================
+   LIVESTREAM PRO
+   OFFLINE DATABASE RECOVERY V1.1
+
+   NO PRODUCTION OVERWRITE
+========================================== */
+
+async function recoveryCli() {
+
+  const [
+
+    command,
+
+    input,
+
+    output,
+
+    ...extra
+
+  ] = process.argv.slice(2);
+
+
+  /* VALIDATE COMMAND */
+
+  if (
+
+    extra.length ||
+
+    !input ||
+
+    !["verify", "extract"].includes(command) ||
+
+    (
+      command === "extract"
+        ? !output
+        : Boolean(output)
+    )
+
+  ) {
+
+    throw new Error(
+
+      "Usage: node security-database.js verify BACKUP | extract BACKUP NEW_DIRECTORY"
+
+    );
+
+  }
+
+
+  /* INITIALIZE ENCRYPTION KEY */
+
+  initializeKey();
+
+
+  /* VERIFY BACKUP */
+
+  const snapshot = await verifyBackup(
+
+    path.resolve(input)
+
+  );
+
+  const names = snapshot.files.map(
+
+    item => item.name
+
+  );
+
+  const missing = BACKUP_FILES.filter(
+
+    name => !names.includes(name)
+
+  );
+
+
+  /* PRINT VERIFICATION REPORT */
+
+  console.log(
+
+    "[RECOVERY] VERIFIED",
+
+    JSON.stringify({
+
+      createdAt:
+        new Date(snapshot.createdAt)
+          .toISOString(),
+
+      files: names,
+
+      missing
+
+    }, null, 2)
+
+  );
+
+  if (command === "verify") {
+
+    return;
+
+  }
+
+
+  /* VALIDATE RECOVERY DESTINATION */
+
+  const target = path.resolve(output);
+
+  const parent = await fsp.realpath(
+
+    path.dirname(target)
+
+  );
+
+  const dest = path.join(
+
+    parent,
+
+    path.basename(target)
+
+  );
+
+  const isWithin = (candidate, root) =>
+
+    candidate === root ||
+
+    candidate.startsWith(
+      root + path.sep
+    );
+
+  const appPublic = path.join(
+
+    __dirname,
+
+    "public"
+
+  );
+
+  // Resolve existing protected directories
+  // to prevent common symlink bypasses.
+
+  const productionRoot =
+    await fsp.realpath(DATA_DIR)
+      .catch(() => DATA_DIR);
+
+  const publicRoot =
+    await fsp.realpath(appPublic)
+      .catch(() => appPublic);
+
+  if (
+
+    isWithin(dest, DATA_DIR) ||
+
+    isWithin(dest, productionRoot) ||
+
+    isWithin(dest, appPublic) ||
+
+    isWithin(dest, publicRoot)
+
+  ) {
+
+    throw new Error(
+
+      "Recovery destination must be outside live data and public directories"
+
+    );
+
+  }
+
+
+  /* CREATE NEW PRIVATE DIRECTORY */
+
+  await fsp.mkdir(dest, {
+
+    mode: 0o700
+
+  });
+
+
+  /* RECOVER VERIFIED FILES */
+
+  for (const item of snapshot.files) {
+
+    const filename = path.join(
+
+      dest,
+
+      item.name
+
+    );
+
+    const bytes = Buffer.from(
+
+      item.content,
+
+      "base64"
+
+    );
+
+    const handle = await fsp.open(
+
+      filename,
+
+      "wx",
+
+      0o600
+
+    );
+
+    try {
+
+      await handle.writeFile(bytes);
+
+      await handle.sync();
+
+    } finally {
+
+      await handle.close();
+
+    }
+
+
+    /* VERIFY EXTRACTED FILE */
+
+    const recovered =
+      await fsp.readFile(filename);
+
+    if (
+      checksum(recovered) !== item.sha256
+    ) {
+
+      throw new Error(
+
+        "Extracted file checksum mismatch"
+
+      );
+
+    }
+
+  }
+
+
+  /* RECOVERY REPORT */
+
+  console.log(
+
+    "[RECOVERY] EXTRACTED AND VERIFIED",
+
+    dest
+
+  );
+
+  console.log(
+
+    "[RECOVERY] No production files were changed."
+
+  );
+
+}
+
+
+/* ==========================================
+   RUN CLI ONLY WHEN EXECUTED DIRECTLY
+========================================== */
+
+if (require.main === module) {
+
+  recoveryCli().catch(error => {
+
+    console.error(
+
+      "[RECOVERY] FAILED",
+
+      error.message
+
+    );
+
+    process.exitCode = 1;
+
+  });
+
+}
+
