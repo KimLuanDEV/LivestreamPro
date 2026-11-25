@@ -10128,6 +10128,58 @@ body.sfu-role-viewer .sfu-chat-text {
 
 
 
+/* ==========================================
+   SFU - VIEWER GPU PERFORMANCE V2.0
+========================================== */
+
+@media (max-width: 768px),
+       (pointer: coarse) {
+
+  body.sfu-role-viewer .sfu-chat-panel,
+  body.sfu-role-viewer .sfu-chat-messages,
+  body.sfu-role-viewer .sfu-chat-content,
+  body.sfu-role-viewer .sfu-chat-form {
+
+    background: transparent !important;
+
+    box-shadow: none !important;
+
+    backdrop-filter: none !important;
+
+    -webkit-backdrop-filter: none !important;
+
+  }
+
+  body.sfu-role-viewer .sfu-chat-messages {
+
+    mask-image: none !important;
+
+    -webkit-mask-image: none !important;
+
+  }
+
+  body.sfu-role-viewer .sfu-chat-item {
+
+    animation: none !important;
+
+    box-shadow: none !important;
+
+  }
+
+  body.sfu-role-viewer .sfu-chat-author,
+  body.sfu-role-viewer .sfu-chat-text {
+
+    text-shadow: 0 1px 3px #000;
+
+  }
+
+  body.sfu-role-viewer .sfu-chat-avatar {
+
+    box-shadow: none !important;
+
+  }
+
+}
 
 
 
@@ -14017,6 +14069,15 @@ function stopRocketEffect() {
 
 function playNextRocket() {
 
+
+  if (document.hidden) {
+
+  rocketQueue.length = 0;
+
+  return;
+
+}
+
   if (rocketPlaying) return;
   if (!rocketQueue.length) return;
 
@@ -14151,32 +14212,80 @@ function playNextRocket() {
   rocketVideo.play().catch(finish);
 }
 
+/* ==========================================
+   SFU - SMART GIFT EFFECT QUEUE
+========================================== */
 
 function enqueueRocketGift(data) {
 
   if (data?.giftId !== "rocket") return;
 
+  // Do not play heavy effects in background
+  if (document.hidden) return;
+
+  const lowPower =
+
+    SFU_LOW_POWER_DEVICE ||
+
+    navigator.connection?.saveData === true ||
+
+    window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+  // Keep gift notifications, skip heavy animation
+  if (lowPower) return;
+
   const donor = String(
     data.donor || "Viewer"
   ).slice(0, 50);
 
-  const quantity = Number.isSafeInteger(data.quantity)
-    ? Math.max(1, Math.min(data.quantity, 50))
+  const quantity = Number.isSafeInteger(
+    data.quantity
+  )
+
+    ? Math.max(
+        1,
+        Math.min(data.quantity, 50)
+      )
+
     : 1;
 
-  // Tránh danh sách hiệu ứng quá dài
-  if (rocketQueue.length >= 10) {
+  const maxQueue =
+    rocketMobileMode ? 1 : 2;
+
+  const last =
+    rocketQueue[rocketQueue.length - 1];
+
+  // Merge queued animations from the same donor
+  if (last && last.donor === donor) {
+
+    last.quantity = Math.min(
+      last.quantity + quantity,
+      999
+    );
+
+    return;
+
+  }
+
+  while (rocketQueue.length >= maxQueue) {
+
     rocketQueue.shift();
+
   }
 
   rocketQueue.push({
+
     donor,
+
     quantity
+
   });
 
   playNextRocket();
-}
 
+}
 
 // Show successful gifts to everyone in this room.
 socket.on("sfu:gift:new", data => {
@@ -15488,21 +15597,24 @@ async function inspectSfuVideoTrack(track, side) {
   if (!track?.getRTCStatsReport) return;
 
   const report = await track.getRTCStatsReport();
+
   if (!report) return;
 
-  const now = performance.now();
+  const previous =
+    sfuVideoStatsCache.get(track) || new Map();
 
-  const stats = [];
+  const current = new Map();
+
+  const results = [];
 
   report.forEach(s => {
 
-    if (
-      s.type !== (
-        side === "HOST"
-          ? "outbound-rtp"
-          : "inbound-rtp"
-      )
-    ) return;
+    const expectedType =
+      side === "HOST"
+        ? "outbound-rtp"
+        : "inbound-rtp";
+
+    if (s.type !== expectedType) return;
 
     if (
       s.kind !== "video" &&
@@ -15511,78 +15623,149 @@ async function inspectSfuVideoTrack(track, side) {
 
     if (s.isRemote) return;
 
-    stats.push(s);
+    current.set(s.id, s);
 
-  });
+    const old = previous.get(s.id);
 
-  if (!stats.length) return;
+    if (!old) return;
 
-  const bytes = stats.reduce(
-    (n, s) => n + (s.bytesSent ?? s.bytesReceived ?? 0),
-    0
-  );
+    const seconds =
+      (s.timestamp - old.timestamp) / 1000;
 
-  const frames = stats.reduce(
-    (n, s) => n + (
+    if (seconds <= 0) return;
+
+    const delta = key => Math.max(
+      0,
+      (s[key] || 0) - (old[key] || 0)
+    );
+
+    const bytes = delta(
       side === "HOST"
-        ? (s.framesEncoded ?? 0)
-        : (s.framesDecoded ?? 0)
-    ),
-    0
-  );
+        ? "bytesSent"
+        : "bytesReceived"
+    );
 
-  const lost = stats.reduce(
-    (n, s) => n + (s.packetsLost ?? 0),
-    0
-  );
+    const frames = delta(
+      side === "HOST"
+        ? "framesEncoded"
+        : "framesDecoded"
+    );
 
-  const previous = sfuVideoStatsCache.get(track);
+    const fps = frames / seconds;
 
-  sfuVideoStatsCache.set(track, {
-    now,
-    bytes,
-    frames,
-    lost
+
+    // Ignore inactive simulcast layers
+
+if (
+
+  side === "HOST" &&
+
+  (s.active === false ||
+    (bytes === 0 && frames === 0))
+
+) {
+
+  return;
+
+}
+
+
+    const lost = delta("packetsLost");
+    const received = delta("packetsReceived");
+
+    const lossPercent =
+      lost + received > 0
+        ? lost / (lost + received) * 100
+        : 0;
+
+    const jitterMs =
+      Number.isFinite(s.jitter)
+        ? s.jitter * 1000
+        : null;
+
+    const freezes = delta("freezeCount");
+
+    const dropped = delta("framesDropped");
+
+    let quality = "GOOD";
+
+    if (
+      freezes > 0 ||
+      fps < 15 ||
+      lossPercent > 5
+    ) {
+
+      quality = "POOR";
+
+    } else if (
+      fps < 23 ||
+      lossPercent > 2 ||
+      (jitterMs !== null && jitterMs > 50)
+    ) {
+
+      quality = "FAIR";
+
+    }
+
+    results.push({
+
+      layer: s.rid || "default",
+
+      resolution:
+        `${s.frameWidth || 0}x${s.frameHeight || 0}`,
+
+      fps: Number(fps.toFixed(1)),
+
+      bitrateKbps: Math.round(
+        bytes * 8 / seconds / 1000
+      ),
+
+      packetLoss:
+        side === "VIEWER"
+          ? lossPercent.toFixed(2) + "%"
+          : null,
+
+      jitterMs:
+        jitterMs === null
+          ? null
+          : Math.round(jitterMs),
+
+      droppedFrames: dropped,
+
+      freezes,
+
+      limitation:
+        s.qualityLimitationReason || null,
+
+      quality
+
+    });
+
   });
 
-  if (!previous) return;
+  sfuVideoStatsCache.set(track, current);
 
-  const seconds = (now - previous.now) / 1000;
+  if (!results.length) return;
 
-  if (seconds <= 0) return;
+  console.log(`[SFU ${side} QUALITY]`);
 
-  const bitrate = Math.max(
-    0,
-    (bytes - previous.bytes) * 8 / seconds / 1000
-  );
-
-  const fps = Math.max(
-    0,
-    (frames - previous.frames) / seconds
-  );
-
-  const lossDelta = Math.max(
-    0,
-    lost - previous.lost
-  );
-
-  const jitterMs = stats.length === 1 &&
-    Number.isFinite(stats[0].jitter)
-      ? Math.round(stats[0].jitter * 1000)
-      : null;
-
-  console.log(`[SFU ${side} VIDEO]`, {
-    fps: Number(fps.toFixed(1)),
-    bitrateKbps: Math.round(bitrate),
-    lostPackets: lossDelta,
-    jitterMs
-  });
+  console.table(results);
 
 }
 
 setInterval(async () => {
 
-  if (!lkRoom || sfuVideoStatsBusy) return;
+ if (
+
+  !lkRoom ||
+
+  sfuVideoStatsBusy ||
+
+  document.hidden ||
+
+  lkRoom.state !== "connected"
+
+) return;
 
   sfuVideoStatsBusy = true;
 
@@ -15691,23 +15874,406 @@ let sfuBeautyBusy = false;
    LIVEKIT VIDEO PROCESSOR
 ========================================== */
 
+
+
+/* ==========================================
+   SFU - WEBGL BEAUTY ENGINE V2.0
+========================================== */
+
+function createSfuBeautyGL(canvas) {
+
+  const gl = canvas.getContext("webgl", {
+
+    alpha: false,
+
+    antialias: false,
+
+    depth: false,
+
+    stencil: false,
+
+    preserveDrawingBuffer: false,
+
+    powerPreference: "high-performance"
+
+  });
+
+  if (!gl) {
+    throw new Error("WebGL unavailable");
+  }
+
+  const vertexSource = `
+    attribute vec2 a_position;
+
+    varying vec2 v_uv;
+
+    void main() {
+
+      v_uv = vec2(
+        (a_position.x + 1.0) * 0.5,
+        (1.0 - a_position.y) * 0.5
+      );
+
+      gl_Position = vec4(
+        a_position, 0.0, 1.0
+      );
+
+    }
+  `;
+
+  const fragmentSource = `
+    precision mediump float;
+
+    uniform sampler2D u_video;
+    uniform vec2 u_pixel;
+    uniform float u_brightness;
+    uniform float u_contrast;
+    uniform float u_saturation;
+    uniform float u_soft;
+    uniform float u_warm;
+
+    varying vec2 v_uv;
+
+    void main() {
+
+      vec3 color =
+        texture2D(u_video, v_uv).rgb;
+
+      if (u_soft > 0.0) {
+
+        vec3 blur = (
+
+          texture2D(
+            u_video,
+            v_uv + vec2(u_pixel.x, 0.0)
+          ).rgb +
+
+          texture2D(
+            u_video,
+            v_uv - vec2(u_pixel.x, 0.0)
+          ).rgb +
+
+          texture2D(
+            u_video,
+            v_uv + vec2(0.0, u_pixel.y)
+          ).rgb +
+
+          texture2D(
+            u_video,
+            v_uv - vec2(0.0, u_pixel.y)
+          ).rgb
+
+        ) * 0.25;
+
+        color = mix(color, blur, u_soft);
+
+      }
+
+      color *= u_brightness;
+
+      color =
+        (color - 0.5) * u_contrast + 0.5;
+
+      float gray = dot(
+        color,
+        vec3(0.299, 0.587, 0.114)
+      );
+
+      color = mix(
+        vec3(gray),
+        color,
+        u_saturation
+      );
+
+      color = mix(
+        color,
+        vec3(1.0, 0.71, 0.45),
+        u_warm
+      );
+
+      gl_FragColor = vec4(
+        clamp(color, 0.0, 1.0),
+        1.0
+      );
+
+    }
+  `;
+
+  function compile(type, source) {
+
+    const shader = gl.createShader(type);
+
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+
+    if (!gl.getShaderParameter(
+      shader,
+      gl.COMPILE_STATUS
+    )) {
+
+      const error =
+        gl.getShaderInfoLog(shader);
+
+      gl.deleteShader(shader);
+
+      throw new Error(error);
+
+    }
+
+    return shader;
+
+  }
+
+  const vertex = compile(
+    gl.VERTEX_SHADER,
+    vertexSource
+  );
+
+  const fragment = compile(
+    gl.FRAGMENT_SHADER,
+    fragmentSource
+  );
+
+  const program = gl.createProgram();
+
+  gl.attachShader(program, vertex);
+  gl.attachShader(program, fragment);
+  gl.linkProgram(program);
+
+  if (!gl.getProgramParameter(
+    program,
+    gl.LINK_STATUS
+  )) {
+
+    throw new Error(
+      gl.getProgramInfoLog(program)
+    );
+
+  }
+
+  gl.useProgram(program);
+
+  const buffer = gl.createBuffer();
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+
+  gl.bufferData(
+
+    gl.ARRAY_BUFFER,
+
+    new Float32Array([
+      -1, -1,
+       1, -1,
+      -1,  1,
+       1,  1
+    ]),
+
+    gl.STATIC_DRAW
+
+  );
+
+  const position = gl.getAttribLocation(
+    program,
+    "a_position"
+  );
+
+  gl.enableVertexAttribArray(position);
+
+  gl.vertexAttribPointer(
+    position,
+    2,
+    gl.FLOAT,
+    false,
+    0,
+    0
+  );
+
+  const texture = gl.createTexture();
+
+  gl.activeTexture(gl.TEXTURE0);
+
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+
+  gl.texParameteri(
+    gl.TEXTURE_2D,
+    gl.TEXTURE_MIN_FILTER,
+    gl.LINEAR
+  );
+
+  gl.texParameteri(
+    gl.TEXTURE_2D,
+    gl.TEXTURE_MAG_FILTER,
+    gl.LINEAR
+  );
+
+  gl.texParameteri(
+    gl.TEXTURE_2D,
+    gl.TEXTURE_WRAP_S,
+    gl.CLAMP_TO_EDGE
+  );
+
+  gl.texParameteri(
+    gl.TEXTURE_2D,
+    gl.TEXTURE_WRAP_T,
+    gl.CLAMP_TO_EDGE
+  );
+
+  const uniforms = {};
+
+  [
+
+    "u_video",
+    "u_pixel",
+    "u_brightness",
+    "u_contrast",
+    "u_saturation",
+    "u_soft",
+    "u_warm"
+
+  ].forEach(name => {
+
+    uniforms[name] =
+      gl.getUniformLocation(program, name);
+
+  });
+
+  const presets = {
+
+    off:     [1, 1, 1, 0, 0],
+
+    natural: [1.035, 1.015, 1.075, 0, 0],
+
+    bright:  [1.095, 1.015, 1.055, 0, 0],
+
+    warm:    [1.045, 1.02, 1.10, 0, .065],
+
+    soft:    [1.055, .99, 1.065, .12, 0],
+
+    studio:  [1.045, 1.075, 1.12, 0, 0]
+
+  };
+
+  return {
+
+    draw(video, mode) {
+
+      if (gl.isContextLost()) {
+
+  throw new Error("WebGL context lost");
+
+}
+
+      const p =
+        presets[mode] || presets.natural;
+
+      gl.viewport(
+        0, 0,
+        canvas.width,
+        canvas.height
+      );
+
+      gl.bindTexture(
+        gl.TEXTURE_2D,
+        texture
+      );
+
+      gl.texImage2D(
+
+        gl.TEXTURE_2D,
+        0,
+        gl.RGB,
+        gl.RGB,
+        gl.UNSIGNED_BYTE,
+        video
+
+      );
+
+      gl.uniform1i(uniforms.u_video, 0);
+
+      gl.uniform2f(
+
+        uniforms.u_pixel,
+
+        1 / canvas.width,
+
+        1 / canvas.height
+
+      );
+
+      gl.uniform1f(
+        uniforms.u_brightness, p[0]
+      );
+
+      gl.uniform1f(
+        uniforms.u_contrast, p[1]
+      );
+
+      gl.uniform1f(
+        uniforms.u_saturation, p[2]
+      );
+
+      gl.uniform1f(
+        uniforms.u_soft, p[3]
+      );
+
+      gl.uniform1f(
+        uniforms.u_warm, p[4]
+      );
+
+      gl.drawArrays(
+        gl.TRIANGLE_STRIP,
+        0,
+        4
+      );
+
+    },
+
+    destroy() {
+
+      gl.deleteTexture(texture);
+
+      gl.deleteBuffer(buffer);
+
+      gl.deleteProgram(program);
+
+      gl.deleteShader(vertex);
+
+      gl.deleteShader(fragment);
+
+    }
+
+  };
+
+}
+
+
 class SfuBeautyVideoProcessor {
 
   constructor(mode) {
 
     this.name = "livestreampro-beauty";
+
     this.mode = mode;
 
     this.processedTrack = undefined;
 
     this.video = null;
+
     this.canvas = null;
-    this.ctx = null;
+
+    this.engine = null;
+
     this.stream = null;
 
     this.raf = 0;
-    this.lastDraw = 0;
+
+    this.frameCallback = 0;
+
     this.destroyed = false;
+
+    this.lastDraw = -Infinity;
+
+    this.fps = SFU_VIDEO_PROFILE.fps;
 
   }
 
@@ -15715,139 +16281,179 @@ class SfuBeautyVideoProcessor {
 
     this.destroyed = false;
 
-    const video = document.createElement("video");
+    const video =
+      document.createElement("video");
 
     video.autoplay = true;
-    video.muted = true;
-    video.playsInline = true;
 
-    video.setAttribute("playsinline", "");
+    video.muted = true;
+
+    video.playsInline = true;
 
     this.video = video;
 
-    const settings = options.track.getSettings?.() || {};
+    const canvas =
+      document.createElement("canvas");
 
-    const canvas = document.createElement("canvas");
+    const settings =
+      options.track.getSettings?.() || {};
 
     canvas.width = settings.width || 1280;
-    canvas.height = settings.height || 720;
 
-    if (typeof canvas.captureStream !== "function") {
-      throw new Error("Canvas capture is unsupported.");
-    }
+    canvas.height = settings.height || 720;
 
     this.canvas = canvas;
 
-    this.ctx = canvas.getContext("2d", {
-      alpha: false
-    });
+    if (!canvas.captureStream) {
 
-    if (!this.ctx) {
-      throw new Error("Cannot initialize beauty canvas.");
+      throw new Error(
+        "Canvas capture unsupported"
+      );
+
     }
 
-    await this.restart(options);
+    try {
 
-    if (this.destroyed) return;
+      this.engine = createSfuBeautyGL(canvas);
 
-    // Canvas output is sent to LiveKit
-    this.stream = canvas.captureStream(30);
+      await this.restart(options);
 
-    this.processedTrack =
-      this.stream.getVideoTracks()[0];
+      this.stream =
+        canvas.captureStream(this.fps);
 
-    if (!this.processedTrack) {
-      throw new Error("Cannot create filtered track.");
-    }
+      this.processedTrack =
+        this.stream.getVideoTracks()[0];
 
-    const draw = timestamp => {
+      if (!this.processedTrack) {
 
-      if (this.destroyed) return;
-
-      if (timestamp - this.lastDraw >= 1000 / 30) {
-
-        this.lastDraw = timestamp;
-
-        const v = this.video;
-        const c = this.canvas;
-        const ctx = this.ctx;
-
-        if (
-          v &&
-          c &&
-          ctx &&
-          v.readyState >= 2 &&
-          v.videoWidth > 0
-        ) {
-
-          if (
-            c.width !== v.videoWidth ||
-            c.height !== v.videoHeight
-          ) {
-            c.width = v.videoWidth;
-            c.height = v.videoHeight;
-          }
-
-          const preset =
-            SFU_BEAUTY_PRESETS[this.mode] ||
-            SFU_BEAUTY_PRESETS.natural;
-
-          ctx.globalAlpha = 1;
-
-          ctx.filter = preset.filter;
-
-          ctx.drawImage(
-            v,
-            0,
-            0,
-            c.width,
-            c.height
-          );
-
-          ctx.filter = "none";
-
-          // Gentle full-frame softening
-          if (preset.soft > 0) {
-
-            ctx.globalAlpha = preset.soft;
-            ctx.filter = "blur(1.5px)";
-
-            ctx.drawImage(
-              v,
-              0,
-              0,
-              c.width,
-              c.height
-            );
-
-            ctx.filter = "none";
-            ctx.globalAlpha = 1;
-
-          }
-
-          // Warm color overlay
-          if (preset.overlay) {
-
-            ctx.fillStyle = preset.overlay;
-
-            ctx.fillRect(
-              0,
-              0,
-              c.width,
-              c.height
-            );
-
-          }
-
-        }
+        throw new Error(
+          "Beauty output track unavailable"
+        );
 
       }
 
-      this.raf = requestAnimationFrame(draw);
+      const draw = timestamp => {
 
-    };
+        if (this.destroyed) return;
 
-    this.raf = requestAnimationFrame(draw);
+        if (
+
+          video.readyState >= 2 &&
+
+          video.videoWidth > 0 &&
+
+          timestamp - this.lastDraw >=
+            1000 / this.fps - 1
+
+        ) {
+
+          this.lastDraw = timestamp;
+
+          if (
+
+            canvas.width !== video.videoWidth ||
+
+            canvas.height !== video.videoHeight
+
+          ) {
+
+            canvas.width = video.videoWidth;
+
+            canvas.height = video.videoHeight;
+
+          }
+
+     try {
+
+  this.engine.draw(
+    video,
+    this.mode
+  );
+
+} catch (error) {
+
+  console.warn(
+    "[SFU BEAUTY] Runtime failure:",
+    error
+  );
+
+  this.destroyed = true;
+
+  const publication =
+    lkRoom?.localParticipant
+      ?.getTrackPublication(Track.Source.Camera);
+
+  const track = publication?.videoTrack;
+
+  if (track?.getProcessor?.() === this) {
+
+    sfuBeautyMode = "off";
+
+    track.stopProcessor()
+
+      .then(() => {
+
+        syncSfuBeautyUI();
+
+        attachLocalCamera();
+
+        showMessage(
+          "Beauty disabled. Original camera restored."
+        );
+
+      })
+
+      .catch(error => {
+
+        console.error(
+          "[SFU BEAUTY] Recovery failed:",
+          error
+        );
+
+      });
+
+  }
+
+  return;
+
+}
+
+        }
+
+        schedule();
+
+      };
+
+      const schedule = () => {
+
+        if (this.destroyed) return;
+
+        if (
+          typeof video.requestVideoFrameCallback
+          === "function"
+        ) {
+
+          this.frameCallback =
+            video.requestVideoFrameCallback(draw);
+
+        } else {
+
+          this.raf =
+            requestAnimationFrame(draw);
+
+        }
+
+      };
+
+      schedule();
+
+    } catch (error) {
+
+      await this.destroy();
+
+      throw error;
+
+    }
 
   }
 
@@ -15858,18 +16464,7 @@ class SfuBeautyVideoProcessor {
     this.video.srcObject =
       new MediaStream([options.track]);
 
-    try {
-
-      await this.video.play();
-
-    } catch (error) {
-
-      console.warn(
-        "[SFU BEAUTY] Video playback:",
-        error
-      );
-
-    }
+    await this.video.play();
 
   }
 
@@ -15879,20 +16474,42 @@ class SfuBeautyVideoProcessor {
 
     cancelAnimationFrame(this.raf);
 
+    if (
+
+      this.video &&
+
+      this.video.cancelVideoFrameCallback
+
+    ) {
+
+      this.video.cancelVideoFrameCallback(
+        this.frameCallback
+      );
+
+    }
+
     if (this.video) {
+
       this.video.pause();
+
       this.video.srcObject = null;
+
     }
 
     this.stream
       ?.getTracks()
       .forEach(track => track.stop());
 
+    this.engine?.destroy();
+
     this.processedTrack = undefined;
 
+    this.engine = null;
+
     this.video = null;
+
     this.canvas = null;
-    this.ctx = null;
+
     this.stream = null;
 
   }
@@ -16125,12 +16742,37 @@ const SFU_IS_MOBILE =
    SFU - ADAPTIVE VIDEO QUALITY V3.0
 ========================================== */
 
-const SFU_VIDEO_PROFILE = SFU_IS_MOBILE
+/* ==========================================
+   SFU - SMART DEVICE VIDEO PROFILE V4.0
+========================================== */
+
+const SFU_LOW_POWER_DEVICE =
+  SFU_IS_MOBILE &&
+  (
+    (navigator.deviceMemory || 8) <= 4 ||
+    (navigator.hardwareConcurrency || 8) <= 4 ||
+    navigator.connection?.saveData === true
+  );
+
+const SFU_VIDEO_PROFILE = SFU_LOW_POWER_DEVICE
+
+  ? {
+      resolution: {
+        width: 960,
+        height: 540
+      },
+      fps: 24,
+      bitrate: 900000
+    }
+
+  : SFU_IS_MOBILE
+
   ? {
       resolution: VideoPresets.h720.resolution,
       fps: 30,
       bitrate: 1500000
     }
+
   : {
       resolution: VideoPresets.h720.resolution,
       fps: 30,
@@ -20874,7 +21516,7 @@ if (watchPlayButton) {
 
 
 
-</script>
+
 
 
 
