@@ -11,6 +11,7 @@
 
 <meta name="theme-color" content="#0b0d10">
 
+<meta name="robots" content="noindex, nofollow">
 <title>Security Center | Livestream Pro</title>
 
 <style>
@@ -670,6 +671,1467 @@ button:disabled {
 
 }
 
+/* ==========================================
+   LSP AUTH PERFORMANCE MONITOR
+   BLACK OBSIDIAN + CHAMPAGNE GOLD
+========================================== */
+
+.auth-perf-panel {
+  position: relative;
+
+  width: 100%;
+  margin: 0 0 24px;
+  padding: 20px;
+
+  border: 1px solid rgba(225,188,126,.22);
+  border-radius: 18px;
+
+  background:
+    radial-gradient(
+      ellipse at top right,
+      rgba(225,188,126,.08),
+      transparent 55%
+    ),
+    linear-gradient(
+      145deg,
+      #1c1c20,
+      #111215
+    );
+
+  box-shadow:
+    0 15px 35px rgba(0,0,0,.25);
+
+  overflow: hidden;
+}
+
+
+/* HEADER */
+
+.auth-perf-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+
+  margin-bottom: 18px;
+}
+
+.auth-perf-heading {
+  min-width: 0;
+}
+
+.auth-perf-kicker {
+  display: block;
+  margin-bottom: 6px;
+
+  color: #b69b73;
+
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.7px;
+}
+
+.auth-perf-heading h2 {
+  margin: 0 0 5px;
+
+  color: #f1dbb7;
+
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: .5px;
+}
+
+.auth-perf-heading p {
+  margin: 0;
+
+  color: #948c80;
+  font-size: 11px;
+}
+
+
+/* STATUS */
+
+.auth-perf-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 7px 10px;
+
+  border: 1px solid rgba(225,188,126,.2);
+  border-radius: 20px;
+
+  background: rgba(225,188,126,.07);
+  color: #e1bc7e;
+
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.auth-perf-status::before {
+  content: "";
+
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.auth-perf-status.is-active {
+  color: #82d6a2;
+  background: rgba(76,175,110,.08);
+  border-color: rgba(76,175,110,.25);
+}
+
+.auth-perf-status.is-error {
+  color: #ff9292;
+  background: rgba(255,80,80,.07);
+  border-color: rgba(255,80,80,.2);
+}
+
+
+/* CACHE EFFICIENCY */
+
+.auth-perf-primary {
+  padding: 18px;
+  margin-bottom: 14px;
+
+  border: 1px solid rgba(225,188,126,.18);
+  border-radius: 14px;
+
+  background: rgba(0,0,0,.22);
+}
+
+.auth-perf-label {
+  display: block;
+
+  color: #ad9878;
+
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+}
+
+#authPerfHitRate {
+  display: block;
+
+  margin: 8px 0 12px;
+
+  color: #f0d5a1;
+
+  font-size: clamp(30px,7vw,42px);
+  font-weight: 800;
+
+  font-variant-numeric: tabular-nums;
+}
+
+.auth-perf-primary small {
+  display: block;
+
+  margin-top: 10px;
+
+  color: #8f887e;
+  font-size: 10px;
+}
+
+.auth-perf-progress {
+  width: 100%;
+  height: 7px;
+
+  border-radius: 20px;
+  background: #302c26;
+
+  overflow: hidden;
+}
+
+#authPerfProgressFill {
+  width: 0;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: linear-gradient(
+    90deg,
+    #a8814f,
+    #efcf96
+  );
+
+  transition: width .5s ease;
+}
+
+
+/* STATISTICS GRID */
+
+.auth-perf-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4,minmax(0,1fr));
+
+  gap: 10px;
+}
+
+.auth-perf-cell {
+  min-width: 0;
+
+  padding: 14px;
+
+  border: 1px solid rgba(225,188,126,.14);
+  border-radius: 12px;
+
+  background: rgba(0,0,0,.18);
+}
+
+.auth-perf-cell span {
+  display: block;
+
+  margin-bottom: 9px;
+
+  color: #9b8c77;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .7px;
+}
+
+.auth-perf-cell strong {
+  display: block;
+
+  color: #efd9b2;
+
+  font-size: clamp(17px,4vw,24px);
+  font-weight: 750;
+
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.auth-perf-cell strong.is-danger {
+  color: #ff9292;
+}
+
+.auth-perf-cell strong.is-success {
+  color: #82d6a2;
+}
+
+
+/* FOOTER */
+
+.auth-perf-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  margin-top: 16px;
+  padding-top: 14px;
+
+  border-top: 1px solid rgba(225,188,126,.12);
+}
+
+.auth-perf-footer span {
+  display: block;
+
+  color: #b2a28b;
+  font-size: 11px;
+}
+
+.auth-perf-footer small {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #77736c;
+  font-size: 10px;
+}
+
+.auth-perf-refresh {
+  display: grid;
+  place-items: center;
+
+  width: 37px;
+  height: 37px;
+
+  flex-shrink: 0;
+
+  padding: 0;
+
+  border: 1px solid rgba(225,188,126,.2);
+  border-radius: 10px;
+
+  background: rgba(225,188,126,.06);
+  color: #e1bc7e;
+
+  cursor: pointer;
+}
+
+.auth-perf-refresh svg {
+  width: 19px;
+  height: 19px;
+}
+
+.auth-perf-refresh:hover {
+  background: rgba(225,188,126,.12);
+}
+
+.auth-perf-refresh:disabled {
+  opacity: .5;
+  cursor: wait;
+}
+
+.auth-perf-refresh.is-loading svg {
+  animation: authPerfSpin 1s linear infinite;
+}
+
+@keyframes authPerfSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* MOBILE */
+
+@media (max-width: 768px) {
+
+  .auth-perf-panel {
+    padding: 14px;
+    border-radius: 15px;
+  }
+
+  .auth-perf-grid {
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+
+    gap: 8px;
+  }
+
+  .auth-perf-heading h2 {
+    font-size: 16px;
+  }
+
+  .auth-perf-cell {
+    padding: 12px;
+  }
+
+  .auth-perf-primary {
+    padding: 15px;
+  }
+
+  .auth-perf-status {
+    padding: 6px 8px;
+    font-size: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  #authPerfProgressFill {
+    transition: none;
+  }
+
+  .auth-perf-refresh.is-loading svg {
+    animation: none;
+  }
+}
+
+
+
+/* ==========================================
+   TRANSACTION SECURITY MONITOR V1.0
+========================================== */
+
+#txSecSuccess {
+  display: block;
+  margin: 8px 0 12px;
+
+  color: #82d6a2;
+
+  font-size: clamp(30px, 7vw, 42px);
+  font-weight: 800;
+
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* SECURITY CONFIGURATION */
+
+.tx-sec-config {
+  margin-top: 16px;
+  padding: 6px 15px;
+
+  border: 1px solid rgba(225,188,126,.14);
+  border-radius: 12px;
+
+  background: rgba(0,0,0,.18);
+}
+
+.tx-sec-config-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+  padding: 12px 0;
+
+  border-bottom:
+    1px solid rgba(225,188,126,.09);
+}
+
+.tx-sec-config-row:last-child {
+  border-bottom: none;
+}
+
+.tx-sec-config-row span {
+  color: #a79b88;
+  font-size: 11px;
+}
+
+.tx-sec-config-row strong {
+  color: #e8d0a5;
+  font-size: 12px;
+  font-weight: 700;
+
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+
+/* SECURITY EVENTS */
+
+.tx-sec-events {
+  margin-top: 18px;
+  padding: 15px;
+
+  border: 1px solid rgba(225,188,126,.15);
+  border-radius: 12px;
+
+  background: rgba(0,0,0,.22);
+}
+
+.tx-sec-events-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.tx-sec-events-heading h3 {
+  margin: 0;
+
+  color: #d9ba88;
+
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+#txSecEventCount {
+  color: #a79b88;
+  font-size: 10px;
+}
+
+.tx-sec-event-list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+  max-height: 280px;
+
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.tx-sec-event {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 10px;
+  padding: 11px;
+
+  border: 1px solid rgba(225,188,126,.08);
+  border-radius: 9px;
+
+  background: rgba(255,255,255,.018);
+}
+
+.tx-sec-event-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+
+  margin-top: 5px;
+
+  border-radius: 50%;
+  background: #e1bc7e;
+}
+
+.tx-sec-event.is-success .tx-sec-event-dot {
+  background: #82d6a2;
+}
+
+.tx-sec-event.is-danger .tx-sec-event-dot {
+  background: #ff9292;
+}
+
+.tx-sec-event-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.tx-sec-event-info strong {
+  display: block;
+
+  color: #e8d9bf;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  overflow-wrap: anywhere;
+}
+
+.tx-sec-event-info small {
+  display: block;
+  margin-top: 4px;
+
+  color: #898278;
+  font-size: 10px;
+
+  overflow-wrap: anywhere;
+}
+
+.tx-sec-event time {
+  color: #a99c87;
+
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.tx-sec-empty {
+  padding: 24px 10px;
+  text-align: center;
+
+  color: #91887a;
+  font-size: 11px;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 768px) {
+
+  .tx-sec-config {
+    padding: 4px 10px;
+  }
+
+  .tx-sec-config-row span {
+    font-size: 10px;
+  }
+
+  .tx-sec-config-row strong {
+    font-size: 11px;
+  }
+
+  .tx-sec-events {
+    padding: 11px;
+  }
+
+  .tx-sec-events-heading h3 {
+    font-size: 10px;
+    letter-spacing: .5px;
+  }
+
+  .tx-sec-event {
+    padding: 9px;
+    gap: 7px;
+  }
+
+}
+
+
+/* ==========================================
+   DATABASE SECURITY MONITOR V1.0
+   BLACK OBSIDIAN + CHAMPAGNE GOLD
+========================================== */
+
+#dbSecVerification {
+  display: block;
+
+  margin: 10px 0;
+
+  color: #e1bc7e;
+
+  font-size: clamp(18px, 4.5vw, 26px);
+  font-weight: 800;
+
+  letter-spacing: .5px;
+}
+
+#dbSecVerification.is-success {
+  color: #82d6a2;
+}
+
+#dbSecVerification.is-danger {
+  color: #ff9292;
+}
+
+
+/* STORAGE MONITOR */
+
+.db-sec-storage {
+  margin-top: 16px;
+  padding: 15px;
+
+  border: 1px solid rgba(225,188,126,.16);
+  border-radius: 12px;
+
+  background: rgba(0,0,0,.2);
+}
+
+.db-sec-storage-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.db-sec-storage-head span {
+  color: #ad9878;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 1px;
+}
+
+#dbSecDiskPercent {
+  color: #e8cea0;
+
+  font-size: 15px;
+  font-weight: 800;
+
+  font-variant-numeric: tabular-nums;
+}
+
+.db-sec-progress {
+  height: 8px;
+
+  border-radius: 20px;
+  background: #302c26;
+
+  overflow: hidden;
+}
+
+#dbSecDiskFill {
+  width: 0;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: linear-gradient(
+    90deg,
+    #a8814f,
+    #efcf96
+  );
+
+  transition: width .5s ease;
+}
+
+#dbSecDiskFill.is-warning {
+  background: #e8a94e;
+}
+
+#dbSecDiskFill.is-danger {
+  background: #e66a6a;
+}
+
+#dbSecDiskInfo {
+  display: block;
+  margin-top: 10px;
+
+  color: #9b9080;
+  font-size: 11px;
+}
+
+
+/* BACKUP LIST */
+
+.db-sec-file-icon {
+  display: grid;
+  place-items: center;
+
+  width: 32px;
+  height: 32px;
+
+  flex: 0 0 32px;
+
+  border: 1px solid rgba(225,188,126,.15);
+  border-radius: 8px;
+
+  background: rgba(225,188,126,.06);
+  color: #d9ba88;
+}
+
+.db-sec-file-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.db-sec-file-size {
+  color: #dfc598;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+
+/* ERROR MESSAGE */
+
+.db-sec-error {
+  margin-top: 14px;
+  padding: 12px;
+
+  border: 1px solid rgba(255,100,100,.2);
+  border-radius: 10px;
+
+  background: rgba(255,80,80,.055);
+  color: #ffaaaa;
+
+  font-size: 11px;
+  line-height: 1.5;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* MANUAL BACKUP BUTTON */
+
+.db-sec-backup-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  width: 100%;
+  min-height: 48px;
+
+  margin-top: 18px;
+  padding: 12px;
+
+  border: 1px solid #e6c58e;
+  border-radius: 11px;
+
+  background: linear-gradient(
+    135deg,
+    #f0d8ab,
+    #c29a63
+  );
+
+  color: #291e13;
+
+  font-size: 12px;
+  font-weight: 850;
+
+  letter-spacing: 1px;
+
+  cursor: pointer;
+
+  box-shadow: 0 6px 18px rgba(0,0,0,.18);
+
+  transition: opacity .2s;
+}
+
+.db-sec-backup-btn svg {
+  width: 21px;
+  height: 21px;
+}
+
+.db-sec-backup-btn:hover {
+  filter: brightness(1.06);
+}
+
+.db-sec-backup-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.db-sec-backup-note {
+  margin: 9px 0 0;
+
+  text-align: center;
+
+  color: #8e8577;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 768px) {
+
+  .db-sec-storage {
+    padding: 12px;
+  }
+
+  .db-sec-file-icon {
+    width: 28px;
+    height: 28px;
+
+    flex-basis: 28px;
+  }
+
+  .db-sec-file-size {
+    font-size: 10px;
+  }
+
+  .db-sec-backup-btn {
+    min-height: 46px;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  #dbSecDiskFill {
+    transition: none;
+  }
+
+}
+
+
+
+/* ==========================================
+   OFFSITE BACKUP & RECOVERY MONITOR V1.1
+========================================== */
+
+.db-offsite-panel {
+
+  margin-top: 18px;
+  padding: 16px;
+
+  border: 1px solid rgba(225,188,126,.20);
+  border-radius: 14px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(225,188,126,.045),
+    rgba(0,0,0,.22)
+  );
+
+}
+
+
+/* HEADER */
+
+.db-offsite-header {
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+  margin-bottom: 16px;
+
+}
+
+.db-offsite-icon {
+
+  display: grid;
+  place-items: center;
+
+  width: 44px;
+  height: 44px;
+
+  flex: 0 0 44px;
+
+  border: 1px solid rgba(225,188,126,.25);
+  border-radius: 12px;
+
+  background: rgba(225,188,126,.08);
+
+  color: #e1bc7e;
+
+}
+
+.db-offsite-icon svg {
+
+  width: 25px;
+  height: 25px;
+
+}
+
+.db-offsite-heading {
+
+  flex: 1;
+  min-width: 0;
+
+}
+
+.db-offsite-heading > span {
+
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #a68e6c;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: .9px;
+
+}
+
+.db-offsite-heading h3 {
+
+  margin: 0 0 4px;
+
+  color: #f0d8ab;
+
+  font-size: 16px;
+  font-weight: 800;
+
+}
+
+.db-offsite-heading small {
+
+  color: #9e9280;
+  font-size: 10px;
+
+}
+
+#dbOffsiteStatus {
+
+  flex-shrink: 0;
+
+  white-space: nowrap;
+
+}
+
+
+/* BACKUP STATUS */
+
+#dbOffsiteLocal,
+#dbOffsiteRemote {
+
+  font-size: clamp(12px, 3.5vw, 18px);
+
+  overflow-wrap: anywhere;
+
+}
+
+#dbOffsiteLocal.is-success,
+#dbOffsiteRemote.is-success,
+#dbOffsiteSuccess.is-success,
+#dbOffsiteFailed.is-success {
+
+  color: #82d6a2;
+
+}
+
+#dbOffsiteLocal.is-danger,
+#dbOffsiteRemote.is-danger,
+#dbOffsiteFailed.is-danger {
+
+  color: #ff9292;
+
+}
+
+#dbOffsiteLastObject {
+
+  max-width: 65%;
+
+  overflow-wrap: anywhere;
+
+}
+
+.db-offsite-note {
+
+  margin: 10px 2px 0;
+
+  color: #91877a;
+
+  font-size: 10px;
+  line-height: 1.5;
+
+}
+
+
+/* RECOVERY BOX */
+
+.db-recovery-box {
+
+  margin-top: 16px;
+
+  border: 1px solid rgba(225,188,126,.16);
+  border-radius: 11px;
+
+  background: rgba(0,0,0,.22);
+
+  overflow: hidden;
+
+}
+
+.db-recovery-box summary {
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+  padding: 13px;
+
+  list-style: none;
+
+  cursor: pointer;
+
+}
+
+.db-recovery-box summary::-webkit-details-marker {
+
+  display: none;
+
+}
+
+.db-recovery-box summary svg {
+
+  width: 22px;
+  height: 22px;
+
+  flex: 0 0 22px;
+
+  color: #d9ba88;
+
+}
+
+.db-recovery-box summary > div {
+
+  flex: 1;
+  min-width: 0;
+
+}
+
+.db-recovery-box summary strong {
+
+  display: block;
+
+  color: #e1bc7e;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  letter-spacing: .5px;
+
+}
+
+.db-recovery-box summary small {
+
+  display: block;
+  margin-top: 4px;
+
+  color: #948979;
+
+  font-size: 10px;
+
+}
+
+.db-recovery-arrow {
+
+  color: #c9a873;
+
+  transition: transform .2s;
+
+}
+
+.db-recovery-box[open] .db-recovery-arrow {
+
+  transform: rotate(180deg);
+
+}
+
+.db-recovery-content {
+
+  padding: 12px;
+
+  border-top:
+    1px solid rgba(225,188,126,.10);
+
+}
+
+.db-recovery-content > span {
+
+  display: block;
+
+  margin-top: 12px;
+
+  color: #d9ba88;
+
+  font-size: 10px;
+  font-weight: 750;
+
+  letter-spacing: .6px;
+
+}
+
+.db-recovery-content p {
+
+  margin: 0 0 10px;
+
+  color: #aaa092;
+
+  font-size: 11px;
+  line-height: 1.6;
+
+}
+
+.db-recovery-content pre {
+
+  margin: 8px 0 14px;
+  padding: 10px;
+
+  background: #0b0c0f;
+
+  border: 1px solid rgba(225,188,126,.12);
+  border-radius: 8px;
+
+  color: #e7cfaa;
+
+  font-size: 10px;
+  line-height: 1.6;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+}
+
+.db-recovery-content .db-recovery-warning {
+
+  margin-bottom: 0;
+  padding: 10px;
+
+  border-radius: 8px;
+
+  background: rgba(255,100,100,.06);
+  color: #e9a19d;
+
+}
+
+
+/* MOBILE */
+
+@media (max-width: 768px) {
+
+  .db-offsite-panel {
+
+    padding: 12px;
+
+  }
+
+  .db-offsite-header {
+
+    gap: 8px;
+
+  }
+
+  .db-offsite-icon {
+
+    width: 34px;
+    height: 34px;
+
+    flex-basis: 34px;
+
+  }
+
+  .db-offsite-icon svg {
+
+    width: 20px;
+    height: 20px;
+
+  }
+
+  .db-offsite-heading h3 {
+
+    font-size: 13px;
+
+  }
+
+  .db-offsite-heading > span {
+
+    font-size: 8px;
+    letter-spacing: .3px;
+
+  }
+
+  #dbOffsiteStatus {
+
+    font-size: 9px;
+
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .db-recovery-arrow {
+
+    transition: none;
+
+  }
+
+}
+
+
+/* ==========================================
+   IDS MONITOR V1.0
+   BLACK OBSIDIAN + CHAMPAGNE GOLD
+========================================== */
+
+#idsThreats {
+
+  display: block;
+
+  margin: 8px 0 12px;
+
+  color: #e1bc7e;
+
+  font-size: clamp(30px, 7vw, 42px);
+
+  font-weight: 800;
+
+  font-variant-numeric: tabular-nums;
+
+}
+
+
+/* RISK SUMMARY */
+
+.ids-risk-grid {
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 9px;
+
+  margin: 14px 0;
+
+}
+
+.ids-risk-cell {
+
+  min-width: 0;
+
+  padding: 14px 10px;
+
+  border: 1px solid currentColor;
+
+  border-radius: 10px;
+
+  background: rgba(0,0,0,.18);
+
+  text-align: center;
+
+}
+
+.ids-risk-cell span {
+
+  display: block;
+
+  font-size: 9px;
+
+  font-weight: 750;
+
+  letter-spacing: .4px;
+
+}
+
+.ids-risk-cell strong {
+
+  display: block;
+
+  margin-top: 8px;
+
+  font-size: 25px;
+
+  font-weight: 850;
+
+  font-variant-numeric: tabular-nums;
+
+}
+
+.ids-low {
+  color: #82d6a2;
+}
+
+.ids-elevated {
+  color: #e1bc7e;
+}
+
+.ids-high {
+  color: #ff9292;
+}
+
+.ids-risk-cell.ids-low {
+
+  border-color: rgba(130,214,162,.20);
+
+}
+
+.ids-risk-cell.ids-elevated {
+
+  border-color: rgba(225,188,126,.20);
+
+}
+
+.ids-risk-cell.ids-high {
+
+  border-color: rgba(255,146,146,.20);
+
+}
+
+
+/* IP RISK RECORD */
+
+.ids-ip-row {
+
+  padding: 12px;
+
+  border: 1px solid rgba(225,188,126,.10);
+
+  border-radius: 9px;
+
+  background: rgba(255,255,255,.02);
+
+}
+
+.ids-ip-head {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 10px;
+
+}
+
+.ids-ip-address {
+
+  min-width: 0;
+
+  color: #e6d5ba;
+
+  font-size: 12px;
+
+  font-weight: 750;
+
+  overflow-wrap: anywhere;
+
+}
+
+.ids-ip-score {
+
+  font-size: 12px;
+
+  font-weight: 800;
+
+  white-space: nowrap;
+
+}
+
+.ids-risk-progress {
+
+  height: 5px;
+
+  margin-top: 10px;
+
+  border-radius: 10px;
+
+  background: #302b25;
+
+  overflow: hidden;
+
+}
+
+.ids-risk-progress > div {
+
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: currentColor;
+
+}
+
+.ids-ip-meta {
+
+  display: block;
+
+  margin-top: 7px;
+
+  color: #928778;
+
+  font-size: 10px;
+
+}
+
+
+/* THREAT EVENT */
+
+.ids-event-level {
+
+  font-size: 9px;
+
+  font-weight: 800;
+
+  white-space: nowrap;
+
+}
+
+
+/* MOBILE */
+
+@media (max-width: 768px) {
+
+  .ids-risk-grid {
+    gap: 6px;
+  }
+
+  .ids-risk-cell {
+    padding: 12px 5px;
+  }
+
+  .ids-risk-cell span {
+    font-size: 8px;
+  }
+
+  .ids-risk-cell strong {
+    font-size: 21px;
+  }
+
+  .ids-ip-address {
+    font-size: 11px;
+  }
+
+}
+
+
+
+
+
+
+  
+.hidden{display:none!important}.soc-tabs{display:flex;gap:6px;overflow-x:auto;margin:14px 0 18px;padding:4px 0 8px;scrollbar-width:thin}.soc-tabs button{white-space:nowrap;padding:11px 14px;border:1px solid var(--border);border-radius:9px;background:#17171a;color:var(--gold);font-size:12px;font-weight:700}.soc-tabs button[aria-pressed="true"]{background:var(--gold);color:#17120c}.soc-pane .auth-perf-panel{margin:0}.soc-state{font-size:16px}.soc-state[data-state="good"]{color:var(--green)}.soc-state[data-state="bad"]{color:var(--red)}.soc-state[data-state="warn"]{color:var(--gold)}.soc-list{max-height:420px;overflow:auto}.soc-list .log-item{align-items:flex-start}#socConfirm{max-width:min(380px,90vw);background:#171a1f;color:var(--text);border:1px solid var(--gold);border-radius:16px;padding:20px}#socConfirm::backdrop{background:#000b}#socConfirm menu{display:flex;justify-content:flex-end;gap:8px;padding:0} .soc-overview .metric-value{font-size:18px} .soc-pane{min-width:0}
 </style>
 </head>
 
@@ -697,7 +2159,7 @@ button:disabled {
   </h1>
 
   <p class="page-subtitle">
-    Application firewall & system monitoring
+    Security Operations Center V2.0 · Unified monitoring
   </p>
 
   <!-- SYSTEM MESSAGE -->
@@ -769,7 +2231,38 @@ button:disabled {
 
   <div id="dashboard" hidden>
 
-    <section class="firewall-hero">
+    <!-- TOOLBAR -->
+
+    <div class="toolbar">
+
+      <span id="lastUpdated"
+            class="updated-text">
+
+        Waiting for data
+
+      </span>
+
+      <div>
+
+        <button id="refreshBtn"
+                class="action-btn">
+
+          REFRESH
+
+        </button>
+
+        <button id="logoutBtn"
+                class="action-btn">
+
+          SIGN OUT
+
+        </button>
+
+      </div>
+
+    </div>
+
+<nav class="soc-tabs" aria-label="Security sections"><button type="button" data-soc-tab="overview" aria-pressed="true">Overview</button><button type="button" data-soc-tab="firewall" aria-pressed="false">Firewall</button><button type="button" data-soc-tab="auth" aria-pressed="false">Auth</button><button type="button" data-soc-tab="finance" aria-pressed="false">Finance</button><button type="button" data-soc-tab="backup" aria-pressed="false">Backup</button><button type="button" data-soc-tab="ids" aria-pressed="false">IDS</button><button type="button" data-soc-tab="logs" aria-pressed="false">Logs</button></nav><div class="soc-pane" data-soc-pane="overview"><section class="panel soc-overview"><h2 class="panel-title">SYSTEM SECURITY STATUS</h2><strong class="soc-state" id="socOverall">CONNECTING</strong><p class="panel-note" id="socSample">Waiting for server sample</p><div class="metrics"><article class="metric"><div class="metric-label">EDGE SECURITY</div><div class="metric-value soc-state" id="socmod-edge">—</div></article><article class="metric"><div class="metric-label">FIREWALL</div><div class="metric-value soc-state" id="socmod-firewall">—</div></article><article class="metric"><div class="metric-label">AUTHENTICATION</div><div class="metric-value soc-state" id="socmod-authentication">—</div></article><article class="metric"><div class="metric-label">TRANSACTION</div><div class="metric-value soc-state" id="socmod-transaction">—</div></article><article class="metric"><div class="metric-label">LOCAL BACKUP</div><div class="metric-value soc-state" id="socmod-database">—</div></article><article class="metric"><div class="metric-label">OFFSITE R2</div><div class="metric-value soc-state" id="socmod-offsite">—</div></article><article class="metric"><div class="metric-label">IDS</div><div class="metric-value soc-state" id="socmod-ids">—</div></article><article class="metric"><div class="metric-label">SERVER HEALTH</div><div class="metric-value soc-state" id="socmod-server">—</div></article></div></section><section class="panel soc-overview"><h2 class="panel-title">SERVER RESOURCES</h2><div class="metrics"><article class="metric"><div class="metric-label">PROCESS CPU / ONE CORE (%)</div><div class="metric-value soc-state" id="socres-cpuPercent">—</div></article><article class="metric"><div class="metric-label">PROCESS RSS / LIMIT (%)</div><div class="metric-value soc-state" id="socres-memoryPercent">—</div></article><article class="metric"><div class="metric-label">PERSISTENT DISK (%)</div><div class="metric-value soc-state" id="socres-disk">—</div></article><article class="metric"><div class="metric-label">PROCESS RSS (MiB)</div><div class="metric-value soc-state" id="socres-rssMB">—</div></article><article class="metric"><div class="metric-label">HEAP USED (MiB)</div><div class="metric-value soc-state" id="socres-heapUsedMB">—</div></article><article class="metric"><div class="metric-label">EVENT LOOP P95 (ms)</div><div class="metric-value soc-state" id="socres-eventLoopP95Ms">—</div></article><article class="metric"><div class="metric-label">EVENT LOOP MAX (ms)</div><div class="metric-value soc-state" id="socres-eventLoopMaxMs">—</div></article><article class="metric"><div class="metric-label">CONNECTED SOCKETS</div><div class="metric-value soc-state" id="socres-connectedSockets">—</div></article><article class="metric"><div class="metric-label">UPTIME (seconds)</div><div class="metric-value soc-state" id="socres-uptimeSeconds">—</div></article></div><p class="panel-note">Process CPU: 100% = one logical core. RAM percentage is unavailable if the container limit is unknown.</p></section></div><div class="soc-pane" data-soc-pane="firewall" hidden>    <section class="firewall-hero">
 
       <svg class="shield-icon"
            viewBox="0 0 64 72"
@@ -809,37 +2302,6 @@ button:disabled {
       </span>
 
     </section>
-
-    <!-- TOOLBAR -->
-
-    <div class="toolbar">
-
-      <span id="lastUpdated"
-            class="updated-text">
-
-        Waiting for data
-
-      </span>
-
-      <div>
-
-        <button id="refreshBtn"
-                class="action-btn">
-
-          REFRESH
-
-        </button>
-
-        <button id="logoutBtn"
-                class="action-btn">
-
-          SIGN OUT
-
-        </button>
-
-      </div>
-
-    </div>
 
     <!-- METRICS -->
 
@@ -1106,14 +2568,1101 @@ button:disabled {
 
     </section>
 
-    <!-- SECURITY LOG -->
+</div><div class="soc-pane" data-soc-pane="auth" hidden><section id="authPerformancePanel"
+         class="auth-perf-panel">
+
+  <div class="auth-perf-header">
+
+    <div class="auth-perf-heading">
+
+      <span class="auth-perf-kicker">
+        LIVESTREAM PRO / SECURITY
+      </span>
+
+      <h2>AUTH PERFORMANCE</h2>
+
+      <p>High Performance Authentication</p>
+
+    </div>
+
+    <span id="authPerfStatus"
+          class="auth-perf-status">
+      CONNECTING
+    </span>
+
+  </div>
+
+  <!-- CACHE HIT RATE -->
+
+  <div class="auth-perf-primary">
+
+    <span class="auth-perf-label">
+      RAM CACHE HIT RATE
+    </span>
+
+    <strong id="authPerfHitRate">
+      --
+    </strong>
+
+    <div class="auth-perf-progress"
+         role="progressbar"
+         aria-label="Cache hit rate"
+         aria-valuemin="0"
+         aria-valuemax="100"
+         aria-valuenow="0">
+
+      <div id="authPerfProgressFill"></div>
+
+    </div>
+
+    <small>
+      Authentication cache efficiency
+    </small>
+
+  </div>
+
+  <!-- STATISTICS -->
+
+  <div class="auth-perf-grid">
+
+    <div class="auth-perf-cell">
+      <span>CACHED ACCOUNTS</span>
+      <strong id="authPerfAccounts">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>RAM CACHE HITS</span>
+      <strong id="authPerfHits">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>CACHE MISSES</span>
+      <strong id="authPerfMisses">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>CACHE REFRESHES</span>
+      <strong id="authPerfRefreshes">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>AUTH DENIED</span>
+      <strong id="authPerfDenied">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>CACHE ERRORS</span>
+      <strong id="authPerfErrors">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>CACHE TTL</span>
+      <strong id="authPerfTTL">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>AUTH VERSION</span>
+      <strong id="authPerfVersion">--</strong>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+
+  <div class="auth-perf-footer">
+
+    <div>
+
+      <span id="authPerfUpdated">
+        Waiting for server...
+      </span>
+
+      <small>Auto refresh while this tab is open (15 seconds)</small>
+
+    </div>
+
+    <button type="button"
+            id="authPerfRefreshBtn"
+            class="auth-perf-refresh"
+            aria-label="Refresh authentication statistics">
+
+      <svg viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="1.7"
+           stroke-linecap="round"
+           stroke-linejoin="round">
+
+        <path d="M20 7v5h-5"/>
+        <path d="M4 17v-5h5"/>
+        <path d="M6.1 8a7 7 0 0 1 11.5-2L20 12"/>
+        <path d="M4 12l2.4 6A7 7 0 0 0 18 16"/>
+
+      </svg>
+
+    </button>
+
+  </div>
+
+</section></div><div class="soc-pane" data-soc-pane="finance" hidden><section id="transactionSecurityPanel"
+         class="auth-perf-panel">
+
+  <div class="auth-perf-header">
+
+    <div class="auth-perf-heading">
+
+      <span class="auth-perf-kicker">
+        LIVESTREAM PRO / FINANCIAL SECURITY
+      </span>
+
+      <h2>TRANSACTION SECURITY</h2>
+
+      <p id="txSecVersion">
+        Transaction Protection V1.0
+      </p>
+
+    </div>
+
+    <span id="txSecStatus"
+          class="auth-perf-status">
+      CONNECTING
+    </span>
+
+  </div>
+
+  <!-- SUCCESSFUL TRANSACTIONS -->
+
+  <div class="auth-perf-primary">
+
+    <span class="auth-perf-label">
+      SUCCESSFUL TRANSACTION OPERATIONS
+    </span>
+
+    <strong id="txSecSuccess">--</strong>
+
+    <small>
+      Recorded operations since server startup
+    </small>
+
+  </div>
+
+  <!-- SECURITY STATISTICS -->
+
+  <div class="auth-perf-grid">
+
+    <div class="auth-perf-cell">
+      <span>DUPLICATE REQUESTS</span>
+      <strong id="txSecDuplicates">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>INVALID AMOUNTS</span>
+      <strong id="txSecInvalidAmounts">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>SECURITY FAILURES</span>
+      <strong id="txSecFailures">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>LOCKED ACCOUNTS</span>
+      <strong id="txSecLocked">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>STORAGE ERRORS</span>
+      <strong id="txSecStorageErrors">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>CONCURRENT BLOCKED</span>
+      <strong id="txSecConcurrent">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>INVALID BALANCES</span>
+      <strong id="txSecInvalidBalances">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>SECURITY BLOCKED</span>
+      <strong id="txSecBlocked">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>ACTIVE CHECKS</span>
+      <strong id="txSecActiveChecks">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>TRACKED ACCOUNTS</span>
+      <strong id="txSecTracked">--</strong>
+    </div>
+
+  </div>
+
+  <!-- SECURITY CONFIGURATION -->
+
+  <div class="tx-sec-config">
+
+    <div class="tx-sec-config-row">
+      <span>Security code limit</span>
+      <strong id="txSecLimit">--</strong>
+    </div>
+
+    <div class="tx-sec-config-row">
+      <span>Transaction lock duration</span>
+      <strong id="txSecLockTime">--</strong>
+    </div>
+
+    <div class="tx-sec-config-row">
+      <span>Maximum transaction</span>
+      <strong id="txSecMaxAmount">--</strong>
+    </div>
+
+    <div class="tx-sec-config-row">
+      <span>Server started</span>
+      <strong id="txSecStarted">--</strong>
+    </div>
+
+  </div>
+
+  <!-- RECENT SECURITY EVENTS -->
+
+  <div class="tx-sec-events">
+
+    <div class="tx-sec-events-heading">
+
+      <h3>RECENT SECURITY EVENTS</h3>
+
+      <span id="txSecEventCount">--</span>
+
+    </div>
+
+    <div id="txSecEventList"
+         class="tx-sec-event-list">
+
+      <div class="tx-sec-empty">
+        Waiting for server...
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+
+  <div class="auth-perf-footer">
+
+    <div>
+
+      <span id="txSecUpdated"
+            role="status">
+        Waiting for server...
+      </span>
+
+      <small>
+        Auto refresh while this tab is open (15 seconds)
+      </small>
+
+    </div>
+
+    <button type="button"
+            id="txSecRefreshBtn"
+            class="auth-perf-refresh"
+            aria-label="Refresh transaction security">
+
+      <svg viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="1.7"
+           stroke-linecap="round"
+           stroke-linejoin="round">
+
+        <path d="M20 7v5h-5"/>
+        <path d="M4 17v-5h5"/>
+        <path d="M6.1 8a7 7 0 0 1 11.5-2L20 12"/>
+        <path d="M4 12l2.4 6A7 7 0 0 0 18 16"/>
+
+      </svg>
+
+    </button>
+
+  </div>
+
+</section></div><div class="soc-pane" data-soc-pane="backup" hidden><section id="databaseSecurityPanel"
+         class="auth-perf-panel">
+
+  <div class="auth-perf-header">
+
+    <div class="auth-perf-heading">
+
+      <span class="auth-perf-kicker">
+        LIVESTREAM PRO / DATA PROTECTION
+      </span>
+
+      <h2>DATABASE SECURITY</h2>
+
+      <p id="dbSecVersion">
+        Encrypted Backup System V1.0
+      </p>
+
+    </div>
+
+    <span id="dbSecStatus"
+          class="auth-perf-status">
+      CONNECTING
+    </span>
+
+  </div>
+
+
+  <!-- BACKUP VERIFICATION -->
+
+  <div class="auth-perf-primary">
+
+    <span class="auth-perf-label">
+      DATABASE BACKUP STATUS
+    </span>
+
+    <strong id="dbSecVerification">
+      WAITING
+    </strong>
+
+    <small id="dbSecVerifiedAt">
+      Waiting for verification...
+    </small>
+
+  </div>
+
+
+  <!-- DATABASE STATISTICS -->
+
+  <div class="auth-perf-grid">
+
+    <div class="auth-perf-cell">
+      <span>TOTAL BACKUPS</span>
+      <strong id="dbSecTotal">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>HOURLY BACKUPS</span>
+      <strong id="dbSecHourly">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>DAILY BACKUPS</span>
+      <strong id="dbSecDaily">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>BACKUP STORAGE</span>
+      <strong id="dbSecBytes">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>SUCCESSFUL BACKUPS</span>
+      <strong id="dbSecSuccess">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>FAILED BACKUPS</span>
+      <strong id="dbSecFailed">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>INTEGRITY FAILURES</span>
+      <strong id="dbSecIntegrity">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>FREE STORAGE</span>
+      <strong id="dbSecFree">--</strong>
+    </div>
+
+  </div>
+
+
+  <!-- STORAGE MONITOR -->
+
+  <div class="db-sec-storage">
+
+    <div class="db-sec-storage-head">
+
+      <span>DISK USAGE</span>
+
+      <strong id="dbSecDiskPercent">
+        --
+      </strong>
+
+    </div>
+
+    <div class="db-sec-progress"
+         role="progressbar"
+         aria-label="Disk usage"
+         aria-valuemin="0"
+         aria-valuemax="100">
+
+      <div id="dbSecDiskFill"></div>
+
+    </div>
+
+    <small id="dbSecDiskInfo">
+      Waiting for storage information...
+    </small>
+
+  </div>
+
+
+  <!-- BACKUP CONFIGURATION -->
+
+  <div class="tx-sec-config">
+
+    <div class="tx-sec-config-row">
+      <span>Encryption</span>
+      <strong id="dbSecEncryption">--</strong>
+    </div>
+
+    <div class="tx-sec-config-row">
+      <span>Compression</span>
+      <strong id="dbSecCompression">--</strong>
+    </div>
+
+    <div class="tx-sec-config-row">
+      <span>Integrity verification</span>
+      <strong id="dbSecChecksum">--</strong>
+    </div>
+
+    <div class="tx-sec-config-row">
+      <span>Backup interval</span>
+      <strong id="dbSecInterval">--</strong>
+    </div>
+
+    <div class="tx-sec-config-row">
+      <span>Backup retention</span>
+      <strong id="dbSecRetention">--</strong>
+    </div>
+
+    <div class="tx-sec-config-row">
+      <span>Last successful backup</span>
+      <strong id="dbSecLastBackup">--</strong>
+    </div>
+
+    <div class="tx-sec-config-row">
+      <span>Last backup size</span>
+      <strong id="dbSecLastSize">--</strong>
+    </div>
+
+    <div class="tx-sec-config-row">
+      <span>Backup location</span>
+      <strong>Render Persistent Disk</strong>
+    </div>
+
+  </div>
+
+
+  <!-- ==========================================
+     OFFSITE BACKUP & RECOVERY V1.1
+========================================== -->
+
+<div id="dbOffsitePanel"
+     class="db-offsite-panel">
+
+  <div class="db-offsite-header">
+
+    <div class="db-offsite-icon">
+
+      <svg viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="1.6"
+           stroke-linecap="round"
+           stroke-linejoin="round">
+
+        <path d="M7 18a5 5 0 1 1 1-9.9
+                 A6 6 0 0 1 19 11
+                 a3.5 3.5 0 0 1-1 7"/>
+
+        <path d="M12 19V10"/>
+        <path d="m8 14 4-4 4 4"/>
+
+      </svg>
+
+    </div>
+
+    <div class="db-offsite-heading">
+
+      <span>DISASTER RECOVERY / V1.1</span>
+
+      <h3>OFFSITE BACKUP</h3>
+
+      <small>Cloudflare R2 Private Storage</small>
+
+    </div>
+
+    <span id="dbOffsiteStatus"
+          class="auth-perf-status">
+
+      WAITING
+
+    </span>
+
+  </div>
+
+
+  <!-- STORAGE PROTECTION -->
+
+  <div class="auth-perf-grid">
+
+    <div class="auth-perf-cell">
+
+      <span>LOCAL BACKUP</span>
+
+      <strong id="dbOffsiteLocal">
+        --
+      </strong>
+
+    </div>
+
+    <div class="auth-perf-cell">
+
+      <span>R2 BACKUP</span>
+
+      <strong id="dbOffsiteRemote">
+        --
+      </strong>
+
+    </div>
+
+    <div class="auth-perf-cell">
+
+      <span>VERIFIED UPLOADS</span>
+
+      <strong id="dbOffsiteSuccess">
+        --
+      </strong>
+
+    </div>
+
+    <div class="auth-perf-cell">
+
+      <span>FAILED UPLOADS</span>
+
+      <strong id="dbOffsiteFailed">
+        --
+      </strong>
+
+    </div>
+
+  </div>
+
+
+  <!-- R2 CONFIGURATION -->
+
+  <div class="tx-sec-config">
+
+    <div class="tx-sec-config-row">
+
+      <span>Storage provider</span>
+
+      <strong>Cloudflare R2</strong>
+
+    </div>
+
+    <div class="tx-sec-config-row">
+
+      <span>Configured bucket</span>
+
+      <strong>livestreampro-backup</strong>
+
+    </div>
+
+    <div class="tx-sec-config-row">
+
+      <span>Target bucket lock</span>
+
+      <strong>7 days</strong>
+
+    </div>
+
+    <div class="tx-sec-config-row">
+
+      <span>Target retention</span>
+
+      <strong>30 days</strong>
+
+    </div>
+
+    <div class="tx-sec-config-row">
+
+      <span>Last R2 verification</span>
+
+      <strong id="dbOffsiteVerifiedAt">
+        --
+      </strong>
+
+    </div>
+
+    <div class="tx-sec-config-row">
+
+      <span>Last verified object</span>
+
+      <strong id="dbOffsiteLastObject">
+        --
+      </strong>
+
+    </div>
+
+  </div>
+
+  <p class="db-offsite-note">
+
+    Bucket privacy, lock and retention settings
+    must be verified in Cloudflare.
+
+  </p>
+
+
+  <!-- OFFSITE ERROR -->
+
+  <div id="dbOffsiteError"
+       class="db-sec-error hidden"
+       role="status">
+
+  </div>
+
+
+  <!-- DATABASE RECOVERY -->
+
+  <details class="db-recovery-box">
+
+    <summary>
+
+      <svg viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="1.6"
+           stroke-linecap="round"
+           stroke-linejoin="round">
+
+        <rect x="3" y="4"
+              width="18" height="16"
+              rx="3"/>
+
+        <path d="m7 9 4 3-4 3"/>
+        <path d="M13 15h4"/>
+
+      </svg>
+
+      <div>
+
+        <strong>DATABASE RECOVERY</strong>
+
+        <small>Secure offline recovery</small>
+
+      </div>
+
+      <span class="db-recovery-arrow">
+        ▾
+      </span>
+
+    </summary>
+
+    <div class="db-recovery-content">
+
+      <p>
+        Verify and extract encrypted backups
+        through Render Shell or a trusted
+        offline environment.
+      </p>
+
+      <span>01 / VERIFY BACKUP</span>
+
+      <pre>node security-database.js verify "$BACKUP"</pre>
+
+      <span>02 / EXTRACT BACKUP</span>
+
+      <pre>node security-database.js extract "$BACKUP" "/tmp/lsp-recovery-$(date +%s)"</pre>
+
+      <p class="db-recovery-warning">
+
+        Never overwrite production databases
+        while the server is running.
+
+        Reconcile financial transactions
+        before restoring live data.
+
+      </p>
+
+    </div>
+
+  </details>
+
+</div>
+
+  <!-- RECENT BACKUP FILES -->
+
+  <div class="tx-sec-events">
+
+    <div class="tx-sec-events-heading">
+
+      <h3>RECENT BACKUPS</h3>
+
+      <span id="dbSecBackupCount">--</span>
+
+    </div>
+
+    <div id="dbSecBackupList"
+         class="tx-sec-event-list">
+
+      <div class="tx-sec-empty">
+        Waiting for server...
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- BACKUP ERROR -->
+
+  <div id="dbSecError"
+       class="db-sec-error hidden"
+       role="status">
+  </div>
+
+
+  <!-- MANUAL BACKUP -->
+
+  <button type="button"
+          id="dbSecBackupBtn"
+          class="db-sec-backup-btn"
+          disabled>
+
+    <svg viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="1.7"
+         stroke-linecap="round"
+         stroke-linejoin="round">
+
+      <ellipse cx="12" cy="5" rx="8" ry="3"/>
+
+      <path d="M4 5v14a8 3 0 0 0 16 0V5"/>
+
+      <path d="M4 12a8 3 0 0 0 16 0"/>
+
+    </svg>
+
+    <span id="dbSecBackupBtnText">
+      BACKUP NOW
+    </span>
+
+  </button>
+
+  <p class="db-sec-backup-note">
+    Create an encrypted database backup.
+    Manual backup is limited to once every 5 minutes.
+  </p>
+
+
+  <!-- FOOTER -->
+
+  <div class="auth-perf-footer">
+
+    <div>
+
+      <span id="dbSecUpdated"
+            role="status">
+        Waiting for server...
+      </span>
+
+      <small>
+        Auto refresh while this tab is open (15 seconds)
+      </small>
+
+    </div>
+
+    <button type="button"
+            id="dbSecRefreshBtn"
+            class="auth-perf-refresh"
+            aria-label="Refresh database statistics">
+
+      <svg viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="1.7"
+           stroke-linecap="round"
+           stroke-linejoin="round">
+
+        <path d="M20 7v5h-5"/>
+        <path d="M4 17v-5h5"/>
+        <path d="M6.1 8a7 7 0 0 1 11.5-2L20 12"/>
+        <path d="M4 12l2.4 6A7 7 0 0 0 18 16"/>
+
+      </svg>
+
+    </button>
+
+  </div>
+
+</section></div><div class="soc-pane" data-soc-pane="ids" hidden><section id="idsSecurityPanel"
+         class="auth-perf-panel">
+
+  <div class="auth-perf-header">
+
+    <div class="auth-perf-heading">
+
+      <span class="auth-perf-kicker">
+        LIVESTREAM PRO / THREAT INTELLIGENCE
+      </span>
+
+      <h2>INTRUSION DETECTION</h2>
+
+      <p>IDS Security Engine V1.0</p>
+
+    </div>
+
+    <span id="idsStatus"
+          class="auth-perf-status">
+      CONNECTING
+    </span>
+
+  </div>
+
+
+  <!-- TOTAL THREATS -->
+
+  <div class="auth-perf-primary">
+
+    <span class="auth-perf-label">
+      TOTAL THREAT SIGNALS
+    </span>
+
+    <strong id="idsThreats">--</strong>
+
+    <small>
+      Recorded since server startup
+    </small>
+
+  </div>
+
+
+  <!-- RISK LEVELS -->
+
+  <div class="ids-risk-grid">
+
+    <div class="ids-risk-cell ids-low">
+
+      <span>LOW RISK</span>
+
+      <strong id="idsLow">--</strong>
+
+    </div>
+
+    <div class="ids-risk-cell ids-elevated">
+
+      <span>ELEVATED</span>
+
+      <strong id="idsElevated">--</strong>
+
+    </div>
+
+    <div class="ids-risk-cell ids-high">
+
+      <span>HIGH RISK</span>
+
+      <strong id="idsHigh">--</strong>
+
+    </div>
+
+  </div>
+
+
+  <!-- IDS STATISTICS -->
+
+  <div class="auth-perf-grid">
+
+    <div class="auth-perf-cell">
+      <span>HTTP REQUESTS</span>
+      <strong id="idsHttp">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>SOCKET PACKETS</span>
+      <strong id="idsPackets">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>LOGIN FAILURES</span>
+      <strong id="idsLogin">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>RATE LIMIT RESPONSES</span>
+      <strong id="idsRateLimit">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>TRANSACTION FAILURES</span>
+      <strong id="idsTransactions">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>SOCKET FLOODS</span>
+      <strong id="idsFlood">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>INVALID SESSIONS</span>
+      <strong id="idsSessions">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>HIGH RISK ALERTS</span>
+      <strong id="idsHighAlerts">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>TRACKED IP ADDRESSES</span>
+      <strong id="idsTracked">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>DROPPED SIGNALS</span>
+      <strong id="idsDropped">--</strong>
+    </div>
+
+  </div>
+
+
+  <!-- TOP RISK IP -->
+
+  <div class="tx-sec-events">
+
+    <div class="tx-sec-events-heading">
+
+      <h3>TOP RISK IP ADDRESSES</h3>
+
+    </div>
+
+    <div id="idsRiskList"
+         class="tx-sec-event-list">
+
+      <div class="tx-sec-empty">
+        Waiting for server...
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- THREAT EVENT HISTORY -->
+
+  <div class="tx-sec-events">
+
+    <div class="tx-sec-events-heading">
+
+      <h3>RECENT THREAT EVENTS</h3>
+
+    </div>
+
+    <div id="idsEventList"
+         class="tx-sec-event-list">
+
+      <div class="tx-sec-empty">
+        Waiting for server...
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- IDS CONFIGURATION -->
+
+  <div class="tx-sec-config">
+
+    <div class="tx-sec-config-row">
+
+      <span>Detection mode</span>
+
+      <strong id="idsMode">--</strong>
+
+    </div>
+
+    <div class="tx-sec-config-row">
+
+      <span>Risk analysis window</span>
+
+      <strong id="idsWindow">--</strong>
+
+    </div>
+
+    <div class="tx-sec-config-row">
+
+      <span>Automatic IP ban</span>
+
+      <strong id="idsAutoBan">--</strong>
+
+    </div>
+
+  </div>
+
+
+  <!-- FOOTER -->
+
+  <div class="auth-perf-footer">
+
+    <div>
+
+      <span id="idsUpdated"
+            role="status">
+        Waiting for server...
+      </span>
+
+      <small>
+        Auto refresh while this tab is open (15 seconds)
+      </small>
+
+    </div>
+
+    <button type="button"
+            id="idsRefreshBtn"
+            class="auth-perf-refresh"
+            aria-label="Refresh IDS statistics">
+
+      <svg viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="1.7"
+           stroke-linecap="round"
+           stroke-linejoin="round">
+
+        <path d="M20 7v5h-5"/>
+
+        <path d="M4 17v-5h5"/>
+
+        <path d="M6.1 8a7 7 0 0 1 11.5-2L20 12"/>
+
+        <path d="M4 12l2.4 6A7 7 0 0 0 18 16"/>
+
+      </svg>
+
+    </button>
+
+  </div>
+
+</section></div><div class="soc-pane" data-soc-pane="logs" hidden><section class="panel"><div class="panel-head"><h2 class="panel-title">Persistent SOC Timeline</h2><button class="action-btn" id="socExport" disabled>EXPORT JSON</button></div><p id="socLogInfo" class="panel-note">Waiting for server sample</p><input class="log-search" id="socLogSearch" type="search" placeholder="Search source, level or event" aria-label="Search SOC events"><div id="socTimeline" class="soc-list"></div></section>    <!-- SECURITY LOG -->
 
     <section class="panel">
 
       <div class="panel-head">
 
         <h2 class="panel-title">
-          Security Event Log
+          Firewall Event Log
         </h2>
 
         <button id="exportBtn"
@@ -1147,12 +3696,12 @@ button:disabled {
 
       <p class="panel-note">
         Latest sampled warnings.
-        Logs are retained in memory only.
+        Firewall warnings are retained in memory only. Persistent SOC events are shown separately above.
       </p>
 
     </section>
 
-  </div>
+</div>  </div>
 
   <footer class="security-footer">
 
@@ -1162,837 +3711,8 @@ button:disabled {
 
 </main>
 
-<script>
-
-"use strict";
-
-/* ==========================================
-   SECURITY CENTER ENGINE
-========================================== */
-
-const $ = id => document.getElementById(id);
-
-const REFRESH_INTERVAL = 10000;
-
-let refreshTimer = null;
-let isAuthenticated = false;
-let isLoading = false;
-let generation = 0;
-
-let recentEvents = [];
-let activitySamples = [];
-
-let previousTotal = null;
-let previousStart = null;
-
-/* ==========================================
-   API REQUEST
-========================================== */
-
-async function adminApi(endpoint, options = {}) {
-
-  const controller = new AbortController();
-
-  const timeout = setTimeout(() => {
-    controller.abort();
-  }, 8000);
-
-  try {
-
-    const response = await fetch(
-      "/api/admin/" + endpoint,
-      {
-        ...options,
-        credentials: "same-origin",
-        cache: "no-store",
-        signal: controller.signal
-      }
-    );
-
-    const data = await response
-      .json()
-      .catch(() => ({}));
-
-    if (!response.ok) {
-
-      const error = new Error(
-        data.message ||
-        data.error ||
-        "HTTP " + response.status
-      );
-
-      error.status = response.status;
-
-      throw error;
-
-    }
-
-    return data;
-
-  } finally {
-
-    clearTimeout(timeout);
-
-  }
-
-}
-
-/* ==========================================
-   HELPERS
-========================================== */
-
-function showMessage(message, error = false) {
-
-  const el = $("systemMessage");
-
-  el.textContent = message;
-
-  el.className =
-    "notice" + (error ? " error" : "");
-
-  el.hidden = !message;
-
-}
-
-function formatNumber(value) {
-
-  return Number.isFinite(value)
-    ? value.toLocaleString("en-US")
-    : "—";
-
-}
-
-function formatUptime(seconds) {
-
-  if (!Number.isFinite(seconds)) return "—";
-
-  const days = Math.floor(seconds / 86400);
-
-  const hours = Math.floor(
-    seconds % 86400 / 3600
-  );
-
-  const minutes = Math.floor(
-    seconds % 3600 / 60
-  );
-
-  return `${days}d ${hours}h ${minutes}m`;
-
-}
-
-function setProgress(id, percentage) {
-
-  const value = Number.isFinite(percentage)
-    ? Math.max(0, Math.min(100, percentage))
-    : 0;
-
-  $(id).style.width = value + "%";
-
-}
-
-/* ==========================================
-   ADMIN ACCESS
-========================================== */
-
-function showLogin(message = "") {
-
-  generation++;
-
-  isAuthenticated = false;
-
-  clearTimeout(refreshTimer);
-
-  $("dashboard").hidden = true;
-  $("loginPanel").hidden = false;
-
-  recentEvents = [];
-  activitySamples = [];
-
-  previousTotal = null;
-  previousStart = null;
-
-  $("securityLogs").replaceChildren();
-  $("activityLine").setAttribute("points", "");
-  $("exportBtn").disabled = true;
-
-  document.querySelectorAll(".metric-value")
-    .forEach(el => {
-      el.textContent = "—";
-    });
-
-  showMessage(message);
-
-}
-
-function showDashboard() {
-
-  isAuthenticated = true;
-
-  $("loginPanel").hidden = true;
-  $("dashboard").hidden = false;
-
-  showMessage("");
-
-  refreshFirewall();
-
-}
-
-async function checkAdminSession() {
-
-  try {
-
-    const data = await adminApi(
-      "auth/status"
-    );
-
-    if (data.authenticated === true) {
-
-      showDashboard();
-
-    } else {
-
-      showLogin("");
-
-    }
-
-  } catch (error) {
-
-    showLogin(
-      "Unable to verify admin session."
-    );
-
-  }
-
-}
-
-/* ==========================================
-   ADMIN LOGIN
-========================================== */
-
-$("loginForm").addEventListener(
-  "submit",
-  async event => {
-
-    event.preventDefault();
-
-    const password =
-      $("adminPassword").value;
-
-    const button = $("unlockBtn");
-
-    if (!password) return;
-
-    button.disabled = true;
-
-    button.textContent = "AUTHENTICATING...";
-
-    try {
-
-      const data = await adminApi(
-        "auth/login",
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type": "application/json"
-          },
-
-          body: JSON.stringify({
-            password
-          })
-        }
-      );
-
-      if (!data.ok) {
-
-        throw new Error(
-          "Authentication failed."
-        );
-
-      }
-
-      showDashboard();
-
-    } catch (error) {
-
-      showMessage(error.message, true);
-
-    } finally {
-
-      $("adminPassword").value = "";
-
-      button.disabled = false;
-
-      button.textContent =
-        "UNLOCK SECURITY CENTER";
-
-    }
-
-  }
-);
-
-/* ==========================================
-   RENDER SECURITY METRICS
-========================================== */
-
-function renderFirewall(data) {
-
-  const firewall = data.firewall;
-
-  if (!data.ok || !firewall) {
-
-    throw new Error(
-      "Invalid firewall response."
-    );
-
-  }
-
-  const fields = [
-    "totalBlocked",
-    "httpBlocked",
-    "socketBlocked",
-    "originBlocked",
-    "activeConnections",
-    "activeIPs",
-    "httpTracked",
-    "socketTracked"
-  ];
-
-  for (const key of fields) {
-
-    $(key).textContent =
-      formatNumber(firewall[key]);
-
-  }
-
-  $("firewallVersion").textContent =
-    "Version " +
-    (firewall.version || "Unknown");
-
-  const status = $("firewallStatus");
-
-  const active =
-    firewall.status === "ACTIVE";
-
-  status.textContent =
-    active ? "ACTIVE" : "UNKNOWN";
-
-  status.className =
-    "status-pill" +
-    (active ? " active" : "");
-
-  const rss =
-    firewall.memory?.rss ??
-    data.memory?.rss;
-
-  const heap =
-    firewall.memory?.heapUsed ??
-    data.memory?.heapUsed;
-
-  $("memoryRSS").textContent =
-    Number.isFinite(rss)
-      ? formatNumber(rss) + " MB"
-      : "—";
-
-  $("memoryHeap").textContent =
-    Number.isFinite(heap)
-      ? formatNumber(heap) + " MB"
-      : "—";
-
-  $("uptime").textContent =
-    formatUptime(firewall.uptime);
-
-  $("lastUpdated").textContent =
-    "Updated " +
-    new Date().toLocaleTimeString(
-      "en-GB"
-    );
-
-  /* TRAFFIC DISTRIBUTION */
-
-  const http =
-    Number(firewall.httpBlocked) || 0;
-
-  const socket =
-    Number(firewall.socketBlocked) || 0;
-
-  const total = http + socket;
-
-  const httpPercent =
-    total ? http / total * 100 : 0;
-
-  const socketPercent =
-    total ? socket / total * 100 : 0;
-
-  $("httpShare").textContent =
-    httpPercent.toFixed(1) + "%";
-
-  $("socketShare").textContent =
-    socketPercent.toFixed(1) + "%";
-
-  setProgress(
-    "httpProgress",
-    httpPercent
-  );
-
-  setProgress(
-    "socketProgress",
-    socketPercent
-  );
-
-  /* STORAGE CAPACITY */
-
-  setProgress(
-    "httpCapacity",
-    firewall.httpTracked / 200
-  );
-
-  setProgress(
-    "socketCapacity",
-    firewall.socketTracked / 200
-  );
-
-  /* ACTIVITY CHART */
-
-  updateActivityChart(firewall);
-
-  /* SECURITY LOGS */
-
-  const logsAvailable =
-    Array.isArray(firewall.recentEvents);
-
-  recentEvents = logsAvailable
-    ? firewall.recentEvents.slice(0, 200)
-    : [];
-
-  renderSecurityLogs();
-
-  if (!logsAvailable) {
-
-    $("emptyLogs").hidden = false;
-
-    $("emptyLogs").textContent =
-      "Security log module is not installed.";
-
-  }
-
-  $("exportBtn").disabled =
-    recentEvents.length === 0;
-
-}
-
-/* ==========================================
-   ACTIVITY CHART
-========================================== */
-
-function updateActivityChart(firewall) {
-
-  const total = firewall.totalBlocked;
-
-  if (!Number.isFinite(total)) return;
-
-  if (
-    previousStart !== firewall.startedAt ||
-    (
-      previousTotal !== null &&
-      total < previousTotal
-    )
-  ) {
-
-    activitySamples = [];
-
-    previousTotal = null;
-
-  }
-
-  if (previousTotal !== null) {
-
-    activitySamples.push(
-      Math.max(0, total - previousTotal)
-    );
-
-  }
-
-  previousStart = firewall.startedAt;
-  previousTotal = total;
-
-  activitySamples =
-    activitySamples.slice(-30);
-
-  const max = Math.max(
-    1,
-    ...activitySamples
-  );
-
-  const points = activitySamples.map(
-    (value, index) => {
-
-      const x = index * 300 / 29;
-
-      const y =
-        99 - value / max * 94;
-
-      return `${x},${y}`;
-
-    }
-  );
-
-  $("activityLine").setAttribute(
-    "points",
-    points.join(" ")
-  );
-
-  $("chartDescription").textContent =
-    activitySamples.length
-
-      ? "Latest sample: " +
-        formatNumber(
-          activitySamples[
-            activitySamples.length - 1
-          ]
-        ) +
-        " blocked operations"
-
-      : "Collecting security samples...";
-
-}
-
-/* ==========================================
-   SECURITY EVENT LOG
-========================================== */
-
-function renderSecurityLogs() {
-
-  const container = $("securityLogs");
-
-  const keyword = $("logSearch")
-    .value
-    .trim()
-    .toLowerCase();
-
-  const filtered = recentEvents.filter(
-    event => {
-
-      return [
-        event.type,
-        event.ip
-      ].some(value =>
-        String(value || "")
-          .toLowerCase()
-          .includes(keyword)
-      );
-
-    }
-  );
-
-  container.replaceChildren();
-
-  $("logCount").textContent =
-    filtered.length + " records";
-
-  $("emptyLogs").hidden =
-    filtered.length > 0;
-
-  $("emptyLogs").textContent =
-    recentEvents.length
-      ? "No matching security events."
-      : "No sampled security events recorded.";
-
-  for (const event of filtered) {
-
-    const row = document.createElement("div");
-
-    row.className = "log-item";
-
-    const icon = document.createElement("div");
-
-    icon.className = "log-icon";
-    icon.textContent = "!";
-
-    const info = document.createElement("div");
-
-    info.className = "log-info";
-
-    const type = document.createElement("div");
-
-    type.className = "log-type";
-
-    type.textContent =
-      String(event.type || "UNKNOWN");
-
-    const ip = document.createElement("div");
-
-    ip.className = "log-ip";
-
-    ip.textContent =
-      String(event.ip || "Unknown IP");
-
-    const time = document.createElement("div");
-
-    time.className = "log-time";
-
-    const date = new Date(event.time);
-
-    time.textContent =
-      Number.isFinite(date.getTime())
-        ? date.toLocaleString("en-GB")
-        : "—";
-
-    info.append(type, ip);
-
-    row.append(icon, info, time);
-
-    container.appendChild(row);
-
-  }
-
-}
-
-$("logSearch").addEventListener(
-  "input",
-  renderSecurityLogs
-);
-
-/* ==========================================
-   REFRESH FIREWALL
-========================================== */
-
-async function refreshFirewall() {
-
-  if (
-    !isAuthenticated ||
-    isLoading ||
-    document.hidden
-  ) return;
-
-  clearTimeout(refreshTimer);
-
-  isLoading = true;
-
-  const currentGeneration = generation;
-
-  $("refreshBtn").disabled = true;
-
-  try {
-
-    const data = await adminApi(
-      "firewall/status"
-    );
-
-    if (
-      generation !== currentGeneration
-    ) return;
-
-    renderFirewall(data);
-
-    showMessage("");
-
-  } catch (error) {
-
-    if (
-      generation !== currentGeneration
-    ) return;
-
-    if (
-      error.status === 401 ||
-      error.status === 403
-    ) {
-
-      showLogin(
-        "Admin session expired. Please sign in."
-      );
-
-      return;
-
-    }
-
-    $("firewallStatus").textContent =
-      "STALE";
-
-    $("firewallStatus").className =
-      "status-pill offline";
-
-    showMessage(
-      "Unable to refresh firewall data. " +
-      "Displayed information may be outdated.",
-      true
-    );
-
-  } finally {
-
-    isLoading = false;
-
-    $("refreshBtn").disabled = false;
-
-    if (
-      isAuthenticated &&
-      !document.hidden
-    ) {
-
-      refreshTimer = setTimeout(
-        refreshFirewall,
-        REFRESH_INTERVAL
-      );
-
-    }
-
-  }
-
-}
-
-$("refreshBtn").addEventListener(
-  "click",
-  refreshFirewall
-);
-
-/* ==========================================
-   EXPORT SECURITY LOGS
-========================================== */
-
-$("exportBtn").addEventListener(
-  "click",
-  () => {
-
-    if (
-      !isAuthenticated ||
-      !recentEvents.length
-    ) return;
-
-    const data = {
-
-      exportedAt:
-        new Date().toISOString(),
-
-      source:
-        "LSP Security Firewall",
-
-      events: recentEvents
-
-    };
-
-    const blob = new Blob(
-      [JSON.stringify(data, null, 2)],
-      {
-        type: "application/json"
-      }
-    );
-
-    const url = URL.createObjectURL(blob);
-
-    const link =
-      document.createElement("a");
-
-    link.href = url;
-
-    link.download =
-      "lsp-security-logs-" +
-      Date.now() +
-      ".json";
-
-    document.body.appendChild(link);
-
-    link.click();
-    link.remove();
-
-    setTimeout(() => {
-      URL.revokeObjectURL(url);
-    }, 1000);
-
-  }
-);
-
-/* ==========================================
-   ADMIN LOGOUT
-========================================== */
-
-$("logoutBtn").addEventListener(
-  "click",
-  async () => {
-
-    $("logoutBtn").disabled = true;
-
-    try {
-
-      const data = await adminApi(
-        "auth/logout",
-        {
-          method: "POST"
-        }
-      );
-
-      if (!data.ok) {
-
-        throw new Error(
-          "Sign out failed."
-        );
-
-      }
-
-      showLogin("Signed out successfully.");
-
-    } catch (error) {
-
-      showMessage(error.message, true);
-
-    } finally {
-
-      $("logoutBtn").disabled = false;
-
-    }
-
-  }
-);
-
-/* ==========================================
-   MOBILE VISIBILITY OPTIMIZATION
-========================================== */
-
-document.addEventListener(
-  "visibilitychange",
-  () => {
-
-    clearTimeout(refreshTimer);
-
-    if (
-      !document.hidden &&
-      isAuthenticated
-    ) {
-
-      refreshFirewall();
-
-    }
-
-  }
-);
-
-window.addEventListener(
-  "pagehide",
-  () => {
-
-    clearTimeout(refreshTimer);
-
-  }
-);
-
-window.addEventListener(
-  "pageshow",
-  event => {
-
-    if (event.persisted) {
-
-      showLogin("");
-      checkAdminSession();
-
-    }
-
-  }
-);
-
-/* START */
-
-checkAdminSession();
-
-</script>
+<dialog id="socConfirm"><h3 id="socConfirmTitle"></h3><p id="socConfirmBody"></p><form method="dialog"><menu><button class="action-btn" value="cancel">CANCEL</button><button class="action-btn" value="confirm">CONFIRM</button></menu></form></dialog>
+<script src="/security-center.js?v=20261125-soc-final-v20"></script>
 
 </body>
 </html>

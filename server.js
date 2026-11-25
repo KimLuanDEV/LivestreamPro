@@ -34,6 +34,15 @@ const securityDatabase =
 const securityIDS =
   require("./security-ids");
 
+  /* ==========================================
+   SECURITY MONITORING CENTER V2.0
+========================================== */
+
+const securityMonitor =
+  require("./security-monitor");
+
+
+
 const ROOM_RELEASE_DELAY = 90000; // 90 seconds
 
 const multer = require("multer");
@@ -5564,6 +5573,64 @@ app.get(
         ok: false,
 
         error: "IDS_UNAVAILABLE"
+
+      });
+
+    }
+
+  }
+
+);
+
+
+
+/* ==========================================
+   ADMIN - SECURITY OPERATIONS CENTER V2.0
+========================================== */
+
+app.get(
+
+  "/api/admin/security-center/stats",
+
+  (req, res) => {
+
+    res.setHeader(
+
+      "Cache-Control",
+
+      "no-store"
+
+    );
+
+    if (!req.lspAdminActorUid) {
+
+      return res.status(403).json({
+
+        ok: false,
+
+        error: "ADMIN_AUTH_REQUIRED"
+
+      });
+
+    }
+
+    try {
+
+      return res.json({
+
+        ok: true,
+
+        ...securityMonitor.getStats()
+
+      });
+
+    } catch {
+
+      return res.status(503).json({
+
+        ok: false,
+
+        error: "SOC_UNAVAILABLE"
 
       });
 
@@ -21934,9 +22001,62 @@ server.listen(PORT, () => {
     `Server running on http://localhost:${PORT}`
   );
 
-  /* DATABASE BACKUP SERVICE */
+
+  /* ========================================
+     DATABASE BACKUP SERVICE
+  ======================================== */
 
   securityDatabase.start();
+
+
+  /* ========================================
+     SECURITY MONITORING CENTER V2.0
+  ======================================== */
+
+  securityMonitor.start({
+
+    edge: () => ({
+
+      enforced: LSP_EDGE_REQUIRED
+
+    }),
+
+    firewall: () => ({
+
+      ...securityFirewall.getStats(),
+
+      status: "ACTIVE"
+
+    }),
+
+    auth: () =>
+      securityAuth.getStats(),
+
+    transaction: () =>
+      securityTransaction.getStats(),
+
+    database: () =>
+      securityDatabase.getStats(),
+
+    ids: () =>
+      securityIDS.getStats(),
+
+    sockets: () => ({
+
+      connected:
+        io.sockets.sockets.size
+
+    })
+
+  }).catch(() => {
+
+    console.error(
+
+      "[SECURITY MONITOR] Startup failed"
+
+    );
+
+  });
 
 });
 

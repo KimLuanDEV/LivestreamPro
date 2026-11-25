@@ -271,8 +271,8 @@ const ip = normalizeIP(
       /(?:^|\/)\.(?!well-known(?:\/|$))/
         .test(decodedPath) ||
 
-     /(?:^|\/)(?:node_modules|server\.js|security-firewall\.js|security-auth\.js|security-transaction\.js|security-database\.js|security-ids\.js|security-backups|package-lock\.json|package\.json)(?:\/|$)/
-        .test(decodedPath) ||
+/(?:^|\/)(?:node_modules|server\.js|security-firewall\.js|security-auth\.js|security-transaction\.js|security-database\.js|security-ids\.js|security-monitor\.js|security-backups|security-logs|soc-events\.json|package-lock\.json|package\.json)(?:\/|$)/
+  .test(decodedPath) ||
 
       /\.(?:env|sql|sqlite|bak|lspbak|log|pem|key|map)$/i
         .test(decodedPath)
