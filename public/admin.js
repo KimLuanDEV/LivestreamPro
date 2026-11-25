@@ -2917,3 +2917,1472 @@ setText(
   startAutoRefresh();
 
 })();
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   DATABASE SECURITY MONITOR V1.0
+========================================== */
+
+(() => {
+
+  const panel = document.getElementById(
+    "databaseSecurityPanel"
+  );
+
+  if (!panel) return;
+
+  if (panel.dataset.initialized === "true") {
+    return;
+  }
+
+  panel.dataset.initialized = "true";
+
+  const $ = id => document.getElementById(id);
+
+  const backupBtn = $("dbSecBackupBtn");
+  const refreshBtn = $("dbSecRefreshBtn");
+
+  const REFRESH_INTERVAL = 30000;
+
+  let refreshTimer = null;
+  let loading = false;
+  let manualBackupRunning = false;
+  let confirmingBackup = false;
+  let sessionExpired = false;
+  let serverBackupRunning = false;
+  let backupAvailable = false;
+  let cooldownUntil = 0;
+
+
+  /* ========================================
+     NUMBER FORMATTING
+  ======================================== */
+
+  function formatNumber(value) {
+
+    if (
+      value === null ||
+      value === undefined
+    ) {
+      return "--";
+    }
+
+    const number = Number(value);
+
+    return Number.isFinite(number)
+
+      ? number.toLocaleString("en-US")
+
+      : "--";
+
+  }
+
+
+  /* ========================================
+     BYTE FORMATTING
+  ======================================== */
+
+  function formatBytes(value) {
+
+    if (value == null) return "--";
+
+    const bytes = Number(value);
+
+    if (
+      !Number.isFinite(bytes) ||
+      bytes < 0
+    ) {
+      return "--";
+    }
+
+    if (bytes === 0) return "0 B";
+
+    const units = [
+      "B",
+      "KB",
+      "MB",
+      "GB",
+      "TB"
+    ];
+
+    let size = bytes;
+    let index = 0;
+
+    while (
+      size >= 1024 &&
+      index < units.length - 1
+    ) {
+
+      size /= 1024;
+      index++;
+
+    }
+
+    return (
+      size.toFixed(index === 0 ? 0 : 2) +
+      " " +
+      units[index]
+    );
+
+  }
+
+
+  /* ========================================
+     DATE FORMATTING
+  ======================================== */
+
+  function formatDate(value) {
+
+    if (!value) return "--";
+
+    const date = new Date(Number(value));
+
+    if (!Number.isFinite(date.getTime())) {
+      return "--";
+    }
+
+    return date.toLocaleString(
+      "en-GB",
+      {
+        timeZone: "Asia/Ho_Chi_Minh"
+      }
+    );
+
+  }
+
+
+  function setText(id, value) {
+
+    const element = $(id);
+
+    if (element) {
+      element.textContent = value;
+    }
+
+  }
+
+
+  /* ========================================
+     MODULE STATUS
+  ======================================== */
+
+  function setStatus(text, state) {
+
+    const element = $("dbSecStatus");
+
+    if (!element) return;
+
+    element.textContent = text;
+
+    element.classList.toggle(
+      "is-active",
+      state === "active"
+    );
+
+    element.classList.toggle(
+      "is-error",
+      state === "error"
+    );
+
+  }
+
+
+  /* ========================================
+     ERROR MESSAGE
+  ======================================== */
+
+  function showError(message = "") {
+
+    const element = $("dbSecError");
+
+    if (!element) return;
+
+    element.textContent = message;
+
+    element.classList.toggle(
+      "hidden",
+      !message
+    );
+
+  }
+
+
+  /* ========================================
+     RENDER COUNTERS
+  ======================================== */
+
+  function renderCounter(
+    id,
+    value,
+    alert = false
+  ) {
+
+    const element = $(id);
+
+    if (!element) return;
+
+    element.textContent =
+      formatNumber(value);
+
+    const valid =
+      value != null &&
+      Number.isFinite(Number(value));
+
+    element.classList.toggle(
+      "is-danger",
+      valid && alert && Number(value) > 0
+    );
+
+    element.classList.toggle(
+      "is-success",
+      valid && alert && Number(value) === 0
+    );
+
+  }
+
+
+  /* ========================================
+     STORAGE MONITOR
+  ======================================== */
+
+  function renderStorage(storage) {
+
+    const fill = $("dbSecDiskFill");
+
+    if (
+      !storage ||
+      !Number.isFinite(
+        Number(storage.usedPercent)
+      )
+    ) {
+
+      setText("dbSecDiskPercent", "--");
+
+      setText("dbSecFree", "--");
+
+      setText(
+        "dbSecDiskInfo",
+        "Storage information unavailable."
+      );
+
+      if (fill) {
+
+        fill.style.width = "0%";
+
+        fill.classList.remove(
+          "is-warning",
+          "is-danger"
+        );
+
+        fill.parentElement?.removeAttribute(
+          "aria-valuenow"
+        );
+
+      }
+
+      return;
+
+    }
+
+    const percent = Math.max(
+
+      0,
+
+      Math.min(
+        100,
+        Number(storage.usedPercent)
+      )
+
+    );
+
+    setText(
+
+      "dbSecDiskPercent",
+
+      percent.toFixed(1) + "%"
+
+    );
+
+    setText(
+
+      "dbSecFree",
+
+      formatBytes(storage.freeBytes)
+
+    );
+
+    setText(
+
+      "dbSecDiskInfo",
+
+      `${formatBytes(storage.usedBytes)} / ` +
+      `${formatBytes(storage.totalBytes)} used`
+
+    );
+
+    if (fill) {
+
+      fill.style.width = `${percent}%`;
+
+      fill.classList.toggle(
+
+        "is-warning",
+
+        percent >= 75 && percent < 90
+
+      );
+
+      fill.classList.toggle(
+
+        "is-danger",
+
+        percent >= 90
+
+      );
+
+      fill.parentElement?.setAttribute(
+
+        "aria-valuenow",
+
+        String(percent)
+
+      );
+
+    }
+
+  }
+
+
+  /* ========================================
+     RECENT BACKUP FILES
+  ======================================== */
+
+  function renderBackups(backups, total) {
+
+    const list = $("dbSecBackupList");
+
+    if (!list) return;
+
+    const records = Array.isArray(backups)
+
+      ? backups.slice(0, 20)
+
+      : [];
+
+    setText(
+
+      "dbSecBackupCount",
+
+      `${records.length} / ${formatNumber(total)}`
+
+    );
+
+    list.replaceChildren();
+
+    if (!records.length) {
+
+      const empty =
+        document.createElement("div");
+
+      empty.className = "tx-sec-empty";
+
+      empty.textContent =
+        "No backup files available.";
+
+      list.appendChild(empty);
+
+      return;
+
+    }
+
+    const fragment =
+      document.createDocumentFragment();
+
+    for (const backup of records) {
+
+      if (!backup || typeof backup !== "object") {
+        continue;
+      }
+
+      const filename = String(
+        backup.name || ""
+      );
+
+      const isDaily =
+        filename.startsWith("daily-");
+
+      const row =
+        document.createElement("div");
+
+      row.className = "tx-sec-event";
+
+      const icon =
+        document.createElement("div");
+
+      icon.className = "db-sec-file-icon";
+
+      // Fixed SVG, not server-generated HTML.
+
+      icon.innerHTML = `
+        <svg viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="1.6"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/>
+
+          <path d="M14 2v6h6"/>
+
+          <rect x="8" y="13"
+                width="8" height="6"
+                rx="1"/>
+
+          <path d="M10 13v-2a2 2 0 0 1 4 0v2"/>
+
+        </svg>
+      `;
+
+      const info =
+        document.createElement("div");
+
+      info.className = "tx-sec-event-info";
+
+      const title =
+        document.createElement("strong");
+
+      title.textContent = isDaily
+
+        ? "Daily Backup"
+
+        : "Hourly Backup";
+
+      const date =
+        document.createElement("small");
+
+      date.textContent =
+        formatDate(backup.createdAt);
+
+      const name =
+        document.createElement("small");
+
+      name.textContent = filename;
+
+      const size =
+        document.createElement("span");
+
+      size.className =
+        "db-sec-file-size";
+
+      size.textContent =
+        formatBytes(backup.size);
+
+      info.append(title, date, name);
+
+      row.append(icon, info, size);
+
+      fragment.appendChild(row);
+
+    }
+
+    list.appendChild(fragment);
+
+  }
+
+
+  /* ========================================
+     UPDATE BACKUP BUTTON
+  ======================================== */
+
+  function updateBackupButton() {
+
+    if (!backupBtn) return;
+
+    const cooldown = Math.max(
+
+      0,
+
+      Math.ceil(
+        (cooldownUntil - Date.now()) / 1000
+      )
+
+    );
+
+    backupBtn.disabled =
+
+      loading ||
+
+      manualBackupRunning ||
+
+      confirmingBackup ||
+
+      serverBackupRunning ||
+
+      sessionExpired ||
+
+      !backupAvailable ||
+
+      cooldown > 0;
+
+    let text = "BACKUP NOW";
+
+    if (
+      manualBackupRunning ||
+      serverBackupRunning
+    ) {
+
+      text = "CREATING BACKUP...";
+
+    } else if (sessionExpired) {
+
+      text = "ACCESS DENIED";
+
+    } else if (!backupAvailable) {
+
+      text = "BACKUP UNAVAILABLE";
+
+    } else if (cooldown > 0) {
+
+      const minutes =
+        Math.ceil(cooldown / 60);
+
+      text =
+        `AVAILABLE IN ${minutes} MIN`;
+
+    }
+
+    setText(
+      "dbSecBackupBtnText",
+      text
+    );
+
+  }
+
+
+  /* ========================================
+     RENDER DATABASE STATISTICS
+  ======================================== */
+
+  function renderStats(data) {
+
+    const status = String(
+      data.status || "UNKNOWN"
+    );
+
+    serverBackupRunning =
+
+      data.backupRunning === true ||
+
+      status === "BACKING_UP";
+
+    backupAvailable = [
+
+      "ACTIVE",
+
+      "BACKING_UP",
+
+      "DEGRADED",
+
+      "WAITING_FOR_BACKUP"
+
+    ].includes(status);
+
+
+    /* STATUS */
+
+    const statusLabels = {
+
+      ACTIVE: "ACTIVE",
+
+      BACKING_UP: "BACKING UP",
+
+      DEGRADED: "DEGRADED",
+
+      NOT_CONFIGURED: "NOT CONFIGURED",
+
+      WAITING_FOR_BACKUP: "WAITING"
+
+    };
+
+    setStatus(
+
+      statusLabels[status] || "UNKNOWN",
+
+      status === "ACTIVE"
+
+        ? "active"
+
+        : [
+            "DEGRADED",
+            "NOT_CONFIGURED"
+          ].includes(status)
+
+          ? "error"
+
+          : "normal"
+
+    );
+
+
+    /* BACKUP VERIFICATION */
+
+    const verification =
+      $("dbSecVerification");
+
+    let verificationText =
+      "WAITING FOR BACKUP";
+
+    let verificationState = "";
+
+    if (status === "NOT_CONFIGURED") {
+
+      verificationText =
+        "BACKUP NOT CONFIGURED";
+
+      verificationState = "danger";
+
+    } else if (status === "DEGRADED") {
+
+      verificationText =
+        "BACKUP CHECK REQUIRED";
+
+      verificationState = "danger";
+
+    } else if (serverBackupRunning) {
+
+      verificationText =
+        "BACKUP IN PROGRESS";
+
+    } else if (
+      status === "ACTIVE" &&
+      data.lastVerifiedAt
+    ) {
+
+      verificationText =
+        "BACKUP VERIFIED";
+
+      verificationState = "success";
+
+    }
+
+    if (verification) {
+
+      verification.textContent =
+        verificationText;
+
+      verification.classList.toggle(
+        "is-success",
+        verificationState === "success"
+      );
+
+      verification.classList.toggle(
+        "is-danger",
+        verificationState === "danger"
+      );
+
+    }
+
+    setText(
+
+      "dbSecVerifiedAt",
+
+      data.lastVerifiedAt
+
+        ? "Last verified: " +
+          formatDate(data.lastVerifiedAt)
+
+        : "No verification in this server session."
+
+    );
+
+
+    /* BACKUP COUNTERS */
+
+    renderCounter(
+      "dbSecTotal",
+      data.totalBackups
+    );
+
+    renderCounter(
+      "dbSecHourly",
+      data.hourlyBackups
+    );
+
+    renderCounter(
+      "dbSecDaily",
+      data.dailyBackups
+    );
+
+    renderCounter(
+      "dbSecSuccess",
+      data.successfulBackups
+    );
+
+    renderCounter(
+      "dbSecFailed",
+      data.failedBackups,
+      true
+    );
+
+    renderCounter(
+      "dbSecIntegrity",
+      data.integrityFailures,
+      true
+    );
+
+    setText(
+
+      "dbSecBytes",
+
+      formatBytes(data.backupBytes)
+
+    );
+
+
+    /* CONFIGURATION */
+
+    setText(
+
+      "dbSecVersion",
+
+      `Encrypted Backup System V${data.version || "--"}`
+
+    );
+
+    setText(
+
+      "dbSecEncryption",
+
+      data.encryption || "--"
+
+    );
+
+    setText(
+
+      "dbSecCompression",
+
+      data.compression || "--"
+
+    );
+
+    setText(
+
+      "dbSecChecksum",
+
+      data.checksum || "--"
+
+    );
+
+    setText(
+
+      "dbSecInterval",
+
+      `${formatNumber(data.intervalMinutes)} minutes`
+
+    );
+
+    setText(
+
+      "dbSecRetention",
+
+      `${formatNumber(data.hourlyRetention)} hourly / ` +
+      `${formatNumber(data.dailyRetention)} daily`
+
+    );
+
+    setText(
+
+      "dbSecLastBackup",
+
+      formatDate(data.lastBackupAt)
+
+    );
+
+    setText(
+
+      "dbSecLastSize",
+
+      data.lastBackupAt
+        ? formatBytes(data.lastBackupSize)
+        : "--"
+
+    );
+
+
+    /* STORAGE AND HISTORY */
+
+    renderStorage(data.storage);
+
+    renderBackups(
+      data.recentBackups,
+      data.totalBackups
+    );
+
+    showError(data.lastError || "");
+
+    setText(
+
+      "dbSecUpdated",
+
+      "Updated: " +
+        new Date().toLocaleTimeString(
+          "en-GB",
+          {
+            timeZone: "Asia/Ho_Chi_Minh"
+          }
+        )
+
+    );
+
+    updateBackupButton();
+
+  }
+
+
+  /* ========================================
+     ACCESS DENIED
+  ======================================== */
+
+  function handleAccessDenied() {
+
+    sessionExpired = true;
+
+    backupAvailable = false;
+
+    stopAutoRefresh();
+
+    setStatus(
+      "ACCESS DENIED",
+      "error"
+    );
+
+    $("dbSecBackupList")
+      ?.replaceChildren();
+
+    setText(
+      "dbSecBackupCount",
+      "--"
+    );
+
+    setText(
+      "dbSecVerification",
+      "ACCESS DENIED"
+    );
+
+    setText(
+
+      "dbSecUpdated",
+
+      "Admin authorization required."
+
+    );
+
+    showError(
+      "Please authenticate again."
+    );
+
+    updateBackupButton();
+
+  }
+
+
+  /* ========================================
+     FETCH DATABASE STATISTICS
+  ======================================== */
+
+  async function loadDatabaseSecurity() {
+
+    if (
+      loading ||
+      manualBackupRunning ||
+      sessionExpired ||
+      document.hidden
+    ) {
+      return;
+    }
+
+    loading = true;
+
+    updateBackupButton();
+
+    if (refreshBtn) {
+
+      refreshBtn.disabled = true;
+
+      refreshBtn.classList.add(
+        "is-loading"
+      );
+
+    }
+
+    const controller =
+      new AbortController();
+
+    const timeout = setTimeout(
+
+      () => controller.abort(),
+
+      8000
+
+    );
+
+    try {
+
+      const response = await fetch(
+
+        "/api/admin/security-database/stats",
+
+        {
+
+          method: "GET",
+
+          credentials: "same-origin",
+
+          cache: "no-store",
+
+          signal: controller.signal
+
+        }
+
+      );
+
+      if (
+        response.status === 401 ||
+        response.status === 403
+      ) {
+
+        handleAccessDenied();
+
+        return;
+
+      }
+
+      const contentType =
+        response.headers.get("content-type") || "";
+
+      if (
+        !contentType.includes("application/json")
+      ) {
+
+        throw new Error(
+          `Invalid API response (HTTP ${response.status})`
+        );
+
+      }
+
+      const data = await response.json();
+
+      if (
+        !response.ok ||
+        data.ok !== true
+      ) {
+
+        throw new Error(
+
+          data.error ||
+          `HTTP ${response.status}`
+
+        );
+
+      }
+
+      renderStats(data);
+
+    } catch (error) {
+
+      backupAvailable = false;
+
+      setStatus(
+        "UNAVAILABLE",
+        "error"
+      );
+
+      setText(
+
+        "dbSecVerification",
+
+        "STATUS UNAVAILABLE"
+
+      );
+
+      setText(
+
+        "dbSecUpdated",
+
+        "Update failed. Previous data may be outdated."
+
+      );
+
+      showError(error.message);
+
+      console.warn(
+
+        "[DATABASE SECURITY]",
+
+        error.message
+
+      );
+
+    } finally {
+
+      clearTimeout(timeout);
+
+      loading = false;
+
+      if (refreshBtn) {
+
+        refreshBtn.disabled = false;
+
+        refreshBtn.classList.remove(
+          "is-loading"
+        );
+
+      }
+
+      updateBackupButton();
+
+    }
+
+  }
+
+
+  /* ========================================
+     CREATE MANUAL BACKUP
+  ======================================== */
+
+  async function createManualBackup() {
+
+    if (
+
+      loading ||
+
+      manualBackupRunning ||
+
+      confirmingBackup ||
+
+      serverBackupRunning ||
+
+      sessionExpired ||
+
+      !backupAvailable ||
+
+      Date.now() < cooldownUntil
+
+    ) {
+      return;
+    }
+
+
+    /* CONFIRM BACKUP */
+
+    confirmingBackup = true;
+
+    updateBackupButton();
+
+    let confirmed = false;
+
+    try {
+
+      confirmed = await showModal({
+
+        title: "DATABASE BACKUP",
+
+        body:
+          "Create a new encrypted database backup now?",
+
+        confirm: true
+
+      });
+
+    } finally {
+
+      confirmingBackup = false;
+
+      updateBackupButton();
+
+    }
+
+    if (
+
+      !confirmed ||
+
+      loading ||
+
+      manualBackupRunning ||
+
+      sessionExpired ||
+
+      serverBackupRunning ||
+
+      !backupAvailable ||
+
+      Date.now() < cooldownUntil
+
+    ) {
+      return;
+    }
+
+
+    manualBackupRunning = true;
+
+    updateBackupButton();
+
+    showError("");
+
+    setStatus(
+      "BACKING UP",
+      "normal"
+    );
+
+    setText(
+
+      "dbSecVerification",
+
+      "BACKUP IN PROGRESS"
+
+    );
+
+    setText(
+
+      "dbSecUpdated",
+
+      "Creating encrypted backup..."
+
+    );
+
+    // The server may need more time than
+    // a regular statistics request.
+
+    const controller =
+      new AbortController();
+
+    const timeout = setTimeout(
+
+      () => controller.abort(),
+
+      120000
+
+    );
+
+    let resultMessage = "";
+
+    try {
+
+      const response = await fetch(
+
+        "/api/admin/security-database/backup",
+
+        {
+
+          method: "POST",
+
+          credentials: "same-origin",
+
+          cache: "no-store",
+
+          signal: controller.signal
+
+        }
+
+      );
+
+      if (
+        response.status === 401 ||
+        response.status === 403
+      ) {
+
+        handleAccessDenied();
+
+        return;
+
+      }
+
+      const contentType =
+        response.headers.get("content-type") || "";
+
+      if (
+        !contentType.includes("application/json")
+      ) {
+
+        throw new Error(
+          `Invalid API response (HTTP ${response.status})`
+        );
+
+      }
+
+      const data = await response.json();
+
+      if (
+        !response.ok ||
+        data.ok !== true
+      ) {
+
+        if (data.error === "BACKUP_RATE_LIMIT") {
+
+          cooldownUntil =
+            Date.now() + 5 * 60 * 1000;
+
+          throw new Error(
+            "Manual backup is limited to once every 5 minutes."
+          );
+
+        }
+
+        if (data.error === "BACKUP_BUSY") {
+
+          throw new Error(
+            "Another backup is already running."
+          );
+
+        }
+
+        if (data.error === "BACKUP_NOT_CONFIGURED") {
+
+          backupAvailable = false;
+
+          throw new Error(
+            "Database backup is not configured."
+          );
+
+        }
+
+        throw new Error(
+
+          data.error ||
+          "BACKUP_FAILED"
+
+        );
+
+      }
+
+
+      /* VERIFIED SERVER RESPONSE */
+
+      cooldownUntil =
+        Date.now() + 5 * 60 * 1000;
+
+      resultMessage =
+
+        `Backup successfully created. ` +
+
+        `${formatNumber(data.files)} files, ` +
+
+        `${formatBytes(data.size)} encrypted.`;
+
+      console.log(
+
+        "[DATABASE BACKUP] SUCCESS",
+
+        {
+
+          files: data.files,
+
+          bytes: data.size
+
+        }
+
+      );
+
+    } catch (error) {
+
+      if (error.name === "AbortError") {
+
+        resultMessage =
+          "Backup result is unconfirmed. Check the backup list before retrying.";
+
+      } else {
+
+        resultMessage =
+          "Backup request: " + error.message;
+
+      }
+
+      // Prevent immediate repeated requests
+      // when the result may be uncertain.
+
+      cooldownUntil = Math.max(
+
+        cooldownUntil,
+
+        Date.now() + 30000
+
+      );
+
+    } finally {
+
+      clearTimeout(timeout);
+
+      manualBackupRunning = false;
+
+      updateBackupButton();
+
+      if (!sessionExpired) {
+
+        await loadDatabaseSecurity();
+
+        if (resultMessage) {
+
+          setText(
+
+            "dbSecUpdated",
+
+            resultMessage
+
+          );
+
+        }
+
+      }
+
+    }
+
+  }
+
+
+  /* ========================================
+     AUTO REFRESH
+  ======================================== */
+
+  function startAutoRefresh() {
+
+    if (
+
+      refreshTimer !== null ||
+
+      sessionExpired ||
+
+      document.hidden
+
+    ) {
+      return;
+    }
+
+    refreshTimer = setInterval(
+
+      () => {
+
+        updateBackupButton();
+
+        loadDatabaseSecurity();
+
+      },
+
+      REFRESH_INTERVAL
+
+    );
+
+  }
+
+
+  function stopAutoRefresh() {
+
+    if (refreshTimer !== null) {
+
+      clearInterval(refreshTimer);
+
+      refreshTimer = null;
+
+    }
+
+  }
+
+
+  /* ========================================
+     BUTTON EVENTS
+  ======================================== */
+
+  backupBtn?.addEventListener(
+
+    "click",
+
+    createManualBackup
+
+  );
+
+  refreshBtn?.addEventListener(
+
+    "click",
+
+    () => {
+
+      sessionExpired = false;
+
+      loadDatabaseSecurity();
+
+      startAutoRefresh();
+
+    }
+
+  );
+
+
+  /* ========================================
+     SAVE SERVER RESOURCES
+  ======================================== */
+
+  document.addEventListener(
+
+    "visibilitychange",
+
+    () => {
+
+      if (document.hidden) {
+
+        stopAutoRefresh();
+
+      } else {
+
+        updateBackupButton();
+
+        loadDatabaseSecurity();
+
+        startAutoRefresh();
+
+      }
+
+    }
+
+  );
+
+  window.addEventListener(
+
+    "pagehide",
+
+    stopAutoRefresh
+
+  );
+
+  window.addEventListener(
+
+    "pageshow",
+
+    () => {
+
+      loadDatabaseSecurity();
+
+      startAutoRefresh();
+
+    }
+
+  );
+
+
+  /* ========================================
+     INITIAL LOAD
+  ======================================== */
+
+  console.log(
+
+    "[DATABASE SECURITY] Monitor V1.0 initialized"
+
+  );
+
+  updateBackupButton();
+
+  loadDatabaseSecurity();
+
+  startAutoRefresh();
+
+})();

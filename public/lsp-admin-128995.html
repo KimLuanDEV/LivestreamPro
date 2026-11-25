@@ -3738,6 +3738,262 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
 }
 
 
+/* ==========================================
+   DATABASE SECURITY MONITOR V1.0
+   BLACK OBSIDIAN + CHAMPAGNE GOLD
+========================================== */
+
+#dbSecVerification {
+  display: block;
+
+  margin: 10px 0;
+
+  color: #e1bc7e;
+
+  font-size: clamp(18px, 4.5vw, 26px);
+  font-weight: 800;
+
+  letter-spacing: .5px;
+}
+
+#dbSecVerification.is-success {
+  color: #82d6a2;
+}
+
+#dbSecVerification.is-danger {
+  color: #ff9292;
+}
+
+
+/* STORAGE MONITOR */
+
+.db-sec-storage {
+  margin-top: 16px;
+  padding: 15px;
+
+  border: 1px solid rgba(225,188,126,.16);
+  border-radius: 12px;
+
+  background: rgba(0,0,0,.2);
+}
+
+.db-sec-storage-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.db-sec-storage-head span {
+  color: #ad9878;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 1px;
+}
+
+#dbSecDiskPercent {
+  color: #e8cea0;
+
+  font-size: 15px;
+  font-weight: 800;
+
+  font-variant-numeric: tabular-nums;
+}
+
+.db-sec-progress {
+  height: 8px;
+
+  border-radius: 20px;
+  background: #302c26;
+
+  overflow: hidden;
+}
+
+#dbSecDiskFill {
+  width: 0;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: linear-gradient(
+    90deg,
+    #a8814f,
+    #efcf96
+  );
+
+  transition: width .5s ease;
+}
+
+#dbSecDiskFill.is-warning {
+  background: #e8a94e;
+}
+
+#dbSecDiskFill.is-danger {
+  background: #e66a6a;
+}
+
+#dbSecDiskInfo {
+  display: block;
+  margin-top: 10px;
+
+  color: #9b9080;
+  font-size: 11px;
+}
+
+
+/* BACKUP LIST */
+
+.db-sec-file-icon {
+  display: grid;
+  place-items: center;
+
+  width: 32px;
+  height: 32px;
+
+  flex: 0 0 32px;
+
+  border: 1px solid rgba(225,188,126,.15);
+  border-radius: 8px;
+
+  background: rgba(225,188,126,.06);
+  color: #d9ba88;
+}
+
+.db-sec-file-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.db-sec-file-size {
+  color: #dfc598;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+
+/* ERROR MESSAGE */
+
+.db-sec-error {
+  margin-top: 14px;
+  padding: 12px;
+
+  border: 1px solid rgba(255,100,100,.2);
+  border-radius: 10px;
+
+  background: rgba(255,80,80,.055);
+  color: #ffaaaa;
+
+  font-size: 11px;
+  line-height: 1.5;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* MANUAL BACKUP BUTTON */
+
+.db-sec-backup-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  width: 100%;
+  min-height: 48px;
+
+  margin-top: 18px;
+  padding: 12px;
+
+  border: 1px solid #e6c58e;
+  border-radius: 11px;
+
+  background: linear-gradient(
+    135deg,
+    #f0d8ab,
+    #c29a63
+  );
+
+  color: #291e13;
+
+  font-size: 12px;
+  font-weight: 850;
+
+  letter-spacing: 1px;
+
+  cursor: pointer;
+
+  box-shadow: 0 6px 18px rgba(0,0,0,.18);
+
+  transition: opacity .2s;
+}
+
+.db-sec-backup-btn svg {
+  width: 21px;
+  height: 21px;
+}
+
+.db-sec-backup-btn:hover {
+  filter: brightness(1.06);
+}
+
+.db-sec-backup-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.db-sec-backup-note {
+  margin: 9px 0 0;
+
+  text-align: center;
+
+  color: #8e8577;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 768px) {
+
+  .db-sec-storage {
+    padding: 12px;
+  }
+
+  .db-sec-file-icon {
+    width: 28px;
+    height: 28px;
+
+    flex-basis: 28px;
+  }
+
+  .db-sec-file-size {
+    font-size: 10px;
+  }
+
+  .db-sec-backup-btn {
+    min-height: 46px;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  #dbSecDiskFill {
+    transition: none;
+  }
+
+}
+
+
 
   </style>
 
@@ -4280,6 +4536,291 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
 </section>
 
 
+
+<!-- ==========================================
+     LSP DATABASE SECURITY MONITOR V1.0
+========================================== -->
+
+<section id="databaseSecurityPanel"
+         class="auth-perf-panel">
+
+  <div class="auth-perf-header">
+
+    <div class="auth-perf-heading">
+
+      <span class="auth-perf-kicker">
+        LIVESTREAM PRO / DATA PROTECTION
+      </span>
+
+      <h2>DATABASE SECURITY</h2>
+
+      <p id="dbSecVersion">
+        Encrypted Backup System V1.0
+      </p>
+
+    </div>
+
+    <span id="dbSecStatus"
+          class="auth-perf-status">
+      CONNECTING
+    </span>
+
+  </div>
+
+
+  <!-- BACKUP VERIFICATION -->
+
+  <div class="auth-perf-primary">
+
+    <span class="auth-perf-label">
+      DATABASE BACKUP STATUS
+    </span>
+
+    <strong id="dbSecVerification">
+      WAITING
+    </strong>
+
+    <small id="dbSecVerifiedAt">
+      Waiting for verification...
+    </small>
+
+  </div>
+
+
+  <!-- DATABASE STATISTICS -->
+
+  <div class="auth-perf-grid">
+
+    <div class="auth-perf-cell">
+      <span>TOTAL BACKUPS</span>
+      <strong id="dbSecTotal">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>HOURLY BACKUPS</span>
+      <strong id="dbSecHourly">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>DAILY BACKUPS</span>
+      <strong id="dbSecDaily">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>BACKUP STORAGE</span>
+      <strong id="dbSecBytes">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>SUCCESSFUL BACKUPS</span>
+      <strong id="dbSecSuccess">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>FAILED BACKUPS</span>
+      <strong id="dbSecFailed">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>INTEGRITY FAILURES</span>
+      <strong id="dbSecIntegrity">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>FREE STORAGE</span>
+      <strong id="dbSecFree">--</strong>
+    </div>
+
+  </div>
+
+
+  <!-- STORAGE MONITOR -->
+
+  <div class="db-sec-storage">
+
+    <div class="db-sec-storage-head">
+
+      <span>DISK USAGE</span>
+
+      <strong id="dbSecDiskPercent">
+        --
+      </strong>
+
+    </div>
+
+    <div class="db-sec-progress"
+         role="progressbar"
+         aria-label="Disk usage"
+         aria-valuemin="0"
+         aria-valuemax="100">
+
+      <div id="dbSecDiskFill"></div>
+
+    </div>
+
+    <small id="dbSecDiskInfo">
+      Waiting for storage information...
+    </small>
+
+  </div>
+
+
+  <!-- BACKUP CONFIGURATION -->
+
+  <div class="tx-sec-config">
+
+    <div class="tx-sec-config-row">
+      <span>Encryption</span>
+      <strong id="dbSecEncryption">--</strong>
+    </div>
+
+    <div class="tx-sec-config-row">
+      <span>Compression</span>
+      <strong id="dbSecCompression">--</strong>
+    </div>
+
+    <div class="tx-sec-config-row">
+      <span>Integrity verification</span>
+      <strong id="dbSecChecksum">--</strong>
+    </div>
+
+    <div class="tx-sec-config-row">
+      <span>Backup interval</span>
+      <strong id="dbSecInterval">--</strong>
+    </div>
+
+    <div class="tx-sec-config-row">
+      <span>Backup retention</span>
+      <strong id="dbSecRetention">--</strong>
+    </div>
+
+    <div class="tx-sec-config-row">
+      <span>Last successful backup</span>
+      <strong id="dbSecLastBackup">--</strong>
+    </div>
+
+    <div class="tx-sec-config-row">
+      <span>Last backup size</span>
+      <strong id="dbSecLastSize">--</strong>
+    </div>
+
+    <div class="tx-sec-config-row">
+      <span>Backup location</span>
+      <strong>Render Persistent Disk</strong>
+    </div>
+
+  </div>
+
+
+  <!-- RECENT BACKUP FILES -->
+
+  <div class="tx-sec-events">
+
+    <div class="tx-sec-events-heading">
+
+      <h3>RECENT BACKUPS</h3>
+
+      <span id="dbSecBackupCount">--</span>
+
+    </div>
+
+    <div id="dbSecBackupList"
+         class="tx-sec-event-list">
+
+      <div class="tx-sec-empty">
+        Waiting for server...
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- BACKUP ERROR -->
+
+  <div id="dbSecError"
+       class="db-sec-error hidden"
+       role="status">
+  </div>
+
+
+  <!-- MANUAL BACKUP -->
+
+  <button type="button"
+          id="dbSecBackupBtn"
+          class="db-sec-backup-btn"
+          disabled>
+
+    <svg viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="1.7"
+         stroke-linecap="round"
+         stroke-linejoin="round">
+
+      <ellipse cx="12" cy="5" rx="8" ry="3"/>
+
+      <path d="M4 5v14a8 3 0 0 0 16 0V5"/>
+
+      <path d="M4 12a8 3 0 0 0 16 0"/>
+
+    </svg>
+
+    <span id="dbSecBackupBtnText">
+      BACKUP NOW
+    </span>
+
+  </button>
+
+  <p class="db-sec-backup-note">
+    Create an encrypted database backup.
+    Manual backup is limited to once every 5 minutes.
+  </p>
+
+
+  <!-- FOOTER -->
+
+  <div class="auth-perf-footer">
+
+    <div>
+
+      <span id="dbSecUpdated"
+            role="status">
+        Waiting for server...
+      </span>
+
+      <small>
+        Auto refresh every 30 seconds
+      </small>
+
+    </div>
+
+    <button type="button"
+            id="dbSecRefreshBtn"
+            class="auth-perf-refresh"
+            aria-label="Refresh database statistics">
+
+      <svg viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="1.7"
+           stroke-linecap="round"
+           stroke-linejoin="round">
+
+        <path d="M20 7v5h-5"/>
+        <path d="M4 17v-5h5"/>
+        <path d="M6.1 8a7 7 0 0 1 11.5-2L20 12"/>
+        <path d="M4 12l2.4 6A7 7 0 0 0 18 16"/>
+
+      </svg>
+
+    </button>
+
+  </div>
+
+</section>
+
+
 <div class="admin-tabs">
   <button type="button"
           class="tab active"
@@ -4665,7 +5206,7 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
 
   const script = document.createElement("script");
 
-script.src = "/admin.js?v=20261125-transaction-v10";
+script.src = "/admin.js?v=20261125-database-v10";
 
     script.onload = () => {
       document.body.classList.remove("lsp-admin-locked");

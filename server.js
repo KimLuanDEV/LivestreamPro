@@ -17,6 +17,14 @@ console.log(
   "[TRANSACTION SECURITY] V1.0 enabled"
 );
 
+/* ==========================================
+   LIVESTREAM PRO
+   DATABASE SECURITY & BACKUP V1.0
+========================================== */
+
+const securityDatabase =
+  require("./security-database");
+
 
 const ROOM_RELEASE_DELAY = 90000; // 90 seconds
 
@@ -5238,6 +5246,175 @@ app.get(
       ...securityTransaction.getStats()
 
     });
+
+  }
+
+);
+
+
+
+
+
+/* ==========================================
+   ADMIN - DATABASE SECURITY MONITOR
+========================================== */
+
+app.get(
+
+  "/api/admin/security-database/stats",
+
+  async (req, res) => {
+
+    res.setHeader(
+      "Cache-Control",
+      "no-store"
+    );
+
+    if (!req.lspAdminActorUid) {
+
+      return res.status(403).json({
+
+        ok: false,
+
+        error: "ADMIN_AUTH_REQUIRED"
+
+      });
+
+    }
+
+    try {
+
+      const stats =
+        await securityDatabase.getStats();
+
+      return res.json({
+
+        ok: true,
+
+        ...stats
+
+      });
+
+    } catch (error) {
+
+      console.error(
+
+        "[DATABASE MONITOR]",
+
+        error.message
+
+      );
+
+      return res.status(503).json({
+
+        ok: false,
+
+        error: "DATABASE_STATS_UNAVAILABLE"
+
+      });
+
+    }
+
+  }
+
+);
+
+
+
+/* ==========================================
+   ADMIN - MANUAL DATABASE BACKUP
+========================================== */
+
+app.post(
+
+  "/api/admin/security-database/backup",
+
+  async (req, res) => {
+
+    res.setHeader(
+      "Cache-Control",
+      "no-store"
+    );
+
+    if (!req.lspAdminActorUid) {
+
+      return res.status(403).json({
+
+        ok: false,
+
+        error: "ADMIN_AUTH_REQUIRED"
+
+      });
+
+    }
+
+    if (!isLspAllowedOrigin(req.headers.origin)) {
+
+      return res.status(403).json({
+
+        ok: false,
+
+        error: "INVALID_ORIGIN"
+
+      });
+
+    }
+
+    try {
+
+      const result =
+        await securityDatabase.createBackup(
+          "manual"
+        );
+
+      if (!result.ok) {
+
+        const status = [
+
+          "BACKUP_BUSY",
+
+          "BACKUP_RATE_LIMIT"
+
+        ].includes(result.error)
+
+          ? 429
+
+          : 503;
+
+        return res.status(status)
+          .json(result);
+
+      }
+
+      console.log(
+
+        "[ADMIN DATABASE BACKUP]",
+
+        req.lspAdminActorUid
+
+      );
+
+      return res.json(result);
+
+    } catch (error) {
+
+      console.error(
+
+        "[ADMIN DATABASE BACKUP]",
+
+        error.message
+
+      );
+
+      return res.status(503).json({
+
+        ok: false,
+
+        error: "BACKUP_FAILED"
+
+      });
+
+    }
 
   }
 
@@ -21492,7 +21669,18 @@ app.use((err, req, res, next) => {
 
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+
+server.listen(PORT, () => {
+
+  console.log(
+    `Server running on http://localhost:${PORT}`
+  );
+
+  /* DATABASE BACKUP SERVICE */
+
+  securityDatabase.start();
+
+});
 
 
 // ⏱ kiểm tra gian hết hạn mỗi 60 giây

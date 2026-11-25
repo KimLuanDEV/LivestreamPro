@@ -271,10 +271,10 @@ const ip = normalizeIP(
       /(?:^|\/)\.(?!well-known(?:\/|$))/
         .test(decodedPath) ||
 
-      /(?:^|\/)(?:node_modules|server\.js|security-firewall\.js|security-auth\.js|security-transaction\.js|package-lock\.json|package\.json)(?:\/|$)/
+     /(?:^|\/)(?:node_modules|server\.js|security-firewall\.js|security-auth\.js|security-transaction\.js|security-database\.js|security-backups|package-lock\.json|package\.json)(?:\/|$)/
         .test(decodedPath) ||
 
-      /\.(?:env|sql|sqlite|bak|log|pem|key|map)$/i
+      /\.(?:env|sql|sqlite|bak|lspbak|log|pem|key|map)$/i
         .test(decodedPath)
     ) {
 
