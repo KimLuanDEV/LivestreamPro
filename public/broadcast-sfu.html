@@ -9492,6 +9492,568 @@ html.ios-pwa-height-fix #sfuChatPanel {
 
 
 
+/* ==========================================
+   SFU - COMPACT GIFT PANEL V2.0
+   BIGO INSPIRED / LUXURY BLACK & GOLD
+========================================== */
+
+#sfuGiftOverlay {
+  background: rgba(0,0,0,.15);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+
+/* COMPACT BOTTOM SHEET */
+
+#sfuGiftOverlay .sfu-gift-sheet {
+
+  display: flex;
+  flex-direction: column;
+
+  width: min(100%, 480px);
+
+  height: 52dvh;
+  max-height: 52dvh;
+
+  padding:
+    8px
+    10px
+    calc(10px + env(safe-area-inset-bottom, 0px));
+
+  gap: 6px;
+
+  overflow: hidden;
+
+  border: 0;
+  border-radius: 20px 20px 0 0;
+
+  background: #211C19;
+
+  box-shadow: 0 -5px 30px rgba(0,0,0,.2);
+
+}
+
+
+/* TOP HANDLE */
+
+.sfu-gift-handle {
+
+  flex-shrink: 0;
+
+  width: 30px;
+  height: 3px;
+
+  margin: 0 auto 3px;
+
+  border-radius: 99px;
+
+  background: rgba(255,255,255,.25);
+
+}
+
+
+/* MINIMAL HEADER */
+
+#sfuGiftOverlay .sfu-gift-head {
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 3px 4px 8px;
+
+  margin: 0;
+
+  border-bottom: 1px solid rgba(255,255,255,.06);
+
+}
+
+#sfuGiftOverlay .sfu-gift-head h2 {
+
+  margin: 0;
+
+  color: #F0DFBF;
+
+  font-size: 14px;
+  font-weight: 750;
+
+  letter-spacing: 0;
+
+}
+
+#sfuGiftOverlay .sfu-gift-head small {
+
+  color: #978D82;
+
+  font-size: 9px;
+
+  letter-spacing: 1px;
+
+}
+
+
+/* CLOSE BUTTON */
+
+#sfuGiftClose {
+
+  display: grid;
+  place-items: center;
+
+  width: 30px;
+  height: 30px;
+
+  padding: 0;
+
+  background: transparent;
+
+  border: 0;
+  border-radius: 0;
+
+  color: #C6BEB5;
+
+  font-size: 23px;
+
+}
+
+
+/* SCROLLABLE GIFT COLLECTION */
+
+#sfuGiftList {
+
+  flex: 1 1 0;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0,1fr));
+
+  grid-auto-rows: min-content;
+
+  align-content: start;
+
+  min-height: 0;
+
+  gap: 5px 3px;
+
+  padding: 3px 0;
+
+  margin: 0;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  overscroll-behavior: contain;
+
+  scrollbar-width: none;
+
+  -webkit-overflow-scrolling: touch;
+
+}
+
+#sfuGiftList::-webkit-scrollbar {
+  display: none;
+}
+
+
+/* REMOVE INDIVIDUAL GIFT CARD BACKGROUND */
+
+#sfuGiftList .sfu-gift-card {
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: flex-start;
+
+  min-width: 0;
+  min-height: 0;
+
+  height: auto;
+
+  gap: 3px;
+
+  padding: 5px 2px;
+
+  background: transparent;
+
+  border: 1px solid transparent;
+  border-radius: 10px;
+
+  box-shadow: none;
+
+}
+
+
+/* SELECTED GIFT */
+
+#sfuGiftList .sfu-gift-card.selected {
+
+  background: rgba(223,190,131,.085);
+
+  border-color: rgba(223,190,131,.8);
+
+  box-shadow: none;
+
+}
+
+
+/* SMALLER GIFT IMAGES */
+
+#sfuGiftList .sfu-gift-image {
+
+  display: block;
+
+  width: 100%;
+  max-width: 64px;
+
+  height: 58px;
+
+  object-fit: contain;
+
+  flex-shrink: 0;
+
+  filter: none;
+
+}
+
+#sfuGiftList .sfu-gift-card.selected
+.sfu-gift-image {
+
+  transform: scale(1.04);
+
+}
+
+
+/* GIFT NAME */
+
+#sfuGiftList .sfu-gift-card strong {
+
+  display: block;
+
+  width: 100%;
+
+  color: #BBB1A7;
+
+  font-size: 10px;
+  font-weight: 500;
+
+  line-height: 1.3;
+
+  text-align: center;
+
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+}
+
+
+/* GIFT PRICE */
+
+#sfuGiftList .sfu-gift-card small {
+
+  color: #ECD19B;
+
+  font-size: 10px;
+  font-weight: 650;
+
+  line-height: 1.2;
+
+  white-space: nowrap;
+
+}
+
+
+/* COMBO QUANTITY - SINGLE ROW */
+
+#sfuGiftOverlay .sfu-combo-panel {
+
+  flex-shrink: 0;
+
+  margin: 0;
+
+  padding: 6px 0 3px;
+
+  border: 0;
+
+  border-top: 1px solid rgba(255,255,255,.07);
+
+  border-radius: 0;
+
+  background: transparent;
+
+}
+
+#sfuGiftOverlay .sfu-combo-list {
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(5, minmax(0,1fr));
+
+  gap: 5px;
+
+}
+
+#sfuGiftOverlay .sfu-combo-btn {
+
+  height: 29px;
+
+  padding: 0 3px;
+
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 99px;
+
+  background: transparent;
+
+  color: #BBB1A6;
+
+  font-size: 11px;
+  font-weight: 650;
+
+}
+
+#sfuGiftOverlay .sfu-combo-btn.active {
+
+  border-color: rgba(223,190,131,.6);
+
+  background: rgba(223,190,131,.15);
+
+  color: #F0D39C;
+
+}
+
+
+/* COMPACT FOOTER */
+
+.sfu-gift-bottom {
+
+  display: flex;
+
+  flex-shrink: 0;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 8px;
+
+  padding: 3px 0;
+
+  min-height: 44px;
+
+}
+
+
+/* DIAMOND BALANCE */
+
+#sfuGiftOverlay .sfu-gift-balance {
+
+  display: flex;
+
+  align-items: center;
+
+  flex-shrink: 0;
+
+  gap: 4px;
+
+  min-width: 0;
+
+  height: 36px;
+
+  padding: 0 10px;
+
+  margin: 0;
+
+  border: 1px solid rgba(223,190,131,.19);
+  border-radius: 99px;
+
+  background: rgba(0,0,0,.12);
+
+}
+
+#sfuGiftOverlay .sfu-gift-balance span {
+
+  font-size: 14px;
+
+  letter-spacing: 0;
+
+}
+
+#sfuGiftBalance {
+
+  color: #F4E5CE;
+
+  font-size: 12px !important;
+  font-weight: 750;
+
+  white-space: nowrap;
+
+}
+
+
+/* TOTAL COST */
+
+#sfuGiftOverlay .sfu-combo-total {
+
+  display: flex;
+
+  flex: 1;
+  min-width: 0;
+
+  flex-direction: column;
+
+  align-items: flex-end;
+  justify-content: center;
+
+  gap: 3px;
+
+  padding: 0;
+
+  margin: 0;
+
+  border: 0;
+
+}
+
+#sfuGiftOverlay .sfu-combo-total span {
+
+  font-size: 8px;
+  font-weight: 500;
+
+  color: #9A9085;
+
+}
+
+#sfuGiftTotal {
+
+  color: #EDCF95;
+
+  font-size: 11px !important;
+
+  font-weight: 750;
+
+  overflow-wrap: anywhere;
+
+}
+
+
+/* COMPACT SEND BUTTON */
+
+#sfuGiftConfirm {
+
+  flex: 0 0 auto;
+
+  width: auto;
+  min-width: 76px;
+  max-width: 125px;
+
+  height: 36px;
+
+  padding: 0 12px;
+
+  border: 0;
+  border-radius: 99px;
+
+  background: linear-gradient(
+    135deg,
+    #F0D59F,
+    #C99D5B
+  );
+
+  color: #241A0D;
+
+  font-size: 10px;
+  font-weight: 850;
+
+  letter-spacing: 0;
+
+}
+
+#sfuGiftConfirm:disabled {
+
+  background: #42392D;
+
+  color: #A69A89;
+
+  opacity: .7;
+
+}
+
+
+/* HIDE EMPTY FEEDBACK SPACE */
+
+#sfuGiftFeedback {
+
+  flex-shrink: 0;
+
+  min-height: 0;
+
+  margin: 0;
+
+  padding: 0 3px;
+
+  color: #FFADA7;
+
+  font-size: 10px;
+
+  text-align: center;
+
+}
+
+#sfuGiftFeedback:empty {
+  display: none;
+}
+
+
+/* SMALL MOBILE SCREENS */
+
+@media (max-width: 380px) {
+
+  #sfuGiftOverlay .sfu-gift-sheet {
+
+    padding-left: 7px;
+    padding-right: 7px;
+
+  }
+
+  #sfuGiftList .sfu-gift-image {
+
+    max-width: 57px;
+    height: 48px;
+
+  }
+
+  #sfuGiftList .sfu-gift-card strong,
+  #sfuGiftList .sfu-gift-card small {
+
+    font-size: 9px;
+
+  }
+
+  #sfuGiftConfirm {
+
+    min-width: 66px;
+
+    padding: 0 8px;
+
+  }
+
+  #sfuGiftOverlay .sfu-gift-balance {
+
+    padding: 0 7px;
+
+  }
+
+}
+
+
+
+
+
 
 </style>
 
@@ -10210,8 +10772,13 @@ html.ios-pwa-height-fix #sfuChatPanel {
 
 </button>
 
-<!-- GIFT MODAL -->
-<div id="sfuGiftOverlay" class="sfu-gift-overlay hidden">
+<!-- ==========================================
+     SFU - COMPACT GIFT PANEL V2.0
+========================================== -->
+
+<div
+  id="sfuGiftOverlay"
+  class="sfu-gift-overlay hidden">
 
   <section
     class="sfu-gift-sheet"
@@ -10219,84 +10786,155 @@ html.ios-pwa-height-fix #sfuChatPanel {
     aria-modal="true"
     aria-labelledby="sfuGiftTitle">
 
+
+    <!-- HANDLE -->
+
+    <div class="sfu-gift-handle"></div>
+
+
+    <!-- HEADER -->
+
     <div class="sfu-gift-head">
-      <div>
-        <small>LIVESTREAMPRO</small>
-        <h2 id="sfuGiftTitle">SEND LIVE GIFT</h2>
-        <p>Support the host with diamonds</p>
-      </div>
+
+      <h2 id="sfuGiftTitle">
+        Gifts
+      </h2>
+
+      <small>
+        LIVE COLLECTION
+      </small>
 
       <button
         type="button"
         id="sfuGiftClose"
-        aria-label="Close gifts">×</button>
+        aria-label="Close gifts">
+        ×
+      </button>
+
     </div>
 
-    <div class="sfu-gift-balance">
-      <span>MY DIAMONDS</span>
-      <strong id="sfuGiftBalance">—</strong>
+
+    <!-- GIFT COLLECTION -->
+
+    <div
+      id="sfuGiftList"
+      class="sfu-gift-grid">
     </div>
 
 
-<!-- PREMIUM LIVE GIFT COLLECTION -->
-<div
-  id="sfuGiftList"
-  class="sfu-gift-grid">
-</div>
+    <!-- COMBO QUANTITY -->
+
+    <div class="sfu-combo-panel">
+
+      <div
+        id="sfuGiftComboList"
+        class="sfu-combo-list">
+
+        <button
+          type="button"
+          class="sfu-combo-btn active"
+          data-quantity="1"
+          aria-pressed="true">
+          ×1
+        </button>
+
+        <button
+          type="button"
+          class="sfu-combo-btn"
+          data-quantity="5"
+          aria-pressed="false">
+          ×5
+        </button>
+
+        <button
+          type="button"
+          class="sfu-combo-btn"
+          data-quantity="10"
+          aria-pressed="false">
+          ×10
+        </button>
+
+        <button
+          type="button"
+          class="sfu-combo-btn"
+          data-quantity="20"
+          aria-pressed="false">
+          ×20
+        </button>
+
+        <button
+          type="button"
+          class="sfu-combo-btn"
+          data-quantity="50"
+          aria-pressed="false">
+          ×50
+        </button>
+
+      </div>
+
+    </div>
 
 
-<!-- SFU GIFT COMBO QUANTITY -->
-<div class="sfu-combo-panel">
+    <!-- FEEDBACK -->
 
-  <div class="sfu-combo-heading">
-    <strong>GIFT QUANTITY</strong>
-    <span>Send multiple gifts at once</span>
-  </div>
-
-  <div id="sfuGiftComboList" class="sfu-combo-list">
-
-    <button type="button" class="sfu-combo-btn active"
-      data-quantity="1" aria-pressed="true">×1</button>
-
-    <button type="button" class="sfu-combo-btn"
-      data-quantity="5" aria-pressed="false">×5</button>
-
-    <button type="button" class="sfu-combo-btn"
-      data-quantity="10" aria-pressed="false">×10</button>
-
-    <button type="button" class="sfu-combo-btn"
-      data-quantity="20" aria-pressed="false">×20</button>
-
-    <button type="button" class="sfu-combo-btn"
-      data-quantity="50" aria-pressed="false">×50</button>
-
-  </div>
-
-  <div class="sfu-combo-total">
-    <span>TOTAL COST</span>
-    <strong id="sfuGiftTotal">0 💎</strong>
-  </div>
-
-</div>
+    <p
+      id="sfuGiftFeedback"
+      class="sfu-gift-feedback"
+      role="status">
+    </p>
 
 
+    <!-- COMPACT BOTTOM BAR -->
+
+    <div class="sfu-gift-bottom">
 
 
-    <p id="sfuGiftFeedback"
-       class="sfu-gift-feedback"
-       role="status"></p>
+      <!-- BALANCE -->
 
-    <button
-      id="sfuGiftConfirm"
-      type="button"
-      class="sfu-gift-confirm"
-      disabled>
-      SELECT A GIFT
-    </button>
+      <div
+        class="sfu-gift-balance"
+        aria-label="My diamonds">
+
+        <span>💎</span>
+
+        <strong id="sfuGiftBalance">
+          —
+        </strong>
+
+      </div>
+
+
+      <!-- TOTAL -->
+
+      <div class="sfu-combo-total">
+
+        <span>TOTAL</span>
+
+        <strong id="sfuGiftTotal">
+          0 💎
+        </strong>
+
+      </div>
+
+
+      <!-- SEND -->
+
+      <button
+        id="sfuGiftConfirm"
+        type="button"
+        class="sfu-gift-confirm"
+        disabled>
+
+        SEND
+
+      </button>
+
+
+    </div>
 
   </section>
-</div>
 
+</div>
 
 <!-- FLOATING GIFT ANNOUNCEMENT -->
 <div
