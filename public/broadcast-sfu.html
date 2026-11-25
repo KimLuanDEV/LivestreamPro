@@ -10051,6 +10051,46 @@ html.ios-pwa-height-fix #sfuChatPanel {
 }
 
 
+/* ==========================================
+   SFU - MOBILE VIEWER PERFORMANCE
+========================================== */
+
+@media (max-width: 768px),
+       (pointer: coarse) {
+
+  body.sfu-role-viewer *,
+  body.sfu-role-viewer *::before,
+  body.sfu-role-viewer *::after {
+
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+
+  }
+
+  body.sfu-role-viewer #remoteMedia {
+
+    contain: layout paint;
+
+  }
+
+  body.sfu-role-viewer #remoteMedia video {
+
+    filter: none !important;
+
+    object-fit: cover;
+
+  }
+
+  body.sfu-role-viewer .sfu-chat-panel {
+
+    background: rgba(15, 17, 22, .94);
+
+  }
+
+}
+
+
+
 
 
 
@@ -16046,23 +16086,20 @@ const SFU_IS_MOBILE =
 
 
 /* ==========================================
-   SFU - HD VIDEO QUALITY PROFILE
+   SFU - ADAPTIVE VIDEO QUALITY V3.0
 ========================================== */
 
 const SFU_VIDEO_PROFILE = SFU_IS_MOBILE
   ? {
-      // MOBILE - HD QUALITY
       resolution: VideoPresets.h720.resolution,
       fps: 30,
-      bitrate: 2000000
+      bitrate: 1500000
     }
   : {
-      // DESKTOP - HD QUALITY
       resolution: VideoPresets.h720.resolution,
       fps: 30,
-      bitrate: 2000000
+      bitrate: 2200000
     };
-
 
 console.log(
   "[SFU VIDEO PROFILE]",
@@ -16108,7 +16145,6 @@ async function connectSFU() {
 
   }
   
-
 lkRoom = new Room({
 
   adaptiveStream: true,
@@ -16117,39 +16153,40 @@ lkRoom = new Room({
 
   videoCaptureDefaults: {
 
-    resolution:
-      SFU_VIDEO_PROFILE.resolution,
+    resolution: SFU_VIDEO_PROFILE.resolution,
 
-    frameRate:
-      SFU_VIDEO_PROFILE.fps
+    frameRate: SFU_VIDEO_PROFILE.fps
 
   },
 
-publishDefaults: {
+  publishDefaults: {
 
-  videoCodec: "h264",
+    videoCodec: "h264",
 
-  // Mobile: chỉ mã hóa một luồng video.
-  // Desktop: giữ nguyên nhiều lớp chất lượng.
-  simulcast: !SFU_IS_MOBILE,
+    // Enable adaptive video layers on all devices
+    simulcast: true,
 
-  videoEncoding: {
+    videoSimulcastLayers: [
 
-    maxBitrate:
-      SFU_VIDEO_PROFILE.bitrate,
+      VideoPresets.h180,
 
-    maxFramerate:
-      SFU_VIDEO_PROFILE.fps
+      VideoPresets.h360
 
-  },
+    ],
 
-  degradationPreference: "maintain-framerate"
+    videoEncoding: {
 
-}
+      maxBitrate: SFU_VIDEO_PROFILE.bitrate,
+
+      maxFramerate: SFU_VIDEO_PROFILE.fps
+
+    },
+
+    degradationPreference: "maintain-framerate"
+
+  }
+
 });
-
-
-
 
 /* ==========================================
    SFU - AUDIO PLAYBACK STATUS
