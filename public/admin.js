@@ -3465,6 +3465,416 @@ setText(
      RENDER DATABASE STATISTICS
   ======================================== */
 
+
+  /* ==========================================
+   OFFSITE BACKUP MONITOR V1.1
+========================================== */
+
+function renderOffsiteSecurity(
+  data,
+  unavailableState = ""
+) {
+
+  const offsite = data?.offsite;
+
+  const statusEl =
+    $("dbOffsiteStatus");
+
+
+  /* RESET STATUS COLORS */
+
+  const setOffsiteStatus = (
+    label,
+    state = ""
+  ) => {
+
+    if (!statusEl) return;
+
+    statusEl.textContent = label;
+
+    statusEl.classList.toggle(
+
+      "is-active",
+
+      state === "success"
+
+    );
+
+    statusEl.classList.toggle(
+
+      "is-error",
+
+      state === "danger"
+
+    );
+
+  };
+
+
+  const setIndicator = (
+    id,
+    label,
+    state = ""
+  ) => {
+
+    const element = $(id);
+
+    if (!element) return;
+
+    element.textContent = label;
+
+    element.classList.toggle(
+
+      "is-success",
+
+      state === "success"
+
+    );
+
+    element.classList.toggle(
+
+      "is-danger",
+
+      state === "danger"
+
+    );
+
+  };
+
+
+  /* LOCAL BACKUP STATUS */
+
+  const localVerified =
+
+    data?.status === "ACTIVE" &&
+
+    Number(data?.lastVerifiedAt) > 0;
+
+  setIndicator(
+
+    "dbOffsiteLocal",
+
+    unavailableState
+
+      ? "--"
+
+      : localVerified
+
+        ? "VERIFIED"
+
+        : data?.backupRunning
+
+          ? "BACKING UP"
+
+          : data?.status === "DEGRADED"
+
+            ? "CHECK REQUIRED"
+
+            : "WAITING",
+
+    unavailableState
+
+      ? ""
+
+      : localVerified
+
+        ? "success"
+
+        : data?.status === "DEGRADED"
+
+          ? "danger"
+
+          : ""
+
+  );
+
+
+  /* ERROR DISPLAY */
+
+  const errorEl =
+    $("dbOffsiteError");
+
+  const setOffsiteError = message => {
+
+    if (!errorEl) return;
+
+    errorEl.textContent =
+      String(message || "").slice(0, 300);
+
+    errorEl.classList.toggle(
+
+      "hidden",
+
+      !message
+
+    );
+
+  };
+
+
+  /* UNAVAILABLE OR OLD BACKEND */
+
+  if (
+    unavailableState ||
+    !offsite ||
+    typeof offsite !== "object"
+  ) {
+
+    setOffsiteStatus(
+
+      unavailableState ||
+      "NOT AVAILABLE",
+
+      "danger"
+
+    );
+
+    setIndicator(
+      "dbOffsiteRemote",
+      "--"
+    );
+
+    setIndicator(
+      "dbOffsiteSuccess",
+      "--"
+    );
+
+    setIndicator(
+      "dbOffsiteFailed",
+      "--"
+    );
+
+    setText(
+      "dbOffsiteVerifiedAt",
+      "--"
+    );
+
+    setText(
+      "dbOffsiteLastObject",
+      "--"
+    );
+
+    setOffsiteError(
+
+      unavailableState
+
+        ? "Unable to verify current offsite status."
+
+        : "Offsite statistics are unavailable. Check the V1.1 backend."
+
+    );
+
+    return;
+
+  }
+
+
+  /* R2 CONNECTION STATUS */
+
+  const status = String(
+
+    offsite.status || "UNKNOWN"
+
+  );
+
+  const lastVerified =
+    Number(offsite.lastVerifiedAt);
+
+  const hasVerification =
+
+    Number.isFinite(lastVerified) &&
+
+    lastVerified > 0;
+
+  const verificationAge =
+
+    Date.now() - lastVerified;
+
+  const intervalMs =
+
+    (Number(data.intervalMinutes) > 0
+
+      ? Number(data.intervalMinutes)
+
+      : 60) * 60000;
+
+  // Warn if no verification has occurred
+  // for more than two backup intervals.
+
+  const stale =
+
+    hasVerification &&
+
+    verificationAge > intervalMs * 2;
+
+
+  /* STATUS LABELS */
+
+  const statusLabels = {
+
+    ACTIVE: "ACTIVE",
+
+    WAITING: "WAITING",
+
+    SYNCING: "SYNCING",
+
+    DEGRADED: "DEGRADED",
+
+    DISABLED: "DISABLED"
+
+  };
+
+  const remoteVerified =
+
+    status === "ACTIVE" &&
+
+    hasVerification &&
+
+    !stale;
+
+  setOffsiteStatus(
+
+    status === "ACTIVE" && stale
+
+      ? "STALE"
+
+      : status === "ACTIVE" && !hasVerification
+
+        ? "UNVERIFIED"
+
+        : statusLabels[status] || "UNKNOWN",
+
+    remoteVerified
+
+      ? "success"
+
+      : stale ||
+        status === "DEGRADED" ||
+        status === "UNKNOWN"
+
+        ? "danger"
+
+        : ""
+
+  );
+
+
+  /* REMOTE BACKUP INDICATOR */
+
+  setIndicator(
+
+    "dbOffsiteRemote",
+
+    remoteVerified
+
+      ? "VERIFIED"
+
+      : status === "SYNCING"
+
+        ? "SYNCING"
+
+        : status === "DISABLED"
+
+          ? "DISABLED"
+
+          : stale
+
+            ? "STALE"
+
+            : status === "DEGRADED"
+
+              ? "CHECK REQUIRED"
+
+              : "WAITING",
+
+    remoteVerified
+
+      ? "success"
+
+      : status === "DEGRADED" || stale
+
+        ? "danger"
+
+        : ""
+
+  );
+
+
+  /* UPLOAD COUNTERS */
+
+  setIndicator(
+
+    "dbOffsiteSuccess",
+
+    formatNumber(
+      offsite.successfulUploads
+    ),
+
+    Number(offsite.successfulUploads) > 0
+
+      ? "success"
+
+      : ""
+
+  );
+
+  renderCounter(
+
+    "dbOffsiteFailed",
+
+    offsite.failedUploads,
+
+    true
+
+  );
+
+
+  /* LAST VERIFIED BACKUP */
+
+  setText(
+
+    "dbOffsiteVerifiedAt",
+
+    hasVerification
+
+      ? formatDate(lastVerified)
+
+      : "--"
+
+  );
+
+  const objectName = String(
+
+    offsite.lastObject || ""
+
+  ).split("/").pop();
+
+  setText(
+
+    "dbOffsiteLastObject",
+
+    objectName || "--"
+
+  );
+
+
+  /* ERROR REPORT */
+
+  setOffsiteError(
+
+    offsite.lastError ||
+
+    (stale
+
+      ? "Offsite verification is older than two backup intervals."
+
+      : "")
+
+  );
+
+}
+
+
   function renderStats(data) {
 
     const status = String(
@@ -3711,14 +4121,19 @@ setText(
     );
 
 
-    /* STORAGE AND HISTORY */
+/* STORAGE AND HISTORY */
 
-    renderStorage(data.storage);
+renderStorage(data.storage);
 
-    renderBackups(
-      data.recentBackups,
-      data.totalBackups
-    );
+renderBackups(
+  data.recentBackups,
+  data.totalBackups
+);
+
+
+/* OFFSITE BACKUP V1.1 */
+
+renderOffsiteSecurity(data);
 
     showError(data.lastError || "");
 
@@ -3750,6 +4165,14 @@ setText(
     sessionExpired = true;
 
     backupAvailable = false;
+
+    /* CLEAR OFFSITE INFORMATION */
+
+renderOffsiteSecurity(
+  null,
+  "ACCESS DENIED"
+);
+
 
     stopAutoRefresh();
 
@@ -3893,11 +4316,22 @@ setText(
     } catch (error) {
 
       backupAvailable = false;
+/* OFFSITE STATUS UNAVAILABLE */
+
+renderOffsiteSecurity(
+
+  null,
+
+  "UNAVAILABLE"
+
+);
 
       setStatus(
         "UNAVAILABLE",
         "error"
       );
+
+
 
       setText(
 

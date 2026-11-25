@@ -3995,6 +3995,387 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
 
 
 
+/* ==========================================
+   OFFSITE BACKUP & RECOVERY MONITOR V1.1
+========================================== */
+
+.db-offsite-panel {
+
+  margin-top: 18px;
+  padding: 16px;
+
+  border: 1px solid rgba(225,188,126,.20);
+  border-radius: 14px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(225,188,126,.045),
+    rgba(0,0,0,.22)
+  );
+
+}
+
+
+/* HEADER */
+
+.db-offsite-header {
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+  margin-bottom: 16px;
+
+}
+
+.db-offsite-icon {
+
+  display: grid;
+  place-items: center;
+
+  width: 44px;
+  height: 44px;
+
+  flex: 0 0 44px;
+
+  border: 1px solid rgba(225,188,126,.25);
+  border-radius: 12px;
+
+  background: rgba(225,188,126,.08);
+
+  color: #e1bc7e;
+
+}
+
+.db-offsite-icon svg {
+
+  width: 25px;
+  height: 25px;
+
+}
+
+.db-offsite-heading {
+
+  flex: 1;
+  min-width: 0;
+
+}
+
+.db-offsite-heading > span {
+
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #a68e6c;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: .9px;
+
+}
+
+.db-offsite-heading h3 {
+
+  margin: 0 0 4px;
+
+  color: #f0d8ab;
+
+  font-size: 16px;
+  font-weight: 800;
+
+}
+
+.db-offsite-heading small {
+
+  color: #9e9280;
+  font-size: 10px;
+
+}
+
+#dbOffsiteStatus {
+
+  flex-shrink: 0;
+
+  white-space: nowrap;
+
+}
+
+
+/* BACKUP STATUS */
+
+#dbOffsiteLocal,
+#dbOffsiteRemote {
+
+  font-size: clamp(12px, 3.5vw, 18px);
+
+  overflow-wrap: anywhere;
+
+}
+
+#dbOffsiteLocal.is-success,
+#dbOffsiteRemote.is-success,
+#dbOffsiteSuccess.is-success,
+#dbOffsiteFailed.is-success {
+
+  color: #82d6a2;
+
+}
+
+#dbOffsiteLocal.is-danger,
+#dbOffsiteRemote.is-danger,
+#dbOffsiteFailed.is-danger {
+
+  color: #ff9292;
+
+}
+
+#dbOffsiteLastObject {
+
+  max-width: 65%;
+
+  overflow-wrap: anywhere;
+
+}
+
+.db-offsite-note {
+
+  margin: 10px 2px 0;
+
+  color: #91877a;
+
+  font-size: 10px;
+  line-height: 1.5;
+
+}
+
+
+/* RECOVERY BOX */
+
+.db-recovery-box {
+
+  margin-top: 16px;
+
+  border: 1px solid rgba(225,188,126,.16);
+  border-radius: 11px;
+
+  background: rgba(0,0,0,.22);
+
+  overflow: hidden;
+
+}
+
+.db-recovery-box summary {
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+  padding: 13px;
+
+  list-style: none;
+
+  cursor: pointer;
+
+}
+
+.db-recovery-box summary::-webkit-details-marker {
+
+  display: none;
+
+}
+
+.db-recovery-box summary svg {
+
+  width: 22px;
+  height: 22px;
+
+  flex: 0 0 22px;
+
+  color: #d9ba88;
+
+}
+
+.db-recovery-box summary > div {
+
+  flex: 1;
+  min-width: 0;
+
+}
+
+.db-recovery-box summary strong {
+
+  display: block;
+
+  color: #e1bc7e;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  letter-spacing: .5px;
+
+}
+
+.db-recovery-box summary small {
+
+  display: block;
+  margin-top: 4px;
+
+  color: #948979;
+
+  font-size: 10px;
+
+}
+
+.db-recovery-arrow {
+
+  color: #c9a873;
+
+  transition: transform .2s;
+
+}
+
+.db-recovery-box[open] .db-recovery-arrow {
+
+  transform: rotate(180deg);
+
+}
+
+.db-recovery-content {
+
+  padding: 12px;
+
+  border-top:
+    1px solid rgba(225,188,126,.10);
+
+}
+
+.db-recovery-content > span {
+
+  display: block;
+
+  margin-top: 12px;
+
+  color: #d9ba88;
+
+  font-size: 10px;
+  font-weight: 750;
+
+  letter-spacing: .6px;
+
+}
+
+.db-recovery-content p {
+
+  margin: 0 0 10px;
+
+  color: #aaa092;
+
+  font-size: 11px;
+  line-height: 1.6;
+
+}
+
+.db-recovery-content pre {
+
+  margin: 8px 0 14px;
+  padding: 10px;
+
+  background: #0b0c0f;
+
+  border: 1px solid rgba(225,188,126,.12);
+  border-radius: 8px;
+
+  color: #e7cfaa;
+
+  font-size: 10px;
+  line-height: 1.6;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+}
+
+.db-recovery-content .db-recovery-warning {
+
+  margin-bottom: 0;
+  padding: 10px;
+
+  border-radius: 8px;
+
+  background: rgba(255,100,100,.06);
+  color: #e9a19d;
+
+}
+
+
+/* MOBILE */
+
+@media (max-width: 768px) {
+
+  .db-offsite-panel {
+
+    padding: 12px;
+
+  }
+
+  .db-offsite-header {
+
+    gap: 8px;
+
+  }
+
+  .db-offsite-icon {
+
+    width: 34px;
+    height: 34px;
+
+    flex-basis: 34px;
+
+  }
+
+  .db-offsite-icon svg {
+
+    width: 20px;
+    height: 20px;
+
+  }
+
+  .db-offsite-heading h3 {
+
+    font-size: 13px;
+
+  }
+
+  .db-offsite-heading > span {
+
+    font-size: 8px;
+    letter-spacing: .3px;
+
+  }
+
+  #dbOffsiteStatus {
+
+    font-size: 9px;
+
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .db-recovery-arrow {
+
+    transition: none;
+
+  }
+
+}
+
+
+
+
   </style>
 
 
@@ -4712,6 +5093,245 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
   </div>
 
 
+  <!-- ==========================================
+     OFFSITE BACKUP & RECOVERY V1.1
+========================================== -->
+
+<div id="dbOffsitePanel"
+     class="db-offsite-panel">
+
+  <div class="db-offsite-header">
+
+    <div class="db-offsite-icon">
+
+      <svg viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="1.6"
+           stroke-linecap="round"
+           stroke-linejoin="round">
+
+        <path d="M7 18a5 5 0 1 1 1-9.9
+                 A6 6 0 0 1 19 11
+                 a3.5 3.5 0 0 1-1 7"/>
+
+        <path d="M12 19V10"/>
+        <path d="m8 14 4-4 4 4"/>
+
+      </svg>
+
+    </div>
+
+    <div class="db-offsite-heading">
+
+      <span>DISASTER RECOVERY / V1.1</span>
+
+      <h3>OFFSITE BACKUP</h3>
+
+      <small>Cloudflare R2 Private Storage</small>
+
+    </div>
+
+    <span id="dbOffsiteStatus"
+          class="auth-perf-status">
+
+      WAITING
+
+    </span>
+
+  </div>
+
+
+  <!-- STORAGE PROTECTION -->
+
+  <div class="auth-perf-grid">
+
+    <div class="auth-perf-cell">
+
+      <span>LOCAL BACKUP</span>
+
+      <strong id="dbOffsiteLocal">
+        --
+      </strong>
+
+    </div>
+
+    <div class="auth-perf-cell">
+
+      <span>R2 BACKUP</span>
+
+      <strong id="dbOffsiteRemote">
+        --
+      </strong>
+
+    </div>
+
+    <div class="auth-perf-cell">
+
+      <span>VERIFIED UPLOADS</span>
+
+      <strong id="dbOffsiteSuccess">
+        --
+      </strong>
+
+    </div>
+
+    <div class="auth-perf-cell">
+
+      <span>FAILED UPLOADS</span>
+
+      <strong id="dbOffsiteFailed">
+        --
+      </strong>
+
+    </div>
+
+  </div>
+
+
+  <!-- R2 CONFIGURATION -->
+
+  <div class="tx-sec-config">
+
+    <div class="tx-sec-config-row">
+
+      <span>Storage provider</span>
+
+      <strong>Cloudflare R2</strong>
+
+    </div>
+
+    <div class="tx-sec-config-row">
+
+      <span>Configured bucket</span>
+
+      <strong>livestreampro-backup</strong>
+
+    </div>
+
+    <div class="tx-sec-config-row">
+
+      <span>Target bucket lock</span>
+
+      <strong>7 days</strong>
+
+    </div>
+
+    <div class="tx-sec-config-row">
+
+      <span>Target retention</span>
+
+      <strong>30 days</strong>
+
+    </div>
+
+    <div class="tx-sec-config-row">
+
+      <span>Last R2 verification</span>
+
+      <strong id="dbOffsiteVerifiedAt">
+        --
+      </strong>
+
+    </div>
+
+    <div class="tx-sec-config-row">
+
+      <span>Last verified object</span>
+
+      <strong id="dbOffsiteLastObject">
+        --
+      </strong>
+
+    </div>
+
+  </div>
+
+  <p class="db-offsite-note">
+
+    Bucket privacy, lock and retention settings
+    must be verified in Cloudflare.
+
+  </p>
+
+
+  <!-- OFFSITE ERROR -->
+
+  <div id="dbOffsiteError"
+       class="db-sec-error hidden"
+       role="status">
+
+  </div>
+
+
+  <!-- DATABASE RECOVERY -->
+
+  <details class="db-recovery-box">
+
+    <summary>
+
+      <svg viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="1.6"
+           stroke-linecap="round"
+           stroke-linejoin="round">
+
+        <rect x="3" y="4"
+              width="18" height="16"
+              rx="3"/>
+
+        <path d="m7 9 4 3-4 3"/>
+        <path d="M13 15h4"/>
+
+      </svg>
+
+      <div>
+
+        <strong>DATABASE RECOVERY</strong>
+
+        <small>Secure offline recovery</small>
+
+      </div>
+
+      <span class="db-recovery-arrow">
+        ▾
+      </span>
+
+    </summary>
+
+    <div class="db-recovery-content">
+
+      <p>
+        Verify and extract encrypted backups
+        through Render Shell or a trusted
+        offline environment.
+      </p>
+
+      <span>01 / VERIFY BACKUP</span>
+
+      <pre>node security-database.js verify "$BACKUP"</pre>
+
+      <span>02 / EXTRACT BACKUP</span>
+
+      <pre>node security-database.js extract "$BACKUP" "/tmp/lsp-recovery-$(date +%s)"</pre>
+
+      <p class="db-recovery-warning">
+
+        Never overwrite production databases
+        while the server is running.
+
+        Reconcile financial transactions
+        before restoring live data.
+
+      </p>
+
+    </div>
+
+  </details>
+
+</div>
+
   <!-- RECENT BACKUP FILES -->
 
   <div class="tx-sec-events">
@@ -5206,7 +5826,7 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
 
   const script = document.createElement("script");
 
-script.src = "/admin.js?v=20261125-database-v10";
+script.src = "/admin.js?v=20261125-database-v11";
 
     script.onload = () => {
       document.body.classList.remove("lsp-admin-locked");
