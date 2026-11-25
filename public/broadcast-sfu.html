@@ -21522,7 +21522,8 @@ if (watchPlayButton) {
 
 <script>
 /* ==========================================
-   SFU - IOS PWA HEIGHT CORRECTION
+   SFU - IOS SMART FULLSCREEN V6.0
+   LIVESTREAM PRO
 ========================================== */
 
 (function initSfuIOSFullscreen() {
@@ -21538,67 +21539,140 @@ if (watchPlayButton) {
 
   const isStandalone =
     navigator.standalone === true ||
-    window.matchMedia(
-      "(display-mode: standalone)"
-    ).matches;
+    matchMedia("(display-mode: standalone)").matches;
 
   if (!isIOS || !isStandalone) return;
+
+  const studio = document.querySelector(".studio");
+
+  if (!studio) return;
+
+
+  /* SAFE AREA SENSOR */
+
+  const probe = document.createElement("div");
+
+  probe.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0;
+    visibility: hidden;
+    pointer-events: none;
+    padding-top: env(safe-area-inset-top, 0px);
+  `;
+
+  document.body.appendChild(probe);
+
+
+  /* STABLE FULLSCREEN STATE */
+
+  let lockedHeight = 0;
+  let lastOrientation = "";
+  let retryTimers = [];
 
 
   function syncFullscreenHeight() {
 
-    const probe = document.createElement("div");
+    if (document.hidden) return;
 
-    probe.style.cssText = `
-      position: fixed;
-      visibility: hidden;
-      pointer-events: none;
-      padding-top: env(safe-area-inset-top, 0px);
-    `;
+    const portrait = matchMedia(
+      "(orientation: portrait)"
+    ).matches;
 
-    document.body.appendChild(probe);
+    const orientation =
+      portrait ? "portrait" : "landscape";
+
+
+    /* RESET ONLY WHEN ORIENTATION CHANGES */
+
+    if (orientation !== lastOrientation) {
+
+      lockedHeight = 0;
+      lastOrientation = orientation;
+
+      root.classList.remove("ios-pwa-height-fix");
+      root.style.removeProperty("--sfu-screen-height");
+
+    }
+
+
+    const screenHeight = portrait
+      ? Math.max(screen.width, screen.height)
+      : Math.min(screen.width, screen.height);
+
+
+    const viewportHeight = window.innerHeight;
+
+    const visualHeight =
+      window.visualViewport?.height || viewportHeight;
 
     const safeTop = parseFloat(
       getComputedStyle(probe).paddingTop
     ) || 0;
 
-    probe.remove();
+
+    /* IGNORE KEYBOARD RESIZE */
+
+    const active = document.activeElement;
+
+    const editing =
+      active &&
+      (
+        active.matches("input, textarea") ||
+        active.isContentEditable
+      );
+
+    const keyboardOpen =
+      editing &&
+      screenHeight - visualHeight > 150;
+
+    if (keyboardOpen) return;
 
 
-    const screenHeight = window.screen.height;
-    const viewportHeight = window.innerHeight;
+    /* PORTRAIT FULLSCREEN CORRECTION */
+
+    if (!portrait) return;
 
     const missingHeight =
       screenHeight - viewportHeight;
 
-
-    // Only correct the iOS status-bar height bug.
-
-    const needsCorrection =
+    const canExtend =
       safeTop > 0 &&
-      missingHeight > 0 &&
-      Math.abs(missingHeight - safeTop) <= 3;
+      missingHeight >= -3 &&
+      missingHeight <= safeTop + 12;
 
 
-    if (needsCorrection) {
+    /* LOCK FULL HEIGHT AFTER VALID MEASUREMENT */
 
-      root.style.setProperty(
-        "--sfu-screen-height",
-        `${screenHeight}px`
-      );
+    if (!lockedHeight && canExtend) {
+
+      lockedHeight = screenHeight;
+
+    }
+
+
+    /* PRESERVE LOCKED HEIGHT */
+
+    if (lockedHeight > 0) {
+
+      const heightValue = `${lockedHeight}px`;
+
+      if (
+        root.style.getPropertyValue(
+          "--sfu-screen-height"
+        ) !== heightValue
+      ) {
+
+        root.style.setProperty(
+          "--sfu-screen-height",
+          heightValue
+        );
+
+      }
 
       root.classList.add(
         "ios-pwa-height-fix"
-      );
-
-    } else {
-
-      root.classList.remove(
-        "ios-pwa-height-fix"
-      );
-
-      root.style.removeProperty(
-        "--sfu-screen-height"
       );
 
     }
@@ -21606,30 +21680,124 @@ if (watchPlayButton) {
   }
 
 
-  syncFullscreenHeight();
+  /* LIMITED VIEWPORT RECOVERY */
+
+  function recoverFullscreen() {
+
+    retryTimers.forEach(clearTimeout);
+    retryTimers = [];
+
+    const delays = [
+      0,
+      100,
+      300,
+      600,
+      1000,
+      1500,
+      2500
+    ];
+
+    delays.forEach(delay => {
+
+      const timer = setTimeout(() => {
+
+        requestAnimationFrame(
+          syncFullscreenHeight
+        );
+
+      }, delay);
+
+      retryTimers.push(timer);
+
+    });
+
+  }
+
+
+  /* INITIAL PAGE LOAD */
+
+  recoverFullscreen();
+
+
+  /* PAGE FULLY LOADED */
 
   window.addEventListener(
-    "resize",
-    syncFullscreenHeight
+    "load",
+    recoverFullscreen
   );
+
+
+  /* RETURN FROM LOBBY OR BFCACHE */
 
   window.addEventListener(
     "pageshow",
-    syncFullscreenHeight
+    recoverFullscreen
   );
 
-  window.addEventListener(
-    "orientationchange",
+
+  /* RETURN FROM BACKGROUND */
+
+  document.addEventListener(
+    "visibilitychange",
     () => {
-      setTimeout(syncFullscreenHeight, 300);
+
+      if (!document.hidden) {
+
+        recoverFullscreen();
+
+      }
+
     }
   );
 
-  setTimeout(syncFullscreenHeight, 500);
+
+  /* SCREEN ORIENTATION */
+
+  window.addEventListener(
+    "orientationchange",
+    recoverFullscreen
+  );
+
+
+  /* VIEWPORT CHANGE */
+
+  let resizeTimer = null;
+
+  function scheduleViewportSync() {
+
+    clearTimeout(resizeTimer);
+
+    resizeTimer = setTimeout(
+      syncFullscreenHeight,
+      150
+    );
+
+  }
+
+  window.addEventListener(
+    "resize",
+    scheduleViewportSync,
+    { passive: true }
+  );
+
+  window.visualViewport?.addEventListener(
+    "resize",
+    scheduleViewportSync,
+    { passive: true }
+  );
+
+
+  /* KEYBOARD CLOSED */
+
+  document.addEventListener(
+    "focusout",
+    () => {
+      setTimeout(syncFullscreenHeight, 350);
+    }
+  );
 
 })();
 </script>
-
 
 </body>
 </html>
