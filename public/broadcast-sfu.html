@@ -9970,6 +9970,375 @@ body.sfu-role-viewer .sfu-chat-text {
 }
 
 
+/* ==========================================
+   LIVESTREAM PRO
+   HOST PROFILE - PREMIUM GLASS V5.0
+========================================== */
+
+/* MAIN HOST CAPSULE */
+
+.studio-topbar #sfuHostBadge {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  width: max-content;
+  max-width: min(220px, calc(100vw - 142px));
+
+  min-width: 0;
+  min-height: 44px;
+  height: auto;
+
+  margin: 0;
+  padding: 4px 6px 4px 4px;
+
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 999px;
+
+  background: linear-gradient(
+    110deg,
+    rgba(29,31,37,.82),
+    rgba(12,14,19,.64)
+  );
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  box-shadow:
+    0 3px 12px rgba(0,0,0,.20),
+    inset 0 1px 0 rgba(255,255,255,.07);
+
+  pointer-events: auto;
+}
+
+/* ==========================================
+   PREMIUM AVATAR
+========================================== */
+
+#sfuHostBadge .sfu-host-avatar-wrap {
+  position: relative;
+
+  flex: 0 0 36px;
+
+  width: 36px;
+  height: 36px;
+
+  padding: 1.5px;
+
+  border: 0;
+  border-radius: 50%;
+
+  background: linear-gradient(
+    145deg,
+    #FFF0CA,
+    #D8B478,
+    #947047
+  );
+
+  box-shadow: none;
+
+  overflow: hidden;
+}
+
+#sfuHostBadge .sfu-host-avatar {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  border-radius: 50%;
+
+  border: 1.5px solid #191B20;
+}
+
+/* ==========================================
+   HOST INFORMATION
+========================================== */
+
+#sfuHostBadge .sfu-host-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+
+  flex: 1 1 auto;
+
+  min-width: 0;
+  max-width: 120px;
+
+  gap: 3px;
+  padding: 0;
+}
+
+/* HOST NAME */
+
+#sfuHostBadge .sfu-host-name {
+  display: block;
+
+  width: 100%;
+
+  margin: 0;
+  padding: 0;
+
+  color: #FFFFFF;
+
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.25;
+
+  letter-spacing: .05px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ==========================================
+   DIAMONDS RECEIVED
+========================================== */
+
+.studio-topbar #sfuHostBadge #sfuLiveEarnings {
+  position: static;
+
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+
+  height: 15px;
+  min-height: 0;
+
+  margin: 0;
+  padding: 0;
+
+  gap: 4px;
+
+  border: none;
+  border-radius: 0;
+
+  background: transparent;
+
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+
+  pointer-events: none;
+}
+
+/* MINI DIAMOND ICON */
+
+#sfuHostBadge #sfuLiveEarnings
+.sfu-earnings-diamond {
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 13px;
+
+  width: 13px;
+  height: 13px;
+
+  padding: 0;
+  margin: 0;
+
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+#sfuHostBadge #sfuLiveEarnings
+.sfu-earnings-diamond svg {
+  display: block;
+
+  width: 13px;
+  height: 13px;
+}
+
+/* DIAMOND VALUE */
+
+#sfuHostBadge #sfuLiveEarningsCount {
+  display: block;
+
+  min-width: 0;
+  max-width: 100%;
+
+  color: #9BDFFF;
+
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+
+  font-variant-numeric: tabular-nums;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ==========================================
+   PREMIUM ADD FRIEND BUTTON
+========================================== */
+
+#sfuHostBadge #sfuHostAddFriend {
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 28px;
+
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+
+  margin: 0 1px 0 2px;
+  padding: 0 0 1px;
+
+  border: 1px solid rgba(255,233,190,.65);
+  border-radius: 50%;
+
+  background: linear-gradient(
+    145deg,
+    #F8E4BC,
+    #E2C18B
+  );
+
+  color: #3C2B17;
+
+  font-family: Arial, sans-serif;
+  font-size: 21px;
+  font-weight: 500;
+  line-height: 1;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.35),
+    0 2px 6px rgba(0,0,0,.12);
+
+  transition: transform .15s ease;
+}
+
+#sfuHostBadge #sfuHostAddFriend:active:not(:disabled) {
+  transform: scale(.9);
+}
+
+/* FRIEND REQUEST PENDING */
+
+#sfuHostBadge #sfuHostAddFriend.is-pending {
+  background: rgba(255,255,255,.10);
+  border-color: rgba(255,255,255,.10);
+
+  color: #D8D8D8;
+  font-size: 14px;
+
+  box-shadow: none;
+}
+
+/* ALREADY FRIENDS */
+
+#sfuHostBadge #sfuHostAddFriend.is-friend {
+  background: rgba(73,190,130,.15);
+  border-color: rgba(100,210,150,.25);
+
+  color: #8FE6B5;
+  font-size: 14px;
+
+  box-shadow: none;
+}
+
+/* ==========================================
+   ROOM ID - MATCHING GLASS DESIGN
+========================================== */
+
+.studio-topbar .sfu-host-profile-group {
+  gap: 4px;
+}
+
+#sfuRoomIdBadge {
+  min-height: 17px;
+
+  margin-left: 5px;
+  padding: 3px 7px;
+
+  gap: 4px;
+
+  border: none;
+  border-radius: 999px;
+
+  background: rgba(10,12,16,.48);
+
+  box-shadow: none;
+
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+#sfuRoomIdBadge .sfu-room-id-label {
+  color: rgba(255,255,255,.65);
+
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .1px;
+}
+
+#sfuRoomIdValue {
+  color: #E6DFD1;
+
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: .4px;
+}
+
+/* ==========================================
+   MOBILE OPTIMIZATION
+========================================== */
+
+@media (max-width: 480px) {
+
+  .studio-topbar #sfuHostBadge {
+    min-height: 42px;
+    gap: 6px;
+
+    padding: 4px 5px 4px 4px;
+  }
+
+  #sfuHostBadge .sfu-host-avatar-wrap {
+    flex-basis: 34px;
+    width: 34px;
+    height: 34px;
+  }
+
+  #sfuHostBadge .sfu-host-name {
+    font-size: 11px;
+  }
+
+  #sfuHostBadge #sfuLiveEarningsCount {
+    font-size: 10px;
+  }
+
+  #sfuHostBadge #sfuHostAddFriend {
+    flex-basis: 27px;
+    width: 27px;
+    min-width: 27px;
+    height: 27px;
+  }
+
+}
+
+/* ==========================================
+   PRESERVE ORIGINAL VISIBILITY
+========================================== */
+
+#sfuHostBadge.hidden,
+#sfuHostBadge #sfuHostAddFriend.hidden,
+#sfuHostBadge #sfuLiveEarnings.hidden,
+#sfuHostBadge.hidden + #sfuRoomIdBadge {
+  display: none !important;
+}
+
 
 </style>
 
