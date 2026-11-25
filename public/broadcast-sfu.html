@@ -10340,6 +10340,389 @@ body.sfu-role-viewer .sfu-chat-text {
 }
 
 
+
+/* ==========================================
+   LIVESTREAM PRO
+   SHARE LIVE ROOM V1.0
+========================================== */
+
+/* SETTINGS SHARE BUTTON */
+
+#studioSettingsPanel #sfuShareRoomBtn {
+  width: 100%;
+  min-height: 44px;
+
+  margin-top: 12px;
+  padding: 10px 14px;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  border: 1px solid rgba(223,190,131,.22);
+  border-radius: 12px;
+
+  background: rgba(223,190,131,.07);
+
+  color: #E8CB98;
+
+  font-size: 11px;
+  font-weight: 750;
+}
+
+#sfuShareRoomBtn .studio-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* ==========================================
+   SHARE BOTTOM SHEET
+========================================== */
+
+#sfuShareDialog {
+  position: fixed;
+  inset: auto 0 0;
+
+  width: min(100%, 480px);
+  max-width: 100%;
+  max-height: 85dvh;
+
+  margin: 0 auto;
+  padding: 0;
+
+  overflow-y: auto;
+
+  border: 1px solid rgba(223,190,131,.26);
+  border-bottom: none;
+  border-radius: 24px 24px 0 0;
+
+  background: #191B21;
+  color: #F4F0E8;
+
+  box-shadow: 0 -12px 50px rgba(0,0,0,.45);
+}
+
+#sfuShareDialog::backdrop {
+  background: rgba(0,0,0,.58);
+}
+
+.sfu-share-sheet {
+  padding:
+    10px
+    17px
+    calc(18px + env(safe-area-inset-bottom,0px));
+
+  background:
+    radial-gradient(
+      ellipse at top,
+      rgba(223,190,131,.07),
+      transparent 65%
+    ),
+    #191B21;
+}
+
+/* HANDLE */
+
+.sfu-share-handle {
+  width: 34px;
+  height: 4px;
+
+  margin: 0 auto 18px;
+
+  border-radius: 999px;
+  background: rgba(255,255,255,.20);
+}
+
+/* HEADER */
+
+.sfu-share-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.sfu-share-header small {
+  color: #C5A36B;
+
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.sfu-share-header h3 {
+  margin: 6px 0;
+
+  color: #F4DFB7;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.sfu-share-header p {
+  margin: 0;
+
+  color: #A5A8B1;
+  font-size: 11px;
+}
+
+#sfuShareClose {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+
+  padding: 0;
+  border: none;
+
+  background: transparent;
+  color: #B5B5BC;
+
+  font-size: 26px;
+}
+
+/* ==========================================
+   ROOM LINK CARD
+========================================== */
+
+.sfu-share-link-card {
+  padding: 12px;
+
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 13px;
+
+  background: #25272E;
+}
+
+.sfu-share-room-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin-bottom: 10px;
+}
+
+.sfu-share-room-info span {
+  color: #A7A2A0;
+
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: .5px;
+}
+
+#sfuShareRoomId {
+  color: #F0D29A;
+
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.sfu-share-link-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+#sfuShareLink {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+
+  padding: 0 9px;
+
+  border: none;
+  outline: none;
+  border-radius: 7px;
+
+  background: #181A20;
+  color: #BBC0CA;
+
+  font-size: 11px;
+
+  text-overflow: ellipsis;
+
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+#sfuShareCopy {
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 36px;
+  padding: 0 11px;
+  gap: 5px;
+
+  border: none;
+  border-radius: 7px;
+
+  background: linear-gradient(
+    145deg,
+    #F0D8AB,
+    #D3AB6E
+  );
+
+  color: #302315;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+#sfuShareCopy svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ==========================================
+   SOCIAL APP GRID
+========================================== */
+
+.sfu-share-apps {
+  display: grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+
+  gap: 10px;
+  padding: 22px 0;
+}
+
+.sfu-share-app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  min-width: 0;
+
+  padding: 0;
+  gap: 8px;
+
+  border: none;
+  background: transparent;
+  color: #E6E6E9;
+}
+
+.sfu-share-app-icon {
+  display: grid;
+  place-items: center;
+
+  width: 47px;
+  height: 47px;
+
+  border-radius: 15px;
+  color: white;
+
+  box-shadow:
+    0 4px 12px rgba(0,0,0,.16);
+
+  transition: transform .15s ease;
+}
+
+.sfu-share-app:active .sfu-share-app-icon {
+  transform: scale(.90);
+}
+
+.sfu-share-app-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.sfu-share-app small {
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.sfu-share-app-icon.zalo {
+  background: #0068FF;
+}
+
+.sfu-share-app-icon.zalo b {
+  font-size: 14px;
+  letter-spacing: -.6px;
+}
+
+.sfu-share-app-icon.facebook {
+  background: #1877F2;
+}
+
+.sfu-share-app-icon.telegram {
+  background: #229ED9;
+}
+
+.sfu-share-app-icon.whatsapp {
+  background: #25B963;
+}
+
+/* ==========================================
+   NATIVE SHARING
+========================================== */
+
+#sfuShareNative {
+  width: 100%;
+  min-height: 43px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 9px;
+  padding: 10px;
+
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 11px;
+
+  background: #292B32;
+  color: #E9D7B7;
+
+  font-size: 12px;
+  font-weight: 650;
+}
+
+#sfuShareNative svg {
+  width: 17px;
+  height: 17px;
+
+  color: #DFBE83;
+}
+
+#sfuShareStatus {
+  margin: 12px 0 0;
+
+  color: #9DDFB6;
+  font-size: 11px;
+  line-height: 1.5;
+
+  text-align: center;
+}
+
+#sfuShareStatus:empty {
+  display: none;
+}
+
+@media (max-width: 380px) {
+
+  .sfu-share-sheet {
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+
+  .sfu-share-app-icon {
+    width: 43px;
+    height: 43px;
+    border-radius: 13px;
+  }
+
+  .sfu-share-app small {
+    font-size: 9px;
+  }
+
+}
+
+
 </style>
 
 
@@ -11854,11 +12237,248 @@ body.sfu-role-viewer .sfu-chat-text {
 
     </section>
 
+
+    <!-- SHARE LIVE ROOM -->
+    <button
+      type="button"
+      id="sfuShareRoomBtn"
+      class="control sfu-share-control">
+
+      <svg
+        class="studio-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round">
+
+        <circle cx="18" cy="5" r="3"/>
+        <circle cx="6" cy="12" r="3"/>
+        <circle cx="18" cy="19" r="3"/>
+
+        <path d="m8.7 10.5 6.6-4"/>
+        <path d="m8.7 13.5 6.6 4"/>
+
+      </svg>
+
+      <span>SHARE ROOM</span>
+
+    </button>
+
   </aside>
 
 
 
+<!-- ==========================================
+     SFU - SHARE LIVE ROOM V1.0
+========================================== -->
 
+<dialog
+  id="sfuShareDialog"
+  class="sfu-share-dialog"
+  aria-labelledby="sfuShareTitle">
+
+  <div class="sfu-share-sheet">
+
+    <div class="sfu-share-handle"></div>
+
+    <!-- HEADER -->
+
+    <div class="sfu-share-header">
+
+      <div>
+
+        <small>LIVESTREAM PRO</small>
+
+        <h3 id="sfuShareTitle">
+          Share Live Room
+        </h3>
+
+        <p>Invite your friends to watch live.</p>
+
+      </div>
+
+      <button
+        type="button"
+        id="sfuShareClose"
+        aria-label="Close sharing">
+
+        &times;
+
+      </button>
+
+    </div>
+
+    <!-- ROOM LINK -->
+
+    <div class="sfu-share-link-card">
+
+      <div class="sfu-share-room-info">
+
+        <span>ROOM ID</span>
+
+        <strong id="sfuShareRoomId">—</strong>
+
+      </div>
+
+      <div class="sfu-share-link-row">
+
+        <input
+          id="sfuShareLink"
+          type="text"
+          aria-label="Livestream room link"
+          readonly
+        />
+
+        <button
+          type="button"
+          id="sfuShareCopy">
+
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8">
+
+            <rect x="8" y="8"
+                  width="12" height="12" rx="2"/>
+
+            <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>
+
+          </svg>
+
+          <span>Copy</span>
+
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- SOCIAL APPS -->
+
+    <div class="sfu-share-apps">
+
+      <!-- ZALO -->
+
+      <button
+        type="button"
+        class="sfu-share-app"
+        data-share="zalo">
+
+        <span class="sfu-share-app-icon zalo">
+          <b>Zalo</b>
+        </span>
+
+        <small>Zalo</small>
+
+      </button>
+
+      <!-- FACEBOOK -->
+
+      <button
+        type="button"
+        class="sfu-share-app"
+        data-share="facebook">
+
+        <span class="sfu-share-app-icon facebook">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+
+            <path d="M14 21v-8h2.7l.4-3H14V8c0-.9.3-1.5 1.6-1.5H17V3.8c-.5-.1-1.4-.2-2.4-.2-2.5 0-4.2 1.5-4.2 4.3V10H8v3h2.4v8Z"/>
+
+          </svg>
+        </span>
+
+        <small>Facebook</small>
+
+      </button>
+
+      <!-- TELEGRAM -->
+
+      <button
+        type="button"
+        class="sfu-share-app"
+        data-share="telegram">
+
+        <span class="sfu-share-app-icon telegram">
+
+          <svg viewBox="0 0 24 24" fill="currentColor">
+
+            <path d="M21.8 3.5 18.6 20c-.2 1-1 1.2-1.8.6l-5-3.7-2.4 2.3c-.3.3-.5.5-1 .5l.4-5.1 9.3-8.4c.4-.4-.1-.6-.6-.3L6 13.1l-5-1.6c-1-.3-1-1 .2-1.5L20.6 2.6c.9-.3 1.4.2 1.2.9Z"/>
+
+          </svg>
+
+        </span>
+
+        <small>Telegram</small>
+
+      </button>
+
+      <!-- WHATSAPP -->
+
+      <button
+        type="button"
+        class="sfu-share-app"
+        data-share="whatsapp">
+
+        <span class="sfu-share-app-icon whatsapp">
+
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linejoin="round">
+
+            <path d="M20 11.5a8.5 8.5 0 0 1-12.6 7.4L3 20l1.2-4.3A8.5 8.5 0 1 1 20 11.5Z"/>
+
+            <path d="M8 7.5c-2 3 3.5 8.5 6.5 6.5l1-1.5-2.5-1.3-1 1c-1.5-.6-2.5-1.7-3-3l1-1L8.5 6Z"/>
+
+          </svg>
+
+        </span>
+
+        <small>WhatsApp</small>
+
+      </button>
+
+    </div>
+
+    <!-- NATIVE SHARE -->
+
+    <button
+      type="button"
+      id="sfuShareNative">
+
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round">
+
+        <path d="M12 16V3m-5 5 5-5 5 5"/>
+        <path d="M5 12H3v9h18v-9h-2"/>
+
+      </svg>
+
+      <span>More sharing options</span>
+
+    </button>
+
+    <!-- STATUS -->
+
+    <p
+      id="sfuShareStatus"
+      role="status"
+      aria-live="polite">
+    </p>
+
+  </div>
+
+</dialog>
 
   <!-- ==========================================
      SFU WATCH & PLAY - MILITARY
@@ -15286,6 +15906,310 @@ document.addEventListener("keydown", event => {
   }
 });
 
+
+/* ==========================================
+   LIVESTREAM PRO
+   SHARE LIVE ROOM V1.0
+========================================== */
+
+const sfuShareDialog = $("sfuShareDialog");
+const sfuShareRoomBtn = $("sfuShareRoomBtn");
+const sfuShareClose = $("sfuShareClose");
+const sfuShareLink = $("sfuShareLink");
+const sfuShareCopy = $("sfuShareCopy");
+const sfuShareNative = $("sfuShareNative");
+const sfuShareStatus = $("sfuShareStatus");
+
+/* ==========================================
+   GENERATE SAFE VIEWER LINK
+========================================== */
+
+function getSfuShareUrl() {
+
+  const url = new URL(
+    "/broadcast-sfu.html",
+    "https://livestreampro.tv"
+  );
+
+  url.searchParams.set("room", roomId);
+  url.searchParams.set("mode", "viewer");
+
+  return url.toString();
+
+}
+
+/* SHARE DATA */
+
+function getSfuShareData() {
+
+  const hostName =
+    $("sfuHostName")?.textContent?.trim()
+    || "Livestream Pro";
+
+  return {
+
+    title: `${hostName} - Live Now`,
+
+    text:
+      `Join ${hostName}'s livestream on Livestream Pro!`,
+
+    url: getSfuShareUrl()
+
+  };
+
+}
+
+/* ==========================================
+   OPEN / CLOSE SHARE SHEET
+========================================== */
+
+function openSfuShareDialog() {
+
+  if (!roomId) return;
+
+  closeStudioSettings();
+
+  $("sfuShareRoomId").textContent = roomId;
+
+  sfuShareLink.value = getSfuShareUrl();
+
+  sfuShareStatus.textContent = "";
+
+  sfuShareCopy.querySelector("span").textContent =
+    "Copy";
+
+  if (!sfuShareDialog.open) {
+
+    sfuShareDialog.showModal();
+
+  }
+
+}
+
+function closeSfuShareDialog() {
+
+  if (sfuShareDialog.open) {
+
+    sfuShareDialog.close();
+
+  }
+
+}
+
+sfuShareRoomBtn.addEventListener(
+  "click",
+  openSfuShareDialog
+);
+
+sfuShareClose.addEventListener(
+  "click",
+  closeSfuShareDialog
+);
+
+sfuShareDialog.addEventListener("close", () => {
+
+  studioSettingsBtn?.focus({
+    preventScroll: true
+  });
+
+});
+
+/* TAP OUTSIDE TO CLOSE */
+
+sfuShareDialog.addEventListener("click", event => {
+
+  if (event.target === sfuShareDialog) {
+
+    closeSfuShareDialog();
+
+  }
+
+});
+
+/* ==========================================
+   COPY ROOM LINK
+========================================== */
+
+async function copySfuShareLink(
+  message = "Link copied successfully."
+) {
+
+  const link = getSfuShareUrl();
+
+  try {
+
+    await navigator.clipboard.writeText(link);
+
+  } catch {
+
+    sfuShareLink.focus();
+    sfuShareLink.select();
+
+    sfuShareLink.setSelectionRange(
+      0,
+      sfuShareLink.value.length
+    );
+
+    let copied = false;
+
+    try {
+
+      copied = document.execCommand("copy");
+
+    } catch {}
+
+    if (!copied) {
+
+      sfuShareStatus.textContent =
+        "Please select and copy the link manually.";
+
+      return false;
+
+    }
+
+  }
+
+  sfuShareCopy.querySelector("span").textContent =
+    "Copied";
+
+  sfuShareStatus.textContent = message;
+
+  return true;
+
+}
+
+sfuShareCopy.addEventListener("click", () => {
+
+  copySfuShareLink();
+
+});
+
+/* ==========================================
+   NATIVE DEVICE SHARING
+========================================== */
+
+async function shareSfuNative(
+  fallbackMessage = "Link copied. Paste it into your favorite app."
+) {
+
+  const data = getSfuShareData();
+
+  if (typeof navigator.share === "function") {
+
+    try {
+
+      await navigator.share(data);
+
+      return;
+
+    } catch (error) {
+
+      // User cancelled sharing
+      if (error?.name === "AbortError") {
+
+        return;
+
+      }
+
+    }
+
+  }
+
+  await copySfuShareLink(fallbackMessage);
+
+}
+
+sfuShareNative.addEventListener("click", () => {
+
+  shareSfuNative();
+
+});
+
+/* ==========================================
+   SOCIAL APPLICATION SHARING
+========================================== */
+
+document
+  .querySelectorAll(
+    "#sfuShareDialog [data-share]"
+  )
+  .forEach(button => {
+
+    button.addEventListener("click", () => {
+
+      const app = button.dataset.share;
+
+      const data = getSfuShareData();
+
+      const url = encodeURIComponent(data.url);
+
+      const text = encodeURIComponent(data.text);
+
+      let target = "";
+
+      switch (app) {
+
+        /* ZALO */
+
+        case "zalo":
+
+          shareSfuNative(
+            "Link copied. Open Zalo and paste it into a conversation."
+          );
+
+          return;
+
+        /* FACEBOOK */
+
+        case "facebook":
+
+          target =
+            "https://www.facebook.com/sharer/sharer.php?u="
+            + url;
+
+          break;
+
+        /* TELEGRAM */
+
+        case "telegram":
+
+          target =
+            "https://t.me/share/url?url="
+            + url
+            + "&text="
+            + text;
+
+          break;
+
+        /* WHATSAPP */
+
+        case "whatsapp":
+
+          target =
+            "https://wa.me/?text="
+            + encodeURIComponent(
+              data.text + "\n" + data.url
+            );
+
+          break;
+
+      }
+
+      if (target) {
+
+        window.open(
+          target,
+          "_blank",
+          "noopener,noreferrer"
+        );
+
+      }
+
+    });
+
+  });
+
+  
 // Chỉ cập nhật chữ, không xóa SVG icon.
 function setStudioButtonText(id, text) {
   const button = $(id);
