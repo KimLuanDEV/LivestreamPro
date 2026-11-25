@@ -18,7 +18,7 @@ console.log(
 );
 
 
-const ROOM_RELEASE_DELAY = 30000; // 30 giây (tuỳ bạn)
+const ROOM_RELEASE_DELAY = 90000; // 90 seconds
 
 const multer = require("multer");
 const express = require("express");
@@ -18154,10 +18154,30 @@ socket.on("sfu:viewer:moderate", async (data, ack) => {
     }
 
 
-    const failed = results.filter(
-      result => result.status === "rejected"
-    );
+    /* ==========================================
+   SFU - SAFE PARTICIPANT REMOVAL
+========================================== */
 
+const failed = results.filter(result => {
+
+  if (result.status !== "rejected") {
+    return false;
+  }
+
+  const error = result.reason;
+
+  // Participant already disconnected.
+  if (
+    error?.status === 404 ||
+    error?.code === "not_found"
+  ) {
+    return false;
+  }
+
+  // Preserve unexpected errors.
+  return true;
+
+});
 
     if (failed.length) {
 
@@ -18173,8 +18193,9 @@ socket.on("sfu:viewer:moderate", async (data, ack) => {
 
       ok: true,
 
-      mediaWarning:
-        results[0]?.status === "rejected",
+mediaWarning: failed.length > 0,
+
+
 
       message:
         "Viewer removed from the room."
