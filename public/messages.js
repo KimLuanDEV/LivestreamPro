@@ -1,4 +1,4 @@
-const socket = io();
+const socket = window.socket || io();
 
 const auth = JSON.parse(localStorage.getItem("user_profile") || "{}");
 const sysModal = document.getElementById("sysModal");
@@ -327,17 +327,18 @@ function showModal(text, okText="OK", cancelText=null){
 
 
 
-socket.on("connect", async () => {
+socket.on("connect", () => {
+
   offlineHandled = false;
 
   if (auth?.uid) {
-    socket.emit("auth-login", { uid: auth.uid });
 
-    // 🔔 ĐĂNG KÝ PUSH
-    setTimeout(() => {
-      enablePush().catch(console.error);
-    }, 1000);
+    socket.emit("auth-login", {
+      uid: auth.uid
+    });
+
   }
+
 });
 
 
@@ -1080,31 +1081,6 @@ div.onclick = async () => {
 }
 
 
-async function enablePush() {
-  if (!("serviceWorker" in navigator)) return;
-  if (!auth?.uid) return;
-
-  const reg = await navigator.serviceWorker.register("/sw.js");
-
-  let sub = await reg.pushManager.getSubscription();
-
-  if (!sub) {
-    const perm = await Notification.requestPermission();
-    if (perm !== "granted") return;
-
-    sub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: "BPG9kTxtU0Fso5VZqUFhqn_ZZLvTeKM32km3pLDnH2UCdKce-owuTMZ5PLzrKyrw_patHMVavHdDM4axJ7L9N7E"
-    });
-  }
-
-  // 🔥 GỬI SUB LÊN SERVER MỖI LẦN (UPSERT)
-  await fetch("/api/push-subscribe", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ uid: auth.uid, sub })
-  });
-}
 
 
 socket.on("msg-blocked", ({ reason }) => {

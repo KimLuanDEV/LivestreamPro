@@ -1,6 +1,6 @@
 /* ==========================================
    LIVESTREAM PRO
-   SECURE PUSH SERVICE WORKER V2.0
+   SECURE PUSH SERVICE WORKER V3.0
 ========================================== */
 
 self.addEventListener("install", event => {
@@ -96,35 +96,60 @@ self.addEventListener("push", event => {
 
     }
 
-    const title =
-      data.title || "Livestream Pro";
+/* ==========================================
+   ANTI-DUPLICATE NOTIFICATION V3.0
+========================================== */
 
-    const options = {
+const title =
+  data.title || "Livestream Pro";
 
-      body: data.body || "",
+const msgId =
+  data.data?.msgId || null;
 
-      icon: "/icons/icon-192.png",
+const fromUid =
+  data.data?.fromUid || null;
 
-      badge: "/icons/icon-192.png",
+const notificationTag =
+  msgId
+    ? `lsp-chat-${targetUid}-${fromUid}-${msgId}`
+    : data.tag
+      ? `lsp-${targetUid}-${data.tag}`
+      : null;
 
-      data: {
+const options = {
 
-        targetUid,
+  body: data.body || "",
 
-        url: data.url || "/messages.html",
+  icon: "/icons/icon-192.png",
 
-        type: data.data?.type || null,
+  badge: "/icons/icon-192.png",
 
-        fromUid: data.data?.fromUid || null
+  renotify: false,
 
-      }
+  ...(notificationTag
+    ? { tag: notificationTag }
+    : {}),
 
-    };
+  data: {
 
-    await self.registration.showNotification(
-      title,
-      options
-    );
+    targetUid,
+
+    msgId,
+
+    url: data.url || "/messages.html",
+
+    type: data.data?.type || null,
+
+    fromUid
+
+  }
+
+};
+
+await self.registration.showNotification(
+  title,
+  options
+);
 
   })());
 

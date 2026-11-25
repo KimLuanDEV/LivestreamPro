@@ -13895,121 +13895,6 @@ socket.on("disconnect", () => {
 
 
 
-// ================================
-// 💬 CHAT 1–1 (ADMIN BYPASS FRIEND)
-// ================================
-socket.on("private-message", async ({ to, text, msgId }) => {
-
-  const fromUid = socket.data.uid
-  const toUid = to
-
-  if (!fromUid || !toUid) return
-
-  const db = loadUsers()
-  const fromAcc = db[fromUid]
-  const toAcc   = db[toUid]
-
-  if (!fromAcc || !toAcc) return
-
-
-  // 🚫 BLOCK CHECK
-  if (
-    (fromAcc.profile?.blockedUsers || []).includes(toUid) ||
-    (toAcc.profile?.blockedUsers || []).includes(fromUid)
-  ){
-    return
-  }
-
-
-// =========================
-// 👑 ADMIN CHECK
-// =========================
-const senderIsAdmin =
-  socket.data.role === "admin" ||
-  fromAcc.role === "admin" ||
-  fromAcc.profile?.role === "admin"
-
-const receiverIsAdmin =
-  toAcc.role === "admin" ||
-  toAcc.profile?.role === "admin"
-
-
-// =========================
-// 👥 FRIEND CHECK
-// =========================
-const needFriendCheck =
-  !senderIsAdmin && !receiverIsAdmin
-
-if (needFriendCheck) {
-
-  const friends = fromAcc.profile?.friends || []
-
-  if (!friends.includes(toUid)) {
-
-    socket.emit("msg-blocked",{
-      reason:"not_friend"
-    })
-
-    return
-  }
-
-}
-
-
-  const msg = {
-    id: msgId || Date.now()+"_"+Math.random().toString(36).slice(2),
-    from: fromUid,
-    to: toUid,
-    text: text || "",
-    time: Date.now(),
-    read:false
-  }
-
-
-  // 💾 SAVE INBOX
-  ;[fromUid,toUid].forEach(uid=>{
-    if(!userInbox.has(uid)) userInbox.set(uid,[])
-    userInbox.get(uid).unshift(msg)
-  })
-
-  saveInbox(Object.fromEntries(userInbox))
-
-
-  // 🔁 REALTIME
-  const sockets = activeUsers.get(toUid)
-
-  if(sockets){
-    for(const sid of sockets){
-
-      
-io.to(sid).emit("private-message", {
-  from: {
-    uid: fromUid,
-    name: fromAcc.profile.name,
-    avatar: fromAcc.profile.avatar
-  },
-  text: msg.text,
-  msgId: msg.id,
-  time: msg.time
-});
-    }
-  }
-
-
-  // 🔔 PUSH OFFLINE
-  await sendPushToUser(toUid,{
-    title: senderIsAdmin
-      ? "You have a new message."
-      : "New message",
-
-    body: text?.slice(0,80) || "You have a new message",
-
-    url:`/messages.html?uid=${fromUid}`,
-    tag:"chat-message"
-  })
-
-})
-
 
 // ================================
 // 🔔 USER ĐÃ CHUYỂN KHOẢN (TOPUP)
@@ -15745,7 +15630,11 @@ const yourFriends = Array.isArray(you.profile.friends)
   ? you.profile.friends
   : [];
 
-const isAdmin = me.role === "admin";
+const isAdmin =
+  me.role === "admin" ||
+  me.profile?.role === "admin" ||
+  you.role === "admin" ||
+  you.profile?.role === "admin";
 
 
 
@@ -15780,6 +15669,39 @@ if (type === "video" && media) {
  const id = msgId || Date.now() + "_" + Math.random().toString(36).slice(2);
 
 
+ /* ==========================================
+   PRIVATE MESSAGE - DUPLICATE PROTECTION
+========================================== */
+
+const existingMessage = (
+  userInbox.get(to) || []
+).find(item =>
+
+  item.id === id &&
+  item.from === fromUid &&
+  item.to === to
+
+);
+
+if (existingMessage) {
+
+  console.log(
+    "[CHAT] Duplicate message ignored:",
+    id
+  );
+
+  socket.emit("msg-status", {
+    msgId: id,
+    status: existingMessage.delivered
+      ? "delivered"
+      : "stored"
+  });
+
+  return;
+
+}
+
+
   const msg = {
     id,
     from: fromUid,
@@ -15791,10 +15713,30 @@ if (type === "video" && media) {
     delivered: false
   };
 
-  // 1️⃣ LƯU VÀO INBOX NGƯỜI NHẬN
-  if (!userInbox.has(to)) userInbox.set(to, []);
-  userInbox.get(to).push(msg);
-  saveInbox(Object.fromEntries(userInbox));
+// SAVE MESSAGE WITHOUT DUPLICATES
+
+for (const uid of new Set([fromUid, to])) {
+
+  if (!userInbox.has(uid)) {
+    userInbox.set(uid, []);
+  }
+
+  const inbox = userInbox.get(uid);
+
+  const exists = inbox.some(
+    item =>
+      item.id === msg.id &&
+      item.from === fromUid &&
+      item.to === to
+  );
+
+  if (!exists) {
+    inbox.push({ ...msg });
+  }
+
+}
+
+saveInbox(Object.fromEntries(userInbox));
 
   // 2️⃣ GỬI REALTIME NẾU ONLINE
   const sockets = activeUsers.get(to);
@@ -15826,25 +15768,28 @@ io.to(sid).emit("private-message", {
 
 
 /* ==========================================
-   PRIVATE MESSAGE - SECURE PUSH
+   PRIVATE MESSAGE - SECURE PUSH V3.0
 ========================================== */
-
-const pushSender = loadUsers()[fromUid];
 
 await sendPushToUser(to, {
 
-  title: `💬 ${pushSender?.profile?.name || "New message"}`,
+  title: `💬 ${me.profile?.name || "New message"}`,
 
   body:
     type === "image" ? "📷 Image"
     : type === "video" ? "🎥 Video"
     : payloadText,
 
-  tag: "chat",
+  tag: `chat-${fromUid}-${id}`,
 
   data: {
+
     type: "chat",
-    fromUid
+
+    fromUid,
+
+    msgId: id
+
   },
 
   url: `/messages.html?openChat=${encodeURIComponent(fromUid)}`

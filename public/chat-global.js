@@ -159,25 +159,86 @@ socket.on("offline-messages", msgs => {
   let notifyCount = 0;
   let lastFrom = null;
 
-  msgs.forEach(m => {
-    const key = getChatKey(m.from, m.to);
-    if (!key) return;
+msgs.forEach(m => {
 
-    const arr = JSON.parse(localStorage.getItem(key) || "[]");
-    arr.push(m);
-    localStorage.setItem(key, JSON.stringify(arr));
+  if (!m?.id || !m.from || !m.to) return;
 
-    notifyCount++;
-    lastFrom = m.from;
+  const uid = String(auth.uid);
+
+  if (String(m.to) !== uid) return;
+
+  const peer = String(m.from);
+
+  const key = getChatKey(uid, peer);
+
+  if (!key) return;
+
+  const clearKey =
+    "lsp_chat_clear_" +
+    JSON.stringify([uid, peer]);
+
+  const clearTime = Number(
+    localStorage.getItem(clearKey) || 0
+  );
+
+  const messageTime = Number(
+    m.time || String(m.id).split("_")[0]
+  );
+
+  if (
+    clearTime &&
+    (
+      !Number.isFinite(messageTime) ||
+      messageTime <= clearTime
+    )
+  ) {
+    return;
+  }
+
+  const arr = JSON.parse(
+    localStorage.getItem(key) || "[]"
+  );
+
+  if (
+    arr.some(item => item.id === m.id)
+  ) {
+    return;
+  }
+
+  arr.push({
+
+    ...m,
+
+    peer,
+
+    seen: false
+
   });
 
-// 🔔 Show a single combined notification
-if (!location.pathname.includes("messages.html") && notifyCount > 0) {
-  if (notifyCount === 1) {
-    showMsg(`📩 Message from ${lastFrom}`);
-  } else {
-    showMsg(`📩 You have ${notifyCount} new messages`);
-  }
+  localStorage.setItem(
+    key,
+    JSON.stringify(arr)
+  );
+
+  notifyCount++;
+
+  lastFrom = m.from;
+
+});
+
+/* ==========================================
+   OFFLINE MESSAGE - BADGE ONLY
+========================================== */
+
+if (
+  !location.pathname.includes("messages.html") &&
+  notifyCount > 0
+) {
+
+  document
+    .querySelector('[data-tab="chat"]')
+    ?.classList.add("has-new");
+
 }
 });
 
@@ -192,33 +253,119 @@ setInterval(() => {
 }, 15000);
 
 
-  // ===== RECEIVE PRIVATE MESSAGE ANYWHERE =====
-  socket.on("private-message", ({ from, text, msgId }) => {
+/* ==========================================
+   GLOBAL PRIVATE MESSAGE RECEIVER V3.0
+   SINGLE NOTIFICATION MODE
+========================================== */
 
-    if (!from?.uid || !text) return;
+socket.on("private-message", ({
+  from,
+  text,
+  msgId,
+  time
+}) => {
 
+  if (!from?.uid || !msgId || !text) return;
 
-    const a = auth.uid;
-    const b = from.uid;
-    const key = a < b ? "chat_" + a + "_" + b : "chat_" + b + "_" + a;
+  // Messages page has its own receiver
+  if (
+    location.pathname.includes("messages.html")
+  ) {
+    return;
+  }
 
-    const arr = JSON.parse(localStorage.getItem(key) || "[]");
+  const peer = String(from.uid);
+
+  const key = getChatKey(
+    auth.uid,
+    peer
+  );
+
+  if (!key) return;
+
+  /* ==========================================
+     PREVENT RESTORING DELETED MESSAGES
+  ========================================== */
+
+  const clearKey =
+    "lsp_chat_clear_" +
+    JSON.stringify([
+      String(auth.uid),
+      peer
+    ]);
+
+  const clearTime = Number(
+    localStorage.getItem(clearKey) || 0
+  );
+
+  const messageTime = Number(
+    time || String(msgId).split("_")[0]
+  );
+
+  if (
+    clearTime &&
+    (
+      !Number.isFinite(messageTime) ||
+      messageTime <= clearTime
+    )
+  ) {
+    return;
+  }
+
+  /* ==========================================
+     PREVENT DUPLICATE MESSAGES
+  ========================================== */
+
+  const arr = JSON.parse(
+    localStorage.getItem(key) || "[]"
+  );
+
+  const exists = arr.some(
+    item => item.id === msgId
+  );
+
+  if (!exists) {
+
     arr.push({
-      from: from.uid,
-      to: a,
+
+      id: msgId,
+
+      from: peer,
+
+      to: auth.uid,
+
       text,
-      time: Date.now(),
-      peer: from.uid
+
+      time: Number.isFinite(messageTime)
+        ? messageTime
+        : Date.now(),
+
+      peer,
+
+      seen: false
+
     });
-    localStorage.setItem(key, JSON.stringify(arr));
 
-if (!location.pathname.includes("messages.html")) {
-  showMsg(`📩 Message from ${from.name}: ${text.slice(0, 60)}`);
-  document.querySelector('[data-tab="chat"]')?.classList.add("has-new");
-}
+    localStorage.setItem(
+      key,
+      JSON.stringify(arr)
+    );
 
-    socket.emit("msg-seen", { to: from.uid, msgId });
-  });
+  }
+
+  /* ==========================================
+     UPDATE INBOX BADGE ONLY
+  ========================================== */
+
+  document
+    .querySelector('[data-tab="chat"]')
+    ?.classList.add("has-new");
+
+  // Web Push is handled exclusively by sw.js
+
+});
+
+
 
 })();
 
