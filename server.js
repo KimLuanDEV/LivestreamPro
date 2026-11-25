@@ -13054,6 +13054,7 @@ function getRoom(roomId) {
   liveStartTs: null,
   pinnedNote: null,
   hostProfile: null,
+  liveTopic: "",
   giftTotal: 0,
   giftByUser: new Map(),
   releaseTimer: null,
@@ -13697,13 +13698,21 @@ function getLobbyList() {
       continue;
     }
 
-    list.push({
-      roomId,
-      viewers: safeSet(room.viewers).size,
-      liveStartTs: room.liveStartTs,
-      host: room.hostProfile || null,
-      mediaMode: room.mediaMode || "sfu"
-    });
+list.push({
+  roomId,
+
+  viewers: safeSet(room.viewers).size,
+
+  liveStartTs: room.liveStartTs,
+
+  host: room.hostProfile || null,
+
+  liveTopic:
+    room.liveTopic || "Welcome to my live",
+
+  mediaMode: room.mediaMode || "sfu"
+});
+
   }
 
   list.sort((a, b) =>
@@ -16701,10 +16710,44 @@ socket.on("room-check", (data, cb) => {
 
   }
 
+/* ==========================================
+   SAVE LIVE TOPIC TO ROOM RESERVATION
+========================================== */
+
+const liveTopic = (
+  typeof data?.liveTopic === "string"
+    ? data.liveTopic
+    : ""
+)
+  .replace(/[\u0000-\u001F\u007F]/g, "")
+  .trim()
+  .slice(0, 60)
+  || "Welcome to my live";
+
+const reservation =
+  autoRoomReservations.get(roomId);
+
+if (!reservation) {
+
   return cb({
-    ok: true,
-    roomId
+    ok: false,
+    reason: "invalid_reservation"
   });
+
+}
+
+reservation.liveTopic = liveTopic;
+
+// Extend reservation before entering Live Studio
+
+reservation.expiresAt =
+  Date.now() + AUTO_ROOM_ID_TTL;
+
+return cb({
+  ok: true,
+  roomId,
+  liveTopic
+});
 
 });
 
@@ -17034,11 +17077,38 @@ if (!room.mediaMode) {
       }
     }
 
-    room.ownerUid = uid;
+room.ownerUid = uid;
+
+/* ==========================================
+   APPLY LIVE TOPIC
+========================================== */
+
+const reservation =
+  autoRoomReservations.get(roomId);
+
+if (
+  reservation &&
+  reservation.uid === String(uid)
+) {
+
+  room.liveTopic =
+    reservation.liveTopic ||
+    "Welcome to my live";
+
+}
+
+if (!room.liveTopic) {
+
+  room.liveTopic =
+    "Welcome to my live";
+
+}
 
 // Room successfully assigned to the host
 
 autoRoomReservations.delete(roomId);
+
+
   }
 
   socket.join(roomId);

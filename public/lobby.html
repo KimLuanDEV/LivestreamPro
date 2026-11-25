@@ -3191,16 +3191,60 @@ body.lobby-page #roomInput::placeholder {
   letter-spacing: 0;
 }
 
-.auto-room-id-note {
-  margin-top: 7px;
-  font-size: 10px;
-  color: #a99b82;
-  text-align: center;
-}
+
 
 #btnConfirmRoom:disabled {
   opacity: .45;
   cursor: not-allowed;
+}
+
+
+
+/* ==========================================
+   LIVE TOPIC
+========================================== */
+
+body.lobby-page #hostNameInput {
+  width: 100%;
+  min-height: 47px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff1d7;
+  background: #24252b;
+  border: 1px solid rgba(219,184,117,.31);
+  border-radius: 12px;
+  outline: none;
+}
+
+body.lobby-page #hostNameInput:focus {
+  border-color: #e4bf7a;
+}
+
+body.lobby-page #hostNameInput::placeholder {
+  color: #928a80;
+}
+
+.live-topic-counter {
+  margin-top: 6px;
+  padding-right: 3px;
+  color: #a99b82;
+  font-size: 10px;
+  text-align: right;
+}
+
+/* LIVE TOPIC ON LOBBY CARD */
+
+body.lobby-page .lobby-live-topic {
+  margin-top: 4px;
+
+  color: #d8c5a5;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 
@@ -3519,12 +3563,22 @@ body.lobby-page #roomInput::placeholder {
   tabindex="-1"
 />
 
-<div class="auto-room-id-note">
-  Automatically assigned by the system
-</div>
 
-    <label>Tên Host</label>
-    <input id="hostNameInput" placeholder="Tên hiển thị" />
+
+  <!-- LIVE TOPIC -->
+<label for="hostNameInput">Live Topic</label>
+
+<input
+  id="hostNameInput"
+  type="text"
+  placeholder="What is your live about?"
+  maxlength="60"
+  autocomplete="off"
+/>
+
+<div class="live-topic-counter">
+  <span id="liveTopicCount">0</span> / 60
+</div>
 
     <div class="modal-actions">
       <button id="btnCancelRoom" type="button">Hủy</button>
@@ -4284,6 +4338,27 @@ const roomInput = document.getElementById("roomInput");
 
 const hostNameInput = document.getElementById("hostNameInput");
 
+
+/* ==========================================
+   LIVE TOPIC CHARACTER COUNTER
+========================================== */
+
+hostNameInput?.addEventListener("input", () => {
+
+  const counter =
+    document.getElementById("liveTopicCount");
+
+  if (counter) {
+
+    counter.textContent =
+      String(hostNameInput.value.length);
+
+  }
+
+});
+
+
+
 let assignedRoomId = "";
 let roomRequestVersion = 0;
 
@@ -4308,8 +4383,11 @@ function openCreateRoom() {
   roomInput.readOnly = true;
   roomInput.placeholder = "Generating Room ID...";
 
-  hostNameInput.value = profile?.name || "";
-  hostNameInput.disabled = true;
+hostNameInput.value = "";
+hostNameInput.disabled = false;
+hostNameInput.readOnly = false;
+
+document.getElementById("liveTopicCount").textContent = "0";
 
   btnConfirmRoom.disabled = true;
   btnCancelRoom.disabled = false;
@@ -4433,10 +4511,17 @@ btnConfirmRoom?.addEventListener("click", () => {
 
   btnConfirmRoom.classList.add("is-loading");
 
-  socket.timeout(8000).emit(
-    "room-check",
-    { roomId: room },
-    (err, res) => {
+const liveTopic =
+  hostNameInput.value.trim().slice(0, 60)
+  || "Welcome to my live";
+
+socket.timeout(8000).emit(
+  "room-check",
+  {
+    roomId: room,
+    liveTopic: liveTopic
+  },
+  (err, res) => {
 
       if (err || !res?.ok) {
 
@@ -4846,6 +4931,14 @@ youtubeRoomStatus === "live"
   ${verified ? `<span class="tick-blue">✔</span>` : ``}
 </div>
 
+${!r.__virtual && r.liveTopic ? `
+
+  <div class="lobby-live-topic">
+    ${escapeHtml(r.liveTopic)}
+  </div>
+
+` : ""}
+
 ${r.__virtual ? `
   <div class="lobby-linked-label">
     EXTERNAL BROADCAST
@@ -5150,10 +5243,6 @@ setInterval(() => socket.emit("lobby-get"), 3000);
 }
 
 
-if (profile){
-  hostNameInput.value = profile.name;
-  hostNameInput.disabled = true;
-}
 
 
 
