@@ -10676,7 +10676,13 @@ const socket = io({
 });
 
 let lkRoom = null;
+
 let started = false;
+let sfuStarting = false;
+let sfuConnecting = false;
+let sfuNextConnectAt = 0;
+
+
 let stopping = false;
 let cameraOn = true;
 let micOn = true;
@@ -13910,8 +13916,31 @@ console.log(
 
 
 async function connectSFU() {
-  const credentials = await getToken();
 
+  if (lkRoom?.state === "connected") {
+    return;
+  }
+
+  if (
+    sfuConnecting ||
+    lkRoom?.state === "reconnecting"
+  ) {
+    throw new Error(
+      "LiveKit connection is already in progress."
+    );
+  }
+
+  if (Date.now() < sfuNextConnectAt) {
+    throw new Error(
+      "LiveKit connection is cooling down."
+    );
+  }
+
+  sfuConnecting = true;
+
+  try {
+
+    const credentials = await getToken();
     // Clear audio elements from an old room.
   if (!isViewer) {
 
@@ -14151,17 +14180,44 @@ if (!isViewer) {
 });
 
 
-  await lkRoom.connect(
-    credentials.url,
-    credentials.token,
-    {
-      autoSubscribe: true
+    await lkRoom.connect(
+      credentials.url,
+      credentials.token,
+      {
+        autoSubscribe: true,
+        maxRetries: 0
+      }
+    );
+
+    sfuNextConnectAt = 0;
+
+    setStatus("CONNECTED", true);
+
+  } catch (error) {
+
+    // Prevent repeated failed connections.
+    sfuNextConnectAt = Date.now() + 60000;
+
+    const failedRoom = lkRoom;
+    lkRoom = null;
+
+    if (failedRoom) {
+      await failedRoom.disconnect().catch(() => {});
     }
-  );
 
-  setStatus("CONNECTED", true);
+    console.warn(
+      "[SFU] Connection failed. Cooldown: 60 seconds."
+    );
+
+    throw error;
+
+  } finally {
+
+    sfuConnecting = false;
+
+  }
+
 }
-
 
 
 /* ==========================================
@@ -14206,7 +14262,9 @@ function hideHostRecovery() {
   hostRecoveryAttempts = 0;
 }
 
-function scheduleHostRecovery(delay = 2000) {
+
+function scheduleHostRecovery(delay = 15000) {
+
   if (
     isViewer ||
     !started ||
@@ -14215,13 +14273,27 @@ function scheduleHostRecovery(delay = 2000) {
   ) return;
 
   if (hostRecoveryTimer) {
-    clearTimeout(hostRecoveryTimer);
+    return;
   }
 
+  const cooldown = Math.max(
+    0,
+    sfuNextConnectAt - Date.now()
+  );
+
+  const safeDelay = Math.max(
+    delay,
+    cooldown
+  );
+
   hostRecoveryTimer = setTimeout(() => {
+
     hostRecoveryTimer = null;
+
     void recoverHostConnection();
-  }, delay);
+
+  }, safeDelay);
+
 }
 
 function showHostSessionEnded(message) {
@@ -14433,9 +14505,15 @@ await syncCameraFacingToServer();
       "Connection interrupted. Trying to restore your livestream..."
     );
 
-    scheduleHostRecovery(
-      Math.min(hostRecoveryAttempts * 2000, 5000)
-    );
+scheduleHostRecovery(
+  Math.min(
+    15000 * Math.pow(
+      2,
+      Math.min(hostRecoveryAttempts - 1, 3)
+    ),
+    120000
+  )
+);
 
   } finally {
 
@@ -14551,8 +14629,11 @@ async function startLive() {
     isViewer ||
     started ||
     stopping ||
-    hostSessionEnded
+    hostSessionEnded ||
+    sfuStarting
   ) return;
+
+  sfuStarting = true;
 
   showMessage("Starting livestream...");
 
@@ -14667,6 +14748,10 @@ socket.emit("live-start", { roomId });
     error.message ||
     "Unable to start livestream."
   );
+
+} finally {
+
+  sfuStarting = false;
 
 }
 
@@ -15273,21 +15358,39 @@ function hideViewerRecovery() {
   }
 }
 
-function scheduleViewerRecovery(delay = 5000) {
 
-  if (!isViewer || viewerLeaving || sfuEndStarted) {
+function scheduleViewerRecovery(delay = 15000) {
+
+  if (
+    !isViewer ||
+    viewerLeaving ||
+    sfuEndStarted
+  ) return;
+
+  if (viewerRecoveryTimer) {
     return;
   }
 
-  if (viewerRecoveryTimer) {
-    clearTimeout(viewerRecoveryTimer);
-  }
+  const cooldown = Math.max(
+    0,
+    sfuNextConnectAt - Date.now()
+  );
+
+  const safeDelay = Math.max(
+    delay,
+    cooldown
+  );
 
   viewerRecoveryTimer = setTimeout(() => {
+
     viewerRecoveryTimer = null;
-    recoverViewerConnection();
-  }, delay);
+
+    void recoverViewerConnection();
+
+  }, safeDelay);
+
 }
+
 
 async function recoverViewerConnection() {
 
