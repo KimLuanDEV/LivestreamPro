@@ -12703,6 +12703,119 @@ return res.json({
 
 
 /* ==========================================
+   SFU - DAILY GIFT SUPPORTERS V1.0
+   RESET 00:00 GMT+7
+========================================== */
+
+function sfuSupporterKey(hostUid, uid) {
+
+  return crypto
+    .createHash("sha256")
+    .update(
+      JSON.stringify([
+        String(hostUid),
+        String(uid)
+      ])
+    )
+    .digest("hex");
+
+}
+
+function getSfuDailySupporters(room, profile) {
+
+  const dayTs = getTodayStartTsVN();
+
+  const daily = profile?.sfuDailySupporters;
+
+  const entries =
+    daily?.dayTs === dayTs &&
+    Array.isArray(daily.entries)
+      ? daily.entries
+      : [];
+
+  return {
+
+    dayTs,
+
+    supporters: entries.map(item => ({
+
+      key: sfuSupporterKey(
+        room.ownerUid,
+        item.uid
+      ),
+
+      name: String(
+        item.name || "Viewer"
+      ).slice(0, 50),
+
+      avatar: normalizeAvatar(
+        String(item.avatar || "")
+      ),
+
+      amount: Number(item.amount) || 0
+
+    })).sort((a, b) => b.amount - a.amount)
+
+  };
+
+}
+
+
+/* ==========================================
+   SFU - AUTOMATIC DAILY RESET
+========================================== */
+
+let sfuSupporterDayTs = getTodayStartTsVN();
+
+setInterval(() => {
+
+  const dayTs = getTodayStartTsVN();
+
+  if (dayTs === sfuSupporterDayTs) return;
+
+  sfuSupporterDayTs = dayTs;
+
+  try {
+
+    const db = loadUsers();
+
+    for (const [id, room] of rooms) {
+
+      if (
+        !room.liveStartTs ||
+        !room.broadcasterId
+      ) continue;
+
+      const profile =
+        db[room.ownerUid]?.profile;
+
+      io.to(id).emit("sfu:supporters:daily", {
+
+        roomId: id,
+
+        ...getSfuDailySupporters(
+          room,
+          profile
+        )
+
+      });
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "[SFU SUPPORTERS RESET]",
+      error
+    );
+
+  }
+
+}, 1000).unref();
+
+
+
+/* ==========================================
    SFU - ACTIVE VIEWER DIRECTORY
 ========================================== */
 
@@ -12730,15 +12843,22 @@ function getSfuActiveViewers(room) {
       !room.viewers.has(viewer.socketId)
     ) continue;
 
-    viewers.push({
-      name: String(
-        viewer.name || "Player"
-      ).slice(0, 50),
+viewers.push({
 
-      avatar: normalizeAvatar(
-        String(viewer.avatar || "")
-      )
-    });
+  key: sfuSupporterKey(
+    room.ownerUid,
+    viewer.uid
+  ),
+
+  name: String(
+    viewer.name || "Player"
+  ).slice(0, 50),
+
+  avatar: normalizeAvatar(
+    String(viewer.avatar || "")
+  )
+
+});
   }
 
   return viewers;
@@ -18410,6 +18530,65 @@ socket.on("sfu:gift:balance", (data, ack) => {
   });
 });
 
+
+
+/* ==========================================
+   SFU - GET DAILY SUPPORTERS
+========================================== */
+
+socket.on("sfu:supporters:get", (data, ack) => {
+
+  if (typeof ack !== "function") return;
+
+  const access =
+    getAuthorizedSfuChatRoom(data?.roomId);
+
+  if (!access) {
+
+    return ack({
+      ok: false,
+      error: "Room access denied."
+    });
+
+  }
+
+  try {
+
+    const db = loadUsers();
+
+    const profile =
+      db[access.room.ownerUid]?.profile;
+
+    return ack({
+
+      ok: true,
+
+      roomId: access.id,
+
+      ...getSfuDailySupporters(
+        access.room,
+        profile
+      )
+
+    });
+
+  } catch (error) {
+
+    console.error(
+      "[SFU SUPPORTERS GET]",
+      error
+    );
+
+    return ack({
+      ok: false
+    });
+
+  }
+
+});
+
+
+
 socket.on("sfu:gift:send", (data, ack) => {
 
   if (typeof ack !== "function") return;
@@ -18627,12 +18806,93 @@ const transaction = {
     { ...transaction, direction: "sent" }
   ].slice(-200);
 
+
   hostProfile.liveGiftHistory = [
     ...(Array.isArray(hostProfile.liveGiftHistory)
       ? hostProfile.liveGiftHistory
       : []),
     { ...transaction, direction: "received" }
   ].slice(-200);
+
+
+  /* ==========================================
+   SFU - SAVE DAILY GIFT SUPPORTER
+========================================== */
+
+const dailyDayTs = getTodayStartTsVN();
+
+const previousDaily =
+  hostProfile.sfuDailySupporters;
+
+
+// RESET OLD DAY DATA
+
+const dailyEntries =
+
+  previousDaily?.dayTs === dailyDayTs &&
+  Array.isArray(previousDaily.entries)
+
+    ? previousDaily.entries
+    : [];
+
+
+// FIND EXISTING SUPPORTER
+
+const donorIndex = dailyEntries.findIndex(
+
+  item =>
+
+    String(item.uid) === String(access.uid)
+
+);
+
+
+// ACCUMULATE GIFT VALUE
+
+const donorRecord = {
+
+  uid: String(access.uid),
+
+  name: senderName,
+
+  avatar: String(
+    senderProfile.avatar || ""
+  ),
+
+  amount:
+
+    (Number(
+      dailyEntries[donorIndex]?.amount
+    ) || 0) + cost
+
+};
+
+
+// UPDATE OR CREATE SUPPORTER
+
+if (donorIndex === -1) {
+
+  dailyEntries.push(donorRecord);
+
+} else {
+
+  dailyEntries[donorIndex] = donorRecord;
+
+}
+
+
+// SAVE DAILY STATISTICS
+
+hostProfile.sfuDailySupporters = {
+
+  dayTs: dailyDayTs,
+
+  entries: dailyEntries
+
+};
+
+
+
 
   try {
     // Synchronous persistence before success is returned.
@@ -18683,6 +18943,21 @@ const payload = {
 
   // Only this room sees the gift animation.
   io.to(access.id).emit("sfu:gift:new", payload);
+
+  /* ==========================================
+   SFU - REALTIME SUPPORTER UPDATE
+========================================== */
+
+io.to(access.id).emit("sfu:supporters:daily", {
+
+  roomId: access.id,
+
+  ...getSfuDailySupporters(
+    room,
+    hostProfile
+  )
+
+});
 
   ack({
     ok: true,

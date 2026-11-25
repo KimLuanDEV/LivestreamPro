@@ -9058,6 +9058,155 @@ html.ios-pwa-height-fix #sfuChatPanel {
 
 
 
+/* ==========================================
+   SFU - DAILY GIFT SUPPORTERS V1.0
+========================================== */
+
+.sfu-supporter-heading {
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin: 16px 0 9px;
+  padding: 0 4px;
+
+  color: #d9b77b;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+
+}
+
+.sfu-supporter-row {
+
+  position: relative;
+
+  margin-bottom: 7px;
+  padding: 11px 9px;
+
+  border: 1px solid rgba(223,190,131,.13);
+  border-radius: 12px;
+
+  background: linear-gradient(
+    110deg,
+    rgba(223,190,131,.075),
+    rgba(255,255,255,.015)
+  );
+
+}
+
+.sfu-supporter-rank {
+
+  display: grid;
+  place-items: center;
+
+  width: 25px;
+  height: 30px;
+  flex-shrink: 0;
+
+  color: #92959d;
+
+  font-size: 12px;
+  font-weight: 900;
+
+}
+
+.sfu-supporter-rank[data-rank="1"] {
+
+  color: #f8d788;
+
+  font-size: 16px;
+
+  text-shadow:
+    0 0 13px rgba(255,200,80,.5);
+
+}
+
+.sfu-supporter-rank[data-rank="2"] {
+
+  color: #cbd3e0;
+  font-size: 14px;
+
+}
+
+.sfu-supporter-rank[data-rank="3"] {
+
+  color: #cd9467;
+  font-size: 13px;
+
+}
+
+.sfu-supporter-row .sfu-viewer-info {
+
+  flex: 1;
+  min-width: 0;
+
+}
+
+.sfu-supporter-row .sfu-viewer-name {
+
+  display: block;
+
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+}
+
+.sfu-supporter-value {
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  flex-shrink: 0;
+  gap: 4px;
+
+  margin-left: auto;
+
+}
+
+.sfu-supporter-value strong {
+
+  color: #f3cf88;
+
+  font-size: 12px;
+  font-weight: 850;
+
+  font-variant-numeric: tabular-nums;
+
+}
+
+.sfu-supporter-value small {
+
+  color: #98969b;
+  font-size: 9px;
+
+}
+
+.sfu-supporter-offline {
+
+  color: #85858b !important;
+
+}
+
+.sfu-supporter-reset {
+
+  padding: 13px 0 5px;
+
+  color: #948674;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .5px;
+
+  text-align: center;
+
+}
+
+
 
 </style>
 
@@ -11000,6 +11149,114 @@ const sfuViewerSummary = $("sfuViewerSummary");
 
 let currentSfuViewers = [];
 
+
+/* ==========================================
+   SFU - DAILY SUPPORTER STATE
+========================================== */
+
+let sfuDailySupporters = [];
+
+let sfuSupporterDayTs = 0;
+
+let sfuSupporterRequest = 0;
+
+
+/* APPLY SERVER DATA */
+
+function applySfuDailySupporters(data) {
+
+  if (
+    data?.roomId !== roomId ||
+    !Array.isArray(data.supporters)
+  ) return;
+
+  const dayTs = Number(data.dayTs) || 0;
+
+  if (dayTs < sfuSupporterDayTs) return;
+
+  sfuSupporterDayTs = dayTs;
+
+  sfuDailySupporters =
+    data.supporters.filter(
+
+      viewer =>
+        viewer &&
+        Number(viewer.amount) > 0
+
+    );
+
+  if (
+    !sfuViewerOverlay.classList.contains("hidden")
+  ) {
+
+    renderSfuViewerList();
+
+  }
+
+}
+
+
+/* REALTIME UPDATE */
+
+socket.on("sfu:supporters:daily", data => {
+
+  if (data?.roomId !== roomId) return;
+
+  sfuSupporterRequest++;
+
+  applySfuDailySupporters(data);
+
+});
+
+
+/* REQUEST DAILY DATA */
+
+function refreshSfuDailySupporters() {
+
+  if (!socket.connected) return;
+
+  const request = ++sfuSupporterRequest;
+
+  socket.timeout(5000).emit(
+
+    "sfu:supporters:get",
+
+    { roomId },
+
+    (error, data) => {
+
+      if (
+        !error &&
+        data?.ok &&
+        request === sfuSupporterRequest
+      ) {
+
+        applySfuDailySupporters(data);
+
+      }
+
+    }
+
+  );
+
+}
+
+
+/* RECOVER MISSED UPDATES */
+
+setInterval(() => {
+
+  if (
+    !sfuViewerOverlay.classList.contains("hidden")
+  ) {
+
+    refreshSfuDailySupporters();
+
+  }
+
+}, 60000);
+
+
 function safeSfuViewerAvatar(value) {
   const raw = String(value || "").trim();
 
@@ -11019,6 +11276,10 @@ function safeSfuViewerAvatar(value) {
   return SFU_DEFAULT_AVATAR;
 }
 
+/* ==========================================
+   SFU - VIEWER & SUPPORTER DIRECTORY
+========================================== */
+
 function renderSfuViewerList() {
 
   sfuViewerList.replaceChildren();
@@ -11026,59 +11287,321 @@ function renderSfuViewerList() {
   const count = currentSfuViewers.length;
 
   sfuViewerSummary.textContent =
+
     `${count.toLocaleString("en-US")} ` +
+
     `${count === 1 ? "person" : "people"} watching`;
 
-  if (count === 0) {
-    const empty = document.createElement("p");
 
-    empty.className = "sfu-viewer-empty";
-    empty.textContent = "No viewers yet.";
+  /* ACTIVE VIEWERS */
 
-    sfuViewerList.appendChild(empty);
-    return;
+  const active = new Map(
+
+    currentSfuViewers.map(viewer => [
+
+      viewer.key,
+      viewer
+
+    ])
+
+  );
+
+
+  /* DAILY SUPPORTERS */
+
+  const supporters = [
+
+    ...sfuDailySupporters
+
+  ].sort((a, b) => b.amount - a.amount);
+
+
+  const supporterKeys = new Set(
+
+    supporters.map(viewer => viewer.key)
+
+  );
+
+
+  /* NORMAL VIEWERS */
+
+  const others = currentSfuViewers.filter(
+
+    viewer => !supporterKeys.has(viewer.key)
+
+  );
+
+
+  const fragment =
+    document.createDocumentFragment();
+
+
+  /* SECTION HEADING */
+
+  function heading(text) {
+
+    const element =
+      document.createElement("div");
+
+    element.className =
+      "sfu-supporter-heading";
+
+    element.textContent = text;
+
+    fragment.appendChild(element);
+
   }
 
-  const fragment = document.createDocumentFragment();
 
-  for (const viewer of currentSfuViewers) {
+  /* EMPTY STATE */
 
-    const row = document.createElement("div");
-    row.className = "sfu-viewer-person";
+  function emptyMessage(text) {
 
-    const avatar = document.createElement("img");
-    avatar.className = "sfu-viewer-avatar";
+    const element =
+      document.createElement("p");
+
+    element.className =
+      "sfu-viewer-empty";
+
+    element.textContent = text;
+
+    fragment.appendChild(element);
+
+  }
+
+
+  /* CREATE VIEWER ROW */
+
+  function addRow(
+
+    viewer,
+
+    rank = 0,
+
+    amount = 0,
+
+    online = true
+
+  ) {
+
+    const row =
+      document.createElement("div");
+
+    row.className =
+      "sfu-viewer-person";
+
+
+    /* SUPPORTER RANK */
+
+    if (rank > 0) {
+
+      row.classList.add(
+        "sfu-supporter-row"
+      );
+
+      const rankLabel =
+        document.createElement("span");
+
+      rankLabel.className =
+        "sfu-supporter-rank";
+
+      rankLabel.dataset.rank =
+        String(rank);
+
+      rankLabel.textContent =
+
+        String(rank).padStart(2, "0");
+
+      row.appendChild(rankLabel);
+
+    }
+
+
+    /* AVATAR */
+
+    const avatar =
+      document.createElement("img");
+
+    avatar.className =
+      "sfu-viewer-avatar";
+
     avatar.alt = "";
     avatar.loading = "lazy";
     avatar.decoding = "async";
 
     avatar.onerror = () => {
+
       avatar.onerror = null;
-      avatar.src = SFU_DEFAULT_AVATAR;
+
+      avatar.src =
+        SFU_DEFAULT_AVATAR;
+
     };
 
-    avatar.src = safeSfuViewerAvatar(viewer.avatar);
+    avatar.src =
+      safeSfuViewerAvatar(viewer.avatar);
 
-    const info = document.createElement("div");
-    info.className = "sfu-viewer-info";
 
-    const name = document.createElement("strong");
-    name.className = "sfu-viewer-name";
+    /* USER INFORMATION */
+
+    const info =
+      document.createElement("div");
+
+    info.className =
+      "sfu-viewer-info";
+
+
+    const name =
+      document.createElement("strong");
+
+    name.className =
+      "sfu-viewer-name";
+
     name.textContent = String(
+
       viewer.name || "Player"
+
     ).slice(0, 50);
 
-    const presence = document.createElement("span");
-    presence.className = "sfu-viewer-presence";
-    presence.textContent = "Watching now";
+
+    /* ONLINE STATUS */
+
+    const presence =
+      document.createElement("span");
+
+    presence.className =
+      "sfu-viewer-presence";
+
+    presence.textContent =
+
+      online
+
+        ? "Watching now"
+
+        : "Not watching now";
+
+
+    if (!online) {
+
+      presence.classList.add(
+        "sfu-supporter-offline"
+      );
+
+    }
+
 
     info.append(name, presence);
+
     row.append(avatar, info);
 
+
+    /* TOTAL GIFTS */
+
+    if (rank > 0) {
+
+      const value =
+        document.createElement("div");
+
+      value.className =
+        "sfu-supporter-value";
+
+
+      const total =
+        document.createElement("strong");
+
+      total.textContent =
+
+        "💎 " +
+
+        Number(amount).toLocaleString("en-US");
+
+
+      const label =
+        document.createElement("small");
+
+      label.textContent =
+        "Gift value";
+
+
+      value.append(total, label);
+
+      row.appendChild(value);
+
+    }
+
+
     fragment.appendChild(row);
+
   }
 
+
+  /* TODAY'S SUPPORTERS */
+
+  heading("TODAY'S SUPPORTERS");
+
+
+  if (!supporters.length) {
+
+    emptyMessage("No gifts today.");
+
+  }
+
+
+  supporters.forEach((donor, index) => {
+
+    const liveViewer =
+      active.get(donor.key);
+
+    addRow(
+
+      liveViewer || donor,
+
+      index + 1,
+
+      donor.amount,
+
+      Boolean(liveViewer)
+
+    );
+
+  });
+
+
+  /* OTHER VIEWERS */
+
+  heading("OTHER VIEWERS");
+
+
+  if (!others.length) {
+
+    emptyMessage("No other viewers.");
+
+  }
+
+
+  others.forEach(viewer => {
+
+    addRow(viewer);
+
+  });
+
+
+  /* DAILY RESET INFORMATION */
+
+  const reset =
+    document.createElement("div");
+
+  reset.className =
+    "sfu-supporter-reset";
+
+  reset.textContent =
+    "DAILY RESET · 00:00 GMT+7";
+
+  fragment.appendChild(reset);
+
+
   sfuViewerList.appendChild(fragment);
+
 }
 
 /* ==========================================
@@ -11184,17 +11707,21 @@ function updateSfuViewerDirectory(viewers) {
       v && typeof v === "object"
     )
 
-    .map(v => ({
+.map(v => ({
 
-      name: String(
-        v.name || "Player"
-      ),
+  key: String(
+    v.key || ""
+  ),
 
-      avatar: String(
-        v.avatar || ""
-      )
+  name: String(
+    v.name || "Player"
+  ),
 
-    }));
+  avatar: String(
+    v.avatar || ""
+  )
+
+}));
 
 
   // UPDATE TOP AVATARS
@@ -11219,21 +11746,41 @@ function updateSfuViewerDirectory(viewers) {
 
 function openSfuViewerList() {
 
-  if (sfuViewerBadge.classList.contains("hidden")) {
+  if (
+    sfuViewerBadge.classList.contains("hidden")
+  ) {
+
     return;
+
   }
+
 
   renderSfuViewerList();
 
-  sfuViewerOverlay.classList.remove("hidden");
 
-  sfuViewerBadge.setAttribute(
-    "aria-expanded",
-    "true"
+  sfuViewerOverlay.classList.remove(
+    "hidden"
   );
 
+
+  sfuViewerBadge.setAttribute(
+
+    "aria-expanded",
+
+    "true"
+
+  );
+
+
+  /* LOAD DAILY SUPPORTERS */
+
+  refreshSfuDailySupporters();
+
+
   sfuViewerClose.focus();
+
 }
+
 
 function closeSfuViewerList() {
 
