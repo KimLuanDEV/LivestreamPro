@@ -9208,6 +9208,291 @@ html.ios-pwa-height-fix #sfuChatPanel {
 
 
 
+/* ==========================================
+   SFU - VIEWER MODERATION UI V1.0
+========================================== */
+
+.sfu-moderation-overlay {
+
+  position: fixed;
+  inset: 0;
+  z-index: 100010;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  background: rgba(0,0,0,.68);
+
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+}
+
+.sfu-moderation-panel {
+
+  width: min(100%, 430px);
+
+  max-height: 90dvh;
+  overflow-y: auto;
+
+  padding:
+    12px
+    18px
+    calc(20px + env(safe-area-inset-bottom));
+
+  border: 1px solid rgba(223,190,131,.25);
+
+  border-radius: 25px 25px 0 0;
+
+  background:
+    radial-gradient(
+      ellipse at top,
+      rgba(223,190,131,.09),
+      transparent 70%
+    ),
+    #15171d;
+
+  box-shadow:
+    0 -20px 60px rgba(0,0,0,.5);
+
+  animation: sheetRise .22s ease-out;
+
+}
+
+.sfu-moderation-handle {
+
+  width: 36px;
+  height: 4px;
+
+  margin: 0 auto 16px;
+
+  border-radius: 20px;
+  background: #655c50;
+
+}
+
+.sfu-moderation-title {
+
+  color: #dfbe83;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 2px;
+
+  text-align: center;
+
+}
+
+.sfu-moderation-profile {
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 20px 0;
+
+}
+
+.sfu-moderation-avatar {
+
+  width: 68px;
+  height: 68px;
+
+  object-fit: cover;
+
+  border: 2px solid #c6a56e;
+  border-radius: 50%;
+
+  box-shadow:
+    0 0 25px rgba(223,190,131,.16);
+
+}
+
+.sfu-moderation-name {
+
+  max-width: 100%;
+
+  color: #f4eee5;
+
+  font-size: 17px;
+  font-weight: 800;
+
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+}
+
+.sfu-moderation-gifts {
+
+  color: #efce8f;
+
+  font-size: 13px;
+  font-weight: 800;
+
+}
+
+.sfu-moderation-actions {
+
+  display: grid;
+  gap: 9px;
+
+}
+
+.sfu-mod-action {
+
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  min-height: 68px;
+
+  gap: 13px;
+  padding: 13px;
+
+  border: 1px solid rgba(223,190,131,.16);
+  border-radius: 14px;
+
+  background: rgba(223,190,131,.06);
+
+  color: #e8c88e;
+  text-align: left;
+
+}
+
+.sfu-mod-action svg {
+
+  flex-shrink: 0;
+
+  width: 23px;
+  height: 23px;
+
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  fill: none;
+
+}
+
+.sfu-mod-action span {
+
+  flex: 1;
+  min-width: 0;
+
+}
+
+.sfu-mod-action strong {
+
+  display: block;
+
+  font-size: 13px;
+  font-weight: 750;
+
+}
+
+.sfu-mod-action small {
+
+  display: block;
+
+  margin-top: 5px;
+
+  color: #9ca0ab;
+
+  font-size: 10px;
+
+}
+
+.sfu-mod-action.danger {
+
+  background: rgba(225,77,87,.09);
+
+  border-color: rgba(225,77,87,.23);
+
+  color: #ff9299;
+
+}
+
+.sfu-mod-action.restore {
+
+  background: rgba(64,180,115,.09);
+
+  border-color: rgba(64,180,115,.2);
+
+  color: #8edbb0;
+
+}
+
+.sfu-mod-cancel {
+
+  width: 100%;
+  min-height: 44px;
+
+  margin-top: 12px;
+
+  border: 0;
+  border-radius: 12px;
+
+  background: rgba(255,255,255,.05);
+
+  color: #b4b7bf;
+
+  font-size: 12px;
+  font-weight: 700;
+
+}
+
+.sfu-mod-target {
+
+  cursor: pointer;
+
+  transition: background .15s ease;
+
+}
+
+.sfu-mod-target:active {
+
+  background: rgba(223,190,131,.13);
+
+}
+
+.sfu-mod-target:focus-visible {
+
+  outline: 1px solid #dfbe83;
+
+}
+
+.sfu-comment-blocked {
+
+  color: #ff9299 !important;
+
+}
+
+.sfu-mod-error {
+
+  min-height: 16px;
+
+  margin: 10px 0 0;
+
+  color: #ff9299;
+
+  text-align: center;
+  font-size: 11px;
+
+}
+
+.sfu-mod-error:empty {
+  display: none;
+}
+
+
+
+
 </style>
 
 
@@ -9704,6 +9989,130 @@ html.ios-pwa-height-fix #sfuChatPanel {
 <!-- ======================================
      SFU - LIVE VIEWERS SHEET
 ====================================== -->
+
+
+<!-- ========================================
+     SFU - VIEWER MANAGEMENT
+========================================= -->
+
+<div
+  id="sfuModerationOverlay"
+  class="sfu-moderation-overlay hidden">
+
+  <section
+    class="sfu-moderation-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Viewer management">
+
+    <div class="sfu-moderation-handle"></div>
+
+    <div class="sfu-moderation-title">
+      VIEWER MANAGEMENT
+    </div>
+
+    <div class="sfu-moderation-profile">
+
+      <img
+        id="sfuModAvatar"
+        class="sfu-moderation-avatar"
+        src="/icons/icon-192.png"
+        alt="">
+
+      <strong
+        id="sfuModName"
+        class="sfu-moderation-name">
+        Viewer
+      </strong>
+
+      <span
+        id="sfuModGifts"
+        class="sfu-moderation-gifts">
+        💎 0
+      </span>
+
+    </div>
+
+    <div class="sfu-moderation-actions">
+
+      <!-- BLOCK COMMENTS -->
+
+      <button
+        type="button"
+        id="sfuModMute"
+        class="sfu-mod-action">
+
+        <svg viewBox="0 0 24 24">
+          <path d="M21 11a8 8 0 0 1-8 8H4l2-4"/>
+          <path d="M3 3l18 18"/>
+          <path d="M5 11V9a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6"/>
+        </svg>
+
+        <span>
+          <strong>Block Comments</strong>
+          <small>Disable commenting in this room</small>
+        </span>
+
+      </button>
+
+      <!-- UNBLOCK COMMENTS -->
+
+      <button
+        type="button"
+        id="sfuModUnmute"
+        class="sfu-mod-action restore hidden">
+
+        <svg viewBox="0 0 24 24">
+          <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5H3l2.5-5"/>
+          <path d="M5 13a8 8 0 1 1 16-1.5"/>
+          <path d="m8 11 3 3 5-6"/>
+        </svg>
+
+        <span>
+          <strong>Unblock Comments</strong>
+          <small>Restore commenting permissions</small>
+        </span>
+
+      </button>
+
+      <!-- KICK VIEWER -->
+
+      <button
+        type="button"
+        id="sfuModKick"
+        class="sfu-mod-action danger">
+
+        <svg viewBox="0 0 24 24">
+          <path d="M10 17l5-5-5-5"/>
+          <path d="M15 12H3"/>
+          <path d="M15 3h5v18h-5"/>
+        </svg>
+
+        <span>
+          <strong>Kick from Room</strong>
+          <small>Remove viewer and prevent rejoining</small>
+        </span>
+
+      </button>
+
+    </div>
+
+    <p
+      id="sfuModError"
+      class="sfu-mod-error">
+    </p>
+
+    <button
+      type="button"
+      id="sfuModCancel"
+      class="sfu-mod-cancel">
+      CANCEL
+    </button>
+
+  </section>
+
+</div>
+
 
 <div
   id="sfuViewerOverlay"
@@ -11530,6 +11939,89 @@ function renderSfuViewerList() {
     }
 
 
+    /* ==========================================
+   SFU - CLICK VIEWER TO MANAGE
+========================================== */
+
+if (viewer.commentBlocked) {
+
+  presence.textContent =
+    "Comments blocked";
+
+  presence.classList.add(
+    "sfu-comment-blocked"
+  );
+
+}
+
+
+if (
+  !isViewer &&
+  online &&
+  viewer.key &&
+  viewer.canModerate
+) {
+
+  row.classList.add(
+    "sfu-mod-target"
+  );
+
+  row.setAttribute("role", "button");
+
+  row.tabIndex = 0;
+
+  row.setAttribute(
+
+    "aria-label",
+
+    `Manage ${viewer.name || "viewer"}`
+
+  );
+
+
+  const openManager = () => {
+
+    openSfuModeration(
+      viewer,
+      amount
+    );
+
+  };
+
+
+  row.addEventListener(
+
+    "click",
+
+    openManager
+
+  );
+
+
+  row.addEventListener(
+
+    "keydown",
+
+    event => {
+
+      if (
+        event.key === "Enter" ||
+        event.key === " "
+      ) {
+
+        event.preventDefault();
+
+        openManager();
+
+      }
+
+    }
+
+  );
+
+}
+
+
     fragment.appendChild(row);
 
   }
@@ -11719,7 +12211,13 @@ function updateSfuViewerDirectory(viewers) {
 
   avatar: String(
     v.avatar || ""
-  )
+  ),
+
+  commentBlocked:
+    v.commentBlocked === true,
+
+  canModerate:
+    v.canModerate === true
 
 }));
 
@@ -11742,6 +12240,356 @@ function updateSfuViewerDirectory(viewers) {
   }
 
 }
+
+
+/* ==========================================
+   SFU - VIEWER MODERATION CONTROLLER
+========================================== */
+
+const sfuModerationOverlay =
+  $("sfuModerationOverlay");
+
+const sfuModMute = $("sfuModMute");
+
+const sfuModUnmute = $("sfuModUnmute");
+
+const sfuModKick = $("sfuModKick");
+
+const sfuModCancel = $("sfuModCancel");
+
+const sfuModError = $("sfuModError");
+
+
+let sfuModSelected = null;
+
+let sfuModBusy = false;
+
+let sfuModConfirmKick = false;
+
+
+/* OPEN VIEWER MANAGEMENT */
+
+function openSfuModeration(viewer, amount = 0) {
+
+  if (
+    isViewer ||
+    !viewer?.key ||
+    !viewer.canModerate ||
+    sfuModBusy
+  ) return;
+
+
+  sfuModSelected = {
+
+    key: viewer.key,
+
+    name: viewer.name,
+
+    commentBlocked:
+      viewer.commentBlocked === true
+
+  };
+
+
+  $("sfuModName").textContent =
+    viewer.name || "Viewer";
+
+
+  const avatar = $("sfuModAvatar");
+
+  avatar.onerror = () => {
+
+    avatar.onerror = null;
+
+    avatar.src =
+      SFU_DEFAULT_AVATAR;
+
+  };
+
+  avatar.src =
+    safeSfuViewerAvatar(viewer.avatar);
+
+
+  $("sfuModGifts").textContent =
+
+    "💎 " +
+
+    Number(amount || 0)
+      .toLocaleString("en-US");
+
+
+  sfuModMute.classList.toggle(
+
+    "hidden",
+
+    sfuModSelected.commentBlocked
+
+  );
+
+
+  sfuModUnmute.classList.toggle(
+
+    "hidden",
+
+    !sfuModSelected.commentBlocked
+
+  );
+
+
+  sfuModError.textContent = "";
+
+  resetSfuKickConfirm();
+
+
+  sfuModerationOverlay.classList.remove(
+    "hidden"
+  );
+
+}
+
+
+/* CLOSE MANAGEMENT MENU */
+
+function closeSfuModeration() {
+
+  if (sfuModBusy) return;
+
+  sfuModerationOverlay.classList.add(
+    "hidden"
+  );
+
+  sfuModSelected = null;
+
+  resetSfuKickConfirm();
+
+}
+
+
+/* RESET KICK CONFIRMATION */
+
+function resetSfuKickConfirm() {
+
+  sfuModConfirmKick = false;
+
+  sfuModKick.querySelector(
+    "strong"
+  ).textContent = "Kick from Room";
+
+  sfuModKick.querySelector(
+    "small"
+  ).textContent =
+    "Remove viewer and prevent rejoining";
+
+}
+
+
+/* REQUEST SERVER MODERATION */
+
+function sendSfuModeration(action) {
+
+  if (
+    isViewer ||
+    !sfuModSelected ||
+    sfuModBusy
+  ) return;
+
+
+  if (!socket.connected) {
+
+    sfuModError.textContent =
+      "Connection unavailable.";
+
+    return;
+
+  }
+
+
+  sfuModBusy = true;
+
+  sfuModError.textContent = "";
+
+
+  const buttons = [
+
+    sfuModMute,
+
+    sfuModUnmute,
+
+    sfuModKick,
+
+    sfuModCancel
+
+  ];
+
+
+  buttons.forEach(button => {
+
+    button.disabled = true;
+
+  });
+
+
+  socket.timeout(15000).emit(
+
+    "sfu:viewer:moderate",
+
+    {
+
+      roomId,
+
+      key: sfuModSelected.key,
+
+      action
+
+    },
+
+    (error, response) => {
+
+      sfuModBusy = false;
+
+      buttons.forEach(button => {
+
+        button.disabled = false;
+
+      });
+
+
+      if (error || !response?.ok) {
+
+        sfuModError.textContent =
+
+          response?.error ||
+
+          "Unable to complete the request.";
+
+        resetSfuKickConfirm();
+
+        return;
+
+      }
+
+
+      closeSfuModeration();
+
+
+      showMessage(
+
+        response.mediaWarning
+
+          ? "Viewer removed. Media disconnection could not be verified."
+
+          : response.message ||
+            "Viewer updated."
+
+      );
+
+    }
+
+  );
+
+}
+
+
+/* BLOCK COMMENTS */
+
+sfuModMute.onclick = () => {
+
+  sendSfuModeration("mute");
+
+};
+
+
+/* RESTORE COMMENTS */
+
+sfuModUnmute.onclick = () => {
+
+  sendSfuModeration("unmute");
+
+};
+
+
+/* KICK WITH CONFIRMATION */
+
+sfuModKick.onclick = () => {
+
+  if (!sfuModConfirmKick) {
+
+    sfuModConfirmKick = true;
+
+
+    sfuModKick.querySelector(
+      "strong"
+    ).textContent =
+      "Confirm Kick";
+
+
+    sfuModKick.querySelector(
+      "small"
+    ).textContent =
+      "Tap again to remove this viewer.";
+
+
+    return;
+
+  }
+
+
+  sendSfuModeration("kick");
+
+};
+
+
+/* CANCEL */
+
+sfuModCancel.onclick =
+  closeSfuModeration;
+
+
+/* CLOSE WHEN TAPPING OUTSIDE */
+
+sfuModerationOverlay.addEventListener(
+
+  "click",
+
+  event => {
+
+    if (
+      event.target ===
+      sfuModerationOverlay
+    ) {
+
+      closeSfuModeration();
+
+    }
+
+  }
+
+);
+
+
+/* CLOSE WITH ESCAPE */
+
+document.addEventListener(
+
+  "keydown",
+
+  event => {
+
+    if (
+      event.key === "Escape" &&
+      !sfuModerationOverlay.classList.contains(
+        "hidden"
+      )
+    ) {
+
+      closeSfuModeration();
+
+    }
+
+  }
+
+);
+
 
 
 function openSfuViewerList() {
@@ -12783,17 +13631,43 @@ function setChatError(message = "") {
   chatError.textContent = String(message);
 }
 
+/* ==========================================
+   SFU - COMMENT PERMISSION CONTROL
+========================================== */
+
 function setChatReady(ready) {
+
   sfuChatReady = !!ready;
 
-  chatInput.disabled = !sfuChatReady;
-  chatSend.disabled = !sfuChatReady || sfuChatSending;
+  const blocked =
+    isViewer && sfuCommentBlocked;
 
-  if (!sfuChatReady) {
-    chatInput.placeholder = "Connecting to room...";
+  chatInput.disabled =
+    !sfuChatReady || blocked;
+
+  chatSend.disabled =
+    !sfuChatReady ||
+    sfuChatSending ||
+    blocked;
+
+
+  if (blocked) {
+
+    chatInput.placeholder =
+      "Comments blocked by host";
+
+  } else if (!sfuChatReady) {
+
+    chatInput.placeholder =
+      "Connecting to room...";
+
   } else {
-    chatInput.placeholder = "Write a comment...";
+
+    chatInput.placeholder =
+      "Write a comment...";
+
   }
+
 }
 
 function updateChatUnread() {
@@ -13101,6 +13975,63 @@ chatToggle.addEventListener("click", () => {
 
 chatClose.addEventListener("click", closeSfuChat);
 
+
+/* ==========================================
+   SFU - VIEWER COMMENT RESTRICTION
+========================================== */
+
+let sfuCommentBlocked = false;
+
+
+socket.on(
+
+  "sfu:viewer:comment-status",
+
+  data => {
+
+    if (
+      !isViewer ||
+      data?.roomId !== roomId
+    ) return;
+
+
+    sfuCommentBlocked =
+      data.blocked === true;
+
+      setChatReady(sfuChatReady);
+
+    if (sfuCommentBlocked) {
+
+      chatInput.placeholder =
+        "Comments blocked by host";
+
+      setChatError(
+        "You can watch but cannot comment."
+      );
+
+      showMessage(
+        "Your comments have been blocked."
+      );
+
+    } else {
+
+      chatInput.placeholder =
+        "Write a comment...";
+
+      setChatError("");
+
+      showMessage(
+        "Comment permissions restored."
+      );
+
+    }
+
+  }
+
+);
+
+
+
 // Nhận bình luận realtime từ server.
 socket.on("sfu:chat:new", message => {
   addSfuChatMessage(message, true);
@@ -13165,6 +14096,12 @@ if (
       setChatError("");
 
 
+// SYNC COMMENT PERMISSION FROM SERVER
+
+sfuCommentBlocked =
+  isViewer &&
+  response.commentBlocked === true;
+
 setSfuChatLive(response.live === true);
 setChatReady(sfuChatLive);
 
@@ -13196,6 +14133,21 @@ renderSfuChat();
 chatForm.addEventListener("submit", event => {
   event.preventDefault();
 
+
+  if (
+  isViewer &&
+  sfuCommentBlocked
+) {
+
+  setChatError(
+    "Your comments have been blocked by the host."
+  );
+
+  return;
+
+}
+
+
   const text = chatInput.value.trim();
 
   if (
@@ -13211,26 +14163,45 @@ chatForm.addEventListener("submit", event => {
   chatSend.disabled = true;
   setChatError("");
 
-  socket.timeout(8000).emit(
-    "sfu:chat:send",
-    { roomId, text },
 
-    (error, response) => {
-      sfuChatSending = false;
-      chatSend.disabled = !sfuChatReady;
+socket.timeout(8000).emit(
+  "sfu:chat:send",
+  { roomId, text },
 
-      if (error || !response?.ok) {
-        setChatError(
-          response?.error || "Unable to send comment."
-        );
-        return;
+  (error, response) => {
+    sfuChatSending = false;
+    chatSend.disabled = !sfuChatReady;
+
+    if (error || !response?.ok) {
+
+      // SFU - COMMENT BLOCKED
+      if (
+        response?.code === "COMMENT_BLOCKED"
+      ) {
+
+        sfuCommentBlocked = true;
+
+setChatReady(sfuChatReady);
+
+        chatInput.placeholder =
+          "Comments blocked by host";
+
       }
 
-      chatInput.value = "";
-      setChatError("");
-      chatInput.focus();
+      setChatError(
+        response?.error || "Unable to send comment."
+      );
+
+      return;
     }
-  );
+
+    chatInput.value = "";
+    setChatError("");
+    chatInput.focus();
+  }
+);
+
+  
 });
 
 socket.on("disconnect", () => {
@@ -16509,6 +17480,101 @@ if (document.readyState === "loading") {
   initSfuHostEndConfirm();
 
 }
+/* ==========================================
+   SFU - VIEWER KICKED FROM LIVESTREAM
+========================================== */
+
+let sfuViewerKicked = false;
+
+
+socket.on(
+
+  "sfu:viewer:kicked",
+
+  async data => {
+
+    if (
+      !isViewer ||
+      sfuViewerKicked ||
+      data?.roomId !== roomId
+    ) return;
+
+
+    sfuViewerKicked = true;
+
+    viewerLeaving = true;
+
+    viewerConnected = false;
+
+
+    if (viewerRecoveryTimer) {
+
+      clearTimeout(
+        viewerRecoveryTimer
+      );
+
+      viewerRecoveryTimer = null;
+
+    }
+
+
+    setSfuChatLive(false);
+
+    setStatus("REMOVED");
+
+    showMessage(
+
+      data.message ||
+
+      "You have been removed by the host."
+
+    );
+
+
+    /* DISCONNECT LIVEKIT */
+
+    const oldRoom = lkRoom;
+
+    lkRoom = null;
+
+
+    if (oldRoom) {
+
+      oldRoom.disconnect().catch(() => {});
+
+    }
+
+
+    /* DISCONNECT PK MEDIA */
+
+    if (pkPeerRoom) {
+
+      const oldPeer = pkPeerRoom;
+
+      pkPeerRoom = null;
+
+      oldPeer.disconnect().catch(() => {});
+
+    }
+
+
+    socket.disconnect();
+
+
+    /* RETURN TO LOBBY */
+
+    setTimeout(() => {
+
+      goLobby();
+
+    }, 1800);
+
+  }
+
+);
+
+
+
 
 socket.on("room-error", data => {
   showMessage(data?.message || "Room error.");

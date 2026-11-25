@@ -12296,6 +12296,8 @@ function getRoom(roomId) {
   broadcasterId: null,
   viewers: new Set(),
   viewerProfiles: new Map(),
+  mutedViewers: new Set(),
+  kickedViewers: new Set(),
   liveStartTs: null,
   pinnedNote: null,
   hostProfile: null,
@@ -12366,6 +12368,26 @@ app.post(
     }
 
  const uid = req.auth.uid;
+
+ /* SFU - BLOCK TOKEN FOR KICKED VIEWERS */
+
+if (
+  requestedRole === "viewer" &&
+  room.kickedViewers?.has(
+    String(uid)
+  )
+) {
+
+  return res.status(403).json({
+
+    ok: false,
+
+    error: "VIEWER_KICKED"
+
+  });
+
+}
+
 
     const db = loadUsers();
     const account = uid ? db[uid] : null;
@@ -12856,7 +12878,16 @@ viewers.push({
 
   avatar: normalizeAvatar(
     String(viewer.avatar || "")
-  )
+  ),
+
+  commentBlocked:
+    room.mutedViewers?.has(
+      String(viewer.uid)
+    ) || false,
+
+  canModerate:
+    viewerSocket.data.authenticated === true &&
+    String(viewer.uid) !== String(room.ownerUid)
 
 });
   }
@@ -15688,6 +15719,30 @@ socket.data.profile = profile;
 
   const room = getRoom(roomId);
 
+
+  /* SFU - PREVENT KICKED VIEWER REJOIN */
+
+if (
+  socket.data.authenticated &&
+  room.kickedViewers?.has(
+    String(socket.data.uid)
+  )
+) {
+
+  socket.emit("sfu:viewer:kicked", {
+
+    roomId,
+
+    message:
+      "You cannot rejoin this livestream."
+
+  });
+
+  return;
+
+}
+
+
 if (!room.streamReady) {
   socket.emit("wait-host-stream");
   return;
@@ -15834,9 +15889,14 @@ if (
 }
 
 if (!room.liveStartTs) {
-  room.liveStartTs = Date.now();
-}
 
+  room.liveStartTs = Date.now();
+
+  room.mutedViewers = new Set();
+
+  room.kickedViewers = new Set();
+
+}
 
 
 /* ==========================================
@@ -15978,6 +16038,31 @@ socket.on("join-room", ({ roomId, role, profile }) => {
   }
 
   const room = getRoom(roomId);
+
+
+  /* SFU - CHECK ROOM ACCESS */
+
+if (
+  role === "viewer" &&
+  socket.data.authenticated &&
+  room.kickedViewers?.has(
+    String(socket.data.uid)
+  )
+) {
+
+  socket.emit("sfu:viewer:kicked", {
+
+    roomId,
+
+    message:
+      "You cannot rejoin this livestream."
+
+  });
+
+  return;
+
+}
+
 
 
   // Verify broadcaster BEFORE joining or modifying room
@@ -17241,6 +17326,15 @@ function getAuthorizedSfuChatRoom(roomId) {
     String(room.ownerUid) === String(uid) &&
     room.broadcasterId === socket.id;
 
+
+    if (
+  !isHost &&
+  room.kickedViewers?.has(String(uid))
+) {
+  return null;
+}
+
+
   const viewer = room.viewerProfiles?.get(String(uid));
 
   const isMember =
@@ -17782,6 +17876,317 @@ socket.on("disconnect", () => {
    SFU CHAT HISTORY - ROOM / PK SHARED
 ========================================== */
 
+
+/* ==========================================
+   SFU - VIEWER MODERATION V1.0
+========================================== */
+
+socket.on("sfu:viewer:moderate", async (data, ack) => {
+
+  if (typeof ack !== "function") return;
+
+  const access =
+    getAuthorizedSfuChatRoom(data?.roomId);
+
+
+  /* VERIFY HOST PERMISSION */
+
+  if (
+    !access ||
+    !access.isHost ||
+    !access.room.liveStartTs
+  ) {
+
+    return ack({
+      ok: false,
+      error: "Host permission required."
+    });
+
+  }
+
+
+  const { room, id } = access;
+
+  const action = String(
+    data?.action || ""
+  );
+
+  const targetKey = String(
+    data?.key || ""
+  );
+
+
+  /* VALIDATE ACTION */
+
+  if (
+    !["mute", "unmute", "kick"].includes(action) ||
+    !/^[a-f0-9]{64}$/.test(targetKey)
+  ) {
+
+    return ack({
+      ok: false,
+      error: "Invalid moderation request."
+    });
+
+  }
+
+
+  /* FIND VERIFIED VIEWER */
+
+  const target = [
+    ...safeMap(room.viewerProfiles).values()
+  ].find(viewer =>
+
+    viewer.uid &&
+    sfuSupporterKey(
+      room.ownerUid,
+      viewer.uid
+    ) === targetKey
+
+  );
+
+
+  if (!target) {
+
+    return ack({
+      ok: false,
+      error: "Viewer is no longer in the room."
+    });
+
+  }
+
+
+  const targetUid = String(target.uid);
+
+  const targetSocket =
+    io.sockets.sockets.get(target.socketId);
+
+
+  if (
+    targetUid === String(room.ownerUid) ||
+    !targetSocket?.connected ||
+    !targetSocket.data.authenticated ||
+    String(targetSocket.data.uid) !== targetUid ||
+    targetSocket.data.roomId !== id ||
+    !room.viewers.has(targetSocket.id)
+  ) {
+
+    return ack({
+      ok: false,
+      error: "Invalid viewer."
+    });
+
+  }
+
+
+  /* INITIALIZE MODERATION STATE */
+
+  room.mutedViewers ??= new Set();
+  room.kickedViewers ??= new Set();
+
+
+  /* ========================================
+     BLOCK / UNBLOCK COMMENTS
+  ======================================== */
+
+  if (
+    action === "mute" ||
+    action === "unmute"
+  ) {
+
+    const blocked = action === "mute";
+
+    if (blocked) {
+
+      room.mutedViewers.add(targetUid);
+
+    } else {
+
+      room.mutedViewers.delete(targetUid);
+
+    }
+
+
+    targetSocket.emit(
+      "sfu:viewer:comment-status",
+      {
+        roomId: id,
+        blocked
+      }
+    );
+
+
+    emitViewerCount(id);
+
+
+    return ack({
+
+      ok: true,
+
+      message: blocked
+        ? "Comments blocked."
+        : "Comments restored."
+
+    });
+
+  }
+
+
+  /* ========================================
+     KICK VIEWER FROM ROOM
+  ======================================== */
+
+  if (action === "kick") {
+
+    if (room.kickedViewers.has(targetUid)) {
+
+      return ack({
+        ok: false,
+        error: "Viewer is already being removed."
+      });
+
+    }
+
+    const service = pkRoomServiceClient();
+
+    if (!service) {
+
+      return ack({
+        ok: false,
+        error: "LiveKit service unavailable."
+      });
+
+    }
+
+
+    // Prevent rejoining before removing media.
+    room.kickedViewers.add(targetUid);
+
+
+    /* REMOVE VOICE PERMISSIONS */
+
+    const voiceState = getSfuVoiceRoom(id);
+
+    voiceState.pending.delete(targetUid);
+
+    voiceState.speakers.delete(targetUid);
+
+    emitSfuVoiceState(id);
+
+
+    /* REMOVE SOCKET MEMBERSHIP */
+
+    targetSocket.emit("sfu:viewer:kicked", {
+
+      roomId: id,
+
+      message:
+        "You have been removed by the host."
+
+    });
+
+
+    targetSocket.leave(id);
+
+    room.viewers.delete(targetSocket.id);
+
+    room.viewerProfiles.delete(targetUid);
+
+
+    emitViewerCount(id);
+
+    emitLobbyUpdate();
+
+
+    /* REMOVE LIVEKIT PARTICIPANTS */
+
+    const removals = [
+
+      service.removeParticipant(
+
+        `lsp_${id}`,
+
+        `viewer_${targetUid}`
+
+      )
+
+    ];
+
+
+    // Remove the secondary video connection
+    // if the viewer is watching a PK battle.
+
+    const match = pkMatches.get(id);
+
+    if (match) {
+
+      const peerId = match.rooms.find(
+        item => item !== id
+      );
+
+      if (peerId) {
+
+        removals.push(
+
+          service.removeParticipant(
+
+            `lsp_${peerId}`,
+
+            `pk_${match.id}_${targetSocket.id}`
+
+          )
+
+        );
+
+      }
+
+    }
+
+
+    const results =
+      await Promise.allSettled(removals);
+
+
+    if (targetSocket.connected) {
+
+      targetSocket.disconnect(true);
+
+    }
+
+
+    const failed = results.filter(
+      result => result.status === "rejected"
+    );
+
+
+    if (failed.length) {
+
+      console.warn(
+        "[SFU MODERATION] Media removal:",
+        failed
+      );
+
+    }
+
+
+    return ack({
+
+      ok: true,
+
+      mediaWarning:
+        results[0]?.status === "rejected",
+
+      message:
+        "Viewer removed from the room."
+
+    });
+
+  }
+
+});
+
+
+
 socket.on("sfu:chat:history", (data, ack) => {
   if (typeof ack !== "function") return;
 
@@ -17811,9 +18216,17 @@ if (
     ? match.sharedComments
     : access.room.sfuComments;
 
-  ack({
-    ok: true,
-    live: Boolean(access.room.liveStartTs),
+ack({
+  ok: true,
+  live: Boolean(access.room.liveStartTs),
+
+  commentBlocked:
+    !access.isHost &&
+    (
+      access.room.mutedViewers?.has(
+        String(access.uid)
+      ) || false
+    ),
 
     // Keep the original room's gift statistics.
     totalCoins: Number(access.room.giftTotal) || 0,
@@ -17847,6 +18260,49 @@ socket.on("sfu:chat:send", (data, ack) => {
     ok: false,
     error: "Livestream is not active."
   });
+}
+
+/* ==========================================
+   SFU - CHECK COMMENT PERMISSION
+========================================== */
+
+if (
+  !access.isHost &&
+  access.room.mutedViewers?.has(
+    String(access.uid)
+  )
+) {
+
+  return ack({
+
+    ok: false,
+
+    code: "COMMENT_BLOCKED",
+
+    error:
+      "Your comments have been blocked by the host."
+
+  });
+
+}
+
+if (
+  access.room.kickedViewers?.has(
+    String(access.uid)
+  )
+) {
+
+  return ack({
+
+    ok: false,
+
+    code: "VIEWER_KICKED",
+
+    error:
+      "You have been removed from this livestream."
+
+  });
+
 }
 
 
