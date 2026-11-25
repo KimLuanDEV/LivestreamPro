@@ -10346,36 +10346,6 @@ body.sfu-role-viewer .sfu-chat-text {
    SHARE LIVE ROOM V1.0
 ========================================== */
 
-/* SETTINGS SHARE BUTTON */
-
-#studioSettingsPanel #sfuShareRoomBtn {
-  width: 100%;
-  min-height: 44px;
-
-  margin-top: 12px;
-  padding: 10px 14px;
-
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-
-  border: 1px solid rgba(223,190,131,.22);
-  border-radius: 12px;
-
-  background: rgba(223,190,131,.07);
-
-  color: #E8CB98;
-
-  font-size: 11px;
-  font-weight: 750;
-}
-
-#sfuShareRoomBtn .studio-icon {
-  width: 18px;
-  height: 18px;
-}
 
 /* ==========================================
    SHARE BOTTOM SHEET
@@ -10721,6 +10691,34 @@ body.sfu-role-viewer .sfu-chat-text {
   }
 
 }
+
+
+/* ==========================================
+   SFU - SHARE ROOM CONTROL ICON
+========================================== */
+
+#studioSettingsPanel #sfuShareControlGrid {
+  margin-top: 24px;
+}
+
+#studioSettingsPanel
+#hostControls.hidden ~ #sfuShareControlGrid {
+  margin-top: 0;
+}
+
+@media (max-width: 430px) {
+
+  #studioSettingsPanel #sfuShareControlGrid {
+    margin-top: 22px;
+  }
+
+  #studioSettingsPanel
+  #hostControls.hidden ~ #sfuShareControlGrid {
+    margin-top: 0;
+  }
+
+}
+
 
 
 </style>
@@ -12237,34 +12235,40 @@ body.sfu-role-viewer .sfu-chat-text {
 
     </section>
 
+<!-- SHARE LIVE ROOM -->
+<div
+  id="sfuShareControlGrid"
+  class="studio-control-grid">
 
-    <!-- SHARE LIVE ROOM -->
-    <button
-      type="button"
-      id="sfuShareRoomBtn"
-      class="control sfu-share-control">
+  <button
+    type="button"
+    id="sfuShareRoomBtn"
+    class="control"
+    aria-label="Share live room">
 
-      <svg
-        class="studio-icon"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round">
+    <svg
+      class="studio-icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round">
 
-        <circle cx="18" cy="5" r="3"/>
-        <circle cx="6" cy="12" r="3"/>
-        <circle cx="18" cy="19" r="3"/>
+      <circle cx="18" cy="5" r="3"/>
+      <circle cx="6" cy="12" r="3"/>
+      <circle cx="18" cy="19" r="3"/>
 
-        <path d="m8.7 10.5 6.6-4"/>
-        <path d="m8.7 13.5 6.6 4"/>
+      <path d="m8.7 10.5 6.6-4"/>
+      <path d="m8.7 13.5 6.6 4"/>
 
-      </svg>
+    </svg>
 
-      <span>SHARE ROOM</span>
+    <span>Share Room</span>
 
-    </button>
+  </button>
+
+</div>
 
   </aside>
 
@@ -16209,7 +16213,7 @@ document
 
   });
 
-  
+
 // Chỉ cập nhật chữ, không xóa SVG icon.
 function setStudioButtonText(id, text) {
   const button = $(id);
