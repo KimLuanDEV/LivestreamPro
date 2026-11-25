@@ -112,28 +112,103 @@ function getChatKeyByUID(peer){
 
 
 
-function saveChat(msg){
-  if(!msg?.id || !msg.peer) return;
+/* ==========================================
+   CHAT CLEAR HISTORY PROTECTION V2.0
+========================================== */
 
-  const key = getChatKeyByUID(msg.peer);
-  if(!key) return;
+function getChatClearKey(peer) {
 
-  const arr = JSON.parse(localStorage.getItem(key) || "[]");
+  return "lsp_chat_clear_" +
+    JSON.stringify([
+      String(auth.uid),
+      String(peer)
+    ]);
 
-  const exist = arr.find(m => m.id === msg.id);
-  if (exist) {
-    if (msg.revoked || msg.text === "__REVOKED__") {
-      exist.text = "__REVOKED__";
-      exist.revoked = true;
-    }
+}
+
+function getChatClearTime(peer) {
+
+  return Number(
+    localStorage.getItem(
+      getChatClearKey(peer)
+    ) || 0
+  );
+
+}
+
+function isDeletedChatMessage(peer, time, msgId) {
+
+  const clearTime = getChatClearTime(peer);
+
+  if (!clearTime) return false;
+
+  const messageTime = Number(
+    time || String(msgId || "").split("_")[0]
+  );
+
+  return (
+    !Number.isFinite(messageTime) ||
+    messageTime <= clearTime
+  );
+
+}
+
+function saveChat(msg) {
+
+  if (!msg?.id || !msg.peer) return;
+
+  // Không lưu lại tin nhắn đã xóa
+  if (
+    isDeletedChatMessage(
+      msg.peer,
+      msg.time,
+      msg.id
+    )
+  ) {
     return;
   }
 
+  const key = getChatKeyByUID(msg.peer);
+
+  if (!key) return;
+
+  const arr = JSON.parse(
+    localStorage.getItem(key) || "[]"
+  );
+
+  const exist = arr.find(
+    m => m.id === msg.id
+  );
+
+  if (exist) {
+
+    if (
+      msg.revoked ||
+      msg.text === "__REVOKED__"
+    ) {
+
+      exist.text = "__REVOKED__";
+      exist.revoked = true;
+
+      localStorage.setItem(
+        key,
+        JSON.stringify(arr)
+      );
+
+    }
+
+    return;
+
+  }
+
   arr.push(msg);
-  localStorage.setItem(key, JSON.stringify(arr));
+
+  localStorage.setItem(
+    key,
+    JSON.stringify(arr)
+  );
+
 }
-
-
 
 // 🔄 SYNC INBOX TỪ SERVER (CHỐNG MẤT TIN)
 async function syncInboxFromServer() {
@@ -173,7 +248,20 @@ function loadChat(){
   const key = chatKey();
   if(!key) return;
 
-let arr = JSON.parse(localStorage.getItem(key) || "[]");
+let arr = JSON.parse(
+  localStorage.getItem(key) || "[]"
+);
+
+// Không hiển thị tin nhắn đã xóa
+arr = arr.filter(m => {
+
+  return !isDeletedChatMessage(
+    currentTargetUID,
+    m.time,
+    m.id
+  );
+
+});
 
 // 🔥 DEDUPE THEO msgId (CỰC KỲ QUAN TRỌNG)
 const map = new Map();
@@ -358,6 +446,17 @@ saveChat({
 socket.on("private-message", ({ from, text, msgId, time }) => {
 
   const peer = from.uid;
+
+  // Chặn tin nhắn cũ được gửi lại
+  if (
+    isDeletedChatMessage(
+      peer,
+      time,
+      msgId
+    )
+  ) {
+    return;
+  }
 
   // 🔐 xác định đúng chatKey
   const key =
@@ -1325,40 +1424,84 @@ socket.on("revoke-message", ({ msgId }) => {
 
 
 
+/* ==========================================
+   CLEAR CONVERSATION HISTORY V2.0
+========================================== */
+
 async function confirmClearMyMessages() {
 
   if (!currentTargetUID) return;
 
+  const peer = currentTargetUID;
+
   const ok = await showModal(
-    "Delete your sent messages?\nThe other person's messages will be kept.",
-    "Delete My Messages",
+
+    "Delete this conversation history?\n" +
+    "This action only affects your chat history on this device.",
+
+    "Delete History",
+
     "Cancel"
+
   );
 
   if (!ok) return;
 
-  clearMyMessages(currentTargetUID);
+  clearMyMessages(peer);
+
 }
 
 
-function clearMyMessages(peer){
-  const me = auth.uid;
-  if(!me || !peer) return;
+function clearMyMessages(peer) {
 
-  const key =
-    me < peer ? `chat_${me}_${peer}` : `chat_${peer}_${me}`;
+  if (!auth?.uid || !peer) return;
 
-  // 1️⃣ XÓA TOÀN BỘ LOCAL CHAT
+  const key = getChatKeyByUID(peer);
+
+  if (!key) return;
+
+  /* ======================================
+     SAVE CLEAR TIMESTAMP
+  ====================================== */
+
+  localStorage.setItem(
+
+    getChatClearKey(peer),
+
+    String(Date.now())
+
+  );
+
+  /* ======================================
+     REMOVE LOCAL CHAT HISTORY
+  ====================================== */
+
   localStorage.removeItem(key);
 
-  // 2️⃣ RESET UI + STATE
-  renderedMsgIds.clear();
-  chatBox.innerHTML = "";
+  /* ======================================
+     RESET CURRENT CHAT
+  ====================================== */
 
-  // 3️⃣ BÁO SERVER (chỉ để dọn inbox offline)
-  socket.emit("clear-my-messages", { peer });
+  if (currentTargetUID === peer) {
+
+    renderedMsgIds.clear();
+
+    chatBox.innerHTML = "";
+
+    btnScrollBottom.classList.add("hidden");
+
+  }
+
+  clearInboxDot();
+
+  renderUserList();
+
+  console.log(
+    "[CHAT] Conversation history cleared:",
+    peer
+  );
+
 }
-
 
 
 socket.on("peer-cleared-my-messages", ({ by }) => {
