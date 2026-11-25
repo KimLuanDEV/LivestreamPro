@@ -1455,13 +1455,34 @@ function confirmLogoutProfile() {
         .json()
         .catch(() => null);
 
-      if (!response.ok || !result?.ok) {
+if (!response.ok || !result?.ok) {
 
-        throw new Error("LOGOUT_FAILED");
+  throw new Error("LOGOUT_FAILED");
 
-      }
+}
 
-      // Disconnect current socket
+/* ==========================================
+   CLEANUP PUSH NOTIFICATION
+========================================== */
+
+try {
+
+  if (window.LSPPush?.cleanup) {
+
+    await window.LSPPush.cleanup();
+
+  }
+
+} catch (error) {
+
+  console.warn(
+    "[PUSH] Logout cleanup failed:",
+    error
+  );
+
+}
+
+// Disconnect current socket
       if (
         typeof socket !== "undefined" &&
         socket.connected

@@ -4605,10 +4605,14 @@ app.post(
 
       }
 
-      // Revoke all existing account sessions
-      securityAuth.revokeAccount(account);
+ // Revoke all existing account sessions
+securityAuth.revokeAccount(account);
 
-      saveUsers(db);
+saveUsers(db);
+
+// Remove all push subscriptions
+// because all account sessions were revoked
+pushSubs.delete(String(uid));
 
       // Disconnect authenticated connections
       for (const client of io.sockets.sockets.values()) {
@@ -12687,21 +12691,170 @@ res.clearCookie("lsp_spirit_sid", {
 });
 
 
-app.post("/api/push-subscribe", (req, res) => {
-  const { uid, sub } = req.body;
-  if (!uid || !sub) return res.sendStatus(400);
+/* ==========================================
+   LIVESTREAM PRO
+   SINGLE ACCOUNT PUSH NOTIFICATION V2.0
+========================================== */
 
-  if (!pushSubs.has(uid)) pushSubs.set(uid, []);
-  const arr = pushSubs.get(uid);
+app.post(
+  "/api/push-subscribe",
 
-  // tránh trùng endpoint
-  if (!arr.find(s => s.endpoint === sub.endpoint)) {
-    arr.push(sub);
+  securityAuth.requireAuth,
+
+  (req, res) => {
+
+    // UID lấy từ phiên đăng nhập đã xác thực
+    const uid = String(req.auth.uid);
+
+    const { sub } = req.body || {};
+
+    if (
+      !sub ||
+      typeof sub.endpoint !== "string" ||
+      !sub.endpoint.startsWith("https://") ||
+      !sub.keys?.p256dh ||
+      !sub.keys?.auth
+    ) {
+
+      return res.status(400).json({
+        ok: false,
+        error: "INVALID_SUBSCRIPTION"
+      });
+
+    }
+
+    /* ======================================
+       REMOVE OLD ACCOUNT BINDINGS
+    ====================================== */
+
+    for (const [oldUid, subscriptions] of pushSubs) {
+
+      const filtered = subscriptions.filter(
+        item => item.endpoint !== sub.endpoint
+      );
+
+      if (filtered.length === 0) {
+
+        pushSubs.delete(oldUid);
+
+      } else {
+
+        pushSubs.set(oldUid, filtered);
+
+      }
+
+    }
+
+    /* ======================================
+       BIND CURRENT ACCOUNT
+    ====================================== */
+
+    const subscriptions =
+      pushSubs.get(uid) || [];
+
+    subscriptions.push({
+      endpoint: sub.endpoint,
+      expirationTime: sub.expirationTime || null,
+      keys: {
+        p256dh: sub.keys.p256dh,
+        auth: sub.keys.auth
+      }
+    });
+
+    pushSubs.set(uid, subscriptions);
+
+    console.log(
+      "[PUSH] Current account registered:",
+      uid
+    );
+
+    return res.json({
+      ok: true
+    });
+
+  }
+);
+
+
+/* ==========================================
+   PUSH NOTIFICATION - UNREGISTER DEVICE
+========================================== */
+
+app.post(
+  "/api/push-unsubscribe",
+
+  securityAuth.requireAuth,
+
+  (req, res) => {
+
+    const uid = String(req.auth.uid);
+
+    const { endpoint } = req.body || {};
+
+    if (
+      typeof endpoint !== "string" ||
+      !endpoint
+    ) {
+
+      return res.status(400).json({
+        ok: false,
+        error: "INVALID_ENDPOINT"
+      });
+
+    }
+
+    const subscriptions =
+      pushSubs.get(uid) || [];
+
+    const filtered = subscriptions.filter(
+      item => item.endpoint !== endpoint
+    );
+
+    if (filtered.length === 0) {
+
+      pushSubs.delete(uid);
+
+    } else {
+
+      pushSubs.set(uid, filtered);
+
+    }
+
+    console.log(
+      "[PUSH] Device unregistered:",
+      uid
+    );
+
+    return res.json({
+      ok: true
+    });
+
+  }
+);
+
+
+/* ==========================================
+   PUSH - VERIFY CURRENT ACCOUNT
+========================================== */
+
+app.get(
+
+  "/api/push-current-account",
+
+  securityAuth.requireAuth,
+
+  (req, res) => {
+
+    res.setHeader("Cache-Control", "no-store");
+
+    return res.json({
+      ok: true,
+      uid: String(req.auth.uid)
+    });
+
   }
 
-  res.json({ ok: true });
-});
-
+);
 
 
 
@@ -13454,19 +13607,80 @@ function emitLobbyUpdate() {
 
 
 
-async function sendPushToUser(uid, payload) {
-  const subs = pushSubs.get(uid);
-  if (!subs || !subs.length) return;
+/* ==========================================
+   SECURE PUSH DELIVERY V2.0
+========================================== */
 
-  for (let i = subs.length - 1; i >= 0; i--) {
-    try {
-      await webpush.sendNotification(subs[i], JSON.stringify(payload));
-    } catch (e) {
-      if (e.statusCode === 410 || e.statusCode === 404) {
-        subs.splice(i, 1); // xoá sub chết
-      }
+async function sendPushToUser(uid, payload) {
+
+  uid = String(uid);
+
+  const subscriptions = [
+    ...(pushSubs.get(uid) || [])
+  ];
+
+  for (const sub of subscriptions) {
+
+    // Kiểm tra thiết bị còn thuộc tài khoản này
+    const current = pushSubs.get(uid) || [];
+
+    if (!current.includes(sub)) {
+      continue;
     }
+
+    try {
+
+      await webpush.sendNotification(
+
+        sub,
+
+        JSON.stringify({
+          ...payload,
+          targetUid: uid
+        }),
+
+        {
+          TTL: 60
+        }
+
+      );
+
+    } catch (error) {
+
+      if (
+        error.statusCode === 410 ||
+        error.statusCode === 404
+      ) {
+
+        const latest = pushSubs.get(uid) || [];
+
+        const filtered = latest.filter(
+          item => item !== sub
+        );
+
+        if (filtered.length === 0) {
+
+          pushSubs.delete(uid);
+
+        } else {
+
+          pushSubs.set(uid, filtered);
+
+        }
+
+      } else {
+
+        console.warn(
+          "[PUSH] Delivery failed:",
+          error.statusCode || error.message
+        );
+
+      }
+
+    }
+
   }
+
 }
 
 
@@ -15610,46 +15824,32 @@ io.to(sid).emit("private-message", {
     msg.delivered = true;
   }
 
- // 3️⃣ 🔔 LUÔN GỬI PUSH (KỂ CẢ ONLINE)
-const subs = pushSubs.get(to);
 
-if (subs && subs.length) {
-  const db = loadUsers();
-  const fromUser = db[fromUid];
+/* ==========================================
+   PRIVATE MESSAGE - SECURE PUSH
+========================================== */
 
- const payload = JSON.stringify({
-  title: `💬 ${fromUser.profile.name}`,
+const pushSender = loadUsers()[fromUid];
+
+await sendPushToUser(to, {
+
+  title: `💬 ${pushSender?.profile?.name || "New message"}`,
+
   body:
-    type === "image" ? "📷 Hình ảnh"
-  : type === "video" ? "🎥 Video"
-  : payloadText,
+    type === "image" ? "📷 Image"
+    : type === "video" ? "🎥 Video"
+    : payloadText,
 
   tag: "chat",
 
-  // 🔥 DATA QUAN TRỌNG NHẤT
   data: {
     type: "chat",
     fromUid
   },
 
-  // fallback nếu browser không support postMessage
-  url: `/messages.html?openChat=${fromUid}`
+  url: `/messages.html?openChat=${encodeURIComponent(fromUid)}`
+
 });
-
-
-
-  for (let i = subs.length - 1; i >= 0; i--) {
-    try {
-      await webpush.sendNotification(subs[i], payload);
-    } catch (e) {
-      if (e.statusCode === 410 || e.statusCode === 404) {
-        subs.splice(i, 1); // 🧹 xoá sub chết
-      } else {
-        console.log("❌ Push failed:", e.message);
-      }
-    }
-  }
-}
 
 
 

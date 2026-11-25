@@ -4455,14 +4455,138 @@ function renderStats(list){
 }
 
 
-function confirmLogout(){
-  showMsg("Bạn có chắc muốn đăng xuất?", "Xác nhận");
-  document.getElementById("msgModal").onclick = () => {
-    localStorage.removeItem("user_profile");
-    location.href = "/login.html";
-  };
+async function unregisterCurrentPush() {
+
+  if (!("serviceWorker" in navigator)) {
+    return;
+  }
+
+  const registration =
+    await navigator.serviceWorker.getRegistration();
+
+  if (!registration) return;
+
+  const sub =
+    await registration.pushManager.getSubscription();
+
+  if (sub) {
+
+    try {
+
+      const response = await fetch(
+        "/api/push-unsubscribe",
+        {
+
+          method: "POST",
+
+          credentials: "same-origin",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+            endpoint: sub.endpoint
+          }),
+
+          signal: AbortSignal.timeout(5000)
+
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("PUSH_UNREGISTER_FAILED");
+      }
+
+    } finally {
+
+      // Disable this browser subscription
+      await sub.unsubscribe();
+
+    }
+
+  }
+
+  const notifications =
+    await registration.getNotifications();
+
+  notifications.forEach(item => item.close());
+
 }
 
+
+function confirmLogout() {
+
+  showMsg(
+    "Are you sure you want to sign out of all devices?",
+    "Confirm Logout"
+  );
+
+  const modal =
+    document.getElementById("msgModal");
+
+  if (!modal) return;
+
+  let loggingOut = false;
+
+  modal.onclick = async () => {
+
+    if (loggingOut) return;
+
+    loggingOut = true;
+
+    try {
+
+      const response = await fetch(
+        "/api/auth/logout-all",
+        {
+          method: "POST",
+          credentials: "same-origin",
+          cache: "no-store"
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.ok) {
+
+        throw new Error("LOGOUT_FAILED");
+
+      }
+
+      // Cleanup Push
+      try {
+
+        await window.LSPPush?.cleanup();
+
+      } catch (error) {
+
+        console.warn("[PUSH]", error);
+
+      }
+
+      localStorage.removeItem("user_profile");
+      localStorage.removeItem("login_uid");
+      localStorage.removeItem("isGuest");
+
+      window.location.replace("/login.html");
+
+    } catch (error) {
+
+      loggingOut = false;
+
+      modal.onclick = null;
+
+      showMsg(
+        "Unable to sign out. Please try again.",
+        "Logout Failed"
+      );
+
+    }
+
+  };
+
+}
 
 function renderSkeleton(){
   skeleton.style.display = "grid";

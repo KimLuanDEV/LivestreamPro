@@ -2265,6 +2265,74 @@ async function loginStatusSuccess(profile) {
     "Welcome back! Redirecting to your account..."
   );
 
+  /* ==========================================
+     SYNC PUSH WITH CURRENT ACCOUNT
+  ========================================== */
+
+  try {
+
+    if (
+      profile?.uid &&
+      "serviceWorker" in navigator &&
+      "PushManager" in window
+    ) {
+
+      const registration =
+        await navigator.serviceWorker.getRegistration();
+
+      if (registration) {
+
+        // Xóa thông báo của tài khoản trước
+        const notifications =
+          await registration.getNotifications();
+
+        notifications.forEach(item => item.close());
+
+        const sub =
+          await registration.pushManager.getSubscription();
+
+        if (sub) {
+
+          const response = await fetch(
+            "/api/push-subscribe",
+            {
+              method: "POST",
+
+              credentials: "same-origin",
+
+              headers: {
+                "Content-Type": "application/json"
+              },
+
+              body: JSON.stringify({
+                sub: sub.toJSON()
+              }),
+
+              signal: AbortSignal.timeout(5000)
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error("PUSH_SYNC_FAILED");
+          }
+
+          console.log(
+            "[PUSH] Current account synchronized:",
+            profile.uid
+          );
+
+        }
+
+      }
+
+    }
+
+  } catch (error) {
+
+    console.warn("[PUSH] Sync failed:", error);
+
+  }
+
   await loginSleep(LOGIN_SUCCESS_DELAY);
 
   window.location.replace("/social.html");
