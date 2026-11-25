@@ -26,6 +26,14 @@ const securityDatabase =
   require("./security-database");
 
 
+  /* ==========================================
+   LIVESTREAM PRO
+   INTRUSION DETECTION SYSTEM V1.0
+========================================== */
+
+const securityIDS =
+  require("./security-ids");
+
 const ROOM_RELEASE_DELAY = 90000; // 90 seconds
 
 const multer = require("multer");
@@ -882,6 +890,37 @@ function lspGetClientIp(req) {
 }
 
 
+
+/* ==========================================
+   IDS - TRUSTED CLIENT IP
+========================================== */
+
+function lspIDSClientIp(req) {
+
+  if (!req) return null;
+
+  if (!lspVerifyCloudflare(req)) {
+
+    return null;
+
+  }
+
+  const ip =
+    req.headers["cf-connecting-ip"];
+
+  if (
+    typeof ip !== "string" ||
+    !lspEdgeNet.isIP(ip)
+  ) {
+
+    return null;
+
+  }
+
+  return ip;
+
+}
+
 /* ==========================================
    HTTP EDGE ACCESS CONTROL
 ========================================== */
@@ -900,6 +939,14 @@ app.use((req, res, next) => {
 
   if (LSP_EDGE_REQUIRED && !verified) {
 
+securityIDS.record(
+
+  "EDGE_DENIED",
+
+  null
+
+);
+
     res.setHeader("Cache-Control", "no-store");
 
     return res.status(403).json({
@@ -915,6 +962,21 @@ app.use((req, res, next) => {
 });
 
 
+
+
+/* ==========================================
+   IDS - HTTP THREAT MONITOR
+========================================== */
+
+securityIDS.installHttp(app, {
+
+  getClientIp: lspIDSClientIp
+
+});
+
+console.log(
+  "[IDS] HTTP monitoring enabled"
+);
 
 
 
@@ -1011,6 +1073,22 @@ io.engine.use((req, res, next) => {
    SOCKET.IO FIREWALL
 ========================================== */
 
+
+/* ==========================================
+   IDS - SOCKET.IO THREAT MONITOR
+========================================== */
+
+securityIDS.installSocket(io, {
+
+  getClientIp: lspIDSClientIp
+
+});
+
+console.log(
+  "[IDS] Socket.IO monitoring enabled"
+);
+
+
 securityFirewall.installSocket(
   io,
   LSP_EDGE_REQUIRED
@@ -1024,6 +1102,9 @@ console.log(
   "[FIREWALL] Socket.IO protection enabled"
 );
 
+console.log(
+  "[INTRUSION DETECTION] V1.0 MONITOR MODE enabled"
+);
 
 /* ==========================================
    SOCKET.IO - ENGINE ERROR DIAGNOSTICS
@@ -4861,6 +4942,16 @@ io.on("connection", socket => {
       !securityAuth.getSocketIdentity(socket)
     ) {
 
+      securityIDS.record(
+
+  "SESSION_INVALID",
+
+  lspIDSClientIp(socket.request),
+
+  "SOCKET"
+
+);
+
       const ack = packet[packet.length - 1];
 
       if (typeof ack === "function") {
@@ -5411,6 +5502,68 @@ app.post(
         ok: false,
 
         error: "BACKUP_FAILED"
+
+      });
+
+    }
+
+  }
+
+);
+
+
+/* ==========================================
+   ADMIN - INTRUSION DETECTION MONITOR
+========================================== */
+
+app.get(
+
+  "/api/admin/security-ids/stats",
+
+  (req, res) => {
+
+    res.setHeader(
+      "Cache-Control",
+      "no-store"
+    );
+
+    if (!req.lspAdminActorUid) {
+
+      return res.status(403).json({
+
+        ok: false,
+
+        error: "ADMIN_AUTH_REQUIRED"
+
+      });
+
+    }
+
+    try {
+
+      return res.json({
+
+        ok: true,
+
+        ...securityIDS.getStats()
+
+      });
+
+    } catch (error) {
+
+      console.error(
+
+        "[IDS MONITOR]",
+
+        error.message
+
+      );
+
+      return res.status(503).json({
+
+        ok: false,
+
+        error: "IDS_UNAVAILABLE"
 
       });
 
@@ -8135,6 +8288,21 @@ const verification =
 
 if (!verification.ok) {
 
+
+  if (
+  verification.error === "INVALID_SECURITY_CODE"
+) {
+
+  securityIDS.record(
+
+    "TRANSACTION_AUTH_FAILED",
+
+    lspIDSClientIp(req)
+
+  );
+
+}
+
   if (verification.retryAfter) {
 
     res.setHeader(
@@ -8485,6 +8653,21 @@ if (
       );
 
     if (!verification.ok) {
+
+if (
+  verification.error === "INVALID_SECURITY_CODE"
+) {
+
+  securityIDS.record(
+
+    "TRANSACTION_AUTH_FAILED",
+
+    lspIDSClientIp(req)
+
+  );
+
+}
+
 
       if (verification.retryAfter) {
 
@@ -11369,7 +11552,24 @@ app.post("/api/prelogin", async (req,res)=>{
   const db = loadUsers();
 
   const acc = db[username];
-  if(!acc) return res.json({ ok:false });
+
+ if (!acc) {
+
+  securityIDS.record(
+
+    "LOGIN_FAILED",
+
+    lspIDSClientIp(req)
+
+  );
+
+  return res.json({
+    ok: false
+  });
+
+}
+
+
 
 if (acc.profile?.accountBlocked) {
   return res.status(403).json({
@@ -11380,7 +11580,22 @@ if (acc.profile?.accountBlocked) {
 
 
   const ok = await bcrypt.compare(String(password), acc.password);
-  if(!ok) return res.json({ ok:false });
+
+  if (!ok) {
+
+  securityIDS.record(
+
+    "LOGIN_FAILED",
+
+    lspIDSClientIp(req)
+
+  );
+
+  return res.json({
+    ok: false
+  });
+
+}
 
   // Đúng user + pass → cho phép nhập mã bảo mật
   res.json({ ok:true });
@@ -11493,7 +11708,21 @@ app.post("/api/login", async (req,res)=>{
 
 
 
-  if(!acc) return res.json({ error:"invalid" });
+ if (!acc) {
+
+  securityIDS.record(
+
+    "LOGIN_FAILED",
+
+    lspIDSClientIp(req)
+
+  );
+
+  return res.json({
+    error: "invalid"
+  });
+
+}
 
     // 🚫 USER BỊ KHOÁ → KHÔNG CHO LOGIN
 if (acc.profile?.accountBlocked) {
@@ -11549,9 +11778,21 @@ if (
 
 
 
-  if(!okPass || !okSec){
-    return res.json({ error:"invalid" });
-  }
+if (!okPass || !okSec) {
+
+  securityIDS.record(
+
+    "LOGIN_FAILED",
+
+    lspIDSClientIp(req)
+
+  );
+
+  return res.json({
+    error: "invalid"
+  });
+
+}
 
   const trusted = crypto.randomBytes(24).toString("hex");
 
@@ -13834,6 +14075,23 @@ const verification =
   );
 
 if (!verification.ok) {
+
+if (
+  verification.error === "INVALID_SECURITY_CODE"
+) {
+
+  securityIDS.record(
+
+    "TRANSACTION_AUTH_FAILED",
+
+    lspIDSClientIp(socket.request),
+
+    "SOCKET"
+
+  );
+
+}
+
 
   return respond({
 

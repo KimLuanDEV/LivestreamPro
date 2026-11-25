@@ -4820,3 +4820,850 @@ renderOffsiteSecurity(
   startAutoRefresh();
 
 })();
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   IDS SECURITY MONITOR V1.0
+========================================== */
+
+(() => {
+
+  const panel = document.getElementById(
+    "idsSecurityPanel"
+  );
+
+  if (!panel) return;
+
+  if (panel.dataset.initialized === "true") {
+    return;
+  }
+
+  panel.dataset.initialized = "true";
+
+  const $ = id => document.getElementById(id);
+
+  const refreshBtn = $("idsRefreshBtn");
+
+  const REFRESH_INTERVAL = 15000;
+
+  let loading = false;
+  let timer = null;
+  let sessionExpired = false;
+
+  const COUNTERS = {
+
+    idsThreats: "threatSignals",
+
+    idsLow: "lowRisk",
+
+    idsElevated: "elevatedRisk",
+
+    idsHigh: "highRisk",
+
+    idsHttp: "httpRequests",
+
+    idsPackets: "socketPackets",
+
+    idsLogin: "loginFailures",
+
+    idsRateLimit: "rateLimitResponses",
+
+    idsTransactions: "transactionFailures",
+
+    idsFlood: "socketFloods",
+
+    idsSessions: "invalidSessions",
+
+    idsHighAlerts: "highRiskAlerts",
+
+    idsTracked: "trackedIPs",
+
+    idsDropped: "droppedSignals"
+
+  };
+
+  const LABELS = {
+
+    EDGE_DENIED:
+      "Edge authentication denied",
+
+    HTTP_FORBIDDEN:
+      "HTTP access forbidden",
+
+    HTTP_UNAUTHORIZED:
+      "Unauthorized API request",
+
+    HTTP_RATE_LIMIT:
+      "HTTP rate limit triggered",
+
+    LOGIN_FAILED:
+      "Login verification failed",
+
+    TRANSACTION_AUTH_FAILED:
+      "Transaction verification failed",
+
+    SESSION_INVALID:
+      "Invalid socket session",
+
+    SOCKET_FLOOD:
+      "Socket flood detected"
+
+  };
+
+
+  /* ========================================
+     COMMON HELPERS
+  ======================================== */
+
+  function setText(id, value) {
+
+    const element = $(id);
+
+    if (element) {
+      element.textContent = value;
+    }
+
+  }
+
+
+  function formatNumber(value) {
+
+    if (value == null) return "--";
+
+    const number = Number(value);
+
+    return Number.isFinite(number)
+
+      ? number.toLocaleString("en-US")
+
+      : "--";
+
+  }
+
+
+  function formatTime(value) {
+
+    if (!value) return "--";
+
+    const date = new Date(Number(value));
+
+    if (!Number.isFinite(date.getTime())) {
+      return "--";
+    }
+
+    return date.toLocaleString(
+
+      "en-GB",
+
+      {
+        timeZone: "Asia/Ho_Chi_Minh"
+      }
+
+    );
+
+  }
+
+
+  function setStatus(label, state = "") {
+
+    const element = $("idsStatus");
+
+    if (!element) return;
+
+    element.textContent = label;
+
+    element.classList.toggle(
+
+      "is-active",
+
+      state === "active"
+
+    );
+
+    element.classList.toggle(
+
+      "is-error",
+
+      state === "error"
+
+    );
+
+  }
+
+
+  function levelClass(level) {
+
+    if (level === "HIGH") {
+      return "ids-high";
+    }
+
+    if (level === "ELEVATED") {
+      return "ids-elevated";
+    }
+
+    if (level === "LOW") {
+      return "ids-low";
+    }
+
+    return "";
+
+  }
+
+
+  function showEmpty(list, message) {
+
+    if (!list) return;
+
+    const empty =
+      document.createElement("div");
+
+    empty.className = "tx-sec-empty";
+
+    empty.textContent = message;
+
+    list.replaceChildren(empty);
+
+  }
+
+
+  /* ========================================
+     RENDER IP RISK SCORES
+  ======================================== */
+
+  function renderRiskList(records) {
+
+    const list = $("idsRiskList");
+
+    if (!list) return;
+
+    const items = Array.isArray(records)
+
+      ? records.filter(
+          item =>
+            item &&
+            Number(item.score) >= 15
+        ).slice(0, 20)
+
+      : [];
+
+    if (!items.length) {
+
+      showEmpty(
+
+        list,
+
+        "No elevated security activity detected."
+
+      );
+
+      return;
+
+    }
+
+    const fragment =
+      document.createDocumentFragment();
+
+    for (const item of items) {
+
+      const score = Math.max(
+
+        0,
+
+        Math.min(
+          100,
+          Number(item.score) || 0
+        )
+
+      );
+
+      const row =
+        document.createElement("div");
+
+      row.className = "ids-ip-row";
+
+      const head =
+        document.createElement("div");
+
+      head.className = "ids-ip-head";
+
+      const ip =
+        document.createElement("strong");
+
+      ip.className = "ids-ip-address";
+
+      ip.textContent =
+        String(item.ip || "--");
+
+      const value =
+        document.createElement("span");
+
+      value.className =
+
+        "ids-ip-score " +
+        levelClass(item.level);
+
+      value.textContent =
+        `${score}/100`;
+
+      head.append(ip, value);
+
+      const progress =
+        document.createElement("div");
+
+      progress.className =
+        "ids-risk-progress";
+
+      const fill =
+        document.createElement("div");
+
+      fill.className =
+        levelClass(item.level);
+
+      fill.style.width =
+        `${score}%`;
+
+      progress.appendChild(fill);
+
+      const meta =
+        document.createElement("small");
+
+      meta.className = "ids-ip-meta";
+
+      meta.textContent =
+
+        `${item.level || "UNKNOWN"} · ` +
+
+        `${formatNumber(item.signals)} signals · ` +
+
+        formatTime(item.lastSeen);
+
+      row.append(
+        head,
+        progress,
+        meta
+      );
+
+      fragment.appendChild(row);
+
+    }
+
+    list.replaceChildren(fragment);
+
+  }
+
+
+  /* ========================================
+     RENDER THREAT EVENTS
+  ======================================== */
+
+  function renderEvents(records) {
+
+    const list = $("idsEventList");
+
+    if (!list) return;
+
+    const items = Array.isArray(records)
+
+      ? records.filter(Boolean).slice(0, 20)
+
+      : [];
+
+    if (!items.length) {
+
+      showEmpty(
+
+        list,
+
+        "No threat alerts recorded."
+
+      );
+
+      return;
+
+    }
+
+    const fragment =
+      document.createDocumentFragment();
+
+    for (const item of items) {
+
+      const row =
+        document.createElement("div");
+
+      row.className = "tx-sec-event";
+
+      const dot =
+        document.createElement("span");
+
+      dot.className = "tx-sec-event-dot";
+
+      dot.style.backgroundColor =
+
+        item.level === "HIGH"
+
+          ? "#ff9292"
+
+          : item.level === "ELEVATED"
+
+            ? "#e1bc7e"
+
+            : "#82d6a2";
+
+      const info =
+        document.createElement("div");
+
+      info.className =
+        "tx-sec-event-info";
+
+      const title =
+        document.createElement("strong");
+
+      title.textContent =
+
+        Object.hasOwn(LABELS, item.type)
+
+          ? LABELS[item.type]
+
+          : "Security signal";
+
+      const detail =
+        document.createElement("small");
+
+      detail.textContent =
+
+        `${item.ip || "--"} · ` +
+
+        `${item.source || "--"} · ` +
+
+        formatTime(item.time);
+
+      const level =
+        document.createElement("span");
+
+      level.className =
+
+        "ids-event-level " +
+
+        levelClass(item.level);
+
+      level.textContent =
+        String(item.level || "UNKNOWN");
+
+      info.append(title, detail);
+
+      row.append(dot, info, level);
+
+      fragment.appendChild(row);
+
+    }
+
+    list.replaceChildren(fragment);
+
+  }
+
+
+  /* ========================================
+     RENDER STATISTICS
+  ======================================== */
+
+  function renderStats(data) {
+
+    for (
+      const [id, key] of Object.entries(COUNTERS)
+    ) {
+
+      setText(
+
+        id,
+
+        formatNumber(data[key])
+
+      );
+
+    }
+
+    setText(
+
+      "idsMode",
+
+      data.mode || "--"
+
+    );
+
+    setText(
+
+      "idsWindow",
+
+      `${formatNumber(
+        data.riskWindowMinutes
+      )} minutes`
+
+    );
+
+    setText(
+
+      "idsAutoBan",
+
+      data.autoBan === true
+
+        ? "ENABLED"
+
+        : data.autoBan === false
+
+          ? "DISABLED"
+
+          : "--"
+
+    );
+
+    renderRiskList(
+      data.topRiskIPs
+    );
+
+    renderEvents(
+      data.recentEvents
+    );
+
+    const active =
+      data.status === "ACTIVE";
+
+    setStatus(
+
+      active ? "MONITOR" : "UNKNOWN",
+
+      active ? "active" : "error"
+
+    );
+
+    setText(
+
+      "idsUpdated",
+
+      "Updated: " +
+        formatTime(Date.now())
+
+    );
+
+  }
+
+
+  /* ========================================
+     CLEAR UNAVAILABLE DATA
+  ======================================== */
+
+  function clearStats(message) {
+
+    for (const id of Object.keys(COUNTERS)) {
+
+      setText(id, "--");
+
+    }
+
+    setText("idsMode", "--");
+
+    setText("idsWindow", "--");
+
+    setText("idsAutoBan", "--");
+
+    showEmpty(
+      $("idsRiskList"),
+      message
+    );
+
+    showEmpty(
+      $("idsEventList"),
+      message
+    );
+
+  }
+
+
+  /* ========================================
+     FETCH IDS STATISTICS
+  ======================================== */
+
+  async function loadIDS() {
+
+    if (
+      loading ||
+      document.hidden ||
+      sessionExpired
+    ) {
+      return;
+    }
+
+    loading = true;
+
+    if (refreshBtn) {
+
+      refreshBtn.disabled = true;
+
+      refreshBtn.classList.add(
+        "is-loading"
+      );
+
+    }
+
+    const controller =
+      new AbortController();
+
+    const timeout = setTimeout(
+
+      () => controller.abort(),
+
+      8000
+
+    );
+
+    try {
+
+      const response = await fetch(
+
+        "/api/admin/security-ids/stats",
+
+        {
+
+          method: "GET",
+
+          credentials: "same-origin",
+
+          cache: "no-store",
+
+          signal: controller.signal
+
+        }
+
+      );
+
+      if (
+        response.status === 401 ||
+        response.status === 403
+      ) {
+
+        sessionExpired = true;
+
+        stopAutoRefresh();
+
+        setStatus(
+          "ACCESS DENIED",
+          "error"
+        );
+
+        clearStats(
+          "Admin authorization required."
+        );
+
+        setText(
+
+          "idsUpdated",
+
+          "Please authenticate again."
+
+        );
+
+        return;
+
+      }
+
+      const contentType =
+        response.headers.get(
+          "content-type"
+        ) || "";
+
+      if (
+        !contentType.includes("application/json")
+      ) {
+
+        throw new Error(
+
+          `Invalid response (HTTP ${response.status})`
+
+        );
+
+      }
+
+      const data = await response.json();
+
+      if (
+        !response.ok ||
+        data.ok !== true
+      ) {
+
+        throw new Error(
+          data.error || "IDS_UNAVAILABLE"
+        );
+
+      }
+
+      renderStats(data);
+
+    } catch (error) {
+
+      setStatus(
+        "UNAVAILABLE",
+        "error"
+      );
+
+      clearStats(
+        "Unable to verify current IDS status."
+      );
+
+      setText(
+
+        "idsUpdated",
+
+        "Update failed: " +
+          error.message
+
+      );
+
+      console.warn(
+
+        "[IDS MONITOR]",
+
+        error.message
+
+      );
+
+    } finally {
+
+      clearTimeout(timeout);
+
+      loading = false;
+
+      if (refreshBtn) {
+
+        refreshBtn.disabled = false;
+
+        refreshBtn.classList.remove(
+          "is-loading"
+        );
+
+      }
+
+    }
+
+  }
+
+
+  /* ========================================
+     AUTO REFRESH
+  ======================================== */
+
+  function startAutoRefresh() {
+
+    if (
+      timer !== null ||
+      sessionExpired ||
+      document.hidden
+    ) {
+      return;
+    }
+
+    timer = setInterval(
+
+      loadIDS,
+
+      REFRESH_INTERVAL
+
+    );
+
+  }
+
+
+  function stopAutoRefresh() {
+
+    if (timer !== null) {
+
+      clearInterval(timer);
+
+      timer = null;
+
+    }
+
+  }
+
+
+  /* ========================================
+     REFRESH EVENTS
+  ======================================== */
+
+  refreshBtn?.addEventListener(
+
+    "click",
+
+    () => {
+
+      sessionExpired = false;
+
+      loadIDS();
+
+      startAutoRefresh();
+
+    }
+
+  );
+
+
+  document.addEventListener(
+
+    "visibilitychange",
+
+    () => {
+
+      if (document.hidden) {
+
+        stopAutoRefresh();
+
+      } else {
+
+        loadIDS();
+
+        startAutoRefresh();
+
+      }
+
+    }
+
+  );
+
+
+  window.addEventListener(
+
+    "pagehide",
+
+    stopAutoRefresh
+
+  );
+
+
+  window.addEventListener(
+
+    "pageshow",
+
+    () => {
+
+      loadIDS();
+
+      startAutoRefresh();
+
+    }
+
+  );
+
+
+  /* ========================================
+     INITIAL LOAD
+  ======================================== */
+
+  console.log(
+    "[IDS MONITOR] V1.0 initialized"
+  );
+
+  loadIDS();
+
+  startAutoRefresh();
+
+})();
+

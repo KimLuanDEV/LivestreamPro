@@ -4374,6 +4374,245 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
 }
 
 
+/* ==========================================
+   IDS MONITOR V1.0
+   BLACK OBSIDIAN + CHAMPAGNE GOLD
+========================================== */
+
+#idsThreats {
+
+  display: block;
+
+  margin: 8px 0 12px;
+
+  color: #e1bc7e;
+
+  font-size: clamp(30px, 7vw, 42px);
+
+  font-weight: 800;
+
+  font-variant-numeric: tabular-nums;
+
+}
+
+
+/* RISK SUMMARY */
+
+.ids-risk-grid {
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 9px;
+
+  margin: 14px 0;
+
+}
+
+.ids-risk-cell {
+
+  min-width: 0;
+
+  padding: 14px 10px;
+
+  border: 1px solid currentColor;
+
+  border-radius: 10px;
+
+  background: rgba(0,0,0,.18);
+
+  text-align: center;
+
+}
+
+.ids-risk-cell span {
+
+  display: block;
+
+  font-size: 9px;
+
+  font-weight: 750;
+
+  letter-spacing: .4px;
+
+}
+
+.ids-risk-cell strong {
+
+  display: block;
+
+  margin-top: 8px;
+
+  font-size: 25px;
+
+  font-weight: 850;
+
+  font-variant-numeric: tabular-nums;
+
+}
+
+.ids-low {
+  color: #82d6a2;
+}
+
+.ids-elevated {
+  color: #e1bc7e;
+}
+
+.ids-high {
+  color: #ff9292;
+}
+
+.ids-risk-cell.ids-low {
+
+  border-color: rgba(130,214,162,.20);
+
+}
+
+.ids-risk-cell.ids-elevated {
+
+  border-color: rgba(225,188,126,.20);
+
+}
+
+.ids-risk-cell.ids-high {
+
+  border-color: rgba(255,146,146,.20);
+
+}
+
+
+/* IP RISK RECORD */
+
+.ids-ip-row {
+
+  padding: 12px;
+
+  border: 1px solid rgba(225,188,126,.10);
+
+  border-radius: 9px;
+
+  background: rgba(255,255,255,.02);
+
+}
+
+.ids-ip-head {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 10px;
+
+}
+
+.ids-ip-address {
+
+  min-width: 0;
+
+  color: #e6d5ba;
+
+  font-size: 12px;
+
+  font-weight: 750;
+
+  overflow-wrap: anywhere;
+
+}
+
+.ids-ip-score {
+
+  font-size: 12px;
+
+  font-weight: 800;
+
+  white-space: nowrap;
+
+}
+
+.ids-risk-progress {
+
+  height: 5px;
+
+  margin-top: 10px;
+
+  border-radius: 10px;
+
+  background: #302b25;
+
+  overflow: hidden;
+
+}
+
+.ids-risk-progress > div {
+
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: currentColor;
+
+}
+
+.ids-ip-meta {
+
+  display: block;
+
+  margin-top: 7px;
+
+  color: #928778;
+
+  font-size: 10px;
+
+}
+
+
+/* THREAT EVENT */
+
+.ids-event-level {
+
+  font-size: 9px;
+
+  font-weight: 800;
+
+  white-space: nowrap;
+
+}
+
+
+/* MOBILE */
+
+@media (max-width: 768px) {
+
+  .ids-risk-grid {
+    gap: 6px;
+  }
+
+  .ids-risk-cell {
+    padding: 12px 5px;
+  }
+
+  .ids-risk-cell span {
+    font-size: 8px;
+  }
+
+  .ids-risk-cell strong {
+    font-size: 21px;
+  }
+
+  .ids-ip-address {
+    font-size: 11px;
+  }
+
+}
+
+
+
+
 
 
   </style>
@@ -5441,6 +5680,261 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
 </section>
 
 
+<!-- ==========================================
+     INTRUSION DETECTION SYSTEM V1.0
+========================================== -->
+
+<section id="idsSecurityPanel"
+         class="auth-perf-panel">
+
+  <div class="auth-perf-header">
+
+    <div class="auth-perf-heading">
+
+      <span class="auth-perf-kicker">
+        LIVESTREAM PRO / THREAT INTELLIGENCE
+      </span>
+
+      <h2>INTRUSION DETECTION</h2>
+
+      <p>IDS Security Engine V1.0</p>
+
+    </div>
+
+    <span id="idsStatus"
+          class="auth-perf-status">
+      CONNECTING
+    </span>
+
+  </div>
+
+
+  <!-- TOTAL THREATS -->
+
+  <div class="auth-perf-primary">
+
+    <span class="auth-perf-label">
+      TOTAL THREAT SIGNALS
+    </span>
+
+    <strong id="idsThreats">--</strong>
+
+    <small>
+      Recorded since server startup
+    </small>
+
+  </div>
+
+
+  <!-- RISK LEVELS -->
+
+  <div class="ids-risk-grid">
+
+    <div class="ids-risk-cell ids-low">
+
+      <span>LOW RISK</span>
+
+      <strong id="idsLow">--</strong>
+
+    </div>
+
+    <div class="ids-risk-cell ids-elevated">
+
+      <span>ELEVATED</span>
+
+      <strong id="idsElevated">--</strong>
+
+    </div>
+
+    <div class="ids-risk-cell ids-high">
+
+      <span>HIGH RISK</span>
+
+      <strong id="idsHigh">--</strong>
+
+    </div>
+
+  </div>
+
+
+  <!-- IDS STATISTICS -->
+
+  <div class="auth-perf-grid">
+
+    <div class="auth-perf-cell">
+      <span>HTTP REQUESTS</span>
+      <strong id="idsHttp">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>SOCKET PACKETS</span>
+      <strong id="idsPackets">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>LOGIN FAILURES</span>
+      <strong id="idsLogin">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>RATE LIMIT RESPONSES</span>
+      <strong id="idsRateLimit">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>TRANSACTION FAILURES</span>
+      <strong id="idsTransactions">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>SOCKET FLOODS</span>
+      <strong id="idsFlood">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>INVALID SESSIONS</span>
+      <strong id="idsSessions">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>HIGH RISK ALERTS</span>
+      <strong id="idsHighAlerts">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>TRACKED IP ADDRESSES</span>
+      <strong id="idsTracked">--</strong>
+    </div>
+
+    <div class="auth-perf-cell">
+      <span>DROPPED SIGNALS</span>
+      <strong id="idsDropped">--</strong>
+    </div>
+
+  </div>
+
+
+  <!-- TOP RISK IP -->
+
+  <div class="tx-sec-events">
+
+    <div class="tx-sec-events-heading">
+
+      <h3>TOP RISK IP ADDRESSES</h3>
+
+    </div>
+
+    <div id="idsRiskList"
+         class="tx-sec-event-list">
+
+      <div class="tx-sec-empty">
+        Waiting for server...
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- THREAT EVENT HISTORY -->
+
+  <div class="tx-sec-events">
+
+    <div class="tx-sec-events-heading">
+
+      <h3>RECENT THREAT EVENTS</h3>
+
+    </div>
+
+    <div id="idsEventList"
+         class="tx-sec-event-list">
+
+      <div class="tx-sec-empty">
+        Waiting for server...
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- IDS CONFIGURATION -->
+
+  <div class="tx-sec-config">
+
+    <div class="tx-sec-config-row">
+
+      <span>Detection mode</span>
+
+      <strong id="idsMode">--</strong>
+
+    </div>
+
+    <div class="tx-sec-config-row">
+
+      <span>Risk analysis window</span>
+
+      <strong id="idsWindow">--</strong>
+
+    </div>
+
+    <div class="tx-sec-config-row">
+
+      <span>Automatic IP ban</span>
+
+      <strong id="idsAutoBan">--</strong>
+
+    </div>
+
+  </div>
+
+
+  <!-- FOOTER -->
+
+  <div class="auth-perf-footer">
+
+    <div>
+
+      <span id="idsUpdated"
+            role="status">
+        Waiting for server...
+      </span>
+
+      <small>
+        Auto refresh every 15 seconds
+      </small>
+
+    </div>
+
+    <button type="button"
+            id="idsRefreshBtn"
+            class="auth-perf-refresh"
+            aria-label="Refresh IDS statistics">
+
+      <svg viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="1.7"
+           stroke-linecap="round"
+           stroke-linejoin="round">
+
+        <path d="M20 7v5h-5"/>
+
+        <path d="M4 17v-5h5"/>
+
+        <path d="M6.1 8a7 7 0 0 1 11.5-2L20 12"/>
+
+        <path d="M4 12l2.4 6A7 7 0 0 0 18 16"/>
+
+      </svg>
+
+    </button>
+
+  </div>
+
+</section>
+
+
 <div class="admin-tabs">
   <button type="button"
           class="tab active"
@@ -5826,7 +6320,7 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
 
   const script = document.createElement("script");
 
-script.src = "/admin.js?v=20261125-database-v11";
+script.src = "/admin.js?v=20261125-ids-v10";
 
     script.onload = () => {
       document.body.classList.remove("lsp-admin-locked");
