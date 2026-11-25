@@ -3160,6 +3160,51 @@ body.lobby-page #skeleton.lobby-grid {
   padding-bottom: 20px !important;
 }
 
+
+
+/* ==========================================
+   AUTO GENERATED ROOM ID
+========================================== */
+
+body.lobby-page #roomInput[readonly] {
+  background: linear-gradient(
+    135deg,
+    #30291f,
+    #191b20
+  );
+
+  color: #f0d29a;
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: 6px;
+  text-align: center;
+
+  cursor: default;
+  caret-color: transparent;
+
+  opacity: 1;
+  -webkit-text-fill-color: #f0d29a;
+}
+
+body.lobby-page #roomInput::placeholder {
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.auto-room-id-note {
+  margin-top: 7px;
+  font-size: 10px;
+  color: #a99b82;
+  text-align: center;
+}
+
+#btnConfirmRoom:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+
+
 </style>
 
 
@@ -3467,13 +3512,16 @@ body.lobby-page #skeleton.lobby-grid {
 <input
   id="roomInput"
   type="text"
-  inputmode="numeric"
-  pattern="[0-9]+"
-  placeholder="For example: 123..."
+  placeholder="Generating Room ID..."
   autocomplete="off"
-  maxlength="15"
-  required
+  maxlength="6"
+  readonly
+  tabindex="-1"
 />
+
+<div class="auto-room-id-note">
+  Automatically assigned by the system
+</div>
 
     <label>Tên Host</label>
     <input id="hostNameInput" placeholder="Tên hiển thị" />
@@ -4232,27 +4280,77 @@ const btnConfirmRoom = document.getElementById("btnConfirmRoom");
 
 const roomInput = document.getElementById("roomInput");
 
-// ROOM ID - ONLY NUMBERS
-roomInput?.addEventListener("input", () => {
-  roomInput.value = roomInput.value.replace(/[^0-9]/g, "");
-});
 
 
 const hostNameInput = document.getElementById("hostNameInput");
 
-function openCreateRoom(){
-  if(isGuest){
-    openErr("🔒 Chỉ tài khoản đăng nhập mới được tạo phòng livestream.");
+let assignedRoomId = "";
+let roomRequestVersion = 0;
+
+/* ==========================================
+   AUTO GENERATE ROOM ID
+========================================== */
+
+function openCreateRoom() {
+
+  if (isGuest) {
+    openErr("Please sign in to create a live room.");
     return;
   }
 
+  const requestVersion = ++roomRequestVersion;
+
+  assignedRoomId = "";
+
   modal.classList.remove("hidden");
+
   roomInput.value = "";
+  roomInput.readOnly = true;
+  roomInput.placeholder = "Generating Room ID...";
+
   hostNameInput.value = profile?.name || "";
   hostNameInput.disabled = true;
-  setTimeout(()=>roomInput.focus(), 0);
-}
 
+  btnConfirmRoom.disabled = true;
+  btnCancelRoom.disabled = false;
+
+  socket.timeout(8000).emit(
+    "room-generate-id",
+    {},
+    (err, res) => {
+
+      if (
+        requestVersion !== roomRequestVersion ||
+        modal.classList.contains("hidden")
+      ) {
+        return;
+      }
+
+      if (
+        err ||
+        !res?.ok ||
+        !/^[0-9]{6}$/.test(String(res.roomId))
+      ) {
+
+        modal.classList.add("hidden");
+
+        openErr(
+          "Unable to generate Room ID. Please try again."
+        );
+
+        return;
+      }
+
+      assignedRoomId = String(res.roomId);
+
+      roomInput.value = assignedRoomId;
+
+      btnConfirmRoom.disabled = false;
+
+    }
+  );
+
+}
 
 function closeModal(){
   modal.classList.add("hidden");
@@ -4313,74 +4411,83 @@ function hideCountdownOverlay(){
   countdownOverlay.setAttribute("aria-hidden","true");
 }
 
-// ===== REPLACE confirm handler =====
-btnConfirmRoom?.addEventListener("click", ()=>{
-  const roomRaw = (roomInput.value || "").trim();
-  const name = (hostNameInput.value || "").trim();
+/* ==========================================
+   ENTER AUTO GENERATED LIVE ROOM
+========================================== */
 
-  if(!roomRaw){
-    openErr("Vui lòng nhập Room ID.");
-    roomInput.focus();
+btnConfirmRoom?.addEventListener("click", () => {
+
+  if (btnConfirmRoom.disabled) return;
+
+  const room = assignedRoomId;
+
+  if (!/^[0-9]{6}$/.test(room)) {
+
+    openErr("Invalid Room ID. Please try again.");
     return;
+
   }
 
-// ROOM ID MUST CONTAIN ONLY NUMBERS
-if (!/^[0-9]{1,15}$/.test(roomRaw)) {
-  openErr("Room ID chỉ được chứa từ 1 đến 15 chữ số.");
-  roomInput.focus();
-  return;
-}
+  btnConfirmRoom.disabled = true;
+  btnCancelRoom.disabled = true;
 
-const room = roomRaw;
-
-  // khóa UI modal tạo phòng
   btnConfirmRoom.classList.add("is-loading");
-  if (btnCancelRoom) btnCancelRoom.disabled = true;
-  roomInput.disabled = true;
-  hostNameInput.disabled = true;
 
-  // hỏi server xem room có bị chiếm không
-  socket.emit("room-check", { roomId: room }, (res)=>{
-    const ok = !!res?.ok;
+  socket.timeout(8000).emit(
+    "room-check",
+    { roomId: room },
+    (err, res) => {
 
-    if (!ok){
-      // mở khoá UI
-      btnConfirmRoom.classList.remove("is-loading");
-      if (btnCancelRoom) btnCancelRoom.disabled = false;
-      roomInput.disabled = false;
-      hostNameInput.disabled = false;
+      if (err || !res?.ok) {
 
-      // lý do
-      if (res?.reason === "taken"){
-        openErr(`Room ID "${room}" đang có host sử dụng. Vui lòng chọn ID khác.`);
-      } else {
-        openErr("Không kiểm tra được Room ID. Thử lại nhé.");
+        btnConfirmRoom.classList.remove("is-loading");
+
+        btnConfirmRoom.disabled = false;
+        btnCancelRoom.disabled = false;
+
+        openCreateRoom();
+
+        openErr(
+          "Room ID unavailable. Please try again."
+        );
+
+        return;
+
       }
-      roomInput.focus();
-      return;
+
+      const url =
+        `/broadcast-sfu.html?room=${encodeURIComponent(room)}`;
+
+      showCountdownOverlay(room);
+
+      let n = 3;
+
+      if (cdNumber) {
+        cdNumber.textContent = String(n);
+      }
+
+      const timer = setInterval(() => {
+
+        n--;
+
+        if (cdNumber) {
+          cdNumber.textContent = String(n);
+        }
+
+        if (n <= 0) {
+
+          clearInterval(timer);
+
+          window.location.href = url;
+
+        }
+
+      }, 650);
+
     }
+  );
 
-    // OK => bật overlay + countdown rồi chuyển trang
-   const url =
-  `/broadcast-sfu.html?room=${encodeURIComponent(room)}`;
-
-    showCountdownOverlay(room);
-
-    let n = 3;
-    cdNumber && (cdNumber.textContent = String(n));
-
-    const timer = setInterval(()=>{
-      n--;
-      cdNumber && (cdNumber.textContent = String(n));
-      if (n <= 0){
-        clearInterval(timer);
-        window.location.href = url;
-      }
-    }, 650);
-  });
 });
-
-
 
 
 

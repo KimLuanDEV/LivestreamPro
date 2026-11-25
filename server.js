@@ -9950,6 +9950,121 @@ const rooms = new Map();
 
 
 /* ==========================================
+   LIVESTREAM PRO
+   AUTO ROOM ID GENERATOR V1.0
+========================================== */
+
+const AUTO_ROOM_ID_TTL = 5 * 60 * 1000;
+
+const autoRoomReservations = new Map();
+
+/* CLEAN EXPIRED RESERVATIONS */
+
+function cleanupAutoRoomReservations() {
+
+  const now = Date.now();
+
+  for (const [roomId, reservation]
+    of autoRoomReservations) {
+
+    if (reservation.expiresAt <= now) {
+
+      autoRoomReservations.delete(roomId);
+
+    }
+
+  }
+
+}
+
+/* GENERATE UNIQUE 6-DIGIT ROOM ID */
+
+function generateAutoRoomId(uid) {
+
+  cleanupAutoRoomReservations();
+
+  uid = String(uid);
+
+  // Reuse an existing reservation for the same user
+
+  for (const [roomId, reservation]
+    of autoRoomReservations) {
+
+    if (
+      reservation.uid === uid &&
+      !rooms.has(roomId)
+    ) {
+
+      reservation.expiresAt =
+        Date.now() + AUTO_ROOM_ID_TTL;
+
+      return roomId;
+
+    }
+
+  }
+
+  // Generate a new unique Room ID
+
+  for (let attempt = 0; attempt < 200; attempt++) {
+
+    const roomId = String(
+      crypto.randomInt(100000, 1000000)
+    );
+
+    if (rooms.has(roomId)) continue;
+
+    if (autoRoomReservations.has(roomId)) continue;
+
+    autoRoomReservations.set(roomId, {
+
+      uid,
+
+      createdAt: Date.now(),
+
+      expiresAt:
+        Date.now() + AUTO_ROOM_ID_TTL
+
+    });
+
+    return roomId;
+
+  }
+
+  return null;
+
+}
+
+/* VERIFY ROOM RESERVATION */
+
+function verifyAutoRoomId(roomId, uid) {
+
+  cleanupAutoRoomReservations();
+
+  const reservation =
+    autoRoomReservations.get(String(roomId));
+
+  return !!(
+
+    reservation &&
+
+    reservation.uid === String(uid) &&
+
+    reservation.expiresAt > Date.now()
+
+  );
+
+}
+
+/* AUTOMATIC CLEANUP */
+
+setInterval(
+  cleanupAutoRoomReservations,
+  60000
+).unref();
+
+
+/* ==========================================
    SFU VOICE CHAT - SERVER STATE
 ========================================== */
 
@@ -16480,30 +16595,118 @@ for (const v of safeMap(room.viewerProfiles).values()) {
 
 
 
+/* ==========================================
+   SERVER GENERATED ROOM ID
+========================================== */
 
-socket.on("room-check", ({ roomId } = {}, cb) => {
+socket.on("room-generate-id", (_, cb) => {
 
-  const rid = normRoomId(roomId);
+  if (typeof cb !== "function") return;
 
-  if (!/^[0-9]{1,15}$/.test(rid)) {
-    return cb?.({
+  const uid = socket.data.uid;
+
+  if (
+    !socket.data.authenticated ||
+    !uid
+  ) {
+
+    return cb({
       ok: false,
-      reason: "invalid_room_id"
+      reason: "login_required"
     });
+
   }
 
-  const room = rooms.get(rid);
+  const account = loadUsers()[uid];
 
-  // CHỈ CHẶN khi phòng đang có host online (đang chiếm room)
-  // -> host thoát/reload thì broadcasterId sẽ bị clear ở disconnect, nên tạo lại được.
-  const taken = !!(room && room.broadcasterId);
+  if (
+    !account?.profile ||
+    account.profile.accountBlocked
+  ) {
 
-  if (taken) return cb?.({ ok: false, reason: "taken", roomId: rid });
+    return cb({
+      ok: false,
+      reason: "account_unavailable"
+    });
 
-  return cb?.({ ok: true, roomId: rid });
+  }
+
+  const roomId = generateAutoRoomId(uid);
+
+  if (!roomId) {
+
+    return cb({
+      ok: false,
+      reason: "generation_failed"
+    });
+
+  }
+
+  return cb({
+    ok: true,
+    roomId
+  });
+
 });
 
 
+/* ==========================================
+   VERIFY AUTO GENERATED ROOM ID
+========================================== */
+
+socket.on("room-check", (data, cb) => {
+
+  if (typeof cb !== "function") return;
+
+  const uid = socket.data.uid;
+
+  const roomId = normRoomId(data?.roomId);
+
+  if (
+    !socket.data.authenticated ||
+    !uid
+  ) {
+
+    return cb({
+      ok: false,
+      reason: "login_required"
+    });
+
+  }
+
+  if (!/^[0-9]{6}$/.test(roomId)) {
+
+    return cb({
+      ok: false,
+      reason: "invalid_room_id"
+    });
+
+  }
+
+  if (!verifyAutoRoomId(roomId, uid)) {
+
+    return cb({
+      ok: false,
+      reason: "invalid_reservation"
+    });
+
+  }
+
+  if (rooms.has(roomId)) {
+
+    return cb({
+      ok: false,
+      reason: "taken"
+    });
+
+  }
+
+  return cb({
+    ok: true,
+    roomId
+  });
+
+});
 
 
 
@@ -16672,17 +16875,77 @@ socket.on("join-room", ({ roomId, role, profile }) => {
     return;
   }
 
-  // Chặn tạo phòng mới bằng Room ID không phải số
+/* ==========================================
+   SECURE AUTO ROOM ID VALIDATION
+========================================== */
+
+if (role === "broadcaster") {
+
+  const uid = socket.data.uid;
+
   if (
-    role === "broadcaster" &&
-    !/^[0-9]{1,15}$/.test(roomId)
+    !socket.data.authenticated ||
+    !uid
   ) {
-    socket.emit("room-error", {
-      reason: "invalid_room_id",
-      message: "Room ID must contain only numbers."
+
+    socket.emit("need-login", {
+      feature: "join-as-host"
     });
+
     return;
+
   }
+
+  const existingRoom = rooms.get(roomId);
+
+  // Allow the existing host to reconnect
+
+  const isExistingOwner = !!(
+
+    existingRoom?.ownerUid &&
+
+    String(existingRoom.ownerUid) === String(uid)
+
+  );
+
+  // New rooms must use a server-generated ID
+
+  if (!isExistingOwner) {
+
+    if (
+      existingRoom ||
+      !/^[0-9]{6}$/.test(roomId) ||
+      !verifyAutoRoomId(roomId, uid)
+    ) {
+
+      socket.emit("room-error", {
+
+        reason: "invalid_room_id",
+
+        message:
+          "Room ID must be assigned by the system."
+
+      });
+
+      return;
+
+    }
+
+  }
+
+} else if (
+  role === "viewer" &&
+  !rooms.has(roomId)
+) {
+
+  socket.emit("room-error", {
+    reason: "room_not_found",
+    message: "This livestream room does not exist."
+  });
+
+  return;
+
+}
 
   const room = getRoom(roomId);
 
@@ -16772,6 +17035,10 @@ if (!room.mediaMode) {
     }
 
     room.ownerUid = uid;
+
+// Room successfully assigned to the host
+
+autoRoomReservations.delete(roomId);
   }
 
   socket.join(roomId);
