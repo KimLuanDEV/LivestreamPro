@@ -9877,6 +9877,100 @@ body.sfu-role-viewer .sfu-chat-text {
 
 
 
+/* ==========================================
+   LIVESTREAM PRO
+   ROOM ID MINI BADGE V1.0
+========================================== */
+
+.studio-topbar .sfu-host-profile-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  flex: 0 1 auto;
+  min-width: 0;
+
+  gap: 4px;
+
+  pointer-events: none;
+}
+
+/* ROOM ID MINI CAPSULE */
+
+.sfu-room-id-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: max-content;
+  min-height: 20px;
+
+  gap: 5px;
+
+  margin-left: 3px;
+  padding: 3px 7px;
+
+
+  line-height: 1;
+  white-space: nowrap;
+
+  pointer-events: none;
+}
+
+/* ROOM ID LABEL */
+
+.sfu-room-id-label {
+  color: rgba(255,255,255,.65);
+
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: .4px;
+}
+
+/* ROOM ID NUMBER */
+
+#sfuRoomIdValue {
+  color: #F0D29A;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: .6px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* HIDE WHEN HOST BADGE IS HIDDEN */
+
+#sfuHostBadge.hidden + #sfuRoomIdBadge {
+  display: none !important;
+}
+
+/* MOBILE OPTIMIZATION */
+
+@media (max-width: 480px) {
+
+  .studio-topbar .sfu-host-profile-group {
+    gap: 3px;
+  }
+
+  .sfu-room-id-badge {
+    min-height: 18px;
+    padding: 3px 6px;
+    margin-left: 2px;
+  }
+
+  .sfu-room-id-label {
+    font-size: 7px;
+  }
+
+  #sfuRoomIdValue {
+    font-size: 9px;
+  }
+
+}
+
+
+
 </style>
 
 
@@ -10226,6 +10320,8 @@ body.sfu-role-viewer .sfu-chat-text {
 <!-- ======================================
      SFU - HOST PROFILE PREMIUM V3
 ====================================== -->
+<!-- HOST PROFILE GROUP -->
+<div class="sfu-host-profile-group">
 
 <div
   id="sfuHostBadge"
@@ -10303,6 +10399,22 @@ body.sfu-role-viewer .sfu-chat-text {
   </button>
 
 </div>
+
+<!-- ROOM ID MINI BADGE -->
+<div
+  id="sfuRoomIdBadge"
+  class="sfu-room-id-badge">
+
+  <span class="sfu-room-id-label">
+  ID:
+  </span>
+
+  <strong id="sfuRoomIdValue">—</strong>
+
+</div>
+
+</div>
+<!-- END HOST PROFILE GROUP -->
 
 
 
@@ -18707,7 +18819,23 @@ if (!sfuRoomIdValid) {
 
 } else {
 
-  $("roomLabel").textContent = roomId;
+  /* ==========================================
+   DISPLAY ROOM ID
+========================================== */
+
+// Existing room label
+const roomLabel = $("roomLabel");
+
+if (roomLabel) {
+  roomLabel.textContent = roomId;
+}
+
+// Mini Room ID under host avatar
+const sfuRoomIdValue = $("sfuRoomIdValue");
+
+if (sfuRoomIdValue) {
+  sfuRoomIdValue.textContent = roomId;
+}
 
   if (isViewer) {
 
