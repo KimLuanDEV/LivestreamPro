@@ -1806,18 +1806,68 @@ postText.addEventListener("pointerdown", e => {
 let scrollTopBeforeModal = 0;
 
 function openComposeModal(){
+
   scrollTopBeforeModal = window.scrollY;
 
   modal.classList.remove("hidden");
 
   modalTextarea.value = postText.value;
 
-  // 🔒 khóa scroll nền (chuẩn iOS)
+  /* ==========================================
+     SYNC AUTHOR PROFILE
+  ========================================== */
+
+  let currentProfile = {};
+
+  try {
+    currentProfile = JSON.parse(
+      localStorage.getItem("user_profile") || "{}"
+    );
+  } catch {}
+
+  const composeAvatar =
+    document.getElementById("composeAvatar");
+
+  const composeName =
+    document.getElementById("composeName");
+
+  if (composeAvatar) {
+
+    composeAvatar.onerror = function(){
+
+      this.onerror = null;
+      this.src = "/icons/icon-192.png";
+
+    };
+
+    composeAvatar.src = fixAvatar(
+      currentProfile.avatar
+    );
+
+  }
+
+  if (composeName) {
+
+    composeName.textContent =
+      currentProfile.name ||
+      currentProfile.uid ||
+      "Your Profile";
+
+  }
+
+  toggleSubmitBtn();
+
+  /* LOCK BACKGROUND SCROLL */
+
   document.body.style.position = "fixed";
-  document.body.style.top = `-${scrollTopBeforeModal}px`;
+
+  document.body.style.top =
+    `-${scrollTopBeforeModal}px`;
+
   document.body.style.left = "0";
   document.body.style.right = "0";
   document.body.style.width = "100%";
+
 }
 
 function closeComposeModal(){
@@ -1893,29 +1943,49 @@ modalVideo?.addEventListener("change", () => {
 });
 
 
-const composeFooter = document.querySelector(".lp-compose-footer");
+/* ==========================================
+   CREATE POST - MOBILE KEYBOARD FIX
+========================================== */
 
-if (window.visualViewport && composeFooter) {
-  const vv = window.visualViewport;
+function updateComposeViewport(){
 
-  const updateFooterPosition = () => {
-    // chiều cao bàn phím
-    const keyboardHeight =
-      window.innerHeight - vv.height - vv.offsetTop;
+  const composeModal =
+    document.getElementById("composeModal");
 
-    if (keyboardHeight > 0) {
-      // 🔥 đẩy footer lên trên bàn phím
-      composeFooter.style.transform =
-        `translateY(-${keyboardHeight}px)`;
-    } else {
-      // bàn phím đóng
-      composeFooter.style.transform = "translateY(0)";
-    }
-  };
+  if (!composeModal) return;
 
-  vv.addEventListener("resize", updateFooterPosition);
-  vv.addEventListener("scroll", updateFooterPosition);
+  const viewport = window.visualViewport;
+
+  composeModal.style.height = viewport
+    ? `${viewport.height}px`
+    : `${window.innerHeight}px`;
+
+  composeModal.style.top = viewport
+    ? `${viewport.offsetTop}px`
+    : "0px";
+
 }
+
+if (window.visualViewport) {
+
+  window.visualViewport.addEventListener(
+    "resize",
+    updateComposeViewport
+  );
+
+  window.visualViewport.addEventListener(
+    "scroll",
+    updateComposeViewport
+  );
+
+}
+
+window.addEventListener(
+  "resize",
+  updateComposeViewport
+);
+
+updateComposeViewport();
 
 
 

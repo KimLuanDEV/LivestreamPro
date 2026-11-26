@@ -4141,6 +4141,519 @@ body.social-page .lp-tabbar {
 
 
 
+/* ==========================================
+   LIVESTREAM PRO
+   CREATE POST - PREMIUM V2.0
+========================================== */
+
+body.social-page #composeModal {
+  --cp-bg: #101114;
+  --cp-card: #1b1d22;
+  --cp-border: rgba(255,255,255,.08);
+  --cp-gold: #e6c478;
+  --cp-text: #f5f5f7;
+  --cp-muted: #92939c;
+
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+
+  background: #08090b;
+  overscroll-behavior: contain;
+}
+
+#composeModal * {
+  box-sizing: border-box;
+}
+
+/* MAIN SHEET */
+
+body.social-page #composeModal .lp-compose-sheet {
+  width: 100%;
+  max-width: 720px;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  background: var(--cp-bg);
+  border: none;
+  overflow: hidden;
+
+  animation: composeEnterV2 .22s ease;
+}
+
+@keyframes composeEnterV2 {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================
+   HEADER
+========================================== */
+
+body.social-page #composeModal .lp-compose-header {
+  position: relative;
+  flex: 0 0 auto;
+
+  display: grid;
+  grid-template-columns: 72px 1fr 72px;
+  align-items: center;
+
+  height: auto;
+  min-height: calc(60px + env(safe-area-inset-top, 0px));
+
+  padding:
+    calc(8px + env(safe-area-inset-top, 0px))
+    16px
+    8px;
+
+  background: var(--cp-bg);
+  border-bottom: 1px solid var(--cp-border);
+}
+
+/* CLOSE BUTTON */
+
+body.social-page #composeModal .lp-close {
+  width: 38px;
+  height: 38px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+
+  background: rgba(255,255,255,.06);
+  color: #bfc0c7;
+
+  cursor: pointer;
+}
+
+#composeModal .lp-close svg {
+  width: 20px;
+  height: 20px;
+
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+/* TITLE */
+
+body.social-page #composeModal .lp-header-title {
+  position: static;
+  transform: none;
+
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -.3px;
+
+  text-align: center;
+  color: var(--cp-text);
+}
+
+/* POST BUTTON */
+
+body.social-page #composeModal .lp-submit.icon {
+  width: 72px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+
+  background: var(--cp-gold);
+  color: #1d170d;
+
+  font-size: 14px;
+  font-weight: 800;
+
+  box-shadow: none;
+  cursor: pointer;
+
+  transition:
+    opacity .2s ease,
+    transform .2s ease;
+}
+
+#composeModal .lp-submit.icon:active {
+  transform: scale(.96);
+}
+
+body.social-page #composeModal .lp-submit.icon:disabled {
+  opacity: .35;
+  cursor: default;
+}
+
+#composeModal .lp-submit.loading {
+  pointer-events: none;
+  opacity: .5;
+}
+
+/* ==========================================
+   COMPOSE CONTENT
+========================================== */
+
+body.social-page #composeModal .lp-compose-body {
+  flex: 1;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 20px;
+
+  padding: 20px 18px;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+
+  background: transparent;
+}
+
+/* AUTHOR */
+
+#composeModal .lp-compose-author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  flex-shrink: 0;
+}
+
+#composeModal .lp-compose-avatar {
+  width: 48px;
+  height: 48px;
+
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+
+  border: 1px solid rgba(255,255,255,.12);
+  background: var(--cp-card);
+}
+
+#composeModal .lp-compose-author-info {
+  flex: 1;
+  min-width: 0;
+}
+
+#composeModal .lp-compose-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--cp-text);
+
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* PUBLIC POST */
+
+#composeModal .lp-compose-visibility {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  margin-top: 5px;
+
+  color: var(--cp-muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+#composeModal .lp-compose-visibility svg {
+  width: 13px;
+  height: 13px;
+
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+}
+
+/* ==========================================
+   TEXTAREA
+========================================== */
+
+body.social-page #composeModal #postTextModal {
+  display: block;
+
+  width: 100%;
+  height: 180px;
+  min-height: 180px;
+  max-height: none;
+
+  flex: 0 0 auto;
+
+  margin: 0;
+  padding: 0;
+
+  border: none;
+  outline: none;
+  border-radius: 0;
+
+  background: transparent;
+  box-shadow: none;
+
+  color: var(--cp-text);
+
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.65;
+
+  resize: none;
+}
+
+body.social-page #composeModal #postTextModal::placeholder {
+  color: #777a84;
+}
+
+/* ==========================================
+   MEDIA PREVIEW
+========================================== */
+
+body.social-page #composeModal .lp-compose-preview {
+  position: relative;
+
+  display: block;
+  flex-shrink: 0;
+
+  width: 100%;
+  height: auto;
+
+  min-height: 0;
+  max-height: none;
+
+  margin: 0;
+  padding: 6px;
+
+  border: 1px solid var(--cp-border);
+  border-radius: 14px;
+
+  background: #090a0c;
+  overflow: hidden;
+}
+
+#composeModal .lp-compose-preview.hidden {
+  display: none !important;
+}
+
+#composeModal .lp-compose-preview img,
+#composeModal .lp-compose-preview video {
+  display: block;
+
+  width: 100%;
+  height: auto;
+  max-height: 340px;
+
+  object-fit: contain;
+  border-radius: 9px;
+}
+
+#composeModal .lp-preview-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 5px;
+}
+
+#composeModal .lp-preview-item {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+
+  border-radius: 9px;
+}
+
+#composeModal .lp-preview-item img {
+  width: 100%;
+  height: 150px;
+
+  object-fit: cover;
+}
+
+body.social-page #composeModal .lp-preview-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 5;
+
+  width: 30px;
+  height: 30px;
+
+  display: grid;
+  place-items: center;
+
+  background: rgba(0,0,0,.72);
+
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 50%;
+
+  color: #fff;
+  font-size: 13px;
+}
+
+/* ==========================================
+   BOTTOM TOOLBAR
+========================================== */
+
+body.social-page #composeModal .lp-compose-footer {
+  position: relative;
+
+  inset: auto;
+
+  width: 100%;
+  max-width: none;
+  height: auto;
+
+  flex: 0 0 auto;
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+
+  margin: 0;
+
+  padding:
+    14px
+    18px
+    calc(14px + env(safe-area-inset-bottom, 0px));
+
+  background: #141519;
+  border-top: 1px solid var(--cp-border);
+
+  backdrop-filter: none;
+  transform: none !important;
+  z-index: 10;
+}
+
+/* TOOLBAR TITLE */
+
+#composeModal .lp-compose-tools-title {
+  color: #a2a4ad;
+
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* TOOL GRID */
+
+#composeModal .lp-compose-tools-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 8px;
+}
+
+/* TOOL BUTTON */
+
+body.social-page #composeModal .lp-tool {
+  width: 100%;
+  height: 65px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+  margin: 0;
+
+  background: var(--cp-card);
+  border: 1px solid var(--cp-border);
+  border-radius: 12px;
+
+  cursor: pointer;
+
+  transition:
+    background .18s ease,
+    transform .18s ease;
+}
+
+#composeModal .lp-tool:active {
+  transform: scale(.96);
+  background: #272930;
+}
+
+body.social-page #composeModal .lp-tool .lp-i {
+  width: 23px;
+  height: 23px;
+
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+}
+
+#composeModal .lp-tool span {
+  color: #d7d8dd;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ICON COLORS */
+
+#composeModal .tool-photo {
+  color: #64d6a0 !important;
+}
+
+#composeModal .tool-video {
+  color: #7caaff !important;
+}
+
+#composeModal .tool-file {
+  color: #e6c478 !important;
+}
+
+/* SMALL MOBILE */
+
+@media (max-width: 360px) {
+
+  body.social-page #composeModal .lp-compose-body {
+    padding: 16px 14px;
+  }
+
+  body.social-page #composeModal .lp-compose-footer {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  body.social-page #composeModal .lp-tool {
+    height: 58px;
+  }
+
+}
+
+
 </style>
 
 </head>
@@ -4418,107 +4931,186 @@ body.social-page .lp-tabbar {
 
 
 
+<!-- ==========================================
+     CREATE POST - PREMIUM V2.0
+========================================== -->
 
-
-<!-- FULLSCREEN COMPOSE MODAL -->
-<div id="composeModal" class="lp-compose-modal hidden">
+<div id="composeModal"
+     class="lp-compose-modal hidden"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="composeTitle">
 
   <div class="lp-compose-sheet">
-    
-    <div class="lp-compose-header">
-  <button class="lp-close" onclick="closeComposeModal()">✕</button>
 
-<div class="lp-header-title">
-    Create Post
-</div>
+    <!-- HEADER -->
+    <header class="lp-compose-header">
 
-<button
-  class="lp-submit icon"
-  onclick="submitFromModal()"
-  title="Post"
->
-  ➤
-</button>
+      <button
+        type="button"
+        class="lp-close"
+        onclick="closeComposeModal()"
+        aria-label="Close">
 
-</div>
+        <svg viewBox="0 0 24 24">
+          <path d="M6 6l12 12M18 6L6 18"/>
+        </svg>
 
+      </button>
+
+      <div id="composeTitle" class="lp-header-title">
+        Create Post
+      </div>
+
+      <button
+        type="button"
+        class="lp-submit icon"
+        onclick="submitFromModal()"
+        title="Post">
+
+        <span>Post</span>
+
+      </button>
+
+    </header>
+
+    <!-- SCROLLABLE CONTENT -->
     <div class="lp-compose-body">
+
+      <!-- AUTHOR -->
+      <div class="lp-compose-author">
+
+        <img
+          id="composeAvatar"
+          class="lp-compose-avatar"
+          src="/icons/icon-192.png"
+          alt="Profile">
+
+        <div class="lp-compose-author-info">
+
+          <div id="composeName"
+               class="lp-compose-name">
+            Your Profile
+          </div>
+
+          <div class="lp-compose-visibility">
+
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M3 12h18"/>
+              <ellipse cx="12" cy="12" rx="4" ry="9"/>
+            </svg>
+
+            <span>Public post</span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- TEXT CONTENT -->
       <textarea
-  id="postTextModal"
-  placeholder="Share something..."
-></textarea>
+        id="postTextModal"
+        placeholder="Share something..."
+        aria-label="Post content"
+      ></textarea>
+
+      <!-- MEDIA PREVIEW -->
+      <div id="composePreview"
+           class="lp-compose-preview hidden">
+
+        <button
+          type="button"
+          class="lp-preview-remove"
+          onclick="clearComposeMedia()"
+          aria-label="Remove media">
+          ✕
+        </button>
+
+        <img id="previewImage"
+             class="hidden"
+             alt="Preview">
+
+        <video
+          id="previewVideo"
+          class="hidden"
+          controls
+          playsinline>
+        </video>
+
+      </div>
+
     </div>
 
+    <!-- MEDIA TOOLBAR -->
+    <footer class="lp-compose-footer">
 
-  <!-- COMPOSE PREVIEW -->
-<div id="composePreview" class="lp-compose-preview hidden">
-  <button class="lp-preview-remove" onclick="clearComposeMedia()">✕</button>
-  <img id="previewImage" class="hidden" />
-  <video id="previewVideo" class="hidden" controls playsinline></video>
-</div>
+      <div class="lp-compose-tools-title">
+        Add to your post
+      </div>
+
+      <div class="lp-compose-tools-grid">
+
+        <!-- PHOTO -->
+        <label class="lp-tool tool-photo">
+
+          <svg class="lp-i">
+            <use href="#ls-image"></use>
+          </svg>
+
+          <span>Photo</span>
+
+          <input
+            type="file"
+            id="modalImage"
+            accept="image/*"
+            multiple
+            hidden>
+
+        </label>
+
+        <!-- VIDEO -->
+        <label class="lp-tool tool-video">
+
+          <svg class="lp-i">
+            <use href="#ls-video"></use>
+          </svg>
+
+          <span>Video</span>
+
+          <input
+            type="file"
+            id="modalVideo"
+            accept="video/*"
+            hidden>
+
+        </label>
+
+        <!-- FILE -->
+        <label class="lp-tool tool-file">
+
+          <svg class="lp-i">
+            <use href="#ls-clip"></use>
+          </svg>
+
+          <span>File</span>
+
+          <input
+            type="file"
+            id="modalFile"
+            hidden>
+
+        </label>
+
+      </div>
+
+    </footer>
 
   </div>
 
-
-
-
-
-  
-
-<!-- ===== PREMIUM COMPOSE FOOTER ===== -->
-
-<div class="lp-compose-footer">
-
-  <!-- CHỌN ẢNH -->
-  <label class="lp-tool" aria-label="Choose photos">
-    <svg class="lp-i">
-      <use href="#ls-image"></use>
-    </svg>
-
-    <input
-      type="file"
-      id="modalImage"
-      accept="image/*"
-      multiple
-      hidden
-    >
-  </label>
-
-  <!-- CHỌN VIDEO -->
-  <label class="lp-tool" aria-label="Choose a video">
-    <svg class="lp-i">
-      <use href="#ls-video"></use>
-    </svg>
-
-    <input
-      type="file"
-      id="modalVideo"
-      accept="video/*"
-      hidden
-    >
-  </label>
-
-
-  <!-- ĐÍNH KÈM -->
-  <label class="lp-tool" aria-label="Attach a file">
-    <svg class="lp-i">
-      <use href="#ls-clip"></use>
-    </svg>
-
-    <input
-      type="file"
-      id="modalFile"
-      hidden
-    >
-  </label>
-
 </div>
-<!-- KẾT THÚC lp-compose-footer -->
-
-</div>
-<!-- KẾT THÚC composeModal -->
-
-
+<!-- END CREATE POST V2.0 -->
 
 
 
