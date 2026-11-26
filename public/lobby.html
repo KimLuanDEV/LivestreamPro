@@ -3967,6 +3967,189 @@ body.lobby-page #sort option {
 
 
 
+
+/* ==========================================
+   LIVESTREAM PRO
+   COMPACT LIVE COUNTDOWN V3.0
+========================================== */
+
+body.lobby-page #countdownOverlay .cd-bg {
+  background: rgba(5, 6, 9, .92);
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* COMPACT PANEL */
+
+body.lobby-page #countdownOverlay .cd-panel {
+  width: min(100%, 270px);
+  max-width: 270px;
+
+  padding: 23px 18px 21px;
+  gap: 0;
+
+  border: 1px solid rgba(217, 185, 125, .35);
+  border-radius: 19px;
+
+  background: linear-gradient(
+    155deg,
+    #24211d,
+    #14161b 75%
+  );
+
+  box-shadow: 0 20px 60px rgba(0,0,0,.55);
+}
+
+body.lobby-page #countdownOverlay .cd-panel::before {
+  display: none;
+}
+
+/* BRAND */
+
+body.lobby-page #countdownOverlay .cd-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: auto;
+  gap: 7px;
+
+  margin: 0 0 13px;
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  color: #d9b97d;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1.8px;
+}
+
+body.lobby-page #countdownOverlay .cd-live-dot {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+  background: #ef6262;
+}
+
+/* TITLE */
+
+body.lobby-page #countdownOverlay .cd-title {
+  margin: 0;
+  padding: 0;
+
+  color: #f4dfb6;
+
+  font-family: Georgia, serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* COUNTDOWN CIRCLE */
+
+body.lobby-page #countdownOverlay .cd-dial {
+  position: relative;
+
+  width: 118px;
+  height: 118px;
+
+  margin: 18px auto 15px;
+
+  border: none;
+  border-radius: 50%;
+
+  background: transparent;
+  box-shadow: none;
+}
+
+body.lobby-page #countdownOverlay .cd-dial::before,
+body.lobby-page #countdownOverlay .cd-dial::after {
+  display: none;
+}
+
+body.lobby-page #countdownOverlay .cd-track {
+  stroke-width: 4;
+  stroke: rgba(217,185,125,.14);
+}
+
+body.lobby-page #countdownOverlay .cd-progress {
+  stroke-width: 4;
+  stroke: #dfbd80;
+
+  filter: none;
+}
+
+/* COUNTDOWN NUMBER */
+
+body.lobby-page #countdownOverlay .cd-number {
+  font-family: system-ui, sans-serif;
+  font-size: 54px;
+  font-weight: 650;
+  line-height: 1;
+
+  color: #f4dfb6;
+
+  text-shadow: none;
+}
+
+/* ROOM ID */
+
+body.lobby-page #countdownOverlay .cd-sub {
+  width: auto;
+
+  margin: 0;
+  padding: 0;
+
+  border: none;
+  border-radius: 0;
+
+  background: transparent;
+  box-shadow: none;
+
+  color: #d9b97d;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: .4px;
+}
+
+/* CONNECTION STATUS */
+
+body.lobby-page #countdownOverlay .cd-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  margin: 11px 0 0;
+  padding: 0;
+
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+body.lobby-page #countdownOverlay .cd-hint {
+  color: #a7a09a;
+
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+body.lobby-page #countdownOverlay .cd-status-dot {
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+  background: #d9b97d;
+}
+
+
 </style>
 
 
@@ -4693,137 +4876,62 @@ body.lobby-page #sort option {
   </div>
 </div>
 
-
-
-<!-- ==========================================
-     LUXURY LIVE COUNTDOWN OVERLAY
-========================================== -->
+<!-- COMPACT LIVE COUNTDOWN OVERLAY -->
 
 <div id="countdownOverlay"
      class="cd-overlay hidden"
      aria-hidden="true"
      role="status">
 
-  <!-- NỀN TỐI -->
   <div class="cd-bg"></div>
 
-  <!-- COUNTDOWN PANEL -->
   <div class="cd-panel">
 
-    <!-- TOP BRAND -->
     <div class="cd-brand">
       <span class="cd-live-dot"></span>
-      <span>LIVESTREAM PRO</span>
-      <span class="cd-brand-separator"></span>
       <span>LIVE STUDIO</span>
     </div>
 
-    <!-- TITLE -->
-    <div class="cd-heading">
-      <h2 class="cd-title">
-        Chuẩn bị lên LIVE
-      </h2>
+    <h2 class="cd-title">
+      Going Live
+    </h2>
 
-      <p class="cd-description">
-        Phòng phát sóng đang được khởi tạo
-      </p>
-    </div>
-
-    <!-- ROOM ID -->
-    <div class="cd-room-wrap">
-      <div class="cd-room-label">
-        PHÒNG PHÁT SÓNG
-      </div>
-
-      <div class="cd-sub" id="cdRoomText">
-        Room: -
-      </div>
-    </div>
-
-    <!-- COUNTDOWN CIRCLE -->
     <div class="cd-dial">
 
       <svg class="cd-gauge"
            viewBox="0 0 180 180"
            aria-hidden="true">
 
-        <!-- VÒNG NỀN -->
-        <circle
-          class="cd-track"
-          cx="90"
-          cy="90"
-          r="76"
-        />
+        <circle class="cd-track"
+                cx="90" cy="90" r="76"/>
 
-        <!-- VÒNG TIẾN TRÌNH -->
-        <circle
-          class="cd-progress"
-          cx="90"
-          cy="90"
-          r="76"
-        />
-
-        <!-- VÒNG TRANG TRÍ BÊN TRONG -->
-        <circle
-          class="cd-inner-ring"
-          cx="90"
-          cy="90"
-          r="65"
-        />
+        <circle class="cd-progress"
+                cx="90" cy="90" r="76"/>
 
       </svg>
 
-      <!-- SỐ ĐẾM NGƯỢC -->
       <div class="cd-dial-content">
-
-        <div
-          class="cd-number"
-          id="cdNumber"
-          aria-live="off"
-        >3</div>
-
-        <div class="cd-unit">
-          GIÂY
-        </div>
-
+        <div class="cd-number"
+             id="cdNumber"
+             aria-live="off">3</div>
       </div>
 
     </div>
 
-    <!-- STATUS -->
+    <div class="cd-sub" id="cdRoomText">
+      Room: -
+    </div>
+
     <div class="cd-status">
-
       <span class="cd-status-dot"></span>
-
       <span class="cd-hint">
-        Đang kết nối tới phòng phát sóng
+        Connecting...
       </span>
-
-    </div>
-
-    <!-- LOADING DOTS -->
-    <div class="cd-loading-dots"
-         aria-hidden="true">
-
-      <span></span>
-      <span></span>
-      <span></span>
-
-    </div>
-
-    <!-- FOOTER -->
-    <div class="cd-footer">
-      Thiết lập phòng
-      <span></span>
-      Kết nối
-      <span></span>
-      Phát sóng
     </div>
 
   </div>
 
 </div>
-
 
 
 
