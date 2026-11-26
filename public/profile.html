@@ -7657,12 +7657,12 @@ body.is-guest .reactions-layer{
 
 
 /* ===== FIX PASS MODAL – CHỐNG NHÌN XUYÊN ===== */
-#passModal{
+:is(#passModal, #securityCodeModal){
   z-index: 10060; /* cao hơn msgModal */
 }
 
 /* backdrop đậm + blur mạnh */
-#passModal .modal-backdrop{
+:is(#passModal, #securityCodeModal) .modal-backdrop{
   background:
     radial-gradient(800px 520px at 30% 20%, rgba(95,168,255,.18), transparent 60%),
     radial-gradient(900px 640px at 70% 30%, rgba(37,240,154,.14), transparent 62%),
@@ -7671,7 +7671,7 @@ body.is-guest .reactions-layer{
 }
 
 /* modal card KHÔNG XUYÊN */
-#passModal .modal-card{
+:is(#passModal, #securityCodeModal) .modal-card{
   background: rgba(5,8,18,.90);   /* 🔥 quan trọng */
   border: 1px solid rgba(255,255,255,.18);
   box-shadow:
@@ -7680,30 +7680,30 @@ body.is-guest .reactions-layer{
 }
 
 /* tiêu đề rõ hơn */
-#passModal h3{
+:is(#passModal, #securityCodeModal) h3{
   font-weight:900;
   text-shadow: 0 0 22px rgba(95,168,255,.25);
 }
 
 /* input nổi + dễ focus */
-#passModal input{
+:is(#passModal, #securityCodeModal) input{
   background: rgba(0,0,0,.45);
   border: 1px solid rgba(255,255,255,.22);
 }
 
-#passModal input:focus{
+:is(#passModal, #securityCodeModal) input:focus{
   border-color: rgba(95,168,255,.55);
   box-shadow: 0 0 0 4px rgba(95,168,255,.18);
 }
 
 /* nút hành động */
-#passModal button{
+:is(#passModal, #securityCodeModal) button{
   font-weight:900;
 }
 
 
 @media(max-width:520px){
-  #passModal .modal-card{
+  :is(#passModal, #securityCodeModal) .modal-card{
     margin: auto 14px;
   }
 }
@@ -7712,17 +7712,17 @@ body.is-guest .reactions-layer{
 /* ===== PASS MODAL -> BOTTOM SHEET (MOBILE) ===== */
 @media (max-width:520px){
 
-  #passModal{
+  :is(#passModal, #securityCodeModal){
     display:flex;
     align-items:flex-end; /* ép xuống đáy */
   }
 
-  #passModal .modal-backdrop{
+  :is(#passModal, #securityCodeModal) .modal-backdrop{
     background: rgba(0,0,0,.65);
     backdrop-filter: blur(6px);
   }
 
-  #passModal .modal-card{
+  :is(#passModal, #securityCodeModal) .modal-card{
     width:100%;
     max-width:none;
     margin:0;
@@ -7736,7 +7736,7 @@ body.is-guest .reactions-layer{
   }
 
   /* tay cầm kéo */
-  #passModal .modal-card::before{
+  :is(#passModal, #securityCodeModal) .modal-card::before{
     content:"";
     display:block;
     width:46px;
@@ -7798,7 +7798,7 @@ body.keyboard-open .pass-sheet{
 
 /* ===== PASS MODAL: chừa chỗ cho mobile tab bar ===== */
 @media (max-width:520px){
-  #passModal .modal-card{
+  :is(#passModal, #securityCodeModal) .modal-card{
     padding-bottom: 96px; /* = chiều cao tab bar + dư */
   }
 }
@@ -16783,10 +16783,10 @@ body.page-profile #profileSheet .ps-footer-brand {
 /* ==========================================
    LIVESTREAM PRO
    LUXURY SECURITY & MESSAGE MODALS
-   Chỉ tác động #passModal và #msgModal
+   Chỉ tác động :is(#passModal, #securityCodeModal) và #msgModal
 ========================================== */
 
-#passModal,
+:is(#passModal, #securityCodeModal),
 #msgModal {
   position: fixed;
   inset: 0;
@@ -16804,12 +16804,12 @@ body.page-profile #profileSheet .ps-footer-brand {
   justify-content: center;
 }
 
-#passModal.hidden,
+:is(#passModal, #securityCodeModal).hidden,
 #msgModal.hidden {
   display: none !important;
 }
 
-#passModal .modal-backdrop,
+:is(#passModal, #securityCodeModal) .modal-backdrop,
 #msgModal .modal-backdrop {
   position: absolute;
   inset: 0;
@@ -16822,7 +16822,7 @@ body.page-profile #profileSheet .ps-footer-brand {
 
 /* CARD */
 
-#passModal .luxury-modal-card,
+:is(#passModal, #securityCodeModal) .luxury-modal-card,
 #msgModal .luxury-modal-card {
   position: relative;
   z-index: 1;
@@ -16871,14 +16871,14 @@ body.page-profile #profileSheet .ps-footer-brand {
   scrollbar-width: none;
 }
 
-#passModal .luxury-modal-card::-webkit-scrollbar,
+:is(#passModal, #securityCodeModal) .luxury-modal-card::-webkit-scrollbar,
 #msgModal .luxury-modal-card::-webkit-scrollbar {
   display: none;
 }
 
 /* GOLD LINE */
 
-#passModal .luxury-modal-accent,
+:is(#passModal, #securityCodeModal) .luxury-modal-accent,
 #msgModal .luxury-modal-accent {
   position: absolute;
   top: 0;
@@ -16899,7 +16899,7 @@ body.page-profile #profileSheet .ps-footer-brand {
 
 /* EYEBROW */
 
-#passModal .luxury-modal-kicker,
+:is(#passModal, #securityCodeModal) .luxury-modal-kicker,
 #msgModal .luxury-modal-kicker {
   margin-bottom: 18px;
 
@@ -16912,13 +16912,13 @@ body.page-profile #profileSheet .ps-footer-brand {
 
 /* PASSWORD HEADING */
 
-#passModal .luxury-modal-heading {
+:is(#passModal, #securityCodeModal) .luxury-modal-heading {
   display: flex;
   align-items: center;
   gap: 13px;
 }
 
-#passModal .luxury-modal-emblem,
+:is(#passModal, #securityCodeModal) .luxury-modal-emblem,
 #msgModal .luxury-message-emblem {
   display: grid;
   place-items: center;
@@ -16942,7 +16942,7 @@ body.page-profile #profileSheet .ps-footer-brand {
   font-size: 25px;
 }
 
-#passModal .luxury-modal-heading h3 {
+:is(#passModal, #securityCodeModal) .luxury-modal-heading h3 {
   margin: 0 0 5px;
 
   color: #f2ddb9;
@@ -16952,7 +16952,7 @@ body.page-profile #profileSheet .ps-footer-brand {
   line-height: 1.2;
 }
 
-#passModal .luxury-modal-heading p {
+:is(#passModal, #securityCodeModal) .luxury-modal-heading p {
   margin: 0;
 
   color: #ada397;
@@ -16960,7 +16960,7 @@ body.page-profile #profileSheet .ps-footer-brand {
   line-height: 1.5;
 }
 
-#passModal .luxury-modal-divider {
+:is(#passModal, #securityCodeModal) .luxury-modal-divider {
   height: 1px;
   margin: 20px 0 18px;
 
@@ -16974,11 +16974,11 @@ body.page-profile #profileSheet .ps-footer-brand {
 
 /* INPUTS */
 
-#passModal .luxury-form-field {
+:is(#passModal, #securityCodeModal) .luxury-form-field {
   margin-top: 13px;
 }
 
-#passModal .luxury-form-field label {
+:is(#passModal, #securityCodeModal) .luxury-form-field label {
   display: block;
   margin: 0 0 7px;
 
@@ -16990,7 +16990,7 @@ body.page-profile #profileSheet .ps-footer-brand {
   letter-spacing: .9px;
 }
 
-#passModal .luxury-form-field input {
+:is(#passModal, #securityCodeModal) .luxury-form-field input {
   display: block;
 
   width: 100%;
@@ -17016,11 +17016,11 @@ body.page-profile #profileSheet .ps-footer-brand {
     box-shadow .2s ease;
 }
 
-#passModal .luxury-form-field input::placeholder {
+:is(#passModal, #securityCodeModal) .luxury-form-field input::placeholder {
   color: #817c76;
 }
 
-#passModal .luxury-form-field input:focus {
+:is(#passModal, #securityCodeModal) .luxury-form-field input:focus {
   border-color: #ddba80;
 
   box-shadow:
@@ -17029,7 +17029,7 @@ body.page-profile #profileSheet .ps-footer-brand {
 
 /* SECURITY NOTE */
 
-#passModal .luxury-modal-note {
+:is(#passModal, #securityCodeModal) .luxury-modal-note {
   margin-top: 17px;
 
   color: #9d9488;
@@ -17040,7 +17040,7 @@ body.page-profile #profileSheet .ps-footer-brand {
 
 /* ACTION BUTTONS */
 
-#passModal .luxury-modal-actions,
+:is(#passModal, #securityCodeModal) .luxury-modal-actions,
 #msgModal .luxury-modal-actions {
   display: grid;
   grid-template-columns: minmax(0,1fr) minmax(0,1.4fr);
@@ -17049,7 +17049,7 @@ body.page-profile #profileSheet .ps-footer-brand {
   margin-top: 21px;
 }
 
-#passModal .luxury-btn,
+:is(#passModal, #securityCodeModal) .luxury-btn,
 #msgModal .luxury-btn {
   width: 100%;
   min-width: 0;
@@ -17068,7 +17068,7 @@ body.page-profile #profileSheet .ps-footer-brand {
   box-shadow: none;
 }
 
-#passModal .luxury-btn-cancel,
+:is(#passModal, #securityCodeModal) .luxury-btn-cancel,
 #msgModal .luxury-btn-cancel {
   border: 1px solid rgba(223,185,124,.28);
 
@@ -17076,7 +17076,7 @@ body.page-profile #profileSheet .ps-footer-brand {
   color: #d0c0aa;
 }
 
-#passModal .luxury-btn-primary,
+:is(#passModal, #securityCodeModal) .luxury-btn-primary,
 #msgModal .luxury-btn-primary {
   border: 1px solid #dfbf87;
 
@@ -17089,14 +17089,14 @@ body.page-profile #profileSheet .ps-footer-brand {
   color: #2c2013;
 }
 
-#passModal .luxury-btn:active,
+:is(#passModal, #securityCodeModal) .luxury-btn:active,
 #msgModal .luxury-btn:active {
   transform: scale(.98);
 }
 
 /* FOOT SIGNATURE */
 
-#passModal .luxury-modal-signature,
+:is(#passModal, #securityCodeModal) .luxury-modal-signature,
 #msgModal .luxury-modal-signature {
   margin-top: 18px;
 
@@ -17162,17 +17162,17 @@ body.page-profile #profileSheet .ps-footer-brand {
 /* SMALL IPHONE */
 
 @media (max-width: 360px) {
-  #passModal .luxury-modal-card,
+  :is(#passModal, #securityCodeModal) .luxury-modal-card,
   #msgModal .luxury-modal-card {
     width: calc(100% - 22px);
     padding: 20px 15px 17px;
   }
 
-  #passModal .luxury-modal-heading h3 {
+  :is(#passModal, #securityCodeModal) .luxury-modal-heading h3 {
     font-size: 21px;
   }
 
-  #passModal .luxury-btn,
+  :is(#passModal, #securityCodeModal) .luxury-btn,
   #msgModal .luxury-btn {
     font-size: 11px;
   }
@@ -17181,28 +17181,28 @@ body.page-profile #profileSheet .ps-footer-brand {
 /* SHORT MOBILE */
 
 @media (max-height: 650px) {
-  #passModal .luxury-modal-card,
+  :is(#passModal, #securityCodeModal) .luxury-modal-card,
   #msgModal .luxury-modal-card {
     padding-top: 18px;
     padding-bottom: 15px;
   }
 
-  #passModal .luxury-modal-kicker,
+  :is(#passModal, #securityCodeModal) .luxury-modal-kicker,
   #msgModal .luxury-modal-kicker {
     margin-bottom: 12px;
   }
 
-  #passModal .luxury-modal-divider {
+  :is(#passModal, #securityCodeModal) .luxury-modal-divider {
     margin: 13px 0;
   }
 
-  #passModal .luxury-form-field {
+  :is(#passModal, #securityCodeModal) .luxury-form-field {
     margin-top: 9px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #passModal .luxury-modal-card,
+  :is(#passModal, #securityCodeModal) .luxury-modal-card,
   #msgModal .luxury-modal-card {
     animation: none;
   }
@@ -17955,6 +17955,118 @@ body.page-profile #profileImageViewerClose {
 </div>
 
 
+
+<!-- ==========================================
+     CHANGE SECURITY CODE MODAL
+========================================== -->
+
+<div id="securityCodeModal" class="modal hidden">
+
+  <div class="modal-backdrop"
+       onclick="closeChangeSecurityCode()"></div>
+
+  <section class="modal-card luxury-modal-card"
+           role="dialog"
+           aria-modal="true"
+           aria-labelledby="securityCodeTitle">
+
+    <div class="luxury-modal-accent"></div>
+
+    <div class="luxury-modal-kicker">
+      LIVESTREAM PRO · SECURITY
+    </div>
+
+    <div class="luxury-modal-heading">
+
+      <div class="luxury-modal-emblem">
+        ✦
+      </div>
+
+      <div>
+        <h3 id="securityCodeTitle">
+          Change Security Code
+        </h3>
+
+        <p>Protect your account and transactions</p>
+      </div>
+
+    </div>
+
+    <div class="luxury-modal-divider"></div>
+
+    <div class="luxury-form-field">
+
+      <label for="currentSecurityCode">
+        CURRENT SECURITY CODE
+      </label>
+
+      <input id="currentSecurityCode"
+             type="password"
+             maxlength="128"
+             placeholder="Enter current security code"
+             autocomplete="off">
+
+    </div>
+
+    <div class="luxury-form-field">
+
+      <label for="newSecurityCode">
+        NEW SECURITY CODE
+      </label>
+
+      <input id="newSecurityCode"
+             type="password"
+             maxlength="72"
+             placeholder="Enter new security code"
+             autocomplete="new-password">
+
+    </div>
+
+    <div class="luxury-form-field">
+
+      <label for="confirmSecurityCode">
+        CONFIRM NEW SECURITY CODE
+      </label>
+
+      <input id="confirmSecurityCode"
+             type="password"
+             maxlength="72"
+             placeholder="Confirm new security code"
+             autocomplete="new-password">
+
+    </div>
+
+    <div class="luxury-modal-note">
+      Use at least 6 characters.
+      Never share your security code with anyone.
+    </div>
+
+    <div class="luxury-modal-actions">
+
+      <button type="button"
+              class="luxury-btn luxury-btn-cancel"
+              onclick="closeChangeSecurityCode()">
+        Cancel
+      </button>
+
+      <button type="button"
+              id="btnSubmitSecurityCode"
+              class="luxury-btn luxury-btn-primary"
+              onclick="submitChangeSecurityCode()">
+        Update Code
+      </button>
+
+    </div>
+
+    <div class="luxury-modal-signature">
+      SECURE ACCOUNT MANAGEMENT
+    </div>
+
+  </section>
+
+</div>
+
+
 <!-- PREMIUM GLOBAL MESSAGE MODAL -->
 <div id="msgModal" class="modal hidden">
 
@@ -18129,6 +18241,24 @@ body.page-profile #profileImageViewerClose {
             <span class="ps-chevron"></span>
           </button>
 
+
+<button class="sheet-btn ps-item"
+        id="btnChangeSecurityCode"
+        type="button"
+        onclick="openChangeSecurityCode()">
+
+  <span class="ps-number">03</span>
+
+  <span class="ps-item-text">
+    <strong>Change Security Code</strong>
+    <small>Update your transaction security code</small>
+  </span>
+
+  <span class="ps-chevron"></span>
+
+</button>
+
+
         </div>
 
       </div>
@@ -18144,7 +18274,7 @@ body.page-profile #profileImageViewerClose {
                 type="button"
                 onclick="confirmLogoutProfile()">
 
-          <span class="ps-number">03</span>
+          <span class="ps-number">04</span>
 
           <span class="ps-item-text">
             <strong>Đăng xuất</strong>
@@ -18886,7 +19016,7 @@ body.page-profile #profileImageViewerClose {
 
 
 
-<script src="/profile.js?v=20261126-3"></script>
+<script src="/profile.js?v=20261126-4"></script>
 <script src="/push-init.js"></script>
 <script src="/app-entry-guard.js"></script>
 

@@ -13001,6 +13001,409 @@ app.get("/api/all-users", (req,res)=>{
 
  // ===== RESET / CHANGE PASSWORD =====
 
+
+ /* ==========================================
+   LIVESTREAM PRO
+   CHANGE SECURITY CODE V1.0
+========================================== */
+
+app.post(
+
+  "/api/change-security-code",
+
+  securityAuth.requireAuth,
+
+  async (req, res) => {
+
+    res.set("Cache-Control", "no-store");
+
+
+    /* ======================================
+       DOMAIN SECURITY
+    ====================================== */
+
+    if (
+      !isLspAllowedOrigin(
+        req.get("origin") || ""
+      )
+    ) {
+
+      return res.status(403).json({
+        ok: false,
+        message: "Invalid request origin."
+      });
+
+    }
+
+
+    // UID FROM VERIFIED SESSION ONLY
+
+    const uid = String(req.auth?.uid || "");
+
+    if (!uid) {
+
+      return res.status(401).json({
+        ok: false,
+        message: "Please sign in again."
+      });
+
+    }
+
+
+    const {
+      currentCode,
+      newCode,
+      confirmCode
+    } = req.body || {};
+
+
+    /* ======================================
+       VALIDATE INPUT
+    ====================================== */
+
+    if (
+
+      typeof currentCode !== "string" ||
+
+      typeof newCode !== "string" ||
+
+      typeof confirmCode !== "string" ||
+
+      !currentCode ||
+
+      currentCode.length > 128 ||
+
+      newCode.length < 6 ||
+
+      Buffer.byteLength(newCode, "utf8") > 72 ||
+
+      newCode !== newCode.trim()
+
+    ) {
+
+      return res.status(400).json({
+
+        ok: false,
+
+        message: "Invalid security code format."
+
+      });
+
+    }
+
+
+    if (newCode !== confirmCode) {
+
+      return res.status(400).json({
+
+        ok: false,
+
+        message: "Security codes do not match."
+
+      });
+
+    }
+
+
+    if (currentCode === newCode) {
+
+      return res.status(400).json({
+
+        ok: false,
+
+        message: "Please choose a different security code."
+
+      });
+
+    }
+
+
+    try {
+
+      /* ====================================
+         LOAD ACCOUNT
+      ==================================== */
+
+      let db = loadUsers();
+
+      let user = db[uid];
+
+
+      if (!user?.profile) {
+
+        return res.status(404).json({
+
+          ok: false,
+
+          message: "Account not found."
+
+        });
+
+      }
+
+
+      if (user.profile.accountBlocked) {
+
+        return res.status(403).json({
+
+          ok: false,
+
+          message: "Account is restricted."
+
+        });
+
+      }
+
+
+      if (
+        typeof user.securityCode !== "string"
+      ) {
+
+        return res.status(403).json({
+
+          ok: false,
+
+          message: "Security code is not configured."
+
+        });
+
+      }
+
+
+      const originalHash = user.securityCode;
+
+
+      /* ====================================
+         VERIFY CURRENT SECURITY CODE
+      ==================================== */
+
+      const verification =
+
+        await securityTransaction.verifySecurityCode(
+
+          uid,
+
+          currentCode,
+
+          originalHash,
+
+          (code, hash) =>
+            bcrypt.compare(code, hash)
+
+        );
+
+
+      if (!verification.ok) {
+
+        if (
+          verification.error ===
+          "INVALID_SECURITY_CODE"
+        ) {
+
+          securityIDS.record(
+
+            "TRANSACTION_AUTH_FAILED",
+
+            lspIDSClientIp(req)
+
+          );
+
+        }
+
+
+        if (verification.retryAfter) {
+
+          res.setHeader(
+
+            "Retry-After",
+
+            String(verification.retryAfter)
+
+          );
+
+        }
+
+
+        const locked = [
+
+          "SECURITY_CODE_LOCKED",
+
+          "TRANSACTION_BUSY",
+
+          "SECURITY_BUSY"
+
+        ].includes(verification.error);
+
+
+        return res.status(
+          locked ? 429 : 403
+        ).json({
+
+          ok: false,
+
+          error: verification.error,
+
+          message: locked
+
+            ? "Too many attempts. Please try again later."
+
+            : "Current security code verification failed."
+
+        });
+
+      }
+
+
+      /* ====================================
+         PREVENT REUSING CURRENT CODE
+      ==================================== */
+
+      if (
+        await bcrypt.compare(newCode, originalHash)
+      ) {
+
+        return res.status(400).json({
+
+          ok: false,
+
+          message: "Please choose a different security code."
+
+        });
+
+      }
+
+
+      /* ====================================
+         HASH NEW SECURITY CODE
+      ==================================== */
+
+      const newHash = await bcrypt.hash(
+        newCode,
+        10
+      );
+
+
+      /* ====================================
+         REVALIDATE SESSION
+      ==================================== */
+
+      const identity =
+
+        securityAuth.getIdentity(
+          req.headers.cookie
+        );
+
+
+      if (
+
+        !identity ||
+
+        identity.uid !== uid ||
+
+        identity.sessionId !== req.auth.sessionId
+
+      ) {
+
+        return res.status(401).json({
+
+          ok: false,
+
+          message: "Session expired. Please sign in again."
+
+        });
+
+      }
+
+
+      /* ====================================
+         RELOAD LATEST ACCOUNT DATA
+
+         Avoid overwriting balances changed
+         during asynchronous bcrypt operations.
+      ==================================== */
+
+      db = loadUsers();
+
+      user = db[uid];
+
+
+      if (
+
+        !user?.profile ||
+
+        user.profile.accountBlocked ||
+
+        user.securityCode !== originalHash
+
+      ) {
+
+        return res.status(409).json({
+
+          ok: false,
+
+          message: "Account state changed. Please try again."
+
+        });
+
+      }
+
+
+      /* ====================================
+         UPDATE SECURITY CODE
+      ==================================== */
+
+      user.securityCode = newHash;
+
+      user.securityCodeChangedAt = Date.now();
+
+
+      saveUsers(db);
+
+
+      console.log(
+
+        "[ACCOUNT SECURITY] Security code updated:",
+
+        uid
+
+      );
+
+
+      return res.json({
+
+        ok: true,
+
+        message: "Security code updated successfully."
+
+      });
+
+
+    } catch (error) {
+
+      console.error(
+
+        "[CHANGE SECURITY CODE] Failed",
+
+        error.name
+
+      );
+
+
+      return res.status(500).json({
+
+        ok: false,
+
+        message: "Unable to update security code."
+
+      });
+
+    }
+
+  }
+
+);
+
+
 app.post("/api/change-password", async (req,res)=>{
   const { username, securityCode, newPassword } = req.body;
   if(!username || !securityCode || !newPassword)

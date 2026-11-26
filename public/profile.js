@@ -3589,3 +3589,285 @@ if (document.readyState === "loading") {
 
 })();
 
+
+/* ==========================================
+   LIVESTREAM PRO
+   CHANGE SECURITY CODE V1.0
+========================================== */
+
+const securityCodeModal =
+  document.getElementById("securityCodeModal");
+
+const btnSubmitSecurityCode =
+  document.getElementById("btnSubmitSecurityCode");
+
+let securityCodeUpdating = false;
+
+
+/* ==========================================
+   RESET INPUTS
+========================================== */
+
+function resetSecurityCodeInputs() {
+
+  [
+    "currentSecurityCode",
+    "newSecurityCode",
+    "confirmSecurityCode"
+  ].forEach(id => {
+
+    const input = document.getElementById(id);
+
+    if (input) {
+      input.value = "";
+    }
+
+  });
+
+}
+
+
+/* ==========================================
+   OPEN MODAL
+========================================== */
+
+function openChangeSecurityCode() {
+
+  if (!__profileAuth?.uid) {
+    showMsg("Please sign in first.");
+    return;
+  }
+
+  if (
+    viewUid &&
+    viewUid !== __profileAuth.uid
+  ) {
+    return;
+  }
+
+  if (securityCodeUpdating) return;
+
+  closeProfileSheet();
+
+  resetSecurityCodeInputs();
+
+  hideTabbar();
+
+  securityCodeModal?.classList.remove("hidden");
+
+}
+
+
+/* ==========================================
+   CLOSE MODAL
+========================================== */
+
+function closeChangeSecurityCode() {
+
+  if (securityCodeUpdating) return;
+
+  securityCodeModal?.classList.add("hidden");
+
+  document.body.classList.remove("keyboard-open");
+
+  resetSecurityCodeInputs();
+
+  showTabbar();
+
+}
+
+
+/* ==========================================
+   SUBMIT SECURITY CODE
+========================================== */
+
+async function submitChangeSecurityCode() {
+
+  if (securityCodeUpdating) return;
+
+  if (
+    !__profileAuth?.uid ||
+    (viewUid && viewUid !== __profileAuth.uid)
+  ) {
+    return;
+  }
+
+  const currentCode =
+    document.getElementById(
+      "currentSecurityCode"
+    ).value;
+
+  const newCode =
+    document.getElementById(
+      "newSecurityCode"
+    ).value;
+
+  const confirmCode =
+    document.getElementById(
+      "confirmSecurityCode"
+    ).value;
+
+
+  if (!currentCode || !newCode || !confirmCode) {
+
+    showMsg("Please complete all fields.");
+    return;
+
+  }
+
+
+  if (
+    newCode.length < 6 ||
+    new TextEncoder().encode(newCode).length > 72 ||
+    newCode !== newCode.trim()
+  ) {
+
+    showMsg("Use 6–72 bytes without surrounding spaces.");
+    return;
+
+  }
+
+
+  if (newCode !== confirmCode) {
+
+    showMsg("Security codes do not match.");
+    return;
+
+  }
+
+
+  if (currentCode === newCode) {
+
+    showMsg("Please choose a different security code.");
+    return;
+
+  }
+
+
+  securityCodeUpdating = true;
+
+  btnSubmitSecurityCode.disabled = true;
+
+  btnSubmitSecurityCode.textContent =
+    "Updating...";
+
+
+  let success = false;
+
+  try {
+
+    const response = await fetch(
+      "/api/change-security-code",
+      {
+        method: "POST",
+
+        credentials: "same-origin",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          currentCode,
+          newCode,
+          confirmCode
+        })
+
+      }
+    );
+
+    const data = await response.json();
+
+
+    if (response.ok && data.ok) {
+
+      success = true;
+
+    } else {
+
+      showMsg(
+        data.message ||
+        "Unable to update security code."
+      );
+
+    }
+
+  } catch {
+
+    showMsg(
+      "Connection failed. Please try again."
+    );
+
+  } finally {
+
+    securityCodeUpdating = false;
+
+    btnSubmitSecurityCode.disabled = false;
+
+    btnSubmitSecurityCode.textContent =
+      "Update Code";
+
+  }
+
+
+  if (success) {
+
+    closeChangeSecurityCode();
+
+    showMsg(
+      "Security code updated successfully.",
+      "Security Updated"
+    );
+
+  }
+
+}
+
+
+/* ==========================================
+   MOBILE KEYBOARD SUPPORT
+========================================== */
+
+document
+  .querySelectorAll("#securityCodeModal input")
+  .forEach(input => {
+
+    input.addEventListener("focus", () => {
+
+      document.body.classList.add(
+        "keyboard-open"
+      );
+
+    });
+
+    input.addEventListener("blur", () => {
+
+      document.body.classList.remove(
+        "keyboard-open"
+      );
+
+    });
+
+  });
+
+
+/* ==========================================
+   OWNER ONLY
+========================================== */
+
+if (
+  !__profileAuth?.uid ||
+  (viewUid && viewUid !== __profileAuth.uid)
+) {
+
+  const button = document.getElementById(
+    "btnChangeSecurityCode"
+  );
+
+  if (button) {
+
+    button.style.display = "none";
+
+  }
+
+}
