@@ -55,14 +55,35 @@ const btnBlock          = document.getElementById("btnBlock");
 // 🔧 FIX LEGACY AVATAR (/avatars -> R2)
 const R2_PUBLIC_URL = "https://pub-a6a541cf3a9c4d0aa06613e3d1dc1c60.r2.dev";
 
-function fixMedia(url){
+function fixMedia(url) {
+
   if (!url) return "";
-  if (url.startsWith("/avatars/") || url.startsWith("/covers/")) {
+
+  // Chuyển avatar mặc định cũ sang ảnh nội bộ
+  if (
+    url === "https://i.ibb.co/GvJWn19q/icon-192.png"
+  ) {
+    return "/icons/icon-192.png";
+  }
+
+  // Giữ nguyên ảnh nội bộ
+  if (
+    url.startsWith("/assets/") ||
+    url.startsWith("/icons/")
+  ) {
+    return url;
+  }
+
+  // Giữ nguyên hệ thống lưu trữ Cloudflare R2
+  if (
+    url.startsWith("/avatars/") ||
+    url.startsWith("/covers/")
+  ) {
     return R2_PUBLIC_URL + url;
   }
+
   return url;
 }
-
 function isAdminUser(u) {
   return (
     u?.role === "admin" ||
@@ -720,15 +741,14 @@ setInterval(() => {
 
 const defaultProfile = {
   name: "User",
-  avatar: "https://i.ibb.co/GvJWn19q/icon-192.png",
+  avatar: "/icons/icon-192.png",
   coins: 0,
   level: 1,
-  exp: 0,            // 🔥 exp
-  coinSent: 0,       // 🎁 đã tặng
-  coinReceived: 0,   // 💎 đã nhận
-  coinDeposit:0,
+  exp: 0,
+  coinSent: 0,
+  coinReceived: 0,
+  coinDeposit: 0,
   bio: "",
-
 };
 
 
@@ -885,7 +905,8 @@ renderProfileVerified(__profileAuth.uid);
 
   
 
-avatarPreview.src = fixMedia(p.avatar);
+avatarPreview.src =
+  fixMedia(p.avatar) || defaultProfile.avatar;
 
 
 

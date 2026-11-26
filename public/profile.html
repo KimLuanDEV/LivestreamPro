@@ -17539,7 +17539,7 @@ body.page-profile .transfer-history-card {
   <!-- PROFILE COVER -->
 <div class="profile-cover">
   <img id="coverPreview"
-       src="https://i.ibb.co/GvJWn19q/icon-192.png"
+       src="/assets/default-cover.jpg"
        alt="cover">
 
   <div class="cover-actions">
@@ -17560,12 +17560,16 @@ body.page-profile .transfer-history-card {
 <!-- AVATAR + BASIC INFO -->
 <div class="profile-header fb-style">
 
-  <div class="avatar-wrap fb-avatar">
-    <img id="avatarPreview"
-         src="https://i.ibb.co/GvJWn19q/icon-192.png" >
-    <div id="avatarCrown" class="avatar-crown hidden">👑</div>
-    <div class="avatar-camera">📷</div>
-  </div>
+<div class="avatar-wrap fb-avatar">
+  <img id="avatarPreview"
+       src="/icons/icon-192.png"
+       alt="Profile Avatar">
+
+  <div id="avatarCrown"
+       class="avatar-crown hidden">👑</div>
+
+  <div class="avatar-camera">📷</div>
+</div>
 
   <input type="file" id="avatarInput" accept="image/*" hidden>
 
@@ -18728,7 +18732,7 @@ body.page-profile .transfer-history-card {
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/chat-global.js"></script>
-<script src="/profile.js"></script>
+<script src="/profile.js?v=20261126-2"></script>
 <script src="/push-init.js"></script>
 <script src="/app-entry-guard.js"></script>
 
