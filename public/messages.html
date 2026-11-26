@@ -2364,20 +2364,36 @@ body.page-messages #chatModal .chat-time:not(.time-group-hidden) {
 }
 
 body.page-messages #chatModal #chatBox {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-content: flex-start !important;
   gap: 0 !important;
 }
 
 body.page-messages #chatModal .chat-line {
+  flex: 0 0 auto !important;
+
+  height: fit-content !important;
+  min-height: 0 !important;
+  max-height: none !important;
+
+  justify-content: flex-start !important;
+
   margin: 0 !important;
   padding: 0 !important;
-  gap: 2px !important;
+  gap: 0 !important;
 }
 
 body.page-messages #chatModal .chat-line > div {
+  flex: 0 0 auto !important;
+
+  height: auto !important;
+  min-height: 0 !important;
+
   margin: 0 !important;
   padding: 0 !important;
 }
-
 body.page-messages #chatModal .chat-line.me + .chat-line.me {
   margin-top: 1px !important;
 }
@@ -2392,7 +2408,14 @@ body.page-messages #chatModal .chat-line.me + .chat-line.other, body.page-messag
 
 body.page-messages #chatModal .bubble-text {
   display: block !important;
+
+  height: auto !important;
+  min-height: 0 !important;
+
   margin: 0 !important;
+  padding: 7px 12px !important;
+
+  line-height: 1.4 !important;
 }
 
 body.page-messages #chatModal .chat-time {
