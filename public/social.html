@@ -6584,8 +6584,6 @@ body.social-page .lp-tabbar .lp-tab.active .icon {
 
   border-radius: 12px;
 
-  padding: 5px 12px;
-
   box-shadow: none;
 
 }
@@ -6647,6 +6645,568 @@ body.social-page button {
 }
 
 </style>
+
+<style>
+/* ==========================================
+   CREATE POST - CHAMPAGNE WHITE V6.1
+   LIVESTREAM PRO
+========================================== */
+
+body.social-page #composeModal {
+
+  --cp-bg: #FAF6E9;
+  --cp-card: #FFFFFF;
+  --cp-border: #EAE0C8;
+  --cp-gold: #947025;
+  --cp-text: #29251D;
+  --cp-muted: #766D5B;
+
+  background: #FAF6E9 !important;
+  color: #29251D !important;
+
+  color-scheme: light;
+
+}
+
+
+/* ==========================================
+   MAIN CONTAINER
+========================================== */
+
+body.social-page #composeModal .lp-compose-sheet {
+
+  background: #FAF6E9 !important;
+  color: #29251D !important;
+
+  border: none !important;
+  box-shadow: none !important;
+
+}
+
+
+/* ==========================================
+   HEADER
+========================================== */
+
+body.social-page #composeModal .lp-compose-header {
+
+  background: linear-gradient(
+    120deg,
+    #FFFDF7,
+    #F8EBC9
+  ) !important;
+
+  border-bottom: 1px solid #EAE0C8 !important;
+
+  box-shadow: none !important;
+
+  padding-left: 16px;
+  padding-right: 16px;
+
+}
+
+
+/* TITLE */
+
+body.social-page #composeModal .lp-header-title {
+
+  color: #29251D !important;
+
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -.4px;
+
+  text-shadow: none !important;
+
+}
+
+
+/* CLOSE BUTTON */
+
+body.social-page #composeModal .lp-close {
+
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #FFFFFF !important;
+  color: #766D5B !important;
+
+  border: 1px solid #EAE0C8 !important;
+  border-radius: 50%;
+
+  padding: 0;
+  box-shadow: none !important;
+
+}
+
+body.social-page #composeModal .lp-close svg {
+
+  width: 19px;
+  height: 19px;
+
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+
+}
+
+
+/* ==========================================
+   POST BUTTON
+========================================== */
+
+body.social-page #composeModal .lp-submit.icon {
+
+  width: auto !important;
+  min-width: 66px;
+  height: 36px;
+
+  padding: 0 16px !important;
+
+  background: linear-gradient(
+    135deg,
+    #F1DDA6,
+    #E3C47C
+  ) !important;
+
+  color: #594114 !important;
+
+  border: 1px solid #DEC280 !important;
+  border-radius: 12px;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  box-shadow: none !important;
+
+}
+
+body.social-page #composeModal .lp-submit.icon span {
+
+  color: #594114 !important;
+
+}
+
+body.social-page #composeModal .lp-submit.icon:disabled {
+
+  background: #EDE6D5 !important;
+
+  color: #A59B87 !important;
+
+  opacity: .65;
+
+  box-shadow: none !important;
+
+}
+
+
+/* ==========================================
+   CONTENT AREA
+========================================== */
+
+body.social-page #composeModal .lp-compose-body {
+
+  background: #FAF6E9 !important;
+
+  color: #29251D !important;
+
+  padding: 16px !important;
+
+  gap: 14px;
+
+}
+
+
+/* ==========================================
+   AUTHOR INFORMATION
+========================================== */
+
+body.social-page #composeModal .lp-compose-author {
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  background: #FFFFFF !important;
+
+  padding: 14px;
+
+  border: 1px solid #EAE0C8;
+  border-radius: 16px;
+
+  box-shadow: none;
+
+}
+
+body.social-page #composeModal .lp-compose-avatar {
+
+  width: 48px;
+  height: 48px;
+
+  flex-shrink: 0;
+
+  object-fit: cover;
+
+  background: #F8EBC9 !important;
+
+  border: 2px solid #F0DFB5;
+  border-radius: 50%;
+
+  box-shadow: none !important;
+
+}
+
+body.social-page #composeModal .lp-compose-author-info {
+
+  min-width: 0;
+
+}
+
+body.social-page #composeModal .lp-compose-name {
+
+  color: #29251D !important;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  text-shadow: none !important;
+
+}
+
+
+/* PUBLIC POST */
+
+body.social-page #composeModal .lp-compose-visibility {
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 5px;
+
+  padding: 4px 8px;
+
+  margin-top: 4px;
+
+  background: #F8F3E6 !important;
+  color: #766D5B !important;
+
+  border: none;
+  border-radius: 8px;
+
+  font-size: 11px;
+
+}
+
+body.social-page #composeModal .lp-compose-visibility svg {
+
+  width: 13px;
+  height: 13px;
+
+  stroke: #947025;
+  fill: none;
+
+  flex-shrink: 0;
+
+}
+
+
+/* ==========================================
+   POST TEXT EDITOR
+========================================== */
+
+body.social-page #composeModal #postTextModal {
+
+  width: 100% !important;
+
+  height: auto !important;
+  min-height: 180px !important;
+  max-height: none !important;
+
+  flex: 1 0 auto;
+
+  padding: 16px !important;
+
+  background: #FFFFFF !important;
+  color: #29251D !important;
+
+  border: 1px solid #EAE0C8 !important;
+  border-radius: 16px;
+
+  font-family: inherit;
+  font-size: 16px !important;
+  font-weight: 400;
+  line-height: 1.65;
+
+  resize: none;
+
+  outline: none !important;
+  box-shadow: none !important;
+
+  caret-color: #947025;
+
+}
+
+body.social-page #composeModal #postTextModal::placeholder {
+
+  color: #958B77 !important;
+  opacity: 1 !important;
+
+}
+
+body.social-page #composeModal #postTextModal:focus {
+
+  border-color: #C9A65D !important;
+
+}
+
+
+/* SMALL EDITOR WHEN MEDIA IS SELECTED */
+
+body.social-page #composeModal
+.lp-compose-body.center-image #postTextModal {
+
+  flex: 0 0 auto;
+
+  min-height: 85px !important;
+  height: 85px !important;
+
+}
+
+
+/* ==========================================
+   IMAGE / VIDEO PREVIEW
+========================================== */
+
+body.social-page #composeModal .lp-compose-preview {
+
+  width: 100% !important;
+
+  margin: 0 !important;
+
+  background: #FFFFFF !important;
+
+  border: 1px solid #EAE0C8 !important;
+  border-radius: 16px;
+
+  box-shadow: none !important;
+
+  overflow: hidden;
+
+}
+
+body.social-page #composeModal .lp-preview-item {
+
+  background: #F8F3E6;
+
+  border-radius: 12px;
+
+}
+
+body.social-page #composeModal .lp-preview-remove {
+
+  background: rgba(41,37,29,.75) !important;
+
+  color: #FFFFFF !important;
+
+  border: none;
+  box-shadow: none;
+
+}
+
+
+/* ==========================================
+   MEDIA TOOLBAR
+========================================== */
+
+body.social-page #composeModal .lp-compose-footer {
+
+  background: #FFFFFF !important;
+
+  border-top: 1px solid #EAE0C8 !important;
+
+  padding: 12px 16px !important;
+
+  padding-bottom: calc(
+    12px + env(safe-area-inset-bottom, 0px)
+  ) !important;
+
+  box-shadow: none !important;
+
+}
+
+
+/* REMOVE TOOLBAR HEADING */
+
+body.social-page #composeModal .lp-compose-tools-title {
+
+  display: none !important;
+
+}
+
+
+/* TOOLS GRID */
+
+body.social-page #composeModal .lp-compose-tools-grid {
+
+  width: 100%;
+
+  display: grid !important;
+
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: 10px;
+
+}
+
+
+/* TOOL BUTTONS */
+
+body.social-page #composeModal .lp-tool {
+
+  width: 100% !important;
+  height: 64px !important;
+
+  display: flex !important;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  padding: 8px !important;
+
+  background: #FAF5E8 !important;
+
+  color: #947025 !important;
+
+  border: 1px solid #EAE0C8 !important;
+  border-radius: 14px;
+
+  box-shadow: none !important;
+
+  cursor: pointer;
+
+  transition: background .18s, transform .18s;
+
+}
+
+
+/* TOOL ICONS */
+
+body.social-page #composeModal .lp-tool .lp-i {
+
+  display: block;
+
+  width: 23px !important;
+  height: 23px !important;
+
+  color: #947025 !important;
+
+  stroke: currentColor;
+
+  filter: none !important;
+
+}
+
+
+/* PHOTO / VIDEO / FILE */
+
+body.social-page #composeModal .lp-tool.tool-photo,
+body.social-page #composeModal .lp-tool.tool-video,
+body.social-page #composeModal .lp-tool.tool-file {
+
+  color: #947025 !important;
+
+}
+
+
+/* TOOL LABEL */
+
+body.social-page #composeModal .lp-tool > span {
+
+  display: block !important;
+
+  color: #766D5B !important;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  line-height: 1.2;
+
+}
+
+
+/* TOUCH EFFECT */
+
+body.social-page #composeModal .lp-tool:active {
+
+  background: #F3E4BE !important;
+
+  transform: scale(.96);
+
+}
+
+
+/* ==========================================
+   MOBILE KEYBOARD
+========================================== */
+
+body.social-page #composeModal.keyboard-open
+.lp-compose-footer {
+
+  padding-bottom: 10px !important;
+
+}
+
+body.social-page #composeModal.keyboard-open
+.lp-tool {
+
+  height: 48px !important;
+
+}
+
+body.social-page #composeModal.keyboard-open
+.lp-tool > span {
+
+  display: none !important;
+
+}
+
+
+/* ==========================================
+   SMALL MOBILE
+========================================== */
+
+@media (max-width: 370px) {
+
+  body.social-page #composeModal .lp-compose-body {
+
+    padding: 12px !important;
+
+  }
+
+  body.social-page #composeModal .lp-compose-tools-grid {
+
+    gap: 6px;
+
+  }
+
+  body.social-page #composeModal .lp-header-title {
+
+    font-size: 16px;
+
+  }
+
+}
+</style>
+
+
 
 </head>
 
