@@ -1317,9 +1317,9 @@ button:disabled {
 }
 
 
-
 /* ==========================================
-   SFU - PREMIUM LIVE ENDED MODAL
+   SFU - MINIMAL LIVE ENDED MODAL V2.0
+   BLACK & CHAMPAGNE GOLD
 ========================================== */
 
 .sfu-end-overlay {
@@ -1332,128 +1332,131 @@ button:disabled {
   justify-content: center;
 
   padding:
-    calc(20px + env(safe-area-inset-top, 0px))
-    20px
-    calc(20px + env(safe-area-inset-bottom, 0px));
+    calc(16px + env(safe-area-inset-top, 0px))
+    16px
+    calc(16px + env(safe-area-inset-bottom, 0px));
 
-  background: rgba(2, 4, 8, .88);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  background: rgba(0, 0, 0, .85);
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
+
+/* MODAL */
 
 .sfu-end-modal {
   position: relative;
 
-  width: min(100%, 390px);
-  padding: 36px 27px 30px;
+  width: min(100%, 270px);
+  padding: 23px 19px 20px;
 
   text-align: center;
   overflow: hidden;
 
-  border: 1px solid rgba(222,184,115,.34);
-  border-radius: 24px;
+  border: 1px solid rgba(223,190,131,.28);
+  border-radius: 20px;
 
-  background:
-    radial-gradient(
-      ellipse at top,
-      rgba(188,139,65,.13),
-      transparent 65%
-    ),
-    linear-gradient(155deg,#191B21,#0D0F13);
+  background: linear-gradient(
+    145deg,
+    #22211f,
+    #15171c
+  );
 
-  box-shadow:
-    0 25px 90px rgba(0,0,0,.65),
-    inset 0 1px rgba(255,255,255,.045);
+  box-shadow: 0 15px 45px rgba(0,0,0,.5);
 
-  animation: sfuEndAppear .35s ease-out;
+  animation: sfuEndAppear .22s ease-out;
 }
+
+/* ICON */
 
 .sfu-end-icon {
   display: grid;
   place-items: center;
 
-  width: 76px;
-  height: 76px;
-  margin: 0 auto 25px;
+  width: 48px;
+  height: 48px;
 
-  border: 1px solid rgba(224,187,119,.38);
+  margin: 0 auto 14px;
+
+  border: 1px solid rgba(223,190,131,.2);
   border-radius: 50%;
 
-  background: rgba(216,172,96,.07);
-  color: #E4C48A;
+  background: rgba(223,190,131,.07);
+  color: #dfbe83;
 }
 
 .sfu-end-icon svg {
-  width: 33px;
-  height: 33px;
+  width: 23px;
+  height: 23px;
 }
 
-.sfu-end-kicker {
-  margin-bottom: 12px;
-  color: #BC9A65;
-
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 2.7px;
-}
+/* TITLE */
 
 .sfu-end-modal h2 {
-  margin: 0 0 13px;
+  margin: 0 0 7px;
 
-  font: 700 clamp(25px, 6vw, 32px)
-    Georgia, "Times New Roman", serif;
+  color: #f4dfb7;
 
-  color: #F2DDB7;
-  letter-spacing: -.5px;
+  font-family: system-ui, sans-serif;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.3;
 }
+
+/* DESCRIPTION */
 
 .sfu-end-modal p {
-  max-width: 280px;
-  margin: 0 auto;
+  margin: 0;
 
-  color: #A8ABB2;
-  font-size: 13px;
-  line-height: 1.8;
+  color: #a8abb2;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
-.sfu-end-divider {
-  width: 100%;
-  height: 1px;
-  margin: 29px 0 24px;
+/* RETURN COUNTDOWN */
 
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(222,184,115,.35),
-    transparent
-  );
-}
+.sfu-end-return {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
 
-.sfu-end-caption,
-.sfu-end-note {
-  display: block;
-  color: #AAA6A0;
+  gap: 4px;
+  margin-top: 20px;
+
+  color: #a8abb2;
   font-size: 11px;
 }
 
 .sfu-end-countdown {
-  display: block;
-  margin: 12px 0 17px;
+  display: inline;
 
-  color: #F0CD91;
-  font-size: 43px;
+  margin: 0;
+
+  color: #dfbe83;
+  font-size: 15px;
   font-weight: 750;
+
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
 
+.sfu-end-return span:last-child {
+  margin-left: -3px;
+  color: #dfbe83;
+}
+
+/* PROGRESS BAR */
+
 .sfu-end-progress {
-  height: 4px;
   width: 100%;
+  height: 3px;
+
+  margin-top: 14px;
 
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(221,186,121,.13);
+
+  background: rgba(223,190,131,.12);
 }
 
 #sfuEndProgress {
@@ -1461,36 +1464,25 @@ button:disabled {
   height: 100%;
 
   border-radius: inherit;
+
   background: linear-gradient(
     90deg,
-    #A7834C,
-    #F0D49C
+    #b38b50,
+    #f0d49c
   );
 }
 
-.sfu-end-note {
-  margin-top: 16px;
-  color: #777C85;
-  font-size: 10px;
-  letter-spacing: .5px;
-}
+/* APPEAR ANIMATION */
 
 @keyframes sfuEndAppear {
   from {
     opacity: 0;
-    transform: translateY(16px) scale(.97);
+    transform: scale(.96);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@media (max-width: 480px) {
-  .sfu-end-modal {
-    padding: 32px 23px 26px;
-    border-radius: 21px;
+    transform: scale(1);
   }
 }
 
@@ -1499,7 +1491,6 @@ button:disabled {
     animation: none;
   }
 }
-
 
 
 /* ==========================================
@@ -12921,8 +12912,10 @@ body.sfu-role-host #sfuPinnedContent.dragging {
   </div>
 
 </div>
+
+
 <!-- ======================================
-     SFU - LIVE ENDED MODAL
+     SFU - COMPACT LIVE ENDED MODAL V2
 ====================================== -->
 
 <div
@@ -12939,52 +12932,44 @@ body.sfu-role-host #sfuPinnedContent.dragging {
       <svg viewBox="0 0 24 24"
            fill="none"
            stroke="currentColor"
-           stroke-width="1.5"
+           stroke-width="1.7"
            stroke-linecap="round"
            stroke-linejoin="round"
            aria-hidden="true">
-        <rect x="3" y="5" width="18"
-              height="14" rx="3"/>
-        <path d="M8 10l8 4M16 10l-8 4"/>
-        <path d="M8 22h8"/>
+
+        <path d="M10.5 7H18a2 2 0 0 1 2 2v7"/>
+        <path d="M3 3l18 18"/>
+        <path d="M3 7v10a2 2 0 0 0 2 2h12"/>
+        <path d="m20 10 3-2v8l-3-2"/>
+
       </svg>
     </div>
 
-    <div class="sfu-end-kicker">
-      LIVESTREAM SESSION
-    </div>
-
     <h2 id="sfuEndTitle">
-      Live Has Ended
+      Live Ended
     </h2>
 
     <p id="sfuEndDescription">
-      The host has ended this broadcast.
       Thank you for watching.
     </p>
 
-    <div class="sfu-end-divider"></div>
+    <div class="sfu-end-return">
 
-    <span class="sfu-end-caption">
-      Returning to Lobby in
-    </span>
+      <span>Returning to lobby in</span>
 
-    <strong
-      id="sfuEndCountdown"
-      class="sfu-end-countdown">05</strong>
+      <strong
+        id="sfuEndCountdown"
+        class="sfu-end-countdown">05</strong><span>s</span>
+
+    </div>
 
     <div class="sfu-end-progress">
       <div id="sfuEndProgress"></div>
     </div>
 
-    <span class="sfu-end-note">
-      Automatic redirection
-    </span>
-
   </div>
 
 </div>
-
 
 
 
