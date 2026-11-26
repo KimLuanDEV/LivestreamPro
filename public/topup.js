@@ -382,12 +382,12 @@ sheetBankInfo.replaceChildren(
   ),
 
   createBankRow(
-    "Account Number",
+    "Account",
     agent.account || "—"
   ),
 
   createBankRow(
-    "Account Holder",
+    "Holder",
     agent.owner || "—"
   ),
 
@@ -408,7 +408,7 @@ sheetBankInfo.replaceChildren(
 
 btnTransferred.innerHTML =
   tpIcon("check") +
-  "<span>I HAVE COMPLETED THE TRANSFER</span>";
+  "<span>I've Transferred</span>";
 
   transferStatus.classList.add("hidden");
 
@@ -512,7 +512,7 @@ btnTransferred.addEventListener("click", () => {
 
 btnTransferred.innerHTML =
   tpIcon("clock") +
-  "<span>NOTIFICATION SENT</span>";
+  "<span>Pending Confirmation</span>";
 
   transferStatus.classList.remove("hidden");
 
@@ -822,7 +822,7 @@ function openCardCheckout() {
 
         <div class="lsp-checkout-brand">
           <small>LIVESTREAM PRO</small>
-          <h2>Secure Checkout</h2>
+          <h2>Checkout</h2>
         </div>
 
         <span class="lsp-checkout-lock">
@@ -836,7 +836,7 @@ function openCardCheckout() {
         <div class="lsp-order-card">
 
           <div class="lsp-order-heading">
-            <span>Order Summary</span>
+            <span>Order</span>
             <small>DIAMOND TOP-UP</small>
           </div>
 
@@ -856,14 +856,14 @@ function openCardCheckout() {
           <div class="lsp-order-divider"></div>
 
           <div class="lsp-order-total">
-            <span>Total Payment</span>
+            <span>Total</span>
             <strong id="lspCheckoutTotal"></strong>
           </div>
 
         </div>
 
         <h3 class="lsp-method-heading">
-          SELECT PAYMENT METHOD
+          Payment Method
         </h3>
 
         <div id="lspCheckoutMethods"
@@ -886,14 +886,14 @@ function openCardCheckout() {
       <footer class="lsp-checkout-footer">
 
         <div class="lsp-checkout-footer-total">
-          <span>Amount to pay</span>
+          <span>Total</span>
           <strong id="lspCheckoutFooterTotal"></strong>
         </div>
 
         <button
           id="lspCheckoutConfirm"
           type="button">
-          CONFIRM PAYMENT
+          Pay Now
         </button>
 
       </footer>
@@ -993,7 +993,7 @@ async function startCardPayment() {
 
   if (button) {
     button.disabled = true;
-    button.textContent = "CONNECTING TO PAYMENT...";
+    button.textContent = "Connecting...";
   }
 
   try {
@@ -1066,7 +1066,7 @@ const allowed = [
 
     if (button) {
       button.disabled = false;
-      button.textContent = "CONFIRM PAYMENT";
+      button.textContent = "Pay Now";
     }
   }
 }

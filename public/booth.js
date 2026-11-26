@@ -546,7 +546,7 @@ function openExtendModalInBooth() {
 
   showModal({
 
-    title: "Extend Booth Rental",
+    title: "Extend",
 
     message: `
 

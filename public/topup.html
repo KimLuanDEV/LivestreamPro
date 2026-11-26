@@ -17,7 +17,7 @@
       type="image/png"
       sizes="512x512"
       href="/icons/icon-512.png">
-      
+
 <script src="/lsp-page-transition.js"></script>
 
 <style>
@@ -1845,6 +1845,774 @@ body.checkout-open {
 
 
 
+/* ==========================================
+   TOPUP V3.0 - MINIMAL BLACK & GOLD
+========================================== */
+
+:root {
+  --bg: #101114;
+  --card: #1c1e23;
+  --gold: #d9b979;
+  --gold-light: #f5f5f7;
+  --text: #f5f5f7;
+  --muted: #96989f;
+  --line: #292b31;
+}
+
+html, body {
+  background: var(--bg);
+}
+
+/* REMOVE EXTRA TEXT */
+
+.header-brand,
+.page-intro,
+.wallet-top > span,
+.wallet-footer,
+.card-payment-title,
+.lsp-checkout-brand small,
+.lsp-order-heading small,
+.lsp-order-name small {
+  display: none !important;
+}
+
+/* ==========================================
+   MAIN LAYOUT
+========================================== */
+
+.topup-shell {
+  width: 100%;
+  max-width: 430px;
+
+  min-height: 100dvh;
+
+  padding:
+    0 14px
+    calc(24px + env(safe-area-inset-bottom,0px));
+
+  background: var(--bg);
+}
+
+/* ==========================================
+   HEADER
+========================================== */
+
+.topup-header {
+  margin: 0 -14px;
+
+  padding:
+    env(safe-area-inset-top,0px)
+    14px
+    0;
+
+  background: var(--bg);
+
+  border-bottom: 1px solid var(--line);
+
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.header-row {
+  height: 56px;
+
+  grid-template-columns:
+    42px minmax(0,1fr) 42px;
+}
+
+.btn-back {
+  width: 40px;
+  height: 40px;
+
+  background: transparent;
+
+  border: none;
+  border-radius: 50%;
+
+  color: var(--gold);
+
+  box-shadow: none;
+}
+
+.btn-back .icon {
+  width: 25px;
+  height: 25px;
+}
+
+.header-center h1 {
+  margin: 0;
+
+  font-family: inherit;
+  font-size: 19px;
+  font-weight: 700;
+
+  color: var(--text);
+}
+
+.header-symbol .icon {
+  width: 25px;
+  height: 25px;
+}
+
+/* ==========================================
+   DIAMOND BALANCE
+========================================== */
+
+.wallet-card {
+  position: relative;
+
+  margin-top: 16px;
+  padding: 19px 18px;
+
+  border: 1px solid var(--line);
+  border-radius: 15px;
+
+  background: var(--card);
+
+  box-shadow: none;
+}
+
+.wallet-card::after {
+  display: none;
+}
+
+.wallet-top {
+  position: absolute;
+
+  top: 18px;
+  right: 18px;
+
+  color: var(--muted);
+}
+
+.wallet-top .icon {
+  width: 23px;
+  height: 23px;
+}
+
+.wallet-label {
+  margin: 0;
+
+  color: var(--muted);
+
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.wallet-value {
+  margin-top: 13px;
+
+  gap: 10px;
+
+  color: var(--gold);
+}
+
+.wallet-value .icon {
+  width: 30px;
+  height: 30px;
+}
+
+#myCoin {
+  min-width: 0;
+
+  font-size: clamp(26px,8vw,36px);
+  font-weight: 750;
+
+  letter-spacing: -.5px;
+}
+
+/* ==========================================
+   PAYMENT METHODS
+========================================== */
+
+.method-heading {
+  margin: 22px 2px 12px;
+}
+
+.method-heading h2 {
+  font-size: 14px;
+  font-weight: 600;
+
+  color: var(--text);
+}
+
+.method-heading::after {
+  display: none;
+}
+
+.topup-option {
+  margin-bottom: 10px;
+
+  background: var(--card);
+
+  border: 1px solid var(--line);
+  border-radius: 13px;
+
+  box-shadow: none;
+}
+
+.topup-option.open {
+  border-color: #34363d;
+}
+
+.option-header {
+  min-height: 70px;
+
+  padding: 12px;
+
+  gap: 12px;
+}
+
+.option-icon {
+  width: 43px;
+  height: 43px;
+
+  background: #30291f;
+
+  border: none;
+  border-radius: 11px;
+
+  color: var(--gold);
+}
+
+.option-icon .icon {
+  width: 23px;
+  height: 23px;
+}
+
+.option-title {
+  font-size: 15px;
+  font-weight: 650;
+
+  color: var(--text);
+}
+
+.option-desc {
+  margin-top: 4px;
+
+  font-size: 11px;
+  font-weight: 400;
+
+  color: var(--muted);
+}
+
+.option-arrow {
+  color: var(--muted);
+
+  width: 18px;
+  height: 18px;
+}
+
+/* Không hiển thị logo ngân hàng thừa */
+
+.card-logos {
+  display: none;
+}
+
+.option-content {
+  padding: 0 12px 12px;
+
+  border-top: 1px solid var(--line);
+}
+
+/* ==========================================
+   AGENT LIST
+========================================== */
+
+.agent-list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 0;
+}
+
+.agent-card {
+  position: relative;
+
+  min-height: 70px;
+
+  padding: 10px 0;
+  gap: 11px;
+
+  background: transparent;
+
+  border: none;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+
+  box-shadow: none;
+}
+
+.agent-card:last-child {
+  border-bottom: none;
+}
+
+.agent-avatar,
+.agent-avatar-placeholder {
+  width: 43px;
+  height: 43px;
+
+  border: none;
+
+  background: #292b31;
+  border-radius: 50%;
+}
+
+.agent-info {
+  flex: 1;
+  min-width: 0;
+
+  padding-right: 15px;
+}
+
+.agent-name {
+  font-size: 14px;
+  font-weight: 650;
+
+  color: var(--text);
+}
+
+.agent-bank {
+  margin-top: 4px;
+
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ONLINE / OFFLINE DOT */
+
+.agent-status {
+  position: absolute;
+
+  right: 27px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  display: flex;
+
+  width: 8px;
+  height: 8px;
+
+  margin: 0;
+
+  font-size: 0;
+
+  color: #49c78c;
+}
+
+.agent-status::before {
+  width: 8px;
+  height: 8px;
+}
+
+.agent-status.offline {
+  color: #747680;
+}
+
+.agent-chevron {
+  color: var(--muted);
+}
+
+.agent-chevron .icon {
+  width: 17px;
+  height: 17px;
+}
+
+/* ==========================================
+   DIAMOND PACKAGES
+========================================== */
+
+.card-payment {
+  padding: 12px 0 0;
+}
+
+.card-package-list {
+  grid-template-columns:
+    repeat(2,minmax(0,1fr));
+
+  gap: 8px;
+}
+
+.card-package {
+  min-height: 100px;
+
+  padding: 10px;
+  gap: 6px;
+
+  background: #24262c;
+
+  border: 1px solid transparent;
+  border-radius: 11px;
+
+  box-shadow: none;
+}
+
+.card-package.selected {
+  background: #30291f;
+
+  border-color: var(--gold);
+
+  box-shadow: none;
+}
+
+.card-package-icon {
+  font-size: 22px;
+}
+
+.card-package-diamonds {
+  color: var(--gold);
+
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.card-package-price {
+  color: #b5b7bf;
+
+  font-size: 12px;
+}
+
+.card-payment-summary {
+  margin-top: 13px;
+
+  padding: 12px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #24262c;
+}
+
+.card-payment-summary strong {
+  color: var(--text);
+}
+
+.card-payment-note {
+  margin: 12px 0 0;
+
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* ==========================================
+   PAYMENT BUTTONS
+========================================== */
+
+.btn-confirm,
+#cardPayBtn,
+#cardPayBtn:not(:disabled),
+#lspCheckoutConfirm,
+#cardMaintenanceClose {
+
+  min-height: 46px;
+
+  background: var(--gold);
+  color: #19150f;
+
+  border: none;
+  border-radius: 10px;
+
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+
+  box-shadow: none;
+}
+
+.btn-copy {
+  min-height: 44px;
+
+  background: #292b31;
+  color: var(--gold);
+
+  border: none;
+  border-radius: 10px;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ==========================================
+   SAFETY NOTE
+========================================== */
+
+.topup-note {
+  margin-top: 16px;
+
+  padding: 3px 2px;
+
+  gap: 8px;
+
+  background: transparent;
+  border: none;
+
+  color: var(--muted);
+
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.topup-note .icon {
+  width: 17px;
+  height: 17px;
+
+  color: var(--muted);
+}
+
+/* ==========================================
+   QR TRANSFER SHEET
+========================================== */
+
+.sheet-overlay {
+  background: rgba(0,0,0,.75);
+
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.bottom-sheet {
+  max-width: 430px;
+
+  padding:
+    10px 16px
+    calc(16px + env(safe-area-inset-bottom,0px));
+
+  background: #17181d;
+
+  border: 1px solid #303238;
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+
+  box-shadow: none;
+}
+
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+
+  margin-bottom: 12px;
+
+  background: #494b53;
+}
+
+.sheet-head h3 {
+  font-size: 18px;
+  font-weight: 700;
+
+  color: var(--text);
+}
+
+.sheet-close {
+  width: 34px;
+  height: 34px;
+
+  background: transparent;
+
+  border: none;
+  border-radius: 50%;
+
+  color: var(--muted);
+}
+
+.sheet-sub {
+  margin: 6px 0 14px;
+
+  font-size: 12px;
+}
+
+.qr-frame {
+  width: min(100%,230px);
+  min-height: 0;
+
+  padding: 12px;
+
+  background: #fff;
+
+  border: none;
+  border-radius: 12px;
+}
+
+.bank-info {
+  margin-top: 14px;
+
+  background: #22242a;
+
+  border: none;
+  border-radius: 11px;
+}
+
+.bank-row {
+  padding: 11px 12px;
+
+  grid-template-columns:
+    minmax(85px,auto) minmax(0,1fr);
+
+  gap: 10px;
+
+  font-size: 12px;
+}
+
+.bank-value {
+  color: var(--text);
+}
+
+#transferText {
+  color: var(--gold);
+  font-size: 13px;
+}
+
+/* ==========================================
+   CHECKOUT
+========================================== */
+
+.lsp-checkout {
+  background: var(--bg);
+}
+
+.lsp-checkout-page {
+  max-width: 430px;
+
+  background: var(--bg);
+}
+
+.lsp-checkout-header {
+  min-height: 0;
+
+  padding:
+    calc(8px + env(safe-area-inset-top,0px))
+    14px
+    8px;
+
+  background: var(--bg);
+
+  border-bottom: 1px solid var(--line);
+}
+
+.lsp-checkout-back {
+  background: transparent;
+
+  border: none;
+
+  color: var(--gold);
+}
+
+.lsp-checkout-brand h2 {
+  margin: 0;
+
+  font-family: inherit;
+  font-size: 19px;
+  font-weight: 700;
+
+  color: var(--text);
+}
+
+.lsp-checkout-body {
+  padding: 14px;
+}
+
+.lsp-order-card {
+  padding: 16px;
+
+  background: var(--card);
+
+  border: none;
+  border-radius: 13px;
+
+  box-shadow: none;
+}
+
+.lsp-order-product {
+  padding: 16px 0;
+}
+
+.lsp-order-diamond {
+  border: none;
+
+  background: #30291f;
+}
+
+.lsp-order-name strong {
+  color: var(--text);
+}
+
+.lsp-order-total strong,
+.lsp-checkout-footer-total strong {
+  color: var(--gold);
+}
+
+.lsp-method-heading {
+  margin: 20px 0 10px;
+
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.lsp-payment-method {
+  min-height: 62px;
+
+  background: var(--card);
+
+  border: 1px solid var(--line);
+  border-radius: 11px;
+}
+
+.lsp-payment-method.selected {
+  background: #30291f;
+
+  border-color: var(--gold);
+}
+
+.lsp-checkout-security {
+  margin-top: 16px;
+  padding: 4px;
+
+  background: transparent;
+  border: none;
+}
+
+.lsp-checkout-footer {
+  background: var(--bg);
+
+  border-top: 1px solid var(--line);
+}
+
+/* ==========================================
+   SMALL MOBILE
+========================================== */
+
+@media (max-width: 360px) {
+
+  .topup-shell {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .topup-header {
+    margin: 0 -10px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .wallet-card {
+    padding: 16px;
+  }
+
+  .option-header {
+    gap: 9px;
+    padding: 10px;
+  }
+
+  .option-title {
+    font-size: 14px;
+  }
+
+  .card-package-diamonds {
+    font-size: 17px;
+  }
+
+}
 
 
 </style>
@@ -1940,7 +2708,7 @@ body.checkout-open {
 
       <div class="header-center">
         <div class="header-brand">LIVESTREAM PRO</div>
-        <h1>Diamond Top-Up</h1>
+        <h1>Top Up</h1>
       </div>
 
       <div class="header-symbol">
@@ -1966,7 +2734,7 @@ body.checkout-open {
       </div>
 
       <div class="wallet-label">
-        Current Diamond Balance
+        Balance
       </div>
 
       <div class="wallet-value">
@@ -1982,7 +2750,7 @@ body.checkout-open {
 
     <!-- PHƯƠNG THỨC -->
     <div class="method-heading">
-      <h2>Top-Up Methods</h2>
+      <h2>Payment Methods</h2>
     </div>
 
 
@@ -2001,11 +2769,11 @@ body.checkout-open {
 <span class="option-left">
 
   <span class="option-title">
-    Top Up via Agent
+    Bank Transfer
   </span>
 
   <span class="option-desc" style="display:block">
-    Bank Transfer · QR Code
+    Agent · QR
   </span>
 
 </span>
@@ -2038,9 +2806,9 @@ body.checkout-open {
         </span>
 
         <span class="option-left">
-          <span class="option-title">Card Top-Up</span>
+          <span class="option-title">Card Payment</span>
           <span class="option-desc" style="display:block">
-            ATM · Visa · Mastercard
+            Visa · Mastercard · JCB
           </span>
         </span>
 
@@ -2074,7 +2842,7 @@ body.checkout-open {
     </div>
 
     <div>
-      <span>Total Payment</span>
+      <span>Total</span>
       <strong id="cardSelectedAmount">—</strong>
     </div>
   </div>
@@ -2084,7 +2852,7 @@ body.checkout-open {
   class="btn-confirm"
   type="button"
   disabled>
-  PAY SECURELY
+  Continue
 </button>
 
 <div
@@ -2109,22 +2877,19 @@ body.checkout-open {
 
 
 
-<div
-
-class="topup-note">
+<div class="topup-note">
 
   <svg class="icon">
     <use href="#tp-info"/>
   </svg>
 
   <span>
-    Always verify the agent's bank name,
-    account number, and account holder before
-    making a transfer. Only confirm after
-    you have completed the payment.
+    Verify bank details before transferring.
+    Confirm only after payment.
   </span>
 
 </div>
+
 
   </main>
 </div>
@@ -2142,7 +2907,7 @@ class="topup-note">
   <div class="sheet-handle"></div>
 
   <div class="sheet-head">
-   <h3>Diamond Top-Up Details</h3>
+   <h3>Bank Transfer</h3>
     <button class="sheet-close"
             type="button"
             onclick="closeTopupSheet()"
@@ -2152,10 +2917,8 @@ class="topup-note">
   </div>
 
 <p class="sheet-sub">
-  Scan the QR code or use the bank details
-  below to complete your transfer.
+  Scan QR or transfer manually.
 </p>
-
 <div class="qr-frame">
 
   <img
@@ -2185,14 +2948,14 @@ class="topup-note">
           type="button"
           onclick="copyTransfer()">
     <svg class="icon"><use href="#tp-copy"/></svg>
-    Copy Transfer Reference
+    Copy Reference
   </button>
 
   <button id="btnTransferred"
           class="btn-confirm"
           type="button">
     <svg class="icon"><use href="#tp-check"/></svg>
-   <span>I HAVE COMPLETED THE TRANSFER</span>
+   <span>I've Transferred</span>
   </button>
 
 <div
@@ -2206,7 +2969,7 @@ class="topup-note">
 </section>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="/topup.js"></script>
+<script src="/topup.js?v=20261126-03"></script>
 <script src="/push-init.js"></script>
 <script src="/app-entry-guard.js"></script>
 
