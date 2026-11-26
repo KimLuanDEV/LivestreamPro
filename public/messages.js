@@ -845,10 +845,12 @@ usersToShow.sort((a,b)=>{
             : ""
           }
         </div>
+<span
+  class="msg-ustatus ${isOnline ? "on" : "off"}"
+  role="img"
+  aria-label="${isOnline ? "Online" : "Offline"}">
+</span>
 
-        <div class="msg-ustatus ${isOnline ? "on" : "off"}">
-          ${isOnline ? "Online" : "Offline"}
-        </div>
       </div>
     `;
 

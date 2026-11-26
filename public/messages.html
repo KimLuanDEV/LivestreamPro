@@ -3833,6 +3833,61 @@ body.page-messages button:focus-visible {
 </style>
 
 
+<style>
+/* ==========================================
+   MESSAGES - MINIMAL ONLINE STATUS
+========================================== */
+
+body.page-messages .msg-user .msg-ustatus {
+
+  position: absolute !important;
+
+  top: 50% !important;
+  right: 16px !important;
+
+  transform: translateY(-50%);
+
+  display: block !important;
+
+  width: 9px !important;
+  height: 9px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border: none !important;
+  border-radius: 50% !important;
+
+  box-shadow: none !important;
+
+}
+
+/* Xóa chấm cũ */
+
+body.page-messages .msg-user .msg-ustatus::before {
+  display: none !important;
+}
+
+/* ONLINE - GREEN */
+
+body.page-messages .msg-user .msg-ustatus.on {
+  background: #22C55E !important;
+}
+
+/* OFFLINE - GRAY */
+
+body.page-messages .msg-user .msg-ustatus.off {
+  background: #B5B5B5 !important;
+}
+
+/* Chừa khoảng trống cho chấm trạng thái */
+
+body.page-messages .msg-user .msg-uinfo {
+  padding-right: 20px;
+}
+
+</style>
+
 
 </head>
 
