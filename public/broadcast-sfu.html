@@ -42,7 +42,7 @@
       type="image/png"
       sizes="512x512"
       href="/icons/icon-512.png">
-      
+
 
 
 <style>
@@ -10732,6 +10732,123 @@ body.sfu-role-viewer .sfu-chat-text {
 
 
 
+/* ==========================================
+   SFU - LIVE PIN CONTENT V1.0
+========================================== */
+
+#sfuPinnedContent {
+  position: absolute;
+  z-index: 8;
+
+  width: max-content;
+  max-width: min(78%, 340px);
+
+  padding: 9px 13px;
+
+  border: 1px solid rgba(223,190,131,.65);
+  border-radius: 12px;
+
+  background: rgba(15,15,18,.86);
+  color: #f6dfad;
+
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.5;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Only host can move pinned content */
+
+body.sfu-role-host #sfuPinnedContent {
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+}
+
+body.sfu-role-host #sfuPinnedContent:active {
+  cursor: grabbing;
+}
+
+/* PIN CONTENT EDITOR */
+
+#sfuPinEditor {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+
+  width: min(90vw, 380px);
+  height: fit-content;
+
+  padding: 18px;
+
+  border: 1px solid rgba(223,190,131,.6);
+  border-radius: 18px;
+
+  background: #17191f;
+  color: #f6dfad;
+}
+
+#sfuPinEditor::backdrop {
+  background: rgba(0,0,0,.65);
+}
+
+#sfuPinEditor strong {
+  display: block;
+  text-align: center;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+}
+
+#sfuPinText {
+  display: block;
+  width: 100%;
+  min-height: 100px;
+
+  margin: 15px 0 10px;
+  padding: 12px;
+
+  border: 1px solid #766342;
+  border-radius: 10px;
+
+  background: #22252b;
+  color: #fff;
+
+  font: inherit;
+  font-size: 16px;
+
+  outline: none;
+  resize: vertical;
+}
+
+#sfuPinEditor .pin-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+#sfuPinEditor .pin-actions button {
+  flex: 1;
+  min-height: 42px;
+  padding: 8px;
+  font-size: 11px;
+}
+
+.sfu-pin-hint {
+  margin: 0;
+  font-size: 11px;
+  color: #999;
+  line-height: 1.5;
+}
+
+
+
+
 </style>
 
 
@@ -10786,6 +10903,59 @@ body.sfu-role-viewer .sfu-chat-text {
 </svg>
 
 <main class="studio">
+
+
+<!-- ==========================================
+     SFU - PINNED CONTENT
+========================================== -->
+
+<div
+  id="sfuPinnedContent"
+  class="hidden">
+</div>
+
+<!-- PIN CONTENT EDITOR -->
+
+<dialog id="sfuPinEditor">
+
+  <strong>PIN CONTENT</strong>
+
+  <textarea
+    id="sfuPinText"
+    maxlength="200"
+    placeholder="Enter pinned content...">
+  </textarea>
+
+  <p class="sfu-pin-hint">
+    Drag the pinned content to change its position.
+  </p>
+
+  <div class="pin-actions">
+
+    <button
+      type="button"
+      class="control"
+      id="sfuPinCancel">
+      CANCEL
+    </button>
+
+    <button
+      type="button"
+      class="control danger"
+      id="sfuPinRemove">
+      REMOVE
+    </button>
+
+    <button
+      type="button"
+      class="control primary"
+      id="sfuPinSave">
+      PIN
+    </button>
+
+  </div>
+
+</dialog>
 
 
 <!-- FULLSCREEN VIDEO -->
@@ -12000,6 +12170,33 @@ body.sfu-role-viewer .sfu-chat-text {
 
 
 
+<!-- PIN CONTENT BUTTON -->
+
+<button
+  type="button"
+  class="control"
+  id="sfuPinButton"
+  disabled>
+
+  <svg
+    class="studio-icon"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.7"
+    stroke-linecap="round"
+    stroke-linejoin="round">
+
+    <path d="M16 3l5 5"/>
+    <path d="M9 10l7-7 5 5-7 7"/>
+    <path d="M9 10l-5 2 8 8 2-5"/>
+    <path d="M9 17l-6 6"/>
+
+  </svg>
+
+  <span>PIN CONTENT</span>
+
+</button>
 
 
 <!-- FLIP FRONT / BACK CAMERA -->
@@ -15190,10 +15387,396 @@ let sfuChatUnreadCount = 0;
 let sfuChatLive = false;
 
 
+/* ==========================================
+   SFU - LIVE PIN CONTENT V1.0
+========================================== */
+
+const pinBox =
+  document.getElementById("sfuPinnedContent");
+
+const pinEditor =
+  document.getElementById("sfuPinEditor");
+
+const pinButton =
+  document.getElementById("sfuPinButton");
+
+const pinText =
+  document.getElementById("sfuPinText");
+
+let livePin = null;
+let pinRevision = 0;
+let pinDrag = null;
+let pinBusy = false;
+
+const pinClamp = n =>
+  Math.max(0, Math.min(1, n));
+
+
+/* RENDER PINNED CONTENT */
+
+function drawLivePin() {
+
+  pinButton.disabled =
+    isViewer || !sfuChatLive;
+
+  pinBox.classList.toggle(
+    "hidden",
+    !livePin || !sfuChatLive
+  );
+
+  if (!livePin || !sfuChatLive) return;
+
+  pinBox.textContent = livePin.text;
+
+  const parent = pinBox.parentElement;
+
+  const maxX = Math.max(
+    0,
+    parent.clientWidth - pinBox.offsetWidth
+  );
+
+  const maxY = Math.max(
+    0,
+    parent.clientHeight - pinBox.offsetHeight
+  );
+
+  pinBox.style.left =
+    `${pinClamp(livePin.x) * maxX}px`;
+
+  pinBox.style.top =
+    `${pinClamp(livePin.y) * maxY}px`;
+
+}
+
+
+/* RECEIVE FROM SERVER */
+
+function receiveLivePin(data) {
+
+  if (
+    !data ||
+    data.roomId !== roomId ||
+    data.revision < pinRevision
+  ) return;
+
+  pinRevision = data.revision;
+
+  livePin = data.pin || null;
+
+  drawLivePin();
+
+}
+
+
+/* CLEAR PIN */
+
+function clearLivePin() {
+
+  livePin = null;
+  pinRevision = 0;
+  pinDrag = null;
+
+  if (pinEditor.open) {
+    pinEditor.close();
+  }
+
+  drawLivePin();
+
+}
+
+
+/* SEND TO SERVER */
+
+function sendLivePin(pin) {
+
+  if (
+    isViewer ||
+    !sfuChatLive ||
+    pinBusy ||
+    !socket.connected
+  ) return;
+
+  pinBusy = true;
+
+  socket.timeout(5000).emit(
+
+    "sfu:pin:set",
+
+    {
+      roomId,
+      pin
+    },
+
+    (error, result) => {
+
+      pinBusy = false;
+
+      if (error || !result?.ok) {
+
+        loadSfuChatHistory();
+
+        return;
+      }
+
+      receiveLivePin(result);
+
+    }
+
+  );
+
+}
+
+
+/* REALTIME SYNC */
+
+socket.on(
+  "sfu:pin:update",
+  receiveLivePin
+);
+
+window.addEventListener(
+  "resize",
+  drawLivePin
+);
+
+
+/* OPEN EDITOR */
+
+pinButton.addEventListener("click", () => {
+
+  if (
+    isViewer ||
+    !sfuChatLive
+  ) return;
+
+  pinText.value =
+    livePin?.text || "";
+
+  closeStudioSettings();
+
+  pinEditor.showModal();
+
+});
+
+
+/* CANCEL */
+
+document.getElementById(
+  "sfuPinCancel"
+).onclick = () => {
+
+  pinEditor.close();
+
+};
+
+
+/* SAVE CONTENT */
+
+document.getElementById(
+  "sfuPinSave"
+).onclick = () => {
+
+  const text = pinText.value.trim();
+
+  if (!text) {
+
+    pinText.focus();
+
+    return;
+
+  }
+
+  if (pinBusy || !socket.connected) return;
+
+  sendLivePin({
+
+    text,
+
+    x: livePin?.x ?? 0.5,
+
+    y: livePin?.y ?? 0.25
+
+  });
+
+  pinEditor.close();
+
+};
+
+
+/* REMOVE CONTENT */
+
+document.getElementById(
+  "sfuPinRemove"
+).onclick = () => {
+
+  if (pinBusy || !socket.connected) return;
+
+  sendLivePin(null);
+
+  pinEditor.close();
+
+};
+
+
+/* ==========================================
+   DRAG START
+========================================== */
+
+pinBox.addEventListener("pointerdown", e => {
+
+  if (
+    isViewer ||
+    !sfuChatLive ||
+    !livePin ||
+    pinBusy ||
+    !socket.connected ||
+    pinDrag ||
+    e.button !== 0
+  ) return;
+
+  const rect =
+    pinBox.getBoundingClientRect();
+
+  pinDrag = {
+
+    id: e.pointerId,
+
+    dx: e.clientX - rect.left,
+
+    dy: e.clientY - rect.top,
+
+    original: { ...livePin }
+
+  };
+
+  pinBox.setPointerCapture(e.pointerId);
+
+  e.preventDefault();
+
+});
+
+
+/* ==========================================
+   DRAG MOVE
+========================================== */
+
+pinBox.addEventListener("pointermove", e => {
+
+  if (
+    !pinDrag ||
+    pinDrag.id !== e.pointerId ||
+    !livePin
+  ) return;
+
+  const parent = pinBox.parentElement;
+
+  const rect =
+    parent.getBoundingClientRect();
+
+  const maxX = Math.max(
+    1,
+    parent.clientWidth - pinBox.offsetWidth
+  );
+
+  const maxY = Math.max(
+    1,
+    parent.clientHeight - pinBox.offsetHeight
+  );
+
+  livePin = {
+
+    ...livePin,
+
+    x: pinClamp(
+      (e.clientX - rect.left - pinDrag.dx) / maxX
+    ),
+
+    y: pinClamp(
+      (e.clientY - rect.top - pinDrag.dy) / maxY
+    )
+
+  };
+
+  drawLivePin();
+
+});
+
+
+/* ==========================================
+   DRAG END
+========================================== */
+
+pinBox.addEventListener("pointerup", e => {
+
+  if (
+    !pinDrag ||
+    pinDrag.id !== e.pointerId
+  ) return;
+
+  const previous = pinDrag.original;
+
+  pinDrag = null;
+
+  if (!socket.connected) {
+
+    livePin = previous;
+
+    drawLivePin();
+
+    return;
+
+  }
+
+  // Only synchronize after releasing.
+
+  sendLivePin(livePin);
+
+});
+
+
+/* DRAG CANCEL */
+
+pinBox.addEventListener("pointercancel", e => {
+
+  if (
+    !pinDrag ||
+    pinDrag.id !== e.pointerId
+  ) return;
+
+  livePin = pinDrag.original;
+
+  pinDrag = null;
+
+  drawLivePin();
+
+});
+
+
+/* CLEAR WHEN ROOM CLOSED */
+
+socket.on(
+  "room-closed",
+  clearLivePin
+);
+
+
+
 function setSfuChatLive(isLive) {
 
   const wasLive = sfuChatLive;
   sfuChatLive = Boolean(isLive);
+
+  // SFU PIN CONTENT
+
+  if (!sfuChatLive) {
+
+    clearLivePin();
+
+  } else {
+
+    drawLivePin();
+
+  }
 
 
 
@@ -15745,6 +16328,22 @@ sfuCommentBlocked =
   response.commentBlocked === true;
 
 setSfuChatLive(response.live === true);
+
+
+// SYNC PINNED CONTENT
+
+if (
+  response.live &&
+  response.pinnedContent
+) {
+
+  receiveLivePin(
+    response.pinnedContent
+  );
+
+}
+
+
 setChatReady(sfuChatLive);
 
 // Đồng bộ tổng quà khi mới tham gia phòng,

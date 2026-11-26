@@ -17757,6 +17757,10 @@ if (!room.liveStartTs) {
 
   room.liveStartTs = Date.now();
 
+  // RESET PIN CONTENT
+
+  room.pinnedContent = null;
+
   room.mutedViewers = new Set();
 
   room.kickedViewers = new Set();
@@ -20239,6 +20243,151 @@ mediaWarning: failed.length > 0,
 
 
 
+/* ==========================================
+   LIVESTREAM PRO
+   SFU PIN CONTENT V1.0
+========================================== */
+
+socket.on("sfu:pin:set", (data, ack) => {
+
+  if (typeof ack !== "function") return;
+
+
+  /* VERIFY ROOM ACCESS */
+
+  const access = getAuthorizedSfuChatRoom(
+    data?.roomId
+  );
+
+
+  /* HOST ONLY */
+
+  if (
+    !access ||
+    !access.isHost ||
+    !access.room.liveStartTs
+  ) {
+
+    return ack({
+
+      ok: false,
+
+      error: "Host access required."
+
+    });
+
+  }
+
+
+  /* ANTI SPAM */
+
+  const now = Date.now();
+
+  if (
+    now - (socket.data.lastSfuPinAt || 0) < 150
+  ) {
+
+    return ack({
+
+      ok: false,
+
+      error: "Please slow down."
+
+    });
+
+  }
+
+
+  /* VALIDATE CONTENT */
+
+  let pin = null;
+
+  if (data.pin !== null) {
+
+    const p = data.pin;
+
+    if (
+      !p ||
+      typeof p.text !== "string" ||
+      !p.text.trim() ||
+      p.text.length > 200 ||
+      !Number.isFinite(p.x) ||
+      !Number.isFinite(p.y)
+    ) {
+
+      return ack({
+
+        ok: false,
+
+        error: "Invalid pinned content."
+
+      });
+
+    }
+
+    pin = {
+
+      text: p.text.trim(),
+
+      x: Math.max(
+        0,
+        Math.min(1, p.x)
+      ),
+
+      y: Math.max(
+        0,
+        Math.min(1, p.y)
+      )
+
+    };
+
+  }
+
+
+  socket.data.lastSfuPinAt = now;
+
+
+  /* SAVE ROOM STATE */
+
+  const state = {
+
+    roomId: access.id,
+
+    revision:
+      (access.room.pinnedContent?.revision || 0) + 1,
+
+    pin
+
+  };
+
+  access.room.pinnedContent = state;
+
+
+  /* BROADCAST TO ALL VIEWERS */
+
+  io.to(access.id).emit(
+
+    "sfu:pin:update",
+
+    state
+
+  );
+
+
+  /* HOST RESPONSE */
+
+  ack({
+
+    ok: true,
+
+    ...state
+
+  });
+
+});
+
+
+
 socket.on("sfu:chat:history", (data, ack) => {
   if (typeof ack !== "function") return;
 
@@ -20269,8 +20418,23 @@ if (
     : access.room.sfuComments;
 
 ack({
+
   ok: true,
+
   live: Boolean(access.room.liveStartTs),
+
+  // SFU PIN CONTENT
+
+  pinnedContent:
+    access.room.pinnedContent || {
+
+      roomId: access.id,
+
+      revision: 0,
+
+      pin: null
+
+    },
 
   commentBlocked:
     !access.isHost &&
