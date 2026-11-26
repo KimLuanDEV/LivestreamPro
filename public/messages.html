@@ -2349,7 +2349,7 @@ body.page-messages #chatModal #chatBox {
   justify-content: flex-start !important;
   align-content: flex-start !important;
 
-  gap: 10px !important;
+  gap: 0px !important;
 }
 
 /* FIX MESSAGE SPACING */
@@ -3933,6 +3933,71 @@ body.page-messages
 
   gap: 3px !important;
 
+}
+
+</style>
+
+
+<style>
+/* ==========================================
+   COMPACT CHAT MESSAGE SPACING
+========================================== */
+
+/* Khoảng cách mặc định giữa các tin nhắn */
+
+body.page-messages #chatModal #chatBox {
+  gap: 0 !important;
+}
+
+body.page-messages #chatModal .chat-line {
+  margin: 0 !important;
+  padding: 0 !important;
+  gap: 2px !important;
+}
+
+/* Loại bỏ khoảng trống trong khung tin nhắn */
+
+body.page-messages #chatModal .chat-line > div {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Hai tin nhắn liên tiếp của bản thân */
+
+body.page-messages #chatModal .chat-line.me + .chat-line.me {
+  margin-top: 1px !important;
+}
+
+/* Hai tin nhắn liên tiếp của đối phương */
+
+body.page-messages #chatModal .chat-line.other + .chat-line.other {
+  margin-top: 1px !important;
+}
+
+/* Khi đổi người gửi tin nhắn */
+
+body.page-messages #chatModal .chat-line.me + .chat-line.other,
+body.page-messages #chatModal .chat-line.other + .chat-line.me {
+  margin-top: 8px !important;
+}
+
+/* Loại bỏ khoảng trống dưới bubble */
+
+body.page-messages #chatModal .bubble-text {
+  display: block !important;
+  margin: 0 !important;
+}
+
+/* Thời gian cuối nhóm */
+
+body.page-messages #chatModal .chat-time {
+  padding: 2px 5px 6px !important;
+}
+
+/* Không chiếm diện tích khi ẩn thời gian */
+
+body.page-messages #chatModal .chat-time.time-group-hidden {
+  display: none !important;
 }
 
 </style>
