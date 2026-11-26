@@ -19316,6 +19316,68 @@ body.page-profile #msgModal {
 
 
 
+/* ==========================================
+   PROFILE - COVER BUTTON CLICK FIX
+========================================== */
+
+/* COVER LAYER */
+
+body.page-profile .profile-cover {
+  position: relative !important;
+  isolation: isolate;
+  z-index: 1 !important;
+}
+
+/* COVER IMAGE */
+
+body.page-profile #coverPreview {
+  pointer-events: auto !important;
+  cursor: pointer;
+}
+
+/* COVER CAMERA */
+
+body.page-profile .profile-cover .cover-actions {
+  position: absolute !important;
+
+  left: 12px !important;
+  bottom: 12px !important;
+
+  z-index: 5 !important;
+  pointer-events: auto !important;
+}
+
+body.page-profile #btnChangeCover {
+  position: relative;
+  pointer-events: auto !important;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+/* TRANSPARENT PROFILE LAYERS */
+
+body.page-profile > .container,
+body.page-profile .profile-shell,
+body.page-profile .profile-header.fb-style {
+  pointer-events: none !important;
+}
+
+/* RESTORE PROFILE INTERACTIONS */
+
+body.page-profile .profile-shell > :not(.profile-header),
+body.page-profile .profile-header.fb-style > * {
+  pointer-events: auto;
+}
+
+/* DECORATIVE LAYERS */
+
+body.page-profile .profile-cover::before,
+body.page-profile .profile-cover::after {
+  pointer-events: none !important;
+}
+
+
+
 </style>
 
 
@@ -19336,10 +19398,20 @@ body.page-profile #msgModal {
        src="/assets/default-cover.jpg"
        alt="cover">
 
-  <div class="cover-actions">
-    <button id="btnChangeCover">📷</button>
-  </div>
 
+
+<div class="cover-actions">
+
+  <button
+    type="button"
+    id="btnChangeCover"
+    aria-label="Change cover photo">
+
+    📷
+
+  </button>
+
+</div>
   <input type="file" id="coverInput" accept="image/*" hidden>
 </div>   
     
@@ -20786,7 +20858,7 @@ body.page-profile #msgModal {
 
 
 
-<script src="/profile.js?v=20261127-02"></script>
+<script src="/profile.js?v=20261127-03"></script>
 <script src="/push-init.js"></script>
 <script src="/app-entry-guard.js"></script>
 

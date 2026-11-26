@@ -1664,9 +1664,40 @@ window.addEventListener(
 
 
 
+/* ==========================================
+   PROFILE - CHANGE COVER BUTTON
+========================================== */
+
 if (btnChangeCover && coverInput) {
-  btnChangeCover.onclick = () => coverInput.click();
+
+  btnChangeCover.onclick = (event) => {
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Only allow editing own profile
+    if (!__profileAuth.uid) return;
+
+    if (
+      viewUid &&
+      viewUid !== __profileAuth.uid
+    ) {
+      return;
+    }
+
+    if (__coverUploading) return;
+
+    // Reset previous file
+    coverInput.value = "";
+
+    // Open photo picker
+    coverInput.click();
+
+  };
+
 }
+
+
 
 if (coverInput) {
   coverInput.onchange = async () => {
