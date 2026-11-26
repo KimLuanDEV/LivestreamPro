@@ -259,14 +259,42 @@ if (auth.uid) {
 
 
 
-const R2_PUBLIC_URL = "https://pub-a6a541cf3a9c4d0aa06613e3d1dc1c60.r2.dev";
+const R2_PUBLIC_URL =
+  "https://pub-a6a541cf3a9c4d0aa06613e3d1dc1c60.r2.dev";
 
-function fixMedia(url){
-  if (!url) return "";
+const DEFAULT_AVATAR = "/icons/icon-192.png";
 
-  // nếu là absolute URL từ site cũ
+const LEGACY_DEFAULT_AVATAR =
+  "https://i.ibb.co/GvJWn19q/icon-192.png";
+
+function fixMedia(url) {
+
+  if (typeof url !== "string" || !url.trim()) {
+    return "";
+  }
+
+  url = url.trim();
+
+  // Chuyển avatar mặc định cũ sang ảnh nội bộ
+  if (
+    url.startsWith(LEGACY_DEFAULT_AVATAR) ||
+    url === "/icons/icon-192.png"
+  ) {
+    return DEFAULT_AVATAR;
+  }
+
+  // Giữ nguyên ảnh nội bộ
+  if (
+    url.startsWith("/assets/") ||
+    url.startsWith("/icons/")
+  ) {
+    return url;
+  }
+
+  // Giữ nguyên hệ thống Cloudflare R2
   if (url.startsWith(location.origin + "/post-images/")) {
-    return R2_PUBLIC_URL + url.replace(location.origin, "");
+    return R2_PUBLIC_URL +
+      url.replace(location.origin, "");
   }
 
   if (
@@ -280,11 +308,15 @@ function fixMedia(url){
   return url;
 }
 
+// Hàm dành riêng cho avatar
+function fixAvatar(url) {
+  return fixMedia(url) || DEFAULT_AVATAR;
+}
 
 
 
 
-document.getElementById("meAvatar").src = fixMedia(auth.avatar);
+document.getElementById("meAvatar").src = fixAvatar(auth.avatar);
 
 
 
@@ -300,7 +332,7 @@ socket.on("profile-update", data => {
     // update avatar góc đăng bài
     const me = document.getElementById("meAvatar");
 
- if (me) me.src = fixMedia(data.avatar);
+ if (me) me.src = fixAvatar(data.avatar);
 
 
     // 🔥 UPDATE TOÀN BỘ FEED CŨ
@@ -308,20 +340,20 @@ socket.on("profile-update", data => {
 
       if (post.dataset.uid === auth.uid) {
     const ava = post.querySelector(".lp-ava");
-    if (ava) ava.src = data.avatar;
+    if (ava) ava.src = fixAvatar(data.avatar);
   }
 
   post.querySelectorAll(".lp-comment").forEach(c => {
     if (c.dataset.uid === auth.uid) {
       const img = c.querySelector(".lp-cm-ava");
-      if (img) img.src = data.avatar;
+      if (img) img.src = fixAvatar(data.avatar);
     }
   });
 
   post.querySelectorAll(".lp-reply").forEach(r => {
     if (r.dataset.uid === auth.uid) {
       const img = r.querySelector("img");
-      if (img) img.src = data.avatar;
+      if (img) img.src = fixAvatar(data.avatar);
     }
   });
 
@@ -370,7 +402,7 @@ function sendReplyChild(postId, cIndex, replyId){
     replyId,
     uid: auth.uid,
     name: auth.name,
-    avatar: auth.avatar,
+    avatar: fixAvatar(auth.avatar),
     text: input.value
   });
 
@@ -591,20 +623,20 @@ socket.on("social-avatar-sync", ({ uid, avatar }) => {
   document.querySelectorAll(".lp-post").forEach(post => {
     if (post.dataset.uid === uid) {
       const img = post.querySelector(".lp-ava");
-      if (img) img.src = fixMedia(avatar);
+      if (img) img.src = fixAvatar(avatar);
     }
 
     post.querySelectorAll(".lp-comment").forEach(c => {
       if (c.dataset.uid === uid) {
         const img = c.querySelector(".lp-cm-ava");
-        if (img) img.src = fixMedia(avatar);
+        if (img) img.src = fixAvatar(avatar);
       }
     });
 
     post.querySelectorAll(".lp-reply").forEach(r => {
       if (r.dataset.uid === uid) {
         const img = r.querySelector("img");
-        if (img) img.src = fixMedia(avatar);
+        if (img) img.src = fixAvatar(avatar);
       }
     });
   });
@@ -693,7 +725,7 @@ socket.on("lp-reply", ({ postId, commentIndex, reply })=>{
 div.innerHTML=`
 
 
-<img src="${fixMedia(reply.avatar)}"
+<img src="${fixAvatar(reply.avatar)}"
      onclick="openUserProfile('${reply.uid}')"
      style="cursor:pointer">
   <div>
@@ -773,7 +805,7 @@ if (cachedPost) {
 
   div.innerHTML = `
 
-<img class="lp-cm-ava" src="${fixMedia(comment.avatar)}"
+<img class="lp-cm-ava" src="${fixAvatar(comment.avatar)}"
      onclick="openUserProfile('${comment.uid}')"
      style="cursor:pointer">
 
@@ -862,7 +894,7 @@ async function submitPost(){
 socket.emit("lp-post", {
   uid: cur.uid,
   name: cur.name,
-  avatar: fixMedia(cur.avatar),
+  avatar: fixAvatar(cur.avatar),
   text,
   images: imageUrls,
   video: videoUrl,
@@ -967,7 +999,7 @@ div.dataset.id = child.id;   // 🔥 bắt buộc
 div.style.marginLeft="16px";
 
 div.innerHTML = `
-<img src="${fixMedia(child.avatar)}"
+<img src="${fixAvatar(child.avatar)}"
      onclick="openUserProfile('${child.uid}')"
      style="cursor:pointer">
 
@@ -1270,7 +1302,7 @@ const time = `
   <!-- AVATAR -->
   <img
     class="lp-ava"
-    src="${fixMedia(p.avatar)}"
+    src="${fixAvatar(p.avatar)}"
     loading="eager"
     decoding="async"
     onclick="openUserProfile('${p.uid}')"
@@ -1443,11 +1475,7 @@ ${p.gifts?.byUser ? `
       const u = window.allUsers?.[uid];
 
       const name = u?.name || uid;
-      const avatar = u?.avatar
-        ? fixMedia(u.avatar)
-        : "https://i.ibb.co/GvJWn19q/icon-192.png" +
-          encodeURIComponent(name);
-
+      const avatar = fixAvatar(u?.avatar);
       return `
         <span class="gift-user">
           <img src="${avatar}" />
@@ -1499,7 +1527,7 @@ if(p.comments && p.comments.length){
     c.dataset.uid = comment.uid;
 
     c.innerHTML = `
-<img class="lp-cm-ava" src="${fixMedia(comment.avatar)}"
+<img class="lp-cm-ava" src="${fixAvatar(comment.avatar)}"
      onclick="openUserProfile('${comment.uid}')"
      style="cursor:pointer">
 
@@ -1554,7 +1582,7 @@ if(p.comments && p.comments.length){
 
 
      rdiv.innerHTML=`
-<img src="${fixMedia(r.avatar)}">
+<img src="${fixAvatar(r.avatar)}">
 
   <div>
     <b>${r.name}</b> ${r.text}
@@ -1601,7 +1629,7 @@ if(r.replies){
   c2.style.marginLeft="16px";
 
   c2.innerHTML = `
-<img src="${fixMedia(child.avatar)}"
+<img src="${fixAvatar(child.avatar)}"
      onclick="openUserProfile('${child.uid}')"
      style="cursor:pointer">
 
@@ -3071,11 +3099,8 @@ function openGiftUsers(postId) {
     const name =
       user?.name || uid;
 
-    const avatar =
-      user?.avatar
-        ? fixMedia(user.avatar)
-        : "/icons/icon-192.png";
-
+    const avatar = fixAvatar(user?.avatar);
+ 
     // CARD
     const card = document.createElement("button");
 
@@ -3090,10 +3115,10 @@ function openGiftUsers(postId) {
     img.alt = "";
     img.loading = "lazy";
 
-    img.onerror = function() {
-      this.onerror = null;
-      this.src = "/icons/icon-192.png";
-    };
+  img.onerror = function() {
+  this.onerror = null;
+  this.src = DEFAULT_AVATAR;
+};
 
     // INFO
     const info = document.createElement("div");
