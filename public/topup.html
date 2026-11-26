@@ -5,6 +5,13 @@
 <meta charset="UTF-8">
 <meta name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+    <meta name="theme-color" content="#FAF6E9">
+
+<meta name="apple-mobile-web-app-status-bar-style"
+      content="default">
+      
+      
 <title>Diamond Top-Up | Livestream Pro</title>
 
 <!-- BROWSER ICON -->
@@ -21,279 +28,415 @@
 <script src="/lsp-page-transition.js?v=20261127-02"></script>
 
 <style>
-/* =========================================
-   LIVESTREAM PRO - LUXURY TOPUP
-   ĐỘC LẬP HOÀN TOÀN STYLE.CSS
-========================================= */
+/* ==========================================
+   LIVESTREAM PRO
+   CHAMPAGNE GOLD TOPUP V1.0
+========================================== */
 
 :root {
-  color-scheme: dark;
-  --bg: #08090c;
-  --card: #17191f;
-  --gold: #dbbc83;
-  --gold-light: #f6e3b9;
-  --text: #f8f3e9;
-  --muted: #999da8;
-  --line: rgba(219,188,131,.22);
-  --green: #7ed1a3;
-  --red: #ef8c8c;
+  color-scheme: light;
+
+  --bg: #FAF6E9;
+  --card: #FFFFFF;
+  --cream: #FCFAF5;
+  --champagne: #F8EBC9;
+
+  --gold: #947025;
+  --gold-light: #70531D;
+
+  --text: #29251D;
+  --muted: #857960;
+  --line: #EAE0C8;
+
+  --green: #32975A;
+  --red: #C95353;
+
+  --gradient:
+    linear-gradient(135deg,#F5E4B5,#E3C47C);
+
+  --shadow:
+    0 4px 16px rgba(112,85,28,.06);
 }
 
-* { box-sizing: border-box; }
 
-html, body {
-  margin: 0;
+/* ==========================================
+   01. GLOBAL RESET
+========================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
   min-height: 100%;
+
+  margin: 0;
+  padding: 0;
+
   background: var(--bg);
   color: var(--text);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
-body { overflow-x: hidden; }
-body.sheet-open { overflow: hidden; }
+body {
+  overflow-x: hidden;
+}
 
-button, input { font: inherit; }
-button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
-button:disabled { opacity: .5; cursor: not-allowed; }
+body.sheet-open,
+body.checkout-open {
+  overflow: hidden;
+}
 
-.hidden, [hidden] { display: none !important; }
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.hidden,
+[hidden] {
+  display: none !important;
+}
+
+
+/* ==========================================
+   02. SVG ICONS
+========================================== */
 
 .icon {
+  display: inline-block;
+
   width: 20px;
   height: 20px;
-  display: inline-block;
+
   fill: none;
   stroke: currentColor;
   stroke-width: 1.8;
+
   stroke-linecap: round;
   stroke-linejoin: round;
+
   flex-shrink: 0;
 }
 
-/* ===== KHUNG TRANG ===== */
+
+/* ==========================================
+   03. MAIN CONTAINER
+========================================== */
 
 .topup-shell {
+  position: relative;
+
   width: 100%;
-  max-width: 520px;
+  max-width: 430px;
+
+  min-height: 100vh;
   min-height: 100dvh;
-  margin: auto;
-  padding: 0 16px 36px;
-  background:
-    radial-gradient(ellipse at 50% 0%, rgba(171,121,56,.13), transparent 50%),
-    linear-gradient(180deg, #101116, #08090c 55%);
+
+  margin: 0 auto;
+
+  padding:
+    0 14px
+    calc(25px + env(safe-area-inset-bottom,0px));
+
+  background: var(--bg);
 }
 
-/* ===== HEADER ===== */
+
+/* ==========================================
+   04. HEADER
+========================================== */
 
 .topup-header {
   position: sticky;
+
   top: 0;
   z-index: 30;
-  margin: 0 -16px;
-  padding: calc(env(safe-area-inset-top, 0px) + 8px) 16px 12px;
-  background: rgba(12,13,17,.95);
-  border-bottom: 1px solid var(--line);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+
+  margin: 0 -14px;
+
+  padding:
+    calc(8px + env(safe-area-inset-top,0px))
+    14px
+    8px;
+
+  background:
+    linear-gradient(120deg,#FFFDF7,#F8EBC9);
+
+  border: none;
+
+  box-shadow: none;
 }
 
 .header-row {
-  height: 62px;
   display: grid;
-  grid-template-columns: 44px minmax(0,1fr) 44px;
+
+  grid-template-columns:
+    42px minmax(0,1fr) 42px;
+
   align-items: center;
-  gap: 8px;
+
+  gap: 10px;
+
+  height: 58px;
 }
 
 .btn-back {
-  width: 42px;
-  height: 42px;
-  padding: 0;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(219,188,131,.36);
+
+  width: 42px;
+  height: 42px;
+
+  margin: 0;
+  padding: 0;
+
+  border: 1px solid var(--line);
   border-radius: 12px;
-  background: linear-gradient(135deg, #28241d, #121419);
-  color: var(--gold-light);
+
+  background: #FFFFFF;
+  color: var(--gold);
+
+  box-shadow: none;
 }
 
-.btn-back:active { transform: scale(.96); }
+.btn-back .icon {
+  width: 23px;
+  height: 23px;
+}
 
-.header-center { text-align: center; min-width: 0; }
+.btn-back:active {
+  transform: scale(.96);
+}
 
-.header-brand {
-  font-size: 9px;
-  font-weight: 750;
-  letter-spacing: 2px;
-  color: var(--gold);
+.header-center {
+  min-width: 0;
+
+  text-align: center;
 }
 
 .header-center h1 {
-  margin: 5px 0 0;
-  font: 700 24px Georgia, "Times New Roman", serif;
-  color: var(--gold-light);
+  margin: 0;
+
+  color: var(--text);
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: 25px;
+  font-weight: 700;
+
+  line-height: 1.3;
 }
 
 .header-symbol {
   display: grid;
   place-items: center;
+
   color: var(--gold);
 }
 
-.header-symbol .icon { width: 26px; height: 26px; }
-
-/* ===== TIÊU ĐỀ PHỤ ===== */
-
-.page-intro {
-  text-align: center;
-  padding: 23px 4px 20px;
+.header-symbol .icon {
+  width: 25px;
+  height: 25px;
 }
 
-.page-intro small {
-  font-size: 10px;
-  letter-spacing: 2.5px;
-  color: #c2a16a;
-  font-weight: 700;
+
+/* REMOVE EXTRA TEXT */
+
+.header-brand,
+.page-intro,
+.wallet-top > span,
+.wallet-footer,
+.card-payment-title,
+.card-logos,
+.lsp-checkout-brand small,
+.lsp-order-heading small,
+.lsp-order-name small {
+  display: none !important;
 }
 
-.page-intro p {
-  margin: 9px 0 0;
-  font-size: 12px;
-  line-height: 1.6;
-  color: var(--muted);
-}
 
-/* ===== SỐ DƯ ===== */
+/* ==========================================
+   05. DIAMOND BALANCE
+========================================== */
 
 .wallet-card {
   position: relative;
-  overflow: hidden;
-  padding: 24px 22px;
-  border-radius: 20px;
-  border: 1px solid rgba(230,192,122,.43);
-  background:
-    radial-gradient(circle at 100% 0%, rgba(215,165,75,.2), transparent 55%),
-    linear-gradient(140deg, #29251f, #141821 65%, #10131a);
-  box-shadow: 0 14px 36px rgba(0,0,0,.35);
-}
 
-.wallet-card::after {
-  content: "";
-  position: absolute;
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  right: -85px;
-  top: -70px;
-  border: 1px solid rgba(255,226,159,.10);
-  box-shadow: 0 0 0 33px rgba(230,184,100,.03);
-  pointer-events: none;
+  overflow: hidden;
+
+  margin-top: 16px;
+  padding: 21px 18px;
+
+  border: 1px solid #E3CCA0;
+  border-radius: 19px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #FFFDF5 0%,
+      #F8EBC9 65%,
+      #F3E1B0 100%
+    );
+
+  box-shadow: var(--shadow);
 }
 
 .wallet-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  position: absolute;
+
+  top: 18px;
+  right: 18px;
+
   color: var(--gold);
-  font-size: 10px;
-  font-weight: 750;
-  letter-spacing: 2px;
+}
+
+.wallet-top .icon {
+  width: 23px;
+  height: 23px;
 }
 
 .wallet-label {
-  margin-top: 24px;
-  font-size: 12px;
-  color: #b7b7bd;
+  margin: 0;
+  padding-right: 30px;
+
+  color: var(--muted);
+
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .wallet-value {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 8px;
+
+  gap: 11px;
+
+  margin-top: 12px;
+
   color: var(--gold-light);
 }
 
 .wallet-value .icon {
-  width: 30px;
-  height: 30px;
+  width: 31px;
+  height: 31px;
+
+  color: var(--gold);
 }
 
 #myCoin {
-  font-size: clamp(27px,7vw,38px);
+  min-width: 0;
+
+  font-size: clamp(27px,8vw,37px);
   font-weight: 800;
+
+  line-height: 1.25;
+  letter-spacing: -.6px;
+
   font-variant-numeric: tabular-nums;
+
   overflow-wrap: anywhere;
 }
 
-.wallet-footer {
-  margin-top: 20px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(225,190,121,.16);
-  color: #9699a3;
-  font-size: 11px;
-}
 
-/* ===== PHƯƠNG THỨC NẠP ===== */
+/* ==========================================
+   06. PAYMENT METHODS
+========================================== */
 
 .method-heading {
-  margin: 27px 0 14px;
   display: flex;
   align-items: center;
-  gap: 10px;
+
+  margin: 24px 2px 12px;
 }
 
 .method-heading h2 {
-  flex: 1;
   margin: 0;
-  font-size: 16px;
-  color: var(--gold-light);
-}
 
-.method-heading::after {
-  content: "";
-  width: 40px;
-  height: 1px;
-  background: var(--gold);
-  opacity: .55;
+  color: var(--text);
+
+  font-size: 16px;
+  font-weight: 750;
 }
 
 .topup-option {
-  margin-bottom: 13px;
   overflow: hidden;
-  border-radius: 17px;
+
+  margin-bottom: 10px;
+
   border: 1px solid var(--line);
-  background: linear-gradient(125deg, #1c1c20, #111318);
-  box-shadow: 0 8px 24px rgba(0,0,0,.22);
+  border-radius: 16px;
+
+  background: #FFFFFF;
+
+  box-shadow: var(--shadow);
 }
 
 .topup-option.open {
-  border-color: rgba(218,181,112,.5);
+  border-color: #DFCFAE;
 }
 
 .option-header {
-  width: 100%;
-  min-height: 78px;
-  padding: 15px;
   display: flex;
   align-items: center;
+
+  width: 100%;
+  min-height: 74px;
+
   gap: 12px;
+
+  padding: 13px;
+
   border: none;
+
   background: transparent;
   color: var(--text);
+
   text-align: left;
 }
 
 .option-icon {
-  width: 47px;
-  height: 47px;
-  flex: none;
   display: grid;
   place-items: center;
-  border-radius: 13px;
-  border: 1px solid rgba(217,181,107,.25);
-  background: rgba(215,176,96,.08);
+
+  width: 44px;
+  height: 44px;
+
+  flex-shrink: 0;
+
+  border: 1px solid #E5D1A0;
+  border-radius: 12px;
+
+  background: var(--champagne);
   color: var(--gold);
 }
 
@@ -308,1805 +451,38 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 }
 
 .option-title {
-  font-size: 14px;
-  font-weight: 750;
-  color: var(--gold-light);
+  display: block;
+
+  color: var(--text);
+
+  font-size: 15px;
+  font-weight: 700;
+
+  line-height: 1.35;
 }
 
 .option-desc {
-  font-size: 11px;
+  display: block;
+
+  margin-top: 4px;
+
   color: var(--muted);
-  margin-top: 5px;
+
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .option-arrow {
   width: 18px;
   height: 18px;
+
   color: var(--gold);
-  transition: transform .2s;
+
+  transition: transform .2s ease;
 }
 
 .topup-option.open .option-arrow {
   transform: rotate(180deg);
-}
-
-.option-content {
-  border-top: 1px solid var(--line);
-  padding: 13px;
-}
-
-/* ===== DANH SÁCH ĐẠI LÝ ===== */
-
-.agent-list {
-  display: grid;
-  gap: 10px;
-}
-
-.agent-card {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 13px;
-  border: 1px solid rgba(216,187,129,.24);
-  border-radius: 13px;
-  background: linear-gradient(120deg, #252320, #15171c);
-  text-align: left;
-  color: var(--text);
-}
-
-.agent-card:active { transform: scale(.99); }
-
-.agent-avatar {
-  width: 49px;
-  height: 49px;
-  flex: none;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--gold);
-  background: #101116;
-}
-
-.agent-avatar-placeholder {
-  width: 49px;
-  height: 49px;
-  flex: none;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--gold);
-  border-radius: 50%;
-  color: var(--gold);
-}
-
-.agent-info { flex: 1; min-width: 0; }
-
-.agent-name {
-  font-size: 13px;
-  font-weight: 750;
-  overflow-wrap: anywhere;
-}
-
-.agent-bank {
-  font-size: 11px;
-  margin-top: 5px;
-  color: var(--muted);
-  overflow-wrap: anywhere;
-}
-
-.agent-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 10px;
-  color: var(--green);
-  margin-top: 7px;
-}
-
-.agent-status::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.agent-status.offline { color: #8d919d; }
-
-.agent-chevron {
-  width: 17px;
-  color: var(--gold);
-}
-
-.empty-agent {
-  text-align: center;
-  padding: 23px 12px;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.7;
-}
-
-/* ===== THẺ NẠP ===== */
-
-.card-logos {
-  display: flex;
-  gap: 5px;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.card-logos img {
-  max-width: 32px;
-  max-height: 19px;
-  object-fit: contain;
-}
-
-.card-coming {
-  padding: 19px 12px;
-  text-align: center;
-  border: 1px dashed var(--line);
-  border-radius: 12px;
-  color: var(--gold);
-  font-size: 13px;
-  line-height: 1.7;
-}
-
-.card-coming small {
-  display: block;
-  color: var(--muted);
-  margin-top: 5px;
-}
-
-/* ===== LƯU Ý ===== */
-
-.topup-note {
-  margin-top: 22px;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  background: rgba(204,169,108,.045);
-  font-size: 11px;
-  line-height: 1.7;
-  color: #aaabb0;
-}
-
-.topup-note .icon { color: var(--gold); }
-
-/* ===== OVERLAY ===== */
-
-.sheet-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  background: rgba(0,0,0,.79);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-
-/* ===== BOTTOM SHEET ===== */
-
-.bottom-sheet {
-  position: fixed;
-  left: 50%;
-  bottom: 0;
-  z-index: 110;
-  width: 100%;
-  max-width: 520px;
-  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 12px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 12px 18px calc(22px + env(safe-area-inset-bottom, 0px));
-  border: 1px solid rgba(221,187,122,.36);
-  border-bottom: none;
-  border-radius: 23px 23px 0 0;
-  background:
-    radial-gradient(ellipse at top, rgba(193,145,69,.15), transparent 55%),
-    #15171d;
-  box-shadow: 0 -20px 60px rgba(0,0,0,.6);
-  transform: translate(-50%,110%);
-  transition: transform .28s ease;
-  pointer-events: none;
-}
-
-.bottom-sheet.show {
-  transform: translate(-50%,0);
-  pointer-events: auto;
-}
-
-.sheet-handle {
-  width: 42px;
-  height: 5px;
-  margin: 0 auto 15px;
-  border-radius: 99px;
-  background: #64583f;
-}
-
-.sheet-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.sheet-head h3 {
-  margin: 0;
-  font-size: 18px;
-  color: var(--gold-light);
-}
-
-.sheet-close {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #25262c;
-  color: var(--gold);
-}
-
-.sheet-sub {
-  margin: 8px 0 16px;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-/* ===== QR ===== */
-
-.qr-frame {
-  width: min(100%,250px);
-  min-height: 200px;
-  margin: auto;
-  padding: 12px;
-  border-radius: 16px;
-  border: 2px solid #cba768;
-  background: #fff;
-  display: grid;
-  place-items: center;
-}
-
-#sheetQr {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-height: 250px;
-  object-fit: contain;
-}
-
-.qr-fallback {
-  text-align: center;
-  color: #454545;
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-/* ===== THÔNG TIN CHUYỂN KHOẢN ===== */
-
-.bank-info {
-  margin-top: 18px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  overflow: hidden;
-  background: #101217;
-}
-
-.bank-row {
-  display: grid;
-  grid-template-columns: 94px minmax(0,1fr);
-  gap: 10px;
-  padding: 12px 13px;
-  border-bottom: 1px solid rgba(255,255,255,.065);
-  font-size: 12px;
-}
-
-.bank-row:last-child { border-bottom: none; }
-
-.bank-label { color: var(--muted); }
-
-.bank-value {
-  text-align: right;
-  font-weight: 650;
-  color: #f6ead2;
-  overflow-wrap: anywhere;
-}
-
-#transferText {
-  font: 700 12px ui-monospace, monospace;
-  color: var(--gold-light);
-  overflow-wrap: anywhere;
-}
-
-/* ===== BUTTONS ===== */
-
-.btn-copy,
-.btn-confirm {
-  width: 100%;
-  min-height: 49px;
-  margin-top: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.btn-copy {
-  border: 1px solid var(--line);
-  background: #262321;
-  color: var(--gold-light);
-}
-
-.btn-confirm {
-  border: 1px solid #e9ca8c;
-  background: linear-gradient(135deg, #f5e0b2, #c79c56);
-  color: #211a10;
-}
-
-.btn-confirm:disabled { opacity: .55; }
-
-.transfer-status {
-  margin-top: 13px;
-  padding: 12px;
-  text-align: center;
-  border: 1px solid rgba(211,176,103,.24);
-  border-radius: 10px;
-  color: #e7c887;
-  background: rgba(208,157,70,.06);
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-/* ===== TOAST ===== */
-
-.toast {
-  position: fixed;
-  z-index: 1000;
-  left: 50%;
-  bottom: calc(25px + env(safe-area-inset-bottom, 0px));
-  width: max-content;
-  max-width: calc(100vw - 30px);
-  padding: 12px 18px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: #24242a;
-  color: #f8e9ca;
-  box-shadow: 0 12px 30px rgba(0,0,0,.5);
-  font-size: 12px;
-  text-align: center;
-  opacity: 0;
-  transform: translate(-50%,12px);
-  transition: opacity .2s, transform .2s;
-  pointer-events: none;
-}
-
-.toast.show {
-  opacity: 1;
-  transform: translate(-50%,0);
-}
-
-.toast-success { border-color: rgba(126,209,163,.5); }
-.toast-error { border-color: rgba(239,140,140,.5); }
-
-/* ===== FORCE LOGOUT ===== */
-
-#forceLogoutModal {
-  position: fixed;
-  inset: 0;
-  z-index: 2000;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-#forceLogoutModal.show { display: flex; }
-
-.fl-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,.88);
-  backdrop-filter: blur(7px);
-}
-
-.fl-box {
-  position: relative;
-  max-width: 350px;
-  width: 100%;
-  padding: 28px 23px;
-  text-align: center;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: #191b23;
-}
-
-.fl-icon { color: var(--red); }
-
-.fl-title {
-  font-size: 17px;
-  font-weight: 800;
-  color: var(--gold-light);
-  margin: 14px 0;
-}
-
-.fl-msg,
-.fl-sub {
-  font-size: 12px;
-  line-height: 1.7;
-  color: var(--muted);
-}
-
-.fl-sub { margin-top: 12px; }
-
-/* ===== MOBILE ===== */
-
-@media (max-width: 380px) {
-  .topup-shell { padding-left: 12px; padding-right: 12px; }
-  .topup-header { margin: 0 -12px; padding-left: 12px; padding-right: 12px; }
-  .header-center h1 { font-size: 22px; }
-  .wallet-card { padding: 21px 17px; }
-  .card-logos img { max-width: 25px; }
-  .option-header { gap: 9px; padding: 12px; }
-  .option-title { font-size: 13px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    transition-duration: .01ms !important;
-  }
-}
-
-
-
-/* ==========================================
-   CARD TOP-UP - MAINTENANCE MODAL
-========================================== */
-
-.card-maintenance-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-
-  display: none;
-  align-items: center;
-  justify-content: center;
-
-  padding: 20px;
-
-  background: rgba(0,0,0,.86);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.card-maintenance-modal.show {
-  display: flex;
-}
-
-.card-maintenance-box {
-  width: 100%;
-  max-width: 370px;
-  padding: 30px 23px 24px;
-
-  text-align: center;
-
-  border-radius: 23px;
-  border: 1px solid rgba(230,191,116,.46);
-
-  background:
-    radial-gradient(
-      circle at top,
-      rgba(215,164,74,.16),
-      transparent 60%
-    ),
-    linear-gradient(145deg,#25231f,#12141a);
-
-  box-shadow:
-    0 25px 75px rgba(0,0,0,.75),
-    0 0 35px rgba(211,159,71,.07);
-
-  animation: cardMaintenanceIn .25s ease-out;
-}
-
-.card-maintenance-symbol {
-  width: 82px;
-  height: 82px;
-  margin: 0 auto 19px;
-
-  display: grid;
-  place-items: center;
-
-  border-radius: 50%;
-  border: 1px solid rgba(230,191,116,.45);
-
-  background: rgba(213,170,89,.09);
-  color: #e8c486;
-
-  box-shadow: 0 0 28px rgba(222,175,86,.12);
-}
-
-.card-maintenance-tag {
-  display: inline-block;
-  padding: 7px 12px;
-
-  border-radius: 30px;
-  border: 1px solid rgba(233,190,94,.3);
-
-  background: rgba(214,160,60,.1);
-  color: #ebbd6f;
-
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 1.4px;
-}
-
-.card-maintenance-box h2 {
-  margin: 18px 0 16px;
-
-  font: 700 22px Georgia,serif;
-  letter-spacing: .5px;
-  color: #f6e3b9;
-}
-
-.card-maintenance-box p {
-  margin: 11px 0;
-
-  font-size: 12px;
-  line-height: 1.8;
-  color: #b3b4bd;
-}
-
-#cardMaintenanceClose {
-  width: 100%;
-  min-height: 49px;
-  margin-top: 24px;
-
-  border: 1px solid #edce96;
-  border-radius: 12px;
-
-  background: linear-gradient(
-    135deg,#f4dfaf,#c89b55
-  );
-
-  color: #241b10;
-  font-size: 13px;
-  font-weight: 850;
-  letter-spacing: .5px;
-}
-
-#cardMaintenanceClose:active {
-  transform: scale(.98);
-}
-
-@keyframes cardMaintenanceIn {
-  from {
-    opacity: 0;
-    transform: translateY(18px) scale(.96);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .card-maintenance-box {
-    animation: none;
-  }
-}
-
-
-
-/* =========================================
-   LIVESTREAM PRO - CARD PAYMENT V1
-========================================= */
-
-.card-payment {
-  padding: 8px 2px 12px;
-}
-
-.card-payment-title {
-  margin-bottom: 15px;
-  text-align: center;
-  color: var(--gold-light);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 1.3px;
-}
-
-.card-package-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.card-package {
-  min-width: 0;
-  min-height: 108px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 7px;
-  border: 1px solid rgba(219,188,131,.22);
-  border-radius: 15px;
-  color: #f6e3b9;
-  background: linear-gradient(
-    145deg, #29251e, #14161c
-  );
-  transition: border-color .2s, transform .2s;
-}
-
-.card-package.selected {
-  border-color: #f5d18b;
-  background: linear-gradient(
-    145deg, #45351f, #211c19
-  );
-  box-shadow: inset 0 0 15px rgba(222,172,79,.1);
-}
-
-.card-package:active {
-  transform: scale(.98);
-}
-
-.card-package-icon {
-  font-size: 23px;
-}
-
-.card-package-diamonds {
-  font-size: 19px;
-  font-weight: 850;
-  overflow-wrap: anywhere;
-}
-
-.card-package-price {
-  font-size: 12px;
-  color: #b6b3ae;
-}
-
-.card-payment-summary {
-  margin-top: 18px;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  background: #101217;
-}
-
-.card-payment-summary > div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 11px;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.card-payment-summary > div:last-child {
-  margin-bottom: 0;
-}
-
-.card-payment-summary strong {
-  color: var(--gold-light);
-  font-size: 14px;
-  font-variant-numeric: tabular-nums;
-}
-
-.card-payment-note {
-  margin: 14px 5px 0;
-  text-align: center;
-  font-size: 11px;
-  line-height: 1.7;
-  color: var(--muted);
-}
-
-#cardPayBtn {
-  margin-top: 15px;
-}
-
-@media (max-width: 360px) {
-  .card-package-list {
-    gap: 7px;
-  }
-
-  .card-package {
-    padding: 10px 5px;
-  }
-
-  .card-package-diamonds {
-    font-size: 16px;
-  }
-}
-
-
-
-
-/* ==========================================
-   LIVESTREAM PRO - CHECKOUT PREVIEW V2
-========================================== */
-
-body.checkout-open {
-  overflow: hidden;
-}
-
-.lsp-checkout {
-  position: fixed;
-  inset: 0;
-  z-index: 5000;
-
-  display: none;
-  justify-content: center;
-
-  background: #08090c;
-}
-
-.lsp-checkout.show {
-  display: flex;
-}
-
-.lsp-checkout-page {
-  width: 100%;
-  max-width: 520px;
-  height: 100dvh;
-
-  display: flex;
-  flex-direction: column;
-
-  overflow: hidden;
-
-  background:
-    radial-gradient(
-      circle at top,
-      rgba(193,145,65,.12),
-      transparent 45%
-    ),
-    #0d0f14;
-
-  color: #f8f3e9;
-}
-
-/* HEADER */
-
-.lsp-checkout-header {
-  flex: none;
-
-  min-height: 83px;
-  padding:
-    calc(env(safe-area-inset-top, 0px) + 12px)
-    18px
-    14px;
-
-  display: flex;
-  align-items: center;
-  gap: 14px;
-
-  border-bottom: 1px solid rgba(219,188,131,.2);
-  background: #111217;
-}
-
-.lsp-checkout-back {
-  width: 41px;
-  height: 41px;
-
-  border: 1px solid #55452e;
-  border-radius: 12px;
-
-  background: #28231c;
-  color: #efd29c;
-
-  font-size: 23px;
-}
-
-.lsp-checkout-brand {
-  flex: 1;
-  min-width: 0;
-}
-
-.lsp-checkout-brand small {
-  color: #d8b67b;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 2px;
-}
-
-.lsp-checkout-brand h2 {
-  margin: 5px 0 0;
-
-  font: 700 22px Georgia, serif;
-  color: #f6e3b9;
-}
-
-.lsp-checkout-lock {
-  font-size: 21px;
-  color: #d7b779;
-}
-
-/* CONTENT */
-
-.lsp-checkout-body {
-  flex: 1;
-  min-height: 0;
-
-  overflow-y: auto;
-  overscroll-behavior: contain;
-
-  padding: 19px 16px 28px;
-}
-
-.lsp-preview-label {
-  padding: 10px 12px;
-  margin-bottom: 17px;
-
-  border: 1px solid rgba(223,182,92,.25);
-  border-radius: 10px;
-
-  background: #292316;
-  color: #e6c583;
-
-  text-align: center;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 1.2px;
-}
-
-/* ORDER SUMMARY */
-
-.lsp-order-card {
-  padding: 18px;
-
-  border: 1px solid rgba(219,188,131,.3);
-  border-radius: 17px;
-
-  background: linear-gradient(
-    145deg,
-    #24211d,
-    #15171d
-  );
-
-  box-shadow: 0 10px 30px rgba(0,0,0,.25);
-}
-
-.lsp-order-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-
-  font-size: 12px;
-  color: #b9b6af;
-}
-
-.lsp-order-heading small {
-  font-size: 9px;
-  letter-spacing: .8px;
-  color: #dbbc83;
-}
-
-.lsp-order-product {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-
-  padding: 23px 0;
-}
-
-.lsp-order-diamond {
-  width: 53px;
-  height: 53px;
-
-  display: grid;
-  place-items: center;
-
-  border-radius: 14px;
-  border: 1px solid #675232;
-
-  background: #30281c;
-  font-size: 27px;
-}
-
-.lsp-order-name {
-  flex: 1;
-  min-width: 0;
-
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-
-.lsp-order-name strong {
-  font-size: 17px;
-  color: #f7e4bd;
-  overflow-wrap: anywhere;
-}
-
-.lsp-order-name small {
-  font-size: 11px;
-  color: #a2a3ad;
-}
-
-.lsp-order-divider {
-  height: 1px;
-  background: rgba(219,188,131,.17);
-}
-
-.lsp-order-total {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-
-  padding-top: 17px;
-}
-
-.lsp-order-total span {
-  color: #b2b2bb;
-  font-size: 12px;
-}
-
-.lsp-order-total strong {
-  color: #f3d397;
-  font-size: 20px;
-  font-variant-numeric: tabular-nums;
-}
-
-/* PAYMENT METHODS */
-
-.lsp-method-heading {
-  margin: 27px 0 14px;
-
-  font-size: 12px;
-  letter-spacing: 1.2px;
-  color: #f6e3b9;
-}
-
-.lsp-checkout-methods {
-  display: grid;
-  gap: 11px;
-}
-
-.lsp-payment-method {
-  width: 100%;
-  min-height: 76px;
-
-  padding: 14px;
-
-  display: flex;
-  align-items: center;
-  gap: 13px;
-
-  border-radius: 13px;
-  border: 1px solid rgba(219,188,131,.2);
-
-  background: #191b21;
-  color: #f7e4bd;
-
-  text-align: left;
-
-  transition:
-    background .2s,
-    border-color .2s;
-}
-
-.lsp-payment-method.selected {
-  border-color: #dabb7b;
-  background: #30291e;
-}
-
-.lsp-method-icon {
-  width: 43px;
-  height: 43px;
-
-  flex: none;
-  display: grid;
-  place-items: center;
-
-  border-radius: 10px;
-  background: #29251f;
-
-  font-size: 24px;
-}
-
-.lsp-method-info {
-  flex: 1;
-  min-width: 0;
-
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.lsp-method-info strong {
-  font-size: 13px;
-}
-
-.lsp-method-info small {
-  font-size: 11px;
-  color: #999da8;
-}
-
-.lsp-method-check {
-  color: #e2bd7b;
-  font-size: 24px;
-}
-
-/* SECURITY INFORMATION */
-
-.lsp-checkout-security {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-
-  margin-top: 22px;
-  padding: 15px;
-
-  border: 1px solid rgba(219,188,131,.17);
-  border-radius: 13px;
-
-  background: #17191e;
-}
-
-.lsp-checkout-security > span {
-  font-size: 20px;
-}
-
-.lsp-checkout-security > div {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-
-.lsp-checkout-security strong {
-  color: #e9d0a2;
-  font-size: 12px;
-}
-
-.lsp-checkout-security small {
-  color: #999da8;
-  font-size: 11px;
-  line-height: 1.6;
-}
-
-/* FIXED FOOTER */
-
-.lsp-checkout-footer {
-  flex: none;
-
-  padding:
-    14px
-    16px
-    calc(16px + env(safe-area-inset-bottom, 0px));
-
-  border-top: 1px solid rgba(219,188,131,.24);
-
-  background: #14161b;
-}
-
-.lsp-checkout-footer-total {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-
-  margin-bottom: 13px;
-}
-
-.lsp-checkout-footer-total span {
-  color: #a4a5ae;
-  font-size: 12px;
-}
-
-.lsp-checkout-footer-total strong {
-  color: #f3d397;
-  font-size: 20px;
-  font-variant-numeric: tabular-nums;
-}
-
-#lspCheckoutConfirm {
-  width: 100%;
-  min-height: 51px;
-
-  border: 1px solid #f3d397;
-  border-radius: 12px;
-
-  background: linear-gradient(
-    135deg,
-    #f5dfb1,
-    #c89b55
-  );
-
-  color: #211a10;
-  font-size: 13px;
-  font-weight: 850;
-  letter-spacing: .6px;
-}
-
-/* ANIMATION */
-
-.lsp-checkout.show .lsp-checkout-page {
-  animation: lspCheckoutEnter .24s ease-out;
-}
-
-@keyframes lspCheckoutEnter {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .lsp-checkout.show .lsp-checkout-page {
-    animation: none;
-  }
-}
-
-@media (max-width: 360px) {
-  .lsp-order-total strong,
-  .lsp-checkout-footer-total strong {
-    font-size: 17px;
-  }
-
-  .lsp-checkout-brand h2 {
-    font-size: 19px;
-  }
-}
-
-
-
-/* ==========================================
-   LIVESTREAM PRO - DEMO CARD DETAILS
-========================================== */
-
-.lsp-demo-card-screen {
-  position: fixed;
-  inset: 0;
-  z-index: 6000;
-  display: flex;
-  justify-content: center;
-  background: #090b10;
-  color: #f6e3b9;
-}
-
-.lsp-demo-card-page {
-  width: 100%;
-  max-width: 520px;
-  height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background:
-    radial-gradient(
-      circle at top,
-      rgba(202,151,68,.14),
-      transparent 55%
-    ),
-    #101217;
-}
-
-.lsp-demo-card-header {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding:
-    calc(14px + env(safe-area-inset-top,0px))
-    17px 15px;
-  border-bottom: 1px solid rgba(219,188,131,.2);
-}
-
-#lspDemoCardBack {
-  width: 42px;
-  height: 42px;
-  border: 1px solid #5c4b32;
-  border-radius: 12px;
-  background: #26221d;
-  color: #f0d49d;
-  font-size: 23px;
-}
-
-.lsp-demo-card-header small {
-  color: #c9a66d;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 2px;
-}
-
-.lsp-demo-card-header h2 {
-  margin: 5px 0 0;
-  font: 700 22px Georgia, serif;
-  color: #f6e3b9;
-}
-
-.lsp-demo-card-body {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 19px 17px 28px;
-}
-
-.lsp-demo-warning {
-  padding: 11px 9px;
-  margin-bottom: 20px;
-  border: 1px solid #65502e;
-  border-radius: 10px;
-  background: #2d2518;
-  color: #eac987;
-  text-align: center;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: .4px;
-}
-
-.lsp-demo-bank-card {
-  min-height: 198px;
-  border: 1px solid #b4935c;
-  border-radius: 19px;
-  padding: 22px;
-  background:
-    radial-gradient(
-      circle at 85% 10%,
-      rgba(255,219,150,.18),
-      transparent 48%
-    ),
-    linear-gradient(
-      135deg,
-      #4b3b25,
-      #24252c 70%,
-      #11151c
-    );
-  box-shadow: 0 15px 35px rgba(0,0,0,.4);
-}
-
-.lsp-demo-card-brand {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-  letter-spacing: 1px;
-}
-
-.lsp-demo-card-brand span {
-  font-size: 25px;
-}
-
-.lsp-demo-card-number {
-  margin: 37px 0 25px;
-  font-size: clamp(17px,5vw,23px);
-  font-weight: 750;
-  letter-spacing: 2px;
-  white-space: nowrap;
-}
-
-.lsp-demo-card-bottom {
-  display: flex;
-  justify-content: space-between;
-}
-
-.lsp-demo-card-bottom > div {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.lsp-demo-card-bottom small {
-  font-size: 9px;
-  color: #b6ae9d;
-}
-
-.lsp-demo-card-bottom strong {
-  font-size: 12px;
-}
-
-.lsp-demo-fields {
-  display: grid;
-  gap: 10px;
-  margin-top: 25px;
-}
-
-.lsp-demo-fields label {
-  display: block;
-  margin-top: 6px;
-  font-size: 12px;
-  font-weight: 650;
-  color: #d8c49f;
-}
-
-.lsp-demo-field {
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  padding: 0 14px;
-  border: 1px solid #494033;
-  border-radius: 11px;
-  background: #1b1d23;
-  color: #e5d7c0;
-  font-size: 13px;
-}
-
-.lsp-demo-field-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.lsp-demo-field-grid > div {
-  display: grid;
-  gap: 10px;
-}
-
-.lsp-demo-description {
-  margin: 24px 0 0;
-  padding: 14px;
-  border: 1px solid rgba(219,188,131,.17);
-  border-radius: 12px;
-  color: #a5a5ad;
-  font-size: 11px;
-  line-height: 1.7;
-}
-
-.lsp-demo-card-footer {
-  flex: none;
-  padding:
-    15px 17px
-    calc(17px + env(safe-area-inset-bottom,0px));
-  background: #17191e;
-  border-top: 1px solid rgba(219,188,131,.2);
-}
-
-.lsp-demo-amount {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 13px;
-  gap: 10px;
-}
-
-.lsp-demo-amount span {
-  color: #a5a5ad;
-  font-size: 12px;
-}
-
-.lsp-demo-amount strong {
-  color: #f4d599;
-  font-size: 20px;
-  font-variant-numeric: tabular-nums;
-}
-
-#lspDemoCardConfirm {
-  width: 100%;
-  min-height: 50px;
-  border: 1px solid #e9ca8c;
-  border-radius: 12px;
-  background: linear-gradient(
-    135deg,#f5e0b2,#c79c56
-  );
-  color: #211a10;
-  font-size: 13px;
-  font-weight: 850;
-}
-
-@media (max-width: 360px) {
-  .lsp-demo-bank-card {
-    padding: 17px;
-  }
-
-  .lsp-demo-card-number {
-    letter-spacing: 1px;
-  }
-}
-
-
-
-
-/* ==========================================
-   CARD DETAILS - EDITABLE PREVIEW
-========================================== */
-
-.lsp-demo-input {
-  width: 100%;
-  min-width: 0;
-
-  outline: none;
-
-  font: inherit;
-  font-size: 13px;
-
-  color: #f6e3b9;
-
-  -webkit-appearance: none;
-  appearance: none;
-
-  transition:
-    border-color .2s,
-    box-shadow .2s;
-}
-
-.lsp-demo-input:focus {
-  border-color: #e1bd7e;
-
-  box-shadow:
-    0 0 0 2px rgba(225,189,126,.13);
-}
-
-.lsp-demo-input::placeholder {
-  color: #898b94;
-  opacity: 1;
-}
-
-.lsp-demo-input option {
-  background: #1b1d23;
-  color: #f6e3b9;
-}
-
-.lsp-demo-nocollect {
-  margin-left: auto;
-
-  font-size: 11px;
-  color: #a9a6a0;
-}
-
-/* Prevent long names from breaking card */
-
-#lspPreviewName {
-  display: block;
-  max-width: 220px;
-
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Responsive improvements */
-
-@media (max-width: 380px) {
-
-  .lsp-demo-field-grid {
-    gap: 8px;
-  }
-
-  .lsp-demo-input {
-    font-size: 12px;
-  }
-
-  #lspPreviewName {
-    max-width: 170px;
-  }
-
-}
-
-
-
-
-/* ==========================================
-   CARD NUMBER INPUT
-========================================== */
-
-#lspCardLastFour {
-  width: 100%;
-  font-size: 15px;
-  font-weight: 650;
-  letter-spacing: 2px;
-  font-variant-numeric: tabular-nums;
-}
-
-.lsp-card-number-help {
-  display: block;
-  margin-top: 3px;
-  color: #aaa49b;
-  font-size: 11px;
-  line-height: 1.5;
-}
-
-#lspPreviewNumber {
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-
-
-
-/* ==========================================
-   PAY SECURELY BUTTON
-========================================== */
-
-#cardPayBtn {
-  width: 100%;
-  min-height: 52px;
-  border-radius: 13px;
-  font-weight: 850;
-  letter-spacing: .7px;
-  transition: opacity .2s, box-shadow .2s;
-}
-
-#cardPayBtn:not(:disabled) {
-  opacity: 1;
-  color: #24190c;
-  border: 1px solid #ffe1a2;
-  background: linear-gradient(
-    135deg,
-    #ffe7b4,
-    #d9a75a
-  );
-  box-shadow: 0 5px 24px rgba(218,171,88,.28);
-}
-
-#cardPayBtn:disabled {
-  opacity: .45;
-  cursor: not-allowed;
-}
-
-
-
-/* ==========================================
-   TOPUP V3.0 - MINIMAL BLACK & GOLD
-========================================== */
-
-:root {
-  --bg: #101114;
-  --card: #1c1e23;
-  --gold: #d9b979;
-  --gold-light: #f5f5f7;
-  --text: #f5f5f7;
-  --muted: #96989f;
-  --line: #292b31;
-}
-
-html, body {
-  background: var(--bg);
-}
-
-/* REMOVE EXTRA TEXT */
-
-.header-brand,
-.page-intro,
-.wallet-top > span,
-.wallet-footer,
-.card-payment-title,
-.lsp-checkout-brand small,
-.lsp-order-heading small,
-.lsp-order-name small {
-  display: none !important;
-}
-
-/* ==========================================
-   MAIN LAYOUT
-========================================== */
-
-.topup-shell {
-  width: 100%;
-  max-width: 430px;
-
-  min-height: 100dvh;
-
-  padding:
-    0 14px
-    calc(24px + env(safe-area-inset-bottom,0px));
-
-  background: var(--bg);
-}
-
-/* ==========================================
-   HEADER
-========================================== */
-
-.topup-header {
-  margin: 0 -14px;
-
-  padding:
-    env(safe-area-inset-top,0px)
-    14px
-    0;
-
-  background: var(--bg);
-
-  border-bottom: 1px solid var(--line);
-
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
-.header-row {
-  height: 56px;
-
-  grid-template-columns:
-    42px minmax(0,1fr) 42px;
-}
-
-.btn-back {
-  width: 40px;
-  height: 40px;
-
-  background: transparent;
-
-  border: none;
-  border-radius: 50%;
-
-  color: var(--gold);
-
-  box-shadow: none;
-}
-
-.btn-back .icon {
-  width: 25px;
-  height: 25px;
-}
-
-.header-center h1 {
-  margin: 0;
-
-  font-family: inherit;
-  font-size: 19px;
-  font-weight: 700;
-
-  color: var(--text);
-}
-
-.header-symbol .icon {
-  width: 25px;
-  height: 25px;
-}
-
-/* ==========================================
-   DIAMOND BALANCE
-========================================== */
-
-.wallet-card {
-  position: relative;
-
-  margin-top: 16px;
-  padding: 19px 18px;
-
-  border: 1px solid var(--line);
-  border-radius: 15px;
-
-  background: var(--card);
-
-  box-shadow: none;
-}
-
-.wallet-card::after {
-  display: none;
-}
-
-.wallet-top {
-  position: absolute;
-
-  top: 18px;
-  right: 18px;
-
-  color: var(--muted);
-}
-
-.wallet-top .icon {
-  width: 23px;
-  height: 23px;
-}
-
-.wallet-label {
-  margin: 0;
-
-  color: var(--muted);
-
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.wallet-value {
-  margin-top: 13px;
-
-  gap: 10px;
-
-  color: var(--gold);
-}
-
-.wallet-value .icon {
-  width: 30px;
-  height: 30px;
-}
-
-#myCoin {
-  min-width: 0;
-
-  font-size: clamp(26px,8vw,36px);
-  font-weight: 750;
-
-  letter-spacing: -.5px;
-}
-
-/* ==========================================
-   PAYMENT METHODS
-========================================== */
-
-.method-heading {
-  margin: 22px 2px 12px;
-}
-
-.method-heading h2 {
-  font-size: 14px;
-  font-weight: 600;
-
-  color: var(--text);
-}
-
-.method-heading::after {
-  display: none;
-}
-
-.topup-option {
-  margin-bottom: 10px;
-
-  background: var(--card);
-
-  border: 1px solid var(--line);
-  border-radius: 13px;
-
-  box-shadow: none;
-}
-
-.topup-option.open {
-  border-color: #34363d;
-}
-
-.option-header {
-  min-height: 70px;
-
-  padding: 12px;
-
-  gap: 12px;
-}
-
-.option-icon {
-  width: 43px;
-  height: 43px;
-
-  background: #30291f;
-
-  border: none;
-  border-radius: 11px;
-
-  color: var(--gold);
-}
-
-.option-icon .icon {
-  width: 23px;
-  height: 23px;
-}
-
-.option-title {
-  font-size: 15px;
-  font-weight: 650;
-
-  color: var(--text);
-}
-
-.option-desc {
-  margin-top: 4px;
-
-  font-size: 11px;
-  font-weight: 400;
-
-  color: var(--muted);
-}
-
-.option-arrow {
-  color: var(--muted);
-
-  width: 18px;
-  height: 18px;
-}
-
-/* Không hiển thị logo ngân hàng thừa */
-
-.card-logos {
-  display: none;
 }
 
 .option-content {
@@ -2115,103 +491,149 @@ html, body {
   border-top: 1px solid var(--line);
 }
 
+
 /* ==========================================
-   AGENT LIST
+   07. AGENT LIST
 ========================================== */
 
 .agent-list {
   display: flex;
   flex-direction: column;
-
-  gap: 0;
 }
 
 .agent-card {
   position: relative;
 
-  min-height: 70px;
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  min-height: 69px;
+
+  gap: 10px;
 
   padding: 10px 0;
-  gap: 11px;
-
-  background: transparent;
 
   border: none;
   border-bottom: 1px solid var(--line);
-  border-radius: 0;
 
-  box-shadow: none;
+  background: transparent;
+  color: var(--text);
+
+  text-align: left;
 }
 
 .agent-card:last-child {
   border-bottom: none;
+  padding-bottom: 3px;
+}
+
+.agent-card:active {
+  opacity: .7;
 }
 
 .agent-avatar,
 .agent-avatar-placeholder {
-  width: 43px;
-  height: 43px;
+  width: 45px;
+  height: 45px;
 
-  border: none;
+  flex-shrink: 0;
 
-  background: #292b31;
+  border: 1px solid #E5D1A0;
   border-radius: 50%;
+
+  background: #F8F0DB;
+  color: var(--gold);
+}
+
+.agent-avatar {
+  object-fit: cover;
+}
+
+.agent-avatar-placeholder {
+  display: grid;
+  place-items: center;
+}
+
+.agent-avatar-placeholder .icon {
+  width: 23px;
+  height: 23px;
 }
 
 .agent-info {
   flex: 1;
   min-width: 0;
 
-  padding-right: 15px;
+  padding-right: 17px;
 }
 
 .agent-name {
-  font-size: 14px;
-  font-weight: 650;
-
   color: var(--text);
+
+  font-size: 14px;
+  font-weight: 700;
+
+  line-height: 1.4;
+
+  overflow-wrap: anywhere;
 }
 
 .agent-bank {
   margin-top: 4px;
 
-  font-size: 11px;
   color: var(--muted);
+
+  font-size: 11px;
+  line-height: 1.4;
+
+  overflow-wrap: anywhere;
 }
+
 
 /* ONLINE / OFFLINE DOT */
 
 .agent-status {
   position: absolute;
 
-  right: 27px;
+  right: 26px;
   top: 50%;
 
   transform: translateY(-50%);
-
-  display: flex;
 
   width: 8px;
   height: 8px;
 
   margin: 0;
 
+  display: flex;
+  align-items: center;
+
   font-size: 0;
 
-  color: #49c78c;
+  color: #32975A;
 }
 
 .agent-status::before {
+  content: "";
+
   width: 8px;
   height: 8px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: currentColor;
 }
 
 .agent-status.offline {
-  color: #747680;
+  color: #AAA69E;
 }
 
 .agent-chevron {
-  color: var(--muted);
+  flex-shrink: 0;
+
+  color: var(--gold);
 }
 
 .agent-chevron .icon {
@@ -2219,8 +641,20 @@ html, body {
   height: 17px;
 }
 
+.empty-agent {
+  padding: 21px 10px;
+
+  color: var(--muted);
+
+  font-size: 12px;
+  line-height: 1.6;
+
+  text-align: center;
+}
+
+
 /* ==========================================
-   DIAMOND PACKAGES
+   08. DIAMOND PACKAGES
 ========================================== */
 
 .card-payment {
@@ -2228,124 +662,260 @@ html, body {
 }
 
 .card-package-list {
+  display: grid;
+
   grid-template-columns:
     repeat(2,minmax(0,1fr));
 
-  gap: 8px;
+  gap: 9px;
 }
 
 .card-package {
-  min-height: 100px;
+  position: relative;
 
-  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
   gap: 6px;
 
-  background: #24262c;
+  min-width: 0;
+  min-height: 105px;
 
-  border: 1px solid transparent;
-  border-radius: 11px;
+  padding: 12px 8px;
 
-  box-shadow: none;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+
+  background: var(--cream);
+  color: var(--text);
+
+  transition:
+    border-color .15s,
+    background .15s,
+    transform .15s;
 }
 
 .card-package.selected {
-  background: #30291f;
+  background: #F8EBC9;
 
-  border-color: var(--gold);
+  border-color: #C9A75D;
 
-  box-shadow: none;
+  box-shadow:
+    inset 0 0 0 1px #C9A75D;
+}
+
+.card-package.selected::after {
+  content: "✓";
+
+  position: absolute;
+
+  top: 7px;
+  right: 7px;
+
+  display: grid;
+  place-items: center;
+
+  width: 18px;
+  height: 18px;
+
+  border-radius: 50%;
+
+  background: var(--gold);
+  color: #FFFFFF;
+
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.card-package:active {
+  transform: scale(.98);
 }
 
 .card-package-icon {
-  font-size: 22px;
+  font-size: 23px;
+  line-height: 1.2;
 }
 
 .card-package-diamonds {
-  color: var(--gold);
+  color: var(--gold-light);
 
-  font-size: 19px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 800;
+
+  line-height: 1.3;
+
+  overflow-wrap: anywhere;
 }
 
 .card-package-price {
-  color: #b5b7bf;
+  color: var(--muted);
+
+  font-size: 12px;
+  font-weight: 550;
+}
+
+
+/* ==========================================
+   09. PAYMENT SUMMARY
+========================================== */
+
+.card-payment-summary {
+  margin-top: 13px;
+  padding: 13px;
+
+  border: 1px solid var(--line);
+  border-radius: 12px;
+
+  background: var(--cream);
+}
+
+.card-payment-summary > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  margin-bottom: 10px;
+
+  color: var(--muted);
 
   font-size: 12px;
 }
 
-.card-payment-summary {
-  margin-top: 13px;
-
-  padding: 12px;
-
-  border: none;
-  border-radius: 10px;
-
-  background: #24262c;
+.card-payment-summary > div:last-child {
+  margin-bottom: 0;
 }
 
 .card-payment-summary strong {
+  min-width: 0;
+
   color: var(--text);
+
+  font-size: 14px;
+  font-weight: 750;
+
+  text-align: right;
+  overflow-wrap: anywhere;
+
+  font-variant-numeric: tabular-nums;
+}
+
+.card-payment-summary > div:last-child strong {
+  color: var(--gold-light);
+
+  font-size: 17px;
 }
 
 .card-payment-note {
-  margin: 12px 0 0;
+  margin: 12px 2px 0;
+
+  color: var(--muted);
 
   font-size: 11px;
-  line-height: 1.5;
+  line-height: 1.6;
+
+  text-align: center;
 }
 
+
 /* ==========================================
-   PAYMENT BUTTONS
+   10. PAYMENT BUTTONS
 ========================================== */
 
+.btn-copy,
 .btn-confirm,
-#cardPayBtn,
-#cardPayBtn:not(:disabled),
 #lspCheckoutConfirm,
-#cardMaintenanceClose {
+#cardMaintenanceClose,
+#lspDemoCardConfirm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
+  gap: 8px;
+
+  width: 100%;
   min-height: 46px;
 
-  background: var(--gold);
-  color: #19150f;
+  margin-top: 12px;
+  padding: 11px;
 
-  border: none;
-  border-radius: 10px;
+  border-radius: 12px;
 
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.btn-confirm,
+#lspCheckoutConfirm,
+#cardMaintenanceClose,
+#lspDemoCardConfirm {
+  border: 1px solid #DFC382;
+
+  background: var(--gradient);
+  color: #4D3915;
 
   box-shadow: none;
 }
 
 .btn-copy {
-  min-height: 44px;
+  border: 1px solid var(--line);
 
-  background: #292b31;
+  background: #FFFFFF;
   color: var(--gold);
-
-  border: none;
-  border-radius: 10px;
-
-  font-size: 13px;
-  font-weight: 600;
 }
 
+.btn-confirm:not(:disabled):active,
+.btn-copy:active,
+#lspCheckoutConfirm:not(:disabled):active {
+  transform: scale(.98);
+}
+
+#cardPayBtn {
+  margin-top: 13px;
+}
+
+#cardPayBtn:disabled,
+.btn-confirm:disabled,
+#lspCheckoutConfirm:disabled {
+  opacity: .5;
+
+  cursor: not-allowed;
+}
+
+
 /* ==========================================
-   SAFETY NOTE
+   11. PAYMENT STATUS & SAFETY NOTE
 ========================================== */
 
-.topup-note {
-  margin-top: 16px;
+.transfer-status {
+  margin-top: 12px;
+  padding: 11px;
 
-  padding: 3px 2px;
+  border: 1px solid #E5D1A0;
+  border-radius: 11px;
+
+  background: #FFF8E7;
+  color: var(--gold-light);
+
+  font-size: 12px;
+  line-height: 1.6;
+
+  text-align: center;
+
+  overflow-wrap: anywhere;
+}
+
+.topup-note {
+  display: flex;
+  align-items: flex-start;
 
   gap: 8px;
 
-  background: transparent;
-  border: none;
+  margin-top: 17px;
+  padding: 3px;
 
   color: var(--muted);
 
@@ -2357,265 +927,923 @@ html, body {
   width: 17px;
   height: 17px;
 
-  color: var(--muted);
+  color: var(--gold);
 }
 
+
 /* ==========================================
-   QR TRANSFER SHEET
+   12. BANK TRANSFER OVERLAY
 ========================================== */
 
 .sheet-overlay {
-  background: rgba(0,0,0,.75);
+  position: fixed;
+  inset: 0;
 
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  z-index: 100;
+
+  background: rgba(52,43,25,.30);
+
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
 }
 
+
+/* ==========================================
+   13. QR BOTTOM SHEET
+========================================== */
+
 .bottom-sheet {
+  position: fixed;
+
+  left: 50%;
+  bottom: 0;
+
+  z-index: 110;
+
+  width: 100%;
   max-width: 430px;
 
+  max-height:
+    calc(100vh - env(safe-area-inset-top,0px) - 12px);
+
+  max-height:
+    calc(100dvh - env(safe-area-inset-top,0px) - 12px);
+
   padding:
-    10px 16px
-    calc(16px + env(safe-area-inset-bottom,0px));
+    11px 16px
+    calc(18px + env(safe-area-inset-bottom,0px));
 
-  background: #17181d;
+  overflow-x: hidden;
+  overflow-y: auto;
 
-  border: 1px solid #303238;
+  overscroll-behavior: contain;
+
+  -webkit-overflow-scrolling: touch;
+
+  border: 1px solid var(--line);
   border-bottom: none;
-  border-radius: 20px 20px 0 0;
+  border-radius: 24px 24px 0 0;
 
-  box-shadow: none;
+  background: #FAF6E9;
+
+  box-shadow:
+    0 -14px 45px rgba(85,65,25,.14);
+
+  transform: translate(-50%,105%);
+
+  visibility: hidden;
+  pointer-events: none;
+
+  transition:
+    transform .25s ease,
+    visibility 0s linear .25s;
+}
+
+.bottom-sheet.show {
+  transform: translate(-50%,0);
+
+  visibility: visible;
+  pointer-events: auto;
+
+  transition: transform .25s ease;
 }
 
 .sheet-handle {
-  width: 36px;
+  width: 38px;
   height: 4px;
 
-  margin-bottom: 12px;
+  margin: 0 auto 14px;
 
-  background: #494b53;
+  border-radius: 20px;
+
+  background: #D6C7A7;
+}
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
 }
 
 .sheet-head h3 {
-  font-size: 18px;
-  font-weight: 700;
+  margin: 0;
 
   color: var(--text);
+
+  font-size: 21px;
+  font-weight: 750;
 }
 
 .sheet-close {
-  width: 34px;
-  height: 34px;
+  display: grid;
+  place-items: center;
 
-  background: transparent;
+  width: 36px;
+  height: 36px;
 
-  border: none;
-  border-radius: 50%;
+  padding: 0;
 
-  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+
+  background: #FFFFFF;
+  color: var(--gold);
 }
 
 .sheet-sub {
-  margin: 6px 0 14px;
+  margin: 8px 0 15px;
+
+  color: var(--muted);
 
   font-size: 12px;
+  line-height: 1.5;
 }
+
+
+/* ==========================================
+   14. QR IMAGE
+========================================== */
 
 .qr-frame {
-  width: min(100%,230px);
+  display: grid;
+  place-items: center;
+
+  width: min(100%,235px);
+
   min-height: 0;
 
+  margin: 0 auto;
   padding: 12px;
 
-  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
 
-  border: none;
-  border-radius: 12px;
+  background: #FFFFFF;
 }
 
+#sheetQr {
+  display: block;
+
+  width: 100%;
+  height: auto;
+
+  max-height: 250px;
+
+  object-fit: contain;
+}
+
+.qr-fallback {
+  padding: 14px 5px;
+
+  color: var(--muted);
+
+  font-size: 12px;
+  line-height: 1.6;
+
+  text-align: center;
+}
+
+
+/* ==========================================
+   15. BANK DETAILS
+========================================== */
+
 .bank-info {
-  margin-top: 14px;
+  overflow: hidden;
 
-  background: #22242a;
+  margin-top: 15px;
 
-  border: none;
-  border-radius: 11px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+
+  background: #FFFFFF;
 }
 
 .bank-row {
-  padding: 11px 12px;
+  display: grid;
 
   grid-template-columns:
-    minmax(85px,auto) minmax(0,1fr);
+    minmax(75px,auto) minmax(0,1fr);
 
   gap: 10px;
 
+  padding: 12px;
+
+  border-bottom: 1px solid var(--line);
+
   font-size: 12px;
+
+  line-height: 1.45;
+}
+
+.bank-row:last-child {
+  border-bottom: none;
+
+  background: #FFF8E7;
+}
+
+.bank-label {
+  color: var(--muted);
 }
 
 .bank-value {
+  min-width: 0;
+
   color: var(--text);
+
+  font-weight: 650;
+
+  text-align: right;
+
+  overflow-wrap: anywhere;
 }
 
 #transferText {
-  color: var(--gold);
+  color: var(--gold-light);
+
+  font-family: ui-monospace, monospace;
+
   font-size: 13px;
+  font-weight: 750;
+
+  overflow-wrap: anywhere;
 }
 
+
 /* ==========================================
-   CHECKOUT
+   16. SEPAY CHECKOUT
 ========================================== */
 
 .lsp-checkout {
+  position: fixed;
+  inset: 0;
+
+  z-index: 5000;
+
+  display: none;
+  justify-content: center;
+
   background: var(--bg);
+}
+
+.lsp-checkout.show {
+  display: flex;
 }
 
 .lsp-checkout-page {
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
   max-width: 430px;
 
+  height: 100vh;
+  height: 100dvh;
+
+  overflow: hidden;
+
   background: var(--bg);
+  color: var(--text);
 }
 
 .lsp-checkout-header {
-  min-height: 0;
+  flex: 0 0 auto;
+
+  display: grid;
+
+  grid-template-columns:
+    42px minmax(0,1fr) 42px;
+
+  align-items: center;
+
+  gap: 10px;
 
   padding:
-    calc(8px + env(safe-area-inset-top,0px))
+    calc(12px + env(safe-area-inset-top,0px))
     14px
-    8px;
+    12px;
 
-  background: var(--bg);
+  background:
+    linear-gradient(120deg,#FFFDF7,#F8EBC9);
 
   border-bottom: 1px solid var(--line);
 }
 
 .lsp-checkout-back {
-  background: transparent;
+  display: grid;
+  place-items: center;
 
-  border: none;
+  width: 42px;
+  height: 42px;
 
+  padding: 0;
+
+  border: 1px solid var(--line);
+  border-radius: 12px;
+
+  background: #FFFFFF;
   color: var(--gold);
+
+  font-size: 23px;
+}
+
+.lsp-checkout-brand {
+  min-width: 0;
+
+  text-align: center;
 }
 
 .lsp-checkout-brand h2 {
   margin: 0;
 
-  font-family: inherit;
-  font-size: 19px;
-  font-weight: 700;
-
   color: var(--text);
+
+  font: 700 24px Georgia, serif;
+}
+
+.lsp-checkout-lock {
+  color: var(--gold);
+
+  font-size: 20px;
+
+  text-align: center;
 }
 
 .lsp-checkout-body {
-  padding: 14px;
+  flex: 1;
+
+  min-height: 0;
+
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  padding: 16px 14px 24px;
 }
+
+
+/* ==========================================
+   17. CHECKOUT ORDER
+========================================== */
 
 .lsp-order-card {
   padding: 16px;
 
-  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 17px;
 
-  border: none;
-  border-radius: 13px;
+  background: #FFFFFF;
 
-  box-shadow: none;
+  box-shadow: var(--shadow);
+}
+
+.lsp-order-heading {
+  display: flex;
+  align-items: center;
+
+  color: var(--muted);
+
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .lsp-order-product {
-  padding: 16px 0;
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 17px 0;
 }
 
 .lsp-order-diamond {
-  border: none;
+  display: grid;
+  place-items: center;
 
-  background: #30291f;
+  width: 53px;
+  height: 53px;
+
+  flex-shrink: 0;
+
+  border: 1px solid #E5D1A0;
+  border-radius: 14px;
+
+  background: var(--champagne);
+
+  font-size: 27px;
+}
+
+.lsp-order-name {
+  flex: 1;
+  min-width: 0;
 }
 
 .lsp-order-name strong {
   color: var(--text);
+
+  font-size: 18px;
+  font-weight: 750;
+
+  overflow-wrap: anywhere;
 }
 
-.lsp-order-total strong,
-.lsp-checkout-footer-total strong {
-  color: var(--gold);
+.lsp-order-divider {
+  height: 1px;
+
+  background: var(--line);
 }
+
+.lsp-order-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  padding-top: 15px;
+}
+
+.lsp-order-total span {
+  color: var(--muted);
+
+  font-size: 12px;
+}
+
+.lsp-order-total strong {
+  min-width: 0;
+
+  color: var(--gold-light);
+
+  font-size: 21px;
+  font-weight: 800;
+
+  text-align: right;
+
+  overflow-wrap: anywhere;
+
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* ==========================================
+   18. CHECKOUT PAYMENT METHOD
+========================================== */
 
 .lsp-method-heading {
-  margin: 20px 0 10px;
+  margin: 22px 2px 11px;
 
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0;
+  color: var(--text);
+
+  font-size: 15px;
+  font-weight: 750;
+}
+
+.lsp-checkout-methods {
+  display: grid;
+
+  gap: 10px;
 }
 
 .lsp-payment-method {
-  min-height: 62px;
+  display: flex;
+  align-items: center;
 
-  background: var(--card);
+  gap: 10px;
+
+  width: 100%;
+  min-height: 67px;
+
+  padding: 13px;
 
   border: 1px solid var(--line);
-  border-radius: 11px;
+  border-radius: 13px;
+
+  background: #FFFFFF;
+  color: var(--text);
+
+  text-align: left;
 }
 
 .lsp-payment-method.selected {
-  background: #30291f;
+  background: #FFF8E7;
 
-  border-color: var(--gold);
+  border-color: #C9A75D;
 }
 
-.lsp-checkout-security {
-  margin-top: 16px;
-  padding: 4px;
+.lsp-payment-method.selected::after {
+  content: "✓";
 
-  background: transparent;
-  border: none;
+  display: grid;
+  place-items: center;
+
+  width: 22px;
+  height: 22px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: var(--gold);
+  color: #FFFFFF;
+
+  font-size: 13px;
+  font-weight: 750;
 }
 
-.lsp-checkout-footer {
-  background: var(--bg);
+.lsp-method-info {
+  display: flex;
+  flex-direction: column;
 
-  border-top: 1px solid var(--line);
+  gap: 5px;
+
+  flex: 1;
+  min-width: 0;
 }
+
+.lsp-method-info strong {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.lsp-method-info small {
+  color: var(--muted);
+
+  font-size: 11px;
+  line-height: 1.5;
+}
+
 
 /* ==========================================
-   SMALL MOBILE
+   19. CHECKOUT SECURITY NOTE
 ========================================== */
 
-@media (max-width: 360px) {
+.lsp-checkout-security {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 10px;
+
+  margin-top: 17px;
+  padding: 13px;
+
+  border: 1px solid var(--line);
+  border-radius: 13px;
+
+  background: var(--cream);
+}
+
+.lsp-checkout-security > span {
+  font-size: 19px;
+}
+
+.lsp-checkout-security > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+
+  min-width: 0;
+}
+
+.lsp-checkout-security strong {
+  color: var(--gold-light);
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.lsp-checkout-security small {
+  color: var(--muted);
+
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+
+/* ==========================================
+   20. CHECKOUT FOOTER
+========================================== */
+
+.lsp-checkout-footer {
+  flex: 0 0 auto;
+
+  padding:
+    14px 16px
+    calc(15px + env(safe-area-inset-bottom,0px));
+
+  border-top: 1px solid var(--line);
+
+  background: #FFFFFF;
+
+  box-shadow:
+    0 -4px 18px rgba(112,85,28,.05);
+}
+
+.lsp-checkout-footer-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+}
+
+.lsp-checkout-footer-total span {
+  color: var(--muted);
+
+  font-size: 13px;
+}
+
+.lsp-checkout-footer-total strong {
+  min-width: 0;
+
+  color: var(--gold-light);
+
+  font-size: 22px;
+  font-weight: 800;
+
+  text-align: right;
+
+  overflow-wrap: anywhere;
+
+  font-variant-numeric: tabular-nums;
+}
+
+#lspCheckoutConfirm {
+  min-height: 49px;
+
+  margin-top: 13px;
+
+  font-size: 14px;
+}
+
+.lsp-checkout.show .lsp-checkout-page {
+  animation: checkoutFadeIn .18s ease-out;
+}
+
+@keyframes checkoutFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+
+/* ==========================================
+   21. TOAST NOTIFICATION
+========================================== */
+
+.toast {
+  position: fixed;
+
+  z-index: 10000;
+
+  left: 50%;
+
+  bottom:
+    calc(23px + env(safe-area-inset-bottom,0px));
+
+  width: max-content;
+
+  max-width: min(400px,calc(100vw - 26px));
+
+  padding: 12px 16px;
+
+  border: 1px solid var(--line);
+  border-radius: 13px;
+
+  background: #FFFFFF;
+  color: var(--text);
+
+  box-shadow:
+    0 8px 25px rgba(85,65,25,.14);
+
+  font-size: 12px;
+  line-height: 1.5;
+
+  text-align: center;
+
+  overflow-wrap: anywhere;
+
+  opacity: 0;
+
+  transform: translateX(-50%);
+
+  transition: opacity .2s;
+
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+}
+
+.toast-success {
+  background: #ECF8EF;
+
+  border-color: #C7E5CF;
+
+  color: #267A47;
+}
+
+.toast-error {
+  background: #FFF1EF;
+
+  border-color: #F0D2CC;
+
+  color: #B94A42;
+}
+
+
+/* ==========================================
+   22. FORCE LOGOUT
+========================================== */
+
+#forceLogoutModal {
+  position: fixed;
+  inset: 0;
+
+  z-index: 20000;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+}
+
+#forceLogoutModal.show {
+  display: flex;
+}
+
+.fl-backdrop {
+  position: absolute;
+  inset: 0;
+
+  background: rgba(52,43,25,.35);
+
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.fl-box {
+  position: relative;
+
+  width: 100%;
+  max-width: 350px;
+
+  padding: 27px 20px;
+
+  border: 1px solid var(--line);
+  border-radius: 23px;
+
+  background: #FFFFFF;
+
+  box-shadow:
+    0 18px 60px rgba(85,65,25,.16);
+
+  text-align: center;
+}
+
+.fl-icon {
+  display: grid;
+  place-items: center;
+
+  width: 62px;
+  height: 62px;
+
+  margin: 0 auto 15px;
+
+  border-radius: 50%;
+
+  background: #FFF1EF;
+  color: var(--red);
+}
+
+.fl-title {
+  margin: 0 0 10px;
+
+  color: var(--text);
+
+  font-size: 21px;
+  font-weight: 750;
+}
+
+.fl-msg,
+.fl-sub {
+  color: var(--muted);
+
+  font-size: 13px;
+  line-height: 1.6;
+
+  overflow-wrap: anywhere;
+}
+
+.fl-sub {
+  margin-top: 10px;
+
+  font-size: 12px;
+}
+
+
+/* ==========================================
+   23. MOBILE RESPONSIVE
+========================================== */
+
+@media (max-width: 375px) {
 
   .topup-shell {
-    padding-left: 10px;
-    padding-right: 10px;
+    padding-left: 11px;
+    padding-right: 11px;
   }
 
   .topup-header {
-    margin: 0 -10px;
-    padding-left: 10px;
-    padding-right: 10px;
+    margin-left: -11px;
+    margin-right: -11px;
+
+    padding-left: 11px;
+    padding-right: 11px;
   }
 
   .wallet-card {
-    padding: 16px;
+    padding: 18px 15px;
+  }
+
+  .header-center h1 {
+    font-size: 23px;
   }
 
   .option-header {
     gap: 9px;
-    padding: 10px;
+
+    padding: 11px;
   }
 
   .option-title {
     font-size: 14px;
   }
 
+  .card-package-list {
+    gap: 7px;
+  }
+
+  .card-package {
+    min-height: 95px;
+
+    padding: 10px 6px;
+  }
+
   .card-package-diamonds {
-    font-size: 17px;
+    font-size: 18px;
+  }
+
+  .lsp-order-total strong,
+  .lsp-checkout-footer-total strong {
+    font-size: 18px;
   }
 
 }
 
 
+/* SHORT MOBILE SCREEN */
+
+@media (max-height: 650px) {
+
+  .qr-frame {
+    width: min(100%,200px);
+  }
+
+  #sheetQr {
+    max-height: 190px;
+  }
+
+  .bank-row {
+    padding: 10px;
+  }
+
+}
+
+
+/* ==========================================
+   24. REDUCED MOTION
+========================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+}
+
 </style>
+
 </head>
 
 <body>
@@ -2706,10 +1934,9 @@ html, body {
         <svg class="icon"><use href="#tp-back"/></svg>
       </button>
 
-      <div class="header-center">
-        <div class="header-brand">LIVESTREAM PRO</div>
-        <h1>Top Up</h1>
-      </div>
+     <div class="header-center">
+  <h1>Top Up</h1>
+</div>
 
       <div class="header-symbol">
         <svg class="icon"><use href="#tp-gem"/></svg>
@@ -2734,8 +1961,8 @@ html, body {
       </div>
 
       <div class="wallet-label">
-        Balance
-      </div>
+  Diamond Balance
+</div>
 
       <div class="wallet-value">
         <svg class="icon"><use href="#tp-gem"/></svg>
@@ -2969,7 +2196,7 @@ html, body {
 </section>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="/topup.js?v=20261126-03"></script>
+<script src="/topup.js?v=20261127-01"></script>
 <script src="/push-init.js"></script>
 <script src="/app-entry-guard.js"></script>
 
