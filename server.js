@@ -1,7 +1,7 @@
 
 
-const MAX_VIEWERS = 5;
-const SOFT_CAP = 4;
+const MAX_VIEWERS = 20;
+const SOFT_CAP = 15;
 
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
