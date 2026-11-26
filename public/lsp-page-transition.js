@@ -62,27 +62,53 @@ const ENTRY_MS = 600;
    CINEMATIC LUXURY PAGE TRANSITION
 ========================================== */
 
+/* ==========================================
+   LIVESTREAM PRO
+   CHAMPAGNE GOLD PAGE TRANSITION V1.0
+========================================== */
+
 style.textContent = `
 
-/* LỚP CHE TRANG MỚI */
+/* ==========================================
+   01. PREVENT DARK SCREEN FLASH
+========================================== */
+
 html.lsppt-arriving::before {
   content: "";
+
   position: fixed;
   inset: 0;
+
   z-index: 2147483646;
-  background: #090b10;
+
+  background: #FAF6E9;
+
   pointer-events: auto;
 }
 
+
+/* ==========================================
+   02. GLOBAL TRANSITION LAYER
+========================================== */
+
 #lsppt-layer,
-#lsppt-layer * {
+#lsppt-layer *,
+#lsppt-layer *::before,
+#lsppt-layer *::after {
   box-sizing: border-box;
 }
 
-/* MÀN CHUYỂN CẢNH TOÀN MÀN HÌNH */
 #lsppt-layer {
+
+  --pt-bg: #FAF6E9;
+  --pt-white: #FFFFFF;
+  --pt-gold: #947025;
+  --pt-line: #EAE0C8;
+  --pt-muted: #857960;
+
   position: fixed;
   inset: 0;
+
   z-index: 2147483647;
 
   display: flex;
@@ -90,26 +116,23 @@ html.lsppt-arriving::before {
   justify-content: center;
 
   padding: 24px;
+
   overflow: hidden;
   isolation: isolate;
 
   background:
     radial-gradient(
-      ellipse at 50% 40%,
-      rgba(204,161,95,.15),
-      transparent 38%
-    ),
-    radial-gradient(
-      ellipse at 50% 100%,
-      rgba(144,102,48,.11),
-      transparent 60%
+      ellipse at 50% 28%,
+      #F3E2B5 0%,
+      transparent 52%
     ),
     linear-gradient(
-      145deg,
-      #17191e,
-      #090b10 52%,
-      #151317
+      180deg,
+      #FFFDF7 0%,
+      #FAF6E9 75%
     );
+
+  color: #29251D;
 
   visibility: hidden;
   pointer-events: none;
@@ -118,45 +141,16 @@ html.lsppt-arriving::before {
 
   transition:
     transform ${EXIT_MS}ms cubic-bezier(.76,0,.24,1),
-    visibility 0s linear \${EXIT_MS}ms;
+    visibility 0s linear ${EXIT_MS}ms;
 }
 
-/* ĐƯỜNG VIỀN TRANG TRÍ */
-#lsppt-layer::before {
-  content: "";
-  position: absolute;
-  inset: 16px;
 
-  border: 1px solid rgba(230,195,131,.09);
+/* ==========================================
+   03. TRANSITION STATES
+========================================== */
 
-  pointer-events: none;
-}
+/* Phủ lên trang hiện tại */
 
-/* VỆT SÁNG Ở RÌA MÀN CHUYỂN CẢNH */
-#lsppt-layer::after {
-  content: "";
-  position: absolute;
-
-  left: 0;
-  right: 0;
-  bottom: 0;
-
-  height: 2px;
-
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(228,191,129,.4),
-    #f2d8a8,
-    rgba(228,191,129,.4),
-    transparent
-  );
-
-  box-shadow: 0 0 24px rgba(228,187,115,.4);
-  pointer-events: none;
-}
-
-/* HIỆU ỨNG ĐI VÀO */
 #lsppt-layer.lsppt-open {
   visibility: visible;
   pointer-events: auto;
@@ -167,7 +161,9 @@ html.lsppt-arriving::before {
     transform ${EXIT_MS}ms cubic-bezier(.76,0,.24,1);
 }
 
-/* HIỆU ỨNG RỜI KHỎI */
+
+/* Rời khỏi trang mới */
+
 #lsppt-layer.lsppt-close {
   visibility: visible;
   pointer-events: none;
@@ -175,38 +171,47 @@ html.lsppt-arriving::before {
   transform: translate3d(0,-105%,0);
 
   transition:
-    transform \${ENTRY_MS}ms cubic-bezier(.76,0,.24,1);
+    transform ${ENTRY_MS}ms cubic-bezier(.76,0,.24,1);
 }
 
-/* KHI VỪA ĐẾN TRANG MỚI */
+
+/* Khi vừa đến trang mới */
+
 html.lsppt-arriving #lsppt-layer {
   visibility: visible;
   pointer-events: auto;
 
   transform: translate3d(0,0,0);
+
   transition: none;
 }
 
-/* NỘI DUNG GIỮA MÀN HÌNH */
+
+/* ==========================================
+   04. CENTER CONTENT
+========================================== */
+
 #lsppt-layer .lsppt-card {
   position: relative;
+
   z-index: 1;
 
   width: min(100%,380px);
-  padding: 15px 0;
+
+  margin: 0;
+  padding: 16px;
 
   display: flex;
   flex-direction: column;
+
   align-items: center;
+  justify-content: center;
 
   text-align: center;
 
   background: transparent;
   border: none;
-  border-radius: 0;
   box-shadow: none;
-
-  color: #f0dbb5;
 
   font-family:
     system-ui,
@@ -215,11 +220,12 @@ html.lsppt-arriving #lsppt-layer {
     sans-serif;
 
   opacity: 0;
-  transform: translateY(15px);
+
+  transform: translateY(10px);
 
   transition:
-    opacity .35s ease,
-    transform .4s ease;
+    opacity .25s ease,
+    transform .3s ease;
 }
 
 #lsppt-layer.lsppt-open .lsppt-card,
@@ -230,223 +236,244 @@ html.lsppt-arriving #lsppt-layer .lsppt-card {
 
 #lsppt-layer.lsppt-close .lsppt-card {
   opacity: 0;
-  transform: translateY(-15px);
+  transform: translateY(-10px);
 }
 
 
 /* ==========================================
-   LIVESTREAM PRO
-   IMAGE LOGO - LUXURY TRANSITION
+   05. BRAND LOGO
 ========================================== */
 
 #lsppt-layer .lsppt-logo {
   position: relative;
 
-  width: 125px;
-  height: 125px;
+  width: 106px;
+  height: 106px;
 
-  margin: 0 0 26px;
+  margin: 0 0 22px;
+  padding: 0;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
 
   background: transparent;
+
   border: none;
-  border-radius: 0;
-  box-shadow: none;
+  border-radius: 24px;
 }
 
-/* HÌNH ẢNH LOGO */
 #lsppt-layer .lsppt-logo-img {
   display: block;
 
   width: 100%;
   height: 100%;
 
+  margin: 0;
+  padding: 0;
+
   object-fit: contain;
   object-position: center;
 
   border: none;
+  border-radius: 24px;
+
   background: transparent;
 
   filter:
-    drop-shadow(0 0 18px rgba(219,174,101,.22));
-
-  animation: lsppt-logo-float 3s ease-in-out infinite;
+    drop-shadow(0 8px 14px rgba(148,112,37,.12));
 
   user-select: none;
   -webkit-user-drag: none;
-}
 
-/* CHUYỂN ĐỘNG NHẸ */
-@keyframes lsppt-logo-float {
-  0%, 100% {
-    transform: translateY(0) scale(1);
-  }
-
-  50% {
-    transform: translateY(-5px) scale(1.035);
-  }
-}
-
-/* MOBILE */
-@media (max-width: 480px) {
-  #lsppt-layer .lsppt-logo {
-    width: 105px;
-    height: 105px;
-    margin-bottom: 23px;
-  }
-}
-
-/* GIẢM CHUYỂN ĐỘNG */
-@media (prefers-reduced-motion: reduce) {
-  #lsppt-layer .lsppt-logo-img {
-    animation: none !important;
-  }
+  animation:
+    lsppt-logo-float 2.4s ease-in-out infinite;
 }
 
 
-/* TÊN THƯƠNG HIỆU */
+/* ==========================================
+   06. BRAND TITLE
+========================================== */
+
 #lsppt-layer .lsppt-title {
-  color: #f5e1bc;
+  margin: 0;
 
-  font-size: clamp(17px,4.5vw,21px);
-  font-weight: 750;
-  letter-spacing: 2.7px;
+  color: #70531D;
 
-  line-height: 1.4;
-  white-space: nowrap;
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: clamp(20px,6vw,27px);
+  font-weight: 700;
+
+  line-height: 1.3;
+  letter-spacing: 1px;
+
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
-/* DÒNG CHUYỂN TRANG */
+
+/* Bỏ dòng LOADING bị trùng */
+
 #lsppt-layer .lsppt-sub {
-  margin-top: 13px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-
-  color: #ada295;
-
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 2px;
+  display: none;
 }
 
-/* HAI ĐƯỜNG KẺ TRANG TRÍ */
-#lsppt-layer .lsppt-sub::before,
-#lsppt-layer .lsppt-sub::after {
-  content: "";
 
-  width: 22px;
-  height: 1px;
+/* ==========================================
+   07. LOADING PROGRESS
+========================================== */
 
-  background: rgba(224,186,121,.4);
-}
-
-/* THANH ÁNH SÁNG */
 #lsppt-layer .lsppt-track {
-  width: min(220px,70vw);
-  height: 2px;
+  width: min(150px,60vw);
+  height: 3px;
 
-  margin-top: 32px;
+  margin-top: 25px;
 
   overflow: hidden;
-  border-radius: 50px;
 
-  background: rgba(226,193,143,.15);
+  border: none;
+  border-radius: 20px;
+
+  background: #EAE0C8;
 }
 
 #lsppt-layer .lsppt-bar {
-  width: 36%;
+  width: 40%;
   height: 100%;
 
   border-radius: inherit;
 
-  background: linear-gradient(
-    90deg,
-    transparent,
-    #d6ad71,
-    #fff0cf,
-    #bb9257
-  );
+  background:
+    linear-gradient(
+      90deg,
+      #D2AB55,
+      #EED69A,
+      #B58E3E
+    );
 
-  box-shadow: 0 0 14px rgba(242,214,167,.55);
-
-  animation: lsppt-flow 1.3s ease-in-out infinite;
+  animation:
+    lsppt-flow 1s ease-in-out infinite;
 }
 
-/* TRẠNG THÁI */
+
+/* ==========================================
+   08. STATUS TEXT
+========================================== */
+
 #lsppt-layer .lsppt-text {
-  margin-top: 16px;
+  max-width: 100%;
+
+  margin: 13px 0 0;
+
+  color: var(--pt-muted);
 
   font-size: 12px;
-  color: #b9b0a5;
-  letter-spacing: .3px;
+  font-weight: 500;
+
   line-height: 1.5;
+  letter-spacing: .2px;
+
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
-/* CHUYỂN ĐỘNG LOGO */
-@keyframes lsppt-diamond {
+
+/* ==========================================
+   09. ANIMATIONS
+========================================== */
+
+@keyframes lsppt-logo-float {
+
   0%, 100% {
-    opacity: .55;
-    transform: rotate(45deg) scale(.96);
+    transform: translateY(0);
   }
 
   50% {
-    opacity: 1;
-    transform: rotate(45deg) scale(1.04);
+    transform: translateY(-4px);
   }
+
 }
 
-/* CHUYỂN ĐỘNG THANH SÁNG */
 @keyframes lsppt-flow {
+
   from {
     transform: translateX(-110%);
   }
 
   to {
-    transform: translateX(290%);
+    transform: translateX(260%);
   }
+
 }
 
-/* MOBILE */
-@media (max-width: 480px) {
-  #lsppt-layer .lsppt-logo {
-    width: 88px;
-    height: 88px;
-    margin-bottom: 26px;
-  }
 
-  #lsppt-layer .lsppt-logo::before {
-    inset: 12px;
+/* ==========================================
+   10. MOBILE RESPONSIVE
+========================================== */
+
+@media (max-width: 480px) {
+
+  #lsppt-layer .lsppt-logo {
+    width: 92px;
+    height: 92px;
+
+    margin-bottom: 18px;
   }
 
   #lsppt-layer .lsppt-title {
-    letter-spacing: 2px;
+    font-size: 23px;
+    letter-spacing: .7px;
   }
 
-  #lsppt-layer .lsppt-sub {
-    font-size: 9px;
-    letter-spacing: 1.5px;
+  #lsppt-layer .lsppt-track {
+    width: 135px;
+    margin-top: 22px;
   }
+
+  #lsppt-layer .lsppt-text {
+    font-size: 11px;
+  }
+
 }
 
-/* GIẢM CHUYỂN ĐỘNG */
+@media (max-height: 400px) {
+
+  #lsppt-layer .lsppt-logo {
+    width: 64px;
+    height: 64px;
+
+    margin-bottom: 12px;
+  }
+
+  #lsppt-layer .lsppt-track {
+    margin-top: 15px;
+  }
+
+}
+
+
+/* ==========================================
+   11. REDUCED MOTION
+========================================== */
+
 @media (prefers-reduced-motion: reduce) {
+
   #lsppt-layer,
   #lsppt-layer *,
   #lsppt-layer *::before,
   #lsppt-layer *::after {
+
     animation: none !important;
     transition: none !important;
+
   }
+
 }
 
 `;
-
 
   document.head.appendChild(style);
 
@@ -474,36 +501,41 @@ html.lsppt-arriving #lsppt-layer .lsppt-card {
       "Loading"
     );
 
-    layer.innerHTML = `
-      <div class="lsppt-card">
+layer.innerHTML = `
 
-<div class="lsppt-logo">
-  <img
-    src="/icons/icon-512.png?v=20261126"
-    alt="Livestream Pro"
-    class="lsppt-logo-img"
-    draggable="false"
-  >
-</div>
+  <div class="lsppt-card">
 
-        <div class="lsppt-title">
-          LIVESTREAM PRO
-        </div>
+    <div class="lsppt-logo">
 
-        <div class="lsppt-sub">
-          LOADING
-        </div>
+      <img
+        src="/icons/icon-512.png?v=20261126"
+        alt="Livestream Pro"
+        class="lsppt-logo-img"
+        draggable="false"
+      >
 
-        <div class="lsppt-track">
-          <div class="lsppt-bar"></div>
-        </div>
+    </div>
 
-        <div class="lsppt-text">
-          Loading...
-        </div>
+    <div class="lsppt-title">
+      LIVESTREAM PRO
+    </div>
 
-      </div>
-    `;
+    <div class="lsppt-track"
+         aria-hidden="true">
+
+      <div class="lsppt-bar"></div>
+
+    </div>
+
+    <div class="lsppt-text">
+      Loading...
+    </div>
+
+  </div>
+
+`;
+
+
 
     document.body.appendChild(layer);
 
