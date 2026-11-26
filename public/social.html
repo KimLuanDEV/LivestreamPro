@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <!-- PWA iOS -->
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#FAF6E9">
 <meta name="apple-mobile-web-app-title" content="Livestream Pro">
 
 <!-- Android / Chrome -->
@@ -5467,6 +5468,1184 @@ body.social-page #composeModal .lp-compose-footer {
 
 }
 
+
+
+</style>
+
+
+
+<style>
+/* ==========================================
+   LIVESTREAM PRO - SOCIAL V6.0
+   CHAMPAGNE GOLD & PURE WHITE
+========================================== */
+
+body.social-page {
+
+  --champagne: #F8EBC9;
+  --paper: #FFFFFF;
+  --canvas: #FAF6E9;
+  --ink: #29251D;
+  --muted: #766D5B;
+  --line: #EAE0C8;
+  --gold: #947025;
+
+  --sg-gold: #947025;
+  --sg-light: #29251D;
+  --sg-bg: #FAF6E9;
+  --sg-panel: #FFFFFF;
+  --sg-border: #EAE0C8;
+  --sg-muted: #766D5B;
+
+  color-scheme: light;
+
+  background: var(--canvas) !important;
+  color: var(--ink) !important;
+
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+html:has(body.social-page) {
+  background: #FAF6E9 !important;
+  color-scheme: light;
+}
+
+body.social-page *,
+body.social-page *::before,
+body.social-page *::after {
+  box-sizing: border-box;
+}
+
+
+/* ==========================================
+   HEADER
+========================================== */
+
+body.social-page .lp-topbar {
+
+  width: 100%;
+  max-width: 720px;
+
+  margin: 0 auto;
+
+  background:
+    linear-gradient(
+      115deg,
+      #FFFDF7,
+      #F8EBC9
+    ) !important;
+
+  border-bottom: 1px solid var(--line);
+  box-shadow: none;
+
+}
+
+body.social-page .lp-head-center h1 {
+  color: var(--ink);
+  font-size: 25px;
+  font-weight: 750;
+  letter-spacing: -.8px;
+  text-shadow: none;
+}
+
+body.social-page .lp-head-brand {
+  color: var(--gold);
+  font-size: 9px;
+  letter-spacing: 2px;
+}
+
+body.social-page .lp-head-line {
+  display: none;
+}
+
+body.social-page .lp-head-symbol {
+
+  width: 42px;
+  height: 42px;
+
+  background: #FFF9E9;
+  color: var(--gold);
+
+  border: 1px solid var(--line);
+  border-radius: 14px;
+
+  box-shadow: none;
+
+}
+
+body.social-page .lp-head-symbol .lp-i {
+  color: var(--gold);
+  filter: none;
+}
+
+
+/* ==========================================
+   CREATE POST
+========================================== */
+
+body.social-page .lp-compose,
+body.social-page .lp-compose.compact {
+
+  width: 100%;
+  max-width: 720px;
+
+  margin: 0 auto;
+  padding: 12px 14px;
+
+  background: #FFFDF8 !important;
+
+  border-bottom: 1px solid var(--line);
+  box-shadow: none;
+
+}
+
+/* Remove unnecessary headings */
+
+body.social-page .lp-compose-heading {
+  display: none !important;
+}
+
+body.social-page .lp-compose-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+body.social-page .lp-compose-row .lp-ava {
+
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+
+  border-radius: 50%;
+  border: 2px solid #F0DFB5;
+
+  box-shadow: none;
+
+}
+
+body.social-page #postText,
+body.social-page .lp-compose.compact #postText {
+
+  background: #F7F3E9 !important;
+
+  color: var(--ink) !important;
+
+  border: 1px solid #EEE5D1;
+  border-radius: 24px;
+
+  box-shadow: none;
+
+}
+
+body.social-page #postText::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+body.social-page .lp-compose-trigger,
+body.social-page .lp-comment-send,
+body.social-page .lp-post-btn {
+
+  background:
+    linear-gradient(
+      145deg,
+      #F8E8B9,
+      #E8CA80
+    ) !important;
+
+  color: #513B10 !important;
+
+  border: 1px solid #E1C57E;
+
+  box-shadow: none;
+
+}
+
+body.social-page .lp-compose-trigger {
+
+  width: 44px;
+  height: 44px;
+
+  flex-shrink: 0;
+
+  border-radius: 14px;
+
+}
+
+body.social-page .lp-compose-trigger .lp-i {
+  color: #765717;
+  filter: none;
+}
+
+
+/* ==========================================
+   SOCIAL FEED
+========================================== */
+
+body.social-page #lpFeed {
+
+  width: 100%;
+  max-width: 720px;
+
+  margin: 0 auto;
+
+  padding:
+    12px
+    12px
+    calc(90px + env(safe-area-inset-bottom, 0px));
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 12px;
+
+  background: transparent !important;
+
+}
+
+body.social-page .lp-post,
+body.social-page .lp-post + .lp-post {
+
+  width: 100%;
+  margin: 0;
+
+  background: #FFFFFF !important;
+
+  border: 1px solid var(--line);
+  border-radius: 18px;
+
+  box-shadow:
+    0 3px 12px rgba(112,85,28,.045);
+
+  overflow: hidden;
+
+}
+
+body.social-page .lp-post-inner {
+
+  padding: 15px;
+
+  background: transparent;
+
+}
+
+body.social-page .lp-post-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+body.social-page .lp-post-head .lp-ava {
+
+  width: 44px;
+  height: 44px;
+
+  border-radius: 50%;
+  border: 2px solid #F0DFB5;
+
+  object-fit: cover;
+
+  box-shadow: none;
+
+}
+
+body.social-page .lp-post-name {
+
+  color: var(--ink) !important;
+
+  font-size: 15px;
+  font-weight: 700;
+
+}
+
+body.social-page .lp-post-time {
+
+  color: var(--muted) !important;
+
+  font-size: 11px;
+  font-weight: 400;
+
+  opacity: 1;
+
+}
+
+body.social-page .lp-post-text {
+
+  color: var(--ink) !important;
+
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.65;
+
+  margin-top: 12px;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+}
+
+body.social-page .lp-post-head .lp-edit,
+body.social-page .lp-post-head .lp-del {
+
+  color: var(--muted);
+  background: #FAF7EF;
+
+  border: 0;
+
+  box-shadow: none;
+
+}
+
+
+/* ==========================================
+   POST IMAGES & VIDEO
+========================================== */
+
+body.social-page .lp-post-images {
+
+  gap: 4px;
+
+  border-radius: 12px;
+  overflow: hidden;
+
+}
+
+body.social-page .lp-post-images .fb-img {
+
+  background: #F7F3E9;
+
+  border-radius: 10px;
+  border: 0;
+
+}
+
+body.social-page .lp-post-img {
+
+  border-radius: 12px;
+  border: 0;
+
+}
+
+body.social-page .lp-post-video {
+
+  border-radius: 12px;
+
+  overflow: hidden;
+
+  background: #000;
+
+}
+
+
+/* ==========================================
+   LIKE - COMMENT - GIFT
+========================================== */
+
+body.social-page .lp-actions {
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  margin-top: 13px;
+
+  padding-top: 10px;
+  padding-bottom: 0;
+
+  border-top: 1px solid #F1EADB;
+
+}
+
+body.social-page .lp-actions .lp-action {
+
+  flex: 1 1 0;
+  min-width: 0;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  background: #FAF8F2 !important;
+
+  border: 0;
+  border-radius: 11px;
+
+  color: var(--muted) !important;
+
+  box-shadow: none;
+
+  opacity: 1;
+
+}
+
+body.social-page .lp-actions .lp-action .lp-i,
+body.social-page .lp-actions .lp-action b {
+
+  color: var(--muted);
+  filter: none;
+
+}
+
+body.social-page .lp-actions .lp-action.like .lp-i,
+body.social-page .lp-actions .lp-action.gift .lp-i {
+
+  color: var(--gold);
+
+}
+
+body.social-page .lp-actions .lp-action.gift {
+
+  margin-left: 0;
+
+  background: #FBF0D4 !important;
+
+  color: #89651D !important;
+
+}
+
+body.social-page .lp-actions .lp-action:active {
+  transform: scale(.96);
+}
+
+body.social-page .lp-gift-users {
+
+  color: var(--muted);
+
+  font-size: 12px;
+
+}
+
+body.social-page .gift-user {
+
+  background: #FAF1D9;
+
+  color: #765717;
+
+  border: 0;
+  border-radius: 20px;
+
+  box-shadow: none;
+
+}
+
+
+/* ==========================================
+   COMMENTS
+========================================== */
+
+body.social-page .lp-comments {
+
+  border-color: var(--line);
+
+  margin-top: 12px;
+  padding-top: 10px;
+
+}
+
+body.social-page .lp-comment {
+
+  gap: 8px;
+
+  padding: 7px 0;
+
+  opacity: 1;
+
+}
+
+body.social-page .lp-cm-ava {
+
+  width: 32px;
+  height: 32px;
+
+  border-radius: 50%;
+  border: 1px solid var(--line);
+
+}
+
+body.social-page .lp-cm-body {
+
+  min-width: 0;
+
+  padding: 10px 12px;
+
+  background: #F8F5ED !important;
+
+  color: var(--ink);
+
+  border: 0;
+  border-radius: 14px;
+
+}
+
+body.social-page .lp-cm-name {
+
+  color: var(--ink) !important;
+
+  font-size: 13px;
+  font-weight: 700;
+
+}
+
+body.social-page .lp-cm-text {
+
+  color: var(--ink) !important;
+
+  font-size: 14px;
+  line-height: 1.5;
+
+  overflow-wrap: anywhere;
+
+}
+
+body.social-page .lp-cm-actions {
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  margin-top: 7px;
+
+  color: var(--muted);
+
+  font-size: 11px;
+
+  opacity: 1;
+
+}
+
+body.social-page .lp-replies {
+
+  border-color: var(--line);
+
+  padding-left: 8px;
+
+}
+
+body.social-page .lp-reply {
+
+  color: var(--ink);
+
+  font-size: 13px;
+  line-height: 1.5;
+
+}
+
+body.social-page .lp-reply > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+
+/* ==========================================
+   COMMENT & REPLY INPUT
+========================================== */
+
+body.social-page .lp-comment-box {
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  margin-top: 12px;
+
+}
+
+body.social-page .lp-comment-input,
+body.social-page .lp-reply-box input {
+
+  min-width: 0;
+
+  background: #FFFFFF !important;
+
+  color: var(--ink) !important;
+
+  border: 1px solid var(--line);
+  border-radius: 24px;
+
+  font-size: 16px;
+
+  box-shadow: none;
+
+}
+
+body.social-page .lp-comment-input::placeholder,
+body.social-page .lp-reply-box input::placeholder {
+
+  color: var(--muted);
+
+  opacity: 1;
+
+}
+
+body.social-page .lp-comment-send {
+
+  width: 42px;
+  height: 42px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  box-shadow: none;
+
+}
+
+body.social-page .lp-reply-box button {
+
+  background: var(--champagne);
+
+  color: #513B10;
+
+  border: 0;
+
+  box-shadow: none;
+
+}
+
+
+/* ==========================================
+   CREATE POST - FULLSCREEN MODAL
+========================================== */
+
+body.social-page #composeModal {
+
+  --cp-bg: #FFFDF8;
+  --cp-card: #F8F3E6;
+  --cp-border: #EAE0C8;
+  --cp-gold: #EDD294;
+  --cp-text: #29251D;
+  --cp-muted: #766D5B;
+
+  background: #FAF6E9 !important;
+
+}
+
+body.social-page #composeModal .lp-compose-sheet {
+
+  background: #FFFDF8 !important;
+
+  color: var(--ink);
+
+}
+
+body.social-page #composeModal .lp-compose-header {
+
+  background: #FFFFFF !important;
+
+  color: var(--ink);
+
+  border-bottom: 1px solid var(--line);
+
+  box-shadow: none;
+
+}
+
+body.social-page #composeModal .lp-header-title {
+
+  color: var(--ink) !important;
+
+  font-weight: 700;
+
+}
+
+body.social-page #composeModal .lp-close {
+
+  background: #F5EFDF !important;
+
+  color: var(--muted);
+
+  border: 0;
+
+  box-shadow: none;
+
+}
+
+body.social-page #composeModal .lp-submit {
+
+  background:
+    linear-gradient(
+      145deg,
+      #F8E8B9,
+      #E8CA80
+    ) !important;
+
+  color: #513B10 !important;
+
+  border: 0;
+
+  box-shadow: none;
+
+}
+
+body.social-page #composeModal .lp-compose-body {
+
+  background: #FFFDF8;
+
+  color: var(--ink);
+
+}
+
+body.social-page #composeModal .lp-compose-name {
+  color: var(--ink) !important;
+}
+
+body.social-page #composeModal .lp-compose-visibility {
+
+  color: var(--muted);
+
+  background: #F8F3E6;
+
+  border-color: var(--line);
+
+}
+
+body.social-page #composeModal #postTextModal {
+
+  color: var(--ink) !important;
+
+  background: transparent !important;
+
+  font-size: 16px;
+
+  line-height: 1.6;
+
+}
+
+body.social-page #composeModal #postTextModal::placeholder {
+
+  color: var(--muted);
+
+  opacity: 1;
+
+}
+
+body.social-page #composeModal .lp-compose-footer {
+
+  background: #FFFDF8 !important;
+
+  border-color: var(--line);
+
+  box-shadow: none;
+
+}
+
+body.social-page #composeModal .lp-compose-tools-title {
+
+  display: none;
+
+}
+
+body.social-page #composeModal .lp-tool {
+
+  background: #F8F3E6 !important;
+
+  color: var(--gold);
+
+  border: 1px solid var(--line);
+  border-radius: 12px;
+
+  box-shadow: none;
+
+}
+
+body.social-page #composeModal .lp-tool .lp-i {
+
+  color: var(--gold);
+
+  filter: none;
+
+}
+
+body.social-page #composeModal .lp-compose-preview {
+
+  background: #F8F3E6;
+
+  border-color: var(--line);
+
+}
+
+
+/* ==========================================
+   GIFT COLLECTION & GIFT SENDERS
+========================================== */
+
+body.social-page :is(
+  #giftModal,
+  #giftUserModal
+) {
+
+  background: rgba(41,37,29,.38);
+
+}
+
+body.social-page :is(
+  .lp-gift-sheet,
+  .lp-gift-users-sheet
+) {
+
+  background: #FFFDF8 !important;
+
+  color: var(--ink) !important;
+
+  border-color: var(--line);
+
+}
+
+body.social-page :is(
+  .lp-gift-header,
+  .lp-gift-content,
+  .lp-gift-footer,
+  .lp-gift-users-header,
+  .lp-gift-users-summary,
+  .lp-gift-users-list,
+  .lp-gift-users-footer
+) {
+
+  background: transparent !important;
+
+  color: var(--ink);
+
+  border-color: var(--line);
+
+  box-shadow: none;
+
+}
+
+body.social-page :is(
+  .lp-gift-heading,
+  .lp-gift-users-heading
+) h2 {
+
+  color: var(--ink) !important;
+
+  font-weight: 700;
+
+  text-shadow: none;
+
+}
+
+body.social-page :is(
+  .lp-gift-kicker,
+  .lp-gift-users-kicker,
+  .lp-gift-heading p,
+  .lp-gift-users-heading p,
+  .lp-gift-users-footer
+) {
+
+  display: none !important;
+
+}
+
+body.social-page :is(
+  .lp-gift-card,
+  .lp-gift-sender-card,
+  .lp-gift-users-stat,
+  .lp-gift-selection
+) {
+
+  background: #FFFFFF !important;
+
+  color: var(--ink);
+
+  border: 1px solid var(--line);
+  border-radius: 14px;
+
+  box-shadow: none;
+
+}
+
+body.social-page .lp-gift-card:is(
+  .active,
+  .selected,
+  [aria-selected="true"]
+) {
+
+  background: #FBEFD0 !important;
+
+  border-color: #C7A45E;
+
+  box-shadow: none;
+
+}
+
+body.social-page :is(
+  .lp-gift-name,
+  .lp-gift-sender-name,
+  .lp-gift-selection strong,
+  .lp-gift-users-stat strong
+) {
+
+  color: var(--ink) !important;
+
+}
+
+body.social-page :is(
+  .lp-gift-price,
+  .lp-gift-sender-amount,
+  .lp-gift-selection-cost strong
+) {
+
+  color: #89651D !important;
+
+  text-shadow: none;
+
+}
+
+body.social-page :is(
+  .lp-gift-section-title,
+  .lp-gift-selection-label,
+  .lp-gift-selection-cost span,
+  .lp-gift-users-stat span,
+  .lp-gift-users-list-heading,
+  .lp-gift-sender-uid,
+  .lp-gift-senders-empty
+) {
+
+  color: var(--muted) !important;
+
+}
+
+body.social-page :is(
+  .lp-gift-close,
+  .lp-gift-users-close
+) {
+
+  background: #F5EFDF;
+
+  color: var(--ink);
+
+  border-color: var(--line);
+
+}
+
+body.social-page .lp-gift-send {
+
+  background:
+    linear-gradient(
+      145deg,
+      #F8E8B9,
+      #E8CA80
+    ) !important;
+
+  color: #513B10 !important;
+
+  border: 0;
+  border-radius: 14px;
+
+  box-shadow: none;
+
+}
+
+
+/* ==========================================
+   CONFIRM MODAL
+========================================== */
+
+body.social-page #socialConfirmModal .scm-box {
+
+  background: #FFFDF8 !important;
+
+  color: var(--ink);
+
+  border: 1px solid var(--line);
+  border-radius: 20px;
+
+  box-shadow:
+    0 12px 40px rgba(41,37,29,.15);
+
+}
+
+body.social-page #socialConfirmModal :is(
+  h3,
+  #scmBody
+) {
+
+  color: var(--ink) !important;
+
+}
+
+body.social-page #socialConfirmModal .scm-input {
+
+  background: #FFFFFF;
+
+  color: var(--ink);
+
+  border: 1px solid var(--line);
+  border-radius: 12px;
+
+}
+
+body.social-page #scmCancel {
+
+  background: #F5EFDF !important;
+
+  color: var(--ink);
+
+  border: 0;
+
+}
+
+body.social-page #scmOk {
+
+  background: #EDD294 !important;
+
+  color: #513B10;
+
+  border: 0;
+
+}
+
+
+/* ==========================================
+   TOAST NOTIFICATION
+========================================== */
+
+body.social-page .lp-toast {
+
+  background: #FFFDF8 !important;
+
+  color: var(--ink) !important;
+
+  border: 1px solid var(--line);
+  border-radius: 14px;
+
+  box-shadow:
+    0 5px 24px rgba(112,85,28,.13);
+
+}
+
+
+/* ==========================================
+   BOTTOM NAVIGATION
+========================================== */
+
+body.social-page .lp-tabbar,
+body.social-page .lp-tabbar.hide {
+
+  background: #FFFDF8 !important;
+
+  border-top: 1px solid var(--line);
+
+  box-shadow:
+    0 -4px 18px rgba(112,85,28,.045);
+
+}
+
+body.social-page .lp-tabbar .lp-tab {
+
+  background: transparent;
+
+  color: #766D5B !important;
+
+  border: 0;
+
+  box-shadow: none;
+
+}
+
+body.social-page .lp-tabbar .lp-tab .icon {
+
+  color: #766D5B;
+
+  filter: none;
+
+}
+
+body.social-page .lp-tabbar .lp-tab .txt {
+
+  font-size: 10px;
+  font-weight: 500;
+
+}
+
+body.social-page .lp-tabbar .lp-tab.active,
+body.social-page .lp-tabbar .lp-tab.active .icon {
+
+  color: #89651D !important;
+
+  filter: none;
+
+}
+
+body.social-page .lp-tabbar .lp-tab.active .icon {
+
+  background: #F8EBC9 !important;
+
+  border-radius: 12px;
+
+  padding: 5px 12px;
+
+  box-shadow: none;
+
+}
+
+body.social-page .lp-tabbar .lp-tab.active .txt {
+
+  font-weight: 700;
+
+}
+
+body.social-page .lp-tabbar .lp-tab::before,
+body.social-page .lp-tabbar .lp-tab::after {
+
+  box-shadow: none;
+
+}
+
+
+/* ==========================================
+   FOCUS & MOBILE OPTIMIZATION
+========================================== */
+
+body.social-page button:focus-visible,
+body.social-page input:focus-visible,
+body.social-page textarea:focus-visible {
+
+  outline: 2px solid #A47C30;
+  outline-offset: 2px;
+
+}
+
+body.social-page button {
+
+  -webkit-tap-highlight-color: transparent;
+
+}
+
+@media (max-width: 370px) {
+
+  body.social-page #lpFeed {
+
+    padding-left: 8px;
+    padding-right: 8px;
+
+  }
+
+  body.social-page .lp-post-inner {
+
+    padding: 12px;
+
+  }
+
+  body.social-page .lp-actions {
+
+    gap: 5px;
+
+  }
+
+}
+
 </style>
 
 </head>
@@ -5551,84 +6730,84 @@ body.social-page #composeModal .lp-compose-footer {
 
 </svg>
 
-<!-- ===== PREMIUM HEADER ===== -->
-<header class="lp-topbar">
 
+<!-- ==========================================
+     SOCIAL - CHAMPAGNE HEADER
+========================================== -->
+
+<header class="lp-topbar">
 
   <div class="lp-head-center">
 
     <div class="lp-head-brand">
+
       <svg class="lp-i">
         <use href="#ls-crown"></use>
       </svg>
+
       <span>LIVESTREAM PRO</span>
+
     </div>
 
-<h1>Social</h1>
-
-    <div class="lp-head-line"></div>
+    <h1>Social</h1>
 
   </div>
 
   <div class="lp-head-symbol" aria-hidden="true">
+
     <svg class="lp-i">
-    <use href="#ls-globe"></use>
+      <use href="#ls-globe"></use>
     </svg>
+
   </div>
 
 </header>
 
 
 
-
-<!-- ===== PREMIUM POST COMPOSER ===== -->
+<!-- ==========================================
+     SOCIAL - MINIMAL POST COMPOSER
+========================================== -->
 
 <div class="lp-compose">
 
-  <div class="lp-compose-heading">
+  <div class="lp-compose-row">
 
-    <div class="lp-compose-heading-left">
+    <img
+      id="meAvatar"
+      class="lp-ava"
+      src="/icons/icon-192.png"
+      alt="Your profile picture"
+    >
+
+    <textarea
+      id="postText"
+      placeholder="What's on your mind?"
+      aria-label="Create a post"
+      readonly
+    ></textarea>
+
+    <button
+      type="button"
+      class="lp-compose-trigger"
+      onclick="openComposeModal()"
+      aria-label="Create a new post"
+    >
+
       <svg class="lp-i">
-        <use href="#ls-sparkle"></use>
+        <use href="#ls-edit"></use>
       </svg>
-      <span>SHARE YOUR MOMENTS</span>
-    </div>
 
-    <span class="lp-compose-kicker">SOCIAL FEED</span>
+    </button>
 
   </div>
 
-<div class="lp-compose-row">
+  <!-- KEEP REQUIRED UPLOAD INPUTS -->
 
-<img
-  id="meAvatar"
-  class="lp-ava"
-  src="/icons/icon-192.png"
-  alt="Your profile picture"
->
-
-  <textarea
-    id="postText"
-    placeholder="What's on your mind?"
-    aria-label="Create a post"
-    readonly
-  ></textarea>
-
-  <button
-    type="button"
-    class="lp-compose-trigger"
-    onclick="openComposeModal()"
-    aria-label="Create a new post"
+  <div
+    class="lp-compose-actions"
+    style="display:none"
   >
-    <svg class="lp-i">
-      <use href="#ls-edit"></use>
-    </svg>
-  </button>
-
-</div>
-
-  <!-- GIỮ LẠI INPUT ẨN CHO JS UPLOAD -->
-  <div class="lp-compose-actions" style="display:none">
 
     <input
       type="file"
@@ -5647,7 +6826,7 @@ body.social-page #composeModal .lp-compose-footer {
       class="lp-post-btn"
       onclick="submitPost()"
     >
-      Đăng bài
+      Post
     </button>
 
   </div>
@@ -5679,7 +6858,7 @@ body.social-page #composeModal .lp-compose-footer {
       </svg>
     </span>
 
-    <span class="txt">Status</span>
+    <span class="txt">Social</span>
   </button>
 
   <button type="button"
