@@ -5782,6 +5782,86 @@ body.lobby-page input:focus {
 </style>
 
 
+<style>
+/* ==========================================
+   LOBBY - REMOVE DARK ROOM BACKGROUND
+========================================== */
+
+html,
+body.lobby-page {
+  background: #FAF6E9 !important;
+  background-image: none !important;
+}
+
+/* Khung danh sách phòng */
+
+body.lobby-page #grid.lobby-grid,
+body.lobby-page #skeleton.lobby-grid {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/* Thẻ phòng live */
+
+body.lobby-page .lobby-card {
+  background: #FFFFFF !important;
+  background-image: none !important;
+  box-shadow: 0 3px 12px rgba(112,85,28,.06) !important;
+}
+
+/* Nền phía sau ảnh host */
+
+body.lobby-page .lobby-cardBg {
+  background: #F8EBC9 !important;
+  background-image: none !important;
+}
+
+/* Ảnh phòng live */
+
+body.lobby-page .lobby-cardBg img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  background: #F8EBC9 !important;
+}
+
+/* Loại bỏ lớp phủ màu đen */
+
+body.lobby-page .lobby-cardShade {
+  display: none !important;
+  background: transparent !important;
+}
+
+/* Khung thông tin host */
+
+body.lobby-page .lobby-cardOverlay.bottom {
+  background: #FFFFFF !important;
+  background-image: none !important;
+  color: #29251D !important;
+}
+
+/* Khung avatar */
+
+body.lobby-page .lobby-ava.mini {
+  background: #F8F3E6 !important;
+}
+
+/* Trạng thái chưa có phòng live */
+
+body.lobby-page #empty {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/* Vùng an toàn phía dưới */
+
+body.lobby-page .mobile-tabbar {
+  background: #FFFFFF !important;
+  background-image: none !important;
+}
+
+</style>
 
 </head>
 <body class="lobby-page">
