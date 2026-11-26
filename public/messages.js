@@ -685,14 +685,15 @@ else if (text?.startsWith("/location ")) {
 
 
 
-  // 💬 TEXT → GIỮ BUBBLE
-  else {
-    html = `
-      <div>
-         <span class="bubble-text ${isMe ? "me" : "other"}">${text}</span>
-      </div>
-    `;
-  }
+// TEXT MESSAGE - COMPACT LAYOUT
+else {
+  const safeText = String(text ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  html = `<div><span class="bubble-text ${isMe ? "me" : "other"}">${safeText}</span></div>`;
+}
 
 // ==========================================
 // CHAT - ORIGINAL MESSAGE TIMESTAMP

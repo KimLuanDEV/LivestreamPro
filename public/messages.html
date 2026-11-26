@@ -2366,23 +2366,31 @@ body.page-messages #chatModal .chat-time:not(.time-group-hidden) {
 body.page-messages #chatModal #chatBox {
   display: flex !important;
   flex-direction: column !important;
+
   justify-content: flex-start !important;
   align-content: flex-start !important;
+
+  white-space: normal !important;
+
   gap: 0 !important;
 }
 
 body.page-messages #chatModal .chat-line {
+
   flex: 0 0 auto !important;
 
-  height: fit-content !important;
+  height: auto !important;
   min-height: 0 !important;
   max-height: none !important;
 
   justify-content: flex-start !important;
 
+  white-space: normal !important;
+
   margin: 0 !important;
   padding: 0 !important;
   gap: 0 !important;
+
 }
 
 body.page-messages #chatModal .chat-line > div {
@@ -2407,6 +2415,7 @@ body.page-messages #chatModal .chat-line.me + .chat-line.other, body.page-messag
 }
 
 body.page-messages #chatModal .bubble-text {
+
   display: block !important;
 
   height: auto !important;
@@ -2416,6 +2425,10 @@ body.page-messages #chatModal .bubble-text {
   padding: 7px 12px !important;
 
   line-height: 1.4 !important;
+
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+
 }
 
 body.page-messages #chatModal .chat-time {
