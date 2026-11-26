@@ -200,7 +200,7 @@ document.querySelectorAll(".lp-post").forEach(p=>{
   const giftBox = p.querySelector(".lp-gift-users");
   if (giftBox && data.gifts?.byUser) {
     giftBox.innerHTML = `
-      🎁 Gifted by:
+      🎁
       ${Object.entries(data.gifts.byUser)
         .slice(0,3)
         .map(([uid,amt]) => `<span class="gift-user">${amt}💎</span>`)
@@ -1467,7 +1467,7 @@ ${p.video ? `
 ${p.gifts?.byUser ? `
 <div class="lp-gift-users"
      onclick="openGiftUsers('${p.id}')">
-  🎁 Gifted by:
+  🎁
   ${Object.entries(p.gifts.byUser)
     .slice(0,3)
     .map(([uid,amt]) => {
@@ -3093,7 +3093,7 @@ socket.on("lp-gift-post", ({ postId, total, fromUid, amount }) => {
   );
   if (box) {
     box.innerHTML = `
-      🎁 Gifted by:
+      🎁
       ${Object.entries(post.gifts.byUser)
         .slice(0,3)
         .map(([uid,amt]) => `<span class="gift-user">${amt}💎</span>`)
