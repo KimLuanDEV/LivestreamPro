@@ -9,894 +9,314 @@
 <meta name="viewport"
 content="width=device-width, initial-scale=1, viewport-fit=cover">
 
-<meta name="theme-color" content="#080808">
+<meta name="theme-color" content="#FAF6E9">
 
 <title>Virtual Live - Livestream Pro</title>
 
 <style>
-
-* {
-  box-sizing: border-box;
+/* LIVESTREAM PRO — VIRTUAL LIVE / CHAMPAGNE GOLD & WHITE */
+:root {
+  color-scheme: light;
+  --bg: #FAF6E9;
+  --white: #FFFFFF;
+  --cream: #FCFAF5;
+  --gold: #947025;
+  --dark-gold: #70531D;
+  --text: #29251D;
+  --muted: #766D5B;
+  --line: #EAE0C8;
+  --champagne: #F8EBC9;
+  --gradient: linear-gradient(135deg, #F5E4B5, #E3C47C);
 }
 
-html,
-body {
+/* 01. Page and safe areas */
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
   margin: 0;
   width: 100%;
   height: 100%;
-  background: #050506;
-  color: #fff;
-  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-text-size-adjust: 100%;
 }
-
-body {
-  overflow: hidden;
-}
-
+body { overflow: hidden; }
+button { font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+button:disabled { cursor: not-allowed; }
+.hidden { display: none !important; }
 .page {
   display: flex;
   flex-direction: column;
-
   width: 100%;
-  max-width: 650px;
-
+  max-width: 430px;
   height: 100vh;
   height: 100dvh;
-
-  margin: auto;
-
-  background: #080808;
+  margin: 0 auto;
+  background: #000;
 }
 
-/* HEADER */
-
+/* 02. Room header */
 .header {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
-  gap: 12px;
-
-  padding:
-    calc(12px + env(safe-area-inset-top))
-    14px
-    12px;
-
-  background: #111114;
-
-  border-bottom: 1px solid #6c522a;
+  gap: 9px;
+  padding: calc(9px + env(safe-area-inset-top, 0px)) 12px 9px;
+  background: linear-gradient(120deg, #FFFDF7, #F8EBC9);
+  border-bottom: 1px solid var(--line);
 }
-
 .back {
-  width: 40px;
-  height: 40px;
-
-  border: 1px solid #997545;
-  border-radius: 12px;
-
-  background: #242019;
-  color: #f5d59a;
-
-  font-size: 25px;
-  cursor: pointer;
-}
-
-.avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
   width: 42px;
   height: 42px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--white);
+  color: var(--gold);
+  font-size: 29px;
+  line-height: 1;
+}
+.avatar, .linked-owner img {
+  display: block;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border: 2px solid var(--white);
   border-radius: 50%;
-
   object-fit: cover;
-
-  border: 2px solid #b9955c;
+  background: var(--champagne);
+  box-shadow: 0 0 0 1px #DFCFAE;
 }
-
-.info {
-  flex: 1;
-  min-width: 0;
-}
-
+.info { flex: 1; min-width: 0; }
 .room-title {
-  color: #f1d6a7;
-
+  color: var(--text);
   font-size: 13px;
-  font-weight: 800;
-
-  white-space: nowrap;
+  font-weight: 750;
   overflow: hidden;
+  white-space: nowrap;
   text-overflow: ellipsis;
 }
-
-.room-meta {
-  margin-top: 5px;
-  font-size: 11px;
-  color: #d3c1a3;
-}
-
+.room-meta { margin-top: 3px; color: var(--muted); font-size: 11px; }
 .live-badge {
-  padding: 7px 9px;
-
-  border-radius: 8px;
-
+  flex-shrink: 0;
+  padding: 5px 8px;
+  border-radius: 7px;
   background: #9e212a;
   color: #fff;
-
   font-size: 10px;
-  font-weight: bold;
+  font-weight: 750;
 }
 
-/* VIDEO */
-
+/* 03. Video: retain original aspect ratio and playback area */
 .video-stage {
   position: relative;
-
-  flex: 1;
+  flex: 1 1 0;
   min-height: 0;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   background: #000;
+  overflow: hidden;
 }
-
 .video-frame {
   display: block;
-
   width: 100%;
   max-height: 100%;
-
   aspect-ratio: 16 / 9;
-
-  border: none;
+  border: 0;
   background: #000;
 }
-
 .video-native {
   display: block;
   width: 100%;
   max-height: 100%;
+  object-fit: contain;
   background: #000;
 }
-
 .loading {
   position: absolute;
   inset: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 20px;
-
-  background: #08080b;
-
-  color: #e8cca2;
-
-  text-align: center;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.hidden {
-  display: none !important;
-}
-
-/* FOOTER */
-
-.footer {
-  padding:
-    14px
-    15px
-    calc(18px + env(safe-area-inset-bottom));
-
-  background: #111114;
-
-  border-top: 1px solid #6c522a;
-
-  color: #aaa;
-
-  font-size: 12px;
-  text-align: center;
-}
-
-
-/* ==========================================
-   LINKED LIVE - LUXURY BLACK & GOLD
-========================================== */
-
-.linked-live-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-
-  padding: 12px 15px
-    calc(12px + env(safe-area-inset-bottom, 0px));
-
-  background: linear-gradient(
-    145deg, #211b14, #111217
-  );
-
-  border-top: 1px solid #725834;
-}
-
-.linked-owner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  text-align: left;
-}
-
-.linked-owner img {
-  width: 43px;
-  height: 43px;
-  flex-shrink: 0;
-  object-fit: cover;
-  border: 1.5px solid #c6a36b;
-  border-radius: 50%;
-}
-
-.linked-owner-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.linked-owner-info small {
-  font-size: 9px;
-  letter-spacing: 1.4px;
-  color: #b99a65;
-}
-
-.linked-owner-info strong {
-  font-size: 14px;
-  color: #f3dab0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.linked-owner-info span {
-  font-size: 10px;
-  color: #a9a39b;
-}
-
-.linked-gift-btn {
-  width: 48px;
-  height: 48px;
-  flex-shrink: 0;
+  z-index: 1;
   display: grid;
   place-items: center;
-
-  border: 1px solid #f3d29a;
-  border-radius: 14px;
-
-  background: linear-gradient(
-    135deg, #f4ddb0, #b58b50
-  );
-
-  color: #261b10;
-  cursor: pointer;
+  padding: 24px;
+  background: var(--cream);
+  color: var(--muted);
+  text-align: center;
+  font-size: 13px;
+  overflow-wrap: anywhere;
 }
 
-.linked-gift-btn svg {
-  width: 26px;
-  height: 26px;
+/* 04. Linked gift recipient toolbar */
+.footer.linked-live-footer {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 13px calc(10px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--line);
+  background: var(--white);
 }
+.linked-owner { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.linked-owner-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.linked-owner-info small { color: var(--gold); font-size: 10px; font-weight: 650; }
+.linked-owner-info strong {
+  color: var(--text);
+  font-size: 14px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.linked-owner-info span { color: var(--muted); font-size: 10px; }
+.linked-gift-btn {
+  display: grid;
+  place-items: center;
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 1px solid #DFC382;
+  border-radius: 13px;
+  background: var(--gradient);
+  color: #4D3915;
+}
+.linked-gift-btn svg { width: 25px; height: 25px; }
+.linked-gift-btn:disabled { opacity: .4; }
 
-/* ==========================================
-   LINKED LIVE - COMPACT GIFT PANEL V2.0
-   SYNC BROADCAST SFU
-========================================== */
-
+/* 05. Gift bottom sheet */
 .lg-modal {
   position: fixed;
   inset: 0;
   z-index: 10000;
-
   display: flex;
   align-items: flex-end;
   justify-content: center;
 }
-
-.lg-backdrop {
-  position: absolute;
-  inset: 0;
-
-  background: rgba(0,0,0,.15);
-}
-
-/* COMPACT BOTTOM SHEET */
-
+.lg-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.20); }
 .lg-sheet {
   position: relative;
   z-index: 1;
-
   display: flex;
   flex-direction: column;
-
-  width: min(100%, 480px);
-
+  width: min(100%, 430px);
   height: 52vh;
   height: 52dvh;
-  max-height: 52dvh;
-
-  padding:
-    8px
-    10px
-    calc(10px + env(safe-area-inset-bottom, 0px));
-
+  min-height: 0;
+  max-height: calc(100% - env(safe-area-inset-top, 0px));
+  padding: 9px 10px calc(10px + env(safe-area-inset-bottom, 0px));
   gap: 6px;
-
   overflow: hidden;
-
-  border: 0;
-  border-radius: 20px 20px 0 0;
-
-  background: #211C19;
-
-  box-shadow: 0 -5px 30px rgba(0,0,0,.2);
-
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 22px 22px 0 0;
+  background: var(--bg);
+  box-shadow: 0 -8px 30px rgba(52,43,25,.15);
   animation: lgSlideUp .22s ease-out;
 }
+@keyframes lgSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.lg-handle { flex-shrink: 0; width: 34px; height: 4px; margin: 0 auto 2px; border-radius: 99px; background: #D6C7A7; }
+.lg-header { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; gap: 8px; padding: 0 4px 5px; border-bottom: 1px solid var(--line); }
+.lg-header h3 { margin: 0; font-size: 17px; font-weight: 750; }
+.lg-header small { display: none; }
+.lg-close { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 9px; background: var(--white); color: var(--gold); font-size: 23px; }
+.lg-recipient { flex-shrink: 0; padding: 1px 4px; color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
+.lg-recipient strong { color: var(--dark-gold); font-weight: 750; }
+.lg-recipient small { display: block; margin-top: 2px; font-size: 10px; color: var(--muted); }
 
-@keyframes lgSlideUp {
-  from {
-    transform: translateY(100%);
-  }
-
-  to {
-    transform: translateY(0);
-  }
-}
-
-/* HANDLE */
-
-.lg-handle {
-  flex-shrink: 0;
-
-  width: 30px;
-  height: 3px;
-
-  margin: 0 auto 3px;
-
-  border-radius: 99px;
-
-  background: rgba(255,255,255,.25);
-}
-
-/* MINIMAL HEADER */
-
-.lg-header {
-  display: flex;
-  flex-shrink: 0;
-
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 8px;
-
-  padding: 3px 4px 8px;
-
-  margin: 0;
-
-  border-bottom: 1px solid rgba(255,255,255,.06);
-}
-
-.lg-header h3 {
-  margin: 0;
-
-  color: #F0DFBF;
-
-  font-size: 14px;
-  font-weight: 750;
-}
-
-.lg-header small {
-  color: #978D82;
-
-  font-size: 9px;
-  letter-spacing: 1px;
-}
-
-.lg-close {
-  display: grid;
-  place-items: center;
-
-  width: 30px;
-  height: 30px;
-
-  padding: 0;
-
-  background: transparent;
-
-  border: 0;
-
-  color: #C6BEB5;
-
-  font-size: 23px;
-
-  cursor: pointer;
-}
-
-/* RECIPIENT */
-
-.lg-recipient {
-  flex-shrink: 0;
-
-  padding: 2px 4px;
-
-  color: #978D82;
-
-  font-size: 10px;
-  line-height: 1.4;
-}
-
-.lg-recipient strong {
-  color: #E4C797;
-
-  font-weight: 650;
-}
-
-.lg-recipient small {
-  display: block;
-
-  margin-top: 2px;
-
-  font-size: 9px;
-  color: #978D82;
-}
-
-/* SCROLLABLE GIFT GRID */
-
+/* 06. Scrollable gift collection */
 .lg-grid {
   flex: 1 1 0;
-
   display: grid;
-
-  grid-template-columns:
-    repeat(4, minmax(0, 1fr));
-
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   grid-auto-rows: min-content;
-
   align-content: start;
-
   min-height: 0;
-  max-height: none;
-
-  gap: 5px 3px;
-
+  gap: 5px;
   padding: 3px 0;
-  margin: 0;
-
   overflow-x: hidden;
   overflow-y: auto;
-
   overscroll-behavior: contain;
-
-  scrollbar-width: none;
-
   -webkit-overflow-scrolling: touch;
 }
-
-.lg-grid::-webkit-scrollbar {
-  display: none;
-}
-
-/* GIFT ITEMS */
-
 .lg-item {
   display: flex;
   flex-direction: column;
-
   align-items: center;
-  justify-content: flex-start;
-
   min-width: 0;
-  min-height: 0;
-
-  height: auto;
-
   gap: 3px;
-
-  padding: 5px 2px;
-
-  background: transparent;
-
-  border: 1px solid transparent;
-  border-radius: 10px;
-
-  box-shadow: none;
-
-  cursor: pointer;
-
-  -webkit-tap-highlight-color: transparent;
+  padding: 5px 3px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--white);
 }
-
-/* SELECTED GIFT */
-
-.lg-item.active {
-  background: rgba(223,190,131,.085);
-
-  border-color: rgba(223,190,131,.8);
-
-  box-shadow: none;
-}
-
-/* GIFT IMAGE */
-
-.lg-item .lg-gift-image {
-  display: block;
-
-  width: 100%;
-  max-width: 64px;
-
-  height: 58px;
-
-  flex-shrink: 0;
-
-  object-fit: contain;
-
-  background: transparent;
-
-  filter: none;
-
-  pointer-events: none;
-  user-select: none;
-
-  transition: transform .15s ease;
-}
-
-.lg-item.active .lg-gift-image {
-  transform: scale(1.04);
-}
-
-/* GIFT NAME */
-
-.lg-item strong {
-  display: block;
-
-  width: 100%;
-
-  color: #BBB1A7;
-
-  font-size: 10px;
-  font-weight: 500;
-
-  line-height: 1.3;
-  text-align: center;
-
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-/* GIFT PRICE */
-
-.lg-item small {
-  color: #ECD19B;
-
-  font-size: 10px;
-  font-weight: 650;
-
-  line-height: 1.2;
-
-  white-space: nowrap;
-}
-
-/* COMBO QUANTITY */
-
-.lg-combo {
-  flex-shrink: 0;
-
-  display: grid;
-
-  grid-template-columns:
-    repeat(5, minmax(0,1fr));
-
-  gap: 5px;
-
-  margin: 0;
-
-  padding: 6px 0 3px;
-
-  border-top: 1px solid rgba(255,255,255,.07);
-}
-
-.lg-combo button {
-  height: 29px;
-
-  padding: 0 3px;
-
-  border: 1px solid rgba(255,255,255,.1);
-  border-radius: 99px;
-
-  background: transparent;
-
-  color: #BBB1A6;
-
-  font-size: 11px;
-  font-weight: 650;
-
-  cursor: pointer;
-}
-
-.lg-combo button.active {
-  border-color: rgba(223,190,131,.6);
-
-  background: rgba(223,190,131,.15);
-
-  color: #F0D39C;
-}
-
-/* BOTTOM BAR */
-
-.lg-bottom {
-  display: flex;
-
-  flex-shrink: 0;
-
-  align-items: center;
-  justify-content: space-between;
-
-  gap: 8px;
-
-  padding: 3px 0;
-
-  min-height: 44px;
-}
-
-/* DIAMOND BALANCE */
-
-.lg-wallet {
-  display: flex;
-
-  align-items: center;
-  flex-shrink: 0;
-
-  gap: 4px;
-
-  min-width: 0;
-
-  height: 36px;
-
-  padding: 0 10px;
-
-  margin: 0;
-
-  border: 1px solid rgba(223,190,131,.19);
-  border-radius: 99px;
-
-  background: rgba(0,0,0,.12);
-}
-
-.lg-wallet span {
-  font-size: 14px;
-}
-
-#lgBalance {
-  color: #F4E5CE;
-
-  font-size: 12px;
-  font-weight: 750;
-
-  white-space: nowrap;
-}
-
-/* TOTAL COST */
-
-.lg-total {
-  display: flex;
-  flex: 1;
-
-  min-width: 0;
-
-  flex-direction: column;
-
-  align-items: flex-end;
-  justify-content: center;
-
-  gap: 3px;
-}
-
-.lg-total span {
-  color: #9A9085;
-
-  font-size: 8px;
-  font-weight: 500;
-}
-
-#lgTotal {
-  color: #EDCF95;
-
-  font-size: 11px;
-  font-weight: 750;
-
-  overflow-wrap: anywhere;
-}
-
-/* SEND BUTTON */
-
-.lg-send {
-  flex: 0 0 auto;
-
-  width: auto;
-
-  min-width: 76px;
-  max-width: 125px;
-
-  height: 36px;
-
-  padding: 0 12px;
-
-  border: 0;
-  border-radius: 99px;
-
-  background: linear-gradient(
-    135deg,
-    #F0D59F,
-    #C99D5B
-  );
-
-  color: #241A0D;
-
-  font-size: 10px;
-  font-weight: 850;
-
-  cursor: pointer;
-}
-
-.lg-send:disabled {
-  background: #42392D;
-
-  color: #A69A89;
-
-  opacity: .7;
-
-  cursor: not-allowed;
-}
-
-.linked-gift-btn:disabled {
-  opacity: .4;
-
-  cursor: not-allowed;
-}
-
-/* FEEDBACK */
-
-.lg-message {
-  flex-shrink: 0;
-
-  min-height: 0;
-
-  margin: 0;
-  padding: 0 3px;
-
-  color: #E2C58E;
-
-  font-size: 10px;
-
-  line-height: 1.3;
-  text-align: center;
-}
-
-.lg-message:empty {
-  display: none;
-}
-
-/* SMALL MOBILE */
-
-@media (max-width: 380px) {
-
-  .lg-sheet {
-    padding-left: 7px;
-    padding-right: 7px;
-  }
-
-  .lg-item .lg-gift-image {
-    max-width: 57px;
-    height: 48px;
-  }
-
-  .lg-item strong,
-  .lg-item small {
-    font-size: 9px;
-  }
-
-  .lg-send {
-    min-width: 66px;
-    padding: 0 8px;
-  }
-
-  .lg-wallet {
-    padding: 0 7px;
-  }
-
-}
-
-
-/* REALTIME GIFT ANIMATION */
-
+.lg-item.active { background: var(--champagne); border-color: #C9A75D; box-shadow: inset 0 0 0 1px #C9A75D; }
+.lg-item .lg-gift-image { display: block; width: 100%; max-width: 64px; height: 58px; flex-shrink: 0; object-fit: contain; pointer-events: none; user-select: none; }
+.lg-item strong { display: block; width: 100%; color: var(--text); font-size: 10px; font-weight: 600; text-align: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.lg-item small { color: var(--dark-gold); font-size: 10px; font-weight: 700; white-space: nowrap; }
+
+/* 07. Combo, feedback and payment controls */
+.lg-combo { flex-shrink: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; padding: 6px 0 2px; border-top: 1px solid var(--line); }
+.lg-combo button { min-height: 32px; padding: 0 3px; border: 1px solid var(--line); border-radius: 9px; background: var(--white); color: var(--muted); font-size: 11px; font-weight: 650; }
+.lg-combo button.active { background: var(--champagne); border-color: #C9A75D; color: var(--dark-gold); }
+.lg-message { flex-shrink: 0; margin: 0; padding: 3px 5px; color: var(--dark-gold); font-size: 11px; line-height: 1.4; text-align: center; overflow-wrap: anywhere; max-height: 65px; overflow-y: auto; }
+.lg-message:empty { display: none; }
+.lg-bottom { display: flex; flex-shrink: 0; align-items: center; gap: 8px; min-height: 44px; padding: 2px 0; }
+.lg-wallet { display: flex; align-items: center; gap: 4px; min-width: 0; max-width: 40%; min-height: 39px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 10px; background: var(--white); }
+.lg-wallet span { flex-shrink: 0; font-size: 14px; }
+#lgBalance { min-width: 0; color: var(--dark-gold); font-size: 12px; font-weight: 750; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.lg-total { display: flex; flex: 1; min-width: 0; flex-direction: column; align-items: flex-end; gap: 1px; }
+.lg-total span { color: var(--muted); font-size: 9px; }
+#lgTotal { color: var(--dark-gold); font-size: 12px; font-weight: 750; overflow-wrap: anywhere; text-align: right; }
+.lg-send { flex: 0 0 auto; min-width: 76px; max-width: 118px; min-height: 40px; padding: 6px 10px; border: 1px solid #DFC382; border-radius: 11px; background: var(--gradient); color: #4D3915; font-size: 10px; font-weight: 800; overflow-wrap: anywhere; }
+.lg-send:disabled { background: #EAE5D9; color: #766D5B; border-color: var(--line); }
+
+/* 08. Realtime gift notification */
 .lg-effect {
   position: fixed;
   left: 50%;
   top: 22%;
   transform: translateX(-50%);
   z-index: 11000;
-
-  width: min(280px, 82vw);
-  padding: 20px;
-
   display: flex;
   align-items: center;
   flex-direction: column;
-  gap: 9px;
-
-  background: linear-gradient(
-    135deg, #392b18ee, #101116f2
-  );
-
-  border: 1px solid #d9b579;
-  border-radius: 19px;
-
-  color: #f2d7a6;
+  gap: 7px;
+  width: min(250px, 82vw);
+  padding: 15px;
+  border: 1px solid #DFC382;
+  border-radius: 18px;
+  background: #FFFDF7;
+  color: var(--dark-gold);
+  box-shadow: 0 8px 28px rgba(52,43,25,.18);
   pointer-events: none;
-
-  box-shadow: 0 0 28px rgba(218,170,87,.2);
-
   animation: lgGiftPop .4s ease-out;
 }
+.lg-effect .lg-effect-image { width: 80px; height: 80px; object-fit: contain; pointer-events: none; user-select: none; }
+.lg-effect strong { max-width: 100%; font-size: 15px; overflow-wrap: anywhere; text-align: center; }
+.lg-effect small { max-width: 100%; color: var(--muted); font-size: 12px; text-align: center; overflow-wrap: anywhere; }
+@keyframes lgGiftPop { from { opacity: 0; transform: translate(-50%, 20px) scale(.9); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
 
-.lg-effect .lg-effect-image {
-
-  display: block;
-
-  width: 96px;
-  height: 96px;
-
-  object-fit: contain;
-
-  background: transparent;
-
-  filter: drop-shadow(
-    0 0 15px rgba(232,190,110,.35)
-  );
-
-  pointer-events: none;
-
-  user-select: none;
-
+/* 09. Responsive and accessibility */
+@media (max-width: 380px) {
+  .header { gap: 7px; padding-left: 9px; padding-right: 9px; }
+  .avatar { width: 37px; height: 37px; }
+  .lg-sheet { padding-left: 7px; padding-right: 7px; }
+  .lg-item .lg-gift-image { max-width: 57px; height: 48px; }
+  .lg-item strong, .lg-item small { font-size: 9px; }
+  .lg-send { min-width: 66px; max-width: 99px; padding: 6px 7px; }
+  .lg-wallet { padding: 6px; }
 }
-
-.lg-effect strong {
-  font-size: 17px;
+@media (max-height: 600px) {
+  .lg-sheet { height: 70vh; height: 70dvh; }
 }
-
-.lg-effect small {
-  font-size: 12px;
-  text-align: center;
-}
-
-@keyframes lgGiftPop {
-  from {
-    opacity: 0;
-    transform: translate(-50%, 20px) scale(.8);
-  }
-
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0) scale(1);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .lg-sheet,
-  .lg-effect {
-    animation: none;
-  }
+  .lg-sheet, .lg-effect { animation: none; }
 }
-
 </style>
 
 </head>
@@ -907,7 +327,7 @@ body {
 
   <header class="header">
 
-    <button class="back" id="backBtn">
+    <button class="back" id="backBtn" type="button" aria-label="Back to lobby">
       ‹
     </button>
 
@@ -927,7 +347,7 @@ body {
       <div class="room-meta">
 
         <span id="viewerCount">0</span>
-        viewers watching
+        viewers
 
       </div>
 
@@ -965,7 +385,7 @@ body {
 
     <div class="linked-owner-info">
 
-      <small>GIFT RECIPIENT</small>
+      <small>Gift recipient</small>
 
       <strong id="linkedOwnerName">
         Not linked
