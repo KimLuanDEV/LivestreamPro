@@ -938,12 +938,6 @@ if(wrap){
  
 
 
-  // 👑 Crown for VIP
-  const crown = document.getElementById("avatarCrown");
-  if(crown){
-    if(lv >= 1) crown.classList.remove("hidden");   // GOLD+
-    else crown.classList.add("hidden");
-  }
 
 
   coinSentVal.textContent = p.coinSent || 0;
@@ -1826,10 +1820,6 @@ if (coverPreview){
   }
 
   const crown = document.getElementById("avatarCrown");
-  if (crown){
-    if (level >= 1) crown.classList.remove("hidden");
-    else crown.classList.add("hidden");
-  }
 
   // ===== ẨN CHỨC NĂNG CHỦ TÀI KHOẢN =====
   document.querySelectorAll(
