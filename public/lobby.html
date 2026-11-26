@@ -5863,6 +5863,55 @@ body.lobby-page .mobile-tabbar {
 
 </style>
 
+
+<style>
+/* ==========================================
+   LOBBY - REMOVE HEADER BORDER
+========================================== */
+
+body.lobby-page .lobby-header-full {
+
+  border: none !important;
+  border-bottom: none !important;
+
+  outline: none !important;
+  box-shadow: none !important;
+
+}
+
+/* Loại bỏ đường kẻ trang trí */
+
+body.lobby-page .lobby-header-full::before,
+body.lobby-page .lobby-header-full::after {
+
+  content: none !important;
+  display: none !important;
+
+}
+
+/* Loại bỏ đường viền khung bên trong */
+
+body.lobby-page .lobby-header-inner,
+body.lobby-page .lobby-header-search {
+
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+
+}
+
+/* Loại bỏ đường viền khu vực bộ lọc */
+
+body.lobby-page .lobby-filter-bar {
+
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+
+}
+
+</style>
+
 </head>
 <body class="lobby-page">
   
