@@ -204,9 +204,12 @@ function updateMoney() {
     Number(withdrawInput.value || 0)
   );
 
-  // Keep the original exchange rate
-  moneyVal.textContent =
-    (val * RATE).toLocaleString("en-US") + " $";
+// Calculate withdrawal amount in USD
+moneyVal.textContent =
+  (val * RATE).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }) + " $";
 
   // PENDING WITHDRAWAL
   if (withdrawInput.disabled) {
