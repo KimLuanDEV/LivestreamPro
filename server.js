@@ -7867,67 +7867,178 @@ emitPrivateSocialEvent(
 });
 
 
-// ===== ADMIN DELETE POST =====
-app.post("/api/admin/delete-post", (req, res) => {
-  const { adminUid, postId, reason } = req.body || {};
+/* ==========================================
+   ADMIN SOCIAL - SECURE DELETE POST
+========================================== */
 
-  if (!adminUid || !postId) {
-    return res.status(400).json({ error: "missing" });
+function handleAdminDeletePost(req, res) {
+
+  const adminUid = req.lspAdminActorUid;
+
+  const postId = String(
+    req.body?.postId || ""
+  ).trim();
+
+  const reason = String(
+    req.body?.reason || ""
+  ).trim().slice(0, 500);
+
+  if (!adminUid) {
+    return res.status(401).json({
+      ok: false,
+      error: "ADMIN_AUTH_REQUIRED"
+    });
   }
 
   const db = loadUsers();
   const admin = db[adminUid];
 
-  // 🔒 chỉ admin
-  if (!admin || admin.role !== "admin") {
-    return res.status(403).json({ error: "not_admin" });
+  // SECURITY - VERIFY ADMIN ROLE
+  if (
+    !admin ||
+    admin.role !== "admin" ||
+    admin.profile?.accountBlocked
+  ) {
+    return res.status(403).json({
+      ok: false,
+      error: "ADMIN_PERMISSION_REQUIRED"
+    });
   }
 
-  const idx = lpPosts.findIndex(p => p.id === postId);
+  if (!postId) {
+    return res.status(400).json({
+      ok: false,
+      error: "MISSING_POST_ID"
+    });
+  }
+
+  const idx = lpPosts.findIndex(
+    p => String(p.id) === postId
+  );
+
   if (idx === -1) {
-    return res.status(404).json({ error: "post_not_found" });
+    return res.status(404).json({
+      ok: false,
+      error: "POST_NOT_FOUND"
+    });
   }
 
   const post = lpPosts[idx];
 
-  // 🧾 log admin action (nên có)
-  post.adminDeleted = {
-    by: adminUid,
-    reason: reason || "",
-    ts: Date.now()
-  };
-
-  // ❌ xoá khỏi danh sách hiển thị
+  // DELETE POST
   lpPosts.splice(idx, 1);
-  saveSocial();
 
-  // 🔔 thông báo cho chủ bài đăng (nếu còn tồn tại)
-  const ownerUid = post.uid;
-  if (ownerUid) {
-    if (!userInbox.has(ownerUid)) userInbox.set(ownerUid, []);
-    userInbox.get(ownerUid).unshift({
-      type: "post-deleted",
-      text: `Your post was deleted by an admin${reason ? `\nReason: ${reason}` : ""}`,
-      time: Date.now(),
-      read: false
+  if (!saveSocial()) {
+
+    // Restore if database save fails
+    lpPosts.splice(idx, 0, post);
+
+    return res.status(500).json({
+      ok: false,
+      error: "SAVE_FAILED"
     });
-    saveInbox(Object.fromEntries(userInbox));
+
   }
 
-  
-emitPrivateSocialEvent(
-  "social-update",
-  post,
-  {
-    type: "post-deleted",
-    postId
+  console.log("[SOCIAL ADMIN] Post deleted", {
+    adminUid,
+    postId,
+    ownerUid: post.uid,
+    reason,
+    timestamp: Date.now()
+  });
+
+  // NOTIFY POST OWNER
+  const ownerUid = post.uid;
+
+  if (ownerUid) {
+
+    try {
+
+      if (!userInbox.has(ownerUid)) {
+        userInbox.set(ownerUid, []);
+      }
+
+      userInbox.get(ownerUid).unshift({
+        type: "post-deleted",
+
+        text:
+          "Your post was deleted by an admin" +
+          (reason ? `\nReason: ${reason}` : ""),
+
+        time: Date.now(),
+        read: false
+      });
+
+      saveInbox(
+        Object.fromEntries(userInbox)
+      );
+
+    } catch (error) {
+
+      console.error(
+        "[SOCIAL ADMIN] Notification failed:",
+        error.message
+      );
+
+    }
+
   }
+
+  // REALTIME UPDATE
+  emitPrivateSocialEvent(
+    "social-update",
+    post,
+    {
+      type: "post-deleted",
+      postId
+    }
+  );
+
+  return res.json({
+    ok: true,
+    postId
+  });
+
+}
+
+
+/* ==========================================
+   ADMIN CENTER - DELETE POST
+========================================== */
+
+app.post(
+  "/api/admin/delete-post",
+  handleAdminDeletePost
 );
 
 
-  res.json({ ok: true });
-});
+/* ==========================================
+   SOCIAL PAGE - AUTHENTICATED ADMIN
+========================================== */
 
+app.post(
+  "/api/social/admin/delete-post",
+
+  securityAuth.requireAuth,
+
+  (req, res) => {
+
+    if (!lspAdminSameOrigin(req)) {
+
+      return res.status(403).json({
+        ok: false,
+        error: "INVALID_ORIGIN"
+      });
+
+    }
+
+    req.lspAdminActorUid = req.auth.uid;
+
+    return handleAdminDeletePost(req, res);
+
+  }
+);
 
 app.post("/api/admin/close-room", (req, res) => {
   const { adminUid, roomId, reason } = req.body || {};

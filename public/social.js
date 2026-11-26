@@ -1095,44 +1095,118 @@ const reason = await showConfirmModal({
 
 
 
+/* ==========================================
+   ADMIN DELETE POST - SECURE V2.0
+========================================== */
 
-async function adminDeletePost(postId){
-const reason = await showConfirmModal({
-  title: "Admin: Delete Post",
-  body: "Enter a reason for deletion (optional):",
-  input: true
-});
+async function adminDeletePost(postId) {
 
-if (reason === false) return;
-
-const ok = await showConfirmModal({
-  title: "Confirm",
-  body: "Are you sure you want to delete this post?"
-});
-
-if (!ok) return;
-
-  const res = await fetch("/api/admin/delete-post", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      adminUid: auth.uid,
-      postId,
-      reason
-    })
+  const reason = await showConfirmModal({
+    title: "Admin: Delete Post",
+    body: "Enter a reason for deletion (optional):",
+    input: true
   });
 
-  const data = await res.json();
+  if (reason === false) return;
 
-showToast(
-  data.ok
-    ? "✅ Post deleted by admin"
-    : "❌ Unable to delete the post",
-  data.ok ? "success" : "error"
-);
+  const ok = await showConfirmModal({
+    title: "Confirm",
+    body: "Are you sure you want to delete this post?"
+  });
+
+  if (!ok) return;
+
+  try {
+
+    const res = await fetch(
+      "/api/social/admin/delete-post",
+      {
+        method: "POST",
+
+        credentials: "same-origin",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          postId,
+          reason
+        })
+      }
+    );
+
+    const data = await res.json();
+
+    if (res.status === 401) {
+
+      showToast(
+        "Session expired. Please sign in again.",
+        "error"
+      );
+
+      return;
+
+    }
+
+    if (res.status === 403) {
+
+      showToast(
+        "Admin permission required.",
+        "error"
+      );
+
+      return;
+
+    }
+
+    if (!res.ok || !data.ok) {
+
+      showToast(
+        "Unable to delete the post.",
+        "error"
+      );
+
+      return;
+
+    }
+
+    // REMOVE POST FROM CURRENT FEED
+    const postEl = [
+      ...document.querySelectorAll(".lp-post")
+    ].find(
+      el => el.dataset.id === String(postId)
+    );
+
+    if (postEl) {
+      postEl.remove();
+    }
+
+    // CLEAR LOCAL CACHE
+    if (window.lpPostMap) {
+      delete window.lpPostMap[postId];
+    }
+
+    showToast(
+      "Post deleted successfully.",
+      "success"
+    );
+
+  } catch (error) {
+
+    console.error(
+      "[ADMIN DELETE POST]",
+      error
+    );
+
+    showToast(
+      "Connection error. Please try again.",
+      "error"
+    );
+
+  }
+
 }
-
-
 
 async function deletePost(id){
 const ok = await showConfirmModal({
