@@ -18987,397 +18987,6 @@ body.page-profile [hidden] {
   display: none !important;
 }
  
-
-
-
-/* ==========================================
-   PROFILE - CHANGE PASSWORD
-   LUXURY CREAM & GOLD
-========================================== */
-
-body.page-profile #passModal {
-
-  position: fixed !important;
-  inset: 0 !important;
-
-  width: 100%;
-  height: 100dvh !important;
-
-  display: flex;
-  align-items: center !important;
-  justify-content: center !important;
-
-  padding: 16px;
-  padding-top: max(16px, env(safe-area-inset-top));
-  padding-bottom: max(16px, env(safe-area-inset-bottom));
-
-  overflow: hidden;
-
-  pointer-events: auto !important;
-  z-index: 11000 !important;
-}
-
-body.page-profile #passModal.hidden {
-  display: none !important;
-}
-
-
-/* BACKDROP */
-
-body.page-profile #passModal .modal-backdrop {
-
-  position: absolute;
-  inset: 0;
-
-  background: rgba(35, 29, 17, .45) !important;
-
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-}
-
-
-/* MODAL CARD */
-
-body.page-profile #passModal .luxury-modal-card {
-
-  position: relative !important;
-
-  width: 100% !important;
-  max-width: 360px !important;
-
-  max-height: 100% !important;
-
-  margin: 0 !important;
-  padding: 22px !important;
-
-  background: #FFFFFF !important;
-  color: #29251D !important;
-
-  border: 1px solid #EAE0C8 !important;
-  border-radius: 24px !important;
-
-  box-shadow:
-    0 20px 60px rgba(70, 50, 15, .18) !important;
-
-  overflow-x: hidden;
-  overflow-y: auto;
-
-  transform: none !important;
-  animation: none !important;
-
-  pointer-events: auto !important;
-  color-scheme: light;
-}
-
-
-/* REMOVE OLD DECORATIONS */
-
-body.page-profile #passModal .luxury-modal-card::before,
-body.page-profile #passModal .luxury-modal-card::after,
-body.page-profile #passModal .luxury-modal-accent,
-body.page-profile #passModal .luxury-modal-kicker,
-body.page-profile #passModal .luxury-modal-signature {
-
-  display: none !important;
-}
-
-
-/* HEADER */
-
-body.page-profile #passModal .luxury-modal-heading {
-
-  display: flex;
-  align-items: center;
-  gap: 12px;
-
-  margin: 0;
-}
-
-body.page-profile #passModal .luxury-modal-heading h3 {
-
-  margin: 0 !important;
-
-  font-family: system-ui, -apple-system,
-               BlinkMacSystemFont, sans-serif !important;
-
-  font-size: 21px !important;
-  font-weight: 800 !important;
-
-  color: #29251D !important;
-  text-shadow: none !important;
-}
-
-body.page-profile #passModal .luxury-modal-heading p {
-  display: none !important;
-}
-
-
-/* SECURITY ICON */
-
-body.page-profile #passModal .luxury-modal-emblem {
-
-  width: 44px;
-  height: 44px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background: #F8EBC9 !important;
-  color: #947025 !important;
-
-  border: 1px solid #E5D1A0 !important;
-  border-radius: 13px;
-
-  flex-shrink: 0;
-}
-
-body.page-profile #passModal .luxury-modal-emblem svg {
-
-  width: 23px;
-  height: 23px;
-
-  stroke: currentColor;
-}
-
-
-/* DIVIDER */
-
-body.page-profile #passModal .luxury-modal-divider {
-
-  height: 1px;
-  margin: 18px 0 !important;
-
-  background: #EAE0C8 !important;
-}
-
-
-/* FORM FIELDS */
-
-body.page-profile #passModal .luxury-form-field {
-
-  margin: 0 0 15px !important;
-}
-
-body.page-profile #passModal .luxury-form-field label {
-
-  display: block;
-
-  margin: 0 0 7px !important;
-
-  color: #706044 !important;
-
-  font-size: 13px !important;
-  font-weight: 650 !important;
-
-  opacity: 1 !important;
-  letter-spacing: 0 !important;
-}
-
-
-/* PASSWORD INPUTS */
-
-body.page-profile #passModal .luxury-form-field input {
-
-  display: block;
-
-  width: 100% !important;
-  height: 48px !important;
-
-  margin: 0 !important;
-  padding: 0 14px !important;
-
-  background: #FAF7EF !important;
-  color: #29251D !important;
-
-  border: 1px solid #EAE0C8 !important;
-  border-radius: 12px !important;
-
-  font-size: 16px !important;
-
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-body.page-profile #passModal input::placeholder {
-
-  color: #9C9586 !important;
-  opacity: 1;
-}
-
-body.page-profile #passModal input:focus {
-
-  background: #FFFFFF !important;
-
-  border-color: #C5A354 !important;
-
-  box-shadow:
-    0 0 0 3px rgba(197, 163, 84, .12) !important;
-}
-
-
-/* SECURITY NOTE */
-
-body.page-profile #passModal .luxury-modal-note {
-
-  margin: 4px 0 18px !important;
-  padding: 0 !important;
-
-  display: flex;
-  align-items: center;
-  gap: 7px;
-
-  background: transparent !important;
-
-  border: none !important;
-
-  color: #857960 !important;
-
-  font-size: 12px !important;
-  text-align: left !important;
-}
-
-
-/* ACTION BUTTONS */
-
-body.page-profile #passModal .luxury-modal-actions {
-
-  display: grid !important;
-
-  grid-template-columns: 1fr 1.5fr;
-
-  gap: 10px;
-  margin: 0 !important;
-}
-
-body.page-profile #passModal .luxury-btn {
-
-  width: 100% !important;
-  height: 46px !important;
-
-  margin: 0 !important;
-  padding: 0 8px !important;
-
-  font-size: 14px !important;
-  font-weight: 700 !important;
-
-  border-radius: 12px !important;
-
-  box-shadow: none !important;
-  text-shadow: none !important;
-
-  touch-action: manipulation;
-}
-
-body.page-profile #passModal .luxury-btn-cancel {
-
-  background: #FAF7EF !important;
-  color: #857960 !important;
-
-  border: 1px solid #EAE0C8 !important;
-}
-
-body.page-profile #passModal .luxury-btn-primary {
-
-  background: linear-gradient(
-    135deg,
-    #F8E8BA,
-    #E5C77E
-  ) !important;
-
-  color: #4D3915 !important;
-
-  border: 1px solid #DFC382 !important;
-}
-
-
-/* MESSAGE MODAL ALWAYS ABOVE PASSWORD MODAL */
-
-body.page-profile #msgModal {
-  z-index: 11010 !important;
-}
-
-
-/* MOBILE */
-
-@media (max-width: 480px) {
-
-  body.page-profile #passModal .luxury-modal-card {
-
-    max-width: 350px !important;
-    padding: 20px !important;
-  }
-
-  body.page-profile #passModal .luxury-modal-heading h3 {
-
-    font-size: 20px !important;
-  }
-}
-
-
-
-/* ==========================================
-   PROFILE - COVER BUTTON CLICK FIX
-========================================== */
-
-/* COVER LAYER */
-
-body.page-profile .profile-cover {
-  position: relative !important;
-  isolation: isolate;
-  z-index: 1 !important;
-}
-
-/* COVER IMAGE */
-
-body.page-profile #coverPreview {
-  pointer-events: auto !important;
-  cursor: pointer;
-}
-
-/* COVER CAMERA */
-
-body.page-profile .profile-cover .cover-actions {
-  position: absolute !important;
-
-  left: 12px !important;
-  bottom: 12px !important;
-
-  z-index: 5 !important;
-  pointer-events: auto !important;
-}
-
-body.page-profile #btnChangeCover {
-  position: relative;
-  pointer-events: auto !important;
-  touch-action: manipulation;
-  cursor: pointer;
-}
-
-/* TRANSPARENT PROFILE LAYERS */
-
-body.page-profile > .container,
-body.page-profile .profile-shell,
-body.page-profile .profile-header.fb-style {
-  pointer-events: none !important;
-}
-
-/* RESTORE PROFILE INTERACTIONS */
-
-body.page-profile .profile-shell > :not(.profile-header),
-body.page-profile .profile-header.fb-style > * {
-  pointer-events: auto;
-}
-
-/* DECORATIVE LAYERS */
-
-body.page-profile .profile-cover::before,
-body.page-profile .profile-cover::after {
-  pointer-events: none !important;
-}
-
-
-
 </style>
 
 
@@ -19398,20 +19007,10 @@ body.page-profile .profile-cover::after {
        src="/assets/default-cover.jpg"
        alt="cover">
 
+  <div class="cover-actions">
+    <button id="btnChangeCover">📷</button>
+  </div>
 
-
-<div class="cover-actions">
-
-  <button
-    type="button"
-    id="btnChangeCover"
-    aria-label="Change cover photo">
-
-    📷
-
-  </button>
-
-</div>
   <input type="file" id="coverInput" accept="image/*" hidden>
 </div>   
     
@@ -19618,138 +19217,80 @@ body.page-profile .profile-cover::after {
 
 
 
-
-<!-- ==========================================
-     CHANGE PASSWORD MODAL
-========================================== -->
-
+<!-- PREMIUM CHANGE PASSWORD MODAL -->
 <div id="passModal" class="modal hidden">
 
   <div class="modal-backdrop"></div>
 
-  <section
-    class="modal-card luxury-modal-card"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="passModalTitle">
+  <section class="modal-card luxury-modal-card"
+           role="dialog"
+           aria-modal="true"
+           aria-labelledby="passModalTitle">
 
-    <!-- HEADER -->
+    <div class="luxury-modal-accent"></div>
+
+    <div class="luxury-modal-kicker">
+      LIVESTREAM PRO · SECURITY
+    </div>
 
     <div class="luxury-modal-heading">
+      <div class="luxury-modal-emblem">✦</div>
 
-      <div class="luxury-modal-emblem">
-
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke-width="1.7"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true">
-
-          <rect
-            x="5" y="10"
-            width="14" height="11"
-            rx="3"/>
-
-          <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
-          <path d="M12 14v3"/>
-
-        </svg>
-
+      <div>
+        <h3 id="passModalTitle">Change Password</h3>
+        <p>Cập nhật thông tin bảo mật tài khoản của bạn</p>
       </div>
-
-      <h3 id="passModalTitle">
-        Change Password
-      </h3>
-
     </div>
 
     <div class="luxury-modal-divider"></div>
 
-
-    <!-- SECURITY CODE -->
-
     <div class="luxury-form-field">
-
-      <label for="oldPass">
-        Security Code
-      </label>
-
-      <input
-        id="oldPass"
-        type="password"
-        placeholder="Enter security code"
-        autocomplete="off">
-
+      <label for="oldPass">MÃ BẢO MẬT</label>
+      <input id="oldPass"
+             type="password"
+             placeholder="Nhập mã bảo mật"
+             autocomplete="off">
     </div>
 
-
-    <!-- NEW PASSWORD -->
-
     <div class="luxury-form-field">
-
-      <label for="newPass">
-        New Password
-      </label>
-
-      <input
-        id="newPass"
-        type="password"
-        placeholder="Enter new password"
-        autocomplete="new-password">
-
+      <label for="newPass">MẬT KHẨU MỚI</label>
+      <input id="newPass"
+             type="password"
+             placeholder="Nhập mật khẩu mới"
+             autocomplete="new-password">
     </div>
 
-
-    <!-- CONFIRM PASSWORD -->
-
     <div class="luxury-form-field">
-
-      <label for="newPass2">
-        Confirm Password
-      </label>
-
-      <input
-        id="newPass2"
-        type="password"
-        placeholder="Confirm new password"
-        autocomplete="new-password">
-
+      <label for="newPass2">XÁC NHẬN MẬT KHẨU</label>
+      <input id="newPass2"
+             type="password"
+             placeholder="Nhập lại mật khẩu mới"
+             autocomplete="new-password">
     </div>
-
-
-    <!-- NOTE -->
 
     <div class="luxury-modal-note">
-
-      Use at least 6 characters.
-
+      Sử dụng mật khẩu riêng tư và không chia sẻ
+      mã bảo mật với người khác.
     </div>
-
-
-    <!-- ACTIONS -->
 
     <div class="luxury-modal-actions">
 
-      <button
-        type="button"
-        class="luxury-btn luxury-btn-cancel"
-        onclick="closePass()">
-
-        Cancel
-
+      <button type="button"
+              class="luxury-btn luxury-btn-cancel"
+              onclick="closePass()">
+        Hủy
       </button>
 
-      <button
-        type="button"
-        class="luxury-btn luxury-btn-primary"
-        onclick="submitChangePass()">
-
-        Save Password
-
+      <button type="button"
+              class="luxury-btn luxury-btn-primary"
+              onclick="submitChangePass()">
+        Xác nhận đổi
       </button>
 
+    </div>
+
+    <div class="luxury-modal-signature">
+      SECURE ACCOUNT MANAGEMENT
     </div>
 
   </section>
@@ -20858,7 +20399,7 @@ body.page-profile .profile-cover::after {
 
 
 
-<script src="/profile.js?v=20261127-03"></script>
+<script src="/profile.js?v=20261126-4"></script>
 <script src="/push-init.js"></script>
 <script src="/app-entry-guard.js"></script>
 

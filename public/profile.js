@@ -1177,23 +1177,10 @@ if(btnChangePass){
   };
 }
 
-function closePass() {
-
+function closePass(){
   passModal.classList.add("hidden");
-
-  passModal.querySelectorAll("input")
-    .forEach(input => {
-      input.blur();
-      input.value = "";
-    });
-
-  document.body.classList.remove("keyboard-open");
-
-  updatePasswordViewport();
-
   showTabbar();
 }
-
 
 // Ẩn tab bar khi mở đổi mật khẩu (mobile)
 function hideTabbar(){
@@ -1590,114 +1577,30 @@ function closeProfileSheet(){
   profileSheet.classList.add("hidden");
 }
 
-function openChangePass() {
-
+/* mở modal đổi mật khẩu từ sheet */
+function openChangePass(){
   closeProfileSheet();
-
   hideTabbar();
-
-  document
-    .getElementById("passModal")
-    ?.classList.remove("hidden");
-
-  updatePasswordViewport();
+  document.getElementById("passModal")?.classList.remove("hidden");
 }
 
 
 
-/* ==========================================
-   CHANGE PASSWORD - MOBILE KEYBOARD FIX
-========================================== */
-
-function updatePasswordViewport() {
-
-  const modal = document.getElementById("passModal");
-
-  if (!modal) return;
-
-  const viewport = window.visualViewport;
-
-  if (modal.classList.contains("hidden")) {
-
-    modal.style.removeProperty("height");
-    modal.style.removeProperty("top");
-
-    return;
-  }
-
-  const height = viewport
-    ? viewport.height
-    : window.innerHeight;
-
-  const offsetTop = viewport
-    ? viewport.offsetTop
-    : 0;
-
-  modal.style.setProperty(
-    "height",
-    `${height}px`,
-    "important"
-  );
-
-  modal.style.setProperty(
-    "top",
-    `${offsetTop}px`,
-    "important"
-  );
-}
-
-window.visualViewport?.addEventListener(
-  "resize",
-  updatePasswordViewport
-);
-
-window.visualViewport?.addEventListener(
-  "scroll",
-  updatePasswordViewport
-);
-
-window.addEventListener(
-  "resize",
-  updatePasswordViewport
-);
+// 📱 Mobile: focus input → đẩy bottom-sheet lên
+document.querySelectorAll("#passModal input").forEach(inp=>{
+  inp.addEventListener("focus", ()=>{
+    document.body.classList.add("keyboard-open");
+  });
+  inp.addEventListener("blur", ()=>{
+    document.body.classList.remove("keyboard-open");
+  });
+});
 
 
-
-
-/* ==========================================
-   PROFILE - CHANGE COVER BUTTON
-========================================== */
 
 if (btnChangeCover && coverInput) {
-
-  btnChangeCover.onclick = (event) => {
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    // Only allow editing own profile
-    if (!__profileAuth.uid) return;
-
-    if (
-      viewUid &&
-      viewUid !== __profileAuth.uid
-    ) {
-      return;
-    }
-
-    if (__coverUploading) return;
-
-    // Reset previous file
-    coverInput.value = "";
-
-    // Open photo picker
-    coverInput.click();
-
-  };
-
+  btnChangeCover.onclick = () => coverInput.click();
 }
-
-
 
 if (coverInput) {
   coverInput.onchange = async () => {
