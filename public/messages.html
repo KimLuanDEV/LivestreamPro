@@ -5,7 +5,10 @@
 
   <!-- PWA iOS -->
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+<meta name="theme-color" content="#FAF6E9">
+
 <meta name="apple-mobile-web-app-title" content="Livestream Pro">
 
 <!-- Android / Chrome -->
@@ -13,7 +16,7 @@
 
 
 
-  <title>Inbox</title>
+ <title>Messages - Livestream Pro</title>
 
   <!-- BROWSER ICON -->
 <link rel="icon"
@@ -2621,6 +2624,1214 @@ body.page-messages.private-chat-open {
 
 
 </style>
+
+
+
+<style>
+/* ==========================================
+   LIVESTREAM PRO - MESSAGES V6.0
+   CHAMPAGNE GOLD & PURE WHITE
+========================================== */
+
+:root {
+
+  --msg-bg: #FAF6E9;
+  --msg-gold: #947025;
+  --msg-light: #29251D;
+  --msg-line: #EAE0C8;
+  --msg-muted: #766D5B;
+
+  --msg-white: #FFFFFF;
+  --msg-cream: #F8F3E6;
+  --msg-champagne: #F8EBC9;
+  --msg-primary: #EED69A;
+
+  color-scheme: light;
+
+}
+
+
+/* ==========================================
+   MAIN BACKGROUND
+========================================== */
+
+html,
+body.page-messages,
+html.private-chat-open,
+body.page-messages.private-chat-open {
+
+  background: #FAF6E9 !important;
+  background-image: none !important;
+
+  color: #29251D !important;
+
+  color-scheme: light;
+
+}
+
+body.page-messages {
+
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  -webkit-tap-highlight-color: transparent;
+
+}
+
+body.page-messages .msg-shell {
+
+  background: #FAF6E9 !important;
+  background-image: none !important;
+
+}
+
+body.page-messages .msg-layout {
+
+  background: #FAF6E9 !important;
+
+}
+
+
+/* ==========================================
+   MESSAGES HEADER
+========================================== */
+
+body.page-messages .msg-topbar {
+
+  background: linear-gradient(
+    120deg,
+    #FFFDF7,
+    #F8EBC9
+  ) !important;
+
+  border-bottom: 1px solid #EAE0C8 !important;
+
+  box-shadow: none !important;
+
+}
+
+body.page-messages .msg-topbar::after {
+
+  display: none !important;
+
+}
+
+body.page-messages .msg-title h1 {
+
+  color: #29251D !important;
+
+  font-family: inherit !important;
+  font-size: 23px !important;
+  font-weight: 750 !important;
+
+  letter-spacing: -.5px;
+
+  text-shadow: none !important;
+
+}
+
+body.page-messages .msg-brand,
+body.page-messages .msg-title-line {
+
+  display: none !important;
+
+}
+
+
+/* ==========================================
+   HEADER ICONS
+========================================== */
+
+body.page-messages .msg-back,
+body.page-messages .msg-header-decoration {
+
+  width: 40px;
+  height: 40px;
+
+  display: grid !important;
+  place-items: center !important;
+
+  margin: 0;
+  padding: 0 !important;
+
+  background: #FFF9E9 !important;
+
+  color: #947025 !important;
+
+  border: 1px solid #E5D6B1 !important;
+  border-radius: 12px;
+
+  box-shadow: none !important;
+
+}
+
+body.page-messages .msg-back .msg-svg,
+body.page-messages .msg-header-decoration .msg-svg {
+
+  display: block !important;
+
+  width: 22px !important;
+  height: 22px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  position: static !important;
+  transform: none !important;
+
+  filter: none !important;
+
+}
+
+
+/* ==========================================
+   USER LIST PANEL
+========================================== */
+
+body.page-messages .msg-users {
+
+  background: #FAF6E9 !important;
+
+  border: none !important;
+
+  box-shadow: none !important;
+
+}
+
+body.page-messages .msg-users-title {
+
+  background: transparent !important;
+
+  border: none !important;
+
+  padding: 12px 15px !important;
+
+}
+
+body.page-messages .msg-users-title h2 {
+
+  color: #29251D !important;
+
+  font-family: inherit !important;
+  font-size: 18px;
+
+  font-weight: 700;
+
+}
+
+body.page-messages .msg-kicker,
+body.page-messages .msg-users-title p,
+body.page-messages .msg-section-icon {
+
+  display: none !important;
+
+}
+
+
+/* ==========================================
+   SEARCH FRIENDS
+========================================== */
+
+body.page-messages .msg-search-box {
+
+  min-height: 44px;
+  height: 44px;
+
+  margin: 12px 14px !important;
+
+  background: #FFFFFF !important;
+
+  color: #947025 !important;
+
+  border: 1px solid #EAE0C8 !important;
+  border-radius: 13px !important;
+
+  box-shadow: none !important;
+
+}
+
+body.page-messages .msg-search-box input {
+
+  background: transparent !important;
+
+  color: #29251D !important;
+
+  font-size: 16px !important;
+
+  box-shadow: none !important;
+
+}
+
+body.page-messages .msg-search-box input::placeholder {
+
+  color: #958B77 !important;
+
+  opacity: 1;
+
+}
+
+body.page-messages .msg-search-box:focus-within {
+
+  border-color: #C7A45E !important;
+
+}
+
+body.page-messages .msg-userlist {
+
+  background: transparent !important;
+
+  padding: 3px 12px 20px !important;
+
+  scrollbar-color: #D6C49C transparent;
+
+}
+
+
+/* ==========================================
+   FRIEND / MESSAGE CARD
+========================================== */
+
+body.page-messages .msg-user {
+
+  min-height: 72px !important;
+
+  margin-bottom: 8px !important;
+
+  padding: 11px 13px !important;
+
+  background: #FFFFFF !important;
+
+  color: #29251D !important;
+
+  border: 1px solid #EAE0C8 !important;
+  border-radius: 15px !important;
+
+  box-shadow:
+    0 2px 8px rgba(112,85,28,.035) !important;
+
+}
+
+body.page-messages .msg-user:hover {
+
+  background: #FFFDF7 !important;
+
+  border-color: #D6BD84 !important;
+
+}
+
+body.page-messages .msg-user:active {
+
+  background: #F8EBC9 !important;
+
+  transform: scale(.985);
+
+}
+
+
+/* AVATAR */
+
+body.page-messages .msg-ava {
+
+  width: 49px !important;
+  height: 49px !important;
+
+  flex: 0 0 49px !important;
+
+  padding: 2px;
+
+  background: #F8F3E6 !important;
+
+  border: 1.5px solid #E6D3A5 !important;
+  border-radius: 50%;
+
+  box-shadow: none !important;
+
+}
+
+
+/* USER NAME */
+
+body.page-messages .msg-uname {
+
+  color: #29251D !important;
+
+  font-size: 14px !important;
+  font-weight: 700 !important;
+
+  line-height: 1.4;
+
+}
+
+
+/* ONLINE / OFFLINE */
+
+body.page-messages .msg-ustatus {
+
+  color: #766D5B !important;
+
+  font-size: 11px;
+
+}
+
+body.page-messages .msg-ustatus.on {
+
+  color: #38835A !important;
+
+}
+
+body.page-messages .msg-ustatus.off {
+
+  color: #958B77 !important;
+
+}
+
+body.page-messages .msg-ustatus::before {
+
+  background: currentColor;
+
+  box-shadow: none !important;
+
+}
+
+body.page-messages .tick-blue {
+
+  color: #2684CE !important;
+
+}
+
+
+/* UNREAD MESSAGE BADGE */
+
+body.page-messages .msg-badge {
+
+  background: #B94B50 !important;
+
+  color: #FFFFFF !important;
+
+  box-shadow: none !important;
+
+}
+
+
+/* EMPTY LIST */
+
+body.page-messages .msg-userlist .empty,
+body.page-messages .msg-no-results {
+
+  color: #766D5B !important;
+
+  background: #FFFFFF !important;
+
+  border: 1px dashed #EAE0C8;
+
+  border-radius: 15px;
+
+}
+
+
+/* ==========================================
+   DESKTOP EMPTY CHAT PANEL
+========================================== */
+
+body.page-messages .msg-placeholder {
+
+  background: #FFFFFF !important;
+
+  border: 1px solid #EAE0C8 !important;
+
+  border-radius: 20px;
+
+  box-shadow: none !important;
+
+}
+
+body.page-messages .msg-empty-icon {
+
+  background: #F8EBC9 !important;
+
+  color: #947025 !important;
+
+  border: 1px solid #EAE0C8 !important;
+
+  box-shadow: none !important;
+
+}
+
+body.page-messages .msg-empty-text {
+
+  color: #766D5B !important;
+
+}
+
+body.page-messages .msg-empty-text strong {
+
+  color: #29251D !important;
+
+  font-family: inherit !important;
+
+  font-weight: 700;
+
+}
+
+
+/* ==========================================
+   PRIVATE CHAT - LIGHT THEME
+========================================== */
+
+body.page-messages #chatModal {
+
+  --pc-bg: #FAF6E9;
+  --pc-surface: #FFFFFF;
+  --pc-gold: #947025;
+  --pc-text: #29251D;
+  --pc-muted: #766D5B;
+  --pc-line: #EAE0C8;
+
+  background: #FAF6E9 !important;
+  background-image: none !important;
+
+  color: #29251D !important;
+
+  color-scheme: light;
+
+}
+
+body.page-messages #chatModal .private-chat-backdrop {
+
+  background: #FAF6E9 !important;
+
+}
+
+body.page-messages #chatModal .private-chat-panel,
+body.page-messages #chatModal .modal-card {
+
+  background: #FAF6E9 !important;
+  background-image: none !important;
+
+  color: #29251D !important;
+
+  border-color: #EAE0C8 !important;
+
+  box-shadow: none !important;
+
+}
+
+body.page-messages #chatModal .private-chat-content {
+
+  background: #FAF6E9 !important;
+
+}
+
+
+/* ==========================================
+   CHAT HEADER
+========================================== */
+
+body.page-messages #chatModal .chat-header {
+
+  background: linear-gradient(
+    120deg,
+    #FFFDF7,
+    #F8EBC9
+  ) !important;
+
+  color: #29251D !important;
+
+  border-bottom: 1px solid #EAE0C8 !important;
+
+  box-shadow: none !important;
+
+}
+
+body.page-messages #chatModal .chat-header-kicker {
+
+  display: none !important;
+
+}
+
+body.page-messages #chatModal #chatTitle {
+
+  color: #29251D !important;
+
+  font-size: 15px !important;
+  font-weight: 700 !important;
+
+}
+
+body.page-messages #chatModal .chat-header-avatar {
+
+  background: #FFFFFF !important;
+
+  border: 1.5px solid #E6D3A5 !important;
+
+  box-shadow: none !important;
+
+}
+
+
+/* CHAT BACK BUTTON */
+
+body.page-messages #chatModal .chat-back {
+
+  background: #FFFDF7 !important;
+
+  color: #947025 !important;
+
+  border: 1px solid #EAE0C8 !important;
+
+  border-radius: 11px;
+
+  box-shadow: none !important;
+
+}
+
+
+/* DELETE CONVERSATION BUTTON */
+
+body.page-messages #chatModal .chat-clear {
+
+  background: #FFF0ED !important;
+
+  color: #AF514A !important;
+
+  border: 1px solid #F0D9D3 !important;
+
+  border-radius: 11px;
+
+  box-shadow: none !important;
+
+}
+
+body.page-messages #chatModal .chat-back,
+body.page-messages #chatModal .chat-clear {
+
+  display: grid !important;
+
+  place-items: center !important;
+
+  padding: 0 !important;
+
+}
+
+
+/* ==========================================
+   CHAT BACKGROUND
+========================================== */
+
+body.page-messages #chatModal #chatBox,
+body.page-messages #chatModal #chatBox.chatbox {
+
+  background: #FAF6E9 !important;
+  background-image: none !important;
+
+  color: #29251D !important;
+
+  scrollbar-color: #D6C49C transparent;
+
+}
+
+
+/* ==========================================
+   CHAT MESSAGE BUBBLES
+========================================== */
+
+body.page-messages #chatModal .bubble-text {
+
+  font-size: 14px !important;
+
+  font-weight: 400;
+
+  line-height: 1.55 !important;
+
+  padding: 10px 14px !important;
+
+  border-radius: 16px !important;
+
+  box-shadow: none !important;
+
+  overflow-wrap: anywhere;
+
+}
+
+
+/* MY MESSAGES - CHAMPAGNE GOLD */
+
+body.page-messages #chatModal .bubble-text.me {
+
+  background: #F1DDA6 !important;
+
+  color: #40331C !important;
+
+  border: 1px solid #E8D099 !important;
+
+  border-bottom-right-radius: 5px !important;
+
+}
+
+
+/* RECEIVED MESSAGES - WHITE */
+
+body.page-messages #chatModal .bubble-text.other {
+
+  background: #FFFFFF !important;
+
+  color: #29251D !important;
+
+  border: 1px solid #EAE0C8 !important;
+
+  border-bottom-left-radius: 5px !important;
+
+}
+
+
+/* MESSAGE TIME */
+
+body.page-messages #chatModal .chat-time {
+
+  color: #766D5B !important;
+
+  font-size: 10px !important;
+
+}
+
+
+/* MESSAGE STATUS */
+
+body.page-messages #chatModal .msg-status {
+
+  color: #947025 !important;
+
+}
+
+
+/* UNSENT MESSAGE */
+
+body.page-messages .msg-revoked {
+
+  background: #F5EFDF !important;
+
+  color: #766D5B !important;
+
+  border: 1px dashed #DCCDAA !important;
+
+  border-radius: 12px;
+
+}
+
+
+/* SYSTEM MESSAGE */
+
+body.page-messages .chat-system {
+
+  background: #F8EBC9 !important;
+
+  color: #765717 !important;
+
+  border: 1px solid #EAE0C8;
+
+  box-shadow: none !important;
+
+}
+
+
+/* ==========================================
+   IMAGE / VIDEO / ALBUM
+========================================== */
+
+body.page-messages #chatModal .chat-img,
+body.page-messages #chatModal .chat-video,
+body.page-messages #chatModal .chat-album {
+
+  border-color: #EAE0C8 !important;
+
+  border-radius: 14px;
+
+  box-shadow: none !important;
+
+}
+
+body.page-messages .album-item {
+
+  background: #F8F3E6;
+
+}
+
+body.page-messages .album-more {
+
+  background: rgba(41,37,29,.55) !important;
+
+  color: #FFFFFF !important;
+
+}
+
+
+/* ==========================================
+   LOCATION MESSAGE
+========================================== */
+
+body.page-messages .location-card {
+
+  background: #FFFFFF !important;
+
+  color: #29251D !important;
+
+  border: 1px solid #EAE0C8 !important;
+
+  border-radius: 14px;
+
+}
+
+body.page-messages .location-title {
+
+  color: #29251D !important;
+
+}
+
+body.page-messages .location-coords {
+
+  color: #766D5B !important;
+
+}
+
+body.page-messages .location-open {
+
+  background: #F8EBC9 !important;
+
+  color: #765717 !important;
+
+  padding: 7px 10px;
+
+  border-radius: 8px;
+
+  font-weight: 600;
+
+}
+
+
+/* ==========================================
+   SCROLL TO BOTTOM
+========================================== */
+
+body.page-messages #chatModal #btnScrollBottom {
+
+  background: #FFFFFF !important;
+
+  color: #947025 !important;
+
+  border: 1px solid #EAE0C8 !important;
+
+  box-shadow:
+    0 4px 15px rgba(112,85,28,.12) !important;
+
+}
+
+body.page-messages #btnScrollBottom .scroll-dot {
+
+  background: #B94B50 !important;
+
+}
+
+
+/* ==========================================
+   MESSAGE COMPOSER
+========================================== */
+
+body.page-messages #chatModal .chatform {
+
+  background: #FFFFFF !important;
+  background-image: none !important;
+
+  border-top: 1px solid #EAE0C8 !important;
+
+  box-shadow: none !important;
+
+}
+
+
+/* MEDIA TOOLS */
+
+body.page-messages #chatModal .chat-tools {
+
+  background: transparent !important;
+
+  gap: 5px;
+
+}
+
+body.page-messages #chatModal .chat-tool {
+
+  background: #F8F3E6 !important;
+
+  color: #947025 !important;
+
+  border: 1px solid #EAE0C8 !important;
+
+  border-radius: 10px !important;
+
+  box-shadow: none !important;
+
+}
+
+body.page-messages #chatModal .chat-tool .msg-svg {
+
+  display: block !important;
+
+  color: #947025 !important;
+
+  stroke: currentColor;
+
+  margin: 0;
+  padding: 0;
+
+  filter: none !important;
+
+}
+
+body.page-messages #chatModal .chat-tool:active {
+
+  background: #F1DDA6 !important;
+
+}
+
+body.page-messages #chatModal .tool-sub {
+
+  display: none !important;
+
+}
+
+
+/* ==========================================
+   MESSAGE INPUT
+========================================== */
+
+body.page-messages #chatModal #msgInput {
+
+  background: #F8F3E6 !important;
+
+  color: #29251D !important;
+
+  border: 1px solid #EAE0C8 !important;
+
+  border-radius: 22px !important;
+
+  font-size: 16px !important;
+
+  box-shadow: none !important;
+
+  caret-color: #947025;
+
+}
+
+body.page-messages #chatModal #msgInput::placeholder {
+
+  color: #958B77 !important;
+
+  opacity: 1 !important;
+
+}
+
+body.page-messages #chatModal #msgInput:focus {
+
+  border-color: #C7A45E !important;
+
+  outline: none !important;
+
+}
+
+
+/* ==========================================
+   SEND BUTTON
+========================================== */
+
+body.page-messages #chatModal #sendBtn {
+
+  display: grid !important;
+
+  place-items: center !important;
+
+  background: linear-gradient(
+    145deg,
+    #F8E8B9,
+    #E8CA80
+  ) !important;
+
+  color: #654B17 !important;
+
+  border: 1px solid #DFC58C !important;
+
+  border-radius: 13px !important;
+
+  box-shadow: none !important;
+
+}
+
+body.page-messages #chatModal #sendBtn .msg-svg {
+
+  display: block;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  transform: none !important;
+
+  filter: none !important;
+
+}
+
+body.page-messages #chatModal #sendBtn:disabled {
+
+  opacity: .45;
+
+}
+
+
+/* ==========================================
+   SYSTEM CONFIRM MODAL
+========================================== */
+
+body.page-messages #sysModal {
+
+  background: rgba(41,37,29,.40) !important;
+
+}
+
+body.page-messages #sysModal .sys-box {
+
+  background: #FFFDF8 !important;
+
+  color: #29251D !important;
+
+  border: 1px solid #EAE0C8 !important;
+
+  border-radius: 22px !important;
+
+  box-shadow:
+    0 16px 45px rgba(41,37,29,.15) !important;
+
+}
+
+body.page-messages #sysModal #sysText {
+
+  color: #29251D !important;
+
+  font-size: 14px;
+
+  line-height: 1.6;
+
+}
+
+body.page-messages #sysModal #sysCancel {
+
+  background: #F5EFDF !important;
+
+  color: #514A3D !important;
+
+  border: 1px solid #EAE0C8 !important;
+
+  box-shadow: none !important;
+
+}
+
+body.page-messages #sysModal #sysOk {
+
+  background: #EED69A !important;
+
+  color: #654B17 !important;
+
+  border: 1px solid #DFC58C !important;
+
+  box-shadow: none !important;
+
+}
+
+
+/* ==========================================
+   IMAGE VIEWER
+========================================== */
+
+body.page-messages #imgZoom {
+
+  background: #FAF6E9 !important;
+
+}
+
+body.page-messages #imgZoom .img-zoom-backdrop {
+
+  background: #FAF6E9 !important;
+
+}
+
+body.page-messages #imgZoom .img-close,
+body.page-messages #imgZoom .img-nav {
+
+  background: #FFFFFF !important;
+
+  color: #947025 !important;
+
+  border: 1px solid #EAE0C8 !important;
+
+  box-shadow: none !important;
+
+}
+
+body.page-messages #imgZoom .img-zoom-indicator {
+
+  background: #F8EBC9 !important;
+
+  color: #654B17 !important;
+
+}
+
+
+/* ==========================================
+   NEW MESSAGE TOAST
+   OVERRIDE JAVASCRIPT INLINE STYLE
+========================================== */
+
+body.page-messages .msg-toast {
+
+  background: #FFFFFF !important;
+
+  color: #29251D !important;
+
+  border: 1px solid #EAE0C8 !important;
+
+  border-radius: 16px !important;
+
+  box-shadow:
+    0 6px 25px rgba(112,85,28,.15) !important;
+
+}
+
+body.page-messages .msg-toast .toast-name {
+
+  color: #29251D !important;
+
+  font-weight: 700;
+
+}
+
+body.page-messages .msg-toast .toast-text {
+
+  color: #766D5B !important;
+
+}
+
+body.page-messages .msg-toast .toast-ava {
+
+  border: 1.5px solid #E6D3A5;
+
+}
+
+
+/* ==========================================
+   MOBILE FULLSCREEN BACKGROUND FIX
+========================================== */
+
+@media (max-width: 700px) {
+
+  html.private-chat-open,
+  body.page-messages.private-chat-open {
+
+    background: #FAF6E9 !important;
+
+  }
+
+  body.page-messages #chatModal {
+
+    background: #FAF6E9 !important;
+
+  }
+
+  body.page-messages #chatModal .private-chat-backdrop {
+
+    background: #FAF6E9 !important;
+
+  }
+
+  body.page-messages #chatModal .private-chat-panel {
+
+    background: #FAF6E9 !important;
+
+  }
+
+  body.page-messages .msg-layout {
+
+    padding: 0 !important;
+
+  }
+
+  body.page-messages #chatModal .chatform {
+
+    background: #FFFFFF !important;
+
+  }
+
+  body.page-messages #chatModal.keyboard-open {
+
+    background: #FAF6E9 !important;
+
+  }
+
+  body.page-messages #chatModal.keyboard-open .chatform {
+
+    background: #FFFFFF !important;
+
+  }
+
+}
+
+
+/* ==========================================
+   SMALL MOBILE OPTIMIZATION
+========================================== */
+
+@media (max-width: 370px) {
+
+  body.page-messages .msg-user {
+
+    padding: 10px !important;
+
+  }
+
+  body.page-messages #chatModal .chat-tools {
+
+    gap: 3px !important;
+
+  }
+
+  body.page-messages #chatModal .chat-tool {
+
+    width: 29px !important;
+
+  }
+
+  body.page-messages #chatModal .bubble-text {
+
+    font-size: 13px !important;
+
+  }
+
+}
+
+
+/* ==========================================
+   ACCESSIBILITY
+========================================== */
+
+body.page-messages button:focus-visible {
+
+  outline: 2px solid #B6944C;
+
+  outline-offset: 2px;
+
+}
+
+</style>
+
 
 
 </head>

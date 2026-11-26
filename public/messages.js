@@ -1073,8 +1073,10 @@ function showMessageToast({ name, text, avatar, uid }) {
     left: "50%",
     bottom: "90px",
     transform: "translateX(-50%)",
-    background: "rgba(0,0,0,.88)",
-    color: "#fff",
+
+    background: "#FFFFFF",
+    color: "#29251D",
+
     borderRadius: "14px",
     padding: "10px 14px",
     display: "flex",
@@ -1082,7 +1084,8 @@ function showMessageToast({ name, text, avatar, uid }) {
     alignItems: "center",
     maxWidth: "90%",
     zIndex: 9999,
-    boxShadow: "0 0 18px rgba(255,59,107,.6)",
+    boxShadow: "0 6px 25px rgba(112,85,28,.15)",
+    border: "1px solid #EAE0C8",
     cursor: "pointer"
   });
 
