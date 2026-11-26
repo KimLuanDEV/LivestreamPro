@@ -3525,6 +3525,128 @@ body.lobby-page .lobby-private-lock {
 
 
 
+/* ==========================================
+   FRIENDS LIVE - MINIMAL EMPTY STATE
+========================================== */
+
+body.lobby-page #empty.log {
+
+  width: calc(100% - 32px);
+  max-width: 420px;
+
+  margin: 35px auto;
+  padding: 35px 15px;
+
+  text-align: center;
+
+  border: none;
+  border-radius: 0;
+
+  background: transparent;
+  box-shadow: none;
+
+}
+
+#empty .live-empty-icon {
+
+  display: grid;
+  place-items: center;
+
+  width: 76px;
+  height: 76px;
+
+  margin: 0 auto 18px;
+
+  border: 1px solid rgba(223,190,131,.12);
+  border-radius: 50%;
+
+  background: radial-gradient(
+    circle,
+    rgba(223,190,131,.10),
+    rgba(223,190,131,.025)
+  );
+
+  color: #dfbe83;
+
+}
+
+#empty .live-empty-icon svg {
+
+  width: 33px;
+  height: 33px;
+
+}
+
+#empty strong {
+
+  display: block;
+
+  color: #f1e5cf;
+
+  font-size: 16px;
+  font-weight: 650;
+
+  letter-spacing: .2px;
+
+}
+
+#empty p {
+
+  margin: 8px 0 21px;
+
+  color: #92929c;
+
+  font-size: 12px;
+  line-height: 1.5;
+
+}
+
+#btnEmptyFindFriends {
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  min-height: 39px;
+  padding: 9px 19px;
+
+  border: none;
+  border-radius: 999px;
+
+  background: linear-gradient(
+    135deg,
+    #f0d9ac,
+    #c49b5e
+  );
+
+  color: #302317;
+
+  font-size: 12px;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition: transform .15s ease;
+
+}
+
+#btnEmptyFindFriends svg {
+
+  width: 17px;
+  height: 17px;
+
+}
+
+#btnEmptyFindFriends:active {
+
+  transform: scale(.95);
+
+}
+
+
+
 
 
 </style>
@@ -3789,7 +3911,57 @@ body.lobby-page .lobby-private-lock {
 
   <div id="grid" class="lobby-grid"></div>
 
-  <div id="empty" class="log">Chưa có phòng nào đang live.</div>
+  <!-- FRIENDS LIVE - EMPTY STATE -->
+
+<div id="empty" class="log">
+
+  <div class="live-empty-icon">
+
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true">
+
+      <path d="m2 2 20 20"/>
+      <path d="M10 10H3v9h12v-4"/>
+      <path d="M3 6h12v5l6-4v10"/>
+
+    </svg>
+
+  </div>
+
+  <strong>No friends live</strong>
+
+  <p>Live rooms are friends-only.</p>
+
+  <button
+    type="button"
+    id="btnEmptyFindFriends">
+
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true">
+
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M2 21v-2a7 7 0 0 1 14 0v2"/>
+      <path d="M19 8v6M16 11h6"/>
+
+    </svg>
+
+    Find Friends
+
+  </button>
+
+</div>
 
       <!-- skeleton loading -->
   <div id="skeleton" class="lobby-grid" style="display:none"></div>
@@ -6427,6 +6599,17 @@ function closeMsg(){
 
 
 const btnPlayerLobby = document.getElementById("btnPlayerLobby");
+
+/* FIND FRIENDS - EMPTY LIVE LOBBY */
+
+document.getElementById("btnEmptyFindFriends")
+  ?.addEventListener("click", () => {
+
+    btnPlayerLobby?.click();
+
+  });
+
+
 const playerLobby = document.getElementById("playerLobby");
 const closePlayerLobby = document.getElementById("closePlayerLobby");
 
@@ -7250,8 +7433,7 @@ playerSearch?.addEventListener("input", e=>{
     "Chọn phòng để xem và tham gia trò chuyện.":
       "Choose a LIVE room to watch and join the conversation.",
 
-    "Chưa có phòng nào đang live.":
-      "No LIVE rooms are available right now.",
+
 
     "Phòng live": "LIVE Rooms",
     "Cập nhật": "Updated",
