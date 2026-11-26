@@ -1087,14 +1087,25 @@ loadFriendRequestCount();
 const avatarInput = document.getElementById("avatarInput");
 const btnChangeAvatar = document.getElementById("btnChangeAvatar");
 
-document.querySelector(".avatar-wrap").onclick = () => {
+/* ==========================================
+   PROFILE - CHANGE AVATAR BUTTON
+========================================== */
 
-   // 🚫 ĐANG XEM PROFILE NGƯỜI KHÁC → KHÔNG ĐỔI AVATAR
-  if (viewUid && viewUid !== __profileAuth.uid) return;
+const profileAvatarCamera =
+  document.querySelector(".avatar-camera");
 
-  avatarInput.click();
-};
+if (profileAvatarCamera) {
 
+  profileAvatarCamera.onclick = (e) => {
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (viewUid && viewUid !== __profileAuth.uid) return;
+
+    avatarInput.click();
+  };
+}
 
 avatarInput.onchange = async () => {
 
@@ -1828,9 +1839,14 @@ if (coverPreview){
 }
 
 
-// 🔒 ẨN ICON CAMERA KHI XEM PROFILE NGƯỜI KHÁC
-document.querySelectorAll(".avatar-camera").forEach(el=>{
-  el.style.display = "none";
+// Only hide camera when viewing another profile
+document.querySelectorAll(".avatar-camera").forEach(el => {
+
+  el.style.display =
+    viewUid && viewUid !== __profileAuth.uid
+      ? "none"
+      : "";
+
 });
 
 
@@ -3458,3 +3474,118 @@ if (document.readyState === "loading") {
   initializeProfileEnglish();
 
 }
+
+
+/* ==========================================
+   PROFILE - FULLSCREEN IMAGE VIEWER V1.0
+========================================== */
+
+(function initProfileImageViewer() {
+
+  const viewer =
+    document.getElementById("profileImageViewer");
+
+  const viewerImg =
+    document.getElementById("profileImageViewerImg");
+
+  const closeBtn =
+    document.getElementById("profileImageViewerClose");
+
+  const avatar =
+    document.getElementById("avatarPreview");
+
+  const cover =
+    document.getElementById("coverPreview");
+
+  if (!viewer || !viewerImg || !closeBtn) return;
+
+  let previousFocus = null;
+
+  // OPEN IMAGE
+  function openImage(source) {
+
+    if (!source) return;
+
+    const url = source.currentSrc || source.src;
+
+    if (!url) return;
+
+    previousFocus = document.activeElement;
+
+    viewerImg.src = url;
+    viewerImg.alt = source.alt || "Profile image";
+
+    viewer.hidden = false;
+    viewer.setAttribute("aria-hidden", "false");
+
+    closeBtn.focus({ preventScroll: true });
+  }
+
+  // CLOSE IMAGE
+  function closeImage() {
+
+    if (viewer.hidden) return;
+
+    viewer.hidden = true;
+    viewer.setAttribute("aria-hidden", "true");
+
+    viewerImg.removeAttribute("src");
+
+    if (previousFocus) {
+      previousFocus.focus({ preventScroll: true });
+    }
+  }
+
+  // BIND IMAGE EVENTS
+  function bindImage(image, label) {
+
+    if (!image) return;
+
+    image.tabIndex = 0;
+    image.setAttribute("role", "button");
+    image.setAttribute("aria-label", label);
+
+    image.addEventListener("click", (e) => {
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      openImage(image);
+    });
+
+    image.addEventListener("keydown", (e) => {
+
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openImage(image);
+      }
+    });
+  }
+
+  // AVATAR
+  bindImage(avatar, "View profile avatar");
+
+  // COVER
+  bindImage(cover, "View profile cover");
+
+  // CLOSE BUTTON
+  closeBtn.addEventListener("click", closeImage);
+
+  // TAP OUTSIDE TO CLOSE
+  viewer.addEventListener("click", (e) => {
+
+    if (e.target === viewer) {
+      closeImage();
+    }
+  });
+
+  // ESC KEY
+  document.addEventListener("keydown", (e) => {
+
+    if (e.key === "Escape" && !viewer.hidden) {
+      closeImage();
+    }
+  });
+
+})();
+

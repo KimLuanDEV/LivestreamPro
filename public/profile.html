@@ -17533,6 +17533,115 @@ body.page-profile .transfer-history-card {
 
 
 
+/* ==========================================
+   PROFILE - FULLSCREEN IMAGE VIEWER
+========================================== */
+
+body.page-profile #avatarPreview,
+body.page-profile #coverPreview {
+  cursor: zoom-in !important;
+  pointer-events: auto !important;
+  touch-action: manipulation;
+}
+
+body.page-profile .avatar-camera {
+  cursor: pointer;
+  pointer-events: auto !important;
+  z-index: 10;
+}
+
+/* Fullscreen black background */
+body.page-profile #profileImageViewer {
+  position: fixed !important;
+  inset: 0 !important;
+
+  width: 100%;
+  height: 100dvh;
+
+  z-index: 2147483647 !important;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, .98);
+
+  padding: 0;
+  margin: 0;
+
+  overflow: hidden;
+  overscroll-behavior: contain;
+  touch-action: none;
+
+  animation: profileViewerFade .2s ease-out;
+}
+
+body.page-profile #profileImageViewer[hidden] {
+  display: none !important;
+}
+
+/* Full-size image */
+body.page-profile #profileImageViewerImg {
+  display: block;
+
+  width: auto !important;
+  height: auto !important;
+
+  max-width: 100% !important;
+  max-height: 88dvh !important;
+
+  object-fit: contain !important;
+
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+
+  animation: profileImageZoom .22s ease-out;
+}
+
+/* Close button */
+body.page-profile #profileImageViewerClose {
+  position: absolute;
+
+  top: calc(env(safe-area-inset-top, 0px) + 14px);
+  right: 14px;
+
+  width: 42px !important;
+  height: 42px !important;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+
+  color: #fff;
+  cursor: pointer;
+
+  z-index: 2;
+}
+
+@keyframes profileViewerFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes profileImageZoom {
+  from {
+    opacity: 0;
+    transform: scale(.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+
+
 
   </style>
 </head>
@@ -18741,7 +18850,43 @@ body.page-profile .transfer-history-card {
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/chat-global.js"></script>
-<script src="/profile.js?v=20261126-2"></script>
+
+
+
+<!-- ==========================================
+     PROFILE - FULLSCREEN IMAGE VIEWER
+========================================== -->
+
+<div id="profileImageViewer"
+     class="profile-image-viewer"
+     role="dialog"
+     aria-modal="true"
+     aria-hidden="true"
+     aria-label="Image viewer"
+     hidden>
+
+  <button id="profileImageViewerClose"
+          class="profile-image-viewer-close"
+          type="button"
+          aria-label="Close image">
+    <svg width="26" height="26"
+         viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="1.8"
+         stroke-linecap="round">
+      <path d="M6 6L18 18M18 6L6 18"/>
+    </svg>
+  </button>
+
+  <img id="profileImageViewerImg"
+       alt="Full size image">
+
+</div>
+
+
+
+<script src="/profile.js?v=20261126-3"></script>
 <script src="/push-init.js"></script>
 <script src="/app-entry-guard.js"></script>
 
