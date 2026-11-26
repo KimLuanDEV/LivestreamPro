@@ -166,7 +166,7 @@ function checkRentAffordable(){
   if(selectedPlan.trial){
   btn.disabled = false;
   btn.classList.remove("disabled");
-  btn.textContent = "Start Free Trial";
+  bbtn.textContent = "Start Trial";
   if(topupBtn) topupBtn.classList.add("hidden");
   priceVal.classList.remove("rent-price-over");
   return;
@@ -185,7 +185,7 @@ function checkRentAffordable(){
   }else{
     btn.disabled = false;
     btn.classList.remove("disabled");
-    btn.textContent = "Rent a Booth";
+    btn.textContent = "Rent";
 
     if(topupBtn){
       topupBtn.classList.add("hidden");
@@ -284,8 +284,9 @@ function renderMarketTabs(totalBooths){
   for(let i = 0; i < totalTabs; i++){
     const btn = document.createElement("button");
     btn.className = "market-tab" + (i === currentTab ? " active" : "");
-    btn.textContent =
-  `Booths ${i * BOOTHS_PER_TAB + 1}–${Math.min(
+   
+btn.textContent =
+  `${i * BOOTHS_PER_TAB + 1} – ${Math.min(
     (i + 1) * BOOTHS_PER_TAB,
     totalBooths
   )}`;
@@ -343,14 +344,12 @@ if (!b.owner) {
     <div class="booth-card-content">
 
       <div class="booth-index">
-        BOOTH ${String(b.id).padStart(2, "0")}
+        ${String(b.id).padStart(2, "0")}
       </div>
 
       <div class="booth-plus">+</div>
 
-      <div class="booth-text">
-        Rent a Booth
-      </div>
+     <div class="booth-text">Rent</div>
 
       <div class="booth-hint">
         Create your own space
@@ -444,7 +443,7 @@ div.innerHTML = `
   <div class="booth-card-content">
 
     <div class="booth-index">
-      BOOTH ${String(b.id).padStart(2, "0")}
+      ${String(b.id).padStart(2, "0")}
     </div>
 
     <div class="booth-logo-shell">
@@ -559,7 +558,7 @@ function updateMarketStats() {
   if (el) {
 
     el.textContent =
-      `${total} booths · ${active} occupied · ${empty} available`;
+  `${active} occupied · ${empty} available`;
 
   }
 

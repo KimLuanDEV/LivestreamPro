@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Livestream Pro • Market</title>
 
 <!-- BROWSER ICON -->
@@ -1884,6 +1885,796 @@ body.market-page #lpModal .btn.primary {
 }
 
 
+/* ==========================================
+   MARKET V3.0 - MINIMAL BLACK & GOLD
+========================================== */
+
+body.market-page {
+  --mk-gold: #d9b979;
+  --mk-light: #f5f5f7;
+  --mk-border: rgba(255,255,255,.07);
+  --mk-muted: #96989f;
+
+  background: #101114 !important;
+  color: #f5f5f7;
+}
+
+/* ===== REMOVE EXTRA TEXT ===== */
+
+body.market-page .market-eyebrow,
+body.market-page .market-description,
+body.market-page .market-intro,
+body.market-page .market-stats-label,
+body.market-page .booth-hint {
+  display: none !important;
+}
+
+/* ==========================================
+   HEADER
+========================================== */
+
+body.market-page .market-header {
+  padding:
+    calc(12px + env(safe-area-inset-top,0px))
+    16px
+    0;
+
+  background: #101114 !important;
+
+  border: none;
+  border-bottom: 1px solid #25262b;
+
+  box-shadow: none;
+}
+
+body.market-page .market-header-inner {
+  padding: 0 0 8px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+body.market-page .market-title {
+  margin: 0;
+
+  font-family: inherit;
+  font-size: 25px;
+  font-weight: 750;
+  letter-spacing: -.5px;
+
+  color: #f5f5f7;
+}
+
+/* MARKET ICON */
+
+body.market-page .market-brand-seal {
+  width: 40px;
+  height: 40px;
+
+  flex: 0 0 40px;
+
+  display: grid;
+  place-items: center;
+
+  background: transparent;
+
+  border: none;
+  border-radius: 0;
+
+  box-shadow: none;
+  color: #d9b979;
+}
+
+body.market-page .market-brand-seal .mk-icon {
+  width: 27px;
+  height: 27px;
+}
+
+/* STATISTICS */
+
+body.market-page .market-stats-row {
+  justify-content: flex-start;
+
+  padding: 2px 0 13px;
+
+  border: none;
+}
+
+body.market-page #marketStats {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  margin: 0;
+
+  color: #a4a6ae;
+
+  font-size: 12px;
+  font-weight: 500;
+}
+
+body.market-page #marketStats::before {
+  content: "";
+
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+  background: #92949c;
+}
+
+/* ==========================================
+   MARKET TABS
+========================================== */
+
+body.market-page .market-tabs {
+  padding: 13px 14px 5px;
+
+  gap: 8px;
+}
+
+body.market-page .market-tab {
+  min-width: 76px;
+  min-height: 36px;
+
+  padding: 8px 17px;
+
+  border: none;
+  border-radius: 9px;
+
+  background: #22242a;
+  color: #a7a9b1;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  box-shadow: none;
+}
+
+body.market-page .market-tab.active {
+  border: none;
+
+  background: #d9b979;
+  color: #19150f;
+
+  box-shadow: none;
+}
+
+/* ==========================================
+   BOOTH GRID
+========================================== */
+
+body.market-page #marketFloor {
+  width: 100%;
+  max-width: 1100px;
+
+  margin: 0 auto;
+
+  padding:
+    10px
+    14px
+    calc(80px + env(safe-area-inset-bottom,0px));
+
+  grid-template-columns:
+    repeat(4,minmax(0,1fr));
+
+  gap: 10px;
+}
+
+/* BOOTH CARD */
+
+body.market-page .booth {
+  position: relative;
+
+  aspect-ratio: auto;
+
+  min-height: 160px;
+
+  padding: 28px 12px 20px;
+
+  border: 1px solid #292b31;
+  border-radius: 14px;
+
+  background: #1a1c21;
+  color: #f5f5f7;
+
+  box-shadow: none;
+  animation: none;
+
+  transition: background .15s ease;
+}
+
+body.market-page .booth::before {
+  display: none;
+}
+
+body.market-page .booth:hover {
+  transform: none;
+
+  background: #202228;
+  border-color: #383a42;
+
+  box-shadow: none;
+}
+
+body.market-page .booth:active {
+  transform: scale(.98);
+}
+
+/* BOOTH NUMBER */
+
+body.market-page .booth-index {
+  position: absolute;
+
+  top: 10px;
+  left: 12px;
+
+  margin: 0;
+
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0;
+
+  color: #858790;
+}
+
+/* STORE LOGO */
+
+body.market-page .booth-logo-shell {
+  width: 72px;
+  height: 72px;
+
+  margin: 0 auto;
+
+  border: none;
+  border-radius: 16px;
+
+  background: #292b31;
+
+  box-shadow: none;
+}
+
+body.market-page .booth-logo {
+  width: 100%;
+  height: 100%;
+
+  border: none;
+  border-radius: 16px;
+
+  object-fit: cover;
+
+  box-shadow: none;
+}
+
+body.market-page .booth:hover .booth-logo {
+  transform: none;
+}
+
+body.market-page .booth-placeholder {
+  color: #d9b979;
+
+  font-family: inherit;
+  font-size: 24px;
+  font-weight: 650;
+}
+
+/* STORE NAME */
+
+body.market-page .booth-name {
+  width: 100%;
+  max-width: 100%;
+
+  margin-top: 11px;
+
+  color: #f5f5f7;
+
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: 0;
+
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ==========================================
+   EMPTY BOOTH
+========================================== */
+
+body.market-page .booth.empty {
+  border: 1px dashed #383a42;
+  background: #15161a;
+
+  box-shadow: none;
+}
+
+body.market-page .booth.empty:hover {
+  background: #1c1e23;
+  border-color: #d9b979;
+
+  box-shadow: none;
+}
+
+body.market-page .booth-plus {
+  display: grid;
+  place-items: center;
+
+  width: 48px;
+  height: 48px;
+
+  margin: 5px auto;
+
+  border-radius: 50%;
+
+  background: #24262c;
+
+  color: #d9b979;
+
+  font-size: 29px;
+  font-weight: 400;
+
+  text-shadow: none;
+}
+
+body.market-page .booth-text {
+  margin-top: 8px;
+
+  color: #a7a9b1;
+
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ==========================================
+   MY BOOTH
+========================================== */
+
+body.market-page .booth.booth-mine {
+  border: 1px solid #b49a65;
+
+  background: #211f1b;
+
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+body.market-page .booth-mine-badge {
+  top: 8px;
+  right: 8px;
+
+  padding: 4px 7px;
+
+  background: rgba(217,185,121,.12);
+  color: #d9b979;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  border-radius: 6px;
+
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+/* EXPIRATION */
+
+body.market-page .booth-expire-badge {
+  bottom: 6px;
+  left: 8px;
+
+  padding: 3px 7px;
+
+  background: #392e20;
+  color: #e7bd79;
+
+  font-size: 9px;
+  font-weight: 600;
+
+  border-radius: 6px;
+
+  box-shadow: none;
+}
+
+body.market-page .booth-expire-badge.danger {
+  background: #382326;
+  color: #ee999e;
+
+  box-shadow: none;
+}
+
+/* ADMIN BUTTONS */
+
+body.market-page .booth-admin {
+  position: static;
+
+  display: flex;
+  justify-content: center;
+
+  gap: 5px;
+}
+
+body.market-page .booth:has(.booth-admin) {
+  flex-direction: column;
+  gap: 10px;
+
+  min-height: 190px;
+
+  padding-bottom: 28px;
+}
+
+body.market-page .booth-admin button {
+  padding: 6px 9px;
+
+  background: #2b2d33;
+  color: #d9dadd;
+
+  border: none;
+  border-radius: 6px;
+
+  font-size: 10px;
+
+  box-shadow: none;
+}
+
+/* LOCKED BOOTH */
+
+body.market-page .booth.booth-locked::after {
+  backdrop-filter: none;
+
+  background: rgba(0,0,0,.65);
+
+  font-size: 26px;
+}
+
+/* ==========================================
+   BOTTOM NAVIGATION
+========================================== */
+
+body.market-page .lp-tabbar {
+  height: calc(
+    58px + env(safe-area-inset-bottom,0px)
+  );
+
+  padding:
+    0
+    0
+    env(safe-area-inset-bottom,0px);
+
+  background: #101114 !important;
+
+  border: none;
+  border-top: 1px solid #25262b;
+  border-radius: 0;
+
+  box-shadow: none;
+}
+
+body.market-page .lp-tabbar .lp-tab {
+  height: 100%;
+
+  background: transparent;
+
+  border: none;
+  border-radius: 0;
+
+  color: #898b94;
+
+  font-size: 10px;
+  font-weight: 500;
+
+  box-shadow: none;
+}
+
+body.market-page .lp-tabbar .lp-tab.active {
+  background: transparent;
+
+  color: #d9b979;
+
+  border: none;
+}
+
+body.market-page .lp-tab .mk-icon {
+  width: 24px;
+  height: 24px;
+
+  filter: none !important;
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media (max-width: 850px) {
+
+  body.market-page #marketFloor {
+    grid-template-columns:
+      repeat(3,minmax(0,1fr));
+  }
+
+}
+
+@media (max-width: 600px) {
+
+  body.market-page #marketFloor {
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+
+    padding-left: 12px;
+    padding-right: 12px;
+
+    gap: 10px;
+  }
+
+  body.market-page .booth {
+    min-height: 142px;
+
+    padding: 25px 10px 18px;
+  }
+
+  body.market-page .booth-logo-shell {
+    width: 64px;
+    height: 64px;
+  }
+
+}
+
+@media (max-width: 360px) {
+
+  body.market-page .booth {
+    min-height: 132px;
+  }
+
+  body.market-page .booth-logo-shell {
+    width: 56px;
+    height: 56px;
+  }
+
+  body.market-page .booth-name {
+    font-size: 13px;
+  }
+
+}
+
+
+/* ==========================================
+   RENT MODAL V3.0 - MINIMAL
+========================================== */
+
+body.market-page .rent-kicker,
+body.market-page .rent-header p,
+body.market-page .lp-modal-kicker,
+body.market-page .rent-save {
+  display: none !important;
+}
+
+body.market-page #rentBackdrop {
+  background: rgba(0,0,0,.75);
+
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.market-page .rent-modal {
+  max-width: 390px;
+
+  background: #17181d;
+
+  border: 1px solid #303137;
+  border-radius: 18px;
+
+  box-shadow: none;
+}
+
+body.market-page .rent-modal::before {
+  display: none;
+}
+
+/* HEADER */
+
+body.market-page .rent-header {
+  align-items: center;
+
+  padding: 14px 16px;
+
+  border-bottom: 1px solid #292b31;
+}
+
+body.market-page .rent-header h2 {
+  margin: 0;
+
+  font-family: inherit;
+  font-size: 19px;
+  font-weight: 700;
+
+  color: #f5f5f7;
+}
+
+body.market-page #closeRent {
+  border: none;
+
+  background: transparent;
+  color: #96989f;
+
+  box-shadow: none;
+}
+
+body.market-page .rent-body {
+  padding: 15px 16px 18px;
+}
+
+/* BOOTH */
+
+body.market-page .rent-slot {
+  padding: 0 2px;
+  margin-bottom: 14px;
+
+  background: transparent;
+  border: none;
+}
+
+body.market-page .rent-slot span {
+  color: #96989f;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  letter-spacing: 0;
+}
+
+body.market-page .rent-slot strong {
+  font-size: 16px;
+  color: #f5f5f7;
+}
+
+/* PLANS */
+
+body.market-page .rent-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+
+  color: #a7a9b1;
+}
+
+body.market-page .rent-options {
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+body.market-page .rent-option,
+body.market-page .rent-option.trial {
+  min-height: 76px;
+
+  justify-content: center;
+
+  padding: 12px;
+
+  background: #22242a;
+
+  border: 1px solid #303238;
+  border-radius: 11px;
+
+  box-shadow: none;
+}
+
+body.market-page .rent-option.active,
+body.market-page .rent-option.trial.active {
+  border: 1px solid #d9b979;
+
+  background: #30291e;
+
+  box-shadow: none;
+}
+
+body.market-page .rent-option .days {
+  color: #a7a9b1;
+
+  font-size: 12px;
+  font-weight: 500;
+}
+
+body.market-page .rent-option .price {
+  margin-top: 7px;
+
+  color: #f5f5f7;
+
+  font-size: 17px;
+  font-weight: 700;
+}
+
+body.market-page .rent-option.active .price {
+  color: #d9b979;
+}
+
+/* CUSTOM RANGE */
+
+body.market-page .rent-custom {
+  padding: 12px;
+
+  margin-bottom: 12px;
+
+  background: #22242a;
+
+  border: none;
+  border-radius: 11px;
+}
+
+body.market-page #rentDaysRange {
+  accent-color: #d9b979;
+}
+
+/* BALANCE */
+
+body.market-page .rent-wallet {
+  margin: 0 0 12px;
+
+  padding: 6px 2px;
+
+  background: transparent;
+  border: none;
+
+  color: #a7a9b1;
+}
+
+body.market-page #rentCoinVal {
+  color: #f5f5f7;
+
+  font-size: 16px;
+  font-weight: 650;
+}
+
+body.market-page .rent-wallet small {
+  display: inline;
+}
+
+/* CONFIRM */
+
+body.market-page #confirmRent {
+  min-height: 45px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #d9b979;
+  color: #19150f;
+
+  font-size: 14px;
+  font-weight: 750;
+
+  box-shadow: none;
+}
+
+/* GENERAL NOTIFICATION */
+
+body.market-page #lpModal .lp-modal-box {
+  background: #17181d;
+
+  border: 1px solid #303137;
+  border-radius: 16px;
+
+  box-shadow: none;
+}
+
+body.market-page #lpModalTitle {
+  font-family: inherit;
+  font-size: 19px;
+  color: #f5f5f7;
+}
+
+body.market-page #lpModalContent {
+  color: #b5b7bf;
+  font-size: 14px;
+}
+
+body.market-page #lpModal .btn.primary {
+  background: #d9b979;
+  color: #19150f;
+
+  border: none;
+}
+
+
 </style>
 </head>
 
@@ -1935,9 +2726,7 @@ body.market-page #lpModal .btn.primary {
         EXCLUSIVE MARKET
       </div>
 
-<h1 class="market-title">
-  Marketplace
-</h1>
+<h1 class="market-title">Market</h1>
 
 <div class="market-description">
   Discover shops and connect with the community
@@ -1945,10 +2734,11 @@ body.market-page #lpModal .btn.primary {
 
     </div>
 
-    <div class="market-brand-seal" aria-hidden="true">
-      <span>LP</span>
-      <small>MARKET</small>
-    </div>
+<div class="market-brand-seal" aria-hidden="true">
+  <svg class="mk-icon">
+    <use href="#mk-store"></use>
+  </svg>
+</div>
 
   </div>
 
@@ -2074,7 +2864,7 @@ body.market-page #lpModal .btn.primary {
         </div>
 
 <h2 id="rentTitle">
-  Rent a Booth
+  Rent Booth
 </h2>
 
 <p>
@@ -2097,7 +2887,7 @@ body.market-page #lpModal .btn.primary {
       <!-- BOOTH NUMBER -->
       <div class="rent-slot">
 
-        <span>SELECTED BOOTH</span>
+        <span>Booth</span>
 
         <strong id="rentBoothId">#</strong>
 
@@ -2105,7 +2895,7 @@ body.market-page #lpModal .btn.primary {
 
       <!-- QUICK PLANS -->
       <div class="rent-section-title">
-        BOOTH RENTAL PLANS
+        Plans
       </div>
 
       <div class="rent-options">
@@ -2115,9 +2905,9 @@ body.market-page #lpModal .btn.primary {
              data-price="0"
              data-trial="true">
 
-          <div class="days">Free Trial</div>
+          <div class="days">30 Days</div>
           <div class="price">Free</div>
-          <div class="rent-save">30-Day Free Trial</div>
+          <div class="rent-save">Free Trial</div>
 
         </div>
 
@@ -2155,7 +2945,7 @@ body.market-page #lpModal .btn.primary {
 
       <!-- CUSTOM DAYS -->
       <div class="rent-section-title">
-        	CUSTOM RENTAL PERIOD
+        	Custom
       </div>
 
       <div class="rent-custom">
@@ -2184,7 +2974,7 @@ body.market-page #lpModal .btn.primary {
 
       <!-- WALLET -->
       <div class="rent-wallet">
-        <span>Available Balance</span>
+        <span>Balance</span>
 
         <div>
           <b id="rentCoinVal">0</b>
@@ -2196,13 +2986,13 @@ body.market-page #lpModal .btn.primary {
       <button type="button"
               id="confirmRent"
               class="rent-confirm">
-        Rent a Booth
+        Rent Booth
       </button>
 
       <button type="button"
               id="btnTopupCoin"
               class="rent-topup hidden">
-        Top Up Diamonds
+        Top Up
       </button>
 
     </div>
@@ -2258,7 +3048,7 @@ body.market-page #lpModal .btn.primary {
 
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="/market.js"></script>
+<script src="/market.js?v=20261126-02"></script>
 <script src="/push-init.js"></script>
 <script src="/app-entry-guard.js"></script>
 
