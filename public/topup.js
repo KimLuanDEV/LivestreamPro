@@ -164,7 +164,7 @@ if (!list.length) {
 
   agentList.innerHTML = `
     <div class="empty-agent">
-      No top-up agents are currently available.
+      No agents available.
     </div>
   `;
 
@@ -203,7 +203,7 @@ if (!list.length) {
 card.querySelector(".agent-bank").textContent =
   [agent.bank, agent.account]
     .filter(Boolean)
-    .join(" · ") || "Bank details unavailable";
+    .join(" · ") || "Bank unavailable";
 
     setAgentStatus(card, Boolean(agent.online));
 
@@ -463,7 +463,7 @@ async function copyTransfer() {
     }
 
     showToast(
-  "Transfer reference copied successfully.",
+  "Reference copied.",
   "success"
 );
 
@@ -512,12 +512,12 @@ btnTransferred.addEventListener("click", () => {
 
 btnTransferred.innerHTML =
   tpIcon("clock") +
-  "<span>Pending Confirmation</span>";
+  "<span>Pending</span>";
 
   transferStatus.classList.remove("hidden");
 
 showToast(
-  "Your transfer notification has been sent to the agent.",
+  "Notification sent.",
   "success"
 );
 });
@@ -781,7 +781,7 @@ const CHECKOUT_METHODS = [
   {
     id: "CARD",
     name: "Visa / Mastercard / JCB",
-    description: "Secure international card payment"
+    description: "International card payment"
   }
 ];
 
@@ -794,7 +794,7 @@ function closeCardCheckout() {
 function openCardCheckout() {
 
   if (!selectedCardPackage) {
-    showToast("Please select a diamond package.", "error");
+    showToast("Select a package.", "error");
     return;
   }
 

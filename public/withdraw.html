@@ -4,7 +4,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport"
-      content="width=device-width,initial-scale=1,maximum-scale=1">
+      content="width=device-width,
+               initial-scale=1,
+               viewport-fit=cover">
+
+<meta name="theme-color" content="#FAF6E9">
+
+<meta name="apple-mobile-web-app-status-bar-style"
+      content="default">
+
+
 <title>Diamond Withdrawal | Livestream Pro</title>
 
 <!-- BROWSER ICON -->
@@ -20,854 +29,133 @@
 
 <script src="/lsp-page-transition.js?v=20261127-02"></script>
 
+
 <style>
 /* ==========================================
-   LIVESTREAM PRO - LUXURY WITHDRAW
-   ========================================== */
+   LIVESTREAM PRO
+   CHAMPAGNE GOLD WITHDRAWAL V1.0
+========================================== */
 
 :root {
-  --wd-bg: #07090e;
-  --wd-card: #121620;
-  --wd-gold: #d9bd83;
-  --wd-gold-light: #f4dfb3;
-  --wd-text: #f6f3ec;
-  --wd-muted: #969dab;
-  --wd-line: rgba(222,190,128,.15);
+  color-scheme: light;
+
+  --wd-bg: #FAF6E9;
+  --wd-card: #FFFFFF;
+  --wd-cream: #FCFAF5;
+  --wd-champagne: #F8EBC9;
+
+  --wd-gold: #947025;
+  --wd-gold-light: #70531D;
+
+  --wd-text: #29251D;
+  --wd-muted: #857960;
+  --wd-line: #EAE0C8;
+
+  --wd-green: #32975A;
+  --wd-red: #C95353;
+  --wd-blue: #397FB9;
+
+  --wd-gradient:
+    linear-gradient(135deg,#F5E4B5,#E3C47C);
+
+  --wd-shadow:
+    0 4px 16px rgba(112,85,28,.06);
 }
 
-* {
+
+/* ==========================================
+   01. GLOBAL RESET
+========================================== */
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 html,
 body.page-withdraw {
-  margin: 0;
+  width: 100%;
   min-height: 100%;
-  background: var(--wd-bg) !important;
+
+  margin: 0;
+  padding: 0;
+
+  background: var(--wd-bg);
   color: var(--wd-text);
+
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body.page-withdraw {
-  font-family: Arial, sans-serif;
-  background-image:
-    radial-gradient(
-      ellipse at 50% 0%,
-      rgba(167,120,53,.13),
-      transparent 43%
-    ) !important;
+  overflow-x: hidden;
+
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 body.page-withdraw button,
 body.page-withdraw input,
 body.page-withdraw select {
-  font-family: inherit;
+  font: inherit;
 }
 
-body.page-withdraw .hidden {
-  display: none !important;
-}
-
-/* ===== KHUNG CHÍNH ===== */
-
-.withdraw-app {
-  width: 100%;
-  max-width: 520px;
-  min-height: 100dvh;
-  margin: auto;
-  padding: 0 16px 35px;
-}
-
-/* ===== HEADER ===== */
-
-.wd-header {
-  height: 72px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: relative;
-  border-bottom: 1px solid var(--wd-line);
-}
-
-.wd-back {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  border: 1px solid var(--wd-line);
-  background: #171920;
-  color: var(--wd-gold);
-  font-size: 24px;
+body.page-withdraw button {
   cursor: pointer;
+
+  -webkit-tap-highlight-color: transparent;
 }
 
-.wd-header-center {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-  white-space: nowrap;
-}
-
-.wd-header-title {
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: 1.5px;
-  color: var(--wd-gold-light);
-}
-
-.wd-header-sub {
-  color: var(--wd-muted);
-  font-size: 9px;
-  letter-spacing: 2px;
-  margin-top: 5px;
-}
-
-.wd-header-icon {
-  width: 38px;
-  text-align: center;
-  font-size: 24px;
-}
-
-/* ===== TIÊU ĐỀ ===== */
-
-.wd-intro {
-  text-align: center;
-  padding: 27px 0 22px;
-}
-
-.wd-eyebrow {
-  color: var(--wd-gold);
-  font-size: 10px;
-  letter-spacing: 3px;
-  font-weight: 700;
-}
-
-.wd-intro h1 {
-  font-size: 25px;
-  line-height: 1.3;
-  margin: 10px 0 8px;
-  color: var(--wd-gold-light);
-  font-weight: 700;
-}
-
-.wd-intro p {
-  font-size: 12px;
-  color: var(--wd-muted);
-  margin: 0;
-}
-
-/* ===== CARD SỐ DƯ ===== */
-
-.wd-balance-card {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid rgba(226,190,120,.42);
-  border-radius: 20px;
-  padding: 24px 22px;
-  background:
-    radial-gradient(
-      circle at 100% 0%,
-      rgba(218,176,92,.22),
-      transparent 50%
-    ),
-    linear-gradient(
-      135deg,
-      #24221f 0%,
-      #13171c 48%,
-      #0d121c 100%
-    );
-  box-shadow: 0 15px 35px rgba(0,0,0,.35);
-}
-
-.wd-balance-card::after {
-  content: "◆";
-  position: absolute;
-  right: -18px;
-  top: 6px;
-  font-size: 155px;
-  color: rgba(218,187,124,.055);
-  pointer-events: none;
-}
-
-.wd-balance-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.wd-small-title {
-  font-size: 10px;
-  letter-spacing: 2px;
-  font-weight: bold;
-  color: var(--wd-gold);
-}
-
-.wd-premium-mark {
-  border: 1px solid rgba(217,189,131,.35);
-  padding: 6px 9px;
-  border-radius: 20px;
-  font-size: 9px;
-  color: var(--wd-gold-light);
-  letter-spacing: 1px;
-}
-
-.wd-balance-label {
-  font-size: 12px;
-  color: #b7b9bd;
-  margin-top: 26px;
-}
-
-.wd-balance-value {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-size: clamp(26px,7vw,36px);
-  font-weight: 800;
-  color: #fff;
-  margin: 8px 0 19px;
-  overflow-wrap: anywhere;
-}
-
-.wd-balance-value .diamond {
-  font-size: 25px;
-}
-
-.wd-balance-bottom {
-  padding-top: 18px;
-  border-top: 1px solid var(--wd-line);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.wd-money-label {
-  font-size: 11px;
-  color: var(--wd-muted);
-}
-
-.wd-money-value {
-  font-size: clamp(17px,5vw,24px);
-  font-weight: 800;
-  color: var(--wd-gold-light);
-  text-align: right;
-  overflow-wrap: anywhere;
-}
-
-/* ===== SECTION ===== */
-
-.wd-panel {
-  margin-top: 20px;
-  border: 1px solid var(--wd-line);
-  border-radius: 18px;
-  background: linear-gradient(
-    155deg,
-    #171b25,
-    #10131b
-  );
-  padding: 20px 16px;
-}
-
-.wd-section-head {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 22px;
-}
-
-.wd-section-icon {
-  width: 42px;
-  height: 42px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  border-radius: 13px;
-  background: rgba(220,184,112,.09);
-  border: 1px solid var(--wd-line);
-}
-
-.wd-section-title {
-  margin: 0;
-  font-size: 15px;
-  color: #f0dfbb;
-  font-weight: 700;
-}
-
-.wd-section-sub {
-  color: var(--wd-muted);
-  font-size: 11px;
-  margin-top: 5px;
-}
-
-.wd-field {
-  margin-bottom: 16px;
-}
-
-.wd-field label {
-  display: block;
-  margin-bottom: 9px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .3px;
-  color: #c6cad1;
-}
-
-body.page-withdraw .wd-input,
-body.page-withdraw .wd-select {
-  width: 100%;
-  min-width: 0;
-  height: 50px;
-  outline: none;
-  border: 1px solid #30343e;
-  border-radius: 12px;
-  padding: 0 14px;
-  background: #0b0e15;
-  color: #fff;
-  font-size: 14px;
-  transition: border-color .2s, box-shadow .2s;
-}
-
-body.page-withdraw .wd-input:focus,
-body.page-withdraw .wd-select:focus {
-  border-color: var(--wd-gold);
-  box-shadow: 0 0 0 3px rgba(217,189,131,.08);
-}
-
-body.page-withdraw .wd-input::placeholder {
-  color: #69717f;
-}
-
-body.page-withdraw .wd-select {
-  color-scheme: dark;
-}
-
-/* ===== TỐI THIỂU ===== */
-
-.wd-min-note {
-  padding: 12px 13px;
-  border: 1px solid rgba(217,189,131,.18);
-  border-radius: 10px;
-  background: rgba(217,189,131,.055);
-  font-size: 11px;
-  line-height: 1.6;
-  color: #c8b68e;
-  margin: -3px 0 19px;
-}
-
-.wd-min-note b {
-  color: #f3d99c;
-}
-
-/* ===== NGÂN HÀNG ===== */
-
-.wd-bank-title {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--wd-gold-light);
-  margin: 23px 0 17px;
-  padding-top: 20px;
-  border-top: 1px solid var(--wd-line);
-}
-
-.wd-bank-preview {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.wd-bank-preview:has(img.hidden) {
-  display: none;
-}
-
-.wd-bank-preview img {
-  max-height: 32px;
-  max-width: 140px;
-  width: auto;
-  object-fit: contain;
-  margin: 0 0 15px;
-}
-
-/* ===== BUTTON ===== */
-
-body.page-withdraw .wd-submit {
-  width: 100%;
-  min-height: 54px;
-  margin-top: 9px;
-  border: 1px solid #efd9a7;
-  border-radius: 12px;
-  background: linear-gradient(
-    135deg,
-    #f6e2b4 0%,
-    #d2aa65 55%,
-    #ac7d38 100%
-  );
-  color: #201a10;
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: .5px;
-  cursor: pointer;
-  box-shadow: 0 8px 22px rgba(190,140,55,.15);
-}
-
-body.page-withdraw .wd-submit:active {
-  transform: scale(.985);
-}
-
-body.page-withdraw .wd-submit:disabled {
+body.page-withdraw button:disabled {
+  opacity: .5;
   cursor: not-allowed;
-  opacity: .45;
-  box-shadow: none;
 }
 
-.wd-security-hint {
-  text-align: center;
-  font-size: 10px;
-  color: #8c95a3;
-  margin: 14px 0 0;
-  line-height: 1.6;
+body.page-withdraw button:focus-visible {
+  outline: 2px solid var(--wd-gold);
+  outline-offset: 2px;
 }
 
-/* ===== LỊCH SỬ ===== */
-
-.wd-history {
-  margin-top: 22px;
-}
-
-.wd-history-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-
-.wd-history-heading h2 {
-  margin: 0;
-  font-size: 16px;
-  color: #f1dfb8;
-}
-
-.wd-history-tag {
-  font-size: 9px;
-  color: var(--wd-gold);
-  letter-spacing: 1px;
-}
-
-.wd-history-scroll {
-  overflow-x: auto;
-  border-radius: 14px;
-  border: 1px solid var(--wd-line);
-  background: #11151e;
-  -webkit-overflow-scrolling: touch;
-}
-
-body.page-withdraw .withdraw-table {
-  width: 100%;
-  min-width: 650px;
-  border-collapse: collapse;
-  font-size: 11px;
-  color: #e5e7eb;
-}
-
-body.page-withdraw .withdraw-table thead {
-  background: #24222a;
-}
-
-body.page-withdraw .withdraw-table th {
-  color: var(--wd-gold);
-  font-size: 10px;
-  text-align: left;
-  white-space: nowrap;
-  padding: 15px 12px;
-  border-bottom: 1px solid var(--wd-line);
-}
-
-body.page-withdraw .withdraw-table td {
-  padding: 14px 12px;
-  border-bottom: 1px solid rgba(255,255,255,.06);
-  line-height: 1.6;
-  vertical-align: middle;
-}
-
-body.page-withdraw .withdraw-table tr:last-child td {
-  border-bottom: none;
-}
-
-body.page-withdraw .st-pending {
-  color: #f4c676;
-  font-weight: bold;
-}
-
-body.page-withdraw .st-approved {
-  color: #65d9ac;
-  font-weight: bold;
-}
-
-body.page-withdraw .st-rejected {
-  color: #ff8787;
-  font-weight: bold;
-}
-
-.wd-empty {
-  text-align: center;
-  padding: 28px 12px;
-  color: var(--wd-muted);
-  font-size: 12px;
-}
-
-.wd-history-tip {
-  font-size: 10px;
-  text-align: center;
-  color: #727b89;
-  margin-top: 12px;
-}
-
-/* ===== PHÂN TRANG ===== */
-
-body.page-withdraw .withdraw-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 15px;
-  margin-top: 18px;
-}
-
-body.page-withdraw .pg-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  border: 1px solid var(--wd-line);
-  background: #1b202a;
-  color: var(--wd-gold);
-  cursor: pointer;
-}
-
-body.page-withdraw .pg-btn:disabled {
-  opacity: .3;
-}
-
-body.page-withdraw .pg-info {
-  font-size: 12px;
-  color: #d6d9df;
-}
-
-/* ===== PENDING ===== */
-
-body.page-withdraw .withdraw-warn {
-  border: 1px solid rgba(245,180,77,.3);
-  background: rgba(245,180,77,.09);
-  color: #f5d39a;
-  padding: 14px;
-  margin: 12px 0;
-  border-radius: 10px;
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-/* ===== MODALS ===== */
-
-body.page-withdraw .lp-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 10000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-body.page-withdraw .lp-modal-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,.82);
-  backdrop-filter: blur(7px);
-}
-
-body.page-withdraw .lp-modal-box {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: 360px;
-  padding: 28px 22px;
-  border: 1px solid rgba(217,189,131,.4);
-  border-radius: 20px;
-  background: linear-gradient(155deg,#20212a,#10131b);
-  text-align: center;
-  box-shadow: 0 25px 60px rgba(0,0,0,.6);
-}
-
-body.page-withdraw .lp-modal-icon {
-  font-size: 35px;
-  margin-bottom: 15px;
-}
-
-body.page-withdraw .lp-modal-box h3 {
-  margin: 0 0 12px;
-  color: var(--wd-gold-light);
-  font-size: 19px;
-}
-
-body.page-withdraw .lp-modal-box p {
-  font-size: 12px;
-  line-height: 1.8;
-  color: #adb4c1;
-}
-
-body.page-withdraw .lp-modal-box input {
-  width: 100%;
-  height: 49px;
-  padding: 0 14px;
-  background: #0b0e15;
-  color: white;
-  border: 1px solid #3e414a;
-  border-radius: 10px;
-  outline: none;
-}
-
-body.page-withdraw .lp-modal-box input:focus {
-  border-color: var(--wd-gold);
-}
-
-body.page-withdraw .lp-modal-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 21px;
-}
-
-body.page-withdraw .lp-modal-actions button {
-  flex: 1;
-  min-height: 44px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-body.page-withdraw .lp-modal-actions .btn-primary {
-  background: linear-gradient(135deg,#f3dca7,#c79e59);
-  color: #17140e;
-  border: none;
-}
-
-body.page-withdraw .lp-modal-actions .btn-secondary {
-  background: #282c35;
-  color: #f0e5cc;
-  border: 1px solid var(--wd-line);
-}
-
-/* ===== FORCE LOGOUT ===== */
-
-body.page-withdraw #forceLogoutModal {
-  position: fixed;
-  inset: 0;
-  z-index: 20000;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-body.page-withdraw #forceLogoutModal.show {
-  display: flex;
-}
-
-body.page-withdraw .fl-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,.9);
-}
-
-body.page-withdraw .fl-box {
-  position: relative;
-  width: 100%;
-  max-width: 350px;
-  background: #191d27;
-  border: 1px solid var(--wd-line);
-  border-radius: 18px;
-  padding: 28px 22px;
-  text-align: center;
-}
-
-body.page-withdraw .fl-icon {
-  font-size: 32px;
-}
-
-body.page-withdraw .fl-title {
-  color: var(--wd-gold-light);
-  font-weight: 800;
-  margin: 14px 0;
-}
-
-body.page-withdraw .fl-msg,
-body.page-withdraw .fl-sub {
-  font-size: 12px;
-  color: var(--wd-muted);
-  line-height: 1.7;
-}
-
-/* ===== FOOTER ===== */
-
-.wd-footer {
-  margin-top: 32px;
-  text-align: center;
-  color: #666f7d;
-  font-size: 10px;
-  letter-spacing: 1.3px;
-}
-
-/* ===== RESPONSIVE ===== */
-
-@media(max-width:380px) {
-  .withdraw-app {
-    padding-left: 11px;
-    padding-right: 11px;
-  }
-
-  .wd-panel {
-    padding: 17px 13px;
-  }
-
-  .wd-balance-card {
-    padding: 20px 17px;
-  }
+.hidden,
+[hidden] {
+  display: none !important;
 }
 
 
 /* ==========================================
-   WITHDRAW - CSS HOÀN TOÀN ĐỘC LẬP
-   ========================================== */
-
-/* RESET RIÊNG CHO TRANG */
-
-html {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  min-height: 100%;
-  background: #07090e;
-  -webkit-text-size-adjust: 100%;
-}
-
-body.page-withdraw {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  min-height: 100dvh;
-  background: #07090e;
-  color: #f6f3ec;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
-  overflow-x: hidden;
-}
-
-body.page-withdraw *,
-body.page-withdraw *::before,
-body.page-withdraw *::after {
-  box-sizing: border-box;
-}
-
-body.page-withdraw button,
-body.page-withdraw input,
-body.page-withdraw select,
-body.page-withdraw textarea {
-  font-family: inherit;
-}
-
-body.page-withdraw button {
-  appearance: none;
-  -webkit-appearance: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-body.page-withdraw input,
-body.page-withdraw select {
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-body.page-withdraw input[type="number"] {
-  appearance: textfield;
-  -moz-appearance: textfield;
-}
-
-body.page-withdraw input[type="number"]::-webkit-inner-spin-button,
-body.page-withdraw input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-/* GIỮ SELECT HIỂN THỊ MŨI TÊN */
-
-body.page-withdraw .wd-select {
-  padding-right: 42px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23d9bd83' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-  background-size: 16px;
-}
-
-/* ẨN HIỆN MODAL - KHÔNG PHỤ THUỘC STYLE.CSS */
-
-body.page-withdraw .hidden {
-  display: none !important;
-}
-
-body.page-withdraw .lp-modal.hidden {
-  display: none !important;
-}
-
-/* CỐ ĐỊNH LAYOUT */
-
-body.page-withdraw .withdraw-app {
-  width: 100%;
-  max-width: 520px;
-  margin: 0 auto;
-}
-
-body.page-withdraw .withdraw-app img {
-  max-width: 100%;
-}
-
-/* TỐI ƯU MOBILE */
-
-@media (max-width: 520px) {
-  body.page-withdraw .withdraw-app {
-    width: 100%;
-  }
-
-  body.page-withdraw input,
-  body.page-withdraw select {
-    font-size: 16px;
-  }
-}
-
-
-
-/* ====================================
-   LUXURY SVG ICON SYSTEM
-   ==================================== */
+   02. SVG ICON SYSTEM
+========================================== */
 
 .wd-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   width: 20px;
   height: 20px;
+
   flex-shrink: 0;
+
+  color: var(--wd-gold);
+
   vertical-align: middle;
-  color: #d9bd83;
 }
 
 .wd-icon svg {
   display: block;
+
   width: 100%;
   height: 100%;
-  stroke: currentColor;
+
   fill: none;
+  stroke: currentColor;
   stroke-width: 1.7;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -888,49 +176,455 @@ body.page-withdraw .withdraw-app img {
   height: 34px;
 }
 
-/* HEADER */
+
+/* ==========================================
+   03. MAIN CONTAINER
+========================================== */
+
+.withdraw-app {
+  position: relative;
+
+  width: 100%;
+  max-width: 430px;
+
+  min-height: 100vh;
+  min-height: 100dvh;
+
+  margin: 0 auto;
+
+  padding:
+    0 14px
+    calc(25px + env(safe-area-inset-bottom,0px));
+
+  background: var(--wd-bg);
+}
+
+.withdraw-app img {
+  max-width: 100%;
+}
+
+
+/* ==========================================
+   04. HEADER
+========================================== */
+
+.wd-header {
+  position: sticky;
+
+  top: 0;
+  z-index: 30;
+
+  display: grid;
+
+  grid-template-columns:
+    42px minmax(0,1fr) 42px;
+
+  align-items: center;
+
+  gap: 10px;
+
+  min-height:
+    calc(74px + env(safe-area-inset-top,0px));
+
+  margin: 0 -14px;
+
+  padding:
+    calc(8px + env(safe-area-inset-top,0px))
+    14px
+    8px;
+
+  background:
+    linear-gradient(120deg,#FFFDF7,#F8EBC9);
+
+  border: none;
+}
 
 .wd-back {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
+
+  width: 42px;
+  height: 42px;
+
+  padding: 0;
+
+  border: 1px solid var(--wd-line);
+  border-radius: 12px;
+
+  background: #FFFFFF;
+  color: var(--wd-gold);
+
+  box-shadow: none;
+}
+
+.wd-back .wd-icon {
+  width: 23px;
+  height: 23px;
+}
+
+.wd-back:active {
+  transform: scale(.96);
+}
+
+.wd-header-center {
+  min-width: 0;
+
+  text-align: center;
+}
+
+.wd-header-title {
+  color: var(--wd-text);
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: 24px;
+  font-weight: 700;
+
+  line-height: 1.3;
 }
 
 .wd-header-icon {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display: grid;
+  place-items: center;
 }
 
 .wd-header-icon .wd-icon {
-  color: #e9cd91;
+  width: 25px;
+  height: 25px;
 }
 
-/* PREMIUM BALANCE */
+
+/* REMOVE EXTRA TEXT */
+
+.wd-header-sub,
+.wd-intro,
+.wd-balance-top,
+.wd-premium-mark,
+.wd-section-sub {
+  display: none;
+}
+
+
+/* ==========================================
+   05. DIAMOND BALANCE
+========================================== */
+
+.wd-balance-card {
+  position: relative;
+
+  overflow: hidden;
+
+  margin-top: 15px;
+  padding: 20px 17px;
+
+  border: 1px solid #E3CCA0;
+  border-radius: 19px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #FFFDF5,
+      #F8EBC9 65%,
+      #F3E1B0
+    );
+
+  box-shadow: var(--wd-shadow);
+}
+
+.wd-balance-label {
+  color: var(--wd-muted);
+
+  font-size: 13px;
+  font-weight: 550;
+}
+
+.wd-balance-value {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  margin: 10px 0 16px;
+
+  color: var(--wd-gold-light);
+
+  font-size: clamp(27px,8vw,37px);
+  font-weight: 800;
+
+  line-height: 1.25;
+
+  font-variant-numeric: tabular-nums;
+}
 
 .wd-balance-value .wd-icon {
-  width: 29px;
-  height: 29px;
+  width: 31px;
+  height: 31px;
 }
 
-.wd-balance-card::after {
-  content: "";
-  right: -60px;
-  top: -70px;
-  width: 200px;
-  height: 200px;
-  border: 1px solid rgba(217,189,131,.08);
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 32px rgba(217,189,131,.025),
-    0 0 0 64px rgba(217,189,131,.015);
+#receivedVal {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
-/* FORM */
+.wd-balance-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  padding-top: 13px;
+
+  border-top: 1px solid #E1CFA6;
+}
+
+.wd-money-label {
+  color: var(--wd-muted);
+
+  font-size: 12px;
+}
+
+.wd-money-value {
+  min-width: 0;
+
+  color: var(--wd-gold-light);
+
+  font-size: clamp(18px,5.5vw,24px);
+  font-weight: 800;
+
+  text-align: right;
+
+  overflow-wrap: anywhere;
+
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* ==========================================
+   06. MAIN PANELS
+========================================== */
+
+.wd-panel {
+  margin-top: 15px;
+  padding: 16px 14px;
+
+  border: 1px solid var(--wd-line);
+  border-radius: 18px;
+
+  background: #FFFFFF;
+
+  box-shadow: var(--wd-shadow);
+}
+
+.wd-section-head {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  margin-bottom: 18px;
+}
+
+.wd-section-icon {
+  display: grid;
+  place-items: center;
+
+  width: 39px;
+  height: 39px;
+
+  flex-shrink: 0;
+
+  border: 1px solid #E5D1A0;
+  border-radius: 11px;
+
+  background: var(--wd-champagne);
+
+  color: var(--wd-gold);
+}
 
 .wd-section-icon .wd-icon {
-  width: 23px;
-  height: 23px;
+  width: 22px;
+  height: 22px;
+}
+
+.wd-section-title {
+  margin: 0;
+
+  color: var(--wd-text);
+
+  font-size: 16px;
+  font-weight: 750;
+
+  line-height: 1.4;
+}
+
+
+/* ==========================================
+   07. INPUT FIELDS
+========================================== */
+
+.wd-field {
+  margin-bottom: 13px;
+}
+
+.wd-field label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #766D5B;
+
+  font-size: 11px;
+  font-weight: 650;
+
+  letter-spacing: .1px;
+}
+
+body.page-withdraw .wd-input,
+body.page-withdraw .wd-select,
+body.page-withdraw .lp-modal-box input {
+  width: 100%;
+  min-width: 0;
+
+  height: 46px;
+
+  padding: 0 12px;
+
+  border: 1px solid var(--wd-line);
+  border-radius: 11px;
+
+  outline: none;
+
+  background: var(--wd-cream);
+  color: var(--wd-text);
+
+  font-size: 16px;
+
+  transition:
+    border-color .15s,
+    box-shadow .15s;
+}
+
+body.page-withdraw .wd-input:focus,
+body.page-withdraw .wd-select:focus,
+body.page-withdraw .lp-modal-box input:focus {
+
+  border-color: #C9A75D;
+
+  box-shadow:
+    0 0 0 3px rgba(201,167,93,.12);
+}
+
+body.page-withdraw input::placeholder {
+  color: #928A7C;
+
+  font-size: 13px;
+
+  opacity: 1;
+}
+
+body.page-withdraw input:disabled,
+body.page-withdraw select:disabled {
+  background-color: #F1EEE6;
+
+  color: #938B7D;
+
+  opacity: 1;
+
+  cursor: not-allowed;
+}
+
+
+/* NUMBER INPUT */
+
+body.page-withdraw input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+body.page-withdraw input[type="number"]
+::-webkit-inner-spin-button,
+
+body.page-withdraw input[type="number"]
+::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+
+/* BANK SELECT */
+
+body.page-withdraw .wd-select {
+  color-scheme: light;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  padding-right: 40px;
+
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23947025' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+
+/* ==========================================
+   08. MINIMUM WITHDRAWAL
+========================================== */
+
+.wd-min-note {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 5px;
+
+  margin: -2px 0 15px;
+  padding: 10px;
+
+  border: 1px solid #E5D1A0;
+  border-radius: 10px;
+
+  background: #FFF8E7;
+
+  color: var(--wd-gold-light);
+
+  font-size: 11px;
+
+  line-height: 1.5;
+}
+
+.wd-min-note b {
+  color: var(--wd-gold);
+  font-weight: 800;
+}
+
+
+/* ==========================================
+   09. BANK DETAILS
+========================================== */
+
+.wd-bank-title {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  margin: 18px 0 15px;
+  padding-top: 15px;
+
+  border-top: 1px solid var(--wd-line);
+
+  color: var(--wd-text);
+
+  font-size: 14px;
+  font-weight: 750;
 }
 
 .wd-bank-title .wd-icon {
@@ -938,323 +632,915 @@ body.page-withdraw .withdraw-app img {
   height: 18px;
 }
 
-.wd-min-note .wd-icon {
-  margin-right: 6px;
+.wd-bank-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* BUTTON */
+.wd-bank-preview:has(img.hidden) {
+  display: none;
+}
+
+.wd-bank-preview img {
+  width: auto;
+
+  max-width: 140px;
+  max-height: 30px;
+
+  margin: 0 0 13px;
+
+  object-fit: contain;
+}
+
+
+/* ==========================================
+   10. PRIMARY BUTTONS
+========================================== */
 
 body.page-withdraw .wd-submit {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+
+  gap: 8px;
+
+  width: 100%;
+  min-height: 47px;
+
+  margin-top: 7px;
+  padding: 10px;
+
+  border: 1px solid #DFC382;
+  border-radius: 12px;
+
+  background: var(--wd-gradient);
+  color: #4D3915;
+
+  font-size: 13px;
+  font-weight: 750;
+
+  line-height: 1.4;
+
+  box-shadow: none;
+
+  transition:
+    transform .15s,
+    opacity .15s;
 }
 
 body.page-withdraw .wd-submit .wd-icon {
-  color: #231b0e;
-}
-
-body.page-withdraw .wd-security-hint {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-}
-
-.wd-security-hint .wd-icon {
-  color: #9f977f;
-}
-
-/* HISTORY */
-
-.wd-history-heading h2 {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.wd-history-heading .wd-icon {
-  width: 19px;
-  height: 19px;
-}
-
-.wd-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-  font-weight: 700;
-}
-
-.wd-status .wd-icon {
-  width: 15px;
-  height: 15px;
   color: currentColor;
 }
 
-/* MODALS */
+body.page-withdraw .wd-submit:disabled {
+  background: #EAE5D9;
+  color: #968A72;
 
-body.page-withdraw .lp-modal-icon {
-  width: 62px;
-  height: 62px;
-  margin: 0 auto 19px;
+  border-color: #E3DACA;
+
+  opacity: 1;
+}
+
+body.page-withdraw .wd-submit:not(:disabled):active {
+  transform: scale(.98);
+}
+
+.wd-security-hint {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 19px;
-  border: 1px solid rgba(217,189,131,.28);
-  background: rgba(217,189,131,.075);
-  font-size: 0;
-}
 
-body.page-withdraw .lp-modal-icon .wd-icon {
-  width: 29px;
-  height: 29px;
-}
+  gap: 6px;
 
-body.page-withdraw .lp-modal-icon.is-success .wd-icon {
-  color: #77d4a5;
-}
+  margin: 12px 0 0;
 
-body.page-withdraw .lp-modal-icon.is-error .wd-icon {
-  color: #ef8585;
-}
+  color: var(--wd-muted);
 
-body.page-withdraw .lp-modal-icon.is-warn .wd-icon {
-  color: #e8bb73;
-}
-
-/* PENDING */
-
-.withdraw-warn {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.withdraw-warn .wd-icon {
-  color: #e8bb73;
-}
-
-/* FORCE LOGOUT */
-
-body.page-withdraw .fl-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-body.page-withdraw .fl-icon .wd-icon {
-  width: 34px;
-  height: 34px;
-  color: #ef8585;
-}
-
-/* PAGINATION */
-
-body.page-withdraw .pg-btn {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-}
-
-body.page-withdraw .pg-btn .wd-icon {
-  width: 16px;
-  height: 16px;
-}
-
-/* BUTTONS DISABLED */
-
-body.page-withdraw button:disabled .wd-icon {
-  opacity: .65;
-}
-
-
-
-/* PREMIUM ICON FINISHING */
-
-.wd-header-icon .wd-icon {
-  width: 24px;
-  height: 24px;
-}
-
-.wd-balance-value > .wd-icon {
-  width: 30px;
-  height: 30px;
-  color: #f0d394;
-}
-
-.wd-small-title {
-  letter-spacing: 2.3px;
-}
-
-.wd-premium-mark {
-  letter-spacing: 1.2px;
-}
-
-.wd-section-icon {
-  border-radius: 12px;
-}
-
-.wd-section-icon .wd-icon,
-.wd-bank-title .wd-icon,
-.wd-history-heading .wd-icon {
-  color: #e2c58d;
-}
-
-.wd-min-note {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.wd-min-note .wd-icon {
-  margin-right: 4px;
-}
-
-.wd-history-heading h2 {
-  font-weight: 700;
-  letter-spacing: .2px;
-}
-
-.wd-status {
   font-size: 11px;
-}
-
-.wd-status .wd-icon {
-  stroke-width: 1.9;
-}
-
-body.page-withdraw .lp-modal-icon .wd-icon svg {
-  stroke-width: 1.5;
-}
-
-body.page-withdraw .wd-submit .wd-icon svg {
-  stroke-width: 2;
-}
-
-body.page-withdraw .wd-submit:disabled .wd-icon {
-  color: #6e6250;
-}
-
-
-
-/* WITHDRAWAL PROCESSING STATUS */
-body.page-withdraw .st-processing {
-  color: #79baff;
-  font-weight: 700;
-}
-
-body.page-withdraw .wd-transaction-note {
-  min-width: 210px;
-  max-width: 320px;
-  white-space: normal;
-  overflow-wrap: anywhere;
   line-height: 1.6;
-  color: #c5cbd5;
-  font-size: 11px;
+
+  text-align: center;
+
+  overflow-wrap: anywhere;
 }
-
-
 
 
 /* ==========================================
-   DIAMOND CONVERSION - BLACK & GOLD
+   11. DIAMOND CONVERSION BALANCES
 ========================================== */
 
 .wd-convert-balances {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 22px;
+
+  grid-template-columns:
+    repeat(2,minmax(0,1fr));
+
+  gap: 9px;
+
+  margin-bottom: 17px;
 }
 
 .wd-convert-balances > div {
   min-width: 0;
-  padding: 15px 12px;
-  border: 1px solid rgba(217,189,131,.22);
+
+  padding: 13px;
+
+  border: 1px solid var(--wd-line);
   border-radius: 13px;
-  background: #0b0e15;
+
+  background: var(--wd-cream);
+}
+
+.wd-convert-balances > div:first-child {
+  background: #FFF8E7;
+
+  border-color: #E5D1A0;
 }
 
 .wd-convert-balances small {
   display: block;
-  color: #a5a7b0;
-  font-size: 9px;
-  letter-spacing: .5px;
+
+  color: var(--wd-muted);
+
+  font-size: 10px;
+  font-weight: 600;
 }
 
 .wd-convert-balances strong {
   display: block;
-  margin-top: 9px;
-  color: #f4dfb3;
-  font-size: 19px;
+
+  margin-top: 6px;
+
+  color: var(--wd-gold-light);
+
+  font-size: clamp(17px,5vw,22px);
   font-weight: 800;
+
+  font-variant-numeric: tabular-nums;
+
   overflow-wrap: anywhere;
 }
 
+
+/* ==========================================
+   12. CONVERSION SUMMARY
+========================================== */
+
 .wd-convert-summary {
-  margin-top: 17px;
-  padding: 17px 14px;
-  border: 1px solid rgba(217,189,131,.2);
+  margin-top: 13px;
+  padding: 13px;
+
+  border: 1px solid var(--wd-line);
   border-radius: 13px;
-  background: #0c1018;
+
+  background: var(--wd-cream);
 }
 
 .wd-convert-summary > div {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  padding: 10px 0;
-  color: #aab0bd;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  padding: 7px 0;
+
+  color: var(--wd-muted);
+
   font-size: 12px;
 }
 
 .wd-convert-summary strong {
-  color: #f4dfb3;
+  min-width: 0;
+
+  color: var(--wd-text);
+
   font-size: 14px;
+  font-weight: 750;
+
+  text-align: right;
+
+  overflow-wrap: anywhere;
+
   font-variant-numeric: tabular-nums;
 }
 
 .wd-convert-summary .wd-convert-fee {
-  color: #f09a9a;
+  color: var(--wd-red);
 }
 
 .wd-convert-summary .wd-convert-total {
-  margin-top: 7px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(217,189,131,.2);
-  color: #f4dfb3;
+  margin-top: 6px;
+  padding-top: 13px;
+
+  border-top: 1px solid var(--wd-line);
+
+  color: var(--wd-text);
+
   font-weight: 700;
 }
 
 .wd-convert-total strong {
-  color: #83dfb2;
-  font-size: 20px;
+  color: var(--wd-green);
+
+  font-size: 22px;
+  font-weight: 800;
 }
 
 .wd-convert-note {
-  color: #a7abb5;
-  font-size: 11px;
-  line-height: 1.7;
-  text-align: center;
-  margin: 16px 2px;
-}
+  margin: 13px 0;
 
-#wdConvertButton:not(:disabled) {
-  opacity: 1;
-  box-shadow: 0 8px 24px rgba(217,189,131,.17);
+  color: var(--wd-muted);
+
+  font-size: 11px;
+  line-height: 1.65;
 }
 
 #wdConvertStatus {
-  min-height: 18px;
+  min-height: 0;
+}
+
+#wdConvertStatus:empty {
+  display: none;
 }
 
 
+/* ==========================================
+   13. PENDING WITHDRAWAL
+========================================== */
+
+.withdraw-warn {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  margin: 10px 0;
+  padding: 11px;
+
+  border: 1px solid #E5D1A0;
+  border-radius: 11px;
+
+  background: #FFF8E7;
+
+  color: var(--wd-gold-light);
+
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+
+/* ==========================================
+   14. TRANSACTION HISTORY
+========================================== */
+
+.wd-history {
+  margin-top: 23px;
+}
+
+.wd-history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 8px;
+
+  margin-bottom: 12px;
+}
+
+.wd-history-heading h2 {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  margin: 0;
+
+  color: var(--wd-text);
+
+  font-size: 15px;
+  font-weight: 750;
+}
+
+.wd-history-heading .wd-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.wd-history-tag {
+  flex-shrink: 0;
+
+  color: var(--wd-muted);
+
+  font-size: 10px;
+}
+
+.wd-history-scroll {
+  overflow-x: auto;
+
+  border: 1px solid var(--wd-line);
+  border-radius: 14px;
+
+  background: #FFFFFF;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+body.page-withdraw .withdraw-table {
+  width: 100%;
+  min-width: 650px;
+
+  border-collapse: collapse;
+
+  color: var(--wd-text);
+
+  font-size: 12px;
+}
+
+.withdraw-table thead {
+  background: #F8EBC9;
+}
+
+.withdraw-table th {
+  padding: 12px 11px;
+
+  border-bottom: 1px solid var(--wd-line);
+
+  color: var(--wd-gold-light);
+
+  font-size: 11px;
+  font-weight: 750;
+
+  text-align: left;
+
+  white-space: nowrap;
+}
+
+.withdraw-table td {
+  padding: 12px 11px;
+
+  border-bottom: 1px solid var(--wd-line);
+
+  line-height: 1.5;
+
+  vertical-align: middle;
+}
+
+.withdraw-table tr:last-child td {
+  border-bottom: none;
+}
+
+.withdraw-table tbody tr:nth-child(even) {
+  background: #FCFAF5;
+}
+
+.wd-transaction-note {
+  min-width: 180px;
+  max-width: 280px;
+
+  color: var(--wd-muted);
+
+  font-size: 11px;
+
+  white-space: normal;
+
+  overflow-wrap: anywhere;
+}
+
+.withdraw-table img[src=""] {
+  display: none;
+}
+
+
+/* ==========================================
+   15. TRANSACTION STATUS
+========================================== */
+
+.wd-status {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 5px;
+
+  padding: 5px 8px;
+
+  border-radius: 7px;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+.wd-status .wd-icon {
+  width: 14px;
+  height: 14px;
+
+  color: currentColor;
+}
+
+.st-pending {
+  color: var(--wd-gold);
+}
+
+.st-pending .wd-status {
+  background: #FFF8E7;
+}
+
+.st-processing {
+  color: var(--wd-blue);
+}
+
+.st-processing .wd-status {
+  background: #EDF5FF;
+}
+
+.st-approved {
+  color: var(--wd-green);
+}
+
+.st-approved .wd-status {
+  background: #ECF8EF;
+}
+
+.st-rejected {
+  color: var(--wd-red);
+}
+
+.st-rejected .wd-status {
+  background: #FFF1EF;
+}
+
+
+/* ==========================================
+   16. EMPTY HISTORY
+========================================== */
+
+.wd-empty {
+  margin: 10px 0 0;
+  padding: 22px 12px;
+
+  border: 1px dashed #E1D4B7;
+  border-radius: 13px;
+
+  background: rgba(255,255,255,.6);
+
+  color: var(--wd-muted);
+
+  font-size: 12px;
+
+  text-align: center;
+}
+
+.wd-history-tip {
+  margin: 10px 0;
+
+  color: var(--wd-muted);
+
+  font-size: 10px;
+
+  text-align: center;
+}
+
+
+/* ==========================================
+   17. PAGINATION
+========================================== */
+
+.withdraw-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 12px;
+
+  margin-top: 14px;
+}
+
+.withdraw-pagination:empty {
+  display: none;
+}
+
+.pg-btn {
+  display: grid;
+  place-items: center;
+
+  width: 38px;
+  height: 38px;
+
+  padding: 0;
+
+  border: 1px solid var(--wd-line);
+  border-radius: 10px;
+
+  background: #FFFFFF;
+
+  color: var(--wd-gold);
+}
+
+.pg-btn .wd-icon {
+  width: 17px;
+  height: 17px;
+}
+
+.pg-btn:disabled {
+  opacity: .35;
+}
+
+.pg-info {
+  color: var(--wd-muted);
+
+  font-size: 12px;
+}
+
+
+/* ==========================================
+   18. MODAL OVERLAY
+========================================== */
+
+body.page-withdraw .lp-modal {
+  position: fixed;
+  inset: 0;
+
+  z-index: 10000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding:
+    calc(18px + env(safe-area-inset-top,0px))
+    18px
+    calc(18px + env(safe-area-inset-bottom,0px));
+}
+
+body.page-withdraw .lp-modal.hidden {
+  display: none !important;
+}
+
+body.page-withdraw #notifyModal {
+  z-index: 11000;
+}
+
+.lp-modal-backdrop,
+.fl-backdrop {
+  position: absolute;
+  inset: 0;
+
+  background: rgba(52,43,25,.30);
+
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+
+/* ==========================================
+   19. MODAL CARD
+========================================== */
+
+body.page-withdraw .lp-modal-box {
+  position: relative;
+  z-index: 1;
+
+  width: 100%;
+  max-width: 350px;
+  max-height: 100%;
+
+  padding: 25px 20px 20px;
+
+  overflow-y: auto;
+
+  border: 1px solid var(--wd-line);
+  border-radius: 23px;
+
+  background: #FFFFFF;
+  color: var(--wd-text);
+
+  box-shadow:
+    0 18px 60px rgba(85,65,25,.16);
+
+  text-align: center;
+
+  animation: wdModalFade .18s ease-out;
+}
+
+.lp-modal-icon {
+  display: grid;
+  place-items: center;
+
+  width: 61px;
+  height: 61px;
+
+  margin: 0 auto 16px;
+
+  border: 1px solid #E5D1A0;
+  border-radius: 18px;
+
+  background: var(--wd-champagne);
+
+  color: var(--wd-gold);
+}
+
+.lp-modal-icon .wd-icon {
+  width: 30px;
+  height: 30px;
+
+  color: currentColor;
+}
+
+.lp-modal-icon.is-success {
+  background: #ECF8EF;
+
+  border-color: #C7E5CF;
+
+  color: var(--wd-green);
+}
+
+.lp-modal-icon.is-error {
+  background: #FFF1EF;
+
+  border-color: #F0D2CC;
+
+  color: var(--wd-red);
+}
+
+.lp-modal-icon.is-warn {
+  background: #FFF8E7;
+
+  color: var(--wd-gold);
+}
+
+.lp-modal-box h3 {
+  margin: 0 0 11px;
+
+  color: var(--wd-text);
+
+  font-size: 20px;
+  font-weight: 750;
+
+  line-height: 1.35;
+}
+
+.lp-modal-box p {
+  margin: 0 0 15px;
+
+  color: var(--wd-muted);
+
+  font-size: 13px;
+  line-height: 1.65;
+
+  overflow-wrap: anywhere;
+
+  white-space: pre-line;
+}
+
+.lp-modal-box input {
+  text-align: center;
+}
+
+@keyframes wdModalFade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+
+/* ==========================================
+   20. MODAL ACTION BUTTONS
+========================================== */
+
+.lp-modal-actions {
+  display: flex;
+
+  gap: 9px;
+
+  margin-top: 19px;
+}
+
+.lp-modal-actions button {
+  flex: 1;
+
+  min-width: 0;
+  min-height: 45px;
+
+  padding: 9px;
+
+  border-radius: 12px;
+
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.lp-modal-actions .btn-primary {
+  background: var(--wd-gradient);
+  color: #4D3915;
+
+  border: 1px solid #DFC382;
+}
+
+.lp-modal-actions .btn-secondary {
+  background: #FFFFFF;
+
+  color: var(--wd-gold);
+
+  border: 1px solid var(--wd-line);
+}
+
+
+/* ==========================================
+   21. FORCE LOGOUT
+========================================== */
+
+body.page-withdraw #forceLogoutModal {
+  position: fixed;
+  inset: 0;
+
+  z-index: 20000;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  padding: 18px;
+}
+
+body.page-withdraw #forceLogoutModal.show {
+  display: flex;
+}
+
+.fl-box {
+  position: relative;
+
+  width: 100%;
+  max-width: 350px;
+
+  padding: 27px 20px;
+
+  border: 1px solid var(--wd-line);
+  border-radius: 23px;
+
+  background: #FFFFFF;
+
+  box-shadow:
+    0 18px 60px rgba(85,65,25,.16);
+
+  text-align: center;
+}
+
+.fl-icon {
+  display: grid;
+  place-items: center;
+
+  width: 62px;
+  height: 62px;
+
+  margin: 0 auto 15px;
+
+  border-radius: 50%;
+
+  background: #FFF1EF;
+
+  color: var(--wd-red);
+}
+
+.fl-icon .wd-icon {
+  width: 30px;
+  height: 30px;
+
+  color: currentColor;
+}
+
+.fl-title {
+  margin: 0 0 10px;
+
+  color: var(--wd-text);
+
+  font-size: 21px;
+  font-weight: 750;
+}
+
+.fl-msg,
+.fl-sub {
+  color: var(--wd-muted);
+
+  font-size: 13px;
+  line-height: 1.6;
+
+  overflow-wrap: anywhere;
+}
+
+.fl-sub {
+  margin-top: 10px;
+
+  font-size: 12px;
+}
+
+
+/* ==========================================
+   22. FOOTER
+========================================== */
+
+.wd-footer {
+  margin-top: 24px;
+  padding-top: 15px;
+
+  border-top: 1px solid var(--wd-line);
+
+  color: var(--wd-muted);
+
+  font-size: 10px;
+
+  text-align: center;
+
+  letter-spacing: .6px;
+}
+
+
+/* ==========================================
+   23. RESPONSIVE MOBILE
+========================================== */
+
+@media (max-width: 375px) {
+
+  .withdraw-app {
+    padding-left: 11px;
+    padding-right: 11px;
+  }
+
+  .wd-header {
+    margin-left: -11px;
+    margin-right: -11px;
+
+    padding-left: 11px;
+    padding-right: 11px;
+  }
+
+  .wd-header-title {
+    font-size: 22px;
+  }
+
+  .wd-panel {
+    padding: 14px 12px;
+  }
+
+  .wd-balance-card {
+    padding: 17px 15px;
+  }
+
+  .wd-history-heading h2 {
+    font-size: 14px;
+  }
+
+  .wd-convert-balances {
+    gap: 7px;
+  }
+
+  .wd-convert-balances > div {
+    padding: 11px;
+  }
+
+}
+
+@media (max-width: 320px) {
+
+  .wd-header-title {
+    font-size: 20px;
+  }
+
+  .wd-history-heading {
+    flex-wrap: wrap;
+  }
+
+  .wd-section-title {
+    font-size: 14px;
+  }
+
+}
+
+
+/* ==========================================
+   24. REDUCED MOTION
+========================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+}
+
 </style>
+
+
 </head>
 
 <body class="page-withdraw">
@@ -1265,55 +1551,65 @@ body.page-withdraw .wd-transaction-note {
 
 <header class="wd-header">
 
-  <button class="wd-back"
-          onclick="goBack()"
-          	aria-label="Back">
+  <button
+    class="wd-back"
+    onclick="goBack()"
+    aria-label="Back">
+
     <span data-wd-icon="back"></span>
+
   </button>
 
   <div class="wd-header-center">
-    <div class="wd-header-title">WITHDRAWAL</div>
-    <div class="wd-header-sub">LIVESTREAM PRO</div>
+
+    <div class="wd-header-title">
+      Withdrawal
+    </div>
+
   </div>
 
   <div class="wd-header-icon">
-    <span data-wd-icon="crown"></span>
+
+    <span data-wd-icon="wallet"></span>
+
   </div>
 
 </header>
 
 
-  <!-- INTRO -->
-  <section class="wd-intro">
-    <div class="wd-eyebrow">PREMIUM WALLET</div>
-    <h1>Asset Management</h1>
-    <p>Convert your diamonds and submit a payout request</p>
-  </section>
 
-  <!-- BALANCE -->
-  <section class="wd-balance-card">
+<section class="wd-balance-card">
 
-    <div class="wd-balance-top">
-<span class="wd-small-title">DIGITAL ASSET</span>
-<span class="wd-premium-mark">PREMIUM MEMBER</span>
+  <div class="wd-balance-label">
+    Available Diamonds
+  </div>
+
+  <div class="wd-balance-value">
+
+    <span
+      data-wd-icon="gem"
+      data-wd-size="lg">
+    </span>
+
+    <span id="receivedVal">0</span>
+
+  </div>
+
+  <div class="wd-balance-bottom">
+
+    <div class="wd-money-label">
+      Estimated Payout
     </div>
 
-    <div class="wd-balance-label">Available Diamonds for Withdrawal</div>
-
-    <div class="wd-balance-value">
-<span data-wd-icon="gem" data-wd-size="lg"></span>
-<span id="receivedVal">0</span>
+    <div
+      class="wd-money-value"
+      id="moneyVal">
+      0 $
     </div>
 
-    <div class="wd-balance-bottom">
-      <div class="wd-money-label">
-       Estimated Payout Value
-      </div>
-      <div class="wd-money-value" id="moneyVal">0 $</div>
-    </div>
+  </div>
 
-  </section>
-
+</section>
 
 
 
@@ -1325,7 +1621,7 @@ body.page-withdraw .wd-transaction-note {
   <span data-wd-icon="wallet"></span>
 </div>
       <div>
-        <h2 class="wd-section-title">Create Withdrawal Request</h2>
+        <h2 class="wd-section-title">Withdraw Diamonds</h2>
         <div class="wd-section-sub">
           Enter the amount of diamonds you wish to withdraw
         </div>
@@ -1333,7 +1629,7 @@ body.page-withdraw .wd-transaction-note {
     </div>
 
     <div class="wd-field">
-      <label for="withdrawInput">DIAMOND WITHDRAWAL AMOUNT</label>
+      <label for="withdrawInput">Amount</label>
       <input
         class="wd-input"
         type="number"
@@ -1347,18 +1643,18 @@ body.page-withdraw .wd-transaction-note {
 
 <p class="wd-min-note" id="minWithdrawNote">
   <span data-wd-icon="warning" data-wd-size="sm"></span>
-  Minimum withdrawal:
+  Minimum:
   <b id="minWithdrawVal"></b> diamonds
 </p>
 
 <div class="wd-bank-title">
   <span data-wd-icon="bank"></span>
-  RECIPIENT BANK DETAILS
+  Bank Details
 </div>
 
 
 <div class="wd-field">
-  <label for="bankName">BANK</label>
+  <label for="bankName">Bank</label>
 
   <select class="wd-select" id="bankName">
     <option value="">Select your bank</option>
@@ -1372,9 +1668,9 @@ body.page-withdraw .wd-transaction-note {
   </select>
 </div>
 
-<!-- CUSTOM BANK NAME -->
+<!-- CUSTOM Bank Name -->
 <div class="wd-field hidden" id="otherBankField">
-  <label for="otherBankName">BANK NAME</label>
+  <label for="otherBankName">Bank Name</label>
 
   <input
     class="wd-input"
@@ -1397,7 +1693,7 @@ body.page-withdraw .wd-transaction-note {
 
 
     <div class="wd-field">
-      <label for="bankAccount">	ACCOUNT NUMBER</label>
+      <label for="bankAccount">Account Number</label>
       <input
         class="wd-input"
         id="bankAccount"
@@ -1409,7 +1705,7 @@ body.page-withdraw .wd-transaction-note {
     </div>
 
     <div class="wd-field">
-      <label for="bankOwner">ACCOUNT HOLDER NAME</label>
+      <label for="bankOwner">Account Holder</label>
       <input
         class="wd-input"
         id="bankOwner"
@@ -1421,7 +1717,7 @@ body.page-withdraw .wd-transaction-note {
 
 <button id="btnSubmitWithdraw" class="wd-submit">
   <span data-wd-icon="send"></span>
-  <span>	SUBMIT WITHDRAWAL REQUEST</span>
+  <span>	Submit Request</span>
 </button>
 
 <p class="wd-security-hint">
@@ -1457,19 +1753,19 @@ body.page-withdraw .wd-transaction-note {
 
   <div class="wd-convert-balances">
     <div>
-      <small>WALLET DIAMONDS</small>
+      <small>Wallet Diamonds</small>
       <strong id="wdConvertWallet">0</strong>
     </div>
 
     <div>
-      <small>GAME DIAMONDS</small>
+      <small>Game Diamonds</small>
       <strong id="wdConvertGame">0</strong>
     </div>
   </div>
 
   <div class="wd-field">
     <label for="wdConvertAmount">
-      AMOUNT TO CONVERT
+      Amount to Convert
     </label>
 
     <input
@@ -1486,35 +1782,33 @@ body.page-withdraw .wd-transaction-note {
   <div class="wd-convert-summary">
 
     <div>
-      <span>Conversion Amount</span>
+      <span>Amount</span>
       <strong id="wdConvertOriginal">0</strong>
     </div>
 
     <div>
-      <span>Conversion Fee (25%)</span>
+      <span>Fee (25%)</span>
       <strong class="wd-convert-fee"
               id="wdConvertFee">0</strong>
     </div>
 
     <div class="wd-convert-total">
-      <span>You Will Receive (75%)</span>
+      <span>You Receive (75%)</span>
       <strong id="wdConvertReceive">0</strong>
     </div>
 
   </div>
 
-  <p class="wd-convert-note">
-    A 25% conversion fee applies.
-    Converted diamonds are added to your game wallet.
-    This transaction cannot be reversed.
-  </p>
-
+ <p class="wd-convert-note">
+  25% fee applies. Diamonds are added to your
+  game wallet. Conversion cannot be reversed.
+</p>
   <button
     id="wdConvertButton"
     class="wd-submit"
     type="button"
     disabled>
-    CONVERT DIAMONDS
+    Convert Diamonds
   </button>
 
   <p id="wdConvertStatus"
@@ -1590,7 +1884,7 @@ body.page-withdraw .wd-transaction-note {
     </h2>
 
     <span class="wd-history-tag">
-      LAST 30 DAYS
+      Last 30 Days
     </span>
 
   </div>
@@ -1606,7 +1900,7 @@ body.page-withdraw .wd-transaction-note {
         <tr>
           <th>Date &amp; Time</th>
           <th>Diamonds</th>
-          <th>Payout</th>
+          <th>Bank Details</th>
           <th>Status</th>
           <th>Notes</th>
         </tr>
@@ -1736,7 +2030,7 @@ body.page-withdraw .wd-transaction-note {
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="/withdraw.js?v=transaction-v11"></script>
+<script src="/withdraw.js?v=transaction-v12"></script>
 <script src="/push-init.js"></script>
 <script src="/app-entry-guard.js"></script>
 
