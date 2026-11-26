@@ -5,6 +5,29 @@
 <meta charset="UTF-8">
 <meta name="viewport"
 content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+
+<!-- LIVESTREAM PRO - IOS PWA -->
+
+<meta name="apple-mobile-web-app-capable"
+      content="yes">
+
+<meta name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent">
+
+<meta name="apple-mobile-web-app-title"
+      content="Livestream Pro">
+
+<meta name="mobile-web-app-capable"
+      content="yes">
+
+<link rel="manifest"
+      href="/manifest.json">
+
+<link rel="apple-touch-icon"
+      href="/icons/icon-192.png">
+
+
 <title>Spirit Beast - LivestreamPro</title>
 
 <!-- BROWSER ICON -->
@@ -17,7 +40,77 @@ content="width=device-width, initial-scale=1, viewport-fit=cover">
       type="image/png"
       sizes="512x512"
       href="/icons/icon-512.png">
-      
+
+
+
+<script>
+/* ==========================================
+   SPIRIT BEAST - EARLY IOS SCREEN LOCK V1.0
+========================================== */
+
+(function initSpiritScreen() {
+
+  const root = document.documentElement;
+
+  const isIOS =
+    /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  const isStandalone =
+    navigator.standalone === true ||
+    matchMedia("(display-mode: standalone)").matches;
+
+  // Không áp dụng khi game nằm trong Watch & Play.
+  if (window.self !== window.top) return;
+
+  if (!isIOS || !isStandalone) return;
+
+
+  function applyScreenHeight() {
+
+    const portrait = matchMedia(
+      "(orientation: portrait)"
+    ).matches;
+
+    if (!portrait) {
+
+      root.classList.remove("ios-spirit-stable");
+      return;
+
+    }
+
+    const screenHeight = Math.max(
+      screen.width,
+      screen.height
+    );
+
+    root.style.setProperty(
+      "--spirit-screen-height",
+      `${screenHeight}px`
+    );
+
+    root.classList.add(
+      "ios-spirit-stable"
+    );
+
+  }
+
+
+  // Apply before first render.
+  applyScreenHeight();
+
+
+  // Update only when screen orientation changes.
+  window.addEventListener(
+    "orientationchange",
+    () => {
+      setTimeout(applyScreenHeight, 300);
+    }
+  );
+
+})();
+</script>
+
+
 <style>
 
 /* =============================================
@@ -2710,6 +2803,134 @@ body { overflow-x:hidden; }
 }
 
 
+
+
+/* ==========================================
+   SPIRIT BEAST - STABLE FULLSCREEN V1.0
+   LIVESTREAM PRO
+========================================== */
+
+
+/* LOCK ROOT SCREEN HEIGHT */
+
+html.ios-spirit-stable {
+
+  width: 100% !important;
+
+  height: var(--spirit-screen-height) !important;
+  min-height: 0 !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
+
+/* LOCK BODY */
+
+html.ios-spirit-stable body {
+
+  position: relative !important;
+
+  width: 100% !important;
+
+  height: var(--spirit-screen-height) !important;
+  min-height: 0 !important;
+  max-height: none !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  overflow: hidden !important;
+}
+
+
+/* MAIN GAME CONTAINER */
+
+html.ios-spirit-stable .app {
+
+  position: relative !important;
+
+  width: 100% !important;
+  max-width: 430px !important;
+
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+
+  margin: 0 auto !important;
+  padding: 0 !important;
+
+  overflow: hidden !important;
+}
+
+
+/* FULL SCREEN GAME BOARD */
+
+html.ios-spirit-stable .realm-board {
+
+  position: absolute !important;
+
+  inset: 0 !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  min-height: 0 !important;
+  max-height: none !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  background-size: 100% 100% !important;
+
+  overflow: hidden !important;
+
+  transition: none !important;
+}
+
+
+/* FULL SCREEN LOADING */
+
+html.ios-spirit-stable .spirit-loading {
+
+  position: absolute !important;
+
+  inset: 0 !important;
+
+  width: 100% !important;
+
+  height: var(--spirit-screen-height) !important;
+
+  min-height: 0 !important;
+  max-height: none !important;
+}
+
+
+html.ios-spirit-stable .spirit-loading-board {
+
+  height: 100% !important;
+
+  background-size: 100% 100% !important;
+}
+
+
+/* KEEP MODALS INSIDE THE SCREEN */
+
+html.ios-spirit-stable .spirit-inventory-overlay,
+html.ios-spirit-stable .spirit-guide-overlay,
+html.ios-spirit-stable .overlay {
+
+  position: absolute !important;
+
+  inset: 0 !important;
+
+  height: 100% !important;
+
+  box-sizing: border-box;
+}
 
 
 </style>
