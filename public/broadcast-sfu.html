@@ -7544,14 +7544,15 @@ body:has(#sfuChatPanel.hidden)
 
 #sfuTopExitBtn {
   background: transparent !important;
-
+  border: none !important;
+  border-radius: 0;
 
   box-shadow: none !important;
 
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 
-  color: #000;
+  color: #FFFFFF;
 
   width: 30px;
   min-width: 30px;
@@ -10860,187 +10861,6 @@ body.sfu-role-host #sfuPinnedContent.dragging {
 
 
 
-/* LIVESTREAM PRO - SFU CHAMPAGNE GOLD & WHITE
-   Appearance only: preserve video, hit targets, state, safe-area and stacking. */
-:root {
-  --sfu-cream: #FAF6E9;
-  --sfu-white: #FFFFFF;
-  --sfu-field: #FCFAF5;
-  --sfu-champagne: #F8EBC9;
-  --sfu-border: #EAE0C8;
-  --sfu-gold: #947025;
-  --sfu-ink: #29251D;
-  --sfu-muted: #746A57;
-  --sfu-primary: linear-gradient(135deg,#F5E4B5,#E3C47C);
-}
-
-/* Keep the actual video and over-video comments unchanged. */
-.studio .placeholder {
-  background: linear-gradient(145deg,#FFFDF7,#FAF6E9);
-}
-.studio .placeholder strong { color: #70531D; }
-
-/* Floating controls: opaque enough for bright and dark video. */
-.studio-topbar #sfuHostBadge,
-#sfuViewerBadge, #sfuRoomIdBadge,
-#sfuBottomToolbar :is(#sfuChatToggle,#sfuVoiceToggle,#sfuGiftToggle,#studioSettingsBtn,#sfuWatchPlayBtn) {
-  background: rgba(255,253,247,.94) !important;
-  color: #70531D !important;
-  border-color: #E5D1A0 !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,.16) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-#sfuHostBadge .sfu-host-name, #sfuViewerCount, #sfuRoomIdValue,
-#sfuRoomIdBadge .sfu-room-id-label, #sfuHostBadge #sfuLiveEarningsCount,
-#sfuViewerBadge svg { color: #70531D !important; text-shadow: none !important; }
-#sfuHostBadge #sfuHostAddFriend { background: var(--sfu-primary); color: #4D3915; }
-#sfuHostBadge #sfuHostAddFriend.is-pending { background: #F1EEE6; color: #746A57; }
-#sfuHostBadge #sfuHostAddFriend.is-friend { background: #ECF8EF; color: #267A47; }
-#sfuBottomToolbar #sfuChatInput {
-  background: rgba(255,253,247,.94) !important;
-  color: var(--sfu-ink) !important;
-  border-color: #E5D1A0 !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-#sfuBottomToolbar #sfuChatInput::placeholder { color: #746A57 !important; }
-#sfuBottomToolbar #sfuChatSend,
-#sfuBottomToolbar :is(#sfuChatToggle,#sfuVoiceToggle,#sfuWatchPlayBtn).active {
-  background: var(--sfu-primary) !important;
-  color: #4D3915 !important;
-  border-color: #C9A75D !important;
-}
-.sfu-chat-avatar,.sfu-system-avatar { border-color: #E5D1A0; background: #F8EBC9; }
-.sfu-avatar-fallback,.sfu-system-avatar { color: #70531D; }
-
-/* Sheets and modal surfaces: never alter visibility/display/z-index. */
-#studioSettingsPanel, #sfuGiftOverlay .sfu-gift-sheet,
-.sfu-viewer-sheet,.sfu-voice-sheet,.sfu-moderation-panel,
-.sfu-game-selector-sheet,#sfuShareDialog,.sfu-share-sheet,
-#sfuPinEditor,#sfuPkOverlay .sfu-pk-dialog,
-.sfu-recovery-card,.sfu-end-modal,.sfu-host-end-modal {
-  color-scheme: light;
-  background: var(--sfu-cream) !important;
-  color: var(--sfu-ink) !important;
-  border-color: var(--sfu-border) !important;
-  box-shadow: 0 -8px 32px rgba(40,30,12,.18) !important;
-}
-#studioSettingsPanel {
-  --tool-bg: #FFFFFF;
-  --tool-color: #947025;
-}
-#studioSettingsPanel .studio-sheet-kicker { color: #29251D !important; font-size: 17px; letter-spacing: 0; }
-#studioSettingsPanel .studio-control-grid > .control { color: var(--sfu-ink); }
-#studioSettingsPanel .studio-control-grid > .control > span { color: var(--sfu-ink) !important; }
-#studioSettingsPanel .studio-control-grid > .control > .studio-icon {
-  background: #FFFFFF !important; color: var(--sfu-gold) !important;
-  border-color: var(--sfu-border) !important;
-}
-#studioSettingsPanel .studio-control-grid > .control.active > .studio-icon {
-  background: #F8EBC9 !important; color: #70531D !important; border-color: #C9A75D !important;
-}
-#studioSettingsPanel #sfuPkEndBtn > .studio-icon { background: #FFF1EF !important; color: #B94A42 !important; }
-#studioSettingsPanel .studio-control-grid > .control:disabled { opacity: .38; }
-:is(.studio-sheet-handle,.sfu-gift-handle,.sfu-viewer-sheet-handle,.sfu-moderation-handle,.sfu-share-handle,.sfu-game-selector-handle) { background: #D6C7A7 !important; }
-
-/* Titles and secondary text inside light panels. */
-#sfuGiftOverlay .sfu-gift-head h2,
-.sfu-viewer-sheet-heading h2,.sfu-voice-header h2,.sfu-voice-sheet h3,
-.sfu-moderation-name,.sfu-game-selector-heading h2,.sfu-share-header h3,
-#sfuPkDialogTitle,.sfu-recovery-title,.sfu-end-modal h2,.sfu-host-end-modal h2,
-.sfu-beauty-heading,.sfu-viewer-name,.sfu-voice-name { color: var(--sfu-ink) !important; }
-.sfu-viewer-sheet-heading p,.sfu-viewer-sheet-heading small,.sfu-viewer-empty,
-.sfu-viewer-sheet-footer,.sfu-voice-header p,.sfu-voice-header small,#sfuVoiceStatus,
-.sfu-share-header p,.sfu-share-header small,.sfu-share-room-info span,
-#sfuPkDialogText,.sfu-recovery-description,.sfu-end-modal p,.sfu-host-end-modal p,
-.sfu-end-return,.sfu-beauty-hint,.sfu-supporter-reset,.sfu-supporter-offline,
-.sfu-supporter-value small,.sfu-mod-action small { color: var(--sfu-muted) !important; }
-#sfuGiftOverlay .sfu-gift-head small,.sfu-voice-header small,
-.sfu-viewer-sheet-heading small,.sfu-share-header small,
-.sfu-end-kicker,.sfu-host-end-kicker { display: none !important; }
-
-/* Cards and inputs. */
-.sfu-beauty-panel,.sfu-viewer-person,.sfu-supporter-row,.sfu-voice-item,
-.sfu-share-link-card,.sfu-game-grid .sfu-game-option,.sfu-mod-action {
-  background: #FFFFFF !important; color: var(--sfu-ink) !important;
-  border-color: var(--sfu-border) !important; box-shadow: none !important;
-}
-#sfuShareLink,#sfuPinText,#sfuPkRoomInput {
-  background: var(--sfu-field) !important; color: var(--sfu-ink) !important;
-  border-color: #D6C7A7 !important;
-}
-#sfuShareRoomId,.sfu-moderation-gifts,.sfu-supporter-value strong,
-.sfu-supporter-heading,.sfu-moderation-title,.sfu-end-countdown { color: #70531D !important; }
-.sfu-share-app small,.sfu-game-grid .sfu-game-info strong { color: var(--sfu-ink) !important; }
-
-/* Gift grid: keep current number of columns and 52dvh sheet. */
-#sfuGiftList .sfu-gift-card { background: #FFFFFF; border-color: #EAE0C8; }
-#sfuGiftList .sfu-gift-card.selected { background: #F8EBC9; border-color: #C9A75D; }
-#sfuGiftList .sfu-gift-card strong { color: #29251D; }
-#sfuGiftList .sfu-gift-card small { color: #70531D; }
-#sfuGiftOverlay .sfu-combo-panel,.sfu-gift-bottom { background: transparent !important; border-color: #EAE0C8 !important; }
-#sfuGiftOverlay .sfu-combo-btn,.sfu-beauty-preset {
-  background: #FFFFFF !important; color: #70531D !important; border-color: #EAE0C8 !important;
-}
-#sfuGiftOverlay .sfu-combo-btn.active,.sfu-beauty-preset.active,
-.sfu-game-grid .sfu-game-option.active {
-  background: #F8EBC9 !important; color: #70531D !important; border-color: #C9A75D !important;
-}
-#sfuGiftBalance,#sfuGiftTotal,#sfuGiftOverlay .sfu-combo-total span { color: #70531D !important; }
-
-/* Common action buttons. */
-#sfuGiftConfirm,#sfuShareCopy,#sfuShareNative,#sfuPinSave,#sfuPkConfirm,
-#sfuRecoveryRetry,.sfu-voice-primary,.sfu-voice-actions button:not(.reject) {
-  background: var(--sfu-primary) !important; color: #4D3915 !important;
-  border-color: #DFC382 !important; box-shadow: none !important;
-}
-#sfuGiftClose,#sfuVoiceClose,#sfuShareClose,#sfuGameSelectorClose,
-.sfu-viewer-sheet-close,#sfuPinCancel,#sfuRecoveryExit,#sfuHostEndCancel,
-.sfu-voice-secondary,.sfu-mod-cancel,.sfu-pk-dialog-actions button:not(#sfuPkConfirm) {
-  background: #FFFFFF !important; color: #70531D !important;
-  border-color: #EAE0C8 !important; box-shadow: none !important;
-}
-#sfuPinRemove,#sfuHostEndConfirm,.sfu-mod-action.danger,.sfu-voice-actions button.reject {
-  background: #FFF1EF !important; color: #B94A42 !important; border-color: #F0D2CC !important;
-}
-.sfu-mod-action.restore { background: #ECF8EF !important; color: #267A47 !important; border-color: #C7E5CF !important; }
-.sfu-mod-action strong,.sfu-mod-action svg { color: inherit !important; }
-#sfuGiftConfirm:disabled,#sfuPkConfirm:disabled,#sfuRecoveryRetry:disabled {
-  background: #EAE5D9 !important; color: #746A57 !important; opacity: .6;
-}
-.sfu-end-icon,.sfu-recovery-icon { background: #F8EBC9 !important; color: #947025 !important; border-color: #E5D1A0 !important; }
-.sfu-host-end-icon { background: #FFF1EF !important; color: #B94A42 !important; border-color: #F0D2CC !important; }
-.sfu-end-progress { background: #EAE0C8; }
-#sfuEndProgress { background: linear-gradient(90deg,#C9A75D,#E3C47C); }
-
-/* Toast: preserve timing and state classes. */
-#message.message { background: #FFFFFF !important; color: #29251D !important; border-color: #EAE0C8 !important; }
-#message.message.is-error { background: #FFF1EF !important; color: #B94A42 !important; border-color: #F0D2CC !important; }
-#message.message.is-success { background: #ECF8EF !important; color: #267A47 !important; border-color: #C7E5CF !important; }
-.sfu-mod-error { color: #B94A42 !important; }
-
-/* Feedback and Watch & Play chrome, not the embedded game. */
-#sfuGiftFeedback { color: #B94A42 !important; }
-.sfu-voice-feedback { color: #70531D !important; }
-#sfuShareStatus,.sfu-viewer-presence { color: #267A47 !important; }
-.sfu-game-header { background: #F8EBC9 !important; border-color: #EAE0C8 !important; }
-.sfu-game-brand strong { color: #29251D !important; }
-.sfu-game-brand small { color: #746A57 !important; }
-.sfu-game-actions button { background: #FFFFFF !important; color: #70531D !important; border-color: #EAE0C8 !important; }
-
-/* Keep PK score animation and outcome semantics. */
-.sfu-pk-result-overlay.is-victory { --pk-outcome-color: #947025; }
-.sfu-pk-result-overlay.is-defeat { --pk-outcome-color: #B94A42; }
-.sfu-pk-result-overlay.is-draw { --pk-outcome-color: #526B89; }
-.sfu-pk-result-overlay .sfu-pk-result-card {
-  color-scheme: light; background: #FFFFFF !important; color: #29251D;
-}
-#sfuPkResultText,.pk-outcome-side small { color: #746A57 !important; }
-.pk-outcome-side strong { color: #29251D !important; }
-.sfu-pk-result-status { background: #FCFAF5 !important; color: #70531D; }
-.sfu-pk-result-overlay #sfuPkResultOK { background: var(--sfu-primary) !important; color: #4D3915 !important; }
-.sfu-pk-result-overlay #sfuPkResultTitle { text-shadow: none; }
 
 
 </style>
