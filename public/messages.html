@@ -2561,6 +2561,65 @@ body.page-messages #chatModal .chat-tool svg {
 }
 
 
+/* ==========================================
+   PRIVATE CHAT V4.2 - KEYBOARD BACKGROUND FIX
+========================================== */
+
+html.private-chat-open {
+  background: #101114 !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+body.page-messages.private-chat-open {
+  background: #101114 !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+/* ẨN DANH SÁCH BẠN BÈ KHI CHAT */
+
+@media (max-width: 700px) {
+
+  body.page-messages.private-chat-open .msg-shell {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  /* CHAT BACKGROUND */
+
+  body.page-messages #chatModal {
+    background: #101114 !important;
+    overscroll-behavior: none !important;
+  }
+
+  body.page-messages #chatModal .private-chat-backdrop {
+    background: #101114 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* FIX KEYBOARD */
+
+  body.page-messages #chatModal .private-chat-panel {
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+  }
+
+  body.page-messages #chatModal #msgInput {
+    font-size: 16px !important;
+    scroll-margin: 0 !important;
+  }
+
+  body.page-messages #chatModal.keyboard-open .chatform {
+    padding-bottom: 8px !important;
+  }
+
+}
+
+
+
 </style>
 
 
