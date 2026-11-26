@@ -13399,11 +13399,17 @@ viewerSocket.data.sessionId !== requestSessionId ||
 viewerSocket.data.roomId !== roomId ||
 !room.viewers.has(viewer.socketId) ||
 
+!canAccessFriendLiveRoom(
+  room,
+  uid
+) ||
+
 !hasPrivateRoomAccess(
   room,
   uid,
   requestSessionId
 )
+
 ) {
   return res.status(403).json({
     ok: false,
@@ -13576,6 +13582,36 @@ if (
     }
 
     const peer = rooms.get(peerId);
+
+
+    /* FRIENDS ONLY - PK MEDIA ACCESS */
+
+const pkUsers = loadUsers();
+
+if (
+  !canAccessFriendLiveRoom(
+    room,
+    uid,
+    pkUsers
+  ) ||
+
+  !canAccessFriendLiveRoom(
+    peer,
+    uid,
+    pkUsers
+  )
+) {
+
+  return res.status(403).json({
+
+    ok: false,
+
+    error: "FRIENDS_ONLY_PK"
+
+  });
+
+}
+
 
     if (room.passwordHash || peer?.passwordHash) {
 
@@ -13851,6 +13887,115 @@ io.to(roomId).emit("viewer-count", {
 
 
 
+/* ==========================================
+   LIVESTREAM PRO
+   FRIENDS ONLY LIVE SECURITY V1.0
+========================================== */
+
+function canAccessFriendLiveRoom(room, uid, db) {
+
+  if (!room || !uid) return false;
+
+  uid = String(uid);
+
+  const hostUid = String(room.ownerUid || "");
+
+  if (!hostUid) return false;
+
+  const users = db || loadUsers();
+
+  const viewer = users[uid]?.profile;
+  const host = users[hostUid]?.profile;
+
+  if (!viewer || !host) return false;
+
+  if (
+    viewer.accountBlocked ||
+    host.accountBlocked
+  ) {
+    return false;
+  }
+
+  // Host can access their own room.
+
+  if (uid === hostUid) return true;
+
+  const viewerFriends =
+    (viewer.friends || []).map(String);
+
+  const hostFriends =
+    (host.friends || []).map(String);
+
+  const viewerBlocked =
+    (viewer.blockedUsers || []).map(String);
+
+  const hostBlocked =
+    (host.blockedUsers || []).map(String);
+
+  // Reject blocked accounts.
+
+  if (
+    viewerBlocked.includes(hostUid) ||
+    hostBlocked.includes(uid)
+  ) {
+    return false;
+  }
+
+  // Require mutual friendship.
+
+  return (
+    viewerFriends.includes(hostUid) &&
+    hostFriends.includes(uid)
+  );
+
+}
+
+
+/* FILTER LIVE ROOMS FOR EACH USER */
+
+function getFriendLobbyList(socket, list, db) {
+
+  if (
+    socket.data.authenticated !== true ||
+    !socket.data.uid
+  ) {
+    return [];
+  }
+
+  const uid = String(socket.data.uid);
+
+  return list.filter(item => {
+
+    const room = rooms.get(item.roomId);
+
+    return canAccessFriendLiveRoom(
+      room,
+      uid,
+      db
+    );
+
+  });
+
+}
+
+
+/* REJECT UNAUTHORIZED VIEWER */
+
+function rejectFriendLiveAccess(socket) {
+
+  socket.emit("room-error", {
+
+    reason: "friends_only",
+
+    message:
+      "Only friends of the host can join this livestream."
+
+  });
+
+}
+
+
+
 function getLobbyList() {
   const list = [];
 
@@ -13903,8 +14048,38 @@ mediaMode: room.mediaMode || "sfu"
 
 
 
+/* ==========================================
+   FRIENDS ONLY - PERSONALIZED LOBBY UPDATE
+========================================== */
+
 function emitLobbyUpdate() {
-  io.emit("lobby-update", { rooms: getLobbyList(), ts: Date.now() });
+
+  const db = loadUsers();
+
+  const list = getLobbyList();
+
+  const ts = Date.now();
+
+  for (const client of io.sockets.sockets.values()) {
+
+    if (!client.connected) continue;
+
+    if (!client.data.liveLobbySubscribed) continue;
+
+    client.emit("lobby-update", {
+
+      rooms: getFriendLobbyList(
+        client,
+        list,
+        db
+      ),
+
+      ts
+
+    });
+
+  }
+
 }
 
 
@@ -14990,7 +15165,7 @@ uMe.profile.blockedUsers ||= [];
   }
 
   saveUsers(db);
-
+emitLobbyUpdate();
 /* =====================================
    REFRESH SOCIAL FEED AFTER BLOCK
 ===================================== */
@@ -15029,6 +15204,8 @@ uMe.profile.blockedUsers =
 
 
   saveUsers(db);
+
+  emitLobbyUpdate();
 
   // 🔔 realtime cho chính mình
   socket.emit("user-unblocked", { uid });
@@ -15120,6 +15297,12 @@ socket.on("friend-respond", ({ from, accept }) => {
 
   saveUsers(db);
 
+if (accept) {
+
+  emitLobbyUpdate();
+
+}
+
   if (accept) {
   refreshSocialFeedForUser(from);
   refreshSocialFeedForUser(to);
@@ -15198,6 +15381,8 @@ socket.on("friend-remove", ({ uid }) => {
   uYou.profile.friends = uYou.profile.friends.filter(x => x !== me);
 
   saveUsers(db);
+
+  emitLobbyUpdate();
 
   refreshSocialFeedForUser(me);
 refreshSocialFeedForUser(uid);
@@ -16684,6 +16869,27 @@ if (!room) {
 }
 
 
+
+
+/* FRIENDS ONLY - VIEWER ACCESS */
+
+if (
+  socket.data.authenticated !== true ||
+
+  !canAccessFriendLiveRoom(
+    room,
+    socket.data.uid,
+    db
+  )
+) {
+
+  rejectFriendLiveAccess(socket);
+
+  return;
+
+}
+
+
 /* PRIVATE ROOM ACCESS CONTROL */
 
 if (!canSocketAccessPrivateRoom(room, socket)) {
@@ -16948,6 +17154,22 @@ socket.on(
     }
 
 
+    /* FRIENDS ONLY - PRIVATE ROOM UNLOCK */
+
+if (!canAccessFriendLiveRoom(room, uid)) {
+
+  return cb({
+
+    ok: false,
+
+    error: "FRIENDS_ONLY"
+
+  });
+
+}
+
+
+
     if (room.kickedViewers?.has(uid)) {
 
       return cb({
@@ -17082,6 +17304,7 @@ socket.on(
 
       if (
         !socket.connected ||
+        !canAccessFriendLiveRoom(room, uid) ||
         socket.data.authenticated !== true ||
         String(socket.data.uid) !== uid ||
         socket.data.sessionId !== sessionId ||
@@ -17306,9 +17529,52 @@ return cb({
 
 
 
-  // Client (lobby.html) gọi để lấy danh sách phòng đang live
+/* ==========================================
+   FRIENDS ONLY - GET LIVE ROOM LIST
+========================================== */
+
 socket.on("lobby-get", () => {
-  socket.emit("lobby-update", { rooms: getLobbyList(), ts: Date.now() });
+
+  socket.data.liveLobbySubscribed = true;
+
+  if (
+    socket.data.authenticated !== true ||
+    !socket.data.uid
+  ) {
+
+    return socket.emit("lobby-update", {
+
+      rooms: [],
+
+      ts: Date.now()
+
+    });
+
+  }
+
+  const db = loadUsers();
+
+  const list = getLobbyList();
+
+  socket.emit("lobby-update", {
+
+    rooms: getFriendLobbyList(
+      socket,
+      list,
+      db
+    ),
+
+    ts: Date.now()
+
+  });
+
+});
+
+
+socket.on("lobby-unsubscribe", () => {
+
+  socket.data.liveLobbySubscribed = false;
+
 });
 
 
@@ -17544,6 +17810,27 @@ if (role === "broadcaster") {
 }
 
   const room = getRoom(roomId);
+
+  /* FRIENDS ONLY - ROOM ACCESS CONTROL */
+
+if (
+  role === "viewer" &&
+  (
+    socket.data.authenticated !== true ||
+
+    !canAccessFriendLiveRoom(
+      room,
+      socket.data.uid
+    )
+  )
+) {
+
+  rejectFriendLiveAccess(socket);
+
+  return;
+
+}
+
 
   /* PRIVATE ROOM - LEGACY VIEWER PROTECTION */
 
@@ -18388,6 +18675,25 @@ host: sfuHostInfo
   }
 
 if (role === "viewer") {
+
+
+  if (
+  !canAccessFriendLiveRoom(
+    room,
+    uid,
+    usersForHost
+  )
+) {
+
+  return cb({
+
+    ok: false,
+
+    error: "FRIENDS_ONLY"
+
+  });
+
+}
 
   if (!canSocketAccessPrivateRoom(room, socket)) {
 

@@ -3616,7 +3616,9 @@ body.lobby-page .lobby-private-lock {
 
       <div class="lobby-brand-copy">
         <div class="lobby-title">LIVESTREAM PRO</div>
-        <div class="lobby-subtitle">PREMIUM LIVE LOUNGE</div>
+        <div class="lobby-subtitle">
+  FRIENDS LIVE LOUNGE
+</div>
       </div>
 
     </div>
@@ -5582,6 +5584,9 @@ privateJoinConfirm.addEventListener("click", () => {
           LOGIN_REQUIRED:
             "Please sign in again.",
 
+          FRIENDS_ONLY:
+  "Only friends of the host can join this livestream.",
+
           INCORRECT_PASSWORD:
             "Incorrect room password.",
 
@@ -6149,8 +6154,35 @@ socket.on("lobby-update", d => {
 
 
 // load
+/* ==========================================
+   FRIENDS ONLY - REALTIME LOBBY
+========================================== */
+
 requestLobby();
-setInterval(() => socket.emit("lobby-get"), 3000);
+
+socket.on("connect", () => {
+
+  socket.emit("lobby-get");
+
+});
+
+
+window.addEventListener("pageshow", event => {
+
+  if (event.persisted) {
+
+    socket.emit("lobby-get");
+
+  }
+
+});
+
+
+window.addEventListener("pagehide", () => {
+
+  socket.emit("lobby-unsubscribe");
+
+});
 
 
 
