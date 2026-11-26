@@ -18987,6 +18987,69 @@ body.page-profile [hidden] {
   display: none !important;
 }
  
+
+
+/* ==========================================
+   PROFILE - FIX CHANGE COVER BUTTON
+========================================== */
+
+/* Giới hạn các lớp bên trong ảnh cover */
+body.page-profile .profile-cover {
+  position: relative !important;
+  isolation: isolate;
+  z-index: 4 !important;
+}
+
+/* Lớp ảnh cover */
+body.page-profile .profile-cover #coverPreview {
+  z-index: 0 !important;
+}
+
+/* Nút đổi ảnh cover */
+body.page-profile .profile-cover .cover-actions {
+  position: absolute !important;
+
+  left: 12px !important;
+  bottom: 12px !important;
+
+  z-index: 5 !important;
+  pointer-events: auto !important;
+}
+
+/* Cho phép thao tác trên mobile */
+body.page-profile #btnChangeCover {
+  pointer-events: auto !important;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* Giữ avatar nằm trên vùng cover giao nhau */
+body.page-profile > .container {
+  z-index: 5 !important;
+  pointer-events: none;
+}
+
+/* Khôi phục thao tác trên nội dung Profile */
+body.page-profile .profile-shell {
+  pointer-events: none;
+}
+
+body.page-profile .profile-header {
+  pointer-events: none;
+}
+
+body.page-profile .profile-header > *,
+body.page-profile .profile-shell > :not(.profile-header) {
+  pointer-events: auto;
+}
+
+/* Không để lớp trang trí chặn thao tác */
+body.page-profile .profile-cover::before,
+body.page-profile .profile-cover::after {
+  pointer-events: none !important;
+}
+
+
 </style>
 
 
@@ -19007,10 +19070,14 @@ body.page-profile [hidden] {
        src="/assets/default-cover.jpg"
        alt="cover">
 
-  <div class="cover-actions">
-    <button id="btnChangeCover">📷</button>
-  </div>
-
+<div class="cover-actions">
+  <button
+    type="button"
+    id="btnChangeCover"
+    aria-label="Change cover photo">
+    📷
+  </button>
+</div>
   <input type="file" id="coverInput" accept="image/*" hidden>
 </div>   
     
@@ -20399,7 +20466,7 @@ body.page-profile [hidden] {
 
 
 
-<script src="/profile.js?v=20261126-4"></script>
+<script src="/profile.js?v=20261127-01"></script>
 <script src="/push-init.js"></script>
 <script src="/app-entry-guard.js"></script>
 

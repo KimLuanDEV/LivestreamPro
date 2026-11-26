@@ -1598,9 +1598,39 @@ document.querySelectorAll("#passModal input").forEach(inp=>{
 
 
 
+
+/* ==========================================
+   PROFILE - CHANGE COVER ACTION
+========================================== */
+
 if (btnChangeCover && coverInput) {
-  btnChangeCover.onclick = () => coverInput.click();
+
+  btnChangeCover.onclick = (e) => {
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Chỉ cho phép đổi cover của chính mình
+    if (!__profileAuth.uid) return;
+
+    if (
+      viewUid &&
+      viewUid !== __profileAuth.uid
+    ) return;
+
+    // Không mở khi đang upload
+    if (__coverUploading) return;
+
+    // Cho phép chọn lại cùng một ảnh
+    coverInput.value = "";
+
+    // Mở thư viện ảnh
+    coverInput.click();
+
+  };
+
 }
+
 
 if (coverInput) {
   coverInput.onchange = async () => {
