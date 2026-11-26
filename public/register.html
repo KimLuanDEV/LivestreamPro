@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <!-- PWA iOS -->
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" 
+      content="default">
 <meta name="apple-mobile-web-app-title" content="Livestream Pro">
 
 <!-- Android / Chrome -->
@@ -13,7 +14,7 @@
 <meta name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover">
 
-<meta name="theme-color" content="#090a0e">
+<meta name="theme-color" content="#FAF6E9">
 
 <title>Create Account | Livestream Pro</title>
 
@@ -34,18 +35,35 @@
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 
 <style>
-
 /* ==========================================
    LIVESTREAM PRO
-   ROYAL OBSIDIAN REGISTRATION
+   CHAMPAGNE GOLD REGISTRATION V1.0
 ========================================== */
 
 :root {
-  color-scheme: dark;
-  --gold: #dfbf89;
-  --gold-light: #f1dcb4;
-  --line: rgba(218,181,120,.30);
+  color-scheme: light;
+
+  --auth-bg: #FAF6E9;
+  --auth-white: #FFFFFF;
+  --auth-cream: #FCFAF5;
+  --auth-champagne: #F8EBC9;
+
+  --auth-gold: #947025;
+  --auth-text: #29251D;
+  --auth-muted: #857960;
+  --auth-line: #EAE0C8;
+
+  --auth-gradient:
+    linear-gradient(135deg, #F5E4B5, #E3C47C);
+
+  --auth-shadow:
+    0 8px 30px rgba(112,85,28,.08);
 }
+
+
+/* ==========================================
+   01. GLOBAL RESET
+========================================== */
 
 *,
 *::before,
@@ -53,28 +71,34 @@
   box-sizing: border-box;
 }
 
-html {
+html,
+body {
   width: 100%;
   height: 100%;
+
   margin: 0;
-  background: #090a0e;
+  padding: 0;
+
+  overflow: hidden;
+
+  background: var(--auth-bg);
+}
+
+html {
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body.register-page {
-  width: 100%;
-  height: 100vh;
-  height: 100dvh;
-  margin: 0;
-
   display: flex;
   justify-content: center;
   align-items: stretch;
 
-  overflow: hidden;
-  background: #090a0e;
+  height: 100vh;
+  height: 100dvh;
 
-  color: #f5e9d3;
+  color: var(--auth-text);
+
   font-family:
     system-ui,
     -apple-system,
@@ -89,207 +113,234 @@ input {
 
 button {
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.hidden {
+button:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--auth-gold);
+  outline-offset: 3px;
+}
+
+a {
+  color: var(--auth-gold);
+  text-decoration: none;
+}
+
+.hidden,
+[hidden] {
   display: none !important;
 }
 
+
 /* ==========================================
-   MAIN SCREEN
+   02. MAIN SCREEN
 ========================================== */
 
 .register-shell {
   position: relative;
-  isolation: isolate;
 
   width: 100%;
   max-width: 430px;
-  min-width: 0;
 
   height: 100%;
   min-height: 0;
+  min-width: 0;
 
   padding:
-    calc(12px + env(safe-area-inset-top, 0px))
-    20px
-    calc(12px + env(safe-area-inset-bottom, 0px));
+    calc(14px + env(safe-area-inset-top,0px))
+    22px
+    calc(14px + env(safe-area-inset-bottom,0px));
 
   display: flex;
   flex-direction: column;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      #F3E2B5 0%,
+      transparent 46%
+    ),
+    linear-gradient(
+      180deg,
+      #FFFDF7 0%,
+      #FAF6E9 70%
+    );
+}
+
+
+/* REMOVE UNNECESSARY TEXT */
+
+.register-top,
+.register-panel-head span,
+.register-status-brand {
+  display: none;
+}
+
+
+/* ==========================================
+   03. CONTENT
+========================================== */
+
+.register-content {
+  flex: 1 1 auto;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 14px 0;
 
   overflow-x: hidden;
   overflow-y: auto;
 
   scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 
-  background:
-    radial-gradient(
-      ellipse 85% 28% at 50% -5%,
-      rgba(185,134,65,.19),
-      transparent 80%
-    ),
-    linear-gradient(
-      180deg,
-      #1a191b 0%,
-      #101115 48%,
-      #090a0e 100%
-    );
+  -webkit-overflow-scrolling: touch;
 }
 
-.register-shell::-webkit-scrollbar {
+.register-content::-webkit-scrollbar {
   display: none;
 }
 
-/* ==========================================
-   BRAND HEADER
-========================================== */
-
-.register-top {
-  flex: 0 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-
-  color: var(--gold);
-  font-size: 9px;
-  font-weight: 750;
-  letter-spacing: 1.15px;
-}
-
-.register-top span:last-child {
-  color: #aa9270;
-  text-align: right;
-}
 
 /* ==========================================
-   CONTENT AREA
+   04. LOGO & BRAND
 ========================================== */
-
-.register-content {
-  flex: 1 0 auto;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-
-  width: 100%;
-  min-width: 0;
-
-  padding: 18px 0 14px;
-}
 
 .register-hero {
   flex: 0 0 auto;
+
   width: 100%;
+
+  margin-top: auto;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
   text-align: center;
 }
 
 .register-avatar {
-  width: 82px;
-  height: 82px;
+  width: 76px;
+  height: 76px;
 
-  margin: 0 auto 16px;
+  margin: 0 auto 13px;
+
+  border-radius: 19px;
 
   background:
     url("/icons/icon-512.png")
     center / cover no-repeat;
 }
 
-.register-eyebrow {
-  margin: 0 0 7px;
-
-  color: #c2a170;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 2.4px;
-}
-
 .register-title {
+  order: 1;
+
   margin: 0;
 
-  color: var(--gold-light);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 29px;
+  color: #70531D;
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: clamp(23px,7vw,29px);
   font-weight: 700;
-  line-height: 1.2;
+
+  line-height: 1.25;
+  letter-spacing: .8px;
+
+  overflow-wrap: anywhere;
 }
 
+.register-eyebrow {
+  order: 2;
+
+  margin: 7px 0 0;
+
+  color: var(--auth-muted);
+
+  font-size: 13px;
+  font-weight: 500;
+
+  letter-spacing: .3px;
+}
 
 
 /* ==========================================
-   REGISTRATION PANEL
+   05. REGISTRATION PANEL
 ========================================== */
 
 .register-panel {
+  flex: 0 0 auto;
+
   width: 100%;
   min-width: 0;
 
-  margin-top: 20px;
-  padding: 17px 17px 18px;
+  margin-top: 21px;
+  padding: 19px 17px 18px;
 
-  border: 1px solid var(--line);
-  border-radius: 17px;
+  border: 1px solid var(--auth-line);
+  border-radius: 23px;
 
-  background: linear-gradient(
-    145deg,
-    rgba(51,43,34,.62),
-    rgba(19,20,25,.88) 65%
-  );
+  background: var(--auth-white);
 
-  box-shadow:
-    inset 0 1px rgba(255,255,255,.035),
-    0 16px 35px rgba(0,0,0,.20);
+  box-shadow: var(--auth-shadow);
 }
 
 .register-panel-head {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
+  align-items: center;
 
-  margin-bottom: 13px;
+  margin-bottom: 15px;
 }
 
 .register-panel-head h2 {
   margin: 0;
 
-  color: #f0d9b1;
-  font: 700 19px Georgia,serif;
+  color: var(--auth-text);
+
+  font-size: 22px;
+  font-weight: 750;
+
+  letter-spacing: -.4px;
 }
 
-.register-panel-head span {
-  color: #b6996d;
-
-  font-size: 8px;
-  font-weight: 700;
-  letter-spacing: .6px;
-
-  text-align: right;
-}
 
 /* ==========================================
-   FORM FIELDS
+   06. INPUT FIELDS
 ========================================== */
 
 .register-field {
   width: 100%;
   min-width: 0;
-  margin-top: 11px;
+
+  margin-top: 13px;
 }
 
 .register-field label {
   display: block;
+
   margin-bottom: 6px;
 
-  color: #caae82;
+  color: #706044;
 
-  font-size: 10px;
-  font-weight: 750;
-  letter-spacing: .8px;
+  font-size: 12px;
+  font-weight: 650;
 }
 
 .register-field input {
@@ -297,164 +348,252 @@ button {
 
   width: 100%;
   min-width: 0;
-  height: 44px;
+
+  height: 47px;
 
   margin: 0;
-  padding: 0 13px;
+  padding: 0 12px;
 
-  border: 1px solid rgba(217,179,114,.25);
-  border-radius: 9px;
-  outline: 0;
+  border: 1px solid var(--auth-line);
+  border-radius: 12px;
 
-  background: #121419;
-  color: #f7ecd8;
+  outline: none;
+
+  background: var(--auth-cream);
+  color: var(--auth-text);
 
   font-size: 16px;
 
   transition:
-    border-color .2s ease,
-    box-shadow .2s ease;
+    border-color .18s,
+    box-shadow .18s;
 }
 
 .register-field input::placeholder {
-  color: #898580;
+  color: #928A7C;
+
+  font-size: 13px;
+
+  opacity: 1;
 }
 
 .register-field input:focus {
-  border-color: #e1bb7b;
-  box-shadow: 0 0 0 3px rgba(215,178,112,.1);
+  border-color: #C9A75D;
+
+  box-shadow:
+    0 0 0 3px rgba(201,167,93,.12);
 }
 
-/* PASSWORD VISIBILITY */
+
+/* AUTOFILL */
+
+input:-webkit-autofill {
+  -webkit-text-fill-color: var(--auth-text);
+
+  -webkit-box-shadow:
+    0 0 0 1000px #FCFAF5 inset;
+}
+
+
+/* ==========================================
+   07. PASSWORD VISIBILITY
+========================================== */
 
 .pass-wrap {
   position: relative;
+
   width: 100%;
+  min-width: 0;
 }
 
 .pass-wrap input {
-  padding-right: 76px;
+  padding-right: 65px;
 }
 
 .pass-eye {
   position: absolute;
-  right: 6px;
+
   top: 50%;
+  right: 7px;
 
   transform: translateY(-50%);
 
-  width: 60px;
-  height: 32px;
+  width: 50px;
+  height: 31px;
+
+  margin: 0;
+  padding: 0;
 
   display: grid;
   place-items: center;
 
-  padding: 0;
-  margin: 0;
+  border: none;
+  border-radius: 8px;
 
-  border: 1px solid rgba(211,174,111,.28);
-  border-radius: 7px;
-
-  background: #2d2822;
-  color: #e3c48c;
+  background: var(--auth-champagne);
+  color: var(--auth-gold);
 
   font-size: 11px;
-  font-weight: 750;
+  font-weight: 700;
 }
 
-/* HELP TEXT */
+
+/* ==========================================
+   08. FIELD HINT & VALIDATION
+========================================== */
 
 .field-hint {
-  margin: 6px 0 0;
-  color: #928d85;
-  font-size: 10px;
+  margin: 6px 2px 0;
+
+  color: var(--auth-muted);
+
+  font-size: 11px;
   line-height: 1.45;
+
+  overflow-wrap: anywhere;
 }
 
 #passWarn {
   display: none;
-  margin-top: 8px;
 
-  color: #f0a09a;
+  margin-top: 8px;
+  padding: 8px 10px;
+
+  border: 1px solid #F0D2CC;
+  border-radius: 8px;
+
+  background: #FFF2EF;
+  color: #B94A42;
+
   font-size: 11px;
-  line-height: 1.4;
+  font-weight: 500;
+
+  line-height: 1.45;
 }
 
+
 /* ==========================================
-   SUBMIT BUTTON
+   09. PRIMARY BUTTONS
 ========================================== */
 
-.register-btn {
+.register-btn,
+.modal-btn,
+.register-status-close {
   display: block;
 
   width: 100%;
-  min-height: 47px;
+  min-height: 48px;
 
-  margin-top: 19px;
-  padding: 11px;
+  padding: 10px 12px;
 
-  border: 1px solid #e7c995;
-  border-radius: 10px;
+  border: 1px solid #DFC382;
+  border-radius: 12px;
 
-  background: linear-gradient(
-    125deg,
-    #f3dfb9,
-    #c49a61
-  );
-
-  color: #281e12;
+  background: var(--auth-gradient);
+  color: #4D3915;
 
   font-size: 13px;
-  font-weight: 850;
-  letter-spacing: .7px;
+  font-weight: 800;
+
+  transition:
+    filter .15s,
+    transform .15s;
 }
 
-.register-btn:active {
+.register-btn {
+  margin-top: 20px;
+
+  letter-spacing: .6px;
+}
+
+.register-btn:active,
+.modal-btn:active,
+.register-status-close:active {
   transform: scale(.985);
 }
 
+
 /* ==========================================
-   ACCOUNT LINK
+   10. SIGN IN LINK
 ========================================== */
 
 .register-links {
   flex: 0 0 auto;
 
   width: 100%;
-  margin-top: 16px;
 
-  color: #aaa29a;
-  font-size: 12px;
+  margin: 17px 0 auto;
+  padding-bottom: 6px;
+
+  color: var(--auth-muted);
+
+  font-size: 13px;
+  line-height: 1.6;
+
   text-align: center;
 }
 
 .register-links a {
-  color: #edcd99;
+  margin-left: 3px;
+
+  color: var(--auth-gold);
+
   font-weight: 750;
-  text-decoration: none;
 }
 
 
+/* ==========================================
+   11. FOOTER
+========================================== */
+
+.register-foot {
+  flex: 0 0 auto;
+
+  width: 100%;
+
+  padding-top: 12px;
+
+  border-top: 1px solid var(--auth-line);
+
+  color: #A3967C;
+
+  text-align: center;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  letter-spacing: .9px;
+  line-height: 1.5;
+}
+
 
 /* ==========================================
-   POPUP MESSAGE
+   12. NOTIFICATION MODAL
 ========================================== */
 
 .register-page .modal {
   position: fixed;
   inset: 0;
+
   z-index: 1000;
+
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
   padding:
-    calc(14px + env(safe-area-inset-top,0px))
-    16px
-    calc(14px + env(safe-area-inset-bottom,0px));
+    calc(16px + env(safe-area-inset-top,0px))
+    18px
+    calc(16px + env(safe-area-inset-bottom,0px));
 
-  background: rgba(0,0,0,.8);
+  background: rgba(52,43,25,.28);
+
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
 }
 
 .register-page .modal-card {
@@ -462,147 +601,53 @@ button {
   max-width: 380px;
   max-height: 100%;
 
+  padding: 25px 21px 21px;
+
   overflow-y: auto;
 
-  padding: 23px 20px 20px;
+  border: 1px solid var(--auth-line);
+  border-radius: 23px;
 
-  border: 1px solid rgba(232,194,127,.4);
-  border-radius: 16px;
+  background: var(--auth-white);
 
-  background: linear-gradient(
-    155deg,
-    #2a251f,
-    #16181d
-  );
-
-  box-shadow: 0 25px 60px rgba(0,0,0,.6);
+  box-shadow:
+    0 20px 60px rgba(85,65,25,.15);
 }
 
 .register-page .modal-card h3 {
   margin: 0 0 12px;
 
-  color: var(--gold-light);
-  font: 700 23px Georgia,serif;
+  color: var(--auth-text);
+
+  font-size: 22px;
+  font-weight: 750;
+
+  line-height: 1.3;
 }
 
-.register-page #msgText {
-  color: #c1b7a7;
+#msgText {
+  color: var(--auth-muted);
+
   font-size: 13px;
   line-height: 1.65;
+
   white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
-.register-page .modal-btn {
-  width: 100%;
-  min-height: 43px;
-
-  margin-top: 17px;
-
-  border: 1px solid #e2c28d;
-  border-radius: 9px;
-
-  background: linear-gradient(
-    135deg,
-    #f0d7aa,
-    #c1975d
-  );
-
-  color: #2a2015;
-  font-size: 12px;
-  font-weight: 800;
+.modal-btn {
+  margin-top: 20px;
 }
-
-/* ==========================================
-   SHORT MOBILE SCREENS
-========================================== */
-
-@media (max-height: 790px) {
-
-  .register-shell {
-    padding-top:
-      calc(10px + env(safe-area-inset-top,0px));
-    padding-bottom:
-      calc(10px + env(safe-area-inset-bottom,0px));
-  }
-
-  .register-content {
-    padding: 13px 0;
-  }
-
-  .register-avatar {
-    width: 66px;
-    height: 66px;
-    margin-bottom: 11px;
-  }
-
-  .register-title {
-    font-size: 26px;
-  }
-
-
-  .register-panel {
-    margin-top: 14px;
-    padding: 13px;
-  }
-
-  .register-panel-head {
-    margin-bottom: 9px;
-  }
-
-  .register-field {
-    margin-top: 9px;
-  }
-
-  .register-field input {
-    height: 41px;
-  }
-
-  .register-btn {
-    margin-top: 14px;
-    min-height: 43px;
-  }
-}
-
-@media (max-height: 620px) {
-
-  .register-avatar {
-    width: 54px;
-    height: 54px;
-  }
-
-
-
-  .register-content {
-    justify-content: flex-start;
-  }
-}
-
-@media (max-width: 360px) {
-
-  .register-shell {
-    padding-left: 13px;
-    padding-right: 13px;
-  }
-
-  .register-title {
-    font-size: 24px;
-  }
-
-  .register-panel-head span {
-    font-size: 7px;
-  }
-}
-
-
 
 
 /* ==========================================
-   REGISTER STATUS - PREMIUM BLACK GOLD
+   13. REGISTRATION STATUS
 ========================================== */
 
 .register-status-overlay {
   position: fixed;
   inset: 0;
+
   z-index: 99999;
 
   display: flex;
@@ -610,170 +655,181 @@ button {
   justify-content: center;
 
   padding: 20px;
-  box-sizing: border-box;
-}
-
-.register-status-overlay.hidden {
-  display: none !important;
 }
 
 .register-status-backdrop {
   position: absolute;
   inset: 0;
 
-  background: rgba(3, 4, 7, .94);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(52,43,25,.28);
+
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
 }
 
 .register-status-card {
   position: relative;
+
   z-index: 1;
 
   width: 100%;
-  max-width: 350px;
+  max-width: 340px;
+  max-height: 100%;
 
-  padding: 38px 24px 30px;
-  text-align: center;
+  padding: 29px 22px 24px;
 
-  border: 1px solid rgba(222, 181, 111, .48);
-  border-radius: 20px;
+  overflow-y: auto;
 
-  background: linear-gradient(
-    155deg,
-    #2b251e,
-    #17191d 60%,
-    #101115
-  );
+  border: 1px solid var(--auth-line);
+  border-radius: 24px;
+
+  background: var(--auth-white);
 
   box-shadow:
-    0 25px 70px rgba(0,0,0,.65),
-    inset 0 1px rgba(255,255,255,.06);
+    0 18px 60px rgba(85,65,25,.16);
 
-  animation: registerAppear .25s ease-out;
+  text-align: center;
+
+  animation:
+    registerAppear .22s ease-out;
 }
 
-.register-status-brand {
-  color: #cba86f;
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 2.5px;
-  margin-bottom: 29px;
-}
+
+/* STATUS ICON */
 
 .register-status-icon {
-  width: 82px;
-  height: 82px;
+  width: 66px;
+  height: 66px;
 
-  margin: 0 auto 24px;
+  margin: 0 auto 18px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  border: 2px solid rgba(215,174,104,.3);
+  border: 1px solid #E7D4A3;
   border-radius: 50%;
 
-  background: rgba(202,158,88,.08);
+  background: #FFF8E7;
 }
+
+
+/* SUCCESS */
 
 .register-status-icon.success {
-  border-color: #76c992;
-  background: rgba(70,180,110,.1);
+  border-color: #B7DFC3;
+  background: #ECF8EF;
 }
+
+.register-status-icon.success::after {
+  content: "✓";
+
+  color: #32975A;
+
+  font-size: 34px;
+  font-weight: 800;
+}
+
+
+/* ERROR */
 
 .register-status-icon.error {
-  border-color: #e07777;
-  background: rgba(210,65,65,.1);
+  border-color: #ECC3BE;
+  background: #FFF0EF;
 }
 
-.register-status-spinner {
-  width: 45px;
-  height: 45px;
+.register-status-icon.error::after {
+  content: "×";
 
-  border: 3px solid rgba(213,174,108,.16);
-  border-top-color: #e9c387;
+  color: #C95353;
+
+  font-size: 39px;
+  font-weight: 650;
+}
+
+
+/* LOADING */
+
+.register-status-spinner {
+  width: 34px;
+  height: 34px;
+
+  border: 3px solid #F0E5CB;
+  border-top-color: #B28B36;
   border-radius: 50%;
 
   animation: registerSpin .8s linear infinite;
 }
 
-.register-status-icon.success::after {
-  content: "✓";
-  color: #88e4aa;
-  font-size: 44px;
-  font-weight: 900;
-}
 
-.register-status-icon.error::after {
-  content: "×";
-  color: #ff9292;
-  font-size: 50px;
-  font-weight: 700;
-}
+/* STATUS CONTENT */
 
 #registerStatusTitle {
-  color: #f0dbb8;
-  font-size: 21px;
-  font-weight: 900;
-  letter-spacing: 1px;
-  margin: 0 0 12px;
+  margin: 0 0 10px;
+
+  color: var(--auth-text);
+
+  font-size: 19px;
+  font-weight: 800;
+
+  letter-spacing: .3px;
+  line-height: 1.4;
 }
 
 #registerStatusText {
-  color: #b9b1a5;
+  margin: 0;
+
+  color: var(--auth-muted);
+
   font-size: 13px;
   line-height: 1.6;
-  margin: 0;
+
   white-space: pre-line;
+  overflow-wrap: anywhere;
 }
+
+
+/* PROGRESS BAR */
 
 .register-status-progress {
   height: 4px;
-  margin-top: 28px;
+
+  margin-top: 23px;
 
   overflow: hidden;
+
   border-radius: 20px;
 
-  background: rgba(218,180,119,.13);
+  background: #F3E9D1;
 }
 
 .register-status-progress span {
   display: block;
+
   width: 35%;
   height: 100%;
 
   border-radius: inherit;
 
-  background: linear-gradient(
-    90deg,
-    #86623a,
-    #f5d69e,
-    #bb8849
-  );
+  background:
+    linear-gradient(
+      90deg,
+      #D2AB55,
+      #F1D99B
+    );
 
-  animation: registerProgress 1.3s ease-in-out infinite;
+  animation:
+    registerProgress 1.3s ease-in-out infinite;
 }
 
 .register-status-close {
-  width: 100%;
-  min-height: 44px;
-  margin-top: 25px;
-
-  border: 1px solid #d6b47b;
-  border-radius: 9px;
-
-  background: linear-gradient(
-    135deg,
-    #f0d7a7,
-    #c39a60
-  );
-
-  color: #282016;
-  font-size: 12px;
-  font-weight: 900;
-  cursor: pointer;
+  margin-top: 20px;
 }
+
+
+/* ==========================================
+   14. ANIMATIONS
+========================================== */
 
 @keyframes registerSpin {
   to {
@@ -794,7 +850,7 @@ button {
 @keyframes registerAppear {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(.96);
+    transform: translateY(10px) scale(.98);
   }
 
   to {
@@ -803,144 +859,146 @@ button {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .register-status-spinner,
-  .register-status-progress span,
-  .register-status-card {
-    animation: none;
+
+/* ==========================================
+   15. RESPONSIVE MOBILE
+========================================== */
+
+@media (max-height: 790px) {
+
+  .register-shell {
+    padding-left: 17px;
+    padding-right: 17px;
   }
+
+  .register-content {
+    padding: 9px 0;
+  }
+
+  .register-avatar {
+    width: 62px;
+    height: 62px;
+
+    margin-bottom: 10px;
+
+    border-radius: 16px;
+  }
+
+  .register-panel {
+    margin-top: 15px;
+
+    padding: 15px 14px;
+  }
+
+  .register-panel-head {
+    margin-bottom: 9px;
+  }
+
+  .register-field {
+    margin-top: 10px;
+  }
+
+  .register-field input {
+    height: 44px;
+  }
+
+  .register-btn {
+    margin-top: 15px;
+    min-height: 44px;
+  }
+
+  .register-links {
+    margin-top: 12px;
+  }
+
 }
 
+@media (max-height: 620px) {
+
+  .register-hero {
+    margin-top: 0;
+  }
+
+  .register-avatar {
+    width: 50px;
+    height: 50px;
+  }
+
+  .register-title {
+    font-size: 23px;
+  }
+
+  .register-panel {
+    margin-top: 12px;
+  }
+
+}
+
+@media (max-width: 360px) {
+
+  .register-shell {
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+
+  .register-panel {
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+
+  .register-title {
+    font-size: 23px;
+  }
+
+}
 
 
 /* ==========================================
-   LIVESTREAM PRO
-   IOS PWA AUTH FULLSCREEN FIX V1.0
-   LOGIN + REGISTER
+   16. IOS PWA FULLSCREEN FIX
 ========================================== */
 
-/* CORRECT ROOT HEIGHT */
-
-html.ios-auth-height-fix {
-
-  height: var(--auth-screen-height) !important;
-  min-height: var(--auth-screen-height) !important;
-
-  margin: 0 !important;
-  padding: 0 !important;
-
-  overflow: hidden;
-}
-
-
-/* CORRECT LOGIN AND REGISTER BODY */
-
-html.ios-auth-height-fix body.auth-page,
+html.ios-auth-height-fix,
 html.ios-auth-height-fix body.register-page {
 
-  width: 100% !important;
-
   height: var(--auth-screen-height) !important;
+
   min-height: var(--auth-screen-height) !important;
+
   max-height: none !important;
-
-  margin: 0 !important;
-  padding: 0 !important;
-
-  display: flex;
-
-  justify-content: center;
-  align-items: stretch;
 
   overflow: hidden;
 }
 
-
-/* LOGIN MAIN SCREEN */
-
-html.ios-auth-height-fix
-body.auth-page .auth-stage {
-
-  height: 100% !important;
-
-  min-height: 0 !important;
-  max-height: none !important;
-
-  margin: 0 auto !important;
-
-  box-sizing: border-box;
+html.ios-auth-height-fix .register-shell {
+  height: 100%;
+  min-height: 0;
+  max-height: none;
 }
 
+html.ios-auth-height-fix .modal,
+html.ios-auth-height-fix .register-status-overlay {
 
-/* REGISTER MAIN SCREEN */
-
-html.ios-auth-height-fix
-body.register-page .register-shell {
-
-  height: 100% !important;
-
-  min-height: 0 !important;
-  max-height: none !important;
-
-  margin: 0 auto !important;
-
-  overflow-x: hidden;
-  overflow-y: auto;
-
-  box-sizing: border-box;
-
-  -webkit-overflow-scrolling: touch;
-}
-
-
-/* LOGIN MODAL FULLSCREEN */
-
-html.ios-auth-height-fix
-body.auth-page .modal {
-
-  top: 0 !important;
-  bottom: auto !important;
-
-  left: 50% !important;
+  top: 0;
+  bottom: auto;
 
   height: var(--auth-screen-height) !important;
-  max-height: none !important;
-
-  transform: translateX(-50%) !important;
 }
 
 
-/* REGISTER MODAL FULLSCREEN */
+/* REDUCED MOTION */
 
-html.ios-auth-height-fix
-body.register-page .modal,
+@media (prefers-reduced-motion: reduce) {
 
-html.ios-auth-height-fix
-body.register-page .register-status-overlay {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 
-  top: 0 !important;
-  bottom: auto !important;
-
-  height: var(--auth-screen-height) !important;
-  max-height: none !important;
-
-  box-sizing: border-box;
 }
-
-
-/* SAFE SCROLL WHEN ENTERING TEXT */
-
-body.auth-page .auth-main,
-body.register-page .register-shell {
-
-  overscroll-behavior: contain;
-
-  -webkit-overflow-scrolling: touch;
-}
-
 
 </style>
-
 
 </head>
 
@@ -962,40 +1020,37 @@ body.register-page .register-shell {
 
   <div class="register-content">
 
-    <!-- BRAND -->
-    <header class="register-hero">
+<header class="register-hero">
 
-      <div
-        class="register-avatar"
-        role="img"
-        aria-label="Livestream Pro Logo">
-      </div>
+  <div
+    class="register-avatar"
+    role="img"
+    aria-label="Livestream Pro Logo">
+  </div>
 
-      <p class="register-eyebrow">
-        START YOUR JOURNEY
-      </p>
+  <h1 class="register-title">
+    LIVESTREAM PRO
+  </h1>
 
-      <h1 class="register-title">
-        Create Account
-      </h1>
+  <p class="register-eyebrow">
+    Create your account
+  </p>
 
-    </header>
+</header>
 
 
     <!-- REGISTRATION FORM -->
     <section class="register-panel">
 
-      <div class="register-panel-head">
-        <h2>Registration Details</h2>
-        <span>MEMBER REGISTRATION</span>
-      </div>
-
+  <div class="register-panel-head">
+  <h2>Sign Up</h2>
+</div>
 
       <!-- USERNAME -->
       <div class="register-field">
 
         <label for="username">
-          USERNAME - UID
+          Username / UID
         </label>
 
         <input
@@ -1007,10 +1062,9 @@ body.register-page .register-shell {
           spellcheck="false"
         >
 
-        <p class="field-hint">
-          At least 6 characters. Use letters,
-          numbers or underscores, without spaces.
-        </p>
+      <p class="field-hint">
+  6+ characters. Letters, numbers or underscores.
+</p>
 
       </div>
 
@@ -1021,7 +1075,7 @@ body.register-page .register-shell {
       <div class="register-field">
 
         <label for="password">
-          PASSWORD
+          Password
         </label>
 
         <div class="pass-wrap">
@@ -1050,7 +1104,7 @@ body.register-page .register-shell {
       <div class="register-field">
 
         <label for="password2">
-          CONFIRM PASSWORD
+          Confirm Password
         </label>
 
         <div class="pass-wrap">
@@ -1085,7 +1139,7 @@ body.register-page .register-shell {
       <div class="register-field">
 
         <label for="securityCode">
-          SECURITY CODE
+          Security Code
         </label>
 
         <div class="pass-wrap">
@@ -1107,10 +1161,9 @@ body.register-page .register-shell {
 
         </div>
 
-        <p class="field-hint">
-          Used to verify your identity and
-          recover your account when needed.
-        </p>
+<p class="field-hint">
+  Used for verification and account recovery.
+</p>
 
       </div>
 
@@ -1139,8 +1192,12 @@ body.register-page .register-shell {
 
   </div>
 
-</main>
 
+<footer class="register-foot">
+  © 2026 LIVESTREAM PRO
+</footer>
+
+</main>
 
 
 
