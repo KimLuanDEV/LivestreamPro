@@ -15,7 +15,7 @@
 
 <title>Sign In • Livestream Pro</title>
 
-<meta name="theme-color" content="#090a0e">
+<meta name="theme-color" content="#FAF6E9">
 
 <!-- PWA MANIFEST -->
 <link rel="manifest"
@@ -44,7 +44,7 @@
       content="Livestream Pro">
 
 <meta name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent">
+      content="default">
 
 <!-- ANDROID -->
 <meta name="mobile-web-app-capable"
@@ -53,17 +53,40 @@
 <meta name="application-name"
       content="Livestream Pro">
 
-<style>
 
+<style>
 /* ==========================================
    LIVESTREAM PRO
-   MIDNIGHT LUXURY LOGIN
+   CHAMPAGNE GOLD LOGIN V1.0
    INDEPENDENT CSS
 ========================================== */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
+
+  --auth-bg: #FAF6E9;
+  --auth-white: #FFFFFF;
+  --auth-cream: #FCFAF5;
+  --auth-champagne: #F8EBC9;
+
+  --auth-gold: #947025;
+  --auth-gold-light: #EED69A;
+
+  --auth-text: #29251D;
+  --auth-muted: #857960;
+  --auth-line: #EAE0C8;
+
+  --auth-gradient:
+    linear-gradient(135deg, #F5E4B5, #E3C47C);
+
+  --auth-shadow:
+    0 8px 30px rgba(112,85,28,.08);
 }
+
+
+/* ==========================================
+   01. GLOBAL RESET
+========================================== */
 
 * {
   box-sizing: border-box;
@@ -74,25 +97,24 @@ body {
   width: 100%;
   height: 100%;
   margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--auth-bg);
 }
 
 html {
-  background: #050608;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
 
 body.auth-page {
   display: flex;
-  align-items: stretch;
   justify-content: center;
 
-  min-height: 100vh;
-  min-height: 100dvh;
-  overflow: hidden;
+  height: 100vh;
+  height: 100dvh;
 
-  background: #050608;
-  color: #f5eee1;
+  color: var(--auth-text);
 
   font-family:
     system-ui,
@@ -100,6 +122,7 @@ body.auth-page {
     "Segoe UI",
     sans-serif;
 }
+
 button,
 input {
   font: inherit;
@@ -107,257 +130,242 @@ input {
 
 button {
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 a {
+  color: var(--auth-gold);
   text-decoration: none;
 }
 
-.hidden {
+.hidden,
+[hidden] {
   display: none !important;
 }
 
 button:focus-visible,
-input:focus-visible,
 a:focus-visible {
-  outline: 2px solid #e9c58d;
+  outline: 2px solid var(--auth-gold);
   outline-offset: 3px;
 }
 
+button:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+
 /* ==========================================
-   MAIN SCREEN - MAX 430 x 870
+   02. MAIN SCREEN
 ========================================== */
 
 .auth-stage {
   position: relative;
-  isolation: isolate;
 
   width: 100%;
   max-width: 430px;
-
-  height: 100vh;
-  height: 100dvh;
-
-  min-width: 0;
+  height: 100%;
   min-height: 0;
 
   padding:
-    calc(18px + env(safe-area-inset-top, 0px))
-    23px;
+    calc(16px + env(safe-area-inset-top,0px))
+    22px
+    calc(14px + env(safe-area-inset-bottom,0px));
 
   display: flex;
   flex-direction: column;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      #F3E2B5 0%,
+      transparent 46%
+    ),
+    linear-gradient(
+      180deg,
+      #FFFDF7 0%,
+      #FAF6E9 70%
+    );
+}
+
+
+/* REMOVE UNNECESSARY TEXT */
+
+.auth-top,
+.auth-hero .microline,
+.login-sub,
+.panel-top span,
+.modal-kicker,
+.login-status-brand {
+  display: none;
+}
+
+
+/* ==========================================
+   03. MAIN CONTENT
+========================================== */
+
+.auth-main {
+  flex: 1 1 auto;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 18px 0;
 
   overflow-x: hidden;
   overflow-y: auto;
 
   scrollbar-width: none;
   overscroll-behavior: contain;
+
   -webkit-overflow-scrolling: touch;
-
-
-
-background:
-    radial-gradient(
-      ellipse 82% 30% at 50% -7%,
-      rgba(194,143,70,.22),
-      transparent 75%
-    ),
-    radial-gradient(
-      ellipse 75% 24% at 50% 100%,
-      rgba(94,66,35,.11),
-      transparent 85%
-    ),
-    linear-gradient(
-      165deg,
-      #1a1a1c 0%,
-      #0c0e13 64%,
-      #090a0e 100%
-    );
 }
 
-.auth-stage::-webkit-scrollbar {
+.auth-main::-webkit-scrollbar {
   display: none;
 }
 
-.auth-stage::before {
-  content: "";
-
-  position: absolute;
-  inset: 0px;
-  z-index: -1;
-
-  pointer-events: none;
-
-}
 
 /* ==========================================
-   TOP BAR
+   04. BRAND & LOGO
 ========================================== */
-
-.auth-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-
-  color: #c8a56e;
-
-  font-size: 9px;
-  font-weight: 750;
-  letter-spacing: 1.7px;
-  white-space: nowrap;
-}
-
-.auth-top span:last-child {
-  color: #91816b;
-  font-size: 8px;
-  letter-spacing: 1.1px;
-}
-
-/* ==========================================
-   BRAND AREA
-========================================== */
-
-.auth-main {
-  width: 100%;
-  min-width: 0;
-
-  margin: auto 0;
-  padding: 26px 0 22px;
-}
 
 .auth-hero {
+  flex: 0 0 auto;
+
+  width: 100%;
+
+  margin-top: auto;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
   text-align: center;
 }
 
-.auth-hero .microline {
-  width: 46px;
-  height: 1px;
-
-  margin: 0 auto 20px;
-
-  background: #c6a171;
-}
-
 .login-avatar {
-  width: 92px;
-  height: 92px;
+  width: 88px;
+  height: 88px;
 
   margin: 0 auto 18px;
 
+  border-radius: 22px;
 
-
-background:
+  background:
     url("/icons/icon-512.png")
     center / cover no-repeat;
-}
 
-.auth-eyebrow {
-  margin: 0 0 8px;
-
-  color: #b89a6c;
-
-  font-size: 9px;
-  font-weight: 750;
-  letter-spacing: 3px;
+  box-shadow:
+    0 6px 20px rgba(148,112,37,.10);
 }
 
 .login-title {
+  order: 1;
+
   margin: 0;
 
-  color: #f2dfbb;
+  color: #70531D;
 
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(25px, 7vw, 32px);
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-size: clamp(23px, 7vw, 29px);
   font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: .7px;
+
+  line-height: 1.25;
+  letter-spacing: .8px;
 
   overflow-wrap: anywhere;
 }
 
-.login-sub {
-  max-width: 285px;
+.auth-eyebrow {
+  order: 2;
 
-  margin: 11px auto 0;
+  margin: 9px 0 0;
 
-  color: #aaa4a0;
+  color: var(--auth-muted);
 
-  font-size: 12px;
-  line-height: 1.65;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .4px;
+
+  text-transform: capitalize;
 }
 
+
 /* ==========================================
-   LOGIN PANEL
+   05. LOGIN PANEL
 ========================================== */
 
 .login-panel {
+  flex: 0 0 auto;
+
+  width: 100%;
+  min-width: 0;
+
   margin-top: 26px;
-  padding: 19px 17px 17px;
+  padding: 23px 19px 19px;
 
-  border: 1px solid rgba(221,182,115,.32);
-  border-radius: 17px;
+  border: 1px solid var(--auth-line);
+  border-radius: 23px;
 
-  background: linear-gradient(
-    145deg,
-    rgba(52,46,39,.6),
-    rgba(19,20,24,.82) 60%
-  );
+  background: var(--auth-white);
 
-  box-shadow:
-    inset 0 1px rgba(255,255,255,.04),
-    0 16px 42px rgba(0,0,0,.18);
+  box-shadow: var(--auth-shadow);
 }
 
 .panel-top {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
+  align-items: center;
 
-  margin-bottom: 17px;
+  margin-bottom: 18px;
 }
 
 .panel-top h2 {
   margin: 0;
 
-  color: #f0dab5;
+  color: var(--auth-text);
 
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 23px;
+  font-weight: 750;
+  letter-spacing: -.4px;
 }
 
-.panel-top span {
-  color: #aa906b;
-
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 1px;
-}
 
 /* ==========================================
-   FORM FIELDS
+   06. INPUT FIELDS
 ========================================== */
 
-.login-field {
-  margin-top: 13px;
+.login-field,
+.modal-field {
+  width: 100%;
   min-width: 0;
 
-  text-align: left;
+  margin-top: 14px;
 }
 
 .login-field label,
 .modal-field label {
   display: block;
+
   margin-bottom: 7px;
 
-  color: #c6a575;
+  color: #706044;
 
-  font-size: 10px;
-  font-weight: 750;
-  letter-spacing: 1px;
+  font-size: 12px;
+  font-weight: 650;
+
+  letter-spacing: 0;
 }
 
 .login-field input,
@@ -366,206 +374,261 @@ background:
 
   width: 100%;
   min-width: 0;
-  height: 47px;
+  height: 49px;
 
   margin: 0;
   padding: 0 13px;
 
-  border: 1px solid rgba(211,177,121,.27);
-  border-radius: 9px;
+  border: 1px solid var(--auth-line);
+  border-radius: 12px;
+
   outline: none;
 
-  background: #121419;
-  color: #f7eee2;
+  background: var(--auth-cream);
+  color: var(--auth-text);
 
   font-size: 16px;
 
   transition:
-    border-color .15s ease,
-    box-shadow .15s ease;
+    border-color .18s,
+    box-shadow .18s;
+}
+
+input::placeholder {
+  color: #A29A8A;
+  font-size: 13px;
+  opacity: 1;
 }
 
 .login-field input:focus,
 .modal-field input:focus {
-  border-color: #d5b078;
+  border-color: #C9A75D;
 
-  box-shadow: 0 0 0 3px rgba(213,176,120,.10);
+  box-shadow:
+    0 0 0 3px rgba(201,167,93,.12);
 }
 
-input::placeholder {
-  color: #827d78;
-  opacity: 1;
+
+/* AUTOFILL - IOS / CHROME */
+
+input:-webkit-autofill {
+  -webkit-text-fill-color: var(--auth-text);
+
+  -webkit-box-shadow:
+    0 0 0 1000px #FCFAF5 inset;
 }
+
 
 /* ==========================================
-   PASSWORD VISIBILITY
+   07. PASSWORD VISIBILITY
 ========================================== */
 
 .pass-wrap {
   position: relative;
+
   width: 100%;
   min-width: 0;
 }
 
 .pass-wrap input {
-  padding-right: 70px;
+  padding-right: 65px;
 }
 
 .pass-eye {
   position: absolute;
+
   top: 50%;
   right: 7px;
 
   transform: translateY(-50%);
 
+  width: 50px;
+  height: 33px;
+
   display: grid;
   place-items: center;
 
-  width: 55px;
-  height: 33px;
-
-  margin: 0;
   padding: 0;
 
-  border: 1px solid rgba(202,164,101,.25);
-  border-radius: 7px;
+  border: 0;
+  border-radius: 8px;
 
-  background: #292520;
-  color: #e0bc80;
+  background: var(--auth-champagne);
+  color: var(--auth-gold);
 
   font-size: 11px;
-  font-weight: 750;
+  font-weight: 700;
 }
 
+
 /* ==========================================
-   BUTTONS
+   08. BUTTONS
 ========================================== */
 
 .login-forgot {
   display: block;
 
-  width: max-content;
+  width: fit-content;
+
   margin: 12px 0 0 auto;
-  padding: 2px 0;
+  padding: 3px 0;
 
   border: none;
   background: transparent;
 
-  color: #dbbc8b;
+  color: var(--auth-gold);
 
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 650;
+}
+
+
+/* PRIMARY BUTTONS */
+
+.login-btn,
+.modal-btn,
+.login-status-close {
+  min-height: 48px;
+
+  padding: 10px 12px;
+
+  border: 1px solid #DFC382;
+  border-radius: 12px;
+
+  background: var(--auth-gradient);
+  color: #4D3915;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  transition:
+    filter .15s,
+    transform .15s;
 }
 
 .login-btn {
   display: block;
-
   width: 100%;
-  min-width: 0;
-  min-height: 46px;
 
-  padding: 10px 12px;
-
-  border: 1px solid #d2af73;
-  border-radius: 10px;
-
-  background: linear-gradient(
-    125deg,
-    #f3dfb5,
-    #c9a06a 80%
-  );
-
-  color: #272017;
-
-  font-size: 13px;
-  font-weight: 850;
-  letter-spacing: .8px;
+  letter-spacing: .7px;
 }
 
 .login-submit {
-  margin-top: 18px;
+  margin-top: 19px;
+}
+
+
+/* SECONDARY BUTTON */
+
+.login-guest,
+.modal-btn.quiet {
+  min-height: 44px;
+
+  padding: 10px;
+
+  border: 1px solid var(--auth-line);
+  border-radius: 12px;
+
+  background: var(--auth-white);
+  color: var(--auth-gold);
+
+  font-size: 12px;
+  font-weight: 650;
 }
 
 .login-guest {
   display: block;
 
   width: 100%;
-  min-height: 42px;
 
   margin-top: 10px;
-
-  border: 1px solid rgba(214,177,117,.32);
-  border-radius: 10px;
-
-  background: rgba(22,22,25,.75);
-  color: #e2caa2;
-
-  font-size: 12px;
-  font-weight: 700;
 }
 
 .login-btn:active,
 .login-guest:active,
-.modal-btn:active {
+.modal-btn:active,
+.login-status-close:active {
   transform: scale(.985);
 }
 
+
 /* ==========================================
-   REGISTER + FOOTER
+   09. REGISTER LINK
 ========================================== */
 
 .register-line {
-  margin-top: 17px;
+  flex: 0 0 auto;
+
+  width: 100%;
+
+  margin: 19px 0 auto;
+
+  padding-bottom: 6px;
 
   text-align: center;
-  color: #9c9690;
 
-  font-size: 12px;
+  color: var(--auth-muted);
+
+  font-size: 13px;
+  line-height: 1.6;
 }
 
 .register-line a {
-  color: #e7c694;
+  margin-left: 3px;
+
+  color: var(--auth-gold);
+
   font-weight: 750;
 }
 
-.auth-foot {
-  margin-top: auto;
-  padding-top: 14px;
-  padding-bottom: 4px;
-
-  border-top: 1px solid rgba(222,186,119,.16);
-
-  text-align: center;
-  color: #87775f;
-
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 1.35px;
-
-  flex-shrink: 0;
-}
 
 /* ==========================================
-   ALL MODALS
+   10. FOOTER
+========================================== */
+
+.auth-foot {
+  flex: 0 0 auto;
+
+  width: 100%;
+
+  padding-top: 13px;
+
+  border-top: 1px solid var(--auth-line);
+
+  color: #A3967C;
+
+  text-align: center;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  letter-spacing: .9px;
+  line-height: 1.5;
+}
+
+
+/* ==========================================
+   11. MODAL SYSTEM
 ========================================== */
 
 .modal {
   position: fixed;
+  inset: 0;
 
-  left: 50%;
-  top: 50%;
   z-index: 1000;
 
-  transform: translate(-50%, -50%);
-
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
 
-  width: min(100%, 430px);
-  height: min(100dvh, 870px);
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
 
-  padding: 16px;
+  padding:
+    calc(16px + env(safe-area-inset-top,0px))
+    18px
+    calc(16px + env(safe-area-inset-bottom,0px));
 
   overflow: hidden;
 }
@@ -578,14 +641,15 @@ input::placeholder {
   z-index: 1200;
 }
 
-.modal-backdrop {
+.modal-backdrop,
+.login-status-backdrop {
   position: absolute;
   inset: 0;
 
-  background: rgba(1,2,4,.88);
+  background: rgba(52,43,25,.28);
 
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
 }
 
 .modal-card {
@@ -596,45 +660,37 @@ input::placeholder {
   max-width: 380px;
   max-height: 100%;
 
-  padding: 26px 21px 22px;
+  padding: 25px 21px 22px;
 
   overflow-y: auto;
 
-  border: 1px solid rgba(231,192,129,.45);
-  border-radius: 17px;
+  border: 1px solid var(--auth-line);
+  border-radius: 23px;
 
-  background: linear-gradient(
-    155deg,
-    #2a241f,
-    #17181d 68%
-  );
+  background: var(--auth-white);
 
-  box-shadow: 0 25px 70px rgba(0,0,0,.65);
-}
+  box-shadow:
+    0 20px 60px rgba(85,65,25,.15);
 
-.modal-kicker {
-  color: #bfa071;
-
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 1.7px;
+  scrollbar-width: none;
 }
 
 .modal-card h3 {
-  margin: 8px 0 9px;
+  margin: 0 0 10px;
 
-  color: #f0d9b3;
+  color: var(--auth-text);
 
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 22px;
+  font-weight: 750;
+
+  line-height: 1.3;
 }
 
 .modal-card p,
 #msgText {
-  margin: 0 0 17px;
+  margin: 0 0 16px;
 
-  color: #b6afa5;
+  color: var(--auth-muted);
 
   font-size: 13px;
   line-height: 1.65;
@@ -643,647 +699,25 @@ input::placeholder {
   overflow-wrap: anywhere;
 }
 
-.modal-field {
-  margin-top: 15px;
-}
-
 .modal-actions {
   display: flex;
+
   gap: 9px;
 
-  margin-top: 21px;
+  margin-top: 22px;
 }
 
 .modal-btn {
   flex: 1 1 0;
 
   min-width: 0;
-  min-height: 44px;
 
-  padding: 8px;
-
-  border: 1px solid #d7b580;
-  border-radius: 9px;
-
-  background: linear-gradient(
-    135deg,
-    #efd7a9,
-    #be955f
-  );
-
-  color: #282015;
-
-  font-size: 12px;
-  font-weight: 800;
+  overflow-wrap: anywhere;
 }
-
-.modal-btn.quiet {
-  background: #282724;
-  color: #e5ceaa;
-
-  border-color: rgba(211,177,122,.28);
-}
-
 
 
 /* ==========================================
-   LIVESTREAM PRO
-   FINAL RESPONSIVE LAYOUT
-   FULL WIDTH + FULL HEIGHT
-========================================== */
-
-/* NỀN TOÀN MÀN HÌNH */
-
-html {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background: #050608;
-}
-
-body.auth-page {
-  display: flex;
-  justify-content: center;
-  align-items: stretch;
-
-  width: 100%;
-  height: 100vh;
-  height: 100dvh;
-  min-height: 0;
-
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-
-  background: #050608;
-}
-
-/* KHUNG CHÍNH - KHÔNG GIỚI HẠN CHIỀU CAO */
-
-body.auth-page .auth-stage {
-  position: relative;
-  isolation: isolate;
-
-  flex: 0 1 430px;
-
-  width: 100%;
-  max-width: 430px;
-  min-width: 0;
-
-  height: 100%;
-  min-height: 0;
-  max-height: none;
-
-  margin: 0;
-
-  padding:
-    calc(16px + env(safe-area-inset-top, 0px))
-    20px
-    calc(16px + env(safe-area-inset-bottom, 0px));
-
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: flex-start;
-
-  overflow-x: hidden;
-  overflow-y: auto;
-
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-
-  box-sizing: border-box;
-}
-
-body.auth-page .auth-stage::-webkit-scrollbar {
-  display: none;
-}
-
-/* THANH TRÊN */
-
-body.auth-page .auth-top {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-
-  width: 100%;
-  min-width: 0;
-
-  margin: 0;
-  padding: 0;
-  white-space: normal;
-}
-
-body.auth-page .auth-top span {
-  min-width: 0;
-  max-width: 50%;
-  line-height: 1.4;
-}
-
-body.auth-page .auth-top span:last-child {
-  text-align: right;
-}
-
-/* NỘI DUNG TRUNG TÂM */
-
-body.auth-page .auth-main {
-  flex: 1 0 auto;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-
-  width: 100%;
-  min-width: 0;
-
-  margin: 0;
-  padding: 18px 0;
-}
-
-/* LOGO VÀ THƯƠNG HIỆU */
-
-body.auth-page .auth-hero {
-  width: 100%;
-  min-width: 0;
-  text-align: center;
-}
-
-body.auth-page .login-avatar {
-  width: 86px;
-  height: 86px;
-  margin: 0 auto 15px;
-}
-
-body.auth-page .login-title {
-  max-width: 100%;
-  font-size: clamp(23px, 7vw, 31px);
-  line-height: 1.2;
-}
-
-body.auth-page .login-sub {
-  max-width: 300px;
-  margin: 10px auto 0;
-  line-height: 1.55;
-}
-
-/* KHUNG ĐĂNG NHẬP */
-
-body.auth-page .login-panel {
-  flex: 0 0 auto;
-
-  width: 100%;
-  min-width: 0;
-
-  margin-top: 20px;
-  padding: 17px 16px;
-}
-
-body.auth-page .panel-top {
-  margin-bottom: 14px;
-}
-
-body.auth-page .panel-top span {
-  font-size: 8px;
-  letter-spacing: .5px;
-  text-align: right;
-}
-
-body.auth-page .login-field {
-  width: 100%;
-  min-width: 0;
-  margin-top: 11px;
-}
-
-body.auth-page .login-field input {
-  width: 100%;
-  min-width: 0;
-  height: 46px;
-}
-
-body.auth-page .login-submit {
-  margin-top: 15px;
-}
-
-body.auth-page .login-guest {
-  margin-top: 9px;
-}
-
-/* ĐĂNG KÝ */
-
-body.auth-page .register-line {
-  flex: 0 0 auto;
-  width: 100%;
-
-  margin: 15px 0 0;
-  text-align: center;
-}
-
-/* FOOTER Ở CUỐI KHUNG */
-
-body.auth-page .auth-foot {
-  flex: 0 0 auto;
-
-  width: 100%;
-  min-width: 0;
-
-  margin: 0;
-  padding: 12px 0 0;
-
-  text-align: center;
-  font-size: 9px;
-  letter-spacing: 1.3px;
-}
-
-/* POPUP FULL HEIGHT */
-
-body.auth-page .modal {
-  width: min(100%, 430px);
-
-  height: 100vh;
-  height: 100dvh;
-  max-height: none;
-
-  padding:
-    calc(14px + env(safe-area-inset-top, 0px))
-    14px
-    calc(14px + env(safe-area-inset-bottom, 0px));
-}
-
-body.auth-page .modal-card {
-  max-height: 100%;
-  overflow-y: auto;
-}
-
-/* MÀN HÌNH THẤP */
-
-@media (max-height: 740px) {
-
-  body.auth-page .auth-stage {
-    padding-top:
-      calc(12px + env(safe-area-inset-top, 0px));
-
-    padding-right: 16px;
-
-    padding-bottom:
-      calc(12px + env(safe-area-inset-bottom, 0px));
-
-    padding-left: 16px;
-  }
-
-  body.auth-page .auth-main {
-    padding: 12px 0;
-  }
-
-  body.auth-page .login-avatar {
-    width: 66px;
-    height: 66px;
-    margin-bottom: 10px;
-  }
-
-  body.auth-page .auth-hero .microline {
-    margin-bottom: 12px;
-  }
-
-  body.auth-page .login-title {
-    font-size: 25px;
-  }
-
-  body.auth-page .login-sub {
-    margin-top: 7px;
-    font-size: 11px;
-  }
-
-  body.auth-page .login-panel {
-    margin-top: 14px;
-    padding: 13px;
-  }
-
-  body.auth-page .panel-top {
-    margin-bottom: 10px;
-  }
-
-  body.auth-page .login-field {
-    margin-top: 9px;
-  }
-
-  body.auth-page .login-field input {
-    height: 43px;
-  }
-
-  body.auth-page .login-submit {
-    margin-top: 11px;
-  }
-
-  body.auth-page .register-line {
-    margin-top: 10px;
-  }
-}
-
-/* MÀN HÌNH RẤT THẤP */
-
-@media (max-height: 590px) {
-
-  body.auth-page .auth-main {
-    justify-content: flex-start;
-    padding: 10px 0;
-  }
-
-  body.auth-page .login-avatar {
-    width: 54px;
-    height: 54px;
-  }
-
-  body.auth-page .login-sub {
-    display: none;
-  }
-
-  body.auth-page .login-panel {
-    margin-top: 12px;
-  }
-}
-
-/* ĐIỆN THOẠI HẸP */
-
-@media (max-width: 360px) {
-
-  body.auth-page .auth-stage {
-    padding-left: 13px;
-    padding-right: 13px;
-  }
-
-  body.auth-page .login-title {
-    font-size: 23px;
-  }
-
-  body.auth-page .panel-top span {
-    font-size: 7px;
-  }
-}
-
-/* GIẢM CHUYỂN ĐỘNG */
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    transition: none !important;
-    animation: none !important;
-  }
-}
-
-
-
-
-/* ==========================================
-   LIVESTREAM PRO
-   FOOTER ANCHORED LAYOUT
-   BOTTOM FIRST - CONTENT ABOVE
-========================================== */
-
-html {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background: #090a0e;
-}
-
-body.auth-page {
-  display: flex;
-  justify-content: center;
-  align-items: stretch;
-
-  width: 100%;
-  height: 100vh;
-  height: 100dvh;
-  min-height: 0;
-
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-
-  background: #090a0e;
-}
-
-/* KHUNG PHỦ TOÀN BỘ CHIỀU CAO */
-
-body.auth-page .auth-stage {
-  position: relative;
-
-  flex: 0 1 430px;
-
-  width: 100%;
-  max-width: 430px;
-  min-width: 0;
-
-  height: 100%;
-  min-height: 0;
-  max-height: none;
-
-  margin: 0;
-
-  padding:
-    calc(14px + env(safe-area-inset-top, 0px))
-    20px
-    calc(10px + env(safe-area-inset-bottom, 0px));
-
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: flex-start;
-
-  overflow: hidden;
-
-  background:
-    radial-gradient(
-      ellipse at 50% 0%,
-      rgba(194,143,70,.16),
-      transparent 44%
-    ),
-    linear-gradient(
-      180deg,
-      #1a1a1c 0%,
-      #0c0e13 64%,
-      #090a0e 100%
-    );
-}
-
-/* THANH TRÊN NẰM TRONG SAFE AREA */
-
-body.auth-page .auth-top {
-  flex: 0 0 auto;
-
-  width: 100%;
-  min-width: 0;
-
-  margin: 0;
-  padding: 0;
-}
-
-/* NỘI DUNG CHIẾM PHẦN CÒN LẠI */
-
-body.auth-page .auth-main {
-  flex: 1 1 auto;
-  min-height: 0;
-  min-width: 0;
-
-  width: 100%;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-
-  margin: 0;
-  padding: 12px 0;
-
-  overflow-x: hidden;
-  overflow-y: auto;
-
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-body.auth-page .auth-main::-webkit-scrollbar {
-  display: none;
-}
-
-/* CĂN NHÓM LOGO - FORM THEO KHÔNG GIAN CÒN LẠI */
-
-body.auth-page .auth-hero {
-  flex: 0 0 auto;
-
-  width: 100%;
-  min-width: 0;
-
-  margin-top: auto;
-}
-
-body.auth-page .login-panel {
-  flex: 0 0 auto;
-
-  width: 100%;
-  min-width: 0;
-
-  margin-top: 20px;
-}
-
-body.auth-page .register-line {
-  flex: 0 0 auto;
-
-  width: 100%;
-  margin-top: 15px;
-  margin-bottom: auto;
-  padding-bottom: 4px;
-}
-
-/* FOOTER LÀ MỐC ĐÁY */
-
-body.auth-page .auth-foot {
-  position: relative;
-
-  flex: 0 0 auto;
-
-  width: 100%;
-  min-width: 0;
-
-  margin: 0;
-  padding: 11px 0 0;
-
-  border-top: 1px solid rgba(222,186,119,.16);
-
-  text-align: center;
-  line-height: 1.5;
-
-  background: transparent;
-}
-
-/* MÀN HÌNH THẤP */
-
-@media (max-height: 740px) {
-
-  body.auth-page .auth-stage {
-    padding-top:
-      calc(10px + env(safe-area-inset-top, 0px));
-
-    padding-right: 16px;
-
-    padding-bottom:
-      calc(8px + env(safe-area-inset-bottom, 0px));
-
-    padding-left: 16px;
-  }
-
-  body.auth-page .auth-main {
-    padding: 9px 0;
-  }
-
-  body.auth-page .login-avatar {
-    width: 66px;
-    height: 66px;
-    margin-bottom: 10px;
-  }
-
-  body.auth-page .login-panel {
-    margin-top: 13px;
-    padding: 13px;
-  }
-
-  body.auth-page .register-line {
-    margin-top: 10px;
-  }
-
-  body.auth-page .auth-foot {
-    padding-top: 8px;
-  }
-}
-
-/* MÀN HÌNH RẤT THẤP */
-
-@media (max-height: 590px) {
-
-  body.auth-page .login-avatar {
-    width: 54px;
-    height: 54px;
-  }
-
-  body.auth-page .login-sub {
-    display: none;
-  }
-
-  body.auth-page .auth-main {
-    padding: 8px 0;
-  }
-
-  body.auth-page .login-panel {
-    margin-top: 10px;
-  }
-}
-
-/* MOBILE HẸP */
-
-@media (max-width: 360px) {
-
-  body.auth-page .auth-stage {
-    padding-left: 13px;
-    padding-right: 13px;
-  }
-
-  body.auth-page .login-title {
-    font-size: 23px;
-  }
-}
-
-
-
-/* ==========================================
-   LIVESTREAM PRO - LOGIN STATUS V2
+   12. LOGIN STATUS OVERLAY
 ========================================== */
 
 .login-status-overlay {
@@ -1297,21 +731,6 @@ body.auth-page .auth-foot {
   justify-content: center;
 
   padding: 20px;
-  box-sizing: border-box;
-}
-
-.login-status-overlay.hidden {
-  display: none !important;
-}
-
-.login-status-backdrop {
-  position: absolute;
-  inset: 0;
-
-  background: rgba(3, 4, 7, .94);
-
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
 }
 
 .login-status-card {
@@ -1319,129 +738,131 @@ body.auth-page .auth-foot {
   z-index: 1;
 
   width: 100%;
-  max-width: 350px;
+  max-width: 340px;
+  max-height: 100%;
 
-  padding: 38px 24px 30px;
+  padding: 29px 22px 24px;
+
+  overflow-y: auto;
+
+  border: 1px solid var(--auth-line);
+  border-radius: 24px;
+
+  background: var(--auth-white);
+
+  box-shadow:
+    0 18px 60px rgba(85,65,25,.16);
 
   text-align: center;
 
-  background: linear-gradient(
-    155deg,
-    #2b251e 0%,
-    #17191d 60%,
-    #101115 100%
-  );
-
-  border: 1px solid rgba(222, 181, 111, .48);
-  border-radius: 20px;
-
-  box-shadow:
-    0 25px 70px rgba(0, 0, 0, .65),
-    inset 0 1px rgba(255, 255, 255, .06);
-
-  animation: loginStatusAppear .25s ease-out;
+  animation: loginStatusAppear .22s ease-out;
 }
 
-.login-status-brand {
-  color: #cba86f;
 
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 2.5px;
-
-  margin-bottom: 29px;
-}
+/* STATUS ICON */
 
 .login-status-icon {
-  width: 82px;
-  height: 82px;
+  width: 66px;
+  height: 66px;
 
-  margin: 0 auto 24px;
+  margin: 0 auto 18px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
+  border: 1px solid #E7D4A3;
   border-radius: 50%;
 
-  background: rgba(202, 158, 88, .08);
-  border: 2px solid rgba(215, 174, 104, .3);
-}
-
-.login-status-icon.loading {
-  border-color: rgba(215, 174, 104, .3);
+  background: #FFF8E7;
 }
 
 .login-status-icon.success {
-  border-color: #76c992;
-  background: rgba(70, 180, 110, .10);
+  background: #ECF8EF;
+  border-color: #B7DFC3;
 }
 
 .login-status-icon.error {
-  border-color: #e07777;
-  background: rgba(210, 65, 65, .10);
-}
-
-.login-status-spinner {
-  width: 45px;
-  height: 45px;
-
-  border: 3px solid rgba(213, 174, 108, .16);
-  border-top-color: #e9c387;
-
-  border-radius: 50%;
-
-  animation: loginSpin .8s linear infinite;
+  background: #FFF0EF;
+  border-color: #ECC3BE;
 }
 
 .login-status-icon.success::after {
   content: "✓";
 
-  color: #88e4aa;
-  font-size: 44px;
-  font-weight: 900;
+  color: #32975A;
+
+  font-size: 34px;
+  font-weight: 800;
 }
 
 .login-status-icon.error::after {
   content: "×";
 
-  color: #ff9292;
-  font-size: 50px;
-  font-weight: 700;
+  color: #C95353;
+
+  font-size: 39px;
+  font-weight: 650;
 }
 
+
+/* LOADING SPINNER */
+
+.login-status-spinner {
+  width: 34px;
+  height: 34px;
+
+  border: 3px solid #F0E5CB;
+  border-top-color: #B28B36;
+  border-radius: 50%;
+
+  animation: loginSpin .8s linear infinite;
+}
+
+
+/* STATUS CONTENT */
+
 #loginStatusTitle {
-  color: #f0dbb8;
+  margin: 0 0 10px;
 
-  font-size: 22px;
-  font-weight: 900;
-  letter-spacing: 1.1px;
+  color: var(--auth-text);
 
-  margin: 0 0 12px;
+  font-size: 19px;
+  font-weight: 800;
+
+  letter-spacing: .3px;
 }
 
 #loginStatusText {
-  color: #b9b1a5;
+  margin: 0;
+
+  color: var(--auth-muted);
 
   font-size: 13px;
   line-height: 1.6;
 
-  margin: 0;
   white-space: pre-line;
+  overflow-wrap: anywhere;
 }
+
+
+/* PROGRESS BAR */
 
 .login-status-progress {
   height: 4px;
-  margin-top: 28px;
+
+  margin-top: 23px;
 
   overflow: hidden;
+
   border-radius: 20px;
 
-  background: rgba(218, 180, 119, .13);
+  background: #F3E9D1;
 }
 
 .login-status-progress span {
   display: block;
+
   width: 35%;
   height: 100%;
 
@@ -1449,35 +870,24 @@ body.auth-page .auth-foot {
 
   background: linear-gradient(
     90deg,
-    #86623a,
-    #f5d69e,
-    #bb8849
+    #D2AB55,
+    #F1D99B
   );
 
-  animation: loginProgress 1.3s ease-in-out infinite;
+  animation:
+    loginProgress 1.3s ease-in-out infinite;
 }
 
 .login-status-close {
   width: 100%;
-  min-height: 44px;
 
-  margin-top: 25px;
-
-  border: 1px solid #d6b47b;
-  border-radius: 9px;
-
-  background: linear-gradient(
-    135deg,
-    #f0d7a7,
-    #c39a60
-  );
-
-  color: #282016;
-  font-size: 12px;
-  font-weight: 900;
-
-  cursor: pointer;
+  margin-top: 20px;
 }
+
+
+/* ==========================================
+   13. ANIMATIONS
+========================================== */
 
 @keyframes loginSpin {
   to {
@@ -1486,11 +896,11 @@ body.auth-page .auth-foot {
 }
 
 @keyframes loginProgress {
-  0% {
+  from {
     transform: translateX(-110%);
   }
 
-  100% {
+  to {
     transform: translateX(310%);
   }
 }
@@ -1498,7 +908,7 @@ body.auth-page .auth-foot {
 @keyframes loginStatusAppear {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(.96);
+    transform: translateY(10px) scale(.98);
   }
 
   to {
@@ -1507,143 +917,144 @@ body.auth-page .auth-foot {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .login-status-spinner,
-  .login-status-progress span,
-  .login-status-card {
-    animation: none;
+
+/* ==========================================
+   14. RESPONSIVE MOBILE
+========================================== */
+
+@media (max-height: 740px) {
+
+  .auth-stage {
+    padding-left: 17px;
+    padding-right: 17px;
   }
+
+  .auth-main {
+    padding: 10px 0;
+  }
+
+  .login-avatar {
+    width: 68px;
+    height: 68px;
+
+    margin-bottom: 12px;
+
+    border-radius: 17px;
+  }
+
+  .login-panel {
+    margin-top: 18px;
+    padding: 17px 15px;
+  }
+
+  .panel-top {
+    margin-bottom: 12px;
+  }
+
+  .login-field {
+    margin-top: 11px;
+  }
+
+  .login-field input {
+    height: 45px;
+  }
+
+  .login-submit {
+    margin-top: 13px;
+  }
+
+  .register-line {
+    margin-top: 13px;
+  }
+
+}
+
+@media (max-height: 590px) {
+
+  .login-avatar {
+    width: 54px;
+    height: 54px;
+  }
+
+  .login-title {
+    font-size: 23px;
+  }
+
+  .auth-hero {
+    margin-top: 0;
+  }
+
+  .login-panel {
+    margin-top: 12px;
+  }
+
+}
+
+@media (max-width: 360px) {
+
+  .auth-stage {
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+
+  .login-panel {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .login-title {
+    font-size: 23px;
+  }
+
 }
 
 
 /* ==========================================
-   LIVESTREAM PRO
-   IOS PWA AUTH FULLSCREEN FIX V1.0
-   LOGIN + REGISTER
+   15. IOS PWA FULLSCREEN CORRECTION
 ========================================== */
 
-/* CORRECT ROOT HEIGHT */
-
-html.ios-auth-height-fix {
+html.ios-auth-height-fix,
+html.ios-auth-height-fix body.auth-page {
 
   height: var(--auth-screen-height) !important;
+
   min-height: var(--auth-screen-height) !important;
 
-  margin: 0 !important;
-  padding: 0 !important;
+  max-height: none !important;
 
   overflow: hidden;
 }
 
+html.ios-auth-height-fix .auth-stage {
+  height: 100%;
+  min-height: 0;
+}
 
-/* CORRECT LOGIN AND REGISTER BODY */
+html.ios-auth-height-fix .modal,
+html.ios-auth-height-fix .login-status-overlay {
 
-html.ios-auth-height-fix body.auth-page,
-html.ios-auth-height-fix body.register-page {
+  top: 0;
 
-  width: 100% !important;
+  bottom: auto;
 
   height: var(--auth-screen-height) !important;
-  min-height: var(--auth-screen-height) !important;
-  max-height: none !important;
-
-  margin: 0 !important;
-  padding: 0 !important;
-
-  display: flex;
-
-  justify-content: center;
-  align-items: stretch;
-
-  overflow: hidden;
 }
 
 
-/* LOGIN MAIN SCREEN */
+/* REDUCED MOTION */
 
-html.ios-auth-height-fix
-body.auth-page .auth-stage {
+@media (prefers-reduced-motion: reduce) {
 
-  height: 100% !important;
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
 
-  min-height: 0 !important;
-  max-height: none !important;
-
-  margin: 0 auto !important;
-
-  box-sizing: border-box;
 }
-
-
-/* REGISTER MAIN SCREEN */
-
-html.ios-auth-height-fix
-body.register-page .register-shell {
-
-  height: 100% !important;
-
-  min-height: 0 !important;
-  max-height: none !important;
-
-  margin: 0 auto !important;
-
-  overflow-x: hidden;
-  overflow-y: auto;
-
-  box-sizing: border-box;
-
-  -webkit-overflow-scrolling: touch;
-}
-
-
-/* LOGIN MODAL FULLSCREEN */
-
-html.ios-auth-height-fix
-body.auth-page .modal {
-
-  top: 0 !important;
-  bottom: auto !important;
-
-  left: 50% !important;
-
-  height: var(--auth-screen-height) !important;
-  max-height: none !important;
-
-  transform: translateX(-50%) !important;
-}
-
-
-/* REGISTER MODAL FULLSCREEN */
-
-html.ios-auth-height-fix
-body.register-page .modal,
-
-html.ios-auth-height-fix
-body.register-page .register-status-overlay {
-
-  top: 0 !important;
-  bottom: auto !important;
-
-  height: var(--auth-screen-height) !important;
-  max-height: none !important;
-
-  box-sizing: border-box;
-}
-
-
-/* SAFE SCROLL WHEN ENTERING TEXT */
-
-body.auth-page .auth-main,
-body.register-page .register-shell {
-
-  overscroll-behavior: contain;
-
-  -webkit-overflow-scrolling: touch;
-}
-
 
 </style>
-
 </head>
 
 <body class="auth-page">
@@ -1677,8 +1088,8 @@ body.register-page .register-shell {
   </div>
 
   <p class="auth-eyebrow">
-    WELCOME BACK
-  </p>
+  Welcome back
+</p>
 
   <h1 class="login-title">
     LIVESTREAM PRO
@@ -1705,9 +1116,9 @@ body.register-page .register-shell {
   <!-- USERNAME -->
   <div class="login-field">
 
-    <label for="username">
-      USERNAME - UID
-    </label>
+  <label for="username">
+  Username / UID
+</label>
 
     <input
       id="username"
@@ -1725,7 +1136,7 @@ body.register-page .register-shell {
   <div class="login-field">
 
     <label for="password">
-      PASSWORD
+      Password
     </label>
 
     <div class="pass-wrap">
@@ -1839,7 +1250,7 @@ body.register-page .register-shell {
     <div class="modal-field">
 
       <label for="forgotPass">
-        NEW PASSWORD
+        New Password
       </label>
 
       <input
@@ -1854,7 +1265,7 @@ body.register-page .register-shell {
     <div class="modal-field">
 
       <label for="forgotSec">
-        SECURITY CODE
+        Security Code
       </label>
 
       <input
