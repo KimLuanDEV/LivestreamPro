@@ -2157,12 +2157,12 @@ function syncLuxuryChatViewport() {
   const editing =
     document.activeElement === msgInput;
 
-  if (!editing) {
-    chatViewportBase = height;
-  }
-
   const keyboardOpen =
     editing && chatViewportBase - height > 100;
+
+  if (!editing && height >= chatViewportBase - 30) {
+    chatViewportBase = height;
+  }
 
   chatModal.style.setProperty(
     "--lux-vh",
@@ -2180,7 +2180,6 @@ function syncLuxuryChatViewport() {
   );
 
 }
-
 function requestChatViewportUpdate() {
 
   cancelAnimationFrame(chatViewportFrame);

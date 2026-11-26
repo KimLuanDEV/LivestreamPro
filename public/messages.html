@@ -2288,6 +2288,278 @@ body.private-chat-open {
 }
 
 
+/* ==========================================
+   PRIVATE CHAT V4.1 - MOBILE LAYOUT FIX
+========================================== */
+
+/* RESET CHAT HEADER */
+
+body.page-messages #chatModal .chat-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+
+  gap: 10px !important;
+  flex: 0 0 auto !important;
+
+  margin: 0 !important;
+}
+
+/* FIX BACK & DELETE BUTTON */
+
+body.page-messages #chatModal .chat-back,
+body.page-messages #chatModal .chat-clear {
+  position: static !important;
+
+  inset: auto !important;
+  transform: none !important;
+
+  width: 40px !important;
+  height: 40px !important;
+
+  flex: 0 0 40px !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  align-self: center !important;
+
+  box-shadow: none !important;
+}
+
+/* REMOVE CHAT BOX BORDER */
+
+body.page-messages #chatModal #chatBox {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+
+  margin: 0 !important;
+  padding: 14px 12px !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+
+  justify-content: flex-start !important;
+  align-content: flex-start !important;
+
+  gap: 10px !important;
+}
+
+/* FIX MESSAGE SPACING */
+
+body.page-messages #chatModal .chat-line {
+  position: relative !important;
+
+  flex: 0 0 auto !important;
+
+  width: 100% !important;
+  height: auto !important;
+
+  min-height: 0 !important;
+  max-height: none !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+
+  justify-content: flex-start !important;
+
+  gap: 4px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border: none !important;
+  background: transparent !important;
+}
+
+/* MESSAGE WRAPPER */
+
+body.page-messages #chatModal .chat-line > div {
+  flex: 0 0 auto !important;
+
+  height: auto !important;
+  min-height: 0 !important;
+
+  margin: 0 !important;
+}
+
+/* SENT / RECEIVED */
+
+body.page-messages #chatModal .chat-line.me {
+  align-items: flex-end !important;
+}
+
+body.page-messages #chatModal .chat-line.other {
+  align-items: flex-start !important;
+}
+
+/* MESSAGE BUBBLE */
+
+body.page-messages #chatModal .bubble-text {
+  display: inline-block !important;
+
+  height: auto !important;
+  min-height: 0 !important;
+
+  margin: 0 !important;
+  padding: 9px 13px !important;
+
+  font-size: 15px !important;
+  line-height: 1.4 !important;
+
+  box-shadow: none !important;
+}
+
+/* FIX TIMESTAMP */
+
+body.page-messages #chatModal .chat-time {
+  position: static !important;
+
+  display: flex !important;
+  align-items: center !important;
+
+  gap: 4px !important;
+
+  width: auto !important;
+  height: auto !important;
+
+  min-height: 0 !important;
+
+  margin: 0 !important;
+  padding: 0 4px !important;
+
+  font-size: 10px !important;
+  line-height: 14px !important;
+
+  color: #96989f !important;
+
+  white-space: nowrap;
+}
+
+/* MESSAGE STATUS */
+
+body.page-messages #chatModal .msg-status {
+  position: static !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+
+  width: auto !important;
+  height: auto !important;
+
+  min-height: 0 !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  font-size: 10px !important;
+  line-height: 14px !important;
+}
+
+#chatModal .msg-status:empty {
+  display: none !important;
+}
+
+/* REMOVE TOOL GLOW */
+
+body.page-messages #chatModal .chat-tool,
+body.page-messages #chatModal .chat-tool svg {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+/* ==========================================
+   MOBILE FULLSCREEN FIX
+========================================== */
+
+@media (max-width: 700px) {
+
+  body.page-messages #chatModal {
+    align-items: stretch !important;
+
+    min-height: 0 !important;
+    max-height: none !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+
+    background: #101114 !important;
+  }
+
+  body.page-messages #chatModal .private-chat-panel {
+    display: flex !important;
+    flex-direction: column !important;
+
+    width: 100% !important;
+    max-width: 430px !important;
+
+    height: 100% !important;
+
+    min-height: 0 !important;
+    max-height: none !important;
+
+    margin: 0 auto !important;
+    padding: 0 !important;
+
+    border: none !important;
+    border-radius: 0 !important;
+  }
+
+  body.page-messages #chatModal .chat-header {
+    min-height: 0 !important;
+
+    padding:
+      calc(env(safe-area-inset-top, 0px) + 8px)
+      12px
+      8px !important;
+  }
+
+  body.page-messages #chatModal .private-chat-content {
+    flex: 1 1 0 !important;
+
+    min-height: 0 !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    overflow: hidden !important;
+  }
+
+  body.page-messages #chatModal .chatform {
+    position: relative !important;
+
+    inset: auto !important;
+
+    flex: 0 0 auto !important;
+
+    width: 100% !important;
+    height: auto !important;
+
+    min-height: 0 !important;
+
+    margin: 0 !important;
+
+    padding:
+      8px
+      10px
+      max(8px, env(safe-area-inset-bottom, 0px))
+      !important;
+
+    transform: none !important;
+    border-radius: 0 !important;
+  }
+
+  body.page-messages #chatModal.keyboard-open .chatform {
+    padding-bottom: 8px !important;
+  }
+
+}
+
 
 </style>
 
@@ -2696,7 +2968,7 @@ body.private-chat-open {
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/chat-global.js"></script>
-<script src="/messages.js?v=20261126-04"></script>
+<script src="/messages.js?v=20261126-05"></script>
 <script src="/push-init.js"></script>
 <script src="/app-entry-guard.js"></script>
 
