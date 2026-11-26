@@ -294,12 +294,18 @@
         background: var(--champagne);
       }
 
-      .hero-visual img {
-        width: 100%;
-        aspect-ratio: 5/4;
-        object-fit: cover;
-      }
 
+.hero-visual img {
+  display: block;
+
+  width: 100%;
+  height: auto;
+
+  aspect-ratio: auto;
+
+  object-fit: contain;
+  object-position: center top;
+}
       /* ===== 08. QR ACCESS ===== */
       .qr-section {
         background: var(--cream);
@@ -431,11 +437,19 @@
         box-shadow: var(--shadow);
       }
 
-      .experience-card img {
-        width: 100%;
-        aspect-ratio: 16/10;
-        object-fit: cover;
-      }
+  .experience-card img {
+  display: block;
+
+  width: 100%;
+  height: auto;
+
+  aspect-ratio: auto;
+
+  object-fit: contain;
+  object-position: center top;
+
+  background: #FCFAF5;
+}
 
       .experience-card div {
         padding: 19px;
@@ -640,10 +654,7 @@
           margin: auto;
         }
 
-        .hero-visual img {
-          aspect-ratio: 16/9;
-        }
-
+   
         .qr-copy {
           text-align: center;
         }
