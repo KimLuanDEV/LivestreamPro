@@ -353,17 +353,38 @@ const { uploadToR2 } = require("./r2");
 
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "";
 
-function normalizeAvatar(url) {
-  if (!url) return "";
+/* ==========================================
+   LIVESTREAM PRO
+   GLOBAL DEFAULT AVATAR
+========================================== */
 
-  // avatar legacy dạng /avatars/xxx.jpg
+const DEFAULT_AVATAR = "/icons/icon-192.png";
+
+const LEGACY_DEFAULT_AVATAR =
+  "https://i.ibb.co/GvJWn19q/icon-192.png";
+
+function normalizeAvatar(url) {
+
+  if (typeof url !== "string" || !url.trim()) {
+    return DEFAULT_AVATAR;
+  }
+
+  url = url.trim();
+
+  // Chuyển avatar mặc định cũ sang asset nội bộ
+  if (
+    url.startsWith(LEGACY_DEFAULT_AVATAR)
+  ) {
+    return DEFAULT_AVATAR;
+  }
+
+  // Giữ nguyên avatar cá nhân trên Cloudflare R2
   if (url.startsWith("/avatars/")) {
     return R2_PUBLIC_URL + url;
   }
 
   return url;
 }
-
 
 /* ==========================================
    SECURITY - MEDIA FILE FILTER
@@ -10864,10 +10885,7 @@ for (const [uid, sockets] of activeUsers.entries()) {
       uid,   
       name: displayName,  
          
-avatar:
-  normalizeAvatar(profile.avatar) ||
-  "https://i.ibb.co/GvJWn19q/icon-192.png" +
-  encodeURIComponent(displayName),
+avatar: normalizeAvatar(profile.avatar),
 
 
       level: Number(profile.level || 1),
@@ -11018,9 +11036,34 @@ function rewardDailySocialPost(user, postId) {
 
 
 
-function loadUsers(){
-  if(!fs.existsSync(USERS_FILE)) return {};
-  return JSON.parse(fs.readFileSync(USERS_FILE,"utf8"));
+function loadUsers() {
+
+  if (!fs.existsSync(USERS_FILE)) return {};
+
+  const db = JSON.parse(
+    fs.readFileSync(USERS_FILE, "utf8")
+  );
+
+  // Đồng bộ avatar mặc định của tài khoản cũ
+  for (const user of Object.values(db)) {
+
+    if (!user?.profile) continue;
+
+    const avatar = user.profile.avatar;
+
+    if (
+      !avatar ||
+      (
+        typeof avatar === "string" &&
+        avatar.startsWith(LEGACY_DEFAULT_AVATAR)
+      )
+    ) {
+      user.profile.avatar = DEFAULT_AVATAR;
+    }
+
+  }
+
+  return db;
 }
 
 
@@ -11919,7 +11962,7 @@ db[username] = {
   profile: {
       uid: username,
       name: "User",
-      avatar: "https://i.ibb.co/GvJWn19q/icon-192.png",
+      avatar: DEFAULT_AVATAR,
       bio: "",  
       coins:0,
       coinDeposit:0,
@@ -12914,8 +12957,7 @@ if (
     list.push({
       uid,
       name: p.name || uid,
-      avatar: normalizeAvatar(p.avatar) ||
-        "https://i.ibb.co/GvJWn19q/icon-192.png" + uid,
+      avatar: normalizeAvatar(p.avatar),
       bank: bank.name || "",
       account: bank.account || "",
       owner: bank.owner || "",
@@ -12943,7 +12985,7 @@ app.get("/api/all-users", (req,res)=>{
     list.push({
       uid,
       name: p.name || uid,
-      avatar: p.avatar || "https://i.ibb.co/GvJWn19q/icon-192.png" + uid,
+      avatar: normalizeAvatar(p.avatar),
       cover: p.cover || "",
       bio: p.bio || "",
       level: p.level || 1,
@@ -16948,7 +16990,7 @@ if (
   profile = {
     uid: `guest_${socket.id}`,
     name: "Guest",
-    avatar: "/icons/icon-192.png",
+    avatar: DEFAULT_AVATAR,
     level: 1,
     coins: 0
   };
@@ -17080,7 +17122,7 @@ const uid = socket.data.authenticated
     uid,
     socketId: socket.id,
     name: safeName(profile?.name),
-    avatar: profile?.avatar || "https://i.ibb.co/GvJWn19q/icon-192.png" ,
+    avatar: normalizeAvatar(profile?.avatar),
     level: Number(profile?.level) || 1,
     coins: Number(profile?.coins) || 0,
     coinSentRoom: old?.coinSentRoom || room.giftByUser.get(uid) || 0,
