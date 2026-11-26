@@ -10839,15 +10839,34 @@ body.sfu-role-host #sfuPinnedContent:active {
   font-size: 11px;
 }
 
-.sfu-pin-hint {
-  margin: 0;
-  font-size: 11px;
-  color: #999;
-  line-height: 1.5;
+
+
+
+
+/* ==========================================
+   SFU PIN CONTENT - TOUCH INTERACTION
+========================================== */
+
+body.sfu-role-host #sfuPinnedContent {
+  pointer-events: auto;
+  touch-action: none;
+  cursor: pointer;
+
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
+body.sfu-role-host #sfuPinnedContent.dragging {
+  cursor: grabbing;
 
+  border-color: #f6dfad;
 
+  box-shadow:
+    0 0 0 2px rgba(223,190,131,.18),
+    0 8px 25px rgba(0,0,0,.35);
+}
 
 </style>
 
@@ -10926,9 +10945,6 @@ body.sfu-role-host #sfuPinnedContent:active {
     placeholder="Enter pinned content...">
   </textarea>
 
-  <p class="sfu-pin-hint">
-    Drag the pinned content to change its position.
-  </p>
 
   <div class="pin-actions">
 
@@ -15540,23 +15556,47 @@ window.addEventListener(
 );
 
 
-/* OPEN EDITOR */
+/* ==========================================
+   OPEN PIN CONTENT EDITOR
+========================================== */
 
-pinButton.addEventListener("click", () => {
+function openLivePinEditor() {
 
   if (
     isViewer ||
-    !sfuChatLive
+    !sfuChatLive ||
+    pinBusy ||
+    pinEditor.open
   ) return;
 
   pinText.value =
     livePin?.text || "";
 
+  document.getElementById(
+    "sfuPinSave"
+  ).textContent =
+    livePin ? "UPDATE" : "PIN";
+
+  document.getElementById(
+    "sfuPinRemove"
+  ).classList.toggle(
+    "hidden",
+    !livePin
+  );
+
   closeStudioSettings();
 
   pinEditor.showModal();
 
-});
+}
+
+
+/* OPEN FROM CONTROL CENTER */
+
+pinButton.addEventListener(
+  "click",
+  openLivePinEditor
+);
 
 
 /* CANCEL */
@@ -15617,9 +15657,16 @@ document.getElementById(
 
 };
 
+/* ==========================================
+   SFU PIN CONTENT V2.0
+   TAP TO EDIT - DRAG TO MOVE
+========================================== */
+
+const PIN_DRAG_THRESHOLD = 8;
+
 
 /* ==========================================
-   DRAG START
+   POINTER DOWN
 ========================================== */
 
 pinBox.addEventListener("pointerdown", e => {
@@ -15641,15 +15688,23 @@ pinBox.addEventListener("pointerdown", e => {
 
     id: e.pointerId,
 
+    startX: e.clientX,
+
+    startY: e.clientY,
+
     dx: e.clientX - rect.left,
 
     dy: e.clientY - rect.top,
+
+    moved: false,
 
     original: { ...livePin }
 
   };
 
-  pinBox.setPointerCapture(e.pointerId);
+  pinBox.setPointerCapture(
+    e.pointerId
+  );
 
   e.preventDefault();
 
@@ -15657,7 +15712,7 @@ pinBox.addEventListener("pointerdown", e => {
 
 
 /* ==========================================
-   DRAG MOVE
+   POINTER MOVE
 ========================================== */
 
 pinBox.addEventListener("pointermove", e => {
@@ -15668,34 +15723,78 @@ pinBox.addEventListener("pointermove", e => {
     !livePin
   ) return;
 
-  const parent = pinBox.parentElement;
+
+  /* DISTINGUISH TAP AND DRAG */
+
+  const distance = Math.hypot(
+
+    e.clientX - pinDrag.startX,
+
+    e.clientY - pinDrag.startY
+
+  );
+
+
+  if (
+    !pinDrag.moved &&
+    distance < PIN_DRAG_THRESHOLD
+  ) return;
+
+
+  pinDrag.moved = true;
+
+  pinBox.classList.add("dragging");
+
+
+  /* CALCULATE POSITION */
+
+  const parent =
+    pinBox.parentElement;
 
   const rect =
     parent.getBoundingClientRect();
 
   const maxX = Math.max(
+
     1,
-    parent.clientWidth - pinBox.offsetWidth
+
+    parent.clientWidth -
+    pinBox.offsetWidth
+
   );
 
   const maxY = Math.max(
+
     1,
-    parent.clientHeight - pinBox.offsetHeight
+
+    parent.clientHeight -
+    pinBox.offsetHeight
+
   );
+
 
   livePin = {
 
     ...livePin,
 
     x: pinClamp(
-      (e.clientX - rect.left - pinDrag.dx) / maxX
+
+      (e.clientX -
+       rect.left -
+       pinDrag.dx) / maxX
+
     ),
 
     y: pinClamp(
-      (e.clientY - rect.top - pinDrag.dy) / maxY
+
+      (e.clientY -
+       rect.top -
+       pinDrag.dy) / maxY
+
     )
 
   };
+
 
   drawLivePin();
 
@@ -15703,7 +15802,7 @@ pinBox.addEventListener("pointermove", e => {
 
 
 /* ==========================================
-   DRAG END
+   POINTER UP
 ========================================== */
 
 pinBox.addEventListener("pointerup", e => {
@@ -15713,13 +15812,50 @@ pinBox.addEventListener("pointerup", e => {
     pinDrag.id !== e.pointerId
   ) return;
 
-  const previous = pinDrag.original;
+
+  const drag = pinDrag;
 
   pinDrag = null;
 
-  if (!socket.connected) {
+  pinBox.classList.remove("dragging");
 
-    livePin = previous;
+
+  if (
+    pinBox.hasPointerCapture(e.pointerId)
+  ) {
+
+    pinBox.releasePointerCapture(
+      e.pointerId
+    );
+
+  }
+
+
+  if (
+    !sfuChatLive ||
+    !livePin
+  ) return;
+
+
+  /* TAP - OPEN EDITOR */
+
+  if (!drag.moved) {
+
+    openLivePinEditor();
+
+    return;
+
+  }
+
+
+  /* CONNECTION LOST */
+
+  if (
+    !socket.connected ||
+    pinBusy
+  ) {
+
+    livePin = drag.original;
 
     drawLivePin();
 
@@ -15727,16 +15863,19 @@ pinBox.addEventListener("pointerup", e => {
 
   }
 
-  // Only synchronize after releasing.
+
+  /* DRAG - SYNC POSITION */
 
   sendLivePin(livePin);
 
 });
 
 
-/* DRAG CANCEL */
+/* ==========================================
+   POINTER CANCEL
+========================================== */
 
-pinBox.addEventListener("pointercancel", e => {
+function cancelLivePinDrag(e) {
 
   if (
     !pinDrag ||
@@ -15747,10 +15886,35 @@ pinBox.addEventListener("pointercancel", e => {
 
   pinDrag = null;
 
+  pinBox.classList.remove("dragging");
+
   drawLivePin();
 
-});
+}
 
+
+pinBox.addEventListener(
+  "pointercancel",
+  cancelLivePinDrag
+);
+
+pinBox.addEventListener(
+  "lostpointercapture",
+  cancelLivePinDrag
+);
+
+
+/* PREVENT LONG PRESS CONTEXT MENU */
+
+pinBox.addEventListener("contextmenu", e => {
+
+  if (!isViewer) {
+
+    e.preventDefault();
+
+  }
+
+});
 
 /* CLEAR WHEN ROOM CLOSED */
 
