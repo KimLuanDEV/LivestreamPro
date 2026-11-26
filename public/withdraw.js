@@ -218,7 +218,7 @@ moneyVal.textContent =
 
     btnSubmit.innerHTML =
       wdIcon("clock") +
-      "<span>PENDING APPROVAL</span>";
+      "<span>Pending Approval</span>";
 
     return;
   }
@@ -238,7 +238,7 @@ moneyVal.textContent =
 
     btnSubmit.innerHTML =
       wdIcon("send") +
-      "<span>SUBMIT WITHDRAWAL REQUEST</span>";
+      "<span>Submit Request</span>";
 
   }
 }
@@ -803,7 +803,7 @@ function toggleWithdrawForm(enable) {
     btnSubmit.disabled = true;
 btnSubmit.innerHTML =
   wdIcon("clock") +
-  "<span>PENDING APPROVAL</span>";
+  "<span>Pending Approval</span>";
 
     if (!warn) {
       warn = document.createElement("div");

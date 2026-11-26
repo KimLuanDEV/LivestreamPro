@@ -166,7 +166,7 @@ function checkRentAffordable(){
   if(selectedPlan.trial){
   btn.disabled = false;
   btn.classList.remove("disabled");
-  bbtn.textContent = "Start Trial";
+  btn.textContent = "Start Trial";
   if(topupBtn) topupBtn.classList.add("hidden");
   priceVal.classList.remove("rent-price-over");
   return;
