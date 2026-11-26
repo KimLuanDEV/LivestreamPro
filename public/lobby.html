@@ -4319,12 +4319,12 @@ body.lobby-page #countdownOverlay .cd-status-dot {
         <use href="#lb-search"></use>
       </svg>
 
-      <input
-        id="q"
-        class="lobby-search"
-        placeholder="Search room or host"
-        autocomplete="off"
-        aria-label="Search live rooms">
+<input
+  id="q"
+  class="lobby-search"
+  placeholder="Search friends or Room ID"
+  autocomplete="off"
+  aria-label="Search live rooms">
 
       <button
         type="button"
@@ -5833,7 +5833,9 @@ function roomMatches(r, q){
   q = q.trim().toLowerCase();
   const roomId = String(r.roomId || "").toLowerCase();
   const hostName = String(r.host?.name || "").toLowerCase();
-  return roomId.includes(q) || hostName.includes(q);
+  return /^\d+$/.test(q)
+  ? roomId === q
+  : hostName.includes(q) || roomId === q;
 }
 
 function applyFilterSort(list){
@@ -6186,8 +6188,11 @@ privateJoinConfirm.addEventListener("click", () => {
           LOGIN_REQUIRED:
             "Please sign in again.",
 
-          FRIENDS_ONLY:
-  "Only friends of the host can join this livestream.",
+          ACCESS_DENIED:
+  "You cannot access this livestream.",
+
+FRIENDS_ONLY:
+  "Only friends of the host can access this feature.",
 
           INCORRECT_PASSWORD:
             "Incorrect room password.",
@@ -6464,22 +6469,62 @@ document.querySelectorAll(".lobby-chipBtn").forEach(btn=>{
 
 sortEl.addEventListener("change", ()=> render(__rooms));
 
+/* ==========================================
+   LIVE ROOM - EXACT ID SEARCH
+========================================== */
+
 let __qTimer = null;
-qEl.addEventListener("input", ()=>{
+
+qEl.addEventListener("input", () => {
+
   clearTimeout(__qTimer);
-  __qTimer = setTimeout(()=>{
-    __q = qEl.value || "";
-    clearQ.style.opacity = __q.trim() ? "1" : ".45";
-    render(__rooms);
-  }, 80);
+
+  __q = qEl.value.trim();
+
+  // Remove previous search results
+  __rooms = [];
+
+  clearQ.style.opacity =
+    __q ? "1" : ".45";
+
+  render(__rooms);
+
+  // Prevent excessive server requests
+  __qTimer = setTimeout(() => {
+
+    socket.emit("lobby-get", {
+
+      query: __q
+
+    });
+
+  }, 350);
+
 });
 
-clearQ.addEventListener("click", ()=>{
+
+clearQ.addEventListener("click", () => {
+
+  clearTimeout(__qTimer);
+
   qEl.value = "";
+
   __q = "";
+
+  __rooms = [];
+
   clearQ.style.opacity = ".45";
+
   render(__rooms);
+
+  socket.emit("lobby-get", {
+
+    query: ""
+
+  });
+
   qEl.focus();
+
 });
 
 
@@ -6680,9 +6725,16 @@ socket.emit("virtual-live:get-counts");
 
 
 /* ===== socket ===== */
-function requestLobby(){
+function requestLobby() {
+
   renderSkeleton();
-  socket.emit("lobby-get");
+
+  socket.emit("lobby-get", {
+
+    query: sharedPrivateRoomId || __q
+
+  });
+
 }
 
 /* SHARED PRIVATE ROOM REQUEST */
@@ -6693,6 +6745,17 @@ let sharedPrivateRoomId = new URLSearchParams(
 
 
 socket.on("lobby-update", d => {
+
+  const currentQuery =
+    sharedPrivateRoomId || __q;
+
+  const responseQuery =
+    d?.query || "";
+
+  // Ignore outdated search results
+  if (responseQuery !== currentQuery) {
+    return;
+  }
 
   __rooms = (d && d.rooms) ? d.rooms : [];
 
@@ -6712,9 +6775,19 @@ socket.on("lobby-update", d => {
 
     );
 
-    const requestedId = sharedPrivateRoomId;
+const requestedId = sharedPrivateRoomId;
 
-    sharedPrivateRoomId = "";
+sharedPrivateRoomId = "";
+
+__rooms = [];
+
+render(__rooms);
+
+socket.emit("lobby-get", {
+
+  query: __q
+
+});
 
     const cleanUrl = new URL(window.location.href);
 
@@ -6764,18 +6837,26 @@ requestLobby();
 
 socket.on("connect", () => {
 
-  socket.emit("lobby-get");
+  socket.emit("lobby-get", {
+
+    query: sharedPrivateRoomId || __q
+
+  });
 
 });
 
 
 window.addEventListener("pageshow", event => {
 
-  if (event.persisted) {
+if (event.persisted) {
 
-    socket.emit("lobby-get");
+  socket.emit("lobby-get", {
 
-  }
+    query: sharedPrivateRoomId || __q
+
+  });
+
+}
 
 });
 

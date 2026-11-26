@@ -13955,7 +13955,7 @@ viewerSocket.data.sessionId !== requestSessionId ||
 viewerSocket.data.roomId !== roomId ||
 !room.viewers.has(viewer.socketId) ||
 
-!canAccessFriendLiveRoom(
+!canAccessLiveRoomById(
   room,
   uid
 ) ||
@@ -14447,8 +14447,12 @@ io.to(roomId).emit("viewer-count", {
    LIVESTREAM PRO
    FRIENDS ONLY LIVE SECURITY V1.0
 ========================================== */
+/* ==========================================
+   LIVE ROOM ACCESS SECURITY V2.0
+   FRIENDS + EXACT ROOM ID
+========================================== */
 
-function canAccessFriendLiveRoom(room, uid, db) {
+function canAccessLiveRoomById(room, uid, db) {
 
   if (!room || !uid) return false;
 
@@ -14465,6 +14469,7 @@ function canAccessFriendLiveRoom(room, uid, db) {
 
   if (!viewer || !host) return false;
 
+  // Reject blocked accounts
   if (
     viewer.accountBlocked ||
     host.accountBlocked
@@ -14472,15 +14477,8 @@ function canAccessFriendLiveRoom(room, uid, db) {
     return false;
   }
 
-  // Host can access their own room.
-
+  // Host can access own room
   if (uid === hostUid) return true;
-
-  const viewerFriends =
-    (viewer.friends || []).map(String);
-
-  const hostFriends =
-    (host.friends || []).map(String);
 
   const viewerBlocked =
     (viewer.blockedUsers || []).map(String);
@@ -14488,8 +14486,7 @@ function canAccessFriendLiveRoom(room, uid, db) {
   const hostBlocked =
     (host.blockedUsers || []).map(String);
 
-  // Reject blocked accounts.
-
+  // Reject mutual blocking
   if (
     viewerBlocked.includes(hostUid) ||
     hostBlocked.includes(uid)
@@ -14497,7 +14494,87 @@ function canAccessFriendLiveRoom(room, uid, db) {
     return false;
   }
 
-  // Require mutual friendship.
+  return true;
+}
+
+
+/* ==========================================
+   LIVE ROOM ACCESS SECURITY V2.0
+   FRIENDS + EXACT ROOM ID
+========================================== */
+
+function canAccessLiveRoomById(room, uid, db) {
+
+  if (!room || !uid) return false;
+
+  uid = String(uid);
+
+  const hostUid = String(room.ownerUid || "");
+
+  if (!hostUid) return false;
+
+  const users = db || loadUsers();
+
+  const viewer = users[uid]?.profile;
+  const host = users[hostUid]?.profile;
+
+  if (!viewer || !host) return false;
+
+  // Reject blocked accounts
+  if (
+    viewer.accountBlocked ||
+    host.accountBlocked
+  ) {
+    return false;
+  }
+
+  // Host can access own room
+  if (uid === hostUid) return true;
+
+  const viewerBlocked =
+    (viewer.blockedUsers || []).map(String);
+
+  const hostBlocked =
+    (host.blockedUsers || []).map(String);
+
+  // Reject mutual blocking
+  if (
+    viewerBlocked.includes(hostUid) ||
+    hostBlocked.includes(uid)
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+
+/* ==========================================
+   MUTUAL FRIENDSHIP CHECK
+========================================== */
+
+function canAccessFriendLiveRoom(room, uid, db) {
+
+  const users = db || loadUsers();
+
+  if (!canAccessLiveRoomById(room, uid, users)) {
+    return false;
+  }
+
+  uid = String(uid);
+
+  const hostUid = String(room.ownerUid);
+
+  if (uid === hostUid) return true;
+
+  const viewer = users[uid].profile;
+  const host = users[hostUid].profile;
+
+  const viewerFriends =
+    (viewer.friends || []).map(String);
+
+  const hostFriends =
+    (host.friends || []).map(String);
 
   return (
     viewerFriends.includes(hostUid) &&
@@ -14507,7 +14584,10 @@ function canAccessFriendLiveRoom(room, uid, db) {
 }
 
 
-/* FILTER LIVE ROOMS FOR EACH USER */
+/* ==========================================
+   FILTER LIVE ROOMS
+   FRIENDS + EXACT ROOM ID
+========================================== */
 
 function getFriendLobbyList(socket, list, db) {
 
@@ -14520,20 +14600,39 @@ function getFriendLobbyList(socket, list, db) {
 
   const uid = String(socket.data.uid);
 
+  const query = String(
+    socket.data.liveLobbyQuery || ""
+  ).trim();
+
+  const exactRoomId = /^\d{6}$/.test(query);
+
   return list.filter(item => {
 
     const room = rooms.get(item.roomId);
 
-    return canAccessFriendLiveRoom(
-      room,
-      uid,
-      db
-    );
+    if (!room) return false;
+
+    // Friends can discover rooms normally
+    if (
+      canAccessFriendLiveRoom(room, uid, db)
+    ) {
+      return true;
+    }
+
+    // Non-friends must know the exact Room ID
+    if (
+      exactRoomId &&
+      String(item.roomId) === query &&
+      canAccessLiveRoomById(room, uid, db)
+    ) {
+      return true;
+    }
+
+    return false;
 
   });
 
 }
-
 
 /* REJECT UNAUTHORIZED VIEWER */
 
@@ -14541,10 +14640,10 @@ function rejectFriendLiveAccess(socket) {
 
   socket.emit("room-error", {
 
-    reason: "friends_only",
+    reason: "access_denied",
 
     message:
-      "Only friends of the host can join this livestream."
+      "You cannot access this livestream."
 
   });
 
@@ -14622,17 +14721,21 @@ function emitLobbyUpdate() {
 
     if (!client.data.liveLobbySubscribed) continue;
 
-    client.emit("lobby-update", {
 
-      rooms: getFriendLobbyList(
-        client,
-        list,
-        db
-      ),
+    
+client.emit("lobby-update", {
 
-      ts
+  query: client.data.liveLobbyQuery || "",
 
-    });
+  rooms: getFriendLobbyList(
+    client,
+    list,
+    db
+  ),
+
+  ts
+
+});
 
   }
 
@@ -17426,13 +17529,12 @@ if (!room) {
 
 
 
-
-/* FRIENDS ONLY - VIEWER ACCESS */
+/* LIVE ROOM - VIEWER ACCESS */
 
 if (
   socket.data.authenticated !== true ||
 
-  !canAccessFriendLiveRoom(
+  !canAccessLiveRoomById(
     room,
     socket.data.uid,
     db
@@ -17710,15 +17812,15 @@ socket.on(
     }
 
 
-    /* FRIENDS ONLY - PRIVATE ROOM UNLOCK */
+/* LIVE ROOM - PRIVATE ROOM UNLOCK */
 
-if (!canAccessFriendLiveRoom(room, uid)) {
+if (!canAccessLiveRoomById(room, uid)) {
 
   return cb({
 
     ok: false,
 
-    error: "FRIENDS_ONLY"
+    error: "ACCESS_DENIED"
 
   });
 
@@ -17860,7 +17962,7 @@ if (!canAccessFriendLiveRoom(room, uid)) {
 
       if (
         !socket.connected ||
-        !canAccessFriendLiveRoom(room, uid) ||
+        !canAccessLiveRoomById(room, uid) ||
         socket.data.authenticated !== true ||
         String(socket.data.uid) !== uid ||
         socket.data.sessionId !== sessionId ||
@@ -18086,10 +18188,17 @@ return cb({
 
 
 /* ==========================================
-   FRIENDS ONLY - GET LIVE ROOM LIST
+   LIVE ROOM SEARCH V2.0
 ========================================== */
 
-socket.on("lobby-get", () => {
+socket.on("lobby-get", (data = {}) => {
+
+  const query =
+    typeof data?.query === "string"
+      ? data.query.trim().slice(0, 100)
+      : "";
+
+  socket.data.liveLobbyQuery = query;
 
   socket.data.liveLobbySubscribed = true;
 
@@ -18100,8 +18209,8 @@ socket.on("lobby-get", () => {
 
     return socket.emit("lobby-update", {
 
+      query,
       rooms: [],
-
       ts: Date.now()
 
     });
@@ -18113,6 +18222,8 @@ socket.on("lobby-get", () => {
   const list = getLobbyList();
 
   socket.emit("lobby-update", {
+
+    query,
 
     rooms: getFriendLobbyList(
       socket,
@@ -18131,8 +18242,9 @@ socket.on("lobby-unsubscribe", () => {
 
   socket.data.liveLobbySubscribed = false;
 
-});
+  socket.data.liveLobbyQuery = "";
 
+});
 
 
 // ===== LIVE TIMER (server-side source of truth) =====
@@ -18373,12 +18485,14 @@ if (role === "broadcaster") {
 
   /* FRIENDS ONLY - ROOM ACCESS CONTROL */
 
+/* LIVE ROOM - ACCESS CONTROL */
+
 if (
   role === "viewer" &&
   (
     socket.data.authenticated !== true ||
 
-    !canAccessFriendLiveRoom(
+    !canAccessLiveRoomById(
       room,
       socket.data.uid
     )
@@ -19237,8 +19351,8 @@ host: sfuHostInfo
 if (role === "viewer") {
 
 
-  if (
-  !canAccessFriendLiveRoom(
+if (
+  !canAccessLiveRoomById(
     room,
     uid,
     usersForHost
@@ -19249,7 +19363,7 @@ if (role === "viewer") {
 
     ok: false,
 
-    error: "FRIENDS_ONLY"
+    error: "ACCESS_DENIED"
 
   });
 
