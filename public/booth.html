@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Booth | Livestream Pro</title>
 
 <!-- BROWSER ICON -->
@@ -16,7 +17,7 @@
       sizes="512x512"
       href="/icons/icon-512.png">
 
-      
+
 <link rel="stylesheet" href="/style.css">
 
 <style>
@@ -1988,6 +1989,791 @@ body.booth-page .fl-kicker {
 }
 
 
+/* ==========================================
+   BOOTH V3.0 - MINIMAL BLACK & GOLD
+========================================== */
+
+body.booth-page {
+  --bt-gold: #d9b979;
+  --bt-light: #f5f5f7;
+  --bt-muted: #96989f;
+  --bt-line: rgba(255,255,255,.07);
+
+  background: #101114 !important;
+  color: #f5f5f7;
+}
+
+/* ===== REMOVE EXTRA TEXT ===== */
+
+body.booth-page .booth-kicker,
+body.booth-page .booth-section-head,
+body.booth-page .booth-modal-kicker,
+body.booth-page .bt-extend-intro {
+  display: none !important;
+}
+
+/* ==========================================
+   HEADER
+========================================== */
+
+body.booth-page .booth-header {
+  min-height: 0;
+
+  padding:
+    calc(9px + env(safe-area-inset-top,0px))
+    12px
+    9px;
+
+  gap: 10px;
+
+  background: #101114;
+
+  border: none;
+  border-bottom: 1px solid #25262b;
+
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+
+  box-shadow: none;
+}
+
+/* BACK BUTTON */
+
+body.booth-page #btnBack {
+  width: 38px;
+  height: 40px;
+
+  min-width: 38px;
+  flex: 0 0 38px;
+
+  background: transparent;
+
+  border: none;
+  border-radius: 50%;
+
+  color: #d9b979;
+
+  box-shadow: none;
+}
+
+/* STORE LOGO */
+
+body.booth-page .booth-logo-frame {
+  width: 42px;
+  height: 42px;
+
+  flex: 0 0 42px;
+
+  padding: 0;
+
+  border: none;
+  border-radius: 12px;
+
+  background: #24262c;
+}
+
+body.booth-page #boothLogo {
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+/* STORE NAME */
+
+body.booth-page #boothName {
+  margin: 0;
+
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 700;
+
+  color: #f5f5f7;
+}
+
+/* EXTEND BUTTON */
+
+body.booth-page #btnExtendBooth {
+  min-width: 60px;
+  min-height: 34px;
+
+  padding: 7px 10px;
+
+  background: #29251e;
+  color: #d9b979;
+
+  border: none;
+  border-radius: 8px;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  box-shadow: none;
+}
+
+/* ==========================================
+   EXPIRATION
+========================================== */
+
+body.booth-page #boothExpireBox {
+  width: calc(100% - 24px);
+
+  margin: 10px auto 0;
+  padding: 9px 12px;
+
+  background: #1c1e23;
+
+  border: none;
+  border-radius: 9px;
+
+  color: #a7a9b1;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  box-shadow: none;
+}
+
+body.booth-page #boothExpireBox.warn {
+  background: #30271e;
+  color: #e5b975;
+}
+
+body.booth-page #boothExpireBox.danger {
+  background: #302124;
+  color: #ee999e;
+}
+
+/* ==========================================
+   MAIN CONTENT
+========================================== */
+
+body.booth-page .booth-body {
+  padding:
+    12px
+    12px
+    calc(90px + env(safe-area-inset-bottom,0px));
+}
+
+/* ==========================================
+   TABS
+========================================== */
+
+body.booth-page .booth-tabs.compact {
+  gap: 6px;
+
+  margin: 0 0 14px;
+  padding: 4px;
+
+  background: #1b1d22;
+
+  border: none;
+  border-radius: 12px;
+}
+
+body.booth-page .booth-tabs.compact .tab {
+  min-height: 38px;
+
+  padding: 8px 6px;
+
+  background: transparent;
+
+  border: none;
+  border-radius: 8px;
+
+  color: #a7a9b1;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  box-shadow: none;
+}
+
+body.booth-page .booth-tabs.compact .tab.active {
+  background: #d9b979;
+  color: #19150f;
+
+  border: none;
+  box-shadow: none;
+}
+
+/* ==========================================
+   PRODUCT GRID
+========================================== */
+
+body.booth-page #productList {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2,minmax(0,1fr));
+
+  gap: 10px;
+}
+
+/* PRODUCT CARD */
+
+body.booth-page .product-card {
+  min-width: 0;
+
+  background: #1c1e23;
+
+  border: 1px solid #292b31;
+  border-radius: 13px;
+
+  box-shadow: none;
+
+  overflow: hidden;
+}
+
+/* PRODUCT IMAGE */
+
+body.booth-page .product-photo-frame {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+
+  background: #24262c;
+
+  border: none;
+  border-radius: 0;
+}
+
+body.booth-page .product-photo {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  border: none;
+  border-radius: 0;
+
+  box-shadow: none;
+}
+
+body.booth-page .product-photo:hover {
+  transform: none;
+}
+
+body.booth-page .product-photo-placeholder {
+  color: #96989f;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* PRODUCT INFORMATION */
+
+body.booth-page .product-content {
+  padding: 11px;
+
+  gap: 6px;
+}
+
+/* NAME */
+
+body.booth-page .product-name {
+  min-height: 0;
+
+  margin: 0;
+
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+
+  color: #f5f5f7;
+}
+
+/* PRICE */
+
+body.booth-page .product-price {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  margin: 0;
+
+  color: #d9b979;
+
+  font-size: 18px;
+  font-weight: 750;
+}
+
+body.booth-page .product-price small {
+  font-size: 12px;
+  font-weight: 500;
+
+  color: #d9b979;
+}
+
+/* DESCRIPTION */
+
+body.booth-page .product-description {
+  min-height: 0;
+
+  margin: 0;
+
+  color: #a7a9b1;
+
+  font-size: 12px;
+  line-height: 1.4;
+
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+body.booth-page .product-description:empty {
+  display: none;
+}
+
+/* STOCK */
+
+body.booth-page .product-stock {
+  margin: 0;
+
+  font-size: 11px;
+  font-weight: 500;
+}
+
+body.booth-page .product-stock.in {
+  color: #96989f;
+}
+
+body.booth-page .product-stock.out {
+  color: #e58d94;
+}
+
+/* ==========================================
+   PRODUCT BUTTONS
+========================================== */
+
+body.booth-page .product-controls {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2,minmax(0,1fr));
+
+  gap: 6px;
+
+  padding-top: 6px;
+}
+
+/* EDIT + DELETE */
+
+body.booth-page .product-controls button {
+  min-height: 34px;
+
+  display: grid;
+  place-items: center;
+
+  margin: 0;
+  padding: 5px;
+
+  background: #292b31;
+
+  border: none;
+  border-radius: 8px;
+
+  color: #d9b979;
+
+  box-shadow: none;
+}
+
+body.booth-page .product-controls .product-delete {
+  background: #292b31;
+  color: #df959b;
+}
+
+body.booth-page .product-controls svg {
+  width: 18px;
+  height: 18px;
+
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* BUY BUTTON */
+
+body.booth-page .product-buy {
+  min-height: 36px;
+
+  margin-top: auto;
+
+  background: #d9b979;
+  color: #19150f;
+
+  border: none;
+  border-radius: 8px;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  box-shadow: none;
+}
+
+body.booth-page .product-buy:disabled {
+  background: #292b31;
+  color: #96989f;
+
+  opacity: .65;
+}
+
+/* ==========================================
+   PAGINATION
+========================================== */
+
+body.booth-page .pagination {
+  margin-top: 16px;
+  gap: 6px;
+}
+
+body.booth-page .pagination button {
+  min-width: 32px;
+  height: 32px;
+
+  background: #22242a;
+
+  border: none;
+  border-radius: 8px;
+
+  color: #b5b7bf;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  box-shadow: none;
+}
+
+body.booth-page .pagination button.active {
+  background: #d9b979;
+  color: #19150f;
+}
+
+/* ==========================================
+   ADD PRODUCT - FLOATING BUTTON
+========================================== */
+
+body.booth-page #btnAddProduct {
+  position: fixed !important;
+
+  top: auto !important;
+  left: auto !important;
+
+  right: 16px !important;
+  bottom: calc(
+    16px + env(safe-area-inset-bottom,0px)
+  ) !important;
+
+  width: 50px !important;
+  height: 50px !important;
+  min-width: 50px !important;
+
+  display: grid;
+  place-items: center;
+
+  margin: 0;
+  padding: 0 !important;
+
+  background: #d9b979;
+  color: #19150f;
+
+  border: none;
+  border-radius: 50%;
+
+  transform: none;
+
+  box-shadow: 0 5px 18px rgba(0,0,0,.3);
+
+  z-index: 110;
+}
+
+body.booth-page #btnAddProduct svg {
+  width: 25px;
+  height: 25px;
+
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* ==========================================
+   ORDERS
+========================================== */
+
+body.booth-page .order-card,
+body.booth-page .my-order-card {
+  padding: 13px;
+
+  background: #1c1e23;
+
+  border: 1px solid #292b31;
+  border-radius: 12px;
+
+  box-shadow: none;
+}
+
+body.booth-page .order-price,
+body.booth-page .my-order-price {
+  color: #d9b979;
+}
+
+body.booth-page .order-meta,
+body.booth-page .my-order-meta {
+  color: #96989f;
+
+  font-size: 11px;
+}
+
+body.booth-page .order-buyer {
+  padding: 10px;
+
+  background: #25272d;
+
+  border: none;
+  border-radius: 9px;
+}
+
+body.booth-page .order-actions button {
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+/* EMPTY STATE */
+
+body.booth-page .empty-text {
+  margin-top: 40px;
+
+  padding: 15px;
+
+  background: transparent;
+
+  border: none;
+  box-shadow: none;
+
+  color: #96989f;
+
+  font-size: 14px;
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media (max-width: 360px) {
+
+  body.booth-page .booth-body {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
+  body.booth-page #productList {
+    gap: 8px;
+  }
+
+  body.booth-page .product-content {
+    padding: 9px;
+  }
+
+  body.booth-page .product-name {
+    font-size: 13px;
+  }
+
+}
+
+
+
+/* ==========================================
+   BOOTH MODALS V3.0
+========================================== */
+
+body.booth-page .modal-backdrop {
+  background: rgba(0,0,0,.75);
+
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.booth-page
+.modal-backdrop:not(#galleryModal) .rent-modal {
+
+  background: #17181d;
+
+  border: 1px solid #303238;
+  border-radius: 16px;
+
+  max-height: calc(
+    100dvh - env(safe-area-inset-top,0px) - 20px
+  );
+
+  overflow-y: auto;
+
+  box-shadow: none;
+}
+
+/* HEADER */
+
+body.booth-page .rent-header {
+  padding: 14px 16px;
+
+  background: #17181d;
+
+  border: none;
+  border-bottom: 1px solid #292b31;
+}
+
+body.booth-page .rent-header b {
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+
+  color: #f5f5f7;
+}
+
+/* CLOSE */
+
+body.booth-page .rent-header .bt-text-close {
+  min-width: 34px;
+  height: 34px;
+
+  padding: 0;
+
+  background: transparent;
+
+  border: none;
+  border-radius: 50%;
+
+  color: #96989f;
+
+  font-size: 21px;
+  font-weight: 400;
+
+  box-shadow: none;
+}
+
+/* FORM BODY */
+
+body.booth-page .rent-body {
+  padding: 14px 16px;
+  gap: 10px;
+}
+
+/* INPUTS */
+
+body.booth-page .rent-body input,
+body.booth-page .rent-body textarea {
+  width: 100%;
+  min-width: 0;
+
+  padding: 12px;
+
+  background: #24262c;
+
+  border: 1px solid transparent;
+  border-radius: 10px;
+
+  font-size: 16px;
+
+  color: #f5f5f7;
+
+  box-shadow: none;
+}
+
+body.booth-page .rent-body input:focus,
+body.booth-page .rent-body textarea:focus {
+  border-color: #d9b979;
+}
+
+body.booth-page .rent-body textarea {
+  min-height: 75px;
+}
+
+/* FORM LABEL */
+
+body.booth-page .booth-buy-form label {
+  color: #a7a9b1;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  letter-spacing: 0;
+}
+
+/* CONFIRM BUTTON */
+
+body.booth-page .rent-confirm {
+  min-height: 44px;
+
+  background: #d9b979;
+  color: #19150f;
+
+  border: none;
+  border-radius: 10px;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  box-shadow: none;
+}
+
+/* FILE UPLOAD */
+
+body.booth-page
+.rent-body input[type="file"]::file-selector-button {
+
+  padding: 9px 12px;
+
+  background: #343137;
+  color: #d9b979;
+
+  border: none;
+  border-radius: 7px;
+}
+
+/* ADD PRODUCT SHEET */
+
+body.booth-page #addProductModal .rent-modal {
+  width: 100%;
+  max-width: 520px;
+
+  border-radius: 18px 18px 0 0;
+
+  padding-bottom: env(safe-area-inset-bottom,0px);
+}
+
+body.booth-page #addProductModal .rent-header {
+  background: #17181d;
+}
+
+/* EXTENSION PLANS */
+
+body.booth-page .bt-extend-options {
+  gap: 8px;
+}
+
+body.booth-page .bt-extend-plan {
+  background: #24262c;
+
+  border: 1px solid #34363d;
+  border-radius: 10px;
+
+  box-shadow: none;
+}
+
+body.booth-page .bt-extend-plan strong {
+  color: #d9b979;
+}
+
+body.booth-page .bt-extend-plan span,
+body.booth-page .bt-extend-plan small {
+  color: #a7a9b1;
+}
+
+body.booth-page #uploadProgressBar {
+  background: #d9b979;
+}
+
+
 
 </style>
 </head>
@@ -2003,12 +2789,24 @@ body.booth-page .fl-kicker {
 
   <header class="booth-header">
 
-    <button type="button"
-            class="booth-back"
-            id="btnBack"
-            aria-label="Back to Marketplace">
-     <span>Market</span>
-    </button>
+<button type="button"
+        class="booth-back"
+        id="btnBack"
+        aria-label="Back to Marketplace">
+
+  <svg width="24" height="24"
+       viewBox="0 0 24 24"
+       fill="none"
+       stroke="currentColor"
+       stroke-width="2"
+       stroke-linecap="round"
+       stroke-linejoin="round">
+
+    <path d="M15 18l-6-6 6-6"/>
+
+  </svg>
+
+</button>
 
     <div class="booth-info">
 
@@ -2080,7 +2878,7 @@ body.booth-page .fl-kicker {
               class="tab hidden"
               data-tab="orders"
               id="tabOrders">
-        Manage Orders
+        Orders
       </button>
 
       <button type="button"
@@ -2128,20 +2926,23 @@ body.booth-page .fl-kicker {
     <!-- PRODUCT EMPTY STATE -->
     <div class="empty-text hidden"
          id="emptyText">
-      No products are available in this booth yet.
+      No products yet.
     </div>
 
   </main>
 
 </div>
 
-<!-- FLOATING OWNER ACTION -->
 <button type="button"
         class="add-product hidden"
-        id="btnAddProduct">
-  Add Product
-</button>
+        id="btnAddProduct"
+        aria-label="Add product">
 
+  <svg viewBox="0 0 24 24">
+    <path d="M12 5v14M5 12h14"/>
+  </svg>
+
+</button>
 
 
 
@@ -2157,16 +2958,16 @@ body.booth-page .fl-kicker {
      <button type="button"
         class="bt-text-close"
         onclick="closeAddProduct()">
-   Close
+   ✕
 </button>
     </div>
 
     <div class="rent-body">
-      <input id="pName" placeholder="Product Name">
+      <input id="pName" placeholder="Name">
     <input id="pPrice"
        type="number"
        min="0"
-       placeholder="Price (Diamonds)">
+       placeholder="Price (💎)">
       <input type="file" id="pImageFile" accept="image/*" multiple>
 
 <img id="pImagePreview"
@@ -2187,8 +2988,8 @@ body.booth-page .fl-kicker {
 </div>
 
 
-      <textarea id="pDesc" placeholder="Product Description"></textarea>
-      <input id="pStock" type="number"placeholder="Stock Quantity">
+      <textarea id="pDesc" placeholder="Description"></textarea>
+      <input id="pStock" type="number"placeholder="Stock">
 
 
 
@@ -2203,7 +3004,7 @@ body.booth-page .fl-kicker {
 
 
 <button class="rent-confirm" id="btnSubmitProduct">
-  Publish Product
+  Publish
 </button>
 
 
@@ -2222,7 +3023,7 @@ body.booth-page .fl-kicker {
       <button type="button"
         class="bt-text-close"
         onclick="closeGlobalModal()">
-  Close
+  ✕
 </button>
     </div>
 
@@ -2264,13 +3065,13 @@ body.booth-page .fl-kicker {
         <div class="booth-modal-kicker">
           SECURE PURCHASE
         </div>
-       <b>Purchase Details</b>
+       <b>Checkout</b>
       </div>
 
 <button type="button"
         class="bt-text-close"
         onclick="closeBuyForm()">
-  Đóng
+  ✕
 </button>
 
     </div>
@@ -2314,7 +3115,7 @@ body.booth-page .fl-kicker {
       <button type="button"
               class="rent-confirm"
               onclick="submitBuyForm()">
-        CONFIRM ORDER
+        Confirm Order
       </button>
 
     </div>
@@ -2330,11 +3131,11 @@ body.booth-page .fl-kicker {
 <div id="galleryModal" class="modal-backdrop hidden">
   <div class="rent-modal" style="max-width:none;width:100%;height:100%;border-radius:0;background:#000">
     <div class="rent-header">
-      <b id="galleryTitle">Product Gallery</b>
+      <b id="galleryTitle">Photos</b>
       <button type="button"
         class="bt-text-close"
         onclick="closeGallery()">
-  Close
+  ✕
 </button>
     </div>
 
@@ -2423,7 +3224,7 @@ body.booth-page .fl-kicker {
 
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="/booth.js"></script>
+<script src="/booth.js?v=20261126-03"></script>
 <script src="/push-init.js"></script>
 <script src="/app-entry-guard.js"></script>
 

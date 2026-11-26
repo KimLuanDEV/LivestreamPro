@@ -216,12 +216,14 @@ function renderProducts(products) {
 
         <div class="product-price">
           ${price.toLocaleString("en-US")}
-          <small>diamonds</small>
+          <small title="Diamonds">💎</small>
         </div>
 
-        <p class="product-description">
-          ${escapeBoothHtml(p.desc || "No description available.")}
-        </p>
+${p.desc?.trim() ? `
+  <p class="product-description">
+    ${escapeBoothHtml(p.desc)}
+  </p>
+` : ""}
 
 <div class="product-stock ${out ? "out" : "in"}">
   ${out
@@ -233,22 +235,44 @@ function renderProducts(products) {
         ${isOwner ? `
           <div class="product-controls">
 
-            <button type="button"
-                    class="product-edit">
-              Edit
-            </button>
+<button type="button"
+        class="product-edit"
+        title="Edit product"
+        aria-label="Edit product">
 
-            <button type="button"
-                    class="product-delete">
-              Delete
-            </button>
+  <svg viewBox="0 0 24 24">
+
+    <path d="M12 20h9"/>
+
+    <path d="M16.5 3.5a2.1 2.1 0 013 3L9 17l-4 1 1-4z"/>
+
+  </svg>
+
+</button>
+
+<button type="button"
+        class="product-delete"
+        title="Delete product"
+        aria-label="Delete product">
+
+  <svg viewBox="0 0 24 24">
+
+    <path d="M3 6h18M8 6V3h8v3"/>
+
+    <path d="M5 6l1 15h12l1-15"/>
+
+    <path d="M10 10v7M14 10v7"/>
+
+  </svg>
+
+</button>
 
           </div>
         ` : `
           <button type="button"
                   class="product-buy"
                   ${out ? "disabled" : ""}>
-            ${out ? "Out of Stock" : "Buy Now"}
+            ${out ? "Sold Out" : "Buy"}
           </button>
         `}
 
