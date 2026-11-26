@@ -4,7 +4,11 @@
   <meta charset="utf-8" />
   <!-- PWA iOS -->
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style"
+      content="default">
+
+<meta name="theme-color" content="#FAF6E9">
+
 <meta name="apple-mobile-web-app-title" content="Livestream Pro">
 
 <!-- Android / Chrome -->
@@ -22,7 +26,7 @@
 
   <!-- CSS da duoc gop truc tiep vao profile.html -->
 
-<script src="/lsp-page-transition.js?v=20261127-01"></script>
+<script src="/lsp-page-transition.js?v=20261127-02"></script>
 
 
   <style>
@@ -15114,7 +15118,7 @@ body.page-profile .avatar-wrap.fb-avatar {
   filter: drop-shadow(0 2px 5px #0008);
 }
 
-/* Bạn bè */
+/* Friends */
 
 .page-profile .btn-profile-friends .lp-icon {
   --pi-size: 21px;
@@ -17643,7 +17647,1351 @@ body.page-profile #profileImageViewerClose {
 
 
 
-  </style>
+ /* ==========================================
+   LIVESTREAM PRO
+   CHAMPAGNE GOLD PROFILE V1.0
+========================================== */
+
+:root {
+  color-scheme: light;
+}
+
+/* ==========================================
+   01. GLOBAL COLORS
+========================================== */
+
+html {
+  background: #FAF6E9 !important;
+}
+
+body.page-profile {
+
+  --bg: #FAF6E9;
+  --panel: #FFFFFF;
+  --panel2: #F8F3E6;
+
+  --text: #29251D;
+  --muted: #857960;
+
+  --stroke: #EAE0C8;
+  --stroke2: #DFCFAE;
+
+  --gold: #947025;
+  --green: #32975A;
+  --red: #C95353;
+  --blue: #397FB9;
+
+  --pf-bg: #FAF6E9;
+  --pf-white: #FFFFFF;
+  --pf-cream: #FCFAF5;
+  --pf-gold: #947025;
+  --pf-line: #EAE0C8;
+  --pf-text: #29251D;
+  --pf-muted: #857960;
+  --pf-champagne: #F8EBC9;
+
+  --pf-gradient:
+    linear-gradient(135deg,#F5E4B5,#E3C47C);
+
+  --pf-shadow:
+    0 4px 16px rgba(112,85,28,.06);
+
+  background: var(--pf-bg) !important;
+  color: var(--pf-text) !important;
+}
+
+body.page-profile > .container,
+body.page-profile .profile-shell,
+body.page-profile .profile-header.fb-style,
+body.page-profile .royal-dashboard {
+
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+
+/* ==========================================
+   02. COVER & AVATAR
+========================================== */
+
+body.page-profile .profile-cover {
+  isolation: isolate;
+
+  background: #F8EBC9 !important;
+
+  border: none !important;
+  box-shadow: none !important;
+}
+
+body.page-profile .profile-cover::after {
+  background: none !important;
+  pointer-events: none !important;
+}
+
+body.page-profile .profile-cover #btnChangeCover {
+
+  width: 36px !important;
+  height: 36px !important;
+
+  background: rgba(255,255,255,.92) !important;
+
+  border: 1px solid #EAE0C8 !important;
+  border-radius: 11px !important;
+
+  color: #947025 !important;
+
+  font-size: 16px !important;
+
+  box-shadow: 0 3px 12px rgba(0,0,0,.08) !important;
+}
+
+body.page-profile .avatar-wrap.fb-avatar {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+body.page-profile .avatar-wrap.fb-avatar::before,
+body.page-profile .avatar-wrap.fb-avatar::after {
+  display: none !important;
+  animation: none !important;
+}
+
+body.page-profile .avatar-wrap.fb-avatar > #avatarPreview {
+
+  border: 3px solid #FFFFFF !important;
+
+  background: #F8EBC9 !important;
+
+  border-radius: 50% !important;
+
+  box-shadow: 0 3px 12px rgba(112,85,28,.12) !important;
+
+  animation: none !important;
+}
+
+body.page-profile .avatar-camera {
+
+  background: #FFFFFF !important;
+  color: #947025 !important;
+
+  border: 1px solid #EAE0C8 !important;
+
+  box-shadow: none !important;
+}
+
+body.page-profile .profile-name,
+body.page-profile #profileNameText {
+
+  color: #29251D !important;
+
+  font-size: 23px !important;
+  font-weight: 750 !important;
+
+  text-shadow: none !important;
+}
+
+body.page-profile .name-input {
+  background: #FFFFFF !important;
+
+  color: #29251D !important;
+
+  border: 1px solid #EAE0C8 !important;
+
+  font-size: 16px !important;
+}
+
+
+/* ==========================================
+   03. DASHBOARD
+========================================== */
+
+body.page-profile .royal-dashboard {
+  display: flex;
+  flex-direction: column;
+
+  gap: 12px !important;
+
+  padding: 0 !important;
+}
+
+body.page-profile .royal-dashboard .royal-bio,
+body.page-profile .royal-dashboard .profile-level {
+
+  padding: 13px !important;
+
+  border: 1px solid var(--pf-line) !important;
+  border-radius: 16px !important;
+
+  background: #FFFFFF !important;
+
+  box-shadow: var(--pf-shadow) !important;
+}
+
+body.page-profile .royal-dashboard .bio-label {
+  margin-bottom: 6px !important;
+}
+
+body.page-profile .royal-dashboard .bio-label span {
+
+  color: #947025 !important;
+
+  font-size: 11px !important;
+  font-weight: 700 !important;
+
+  letter-spacing: .5px !important;
+}
+
+body.page-profile .royal-dashboard #bioInput {
+
+  width: 100% !important;
+
+  min-height: 62px !important;
+  height: auto !important;
+
+  padding: 9px 10px !important;
+
+  background: #FCFAF5 !important;
+  color: #29251D !important;
+
+  border: 1px solid #EAE0C8 !important;
+  border-radius: 10px !important;
+
+  font-size: 16px !important;
+
+  line-height: 1.5 !important;
+
+  resize: none;
+}
+
+body.page-profile #bioInput::placeholder {
+  color: #9B9280 !important;
+}
+
+
+/* ==========================================
+   04. FRIENDS
+========================================== */
+
+body.page-profile .royal-dashboard .btn-profile-friends {
+
+  min-height: 54px !important;
+
+  margin: 0 !important;
+  padding: 12px !important;
+
+  background: #FFFFFF !important;
+
+  color: #29251D !important;
+
+  border: 1px solid #EAE0C8 !important;
+  border-radius: 14px !important;
+
+  box-shadow: none !important;
+
+  font-size: 14px !important;
+}
+
+body.page-profile .btn-profile-friends .icon,
+body.page-profile .royal-arrow {
+  color: #947025 !important;
+}
+
+body.page-profile .friend-badge {
+
+  background: #F8EBC9 !important;
+  color: #947025 !important;
+
+  border: none !important;
+}
+
+body.page-profile .friend-req-badge {
+
+  background: #C95353 !important;
+  color: #FFFFFF !important;
+}
+
+body.page-profile .profile-friend-actions button {
+
+  min-height: 40px !important;
+
+  padding: 8px !important;
+
+  border: 1px solid #EAE0C8 !important;
+  border-radius: 10px !important;
+
+  background: #FFFFFF !important;
+  color: #947025 !important;
+
+  font-size: 12px !important;
+
+  box-shadow: none !important;
+}
+
+body.page-profile .profile-friend-actions .btn-primary,
+body.page-profile .profile-friend-actions .btn-msg {
+
+  background: var(--pf-gradient) !important;
+  color: #4D3915 !important;
+}
+
+body.page-profile .profile-friend-actions .btn-danger,
+body.page-profile .profile-friend-actions .btn-danger-outline {
+
+  background: #FFF1EF !important;
+  color: #B94A42 !important;
+
+  border-color: #F0D2CC !important;
+}
+
+
+/* ==========================================
+   05. LEVEL & EXPERIENCE
+========================================== */
+
+body.page-profile .royal-dashboard .profile-level::after {
+  display: none !important;
+}
+
+body.page-profile .royal-dashboard .level-badge {
+
+  background: #F8EBC9 !important;
+  color: #947025 !important;
+
+  border: 1px solid #E6D2A2 !important;
+  border-radius: 8px !important;
+
+  padding: 6px 10px !important;
+
+  font-size: 11px !important;
+
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+body.page-profile .royal-dashboard .exp-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+body.page-profile .royal-dashboard .exp-head,
+body.page-profile #expText {
+
+  color: #857960 !important;
+
+  font-size: 11px !important;
+}
+
+body.page-profile .royal-dashboard .exp-bar {
+
+  height: 6px !important;
+
+  background: #F0E8D5 !important;
+
+  border: none !important;
+  border-radius: 20px !important;
+
+  overflow: hidden;
+}
+
+body.page-profile .royal-dashboard .exp-bar__fill {
+
+  background:
+    linear-gradient(90deg,#C9A75D,#EED69A) !important;
+
+  border-radius: inherit !important;
+
+  box-shadow: none !important;
+}
+
+
+/* ==========================================
+   06. ACCOUNT SECTION
+========================================== */
+
+body.page-profile .royal-dashboard .royal-section-title {
+
+  margin: 3px 0 0 !important;
+  padding: 0 !important;
+
+  border: none !important;
+}
+
+body.page-profile .royal-section-title > span {
+
+  color: #29251D !important;
+
+  font-size: 17px !important;
+  font-weight: 750 !important;
+
+  letter-spacing: 0 !important;
+}
+
+body.page-profile .royal-section-title small {
+  display: none !important;
+}
+
+
+/* ==========================================
+   07. WALLET & ACCOUNT CARDS
+========================================== */
+
+body.page-profile .royal-dashboard .profile-stats {
+
+  display: grid !important;
+
+  grid-template-columns:
+    repeat(2,minmax(0,1fr)) !important;
+
+  gap: 10px !important;
+}
+
+body.page-profile .royal-dashboard .profile-stats .stat-box {
+
+  grid-column: auto !important;
+
+  min-width: 0 !important;
+  min-height: 108px !important;
+
+  height: auto !important;
+
+  margin: 0 !important;
+  padding: 13px !important;
+
+  background: #FFFFFF !important;
+
+  border: 1px solid #EAE0C8 !important;
+  border-radius: 16px !important;
+
+  color: #29251D !important;
+
+  box-shadow: var(--pf-shadow) !important;
+
+  overflow: hidden;
+}
+
+body.page-profile .profile-stats .stat-box::before,
+body.page-profile .profile-stats .stat-box::after {
+
+  content: none !important;
+  display: none !important;
+}
+
+/* PRIMARY DIAMOND CARD */
+
+body.page-profile .royal-dashboard #btnTopupCoin {
+
+  background:
+    linear-gradient(135deg,#FFF8E7,#F8EBC9) !important;
+
+  border-color: #E4D09D !important;
+}
+
+body.page-profile .royal-dashboard .stat-badge {
+
+  position: static !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  align-self: flex-start !important;
+
+  width: fit-content !important;
+
+  margin: 0 0 9px !important;
+  padding: 4px 7px !important;
+
+  border: none !important;
+  border-radius: 6px !important;
+
+  background: #F8F0DB !important;
+  color: #947025 !important;
+
+  font-size: 9px !important;
+  font-weight: 700 !important;
+
+  letter-spacing: .3px !important;
+
+  box-shadow: none !important;
+}
+
+body.page-profile .royal-dashboard .profile-stats .stat-label {
+
+  margin: 0 0 5px !important;
+
+  color: #766D5B !important;
+
+  font-size: 12px !important;
+  font-weight: 500 !important;
+
+  letter-spacing: 0 !important;
+
+  text-shadow: none !important;
+}
+
+body.page-profile .royal-dashboard .profile-stats .stat-val {
+
+  color: #29251D !important;
+
+  font-size: clamp(18px,5.3vw,25px) !important;
+  font-weight: 800 !important;
+
+  font-variant-numeric: tabular-nums;
+
+  line-height: 1.3 !important;
+
+  overflow-wrap: anywhere;
+
+  text-shadow: none !important;
+}
+
+body.page-profile .royal-dashboard #btnTopupCoin .stat-val {
+  color: #947025 !important;
+}
+
+body.page-profile .royal-dashboard #btnWithdraw .stat-val {
+  color: #327A50 !important;
+}
+
+body.page-profile .royal-dashboard #btnTransferCoin,
+body.page-profile .royal-dashboard #btnTransferHistory {
+
+  min-height: 83px !important;
+}
+
+body.page-profile .royal-dashboard .royal-action-arrow {
+
+  color: #947025 !important;
+
+  font-size: 17px !important;
+
+  background: transparent !important;
+
+  box-shadow: none !important;
+}
+
+
+/* ==========================================
+   08. BOTTOM NAVIGATION
+========================================== */
+
+body.page-profile .mobile-tabbar {
+
+  background: #FFFFFF !important;
+
+  border: none !important;
+  border-top: 1px solid #EAE0C8 !important;
+
+  box-shadow: 0 -4px 18px rgba(112,85,28,.05) !important;
+
+  backdrop-filter: none !important;
+}
+
+body.page-profile .mobile-tabbar .tab-item,
+body.page-profile .mobile-tabbar .tab-text {
+
+  color: #857960 !important;
+
+  text-shadow: none !important;
+}
+
+body.page-profile .mobile-tabbar .tab-icon {
+
+  color: #947025 !important;
+
+  background: transparent !important;
+
+  box-shadow: none !important;
+}
+
+body.page-profile .mobile-tabbar .tab-item.active,
+body.page-profile .mobile-tabbar .tab-item.active .tab-text {
+
+  color: #947025 !important;
+}
+
+body.page-profile .mobile-tabbar .tab-item.active .tab-icon {
+
+  background: #FAF0D7 !important;
+
+  border-radius: 10px !important;
+}
+
+body.page-profile .mobile-tabbar .tab-main .tab-plus {
+
+  background: var(--pf-gradient) !important;
+  color: #70531D !important;
+
+  border: 1px solid #DFC382 !important;
+
+  box-shadow: none !important;
+}
+
+body.page-profile .mobile-tabbar .tab-text {
+
+  font-size: 10px !important;
+  font-weight: 600 !important;
+}
+
+
+/* ==========================================
+   09. GLOBAL INPUTS
+========================================== */
+
+body.page-profile input:not([type="file"]),
+body.page-profile textarea {
+
+  background: #FCFAF5 !important;
+  color: #29251D !important;
+
+  border-color: #EAE0C8 !important;
+
+  font-size: 16px !important;
+}
+
+body.page-profile input::placeholder,
+body.page-profile textarea::placeholder {
+
+  color: #9B9280 !important;
+}
+
+body.page-profile input:focus,
+body.page-profile textarea:focus {
+
+  border-color: #C9A75D !important;
+
+  box-shadow:
+    0 0 0 3px rgba(201,167,93,.10) !important;
+}
+
+
+/* ==========================================
+   10. SETTINGS PANEL
+========================================== */
+
+body.page-profile #profileSheet .sheet-backdrop,
+body.page-profile #transferModal .sheet-backdrop,
+body.page-profile .confirm-backdrop,
+body.page-profile .modal-backdrop {
+
+  background: rgba(52,43,25,.30) !important;
+
+  backdrop-filter: blur(5px) !important;
+  -webkit-backdrop-filter: blur(5px) !important;
+}
+
+body.page-profile #profileSheet .ps-panel {
+
+  background: #FAF6E9 !important;
+
+  border: 1px solid #EAE0C8 !important;
+
+  border-radius: 24px 24px 0 0 !important;
+
+  color: #29251D !important;
+
+  box-shadow:
+    0 -12px 40px rgba(112,85,28,.12) !important;
+}
+
+body.page-profile .sheet-handle {
+  background: #D6C7A7 !important;
+}
+
+body.page-profile #profileSheet .ps-header {
+
+  background: transparent !important;
+
+  border: none !important;
+}
+
+body.page-profile #profileSheet .sheet-title {
+
+  color: #29251D !important;
+
+  font-size: 22px !important;
+  font-weight: 750 !important;
+}
+
+body.page-profile #profileSheet .ps-kicker,
+body.page-profile #profileSheet .ps-subtitle,
+body.page-profile #profileSheet .ps-item-text small,
+body.page-profile #profileSheet .ps-footer-brand {
+
+  display: none !important;
+}
+
+body.page-profile #profileSheet .ps-close {
+
+  background: #FFFFFF !important;
+  color: #947025 !important;
+
+  border: 1px solid #EAE0C8 !important;
+}
+
+body.page-profile #profileSheet .ps-content {
+
+  background: transparent !important;
+}
+
+body.page-profile #profileSheet .ps-group-title {
+
+  color: #857960 !important;
+
+  font-size: 10px !important;
+
+  letter-spacing: .6px !important;
+}
+
+body.page-profile #profileSheet .ps-item {
+
+  min-height: 59px !important;
+
+  padding: 10px 12px !important;
+
+  background: #FFFFFF !important;
+
+  border: 1px solid #EAE0C8 !important;
+  border-radius: 13px !important;
+
+  box-shadow: none !important;
+}
+
+body.page-profile #profileSheet .ps-item.primary {
+
+  background: #FFF8E7 !important;
+
+  border-color: #E5D1A0 !important;
+}
+
+body.page-profile #profileSheet .ps-number {
+
+  width: 34px !important;
+  height: 34px !important;
+
+  background: #F8EBC9 !important;
+  color: #947025 !important;
+
+  border: none !important;
+  border-radius: 9px !important;
+}
+
+body.page-profile #profileSheet .ps-item-text strong {
+
+  color: #29251D !important;
+
+  font-size: 13px !important;
+  font-weight: 650 !important;
+}
+
+body.page-profile #profileSheet .ps-chevron {
+
+  border-color: #A18B5C !important;
+}
+
+body.page-profile #profileSheet .ps-item.danger {
+
+  background: #FFF1EF !important;
+  border-color: #F0D2CC !important;
+}
+
+body.page-profile #profileSheet .ps-item.danger strong {
+
+  color: #B94A42 !important;
+}
+
+body.page-profile #profileSheet .ps-item.danger .ps-number {
+
+  background: #FBE1DD !important;
+  color: #B94A42 !important;
+}
+
+body.page-profile #profileSheet .ps-footer {
+
+  background: transparent !important;
+  border-color: #EAE0C8 !important;
+}
+
+body.page-profile #profileSheet .ps-cancel {
+
+  background: #FFFFFF !important;
+  color: #947025 !important;
+
+  border: 1px solid #EAE0C8 !important;
+  border-radius: 12px !important;
+}
+
+
+/* ==========================================
+   11. SECURITY & MESSAGE MODALS
+========================================== */
+
+body.page-profile
+:is(#passModal,#securityCodeModal,#msgModal)
+.luxury-modal-card {
+
+  background: #FFFFFF !important;
+
+  color: #29251D !important;
+
+  border: 1px solid #EAE0C8 !important;
+  border-radius: 23px !important;
+
+  box-shadow:
+    0 18px 50px rgba(85,65,25,.15) !important;
+}
+
+body.page-profile .luxury-modal-accent,
+body.page-profile .luxury-modal-kicker,
+body.page-profile .luxury-modal-signature {
+
+  display: none !important;
+}
+
+body.page-profile .luxury-modal-emblem,
+body.page-profile .luxury-message-emblem {
+
+  background: #F8EBC9 !important;
+  color: #947025 !important;
+
+  border: 1px solid #E5D1A0 !important;
+
+  box-shadow: none !important;
+}
+
+body.page-profile .luxury-modal-heading h3,
+body.page-profile #msgModal #msgTitle {
+
+  color: #29251D !important;
+
+  font-size: 22px !important;
+
+  text-shadow: none !important;
+}
+
+body.page-profile .luxury-modal-heading p,
+body.page-profile #msgModal #msgText {
+
+  color: #857960 !important;
+
+  font-size: 13px !important;
+}
+
+body.page-profile .luxury-form-field label {
+
+  color: #706044 !important;
+
+  font-size: 11px !important;
+
+  letter-spacing: 0 !important;
+}
+
+body.page-profile .luxury-modal-divider {
+
+  background: #EAE0C8 !important;
+}
+
+body.page-profile .luxury-modal-note {
+
+  background: #FFF8E7 !important;
+  color: #857960 !important;
+
+  border-color: #EAE0C8 !important;
+
+  font-size: 11px !important;
+}
+
+
+/* ==========================================
+   12. TRANSFER DIAMONDS
+========================================== */
+
+body.page-profile #transferModal .sheet-card,
+body.page-profile .transfer-confirm .confirm-card {
+
+  background: #FFFFFF !important;
+  color: #29251D !important;
+
+  border: 1px solid #EAE0C8 !important;
+
+  box-shadow:
+    0 18px 50px rgba(85,65,25,.15) !important;
+}
+
+body.page-profile .transfer-confirm .confirm-card::before {
+
+  display: none !important;
+}
+
+body.page-profile #transferModal .transfer-brand,
+body.page-profile .transfer-confirm .confirm-kicker {
+
+  display: none !important;
+}
+
+body.page-profile #transferModal .sheet-header,
+body.page-profile .transfer-confirm .confirm-header {
+
+  color: #29251D !important;
+
+  font-size: 22px !important;
+
+  text-shadow: none !important;
+}
+
+body.page-profile #transferModal .transfer-subtitle,
+body.page-profile #transferModal .transfer-field-note,
+body.page-profile .transfer-confirm .confirm-description {
+
+  color: #857960 !important;
+
+  font-size: 12px !important;
+}
+
+body.page-profile #transferModal .transfer-field label {
+
+  color: #706044 !important;
+
+  font-size: 11px !important;
+}
+
+body.page-profile #transferModal .transfer-preview,
+body.page-profile .transfer-confirm .confirm-user {
+
+  background: #FCFAF5 !important;
+
+  border: 1px solid #EAE0C8 !important;
+
+  box-shadow: none !important;
+}
+
+body.page-profile #transferModal .preview-name,
+body.page-profile .transfer-confirm .confirm-name {
+
+  color: #29251D !important;
+}
+
+body.page-profile #transferModal .preview-level,
+body.page-profile #transferModal .preview-coins,
+body.page-profile #transferModal .preview-kicker,
+body.page-profile .transfer-confirm .confirm-level,
+body.page-profile .transfer-confirm .confirm-user-label {
+
+  color: #857960 !important;
+}
+
+body.page-profile .transfer-confirm .confirm-amount-box {
+
+  background: #F8EBC9 !important;
+
+  border: 1px solid #E5D1A0 !important;
+
+  box-shadow: none !important;
+}
+
+body.page-profile .transfer-confirm .confirm-amount {
+
+  color: #947025 !important;
+
+  text-shadow: none !important;
+}
+
+body.page-profile .transfer-confirm .confirm-label,
+body.page-profile .transfer-confirm .confirm-amount-unit {
+
+  color: #857960 !important;
+}
+
+body.page-profile .transfer-confirm .confirm-warning {
+
+  background: #FFF8E7 !important;
+  color: #857960 !important;
+
+  border: 1px solid #EAE0C8 !important;
+}
+
+body.page-profile #transferModal .transfer-separator {
+
+  background: #EAE0C8 !important;
+}
+
+
+/* ==========================================
+   13. TRANSFER SECURITY
+========================================== */
+
+body.page-profile .transfer-security-box {
+
+  padding: 13px !important;
+
+  background: #FCFAF5 !important;
+
+  border: 1px solid #EAE0C8 !important;
+  border-radius: 14px !important;
+}
+
+body.page-profile .transfer-security-heading,
+body.page-profile .transfer-security-label {
+
+  color: #947025 !important;
+
+  letter-spacing: 0 !important;
+}
+
+body.page-profile .transfer-security-required {
+
+  background: #F8EBC9 !important;
+
+  border: none !important;
+}
+
+body.page-profile .transfer-security-input-wrap {
+
+  background: #FFFFFF !important;
+
+  border: 1px solid #EAE0C8 !important;
+}
+
+body.page-profile #transferSecurityCode {
+
+  background: transparent !important;
+
+  color: #29251D !important;
+
+  border: none !important;
+
+  box-shadow: none !important;
+}
+
+body.page-profile .transfer-security-toggle {
+
+  background: transparent !important;
+
+  color: #947025 !important;
+
+  border: none !important;
+}
+
+body.page-profile .transfer-security-hint {
+
+  color: #857960 !important;
+}
+
+body.page-profile .transfer-security-error {
+
+  background: #FFF1EF !important;
+  color: #B94A42 !important;
+
+  border-color: #F0D2CC !important;
+}
+
+body.page-profile #transferSuccessModal .success-status {
+
+  color: #947025 !important;
+  background: #FFF8E7 !important;
+
+  border: 1px solid #E5D1A0 !important;
+}
+
+
+/* ==========================================
+   14. GLOBAL MODAL BUTTONS
+========================================== */
+
+body.page-profile
+:is(#passModal,#securityCodeModal,#msgModal)
+.luxury-btn-primary,
+
+body.page-profile #transferModal .btn-confirm,
+
+body.page-profile .transfer-confirm .btn-confirm {
+
+  min-height: 44px !important;
+
+  background: var(--pf-gradient) !important;
+
+  color: #4D3915 !important;
+
+  border: 1px solid #DFC382 !important;
+  border-radius: 12px !important;
+
+  font-weight: 750 !important;
+
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+body.page-profile
+:is(#passModal,#securityCodeModal,#msgModal)
+.luxury-btn-cancel,
+
+body.page-profile #transferModal .btn-cancel,
+
+body.page-profile .transfer-confirm .btn-cancel {
+
+  min-height: 44px !important;
+
+  background: #FFFFFF !important;
+  color: #947025 !important;
+
+  border: 1px solid #EAE0C8 !important;
+  border-radius: 12px !important;
+
+  box-shadow: none !important;
+}
+
+
+/* ==========================================
+   15. TRANSACTION HISTORY
+========================================== */
+
+body.page-profile #transferHistoryModal,
+body.page-profile #depositHistoryScreen {
+
+  background: #FAF6E9 !important;
+  color: #29251D !important;
+}
+
+body.page-profile .history-screen .history-header {
+
+  background:
+    linear-gradient(120deg,#FFFDF7,#F8EBC9) !important;
+
+  border: none !important;
+
+  box-shadow: none !important;
+}
+
+body.page-profile .history-screen .history-header::after {
+
+  display: none !important;
+}
+
+body.page-profile .history-screen .history-title {
+
+  color: #29251D !important;
+
+  font-size: 21px !important;
+}
+
+body.page-profile .history-screen .history-kicker,
+body.page-profile .history-screen .history-footer,
+body.page-profile .history-screen .history-section-label {
+
+  display: none !important;
+}
+
+body.page-profile .history-screen .history-subtitle {
+
+  color: #857960 !important;
+
+  font-size: 11px !important;
+}
+
+body.page-profile .history-screen .history-close {
+
+  background: #FFFFFF !important;
+  color: #947025 !important;
+
+  border: 1px solid #EAE0C8 !important;
+  border-radius: 10px !important;
+}
+
+body.page-profile .history-screen .history-tabs {
+
+  background: transparent !important;
+  border: none !important;
+}
+
+body.page-profile .history-screen .history-tab {
+
+  background: #FFFFFF !important;
+  color: #857960 !important;
+
+  border: 1px solid #EAE0C8 !important;
+
+  box-shadow: none !important;
+}
+
+body.page-profile .history-screen .history-tab.active {
+
+  background: #F8EBC9 !important;
+  color: #947025 !important;
+
+  border-color: #E5D1A0 !important;
+}
+
+body.page-profile .history-screen .history-tab.active::after {
+
+  display: none !important;
+}
+
+body.page-profile .history-screen .history-list {
+
+  background: transparent !important;
+}
+
+body.page-profile .history-screen .transfer-item,
+body.page-profile .transfer-history-card {
+
+  background: #FFFFFF !important;
+
+  border: 1px solid #EAE0C8 !important;
+  border-radius: 14px !important;
+
+  box-shadow: none !important;
+}
+
+body.page-profile .history-screen .transfer-name,
+body.page-profile .transfer-history-card .transfer-name {
+
+  color: #29251D !important;
+}
+
+body.page-profile .history-screen .transfer-time,
+body.page-profile .history-screen .history-unit,
+body.page-profile .transfer-uid,
+body.page-profile .transfer-history-direction,
+body.page-profile .transfer-history-description,
+body.page-profile .transfer-history-reference,
+body.page-profile .transfer-history-processed {
+
+  color: #857960 !important;
+}
+
+body.page-profile .transfer-history-status-row,
+body.page-profile .transfer-history-reference {
+
+  border-color: #EAE0C8 !important;
+}
+
+body.page-profile .history-screen .transfer-send {
+  color: #C95353 !important;
+}
+
+body.page-profile .history-screen .transfer-receive {
+  color: #32975A !important;
+}
+
+body.page-profile .transfer-status-badge.pending {
+
+  background: #FFF8E7 !important;
+  color: #947025 !important;
+
+  border-color: #E5D1A0 !important;
+}
+
+body.page-profile .transfer-status-badge.approved {
+
+  background: #ECF8EF !important;
+  color: #32975A !important;
+
+  border-color: #B7DFC3 !important;
+}
+
+body.page-profile .transfer-status-badge.rejected {
+
+  background: #FFF1EF !important;
+  color: #B94A42 !important;
+
+  border-color: #F0D2CC !important;
+}
+
+body.page-profile .history-screen .history-empty {
+
+  color: #857960 !important;
+}
+
+
+/* ==========================================
+   16. FULLSCREEN IMAGE VIEWER
+========================================== */
+
+body.page-profile #profileImageViewer {
+
+  background: #FAF6E9 !important;
+}
+
+body.page-profile #profileImageViewerClose {
+
+  background: #FFFFFF !important;
+
+  color: #947025 !important;
+
+  border: 1px solid #EAE0C8 !important;
+  border-radius: 12px !important;
+}
+
+
+/* ==========================================
+   17. NOTIFICATIONS
+========================================== */
+
+body.page-profile #toast-container .toast,
+body.page-profile .fl-box {
+
+  background: #FFFFFF !important;
+  color: #29251D !important;
+
+  border: 1px solid #EAE0C8 !important;
+
+  box-shadow: var(--pf-shadow) !important;
+}
+
+body.page-profile .fl-title {
+  color: #29251D !important;
+}
+
+body.page-profile .fl-msg,
+body.page-profile .fl-sub {
+  color: #857960 !important;
+}
+
+
+/* ==========================================
+   18. SMALL MOBILE
+========================================== */
+
+@media (max-width: 360px) {
+
+  body.page-profile .royal-dashboard .profile-stats {
+    gap: 8px !important;
+  }
+
+  body.page-profile .royal-dashboard
+  .profile-stats .stat-box {
+
+    padding: 10px !important;
+    min-height: 96px !important;
+  }
+
+  body.page-profile .royal-dashboard
+  .profile-stats .stat-val {
+
+    font-size: 19px !important;
+  }
+
+  body.page-profile .profile-name,
+  body.page-profile #profileNameText {
+
+    font-size: 21px !important;
+  }
+
+}
+
+
+/* KEEP HIDDEN ELEMENTS */
+
+body.page-profile .hidden,
+body.page-profile [hidden] {
+
+  display: none !important;
+}
+ 
+</style>
+
+
 </head>
 
 <body class="page-profile">
@@ -17725,7 +19073,7 @@ body.page-profile #profileImageViewerClose {
           onclick="location.href='/friends.html'">
 
     <span class="icon">👥</span>
-    <span class="text">Bạn bè</span>
+    <span class="text">Friends</span>
 
     <span class="friend-badge"
           id="friendCount" hidden>0</span>
@@ -17774,7 +19122,7 @@ body.page-profile #profileImageViewerClose {
 
     <div class="exp-card">
       <div class="exp-head">
-        <span>TIẾN ĐỘ KINH NGHIỆM</span>
+        <span>Experience</span>
         <span id="expText">0 / 100</span>
       </div>
 
@@ -17787,7 +19135,7 @@ body.page-profile #profileImageViewerClose {
 
   <!-- TIÊU ĐỀ TÀI KHOẢN -->
   <div class="royal-section-title">
-    <span>✦ TÀI KHOẢN CỦA BẠN</span>
+    <span>✦ My Account</span>
     <small>QUẢN LÝ TÀI SẢN</small>
   </div>
 
@@ -17796,32 +19144,32 @@ body.page-profile #profileImageViewerClose {
 
     <div class="stat-box clickable badge-topup"
          id="btnTopupCoin">
-      <span class="stat-badge">NẠP</span>
-      <div class="stat-label">Kim cương</div>
+      <span class="stat-badge">TOP UP</span>
+      <div class="stat-label">Diamonds</div>
       <div class="stat-val" id="coinVal">0</div>
     </div>
 
     <div class="stat-box gold clickable badge-invest"
          id="btnInvest">
-      <span class="stat-badge">ĐẦU TƯ</span>
-      <div class="stat-label">Đã sử dụng</div>
+      <span class="stat-badge">INVEST</span>
+      <div class="stat-label">Used Diamonds</div>
       <div class="stat-val" id="coinSentVal">0</div>
     </div>
 
     <div class="stat-box blue clickable badge-withdraw"
          id="btnWithdraw">
-      <span class="stat-badge">RÚT</span>
-      <div class="stat-label">Ví tiền</div>
+      <span class="stat-badge">WITHDRAW</span>
+      <div class="stat-label">Wallet</div>
       <div class="stat-val" id="coinReceivedVal">0</div>
     </div>
 
 <div class="stat-box green clickable"
      id="btnDepositHistory">
 
-  <span class="stat-badge">TOTAL DEPOSIT</span>
+  <span class="stat-badge">DEPOSITS</span>
 
   <div class="stat-label">
-    Deposit History · Today
+    Today's Deposits
   </div>
 
   <div class="stat-val" id="coinDepositVal">
@@ -17832,15 +19180,15 @@ body.page-profile #profileImageViewerClose {
 
     <div class="stat-box purple clickable"
          id="btnTransferCoin">
-      <span class="stat-badge">GỬI</span>
-      <div class="stat-label">Diamond Transfer</div>
+      <span class="stat-badge">SEND</span>
+      <div class="stat-label">Transfer</div>
       <div class="royal-action-arrow">↗</div>
     </div>
 
     <div class="stat-box purple clickable"
          id="btnTransferHistory">
-      <span class="stat-badge">LỊCH SỬ</span>
-      <div class="stat-label">Today's Transactions</div>
+      <span class="stat-badge">HISTORY</span>
+      <div class="stat-label">Transactions</div>
       <div class="royal-action-arrow">↗</div>
     </div>
 
@@ -17863,7 +19211,7 @@ body.page-profile #profileImageViewerClose {
   <!-- ACTIONS -->
   <div class="profile-actions" style="display: none;">
     <button id="btnSave">💾 Lưu</button>
-    <button id="btnChangePass">🔐 Đổi mật khẩu</button>
+    <button id="btnChangePass">🔐 Change Password</button>
     <button id="btnMessages" style="display: none;">📩 Tin nhắn</button>
     <button onclick="location.href='/lobby.html'">🏟 Lobby</button>
   </div>
@@ -17891,7 +19239,7 @@ body.page-profile #profileImageViewerClose {
       <div class="luxury-modal-emblem">✦</div>
 
       <div>
-        <h3 id="passModalTitle">Đổi mật khẩu</h3>
+        <h3 id="passModalTitle">Change Password</h3>
         <p>Cập nhật thông tin bảo mật tài khoản của bạn</p>
       </div>
     </div>
@@ -18133,7 +19481,7 @@ body.page-profile #profileImageViewerClose {
      tabindex="0">
 
   <div class="tab-icon">🌍</div>
-  <div class="tab-text">Status</div>
+  <div class="tab-text">Social</div>
 
 </div>
 
@@ -18182,7 +19530,7 @@ body.page-profile #profileImageViewerClose {
         </div>
 
         <h2 class="sheet-title" id="psTitle">
-          Cài đặt tài khoản
+          Settings
         </h2>
 
         <p class="ps-subtitle">
@@ -18217,10 +19565,19 @@ body.page-profile #profileImageViewerClose {
                   id="btnWithdrawFromSheet"
                   type="button">
 
-            <span class="ps-number">01</span>
+           <span class="ps-number">
+  <svg width="19" height="19" viewBox="0 0 24 24"
+       fill="none" stroke="currentColor"
+       stroke-width="1.8" stroke-linecap="round"
+       stroke-linejoin="round">
+    <rect x="3" y="5" width="18" height="15" rx="3"/>
+    <path d="M21 10h-6v5h6"/>
+    <path d="M16 12.5h.01"/>
+  </svg>
+</span>
 
             <span class="ps-item-text">
-              <strong>Rút tiền</strong>
+              <strong>Withdraw</strong>
               <small>Quản lý yêu cầu rút tiền</small>
             </span>
 
@@ -18231,10 +19588,19 @@ body.page-profile #profileImageViewerClose {
                   type="button"
                   onclick="openChangePass()">
 
-            <span class="ps-number">02</span>
+     <span class="ps-number">
+  <svg width="19" height="19" viewBox="0 0 24 24"
+       fill="none" stroke="currentColor"
+       stroke-width="1.8" stroke-linecap="round"
+       stroke-linejoin="round">
+    <rect x="5" y="10" width="14" height="11" rx="3"/>
+    <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+    <path d="M12 14v3"/>
+  </svg>
+</span>
 
             <span class="ps-item-text">
-              <strong>Đổi mật khẩu</strong>
+              <strong>Change Password</strong>
               <small>Cập nhật bảo mật tài khoản</small>
             </span>
 
@@ -18247,7 +19613,16 @@ body.page-profile #profileImageViewerClose {
         type="button"
         onclick="openChangeSecurityCode()">
 
-  <span class="ps-number">03</span>
+  <span class="ps-number">
+  <svg width="19" height="19" viewBox="0 0 24 24"
+       fill="none" stroke="currentColor"
+       stroke-width="1.8" stroke-linecap="round"
+       stroke-linejoin="round">
+    <path d="M12 3 3 7v5c0 5 4 8 9 10
+             5-2 9-5 9-10V7z"/>
+    <path d="m9 12 2 2 4-4"/>
+  </svg>
+</span>
 
   <span class="ps-item-text">
     <strong>Change Security Code</strong>
@@ -18274,10 +19649,20 @@ body.page-profile #profileImageViewerClose {
                 type="button"
                 onclick="confirmLogoutProfile()">
 
-          <span class="ps-number">04</span>
+         <span class="ps-number">
+  <svg width="19" height="19" viewBox="0 0 24 24"
+       fill="none" stroke="currentColor"
+       stroke-width="1.8" stroke-linecap="round"
+       stroke-linejoin="round">
+    <path d="M10 4H5a2 2 0 0 0-2 2v12
+             a2 2 0 0 0 2 2h5"/>
+    <path d="M9 12h12"/>
+    <path d="m17 8 4 4-4 4"/>
+  </svg>
+</span>
 
           <span class="ps-item-text">
-            <strong>Đăng xuất</strong>
+            <strong>Log Out</strong>
             <small>Kết thúc phiên đăng nhập hiện tại</small>
           </span>
 

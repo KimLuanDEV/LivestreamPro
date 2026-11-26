@@ -13,8 +13,8 @@
 
   // Thời gian chuyển trang
   // Thời gian màn chuyển cảnh đi vào và rời đi
-const EXIT_MS = 560;
-const ENTRY_MS = 600;
+const EXIT_MS = 220;
+const ENTRY_MS = 280;
 
   const reduceMotion = !!window.matchMedia?.(
     "(prefers-reduced-motion: reduce)"
@@ -134,54 +134,58 @@ html.lsppt-arriving::before {
 
   color: #29251D;
 
-  visibility: hidden;
-  pointer-events: none;
+visibility: hidden;
+pointer-events: none;
 
-  transform: translate3d(0,105%,0);
+opacity: 0;
+transform: none;
 
-  transition:
-    transform ${EXIT_MS}ms cubic-bezier(.76,0,.24,1),
-    visibility 0s linear ${EXIT_MS}ms;
+transition:
+  opacity ${EXIT_MS}ms ease,
+  visibility 0s linear ${EXIT_MS}ms;
 }
 
 
 /* ==========================================
-   03. TRANSITION STATES
+   03. SMOOTH FADE TRANSITION V2.0
 ========================================== */
 
-/* Phủ lên trang hiện tại */
+/* FADE IN */
 
 #lsppt-layer.lsppt-open {
   visibility: visible;
   pointer-events: auto;
 
-  transform: translate3d(0,0,0);
+  opacity: 1;
+  transform: none;
 
   transition:
-    transform ${EXIT_MS}ms cubic-bezier(.76,0,.24,1);
+    opacity ${EXIT_MS}ms ease;
 }
 
 
-/* Rời khỏi trang mới */
+/* FADE OUT */
 
 #lsppt-layer.lsppt-close {
   visibility: visible;
-  pointer-events: none;
+  pointer-events: auto;
 
-  transform: translate3d(0,-105%,0);
+  opacity: 0;
+  transform: none;
 
   transition:
-    transform ${ENTRY_MS}ms cubic-bezier(.76,0,.24,1);
+    opacity ${ENTRY_MS}ms ease;
 }
 
 
-/* Khi vừa đến trang mới */
+/* ARRIVING PAGE */
 
 html.lsppt-arriving #lsppt-layer {
   visibility: visible;
   pointer-events: auto;
 
-  transform: translate3d(0,0,0);
+  opacity: 1;
+  transform: none;
 
   transition: none;
 }
@@ -219,25 +223,12 @@ html.lsppt-arriving #lsppt-layer {
     "Segoe UI",
     sans-serif;
 
-  opacity: 0;
-
-  transform: translateY(10px);
-
-  transition:
-    opacity .25s ease,
-    transform .3s ease;
+opacity: 1;
+transform: none;
+transition: none;
 }
 
-#lsppt-layer.lsppt-open .lsppt-card,
-html.lsppt-arriving #lsppt-layer .lsppt-card {
-  opacity: 1;
-  transform: translateY(0);
-}
 
-#lsppt-layer.lsppt-close .lsppt-card {
-  opacity: 0;
-  transform: translateY(-10px);
-}
 
 
 /* ==========================================
@@ -285,8 +276,7 @@ html.lsppt-arriving #lsppt-layer .lsppt-card {
   user-select: none;
   -webkit-user-drag: none;
 
-  animation:
-    lsppt-logo-float 2.4s ease-in-out infinite;
+animation: none;
 }
 
 
@@ -857,39 +847,46 @@ layer.innerHTML = `
     true
   );
 
-  /* ======================================
-     TRANG MỚI HIỆN LÊN MƯỢT
-  ====================================== */
+/* ==========================================
+   SMOOTH PAGE ARRIVAL V2.0
+========================================== */
 
-  function onPageReady() {
+function onPageReady() {
 
-    const el = getLayer();
+  const el = getLayer();
 
-    if (!arriving || !el) return;
+  if (!arriving || !el) return;
 
-    el.classList.add("lsppt-open");
+  el.classList.remove("lsppt-close");
+  el.classList.add("lsppt-open");
+
+  // Xác lập trạng thái hiển thị ban đầu
+  void el.offsetHeight;
+
+  requestAnimationFrame(() => {
 
     requestAnimationFrame(() => {
 
-      requestAnimationFrame(() => {
+      document.documentElement.classList.remove(
+        "lsppt-arriving"
+      );
 
-        document.documentElement.classList.remove(
-          "lsppt-arriving"
-        );
+      el.classList.add("lsppt-close");
+      el.classList.remove("lsppt-open");
 
-        el.classList.add("lsppt-close");
-        el.classList.remove("lsppt-open");
+      setTimeout(() => {
 
-        setTimeout(() => {
+        el.classList.remove("lsppt-close");
 
-          el.classList.remove("lsppt-close");
+        arriving = false;
 
-        }, ENTRY_MS + 40);
-
-      });
+      }, reduceMotion ? 0 : ENTRY_MS + 40);
 
     });
-  }
+
+  });
+
+}
 
   if (document.readyState === "loading") {
 
