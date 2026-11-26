@@ -479,7 +479,7 @@ html.lsppt-arriving #lsppt-layer .lsppt-card {
 
 <div class="lsppt-logo">
   <img
-    src="/icons/icon-512.png"
+    src="/icons/icon-512.png?v=20261126"
     alt="Livestream Pro"
     class="lsppt-logo-img"
     draggable="false"
