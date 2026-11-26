@@ -1177,10 +1177,23 @@ if(btnChangePass){
   };
 }
 
-function closePass(){
+function closePass() {
+
   passModal.classList.add("hidden");
+
+  passModal.querySelectorAll("input")
+    .forEach(input => {
+      input.blur();
+      input.value = "";
+    });
+
+  document.body.classList.remove("keyboard-open");
+
+  updatePasswordViewport();
+
   showTabbar();
 }
+
 
 // Ẩn tab bar khi mở đổi mật khẩu (mobile)
 function hideTabbar(){
@@ -1577,60 +1590,83 @@ function closeProfileSheet(){
   profileSheet.classList.add("hidden");
 }
 
-/* mở modal đổi mật khẩu từ sheet */
-function openChangePass(){
+function openChangePass() {
+
   closeProfileSheet();
+
   hideTabbar();
-  document.getElementById("passModal")?.classList.remove("hidden");
+
+  document
+    .getElementById("passModal")
+    ?.classList.remove("hidden");
+
+  updatePasswordViewport();
 }
-
-
-
-// 📱 Mobile: focus input → đẩy bottom-sheet lên
-document.querySelectorAll("#passModal input").forEach(inp=>{
-  inp.addEventListener("focus", ()=>{
-    document.body.classList.add("keyboard-open");
-  });
-  inp.addEventListener("blur", ()=>{
-    document.body.classList.remove("keyboard-open");
-  });
-});
-
 
 
 
 /* ==========================================
-   PROFILE - CHANGE COVER ACTION
+   CHANGE PASSWORD - MOBILE KEYBOARD FIX
 ========================================== */
 
-if (btnChangeCover && coverInput) {
+function updatePasswordViewport() {
 
-  btnChangeCover.onclick = (e) => {
+  const modal = document.getElementById("passModal");
 
-    e.preventDefault();
-    e.stopPropagation();
+  if (!modal) return;
 
-    // Chỉ cho phép đổi cover của chính mình
-    if (!__profileAuth.uid) return;
+  const viewport = window.visualViewport;
 
-    if (
-      viewUid &&
-      viewUid !== __profileAuth.uid
-    ) return;
+  if (modal.classList.contains("hidden")) {
 
-    // Không mở khi đang upload
-    if (__coverUploading) return;
+    modal.style.removeProperty("height");
+    modal.style.removeProperty("top");
 
-    // Cho phép chọn lại cùng một ảnh
-    coverInput.value = "";
+    return;
+  }
 
-    // Mở thư viện ảnh
-    coverInput.click();
+  const height = viewport
+    ? viewport.height
+    : window.innerHeight;
 
-  };
+  const offsetTop = viewport
+    ? viewport.offsetTop
+    : 0;
 
+  modal.style.setProperty(
+    "height",
+    `${height}px`,
+    "important"
+  );
+
+  modal.style.setProperty(
+    "top",
+    `${offsetTop}px`,
+    "important"
+  );
 }
 
+window.visualViewport?.addEventListener(
+  "resize",
+  updatePasswordViewport
+);
+
+window.visualViewport?.addEventListener(
+  "scroll",
+  updatePasswordViewport
+);
+
+window.addEventListener(
+  "resize",
+  updatePasswordViewport
+);
+
+
+
+
+if (btnChangeCover && coverInput) {
+  btnChangeCover.onclick = () => coverInput.click();
+}
 
 if (coverInput) {
   coverInput.onchange = async () => {
