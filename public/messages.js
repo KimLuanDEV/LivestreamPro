@@ -437,10 +437,16 @@ saveChat({
   seen: true
 });
 
- // ✅ XÓA INPUT NGAY LẬP TỨC (QUAN TRỌNG)
-  input.value = "";
-  input.blur();
-  setTimeout(()=>input.focus(),20);
+
+input.value = "";
+
+input.style.height = "42px";
+
+input.dispatchEvent(new Event("input"));
+
+input.focus({
+  preventScroll: true
+});
 };
 
 
@@ -912,27 +918,47 @@ async function openChatByUid(uid) {
 }
 
 
-
 async function openChat(){
-  document.body.style.overflow = "hidden";
+
+  document.documentElement.classList.add(
+    "private-chat-open"
+  );
+
+  document.body.classList.add(
+    "private-chat-open"
+  );
+
+  chatViewportBase =
+    window.visualViewport?.height ||
+    window.innerHeight;
+
   chatModal.classList.remove("hidden");
 
-  // 🔥 BẮT BUỘC: sync inbox từ server
+  syncLuxuryChatViewport();
+
   await syncInboxFromServer();
 
-  // render lại chat sau khi sync
+  if (chatModal.classList.contains("hidden")) {
+    return;
+  }
+
   loadChat();
+
   scrollChatToBottom(true);
 
-  // ✅ chỉ mark seen SAU KHI ĐÃ LOAD
   if (currentTargetUID) {
+
     markPeerSeen(currentTargetUID);
-    socket.emit("msg-seen-all", { peer: currentTargetUID });
+
+    socket.emit("msg-seen-all", {
+      peer: currentTargetUID
+    });
+
   }
 
   clearInboxDot();
-}
 
+}
 
 
 function markPeerSeen(peer){
@@ -970,29 +996,29 @@ function countUnread(peer){
 
 
 function closeChat(){
-  document.body.style.overflow = ""; // mở lại
+
+  msgInput.blur();
+
   chatModal.classList.add("hidden");
+
+  chatModal.classList.remove(
+    "keyboard-open"
+  );
+
+  chatModal.style.removeProperty("--lux-vh");
+  chatModal.style.removeProperty("--lux-top");
+
+  document.documentElement.classList.remove(
+    "private-chat-open"
+  );
+
+  document.body.classList.remove(
+    "private-chat-open"
+  );
+
   currentTarget = null;
+
 }
-
-
-let baseHeight = window.innerHeight;
-
-window.addEventListener("resize", () => {
-  const h = window.innerHeight;
-  const diff = baseHeight - h;
-
-  // nếu bàn phím mở
-  if(diff > 150){
-    document
-      .getElementById("chatModal")
-      .style.setProperty("--kb", diff + "px");
-  }else{
-    document
-      .getElementById("chatModal")
-      .style.setProperty("--kb", "0px");
-  }
-});
 
 
 
@@ -1189,15 +1215,21 @@ const msgInput = document.getElementById("msgInput");
 const sendBtn = document.getElementById("sendBtn");
 
 
-// 🔥 AUTO GROW TEXTAREA
 msgInput.addEventListener("input", () => {
-  msgInput.style.height = "auto";
-  msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + "px";
 
-  // giữ logic mờ / hiện nút gửi
-  sendBtn.style.opacity = msgInput.value.trim() ? "1" : "0.4";
+  msgInput.style.height = "42px";
+
+  const nextHeight = Math.max(
+    42,
+    Math.min(msgInput.scrollHeight + 2, 110)
+  );
+
+  msgInput.style.height = nextHeight + "px";
+
+  sendBtn.style.opacity =
+    msgInput.value.trim() ? "1" : "0.45";
+
 });
-
 
 function openImgZoom(url) {
   const modal = document.getElementById("imgZoom");
@@ -2095,51 +2127,93 @@ function restoreMessageToolIcon(btn) {
 
 
 
-/* ===== MOBILE VISUAL VIEWPORT ===== */
+/* ==========================================
+   PRIVATE CHAT - VIEWPORT V4.0
+========================================== */
+
+let chatViewportBase = window.innerHeight;
+let chatViewportFrame = 0;
 
 function syncLuxuryChatViewport() {
-  const modal = document.getElementById("chatModal");
 
-  if (!modal) return;
+  if (
+    !chatModal ||
+    chatModal.classList.contains("hidden")
+  ) {
+    return;
+  }
 
   const viewport = window.visualViewport;
 
-  const height = viewport
-    ? viewport.height
-    : window.innerHeight;
+  const height = Math.round(
+    viewport?.height || window.innerHeight
+  );
 
-  const top = viewport
-    ? viewport.offsetTop
-    : 0;
+  const top = Math.max(
+    0,
+    Math.round(viewport?.offsetTop || 0)
+  );
 
-  modal.style.setProperty(
+  const editing =
+    document.activeElement === msgInput;
+
+  if (!editing) {
+    chatViewportBase = height;
+  }
+
+  const keyboardOpen =
+    editing && chatViewportBase - height > 100;
+
+  chatModal.style.setProperty(
     "--lux-vh",
-    Math.round(height) + "px"
+    `${height}px`
   );
 
-  modal.style.setProperty(
+  chatModal.style.setProperty(
     "--lux-top",
-    Math.round(top) + "px"
+    `${top}px`
   );
+
+  chatModal.classList.toggle(
+    "keyboard-open",
+    keyboardOpen
+  );
+
+}
+
+function requestChatViewportUpdate() {
+
+  cancelAnimationFrame(chatViewportFrame);
+
+  chatViewportFrame = requestAnimationFrame(
+    syncLuxuryChatViewport
+  );
+
 }
 
 if (window.visualViewport) {
+
   window.visualViewport.addEventListener(
     "resize",
-    syncLuxuryChatViewport
+    requestChatViewportUpdate
   );
 
   window.visualViewport.addEventListener(
     "scroll",
-    syncLuxuryChatViewport
+    requestChatViewportUpdate
   );
+
 }
 
 window.addEventListener(
   "resize",
-  syncLuxuryChatViewport
+  requestChatViewportUpdate
 );
 
-syncLuxuryChatViewport();
+msgInput.addEventListener("focus", () => {
+  requestChatViewportUpdate();
+});
 
-
+msgInput.addEventListener("blur", () => {
+  requestChatViewportUpdate();
+});

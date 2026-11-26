@@ -1658,6 +1658,637 @@ body.page-messages #sendBtn {
 
 }
 
+
+/* ==========================================
+   PRIVATE CHAT V4.0
+   MINIMAL BLACK & GOLD
+========================================== */
+
+body.page-messages #chatModal {
+
+  --pc-bg: #101114;
+  --pc-surface: #22242a;
+  --pc-gold: #d9b979;
+  --pc-text: #f5f5f7;
+  --pc-muted: #96989f;
+  --pc-line: rgba(255,255,255,.07);
+
+  position: fixed !important;
+
+  top: var(--lux-top, 0px) !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: auto !important;
+
+  width: 100% !important;
+  height: var(--lux-vh, 100dvh) !important;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin: 0;
+  padding: 0;
+
+  overflow: hidden;
+  overscroll-behavior: none;
+
+  background: #08090b;
+
+  z-index: 300 !important;
+
+  transform: none !important;
+  animation: none !important;
+  transition: none !important;
+}
+
+body.page-messages #chatModal.hidden {
+  display: none !important;
+}
+
+/* ===== BACKDROP ===== */
+
+#chatModal .private-chat-backdrop {
+  position: absolute;
+  inset: 0;
+
+  background: rgba(0,0,0,.7);
+}
+
+/* ===== MAIN PANEL ===== */
+
+#chatModal .private-chat-panel {
+  position: relative;
+
+  width: 100%;
+  max-width: 520px;
+
+  height: 100%;
+  max-height: 900px;
+
+  min-height: 0;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  margin: 0 auto;
+  padding: 0;
+
+  background: var(--pc-bg);
+
+  border: none;
+  border-radius: 18px;
+
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* ==========================================
+   HEADER
+========================================== */
+
+body.page-messages #chatModal .chat-header {
+
+  position: relative !important;
+
+  flex: 0 0 auto;
+
+  width: 100%;
+  height: auto;
+  min-height: 60px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 8px 12px;
+
+  background: var(--pc-bg);
+  border-bottom: 1px solid var(--pc-line);
+
+  box-shadow: none;
+  backdrop-filter: none;
+
+  z-index: 2;
+}
+
+/* HEADER BUTTONS */
+
+body.page-messages #chatModal .chat-back,
+body.page-messages #chatModal .chat-clear {
+
+  width: 40px;
+  height: 40px;
+
+  flex: 0 0 40px;
+
+  display: grid;
+  place-items: center;
+
+  margin: 0;
+  padding: 0;
+
+  border: none;
+  border-radius: 50%;
+
+  background: transparent;
+  color: var(--pc-gold);
+
+  box-shadow: none;
+
+  cursor: pointer;
+}
+
+body.page-messages #chatModal .chat-clear {
+  color: #96989f;
+}
+
+#chatModal .chat-back .msg-svg {
+  width: 24px;
+  height: 24px;
+}
+
+#chatModal .chat-clear .msg-svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* AVATAR */
+
+body.page-messages #chatModal .chat-header-avatar {
+
+  width: 40px;
+  height: 40px;
+
+  flex: 0 0 40px;
+
+  border: none;
+  border-radius: 50%;
+
+  padding: 0;
+  margin: 0;
+
+  object-fit: cover;
+
+  background: var(--pc-surface);
+}
+
+/* USER NAME */
+
+body.page-messages #chatModal .chat-header-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+body.page-messages #chatModal #chatTitle {
+
+  display: block;
+
+  max-width: 100%;
+
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  font-size: 16px;
+  font-weight: 650;
+
+  color: var(--pc-text);
+}
+
+/* ==========================================
+   CHAT CONTENT
+========================================== */
+
+#chatModal .private-chat-content {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+
+  flex: 1 1 0;
+
+  width: 100%;
+  min-height: 0;
+  min-width: 0;
+
+  overflow: hidden;
+}
+
+body.page-messages #chatModal #chatBox {
+
+  position: relative !important;
+
+  flex: 1 1 0 !important;
+
+  width: 100% !important;
+  height: auto !important;
+
+  min-height: 0 !important;
+  max-height: none !important;
+
+  margin: 0;
+  padding: 16px 12px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+
+  background: var(--pc-bg);
+
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+
+  overscroll-behavior-y: contain;
+
+  -webkit-overflow-scrolling: touch;
+
+  scrollbar-width: none;
+}
+
+#chatModal #chatBox::-webkit-scrollbar {
+  display: none;
+}
+
+/* MESSAGE ROW */
+
+body.page-messages #chatModal .chat-line {
+  flex-shrink: 0;
+
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#chatModal .chat-line > div {
+  min-width: 0;
+  max-width: 100%;
+}
+
+#chatModal .chat-line.me {
+  align-items: flex-end;
+}
+
+#chatModal .chat-line.other {
+  align-items: flex-start;
+}
+
+/* ==========================================
+   MESSAGE BUBBLES
+========================================== */
+
+body.page-messages #chatModal .bubble-text {
+
+  display: inline-block;
+
+  width: fit-content;
+  max-width: min(78vw, 350px);
+
+  padding: 10px 14px;
+
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.5;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+  border: none;
+  border-radius: 18px;
+
+  box-shadow: none;
+}
+
+/* SENT */
+
+body.page-messages #chatModal .bubble-text.me {
+
+  background: var(--pc-gold);
+  color: #19150f;
+
+  border-bottom-right-radius: 5px;
+}
+
+/* RECEIVED */
+
+body.page-messages #chatModal .bubble-text.other {
+
+  background: var(--pc-surface);
+  color: var(--pc-text);
+
+  border-bottom-left-radius: 5px;
+}
+
+/* TIME */
+
+body.page-messages #chatModal .chat-time {
+
+  margin: 0;
+  padding: 0 5px;
+
+  color: #90929a;
+  font-size: 10px;
+
+  line-height: 1.3;
+}
+
+/* MEDIA */
+
+body.page-messages #chatModal .chat-media,
+body.page-messages #chatModal .chat-album,
+body.page-messages #chatModal .chat-location {
+
+  max-width: min(80vw, 350px);
+}
+
+body.page-messages #chatModal .chat-img,
+body.page-messages #chatModal .chat-video {
+
+  display: block;
+
+  max-width: 100%;
+  max-height: 340px;
+
+  height: auto;
+
+  border: none;
+  border-radius: 14px;
+
+  object-fit: contain;
+}
+
+/* ==========================================
+   SCROLL TO BOTTOM
+========================================== */
+
+body.page-messages #chatModal #btnScrollBottom {
+
+  position: absolute;
+
+  right: 14px;
+  bottom: 14px;
+
+  width: 40px;
+  height: 40px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid var(--pc-line);
+  border-radius: 50%;
+
+  background: #292b31;
+  color: var(--pc-gold);
+
+  box-shadow: 0 4px 15px #0005;
+
+  z-index: 5;
+}
+
+/* ==========================================
+   BOTTOM COMPOSER
+========================================== */
+
+body.page-messages #chatModal .chatform {
+
+  position: relative !important;
+
+  inset: auto !important;
+
+  flex: 0 0 auto !important;
+
+  display: flex;
+  align-items: flex-end;
+
+  gap: 6px;
+
+  width: 100% !important;
+  height: auto !important;
+
+  min-width: 0;
+
+  margin: 0 !important;
+  padding: 8px 10px;
+
+  background: var(--pc-bg);
+
+  border: none;
+  border-top: 1px solid var(--pc-line);
+
+  transform: none !important;
+
+  box-shadow: none;
+  backdrop-filter: none;
+
+  z-index: 2;
+}
+
+/* TOOLS */
+
+body.page-messages #chatModal .chat-tools {
+
+  display: flex;
+  align-items: center;
+
+  flex: 0 0 auto;
+
+  gap: 0;
+}
+
+/* TOOL BUTTONS */
+
+body.page-messages #chatModal .chat-tool {
+
+  position: relative;
+
+  width: 36px;
+  height: 42px;
+
+  flex: 0 0 36px;
+
+  display: grid;
+  place-items: center;
+
+  margin: 0;
+  padding: 0;
+
+  border: none;
+  border-radius: 10px;
+
+  background: transparent;
+  color: var(--pc-gold);
+
+  box-shadow: none;
+
+  cursor: pointer;
+}
+
+#chatModal .chat-tool .tool-icon {
+  display: grid;
+  place-items: center;
+}
+
+#chatModal .chat-tool .msg-svg {
+  width: 22px;
+  height: 22px;
+}
+
+#chatModal .chat-tool:active {
+  background: rgba(255,255,255,.07);
+}
+
+/* ==========================================
+   TEXT INPUT
+========================================== */
+
+body.page-messages #chatModal #msgInput {
+
+  flex: 1 1 0 !important;
+
+  width: 0;
+  min-width: 0 !important;
+
+  height: 42px;
+  min-height: 42px;
+  max-height: 110px;
+
+  margin: 0 !important;
+  padding: 10px 13px;
+
+  resize: none;
+
+  outline: none;
+
+  border: 1px solid transparent;
+  border-radius: 22px;
+
+  background: var(--pc-surface);
+
+  color: var(--pc-text);
+
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 20px;
+
+  overflow-y: auto;
+
+  box-shadow: none;
+}
+
+#chatModal #msgInput::placeholder {
+  color: #858790;
+}
+
+#chatModal #msgInput:focus {
+  border-color: rgba(217,185,121,.4);
+}
+
+/* SEND BUTTON */
+
+body.page-messages #chatModal #sendBtn {
+
+  width: 42px;
+  height: 42px;
+
+  flex: 0 0 42px;
+
+  display: grid;
+  place-items: center;
+
+  margin: 0;
+  padding: 0;
+
+  border: none;
+  border-radius: 50%;
+
+  background: var(--pc-gold);
+  color: #17130d;
+
+  box-shadow: none;
+
+  cursor: pointer;
+}
+
+#chatModal #sendBtn .msg-svg {
+  width: 21px;
+  height: 21px;
+}
+
+#chatModal #sendBtn:active {
+  transform: scale(.94);
+}
+
+/* ==========================================
+   MOBILE FULLSCREEN
+========================================== */
+
+@media (max-width: 700px) {
+
+  #chatModal .private-chat-panel {
+
+    width: 100%;
+    max-width: 430px;
+
+    height: 100%;
+    max-height: none;
+
+    border-radius: 0;
+  }
+
+  body.page-messages #chatModal .chat-header {
+
+    padding-top: calc(
+      8px + env(safe-area-inset-top, 0px)
+    );
+  }
+
+  body.page-messages #chatModal .chatform {
+
+    padding-bottom: calc(
+      8px + env(safe-area-inset-bottom, 0px)
+    );
+  }
+
+}
+
+/* KEYBOARD OPEN */
+
+body.page-messages #chatModal.keyboard-open .chatform {
+  padding-bottom: 8px;
+}
+
+/* SMALL PHONE */
+
+@media (max-width: 370px) {
+
+  body.page-messages #chatModal .chat-tool {
+    width: 31px;
+    flex-basis: 31px;
+  }
+
+  body.page-messages #chatModal .chatform {
+    padding-left: 7px;
+    padding-right: 7px;
+    gap: 4px;
+  }
+
+}
+
+/* PREVENT BACKGROUND SCROLL */
+
+html.private-chat-open,
+body.private-chat-open {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+
+
 </style>
 
 
@@ -1854,127 +2485,130 @@ body.page-messages #sendBtn {
 
 
 
+<!-- ==========================================
+     PRIVATE CHAT V4.0
+========================================== -->
 
-<!-- ===== LUXURY CHAT MODAL ===== -->
+<div id="chatModal"
+     class="private-chat-modal hidden"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="chatTitle">
 
-<div id="chatModal" class="modal hidden">
-
-  <div class="modal-backdrop"
+  <div class="private-chat-backdrop"
        onclick="closeChat()"></div>
 
-  <div class="modal-card" style="max-width:520px">
+  <div class="private-chat-panel">
 
-    <!-- CHAT HEADER -->
+    <!-- HEADER -->
     <header class="chat-header">
 
-<!-- BACK -->
-<button
-  type="button"
-  class="chat-back"
-  onclick="closeChat()"
-  aria-label="Back to conversations"
->
-  <svg class="msg-svg">
-    <use href="#mi-back"></use>
-  </svg>
-</button>
+      <button
+        type="button"
+        class="chat-back"
+        onclick="closeChat()"
+        aria-label="Back">
 
-<img
-  id="chatHeaderAvatar"
-  class="chat-header-avatar"
-  src=""
-  alt="Profile picture"
->
+        <svg class="msg-svg">
+          <use href="#mi-back"></use>
+        </svg>
+
+      </button>
+
+      <img
+        id="chatHeaderAvatar"
+        class="chat-header-avatar"
+        src="/icons/icon-192.png"
+        alt="Profile"
+        onerror="this.onerror=null;this.src='/icons/icon-192.png'">
 
       <div class="chat-header-title">
-
-        <div class="chat-header-kicker">
-          PRIVATE CHAT
-        </div>
-
-       <span id="chatTitle">Conversation</span>
-
+        <span id="chatTitle">Conversation</span>
       </div>
 
-      <!-- XÓA LỊCH SỬ -->
-<button
-  type="button"
-  class="chat-clear icon-btn"
-  onclick="confirmClearMyMessages()"
-  aria-label="Clear my message history"
->
-  <svg class="msg-svg">
-    <use href="#mi-trash"></use>
-  </svg>
-</button>
+      <button
+        type="button"
+        class="chat-clear"
+        onclick="confirmClearMyMessages()"
+        aria-label="Clear history">
+
+        <svg class="msg-svg">
+          <use href="#mi-trash"></use>
+        </svg>
+
+      </button>
 
     </header>
 
-    <!-- DANH SÁCH -->
-    <div id="chatBox" class="chatbox"></div>
+    <!-- MESSAGE CONTENT -->
+    <div class="private-chat-content">
 
-    <!-- SCROLL TO BOTTOM -->
-<button
-  id="btnScrollBottom"
-  class="chat-scroll-bottom hidden"
-  type="button"
-  aria-label="Scroll to the latest message"
->
-  <svg class="msg-svg">
-    <use href="#mi-down"></use>
-  </svg>
+      <div id="chatBox" class="chatbox"></div>
 
-  <span class="scroll-dot"></span>
-</button>
+      <button
+        id="btnScrollBottom"
+        class="chat-scroll-bottom hidden"
+        type="button"
+        aria-label="Latest message">
+
+        <svg class="msg-svg">
+          <use href="#mi-down"></use>
+        </svg>
+
+        <span class="scroll-dot"></span>
+
+      </button>
+
+    </div>
 
     <!-- COMPOSER -->
-    <div class="chatform">
+    <footer class="chatform">
 
       <div class="chat-tools">
 
-        <!-- IMAGE -->
+        <!-- PHOTO -->
         <button
           type="button"
-          class="chat-tool tool-image"
           id="btnImage"
-          aria-label="Send Photos"
-        >
+          class="chat-tool tool-image"
+          aria-label="Photos">
+
           <span class="tool-icon">
             <svg class="msg-svg">
               <use href="#mi-image"></use>
             </svg>
           </span>
-          <span class="tool-ring"></span>
+
         </button>
 
         <!-- VIDEO -->
         <button
           type="button"
-          class="chat-tool tool-video"
           id="btnVideo"
-          aria-label="Send Video"
-        >
+          class="chat-tool tool-video"
+          aria-label="Video">
+
           <span class="tool-icon">
             <svg class="msg-svg">
               <use href="#mi-video"></use>
             </svg>
           </span>
-          <span class="tool-ring"></span>
+
         </button>
 
         <!-- LOCATION -->
         <button
           type="button"
-          class="chat-tool tool-location"
           id="btnLocation"
-          aria-label="Share Location"
-        >
+          class="chat-tool tool-location"
+          aria-label="Location">
+
           <span class="tool-icon">
             <svg class="msg-svg">
               <use href="#mi-location"></use>
             </svg>
           </span>
-          <span class="tool-ring"></span>
+
         </button>
 
         <input
@@ -1982,43 +2616,42 @@ body.page-messages #sendBtn {
           id="imgInput"
           accept="image/*"
           multiple
-          hidden
-        >
+          hidden>
 
         <input
           type="file"
           id="videoInput"
           accept="video/*"
-          hidden
-        >
+          hidden>
 
       </div>
 
-      <!-- INPUT -->
-<textarea
-  id="msgInput"
-  rows="1"
-  placeholder="Message..."
-  aria-label="Message text"
-></textarea>
+      <!-- MESSAGE INPUT -->
+      <textarea
+        id="msgInput"
+        rows="1"
+        placeholder="Message..."
+        aria-label="Message"
+      ></textarea>
 
       <!-- SEND -->
-<button
-  type="button"
-  id="sendBtn"
-  class="send-arrow"
-  aria-label="Send message"
->
-  <svg class="msg-svg">
-    <use href="#mi-send"></use>
-  </svg>
-</button>
+      <button
+        type="button"
+        id="sendBtn"
+        class="send-arrow"
+        aria-label="Send">
 
-    </div>
+        <svg class="msg-svg">
+          <use href="#mi-send"></use>
+        </svg>
+
+      </button>
+
+    </footer>
 
   </div>
-</div>
 
+</div>
 
 
 
@@ -2063,7 +2696,7 @@ body.page-messages #sendBtn {
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/chat-global.js"></script>
-<script src="/messages.js"></script>
+<script src="/messages.js?v=20261126-04"></script>
 <script src="/push-init.js"></script>
 <script src="/app-entry-guard.js"></script>
 
