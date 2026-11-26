@@ -131,7 +131,7 @@ let received = Math.max(
 // 🔁 TỶ GIÁ (bạn chỉnh tùy ý)
 const RATE = 0.00773; // 1 kim cương = 0.00773 / giá đô $
 // ⛔ RÚT TỐI THIỂU
-const MIN_WITHDRAW = 5000; // 💎 tối thiểu để được rút
+const MIN_WITHDRAW = 3000; // 💎 tối thiểu để được rút
 
 
 const receivedVal = document.getElementById("receivedVal");
