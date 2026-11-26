@@ -8126,13 +8126,6 @@ body.keyboard-open .pass-sheet{
   right:0;
   bottom:-18px;
   height:18px;
-
-  background: linear-gradient(
-    180deg,
-    rgba(7,10,20,.90),
-    rgba(7,10,20,0)
-  );
-
   pointer-events:none;
   z-index:1;
 }
