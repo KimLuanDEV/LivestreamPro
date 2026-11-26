@@ -1811,6 +1811,8 @@ function openComposeModal(){
 
   modal.classList.remove("hidden");
 
+  updateComposeViewport();
+
   modalTextarea.value = postText.value;
 
   /* ==========================================
@@ -1871,11 +1873,21 @@ function openComposeModal(){
 }
 
 function closeComposeModal(){
+
+  modalTextarea.blur();
+
   modal.classList.add("hidden");
+
+  modal.classList.remove("keyboard-open");
+
+  modal.style.removeProperty("height");
+  modal.style.removeProperty("top");
 
   postText.value = modalTextarea.value;
 
-  // 🔓 mở lại scroll nền
+
+  /* UNLOCK BACKGROUND SCROLL */
+
   document.body.style.position = "";
   document.body.style.top = "";
   document.body.style.left = "";
@@ -1883,8 +1895,8 @@ function closeComposeModal(){
   document.body.style.width = "";
 
   window.scrollTo(0, scrollTopBeforeModal);
-}
 
+}
 
 async function submitFromModal(){
   if(isPosting) return;
@@ -1944,50 +1956,143 @@ modalVideo?.addEventListener("change", () => {
 
 
 /* ==========================================
-   CREATE POST - MOBILE KEYBOARD FIX
+   CREATE POST - STABLE VIEWPORT V3.0
 ========================================== */
 
-function updateComposeViewport(){
+function updateComposeViewport() {
 
   const composeModal =
     document.getElementById("composeModal");
 
   if (!composeModal) return;
 
+  if (composeModal.classList.contains("hidden")) {
+    return;
+  }
+
+  const root = document.documentElement;
+
   const viewport = window.visualViewport;
 
-  composeModal.style.height = viewport
-    ? `${viewport.height}px`
-    : `${window.innerHeight}px`;
+  const isStableIOS =
+    root.classList.contains("ios-social-stable");
 
-  composeModal.style.top = viewport
-    ? `${viewport.offsetTop}px`
-    : "0px";
+
+  /* GET STABLE SCREEN HEIGHT */
+
+  const savedHeight = parseFloat(
+    root.style.getPropertyValue(
+      "--social-screen-height"
+    )
+  );
+
+  const fullHeight =
+    isStableIOS && savedHeight > 0
+      ? savedHeight
+      : window.innerHeight;
+
+
+  const visualHeight =
+    viewport?.height || window.innerHeight;
+
+
+  /* DETECT VIRTUAL KEYBOARD */
+
+  const active = document.activeElement;
+
+  const editing =
+    active &&
+    composeModal.contains(active) &&
+    (
+      active.matches("textarea, input") ||
+      active.isContentEditable
+    );
+
+  const keyboardOpen =
+    editing &&
+    fullHeight - visualHeight > 150;
+
+
+  composeModal.classList.toggle(
+    "keyboard-open",
+    Boolean(keyboardOpen)
+  );
+
+
+  /* KEYBOARD OPEN */
+
+  if (keyboardOpen) {
+
+    composeModal.style.height =
+      `${visualHeight}px`;
+
+    composeModal.style.top =
+      `${viewport?.offsetTop || 0}px`;
+
+    return;
+
+  }
+
+
+  /* NORMAL MODE - LOCK FULL HEIGHT */
+
+  composeModal.style.height =
+    `${fullHeight}px`;
+
+  composeModal.style.top = "0px";
 
 }
 
-if (window.visualViewport) {
 
-  window.visualViewport.addEventListener(
-    "resize",
-    updateComposeViewport
-  );
+/* VIEWPORT EVENTS */
 
-  window.visualViewport.addEventListener(
-    "scroll",
+let composeViewportFrame = 0;
+
+function scheduleComposeViewport() {
+
+  cancelAnimationFrame(composeViewportFrame);
+
+  composeViewportFrame = requestAnimationFrame(
     updateComposeViewport
   );
 
 }
+
+
+window.visualViewport?.addEventListener(
+  "resize",
+  scheduleComposeViewport
+);
+
+window.visualViewport?.addEventListener(
+  "scroll",
+  scheduleComposeViewport
+);
 
 window.addEventListener(
   "resize",
-  updateComposeViewport
+  scheduleComposeViewport
 );
 
-updateComposeViewport();
+window.addEventListener(
+  "orientationchange",
+  () => {
+    setTimeout(updateComposeViewport, 400);
+  }
+);
 
 
+document.addEventListener(
+  "focusin",
+  scheduleComposeViewport
+);
+
+document.addEventListener(
+  "focusout",
+  () => {
+    setTimeout(updateComposeViewport, 350);
+  }
+);
 
 const previewBox = document.getElementById("composePreview");
 const previewImage = document.getElementById("previewImage");
