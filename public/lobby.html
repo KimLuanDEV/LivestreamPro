@@ -4,7 +4,12 @@
   <meta charset="utf-8">
   <!-- PWA iOS -->
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style"
+      content="default">
+
+<meta name="theme-color"
+      content="#FAF6E9">
+
 <meta name="apple-mobile-web-app-title" content="Livestream Pro">
 
 <!-- Android / Chrome -->
@@ -4153,6 +4158,1631 @@ body.lobby-page #countdownOverlay .cd-status-dot {
 </style>
 
 
+<style>
+/* ==========================================
+   LIVESTREAM PRO - LOBBY V6.0
+   CHAMPAGNE GOLD & PURE WHITE
+========================================== */
+
+:root {
+
+  --lb-bg: #FAF6E9;
+  --lb-panel: #FFFFFF;
+  --lb-gold: #947025;
+  --lb-light: #29251D;
+  --lb-muted: #766D5B;
+  --lb-line: #EAE0C8;
+
+  --lb-cream: #F8F3E6;
+  --lb-champagne: #F8EBC9;
+  --lb-primary: #EED69A;
+
+}
+
+html,
+html.ios-lobby-stable,
+body.lobby-page,
+html.ios-lobby-stable body.lobby-page {
+
+  background: #FAF6E9 !important;
+  color: #29251D !important;
+  color-scheme: light;
+
+}
+
+body.lobby-page {
+
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  -webkit-tap-highlight-color: transparent;
+
+}
+
+
+/* ==========================================
+   HEADER
+========================================== */
+
+body.lobby-page .lobby-header-full {
+
+  background: linear-gradient(
+    120deg,
+    #FFFDF7,
+    #F8EBC9
+  ) !important;
+
+  border-bottom: 1px solid var(--lb-line) !important;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page .lobby-header-inner {
+
+  min-height: 62px !important;
+
+  padding:
+    calc(9px + env(safe-area-inset-top, 0px))
+    14px
+    9px !important;
+
+}
+
+body.lobby-page .lobby-brand {
+
+  gap: 10px !important;
+
+}
+
+body.lobby-page .lobby-brand-mark {
+
+  width: 40px !important;
+  height: 40px !important;
+
+  flex: 0 0 40px !important;
+
+  display: grid !important;
+  place-items: center !important;
+
+  padding: 0 !important;
+
+  background: #FFF9E9 !important;
+  color: #947025 !important;
+
+  border: 1px solid #E5D6B1 !important;
+  border-radius: 12px !important;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page .lobby-brand-mark .lb-icon {
+
+  display: block !important;
+
+  width: 23px !important;
+  height: 23px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  transform: none !important;
+  filter: none !important;
+
+}
+
+body.lobby-page .lobby-title {
+
+  color: #29251D !important;
+
+  font-size: 15px !important;
+  font-weight: 750 !important;
+
+  letter-spacing: .3px !important;
+  text-shadow: none !important;
+
+}
+
+body.lobby-page .lobby-subtitle {
+
+  color: #947025 !important;
+
+  font-size: 9px !important;
+  font-weight: 500;
+
+  letter-spacing: 1px !important;
+
+}
+
+body.lobby-page .lobby-header-actions {
+
+  gap: 7px !important;
+
+}
+
+body.lobby-page .lobby-header-actions .lobby-iconBtn {
+
+  display: grid !important;
+  place-items: center !important;
+
+  background: #FFF9E9 !important;
+  color: #947025 !important;
+
+  border: 1px solid #E5D6B1 !important;
+  border-radius: 11px !important;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page .lobby-header-actions .lobby-iconBtn .lb-icon {
+
+  display: block;
+
+  margin: 0;
+  padding: 0;
+
+  filter: none !important;
+  transform: none !important;
+
+}
+
+body.lobby-page .lobby-header-actions .lobby-iconBtn:hover {
+
+  background: #F3E5C0 !important;
+
+}
+
+
+/* ==========================================
+   ROOM SEARCH
+========================================== */
+
+body.lobby-page .lobby-header-search {
+
+  background: transparent !important;
+
+  padding: 0 14px 12px !important;
+
+}
+
+body.lobby-page .lobby-searchWrap {
+
+  min-height: 44px;
+
+  background: #FFFFFF !important;
+  color: #947025 !important;
+
+  border: 1px solid var(--lb-line) !important;
+  border-radius: 13px !important;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page #q.lobby-search {
+
+  background: transparent !important;
+  color: #29251D !important;
+
+  font-size: 16px !important;
+  font-weight: 400;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page #q::placeholder {
+
+  color: #958B77 !important;
+  opacity: 1;
+
+}
+
+body.lobby-page #clearQ {
+
+  background: #F8F3E6 !important;
+  color: #947025 !important;
+
+  border-radius: 8px;
+
+}
+
+
+/* ==========================================
+   LIVE FILTER BAR
+========================================== */
+
+body.lobby-page .lobby-filter-bar {
+
+  background: #FAF6E9 !important;
+
+  border: none !important;
+
+  padding: 12px 0 5px !important;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page .lobby-filter-scroll {
+
+  gap: 7px !important;
+
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+
+}
+
+body.lobby-page .lobby-chipBtn {
+
+  min-height: 36px !important;
+
+  padding: 8px 13px !important;
+
+  background: #FFFFFF !important;
+  color: #766D5B !important;
+
+  border: 1px solid var(--lb-line) !important;
+  border-radius: 999px !important;
+
+  font-size: 12px !important;
+  font-weight: 600 !important;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page .lobby-chipBtn.is-active {
+
+  background: #F1DDA6 !important;
+  color: #654B17 !important;
+
+  border: 1px solid #DFC58C !important;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page .lobby-chipBtn::after {
+
+  display: none !important;
+
+}
+
+body.lobby-page .lobby-chipBtn:hover {
+
+  color: #947025 !important;
+
+}
+
+body.lobby-page #sort {
+
+  background: #FFFFFF !important;
+  color: #766D5B !important;
+
+  border: 1px solid var(--lb-line) !important;
+  border-radius: 10px !important;
+
+  font-weight: 500;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page #sort option {
+
+  background: #FFFFFF !important;
+  color: #29251D !important;
+
+}
+
+body.lobby-page .lobby-sort-wrap > svg {
+
+  color: #947025 !important;
+
+}
+
+
+/* ==========================================
+   LIVE ROOM GRID
+========================================== */
+
+body.lobby-page #grid.lobby-grid,
+body.lobby-page #skeleton.lobby-grid {
+
+  gap: 12px;
+
+  padding-top: 13px;
+  padding-left: 12px;
+  padding-right: 12px;
+
+}
+
+
+/* ==========================================
+   LIVE ROOM CARD
+========================================== */
+
+body.lobby-page .lobby-card {
+
+  display: flex !important;
+  flex-direction: column !important;
+
+  position: relative !important;
+
+  height: auto !important;
+  min-height: 0 !important;
+
+  aspect-ratio: auto !important;
+
+  background: #FFFFFF !important;
+  color: #29251D !important;
+
+  border: 1px solid var(--lb-line) !important;
+  border-radius: 17px !important;
+
+  box-shadow:
+    0 3px 12px rgba(112,85,28,.055) !important;
+
+  overflow: hidden;
+
+}
+
+body.lobby-page .lobby-card:hover {
+
+  border-color: #CFB477 !important;
+
+  box-shadow:
+    0 5px 18px rgba(112,85,28,.10) !important;
+
+}
+
+
+/* ROOM COVER */
+
+body.lobby-page .lobby-cardBg {
+
+  position: relative !important;
+
+  inset: auto !important;
+  z-index: 0 !important;
+
+  width: 100%;
+  height: auto !important;
+
+  aspect-ratio: 1 / 1;
+
+  flex-shrink: 0;
+
+  background: #F1E6CC !important;
+
+  overflow: hidden;
+
+}
+
+body.lobby-page .lobby-cardBg img {
+
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+}
+
+body.lobby-page .lobby-cardShade {
+
+  background: linear-gradient(
+    180deg,
+    rgba(0,0,0,.16),
+    transparent 40%
+  ) !important;
+
+}
+
+
+/* ==========================================
+   ROOM ID & LIVE BADGES
+========================================== */
+
+body.lobby-page .lobby-cardOverlay.top {
+
+  position: absolute !important;
+
+  top: 8px;
+  left: 8px;
+  right: 8px;
+
+  z-index: 2;
+
+}
+
+body.lobby-page .lobby-room {
+
+  flex-shrink: 0;
+
+  max-width: 48%;
+
+  padding: 5px 7px;
+
+  background: rgba(255,255,255,.94) !important;
+  color: #654B17 !important;
+
+  border: 0 !important;
+  border-radius: 7px;
+
+  font-size: 10px;
+  font-weight: 700;
+
+}
+
+body.lobby-page .lobby-livePill,
+body.lobby-page .badge--virtual {
+
+  background: #B94B50 !important;
+  color: #FFFFFF !important;
+
+  border: 0 !important;
+  border-radius: 7px;
+
+  padding: 5px 7px;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page .lobby-liveDot {
+
+  background: #FFFFFF !important;
+
+}
+
+body.lobby-page .badge--info {
+
+  background: #F8EBC9 !important;
+  color: #765717 !important;
+
+  border: 0 !important;
+
+}
+
+body.lobby-page .lobby-private-lock {
+
+  background: #FFF4D5 !important;
+  color: #765717 !important;
+
+  border: 1px solid #E5D6B1 !important;
+
+  font-size: 9px;
+
+}
+
+
+/* ==========================================
+   WHITE HOST INFORMATION PANEL
+========================================== */
+
+body.lobby-page .lobby-cardOverlay.bottom {
+
+  position: relative !important;
+
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+
+  background: #FFFFFF !important;
+
+  padding: 11px 10px !important;
+
+  color: #29251D !important;
+
+}
+
+body.lobby-page .lobby-hostRow {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+}
+
+body.lobby-page .lobby-ava.mini {
+
+  width: 33px;
+  height: 33px;
+
+  flex: 0 0 33px;
+
+  background: #F8F3E6 !important;
+
+  border: 1.5px solid #E6D3A5 !important;
+
+}
+
+body.lobby-page .lobby-hostname {
+
+  color: #29251D !important;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  text-shadow: none !important;
+
+}
+
+body.lobby-page .lobby-live-topic {
+
+  color: #766D5B !important;
+
+  font-size: 11px;
+  font-weight: 400;
+
+  margin-top: 3px;
+
+}
+
+body.lobby-page .lobby-linked-label {
+
+  color: #947025 !important;
+
+  font-size: 8px;
+
+  letter-spacing: .2px;
+
+}
+
+body.lobby-page .tick-blue {
+
+  color: #2684CE !important;
+
+}
+
+
+/* ==========================================
+   VIEWER COUNT & WATCH BUTTON
+========================================== */
+
+body.lobby-page .lobby-statsRow {
+
+  margin-top: 10px;
+
+  padding-top: 9px;
+
+  border-top: 1px solid #F0EADB !important;
+
+}
+
+body.lobby-page .lobby-chip {
+
+  color: #766D5B !important;
+
+  font-size: 11px;
+
+}
+
+body.lobby-page .lobby-chip b {
+
+  color: #514A3D !important;
+
+  font-weight: 650;
+
+}
+
+body.lobby-page .lobby-chip .lb-icon {
+
+  color: #947025 !important;
+
+}
+
+body.lobby-page .lobby-cta {
+
+  background: #F8EBC9 !important;
+  color: #765717 !important;
+
+  padding: 6px 9px;
+
+  border-radius: 8px;
+
+  font-size: 10px;
+  font-weight: 650;
+
+}
+
+
+/* ==========================================
+   EMPTY STATE & LOADING
+========================================== */
+
+body.lobby-page #empty.log {
+
+  background: transparent !important;
+
+  color: #766D5B !important;
+
+  border: none !important;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page #empty .live-empty-icon {
+
+  background: #F8EBC9 !important;
+  color: #947025 !important;
+
+  border: 1px solid var(--lb-line) !important;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page #empty strong {
+
+  color: #29251D !important;
+
+  font-size: 16px;
+  font-weight: 700;
+
+}
+
+body.lobby-page #empty p {
+
+  color: #766D5B !important;
+
+}
+
+body.lobby-page .lobby-skel {
+
+  background: #FFFFFF !important;
+
+  border: 1px solid var(--lb-line) !important;
+
+}
+
+body.lobby-page .lobby-skelLine {
+
+  background: #F1EADB !important;
+
+}
+
+
+/* ==========================================
+   BOTTOM NAVIGATION
+========================================== */
+
+body.lobby-page .mobile-tabbar,
+html.ios-lobby-stable body.lobby-page .mobile-tabbar {
+
+  background: #FFFDF8 !important;
+
+  border: 1px solid var(--lb-line) !important;
+  border-bottom: 0 !important;
+
+  border-radius: 18px 18px 0 0;
+
+  box-shadow:
+    0 -4px 18px rgba(112,85,28,.06) !important;
+
+}
+
+body.lobby-page .mobile-tabbar .tab-item {
+
+  color: #766D5B !important;
+
+  background: transparent !important;
+
+  border: 0 !important;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page .mobile-tabbar .tab-icon {
+
+  color: #766D5B !important;
+
+  filter: none !important;
+
+}
+
+body.lobby-page .mobile-tabbar .tab-item.active {
+
+  background: #F8EBC9 !important;
+  color: #947025 !important;
+
+  border: none !important;
+
+}
+
+body.lobby-page .mobile-tabbar .tab-item.active .tab-icon {
+
+  color: #947025 !important;
+
+  filter: none !important;
+
+}
+
+body.lobby-page .tab-main .tab-plus {
+
+  display: grid !important;
+  place-items: center !important;
+
+  background: linear-gradient(
+    145deg,
+    #F8E8B9,
+    #E8CA80
+  ) !important;
+
+  color: #654B17 !important;
+
+  border: 2px solid #FFFFFF !important;
+
+  border-radius: 14px !important;
+
+  box-shadow:
+    0 3px 10px rgba(148,112,37,.15) !important;
+
+}
+
+body.lobby-page .tab-main .tab-plus .lb-icon {
+
+  display: block;
+
+  margin: 0;
+  padding: 0;
+
+  transform: none !important;
+
+}
+
+body.lobby-page .tab-main-label {
+
+  color: #947025 !important;
+
+}
+
+
+/* ==========================================
+   CREATE ROOM & GENERAL MODALS
+========================================== */
+
+body.lobby-page .modal-backdrop {
+
+  background: rgba(41,37,29,.40) !important;
+
+}
+
+body.lobby-page :is(
+  #createRoomModal,
+  #msgModal,
+  #inboxModal
+) .modal-card {
+
+  background: #FFFDF8 !important;
+  color: #29251D !important;
+
+  border: 1px solid var(--lb-line) !important;
+  border-radius: 22px !important;
+
+  box-shadow:
+    0 16px 50px rgba(41,37,29,.16) !important;
+
+}
+
+body.lobby-page :is(
+  #createRoomModal,
+  #msgModal,
+  #inboxModal
+) h3 {
+
+  color: #29251D !important;
+
+  font-family: inherit !important;
+  font-size: 20px !important;
+  font-weight: 750;
+
+  text-shadow: none !important;
+
+}
+
+body.lobby-page #createRoomModal label {
+
+  color: #766D5B !important;
+
+  font-size: 12px;
+  font-weight: 600;
+
+}
+
+body.lobby-page #msgText,
+body.lobby-page #inboxList {
+
+  color: #29251D !important;
+
+}
+
+body.lobby-page :is(
+  #roomInput,
+  #hostNameInput,
+  #roomPasswordInput,
+  #privateJoinPassword
+) {
+
+  background: #FFFFFF !important;
+  color: #29251D !important;
+
+  border: 1px solid var(--lb-line) !important;
+  border-radius: 12px;
+
+  font-size: 16px;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page #roomInput[readonly] {
+
+  background: #F8F0DC !important;
+
+  color: #947025 !important;
+  -webkit-text-fill-color: #947025 !important;
+
+  font-size: 26px;
+  font-weight: 750;
+
+  letter-spacing: 5px;
+
+}
+
+body.lobby-page :is(
+  #hostNameInput,
+  #roomPasswordInput,
+  #privateJoinPassword
+)::placeholder {
+
+  color: #958B77 !important;
+
+  opacity: 1;
+
+}
+
+body.lobby-page .live-topic-counter {
+
+  color: #766D5B !important;
+
+}
+
+
+/* ==========================================
+   PUBLIC / PRIVATE ROOM
+========================================== */
+
+body.lobby-page .room-privacy-option {
+
+  background: #FFFFFF !important;
+  color: #766D5B !important;
+
+  border: 1px solid var(--lb-line) !important;
+  border-radius: 14px;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page .room-privacy-option.active {
+
+  background: #F8EBC9 !important;
+  color: #765717 !important;
+
+  border-color: #C7A45E !important;
+
+}
+
+body.lobby-page .room-privacy-option svg {
+
+  color: #947025 !important;
+
+}
+
+body.lobby-page .room-privacy-option small {
+
+  color: #766D5B !important;
+
+}
+
+body.lobby-page #toggleRoomPassword {
+
+  color: #947025 !important;
+
+}
+
+
+/* ==========================================
+   PRIMARY & SECONDARY BUTTONS
+========================================== */
+
+body.lobby-page :is(
+  #btnConfirmRoom,
+  #msgOk,
+  #privateJoinConfirm,
+  .neon-btn--main
+) {
+
+  background: linear-gradient(
+    145deg,
+    #F8E8B9,
+    #E8CA80
+  ) !important;
+
+  color: #654B17 !important;
+
+  border: 1px solid #DFC58C !important;
+  border-radius: 12px;
+
+  box-shadow: none !important;
+
+  font-weight: 700;
+
+}
+
+body.lobby-page :is(
+  #btnCancelRoom,
+  #msgCancel,
+  #privateJoinCancel,
+  .neon-btn--ghost
+) {
+
+  background: #F5EFDF !important;
+  color: #514A3D !important;
+
+  border: 1px solid var(--lb-line) !important;
+  border-radius: 12px;
+
+  box-shadow: none !important;
+
+}
+
+
+/* ==========================================
+   PRIVATE ROOM ACCESS DIALOG
+========================================== */
+
+body.lobby-page #privateRoomDialog {
+
+  background: #FFFDF8 !important;
+  color: #29251D !important;
+
+  border: 1px solid var(--lb-line) !important;
+  border-radius: 22px;
+
+  box-shadow:
+    0 16px 50px rgba(41,37,29,.16) !important;
+
+}
+
+body.lobby-page #privateRoomDialog::backdrop {
+
+  background: rgba(41,37,29,.45) !important;
+
+}
+
+body.lobby-page .private-room-content {
+
+  color: #29251D !important;
+
+  background: transparent !important;
+
+}
+
+body.lobby-page .private-room-emblem {
+
+  background: #F8EBC9 !important;
+  color: #947025 !important;
+
+  border-color: var(--lb-line) !important;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page .private-room-content h3 {
+
+  color: #29251D !important;
+
+}
+
+body.lobby-page .private-room-content > p {
+
+  color: #766D5B !important;
+
+}
+
+body.lobby-page .private-room-number {
+
+  background: #F8F3E6 !important;
+  color: #766D5B !important;
+
+  border-color: var(--lb-line) !important;
+
+}
+
+body.lobby-page .private-room-number strong {
+
+  color: #947025 !important;
+
+}
+
+body.lobby-page #privateJoinError {
+
+  color: #B13A3A !important;
+
+}
+
+
+/* ==========================================
+   MEMBER DIRECTORY
+========================================== */
+
+body.lobby-page #playerLobby .player-lobby-backdrop {
+
+  background: rgba(41,37,29,.40) !important;
+
+}
+
+body.lobby-page #playerLobby .player-lobby-panel {
+
+  background: #FAF6E9 !important;
+  color: #29251D !important;
+
+  border-color: var(--lb-line) !important;
+
+  box-shadow:
+    0 -10px 40px rgba(41,37,29,.15) !important;
+
+}
+
+body.lobby-page #playerLobby .player-lobby-panel::before {
+
+  display: none;
+
+}
+
+body.lobby-page #playerLobby .player-lobby-header {
+
+  background: #FFFDF8 !important;
+
+  padding: 16px 17px !important;
+
+  align-items: center;
+
+  border-bottom: 1px solid var(--lb-line) !important;
+
+}
+
+body.lobby-page #playerLobby .player-lobby-header .title {
+
+  color: #29251D !important;
+
+  font-family: inherit !important;
+  font-size: 21px !important;
+  font-weight: 750;
+
+  margin: 0 !important;
+
+}
+
+body.lobby-page #playerLobby .player-lobby-kicker,
+body.lobby-page #playerLobby .player-lobby-description {
+
+  display: none !important;
+
+}
+
+body.lobby-page #playerLobby #closePlayerLobby {
+
+  display: grid !important;
+  place-items: center !important;
+
+  background: #F8F3E6 !important;
+  color: #766D5B !important;
+
+  border: 1px solid var(--lb-line) !important;
+  border-radius: 50%;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page #playerLobby #playerSearch {
+
+  background: #FFFFFF !important;
+  color: #29251D !important;
+
+  border: 1px solid var(--lb-line) !important;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page #playerLobby #playerSearch::placeholder {
+
+  color: #958B77 !important;
+
+}
+
+body.lobby-page #playerLobby .player-list-heading,
+body.lobby-page #playerLobby #playerResultCount {
+
+  color: #766D5B !important;
+
+}
+
+
+/* MEMBER CARD */
+
+body.lobby-page #playerLobby .player-row {
+
+  background: #FFFFFF !important;
+
+  border: 1px solid var(--lb-line) !important;
+  border-radius: 15px;
+
+  padding: 12px !important;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page #playerLobby .pava {
+
+  background: #F8EBC9 !important;
+
+  border: 2px solid #E6D3A5 !important;
+
+}
+
+body.lobby-page #playerLobby .pava img {
+
+  background: #F8F3E6 !important;
+
+  border-color: #FFFFFF !important;
+
+}
+
+body.lobby-page #playerLobby .pava-initial {
+
+  color: #947025 !important;
+
+}
+
+body.lobby-page #playerLobby .pava .dot {
+
+  border-color: #FFFFFF !important;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page #playerLobby .pname {
+
+  color: #29251D !important;
+
+  font-weight: 700;
+
+}
+
+body.lobby-page #playerLobby .plevel {
+
+  color: #947025 !important;
+
+}
+
+body.lobby-page #playerLobby .player-status {
+
+  color: #766D5B !important;
+
+}
+
+body.lobby-page #playerLobby .player-status.on {
+
+  color: #38835A !important;
+
+}
+
+
+/* MEMBER ACTIONS */
+
+body.lobby-page #playerLobby .pactions {
+
+  border-top: 1px solid #F1EADB !important;
+
+  gap: 7px;
+
+}
+
+body.lobby-page #playerLobby .pactions button {
+
+  background: #F8F3E6 !important;
+  color: #765717 !important;
+
+  border: 1px solid var(--lb-line) !important;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page #playerLobby .pactions .btn-block {
+
+  background: #FFF0ED !important;
+  color: #AF514A !important;
+
+  border: 1px solid #F0D9D3 !important;
+
+}
+
+body.lobby-page #playerLobby .pme {
+
+  background: #F8EBC9 !important;
+  color: #947025 !important;
+
+  border-color: var(--lb-line) !important;
+
+}
+
+body.lobby-page #playerLobby .player-lobby-empty {
+
+  background: #FFFFFF !important;
+  color: #766D5B !important;
+
+  border-color: var(--lb-line) !important;
+
+}
+
+body.lobby-page #playerLobby .player-lobby-footer {
+
+  display: none !important;
+
+}
+
+body.lobby-page #playerLobby .player-lobby-list {
+
+  padding-bottom: calc(
+    18px + env(safe-area-inset-bottom, 0px)
+  ) !important;
+
+}
+
+
+/* ==========================================
+   GOING LIVE COUNTDOWN
+========================================== */
+
+body.lobby-page #countdownOverlay .cd-bg {
+
+  background: rgba(41,37,29,.40) !important;
+
+}
+
+body.lobby-page #countdownOverlay .cd-panel {
+
+  background: #FFFDF8 !important;
+
+  color: #29251D !important;
+
+  border: 1px solid var(--lb-line) !important;
+
+  box-shadow:
+    0 15px 45px rgba(41,37,29,.15) !important;
+
+}
+
+body.lobby-page #countdownOverlay .cd-brand {
+
+  color: #947025 !important;
+
+}
+
+body.lobby-page #countdownOverlay .cd-title {
+
+  color: #29251D !important;
+
+  font-family: inherit !important;
+  font-weight: 750;
+
+}
+
+body.lobby-page #countdownOverlay .cd-dial {
+
+  background: #FAF6E9 !important;
+
+  border-radius: 50%;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page #countdownOverlay .cd-inner-ring {
+
+  border-color: #EAE0C8 !important;
+
+}
+
+body.lobby-page #countdownOverlay .cd-track {
+
+  stroke: #EAE0C8 !important;
+
+}
+
+body.lobby-page #countdownOverlay .cd-progress {
+
+  stroke: #B6944C !important;
+
+  filter: none !important;
+
+}
+
+body.lobby-page #countdownOverlay .cd-number {
+
+  color: #947025 !important;
+
+  text-shadow: none !important;
+
+}
+
+body.lobby-page #countdownOverlay :is(
+  .cd-unit,
+  .cd-description,
+  .cd-room-label,
+  .cd-sub,
+  .cd-status,
+  .cd-hint,
+  .cd-footer
+) {
+
+  color: #766D5B !important;
+
+}
+
+body.lobby-page #countdownOverlay .cd-status-dot {
+
+  background: #947025 !important;
+
+}
+
+
+/* ==========================================
+   WELCOME MODAL
+========================================== */
+
+body.lobby-page .neon-modal {
+
+  background: #FFFDF8 !important;
+  color: #29251D !important;
+
+  border: 1px solid var(--lb-line) !important;
+  border-radius: 22px;
+
+  box-shadow:
+    0 16px 50px rgba(41,37,29,.16) !important;
+
+}
+
+body.lobby-page .neon-frame,
+body.lobby-page .neon-scan {
+
+  display: none !important;
+
+}
+
+body.lobby-page .welcome-title {
+
+  color: #29251D !important;
+
+  text-shadow: none !important;
+
+}
+
+body.lobby-page .welcome-title span {
+
+  color: #947025 !important;
+
+}
+
+body.lobby-page .welcome-sub,
+body.lobby-page .neon-check {
+
+  color: #766D5B !important;
+
+}
+
+body.lobby-page .welcome-logo {
+
+  background: #F8EBC9 !important;
+
+  border-color: var(--lb-line) !important;
+
+  box-shadow: none !important;
+
+}
+
+
+/* ==========================================
+   ERROR MODAL
+========================================== */
+
+body.lobby-page #errModal .lsp-error-modal {
+
+  background: #FFFDF8 !important;
+  color: #29251D !important;
+
+  border: 1px solid var(--lb-line) !important;
+
+  box-shadow:
+    0 16px 50px rgba(41,37,29,.16) !important;
+
+}
+
+body.lobby-page #errModal .lsp-error-header,
+body.lobby-page #errModal .lsp-error-content,
+body.lobby-page #errModal .lsp-error-footer {
+
+  background: transparent !important;
+
+  border-color: var(--lb-line) !important;
+
+}
+
+body.lobby-page #errModal #errTitle {
+
+  color: #29251D !important;
+
+}
+
+body.lobby-page #errModal :is(
+  #errText,
+  .lsp-error-footer-note,
+  .lsp-error-label,
+  .lsp-error-kicker
+) {
+
+  color: #766D5B !important;
+
+}
+
+body.lobby-page #errModal .lsp-error-icon {
+
+  background: #FFF0ED !important;
+  color: #B94B50 !important;
+
+  box-shadow: none !important;
+
+}
+
+body.lobby-page #errModal .lsp-error-close {
+
+  background: #F5EFDF !important;
+  color: #766D5B !important;
+
+  border-color: var(--lb-line) !important;
+
+}
+
+body.lobby-page #errModal .lsp-error-confirm {
+
+  background: #EED69A !important;
+  color: #654B17 !important;
+
+  border: 1px solid #DFC58C !important;
+
+  box-shadow: none !important;
+
+}
+
+
+/* ==========================================
+   MOBILE OPTIMIZATION
+========================================== */
+
+@media (max-width: 600px) {
+
+  body.lobby-page #grid.lobby-grid,
+  body.lobby-page #skeleton.lobby-grid {
+
+    grid-template-columns:
+      repeat(2, minmax(0,1fr)) !important;
+
+    gap: 10px !important;
+
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+
+  }
+
+  body.lobby-page .lobby-card {
+
+    border-radius: 15px !important;
+
+  }
+
+  body.lobby-page .lobby-cardOverlay.bottom {
+
+    padding: 10px 9px !important;
+
+  }
+
+}
+
+@media (max-width: 370px) {
+
+  body.lobby-page .lobby-title {
+
+    font-size: 12px !important;
+
+  }
+
+  body.lobby-page .lobby-brand-mark {
+
+    width: 34px !important;
+    height: 34px !important;
+
+    flex-basis: 34px !important;
+
+  }
+
+  body.lobby-page .lobby-header-actions {
+
+    gap: 5px !important;
+
+  }
+
+  body.lobby-page .lobby-cta {
+
+    font-size: 9px;
+
+    padding: 5px 6px;
+
+  }
+
+}
+
+
+/* ==========================================
+   INPUT FOCUS
+========================================== */
+
+body.lobby-page :is(
+  input,
+  select,
+  button
+):focus-visible {
+
+  outline: 2px solid #B6944C;
+
+  outline-offset: 2px;
+
+}
+
+body.lobby-page input:focus {
+
+  border-color: #C7A45E !important;
+
+}
+
+</style>
+
+
+
 </head>
 <body class="lobby-page">
   
@@ -4504,7 +6134,7 @@ body.lobby-page #countdownOverlay .cd-status-dot {
   <div class="modal-backdrop"></div>
 
   <div class="modal-card">
-    <h3> Tạo phòng livestream</h3>
+   <h3>Create Room</h3>
 
 <label>Room ID</label>
 
@@ -4641,10 +6271,22 @@ body.lobby-page #countdownOverlay .cd-status-dot {
 
 </div>
 
-    <div class="modal-actions">
-      <button id="btnCancelRoom" type="button">Hủy</button>
-      <button id="btnConfirmRoom" type="button">Vào phòng</button>
-    </div>
+<div class="modal-actions">
+
+  <button
+    id="btnCancelRoom"
+    type="button">
+    Cancel
+  </button>
+
+  <button
+    id="btnConfirmRoom"
+    type="button">
+    Go Live
+  </button>
+
+</div>
+    
   </div>
 </div>
 
