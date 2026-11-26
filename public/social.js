@@ -1859,18 +1859,21 @@ function openComposeModal(){
 
   toggleSubmitBtn();
 
-  /* LOCK BACKGROUND SCROLL */
+/* LOCK BACKGROUND SCROLL */
 
-  document.body.style.position = "fixed";
+document.documentElement.classList.add(
+  "lp-compose-open"
+);
 
-  document.body.style.top =
-    `-${scrollTopBeforeModal}px`;
+document.body.classList.add(
+  "lp-compose-open"
+);
 
-  document.body.style.left = "0";
-  document.body.style.right = "0";
-  document.body.style.width = "100%";
+requestAnimationFrame(updateComposeViewport);
+
 
 }
+
 
 function closeComposeModal(){
 
@@ -1883,16 +1886,20 @@ function closeComposeModal(){
   modal.style.removeProperty("height");
   modal.style.removeProperty("top");
 
+  modal.style.removeProperty("--compose-height");
+  modal.style.removeProperty("--compose-top");
+
   postText.value = modalTextarea.value;
 
+  /* UNLOCK BACKGROUND */
 
-  /* UNLOCK BACKGROUND SCROLL */
+  document.documentElement.classList.remove(
+    "lp-compose-open"
+  );
 
-  document.body.style.position = "";
-  document.body.style.top = "";
-  document.body.style.left = "";
-  document.body.style.right = "";
-  document.body.style.width = "";
+  document.body.classList.remove(
+    "lp-compose-open"
+  );
 
   window.scrollTo(0, scrollTopBeforeModal);
 
@@ -1964,85 +1971,51 @@ function updateComposeViewport() {
   const composeModal =
     document.getElementById("composeModal");
 
-  if (!composeModal) return;
-
-  if (composeModal.classList.contains("hidden")) {
+  if (
+    !composeModal ||
+    composeModal.classList.contains("hidden")
+  ) {
     return;
   }
 
-  const root = document.documentElement;
-
   const viewport = window.visualViewport;
 
-  const isStableIOS =
-    root.classList.contains("ios-social-stable");
-
-
-  /* GET STABLE SCREEN HEIGHT */
-
-  const savedHeight = parseFloat(
-    root.style.getPropertyValue(
-      "--social-screen-height"
-    )
+  const height = Math.round(
+    viewport?.height || window.innerHeight
   );
 
-  const fullHeight =
-    isStableIOS && savedHeight > 0
-      ? savedHeight
-      : window.innerHeight;
-
-
-  const visualHeight =
-    viewport?.height || window.innerHeight;
-
-
-  /* DETECT VIRTUAL KEYBOARD */
+  const top = Math.max(
+    0,
+    Math.round(viewport?.offsetTop || 0)
+  );
 
   const active = document.activeElement;
 
   const editing =
     active &&
     composeModal.contains(active) &&
-    (
-      active.matches("textarea, input") ||
-      active.isContentEditable
-    );
+    active.matches("textarea, input");
 
   const keyboardOpen =
     editing &&
-    fullHeight - visualHeight > 150;
-
+    window.innerHeight - height > 120;
 
   composeModal.classList.toggle(
     "keyboard-open",
     Boolean(keyboardOpen)
   );
 
+  composeModal.style.setProperty(
+    "--compose-height",
+    `${height}px`
+  );
 
-  /* KEYBOARD OPEN */
-
-  if (keyboardOpen) {
-
-    composeModal.style.height =
-      `${visualHeight}px`;
-
-    composeModal.style.top =
-      `${viewport?.offsetTop || 0}px`;
-
-    return;
-
-  }
-
-
-  /* NORMAL MODE - LOCK FULL HEIGHT */
-
-  composeModal.style.height =
-    `${fullHeight}px`;
-
-  composeModal.style.top = "0px";
+  composeModal.style.setProperty(
+    "--compose-top",
+    `${top}px`
+  );
 
 }
-
 
 /* VIEWPORT EVENTS */
 
@@ -2192,21 +2165,76 @@ modalImage?.addEventListener("change", () => {
 
 
 
+/* ==========================================
+   CREATE POST - IOS RUBBER BAND FIX
+========================================== */
 
-modal.addEventListener("touchmove", e => {
-  // cho phép vuốt bên trong modal
+let composeTouchY = 0;
+
+modal.addEventListener("touchstart", e => {
+
+  composeTouchY = e.touches[0].clientY;
+
 }, { passive: true });
 
-// ❌ chặn vuốt nền khi modal mở
-document.addEventListener("touchmove", e => {
-  if (!modal.classList.contains("hidden")) {
-    if (!modal.contains(e.target)) {
-      e.preventDefault();
-    }
+
+modal.addEventListener("touchmove", e => {
+
+  if (e.touches.length !== 1) return;
+
+  const currentY = e.touches[0].clientY;
+  const deltaY = currentY - composeTouchY;
+
+  composeTouchY = currentY;
+
+  const scroller = e.target.closest(
+    "textarea, .lp-compose-body"
+  );
+
+  if (!scroller) {
+
+    if (e.cancelable) e.preventDefault();
+
+    return;
   }
+
+  const canScroll =
+    scroller.scrollHeight >
+    scroller.clientHeight + 1;
+
+  const atTop =
+    scroller.scrollTop <= 0;
+
+  const atBottom =
+    scroller.scrollTop +
+    scroller.clientHeight >=
+    scroller.scrollHeight - 1;
+
+  if (
+    !canScroll ||
+    (atTop && deltaY > 0) ||
+    (atBottom && deltaY < 0)
+  ) {
+
+    if (e.cancelable) e.preventDefault();
+
+  }
+
 }, { passive: false });
 
 
+document.addEventListener("touchmove", e => {
+
+  if (
+    !modal.classList.contains("hidden") &&
+    !modal.contains(e.target)
+  ) {
+
+    if (e.cancelable) e.preventDefault();
+
+  }
+
+}, { passive: false });
 
 function renderImagePreview(){
   previewBox.classList.remove("hidden");
