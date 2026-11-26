@@ -4968,14 +4968,16 @@ body.lobby-page #sort option {
     </header>
 
 
-<!-- SEARCH ALL PLAYERS -->
+<!-- EXACT PLAYER SEARCH -->
 <div class="player-search">
   <input
     id="playerSearch"
     type="search"
-    placeholder="Search players by name or UID..."
+    placeholder="Enter exact name or UID"
     autocomplete="off"
-    aria-label="Search players"
+    autocorrect="off"
+    spellcheck="false"
+    aria-label="Search players by exact name or UID"
   >
 </div>
 
@@ -7040,13 +7042,14 @@ function renderPlayerLobbyAll() {
     }
 
 
-    const name = String(u.name || "")
-      .toLowerCase();
+const name = String(u.name || "")
+  .trim()
+  .toLowerCase();
 
-    return (
-      name.includes(keyword) ||
-      uid.toLowerCase().includes(keyword)
-    );
+return (
+  name === keyword ||
+  uid.trim().toLowerCase() === keyword
+);
 
   });
 
