@@ -3889,6 +3889,55 @@ body.page-messages .msg-user .msg-uinfo {
 </style>
 
 
+<style>
+/* ==========================================
+   SMART CHAT TIMESTAMP V1.0
+========================================== */
+
+/* Ẩn thời gian của tin nhắn trong cùng nhóm */
+
+body.page-messages
+#chatModal
+.chat-time.time-group-hidden {
+
+  display: none !important;
+
+}
+
+
+/* Thời gian cuối nhóm */
+
+body.page-messages
+#chatModal
+.chat-time:not(.time-group-hidden) {
+
+  color: #958B77 !important;
+
+  font-size: 10px !important;
+  font-weight: 400 !important;
+
+  line-height: 14px !important;
+
+  padding: 2px 5px 5px !important;
+
+  opacity: .9;
+
+}
+
+
+/* Khoảng cách giữa các tin nhắn */
+
+body.page-messages
+#chatModal
+.chat-line {
+
+  gap: 3px !important;
+
+}
+
+</style>
+
+
 </head>
 
 <body class="page-messages">
@@ -4293,7 +4342,7 @@ body.page-messages .msg-user .msg-uinfo {
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/chat-global.js"></script>
-<script src="/messages.js?v=20261126-05"></script>
+<script src="/messages.js?v=20261127-01"></script>
 <script src="/push-init.js"></script>
 <script src="/app-entry-guard.js"></script>
 

@@ -727,7 +727,12 @@ const formattedTime = validTime
       minute: "2-digit",
       hour12: false
     })
-  : "--";
+: "--";
+
+/* Lưu thời gian gốc để phân nhóm tin nhắn */
+
+div.dataset.chatTimestamp =
+  validTime ? String(timestamp) : "";
 
 div.innerHTML = `
   ${html}
@@ -2221,3 +2226,180 @@ msgInput.addEventListener("focus", () => {
 msgInput.addEventListener("blur", () => {
   requestChatViewportUpdate();
 });
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   SMART CHAT TIMESTAMP V1.0
+========================================== */
+
+// Khoảng nghỉ để kết thúc nhóm tin nhắn
+
+const CHAT_TIME_GROUP_MS = 3 * 60 * 1000;
+
+let chatTimestampTimer = null;
+
+
+/* ==========================================
+   UPDATE MESSAGE TIMESTAMP GROUPS
+========================================== */
+
+function refreshChatTimestamps() {
+
+  clearTimeout(chatTimestampTimer);
+
+  chatTimestampTimer = null;
+
+  const messages = Array.from(chatBox.children)
+    .filter(el =>
+      el.classList.contains("chat-line") &&
+      el.querySelector(".chat-time")
+    );
+
+  if (!messages.length) return;
+
+  const now = Date.now();
+
+  messages.forEach((message, index) => {
+
+    const timeEl =
+      message.querySelector(".chat-time");
+
+    const currentTime = Number(
+      message.dataset.chatTimestamp
+    );
+
+    const nextMessage =
+      messages[index + 1];
+
+    const nextTime = Number(
+      nextMessage?.dataset.chatTimestamp || 0
+    );
+
+    let showTime = false;
+
+
+    /* Tin nhắn không có thời gian hợp lệ */
+
+    if (!currentTime) {
+
+      timeEl.classList.add("time-group-hidden");
+
+      return;
+
+    }
+
+
+    /* ======================================
+       CÁC NHÓM TIN NHẮN TRƯỚC ĐÓ
+    ====================================== */
+
+    if (nextMessage) {
+
+      const gap = nextTime - currentTime;
+
+      // Chỉ hiện thời gian ở cuối nhóm
+
+      showTime =
+        nextTime > 0 &&
+        gap >= CHAT_TIME_GROUP_MS;
+
+    }
+
+
+    /* ======================================
+       TIN NHẮN CUỐI CÙNG
+    ====================================== */
+
+    else {
+
+      const elapsed = now - currentTime;
+
+      showTime =
+        elapsed >= CHAT_TIME_GROUP_MS;
+
+
+      // Chưa đủ 3 phút: tự động cập nhật sau
+
+      if (!showTime) {
+
+        const remaining =
+          CHAT_TIME_GROUP_MS - elapsed;
+
+        chatTimestampTimer = setTimeout(() => {
+
+          refreshChatTimestamps();
+
+          const nearBottom =
+            chatBox.scrollHeight -
+            chatBox.scrollTop -
+            chatBox.clientHeight < 80;
+
+          if (
+            nearBottom &&
+            !chatModal.classList.contains("hidden")
+          ) {
+
+            scrollChatToBottom(true);
+
+          }
+
+        }, Math.max(100, remaining + 50));
+
+      }
+
+    }
+
+
+    /* SHOW / HIDE */
+
+    timeEl.classList.toggle(
+      "time-group-hidden",
+      !showTime
+    );
+
+  });
+
+}
+
+
+/* ==========================================
+   REALTIME MESSAGE OBSERVER
+========================================== */
+
+const chatTimestampObserver =
+  new MutationObserver(() => {
+
+    refreshChatTimestamps();
+
+  });
+
+chatTimestampObserver.observe(chatBox, {
+
+  childList: true,
+
+  subtree: true
+
+});
+
+
+/* INITIAL UPDATE */
+
+refreshChatTimestamps();
+
+
+/* REFRESH WHEN RETURNING TO APP */
+
+document.addEventListener(
+  "visibilitychange",
+  () => {
+
+    if (!document.hidden) {
+
+      refreshChatTimestamps();
+
+    }
+
+  }
+);
+
