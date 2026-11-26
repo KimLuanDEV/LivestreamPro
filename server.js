@@ -5722,6 +5722,88 @@ app.use("/data", (req, res) => {
 
 
 
+
+/* ==========================================
+   PRIVATE ROOM - SHARED LINK PROTECTION
+========================================== */
+
+app.get("/broadcast-sfu.html", (req, res, next) => {
+
+  res.set("Cache-Control", "no-store");
+
+  if (req.query.mode !== "viewer") {
+
+    return next();
+
+  }
+
+  const roomId = normRoomId(req.query.room);
+
+  const room = rooms.get(roomId);
+
+  if (!room || !room.passwordHash) {
+
+    return next();
+
+  }
+
+
+  /* READ CURRENT HTTP SESSION COOKIE */
+
+  const sessionCookie = String(
+    req.headers.cookie || ""
+  )
+    .split(";")
+    .map(value => value.trim())
+    .find(value =>
+      value.startsWith("lsp_spirit_sid=")
+    );
+
+
+  const rawSession = sessionCookie
+
+    ? sessionCookie.slice(
+        "lsp_spirit_sid=".length
+      )
+
+    : "";
+
+
+  const sessionId = rawSession
+
+    ? crypto
+        .createHash("sha256")
+        .update(rawSession)
+        .digest("hex")
+
+    : null;
+
+
+  /* Existing password authorization */
+
+  if (
+    sessionId &&
+    room.privateAccess?.has(sessionId)
+  ) {
+
+    return next();
+
+  }
+
+
+  return res.redirect(
+
+    302,
+
+    "/lobby.html?unlockRoom=" +
+      encodeURIComponent(roomId)
+
+  );
+
+});
+
+
+
 app.use(express.static(path.join(__dirname, "public")));
 
 
@@ -10279,6 +10361,16 @@ async function pkRevokePeerParticipants(match) {
 function pkHost(roomId, socketId) {
   const id = normRoomId(roomId);
   const room = rooms.get(id);
+
+  // Private rooms cannot participate in PK.
+
+if (room?.passwordHash) {
+
+  return null;
+
+}
+
+
   const host = room?.broadcasterId
     ? io.sockets.sockets.get(room.broadcasterId)
     : null;
@@ -13040,6 +13132,66 @@ function safeSet(s){ return s instanceof Set ? s : new Set(); }
 
 
 
+/* ==========================================
+   LIVESTREAM PRO
+   PRIVATE LIVE ROOM SECURITY V1.0
+========================================== */
+
+function hasPrivateRoomAccess(
+  room,
+  uid,
+  sessionId
+) {
+
+  if (!room) return false;
+
+  if (!room.passwordHash) return true;
+
+  if (!uid || !sessionId) return false;
+
+  return (
+    room.privateAccess?.get(String(sessionId))
+      === String(uid)
+  );
+
+}
+
+
+function canSocketAccessPrivateRoom(room, socket) {
+
+  if (!room) return false;
+
+  if (!room.passwordHash) return true;
+
+  if (socket.data.authenticated !== true) {
+    return false;
+  }
+
+  return hasPrivateRoomAccess(
+    room,
+    socket.data.uid,
+    socket.data.sessionId
+  );
+
+}
+
+
+function rejectPrivateRoomAccess(socket, roomId) {
+
+  socket.emit("room-error", {
+
+    roomId,
+
+    reason: "room_password_required",
+
+    message:
+      "This livestream requires a room password."
+
+  });
+
+}
+
+
 
 function getRoom(roomId) {
   roomId = normRoomId(roomId);
@@ -13055,6 +13207,9 @@ function getRoom(roomId) {
   pinnedNote: null,
   hostProfile: null,
   liveTopic: "",
+  passwordHash: null,
+  privateAccess: new Map(),
+  privateAttempts: new Map(),
   giftTotal: 0,
   giftByUser: new Map(),
   releaseTimer: null,
@@ -13240,9 +13395,15 @@ if (
   viewerSocket.data.authenticated !== true ||
   viewerSocket.data.uid !== uid ||
   !requestSessionId ||
-  viewerSocket.data.sessionId !== requestSessionId ||
-  viewerSocket.data.roomId !== roomId ||
-  !room.viewers.has(viewer.socketId)
+viewerSocket.data.sessionId !== requestSessionId ||
+viewerSocket.data.roomId !== roomId ||
+!room.viewers.has(viewer.socketId) ||
+
+!hasPrivateRoomAccess(
+  room,
+  uid,
+  requestSessionId
+)
 ) {
   return res.status(403).json({
     ok: false,
@@ -13415,6 +13576,20 @@ if (
     }
 
     const peer = rooms.get(peerId);
+
+    if (room.passwordHash || peer?.passwordHash) {
+
+  return res.status(403).json({
+
+    ok: false,
+
+    error: "PRIVATE_ROOM_PK_DISABLED"
+
+  });
+
+}
+
+
     const peerHost = peer?.broadcasterId
       ? io.sockets.sockets.get(peer.broadcasterId)
       : null;
@@ -13707,10 +13882,13 @@ list.push({
 
   host: room.hostProfile || null,
 
-  liveTopic:
-    room.liveTopic || "Welcome to my live",
+liveTopic:
+  room.liveTopic || "Welcome to my live",
 
-  mediaMode: room.mediaMode || "sfu"
+isPrivate:
+  Boolean(room.passwordHash),
+
+mediaMode: room.mediaMode || "sfu"
 });
 
   }
@@ -16488,7 +16666,33 @@ socket.data.profile = profile;
   roomId = normRoomId(roomId);
   if (!roomId) return;
 
-  const room = getRoom(roomId);
+  const room = rooms.get(roomId);
+
+if (!room) {
+
+  socket.emit("room-error", {
+
+    reason: "room_not_found",
+
+    message:
+      "This livestream is no longer available."
+
+  });
+
+  return;
+
+}
+
+
+/* PRIVATE ROOM ACCESS CONTROL */
+
+if (!canSocketAccessPrivateRoom(room, socket)) {
+
+  rejectPrivateRoomAccess(socket, roomId);
+
+  return;
+
+}
 
 
   /* SFU - PREVENT KICKED VIEWER REJOIN */
@@ -16663,7 +16867,281 @@ socket.on("room-generate-id", (_, cb) => {
    VERIFY AUTO GENERATED ROOM ID
 ========================================== */
 
-socket.on("room-check", (data, cb) => {
+/* ==========================================
+   PRIVATE ROOM - VERIFY VIEWER PASSWORD
+========================================== */
+
+socket.on(
+  "private-room:unlock",
+  async (data, cb) => {
+
+    if (typeof cb !== "function") return;
+
+    if (
+      socket.data.authenticated !== true ||
+      !socket.data.uid ||
+      !socket.data.sessionId
+    ) {
+
+      return cb({
+
+        ok: false,
+
+        error: "LOGIN_REQUIRED"
+
+      });
+
+    }
+
+    if (blockIfLocked(socket)) {
+
+      return cb({
+
+        ok: false,
+
+        error: "ACCOUNT_BLOCKED"
+
+      });
+
+    }
+
+
+    const uid = String(socket.data.uid);
+
+    const sessionId = socket.data.sessionId;
+
+    const roomId = normRoomId(data?.roomId);
+
+    const password =
+      typeof data?.password === "string"
+        ? data.password
+        : "";
+
+
+    if (
+      !/^[a-z0-9_.-]{1,64}$/.test(roomId)
+    ) {
+
+      return cb({
+
+        ok: false,
+
+        error: "INVALID_ROOM"
+
+      });
+
+    }
+
+
+    const room = rooms.get(roomId);
+
+    if (!room || !room.liveStartTs || !room.streamReady) {
+
+      return cb({
+
+        ok: false,
+
+        error: "ROOM_NOT_AVAILABLE"
+
+      });
+
+    }
+
+
+    if (room.kickedViewers?.has(uid)) {
+
+      return cb({
+
+        ok: false,
+
+        error: "VIEWER_KICKED"
+
+      });
+
+    }
+
+
+    if (!room.passwordHash) {
+
+      return cb({ ok: true });
+
+    }
+
+
+    if (
+      password.length < 6 ||
+      password.length > 32 ||
+      Buffer.byteLength(password, "utf8") > 72
+    ) {
+
+      return cb({
+
+        ok: false,
+
+        error: "INCORRECT_PASSWORD"
+
+      });
+
+    }
+
+
+    /* LIMIT PASSWORD ATTEMPTS */
+
+    room.privateAttempts ||= new Map();
+
+    const now = Date.now();
+
+    // Remove expired attempt records.
+
+    for (const [key, value] of room.privateAttempts) {
+
+      if (value.resetAt <= now && !value.pending) {
+
+        room.privateAttempts.delete(key);
+
+      }
+
+    }
+
+    let attempt = room.privateAttempts.get(uid);
+
+    if (!attempt) {
+
+      if (room.privateAttempts.size >= 2000) {
+
+        return cb({
+
+          ok: false,
+
+          error: "TRY_AGAIN_LATER"
+
+        });
+
+      }
+
+      attempt = {
+
+        count: 0,
+
+        resetAt: now + 5 * 60 * 1000,
+
+        pending: false
+
+      };
+
+      room.privateAttempts.set(uid, attempt);
+
+    }
+
+
+    if (attempt.pending || attempt.count >= 5) {
+
+      return cb({
+
+        ok: false,
+
+        error: "TOO_MANY_ATTEMPTS"
+
+      });
+
+    }
+
+
+    attempt.count++;
+
+    attempt.pending = true;
+
+    const expectedHash = room.passwordHash;
+
+
+    try {
+
+      const correct = await bcrypt.compare(
+
+        password,
+
+        expectedHash
+
+      );
+
+
+      if (!correct) {
+
+        return cb({
+
+          ok: false,
+
+          error: "INCORRECT_PASSWORD"
+
+        });
+
+      }
+
+
+      /* RECHECK ROOM AND SESSION */
+
+      if (
+        !socket.connected ||
+        socket.data.authenticated !== true ||
+        String(socket.data.uid) !== uid ||
+        socket.data.sessionId !== sessionId ||
+        rooms.get(roomId) !== room ||
+        room.passwordHash !== expectedHash ||
+        !room.streamReady ||
+        room.kickedViewers?.has(uid)
+      ) {
+
+        return cb({
+
+          ok: false,
+
+          error: "ROOM_NOT_AVAILABLE"
+
+        });
+
+      }
+
+
+      /* AUTHORIZE CURRENT LOGIN SESSION */
+
+      room.privateAccess ||= new Map();
+
+      room.privateAccess.set(
+        String(sessionId),
+        uid
+      );
+
+      room.privateAttempts.delete(uid);
+
+
+      return cb({
+
+        ok: true
+
+      });
+
+
+    } catch (error) {
+
+      return cb({
+
+        ok: false,
+
+        error: "VERIFICATION_FAILED"
+
+      });
+
+    } finally {
+
+      attempt.pending = false;
+
+    }
+
+  }
+);
+
+
+socket.on("room-check", async (data, cb) => {
 
   if (typeof cb !== "function") return;
 
@@ -16735,6 +17213,81 @@ if (!reservation) {
   });
 
 }
+
+/* PRIVATE ROOM CONFIGURATION */
+
+const isPrivate = data?.isPrivate === true;
+
+const roomPassword =
+  typeof data?.roomPassword === "string"
+    ? data.roomPassword
+    : "";
+
+let passwordHash = null;
+
+if (isPrivate) {
+
+  if (
+    roomPassword.length < 6 ||
+    roomPassword.length > 32 ||
+    Buffer.byteLength(roomPassword, "utf8") > 72
+  ) {
+
+    return cb({
+
+      ok: false,
+
+      reason: "invalid_room_password"
+
+    });
+
+  }
+
+  try {
+
+    passwordHash = await bcrypt.hash(
+      roomPassword,
+      10
+    );
+
+  } catch (error) {
+
+    return cb({
+
+      ok: false,
+
+      reason: "password_setup_failed"
+
+    });
+
+  }
+
+}
+
+
+/* REVALIDATE AFTER ASYNC PASSWORD HASH */
+
+if (
+  !socket.connected ||
+  socket.data.authenticated !== true ||
+  socket.data.uid !== uid ||
+  !verifyAutoRoomId(roomId, uid) ||
+  rooms.has(roomId) ||
+  autoRoomReservations.get(roomId) !== reservation
+) {
+
+  return cb({
+
+    ok: false,
+
+    reason: "invalid_reservation"
+
+  });
+
+}
+
+
+reservation.passwordHash = passwordHash;
 
 reservation.liveTopic = liveTopic;
 
@@ -16992,6 +17545,20 @@ if (role === "broadcaster") {
 
   const room = getRoom(roomId);
 
+  /* PRIVATE ROOM - LEGACY VIEWER PROTECTION */
+
+if (
+  role === "viewer" &&
+  !canSocketAccessPrivateRoom(room, socket)
+) {
+
+  rejectPrivateRoomAccess(socket, roomId);
+
+  return;
+
+}
+
+
 
   /* SFU - CHECK ROOM ACCESS */
 
@@ -17094,6 +17661,15 @@ if (
   room.liveTopic =
     reservation.liveTopic ||
     "Welcome to my live";
+
+  /* APPLY PRIVATE ROOM SECURITY */
+
+  room.passwordHash =
+    reservation.passwordHash || null;
+
+  room.privateAccess = new Map();
+
+  room.privateAttempts = new Map();
 
 }
 
@@ -17811,9 +18387,21 @@ host: sfuHostInfo
 
   }
 
-  if (role === "viewer") {
+if (role === "viewer") {
 
-    const viewer = room.viewerProfiles?.get(uid);
+  if (!canSocketAccessPrivateRoom(room, socket)) {
+
+    return cb({
+
+      ok: false,
+
+      error: "ROOM_PASSWORD_REQUIRED"
+
+    });
+
+  }
+
+  const viewer = room.viewerProfiles?.get(uid);
 
     const authorized =
       !!viewer &&

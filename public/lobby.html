@@ -3249,6 +3249,284 @@ body.lobby-page .lobby-live-topic {
 
 
 
+/* ==========================================
+   LIVESTREAM PRO
+   PRIVATE LIVE ROOM V1.0
+========================================== */
+
+.live-room-privacy {
+  margin-top: 16px;
+}
+
+.room-privacy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.room-privacy-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 0;
+  min-height: 88px;
+
+  padding: 12px 6px;
+  gap: 6px;
+
+  border: 1px solid rgba(223,190,131,.14);
+  border-radius: 13px;
+
+  background: #22242a;
+  color: #b8b4ac;
+
+  cursor: pointer;
+}
+
+.room-privacy-option.active {
+  border-color: #dfbe83;
+
+  background: linear-gradient(
+    145deg,
+    #413421,
+    #27221d
+  );
+
+  color: #f4dfb7;
+}
+
+.room-privacy-option svg {
+  width: 23px;
+  height: 23px;
+
+  color: #dfbe83;
+}
+
+.room-privacy-option strong {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.room-privacy-option small {
+  font-size: 9px;
+  font-weight: 400;
+
+  opacity: .7;
+}
+
+.room-password-wrap {
+  position: relative;
+}
+
+#roomPasswordInput,
+#privateJoinPassword {
+  width: 100%;
+  height: 46px;
+
+  padding: 0 13px;
+
+  border: 1px solid rgba(223,190,131,.3);
+  border-radius: 11px;
+
+  outline: none;
+
+  background: #24252b;
+  color: #fff;
+
+  font-size: 16px;
+}
+
+#roomPasswordInput {
+  padding-right: 46px;
+}
+
+#roomPasswordInput:focus,
+#privateJoinPassword:focus {
+  border-color: #dfbe83;
+}
+
+#toggleRoomPassword {
+  position: absolute;
+
+  top: 0;
+  right: 0;
+
+  width: 44px;
+  height: 46px;
+
+  display: grid;
+  place-items: center;
+
+  border: none;
+  background: transparent;
+
+  color: #bfa77d;
+}
+
+#toggleRoomPassword svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ==========================================
+   PRIVATE ROOM - VIEWER ACCESS DIALOG
+========================================== */
+
+#privateRoomDialog {
+  width: min(370px, calc(100vw - 32px));
+
+  max-height: 85dvh;
+  overflow-y: auto;
+
+  padding: 0;
+  margin: auto;
+
+  border: 1px solid rgba(223,190,131,.4);
+  border-radius: 22px;
+
+  background: #191b20;
+  color: #f4dfb7;
+
+  box-shadow: 0 20px 60px rgba(0,0,0,.55);
+}
+
+#privateRoomDialog::backdrop {
+  background: rgba(0,0,0,.68);
+}
+
+.private-room-content {
+  padding: 25px 20px 20px;
+
+  text-align: center;
+}
+
+.private-room-emblem {
+  display: grid;
+  place-items: center;
+
+  width: 65px;
+  height: 65px;
+
+  margin: 0 auto 17px;
+
+  border: 1px solid rgba(223,190,131,.5);
+  border-radius: 50%;
+
+  background: #30271c;
+  color: #e9c88d;
+}
+
+.private-room-emblem svg {
+  width: 30px;
+  height: 30px;
+}
+
+.private-room-content h3 {
+  margin: 0 0 10px;
+  font-size: 21px;
+}
+
+.private-room-content > p {
+  color: #a9a9b0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.private-room-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 9px;
+  margin: 20px 0 12px;
+
+  color: #bba584;
+  font-size: 10px;
+}
+
+.private-room-number strong {
+  color: #f0d29a;
+  font-size: 14px;
+}
+
+#privateJoinError {
+  color: #ff9393;
+  font-size: 11px;
+}
+
+#privateJoinError:empty {
+  display: none;
+}
+
+.private-room-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  gap: 9px;
+  margin-top: 17px;
+}
+
+.private-room-actions button {
+  min-height: 43px;
+
+  border-radius: 11px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+#privateJoinCancel {
+  border: 1px solid rgba(223,190,131,.2);
+
+  background: #2c2c30;
+  color: #e0d6c5;
+}
+
+#privateJoinConfirm {
+  border: none;
+
+  background: linear-gradient(
+    145deg,
+    #f0dab0,
+    #c39a59
+  );
+
+  color: #291d10;
+}
+
+#privateJoinConfirm:disabled {
+  opacity: .5;
+}
+
+/* LOCK BADGE IN LOBBY */
+
+body.lobby-page .lobby-private-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  padding: 5px 7px;
+
+  border: 1px solid rgba(223,190,131,.35);
+  border-radius: 7px;
+
+  background: rgba(25,20,13,.85);
+  color: #f0cf95;
+
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.lobby-private-lock svg {
+  width: 11px;
+  height: 11px;
+}
+
+
+
+
+
 </style>
 
 
@@ -3580,6 +3858,112 @@ body.lobby-page .lobby-live-topic {
   <span id="liveTopicCount">0</span> / 60
 </div>
 
+
+<!-- ROOM PRIVACY -->
+
+<div class="live-room-privacy">
+
+  <label>Room Privacy</label>
+
+  <div class="room-privacy-grid">
+
+    <!-- PUBLIC ROOM -->
+
+    <button
+      type="button"
+      id="publicRoomBtn"
+      class="room-privacy-option active">
+
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6">
+
+        <circle cx="12" cy="12" r="9"/>
+        <ellipse cx="12" cy="12" rx="4" ry="9"/>
+        <path d="M3 12h18"/>
+
+      </svg>
+
+      <strong>Public Room</strong>
+
+      <small>Open access</small>
+
+    </button>
+
+    <!-- PRIVATE ROOM -->
+
+    <button
+      type="button"
+      id="privateRoomBtn"
+      class="room-privacy-option">
+
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6">
+
+        <rect x="5" y="10" width="14" height="11" rx="3"/>
+        <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+        <circle cx="12" cy="15" r="1"/>
+        <path d="M12 16v2"/>
+
+      </svg>
+
+      <strong>Private Room</strong>
+
+      <small>Password required</small>
+
+    </button>
+
+  </div>
+
+</div>
+
+<!-- ROOM PASSWORD -->
+
+<div id="roomPasswordSection" class="hidden">
+
+  <label for="roomPasswordInput">
+    Room Password
+  </label>
+
+  <div class="room-password-wrap">
+
+    <input
+      id="roomPasswordInput"
+      type="password"
+      placeholder="Enter 6–32 characters"
+      minlength="6"
+      maxlength="32"
+      autocomplete="new-password"
+    />
+
+    <button
+      type="button"
+      id="toggleRoomPassword"
+      aria-label="Show or hide password">
+
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6">
+
+        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12Z"/>
+        <circle cx="12" cy="12" r="3"/>
+
+      </svg>
+
+    </button>
+
+  </div>
+
+
+</div>
+
     <div class="modal-actions">
       <button id="btnCancelRoom" type="button">Hủy</button>
       <button id="btnConfirmRoom" type="button">Vào phòng</button>
@@ -3589,6 +3973,82 @@ body.lobby-page .lobby-live-topic {
 
 
 
+
+<!-- PRIVATE LIVE ROOM ACCESS -->
+
+<dialog
+  id="privateRoomDialog"
+  class="private-room-dialog"
+  aria-labelledby="privateRoomTitle">
+
+  <div class="private-room-content">
+
+    <div class="private-room-emblem">
+
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5">
+
+        <rect x="5" y="10" width="14" height="11" rx="3"/>
+        <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+        <circle cx="12" cy="15" r="1"/>
+        <path d="M12 16v2"/>
+
+      </svg>
+
+    </div>
+
+    <h3 id="privateRoomTitle">
+      Private Live Room
+    </h3>
+
+    <p>
+      Enter the password to join this livestream.
+    </p>
+
+    <div class="private-room-number">
+
+      ROOM ID
+
+      <strong id="privateJoinRoomId">—</strong>
+
+    </div>
+
+    <input
+      id="privateJoinPassword"
+      type="password"
+      maxlength="32"
+      placeholder="Enter room password"
+      autocomplete="off"
+    />
+
+    <p id="privateJoinError" role="status"></p>
+
+    <div class="private-room-actions">
+
+      <button
+        type="button"
+        id="privateJoinCancel">
+
+        Cancel
+
+      </button>
+
+      <button
+        type="button"
+        id="privateJoinConfirm">
+
+        Unlock Room
+
+      </button>
+
+    </div>
+
+  </div>
+
+</dialog>
 
 <!-- ==========================================
      LIVESTREAM PRO - LUXURY ERROR MODAL
@@ -4359,6 +4819,98 @@ hostNameInput?.addEventListener("input", () => {
 
 
 
+/* ==========================================
+   PRIVATE ROOM - CREATE CONTROLS
+========================================== */
+
+let createRoomPrivate = false;
+
+const publicRoomBtn =
+  document.getElementById("publicRoomBtn");
+
+const privateRoomBtn =
+  document.getElementById("privateRoomBtn");
+
+const roomPasswordSection =
+  document.getElementById("roomPasswordSection");
+
+const roomPasswordInput =
+  document.getElementById("roomPasswordInput");
+
+const toggleRoomPassword =
+  document.getElementById("toggleRoomPassword");
+
+
+function setCreateRoomPrivacy(isPrivate) {
+
+  createRoomPrivate = isPrivate === true;
+
+  publicRoomBtn.classList.toggle(
+    "active",
+    !createRoomPrivate
+  );
+
+  privateRoomBtn.classList.toggle(
+    "active",
+    createRoomPrivate
+  );
+
+  publicRoomBtn.setAttribute(
+    "aria-pressed",
+    String(!createRoomPrivate)
+  );
+
+  privateRoomBtn.setAttribute(
+    "aria-pressed",
+    String(createRoomPrivate)
+  );
+
+  roomPasswordSection.classList.toggle(
+    "hidden",
+    !createRoomPrivate
+  );
+
+  roomPasswordInput.disabled =
+    !createRoomPrivate;
+
+  if (!createRoomPrivate) {
+
+    roomPasswordInput.value = "";
+    roomPasswordInput.type = "password";
+
+  }
+
+}
+
+
+publicRoomBtn.addEventListener("click", () => {
+
+  setCreateRoomPrivacy(false);
+
+});
+
+
+privateRoomBtn.addEventListener("click", () => {
+
+  setCreateRoomPrivacy(true);
+
+  roomPasswordInput.focus();
+
+});
+
+
+toggleRoomPassword.addEventListener("click", () => {
+
+  roomPasswordInput.type =
+    roomPasswordInput.type === "password"
+      ? "text"
+      : "password";
+
+});
+
+
+
+
 let assignedRoomId = "";
 let roomRequestVersion = 0;
 
@@ -4387,7 +4939,40 @@ hostNameInput.value = "";
 hostNameInput.disabled = false;
 hostNameInput.readOnly = false;
 
+
+// Reset room privacy.
+
+setCreateRoomPrivacy(false);
+
+roomPasswordInput.value = "";
+roomPasswordInput.type = "password";
+
+
+
 document.getElementById("liveTopicCount").textContent = "0";
+
+
+const roomPassword = createRoomPrivate
+  ? roomPasswordInput.value
+  : "";
+
+if (
+  createRoomPrivate &&
+  (
+    roomPassword.length < 6 ||
+    roomPassword.length > 32 ||
+    new TextEncoder().encode(roomPassword).length > 72
+  )
+) {
+
+  openErr(
+    "Room password must contain 6–32 characters."
+  );
+
+  return;
+
+}
+
 
   btnConfirmRoom.disabled = true;
   btnCancelRoom.disabled = false;
@@ -4506,6 +5091,29 @@ btnConfirmRoom?.addEventListener("click", () => {
 
   }
 
+
+const roomPassword = createRoomPrivate
+  ? roomPasswordInput.value
+  : "";
+
+if (
+  createRoomPrivate &&
+  (
+    roomPassword.length < 6 ||
+    roomPassword.length > 32 ||
+    new TextEncoder().encode(roomPassword).length > 72
+  )
+) {
+
+  openErr(
+    "Room password must contain 6–32 characters."
+  );
+
+  return;
+
+}
+
+
   btnConfirmRoom.disabled = true;
   btnCancelRoom.disabled = true;
 
@@ -4519,7 +5127,12 @@ socket.timeout(8000).emit(
   "room-check",
   {
     roomId: room,
-    liveTopic: liveTopic
+
+    liveTopic: liveTopic,
+
+    isPrivate: createRoomPrivate,
+
+    roomPassword: roomPassword
   },
   (err, res) => {
 
@@ -4539,6 +5152,9 @@ socket.timeout(8000).emit(
         return;
 
       }
+
+
+roomPasswordInput.value = "";
 
       const url =
         `/broadcast-sfu.html?room=${encodeURIComponent(room)}`;
@@ -4813,6 +5429,220 @@ function hideSkeleton(){
   grid.style.display = "";
 }
 
+
+/* ==========================================
+   PRIVATE ROOM - VIEWER PASSWORD DIALOG
+========================================== */
+
+const privateRoomDialog =
+  document.getElementById("privateRoomDialog");
+
+const privateJoinPassword =
+  document.getElementById("privateJoinPassword");
+
+const privateJoinConfirm =
+  document.getElementById("privateJoinConfirm");
+
+const privateJoinError =
+  document.getElementById("privateJoinError");
+
+let pendingPrivateRoomId = "";
+
+let privateJoinBusy = false;
+
+
+function openPrivateRoomDialog(roomId) {
+
+  if (isGuest || !profile.uid) {
+
+    openErr(
+      "Please sign in to join this livestream."
+    );
+
+    return;
+
+  }
+
+  if (privateRoomDialog.open) return;
+
+  pendingPrivateRoomId = String(roomId);
+
+  document.getElementById(
+    "privateJoinRoomId"
+  ).textContent = pendingPrivateRoomId;
+
+  privateJoinPassword.value = "";
+
+  privateJoinError.textContent = "";
+
+  privateJoinConfirm.disabled = false;
+
+  privateRoomDialog.showModal();
+
+  privateJoinPassword.focus();
+
+}
+
+
+document.getElementById(
+  "privateJoinCancel"
+).addEventListener("click", () => {
+
+  if (privateJoinBusy) return;
+
+  privateRoomDialog.close();
+
+});
+
+
+privateRoomDialog.addEventListener(
+  "cancel",
+  event => {
+
+    if (privateJoinBusy) {
+
+      event.preventDefault();
+
+    }
+
+  }
+);
+
+
+privateRoomDialog.addEventListener(
+  "close",
+  () => {
+
+    pendingPrivateRoomId = "";
+
+    privateJoinPassword.value = "";
+
+    privateJoinError.textContent = "";
+
+  }
+);
+
+
+privateJoinConfirm.addEventListener("click", () => {
+
+  if (privateJoinBusy) return;
+
+  const roomId = pendingPrivateRoomId;
+
+  const password = privateJoinPassword.value;
+
+  if (!roomId) return;
+
+  if (
+    password.length < 6 ||
+    password.length > 32
+  ) {
+
+    privateJoinError.textContent =
+      "Please enter a valid room password.";
+
+    return;
+
+  }
+
+
+  privateJoinBusy = true;
+
+  privateJoinConfirm.disabled = true;
+
+  privateJoinConfirm.textContent =
+    "Verifying...";
+
+  privateJoinError.textContent = "";
+
+
+  socket.timeout(10000).emit(
+
+    "private-room:unlock",
+
+    {
+      roomId,
+      password
+    },
+
+    (err, response) => {
+
+      privateJoinBusy = false;
+
+      privateJoinConfirm.disabled = false;
+
+      privateJoinConfirm.textContent =
+        "Unlock Room";
+
+
+      if (err || !response?.ok) {
+
+        const messages = {
+
+          LOGIN_REQUIRED:
+            "Please sign in again.",
+
+          INCORRECT_PASSWORD:
+            "Incorrect room password.",
+
+          TOO_MANY_ATTEMPTS:
+            "Too many attempts. Please try again later.",
+
+          ROOM_NOT_AVAILABLE:
+            "This livestream is no longer available.",
+
+          VIEWER_KICKED:
+            "You cannot rejoin this livestream.",
+
+          ACCOUNT_BLOCKED:
+            "Your account is unavailable."
+
+        };
+
+        privateJoinError.textContent =
+
+          messages[response?.error] ||
+
+          "Unable to unlock room. Please try again.";
+
+        return;
+
+      }
+
+
+      privateJoinPassword.value = "";
+
+      privateRoomDialog.close();
+
+
+      window.location.href =
+
+        `/broadcast-sfu.html?mode=viewer&room=${encodeURIComponent(roomId)}`;
+
+    }
+
+  );
+
+});
+
+
+privateJoinPassword.addEventListener(
+  "keydown",
+  event => {
+
+    if (event.key === "Enter") {
+
+      event.preventDefault();
+
+      privateJoinConfirm.click();
+
+    }
+
+  }
+);
+
+
+
 function render(list){
   // 1) room thật (server)
   const showReal = applyFilterSort(list);
@@ -4886,11 +5716,30 @@ const youtubeRoomStatus =
     </div>
 
     <div class="lobby-badges">
-      ${
+
+      ${!r.__virtual && r.isPrivate ? `
+
+  <span class="lobby-private-lock">
+
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2">
+
+      <rect x="5" y="10" width="14" height="11" rx="3"/>
+      <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+
+    </svg>
+
+    PRIVATE
+
+  </span>
+
+` : ""}
 
 
-
-
+${
 r.__virtual
   ? `<span class="badge badge--virtual">${
    
@@ -4955,10 +5804,32 @@ ${r.__virtual ? `
   </svg>
   <b>${Number(r.viewers)||0}</b>
 </span>
-      <span class="lobby-cta">Vào xem ➜</span>
+     <span class="lobby-cta">
+
+  ${!r.__virtual && r.isPrivate
+    ? "Unlock"
+    : "Watch now"}
+
+</span>
     </div>
   </div>
 `;
+
+
+/* PRIVATE ROOM CLICK HANDLER */
+
+if (!r.__virtual && r.isPrivate) {
+
+  a.addEventListener("click", event => {
+
+    event.preventDefault();
+
+    openPrivateRoomDialog(r.roomId);
+
+  });
+
+}
+
 
 
     grid.appendChild(a);
@@ -5207,10 +6078,73 @@ function requestLobby(){
   socket.emit("lobby-get");
 }
 
+/* SHARED PRIVATE ROOM REQUEST */
+
+let sharedPrivateRoomId = new URLSearchParams(
+  window.location.search
+).get("unlockRoom") || "";
+
+
 socket.on("lobby-update", d => {
+
   __rooms = (d && d.rooms) ? d.rooms : [];
+
   __ts = d && d.ts ? d.ts : Date.now();
+
   render(__rooms);
+
+
+  /* AUTO OPEN PRIVATE ROOM DIALOG */
+
+  if (sharedPrivateRoomId) {
+
+    const targetRoom = __rooms.find(
+
+      room =>
+        String(room.roomId) === sharedPrivateRoomId
+
+    );
+
+    const requestedId = sharedPrivateRoomId;
+
+    sharedPrivateRoomId = "";
+
+    const cleanUrl = new URL(window.location.href);
+
+    cleanUrl.searchParams.delete("unlockRoom");
+
+    history.replaceState(
+      history.state,
+      "",
+      cleanUrl.toString()
+    );
+
+
+    if (!targetRoom) {
+
+      openErr(
+        "This livestream is no longer available."
+      );
+
+      return;
+
+    }
+
+
+    if (targetRoom.isPrivate) {
+
+      openPrivateRoomDialog(requestedId);
+
+    } else {
+
+      window.location.href =
+
+        `/broadcast-sfu.html?mode=viewer&room=${encodeURIComponent(requestedId)}`;
+
+    }
+
+  }
+
 });
 
 
