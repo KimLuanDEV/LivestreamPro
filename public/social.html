@@ -37,6 +37,68 @@
 
 <script src="/lsp-page-transition.js?v=20261126"></script>
 
+
+<script>
+/* ==========================================
+   SOCIAL - IOS EARLY SCREEN INITIALIZATION
+========================================== */
+
+(function initSocialScreen() {
+
+  const isIOS =
+    /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  const isStandalone =
+    navigator.standalone === true ||
+    matchMedia("(display-mode: standalone)").matches;
+
+  if (!isIOS || !isStandalone) return;
+
+  const root = document.documentElement;
+
+  function applyScreenHeight() {
+
+    const portrait = matchMedia(
+      "(orientation: portrait)"
+    ).matches;
+
+    if (!portrait) {
+
+      root.classList.remove("ios-social-stable");
+      return;
+
+    }
+
+    const screenHeight = Math.max(
+      screen.width,
+      screen.height
+    );
+
+    root.style.setProperty(
+      "--social-screen-height",
+      `${screenHeight}px`
+    );
+
+    root.classList.add("ios-social-stable");
+
+  }
+
+  /* APPLY BEFORE FIRST RENDER */
+
+  applyScreenHeight();
+
+  /* UPDATE ONLY ON ORIENTATION CHANGE */
+
+  window.addEventListener(
+    "orientationchange",
+    () => {
+      setTimeout(applyScreenHeight, 300);
+    }
+  );
+
+})();
+</script>
+
 <style>
 
 
@@ -4024,6 +4086,61 @@ body.social-page .lp-post-head
   }
 
 }
+
+
+/* ==========================================
+   SOCIAL - STABLE BOTTOM TABBAR V4.0
+========================================== */
+
+body.social-page .lp-tabbar,
+body.social-page .lp-tabbar.hide {
+
+  position: fixed !important;
+
+  top: auto !important;
+  bottom: 0 !important;
+
+  left: 0 !important;
+  right: 0 !important;
+
+  margin: 0 auto !important;
+
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+
+  box-sizing: border-box;
+
+  background: #111217;
+
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+
+  z-index: 9999 !important;
+}
+
+
+/* IOS PWA - STABLE SCREEN ANCHOR */
+
+html.ios-social-stable
+body.social-page .lp-tabbar {
+
+  top: calc(
+    var(--social-screen-height)
+    - 69px
+    - env(safe-area-inset-bottom, 0px)
+  ) !important;
+
+  bottom: auto !important;
+
+}
+
+
+
 </style>
 
 </head>
@@ -4612,7 +4729,7 @@ body.social-page .lp-post-head
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/chat-global.js"></script>
-<script src="/social.js"></script>
+<script src="/social.js?v=20261126-02"></script>
 <script src="/push-init.js"></script>
 
 </body>
