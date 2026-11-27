@@ -141,17 +141,52 @@ fetch("/api/me/" + viewUid, {
 .catch(() => {});
 
 
-  // 🔍 LẤY TRẠNG THÁI BẠN BÈ
-  fetch("/api/friends/" + __profileAuth.uid)
-    .then(r => r.json())
+/* ==========================================
+   PROFILE - RESTORE FRIEND & FOLLOW STATUS
+========================================== */
 
-    .then(data => {
-      const friends = data.friends || [];
-      const requests = data.requests || []; // lời mời nhận được
-      const sent = data.sent || [];          // 🔥 lời mời đã gửi
+fetch(
+  "/api/friends/" + encodeURIComponent(__profileAuth.uid),
+  {
+    cache: "no-store",
+    credentials: "same-origin"
+  }
+)
 
-const isFriend = friends.some(u => u.uid === viewUid);
-const isPendingSent = sent.some(u => u.uid === viewUid);
+.then(r => {
+
+  if (!r.ok) {
+    throw new Error("Failed to load friend status");
+  }
+
+  return r.json();
+
+})
+
+.then(data => {
+
+  const friends = Array.isArray(data.friends)
+    ? data.friends
+    : [];
+
+  const requests = Array.isArray(data.requests)
+    ? data.requests
+    : [];
+
+  // Lấy danh sách lời mời đã gửi từ server
+  const sent = Array.isArray(data.sentRequests)
+    ? data.sentRequests.map(String)
+    : [];
+
+  const targetUid = String(viewUid);
+
+  // Kiểm tra trạng thái bạn bè
+  const isFriend = friends.some(
+    u => String(u.uid) === targetUid
+  );
+
+  // Kiểm tra trạng thái Follow
+  const isPendingSent = sent.includes(targetUid);
 
 // 🔥 ADMIN CHECK
 const meIsAdmin =
