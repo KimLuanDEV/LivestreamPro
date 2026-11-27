@@ -14553,6 +14553,10 @@ function canAccessLiveRoomById(room, uid, db) {
    MUTUAL FRIENDSHIP CHECK
 ========================================== */
 
+
+
+
+
 function canAccessFriendLiveRoom(room, uid, db) {
 
   const users = db || loadUsers();
@@ -14585,6 +14589,44 @@ function canAccessFriendLiveRoom(room, uid, db) {
 
 
 /* ==========================================
+   LIVE LOBBY - FRIENDS + FOLLOW ACCESS
+========================================== */
+
+function canDiscoverFollowLiveRoom(room, uid, db) {
+
+  const users = db || loadUsers();
+
+  // Giữ nguyên các điều kiện bảo mật
+  if (!canAccessLiveRoomById(room, uid, users)) {
+    return false;
+  }
+
+  uid = String(uid);
+
+  const hostUid = String(room.ownerUid);
+
+  // Chủ phòng luôn nhìn thấy phòng của mình
+  if (uid === hostUid) return true;
+
+  // Đã kết bạn
+  if (canAccessFriendLiveRoom(room, uid, users)) {
+    return true;
+  }
+
+  const host = users[hostUid]?.profile;
+
+  // Kiểm tra người xem đã gửi lời mời cho host
+  const incomingRequests = Array.isArray(host?.friendRequests)
+    ? host.friendRequests.map(String)
+    : [];
+
+  // Chỉ cần Follow, không cần host chấp nhận
+  return incomingRequests.includes(uid);
+
+}
+
+
+/* ==========================================
    FILTER LIVE ROOMS
    FRIENDS + EXACT ROOM ID
 ========================================== */
@@ -14612,12 +14654,14 @@ function getFriendLobbyList(socket, list, db) {
 
     if (!room) return false;
 
-    // Friends can discover rooms normally
-    if (
-      canAccessFriendLiveRoom(room, uid, db)
-    ) {
-      return true;
-    }
+// Friends and followers can discover live rooms
+if (
+  canDiscoverFollowLiveRoom(room, uid, db)
+) {
+  return true;
+}
+
+
 
     // Non-friends must know the exact Room ID
     if (
@@ -15913,8 +15957,12 @@ if (
   // đã gửi rồi → bỏ qua
   if (uTo.profile.friendRequests.includes(from)) return;
 
-  uTo.profile.friendRequests.push(from);
-  saveUsers(db);
+uTo.profile.friendRequests.push(from);
+
+saveUsers(db);
+
+// REALTIME - FOLLOW LIVE ROOM
+emitLobbyUpdate();
 
   // realtime nếu online
   const sockets = activeUsers.get(to);
@@ -15954,13 +16002,10 @@ socket.on("friend-respond", ({ from, accept }) => {
       uTo.profile.friends.push(from);
   }
 
-  saveUsers(db);
+saveUsers(db);
 
-if (accept) {
-
-  emitLobbyUpdate();
-
-}
+// Refresh lobby on acceptance or rejection
+emitLobbyUpdate();
 
   if (accept) {
   refreshSocialFeedForUser(from);
@@ -15999,26 +16044,39 @@ if (accept) {
 });
 
 
+/* ==========================================
+   CANCEL FOLLOW REQUEST
+========================================== */
+
 socket.on("friend-cancel", ({ uid }) => {
-  const meUid = socket.data.uid;
-  if (!meUid || !uid) return;
+
+  if (socket.data.authenticated !== true) return;
+
+  const meUid = String(socket.data.uid || "");
+  const targetUid = String(uid || "");
+
+  if (!meUid || !targetUid || meUid === targetUid) {
+    return;
+  }
 
   const db = loadUsers();
+
   const me = db[meUid];
-  const other = db[uid];
+  const other = db[targetUid];
 
-  if (!me || !other) return;
+  if (!me?.profile || !other?.profile) return;
 
-  // me.sent = lời mời đã gửi
-  me.friends ||= {};
-  other.friends ||= {};
-
-  me.friends.sent = (me.friends.sent || []).filter(u => u !== uid);
-  other.friends.requests = (other.friends.requests || []).filter(u => u !== meUid);
+  // Remove outgoing follow request
+  other.profile.friendRequests =
+    (other.profile.friendRequests || [])
+      .filter(id => String(id) !== meUid);
 
   saveUsers(db);
-});
 
+  // Refresh live lobby
+  emitLobbyUpdate();
+
+});
 
 
 
@@ -20010,7 +20068,10 @@ socket.on("sfu:friend:request", (data, ack) => {
 
   receiver.profile.friendRequests.push(from);
 
-  saveUsers(db);
+saveUsers(db);
+
+// REALTIME - FOLLOW LIVE ROOM
+emitLobbyUpdate();
 
   // Reuse the existing realtime friend notification.
   emitToUser(to, "friend-request", {
