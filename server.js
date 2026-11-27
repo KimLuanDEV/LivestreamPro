@@ -361,7 +361,7 @@ const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "";
 const DEFAULT_AVATAR = "/icons/icon-192.png";
 
 const LEGACY_DEFAULT_AVATAR =
-  "/assets/default-cover.jpg";
+  "/assets/default-cover.png";
 
 function normalizeAvatar(url) {
 
