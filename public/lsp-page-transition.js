@@ -106,16 +106,34 @@ html.lsppt-arriving::before {
   --pt-line: #EAE0C8;
   --pt-muted: #857960;
 
-  position: fixed;
-  inset: 0;
+position: fixed !important;
 
-  z-index: 2147483647;
+top: 0 !important;
+left: 0 !important;
+right: 0 !important;
+bottom: 0 !important;
+
+width: 100% !important;
+height: 100% !important;
+
+max-width: none !important;
+max-height: none !important;
+
+margin: 0 !important;
+border: 0 !important;
+border-radius: 0 !important;
+
+z-index: 2147483647 !important;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  padding: 24px;
+  padding:
+  calc(24px + env(safe-area-inset-top, 0px))
+  calc(24px + env(safe-area-inset-right, 0px))
+  calc(24px + env(safe-area-inset-bottom, 0px))
+  calc(24px + env(safe-area-inset-left, 0px));
 
   overflow: hidden;
   isolation: isolate;
@@ -152,17 +170,21 @@ transition:
 
 /* FADE IN */
 
+/* ==========================================
+   FULLSCREEN TRANSITION - INSTANT COVER
+========================================== */
+
 #lsppt-layer.lsppt-open {
-  visibility: visible;
+
+  visibility: visible !important;
   pointer-events: auto;
 
-  opacity: 1;
-  transform: none;
+  opacity: 1 !important;
+  transform: none !important;
 
-  transition:
-    opacity ${EXIT_MS}ms ease;
+  transition: none !important;
+
 }
-
 
 /* FADE OUT */
 
@@ -621,8 +643,19 @@ layer.innerHTML = `
     ).textContent =
       options.label || "Loading...";
 
-    el.classList.remove("lsppt-close");
-    el.classList.add("lsppt-open");
+/* ==========================================
+   FORCE TRANSITION TO FRONT
+========================================== */
+
+// Đưa lớp chuyển cảnh xuống cuối DOM
+// để ưu tiên hiển thị trên các modal cùng z-index
+document.body.appendChild(el);
+
+el.classList.remove("lsppt-close");
+el.classList.add("lsppt-open");
+
+// Buộc trình duyệt cập nhật layout
+void el.offsetHeight;
 
     // Chờ hoạt cảnh phủ trang cũ
     setTimeout(() => {
