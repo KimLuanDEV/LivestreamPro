@@ -8598,8 +8598,65 @@ let lastWinMulti = 0
 let roundResults = {}
 
 
-let lastBetSlot = 0
-let lastBetValue = 0
+
+/* ==========================================
+   WHEEL8 - CLIENT REQUEST TRACKING
+========================================== */
+
+const w8PendingBets = new Map();
+
+let w8BetSequence = 0;
+
+function w8MakeBetRequestId() {
+
+  if (window.crypto?.randomUUID) {
+    return window.crypto.randomUUID();
+  }
+
+  const bytes = new Uint8Array(16);
+
+  window.crypto.getRandomValues(bytes);
+
+  const randomPart = Array.from(
+    bytes,
+    b => b.toString(16).padStart(2, "0")
+  ).join("");
+
+  return randomPart + "-" +
+    (++w8BetSequence).toString(36);
+}
+
+function w8ShowBetError(message) {
+
+  const modal =
+    document.getElementById("betClosedModal");
+
+  const text =
+    document.getElementById("betClosedText");
+
+  if (!modal || !text) return;
+
+  text.textContent = message;
+
+  modal.style.display = "flex";
+
+  clearTimeout(w8ShowBetError.timer);
+
+  w8ShowBetError.timer = setTimeout(() => {
+
+    modal.style.display = "none";
+
+  }, 1200);
+
+}
+
+// Khi mất kết nối, trạng thái đang chờ
+// là chưa xác định; không tự gửi lại.
+socket.on("disconnect", () => {
+
+  w8PendingBets.clear();
+
+});
 
 
 const myBets = [0,0,0,0,0,0,0,0]
@@ -8932,81 +8989,145 @@ event.target.classList.add("active")
 
 }
 
-/* BET */
 
-function bet(slot){
+/* ==========================================
+   WHEEL8 - BET WITH REQUEST ID
+========================================== */
 
-if(!currentBet) return
+function bet(slot) {
 
-const modal = document.getElementById("betClosedModal")
-const text  = document.getElementById("betClosedText")
+  slot = Number(slot);
 
-// 🔒 không đủ coin
-if(coins < currentBet){
+  const betAmount = Number(currentBet);
 
-text.textContent = "NOT ENOUGH COINS"
-modal.style.display = "flex"
+  // ==============================
+  // VALIDATE
+  // ==============================
 
-setTimeout(()=> modal.style.display = "none",2000)
+  if (
+    !Number.isInteger(slot) ||
+    slot < 1 ||
+    slot > 8 ||
+    !Number.isSafeInteger(betAmount) ||
+    betAmount <= 0
+  ) {
+    return;
+  }
 
-return
+  // ==============================
+  // BET LOCK
+  // ==============================
+
+  if (isBetLocked) {
+
+    w8ShowBetError("BETTING CLOSED");
+    return;
+
+  }
+
+  // ==============================
+  // CONNECTION CHECK
+  // ==============================
+
+  if (!socket.connected) {
+
+    w8ShowBetError("CONNECTION LOST");
+    return;
+
+  }
+
+  // ==============================
+  // BALANCE CHECK
+  // ==============================
+
+  if (coins < betAmount) {
+
+    w8ShowBetError("NOT ENOUGH COINS");
+    return;
+
+  }
+
+  // ==============================
+  // PENDING LIMIT
+  // ==============================
+
+  if (w8PendingBets.size >= 30) {
+
+    w8ShowBetError("TOO MANY PENDING BETS");
+    return;
+
+  }
+
+  // ==============================
+  // CREATE REQUEST
+  // ==============================
+
+  const requestId = w8MakeBetRequestId();
+
+  const item = {
+
+    slot,
+
+    bet: betAmount,
+
+    roundId: currentRoundId,
+
+    ts: Date.now()
+
+  };
+
+  w8PendingBets.set(
+    requestId,
+    item
+  );
+
+  // ==============================
+  // SEND TO SERVER
+  // ==============================
+
+  socket.emit("wheel8-bet", {
+
+    requestId,
+
+    roundId: currentRoundId,
+
+    slot,
+
+    bet: betAmount
+
+  });
+
+  // ==============================
+  // ACK TIMEOUT
+  // ==============================
+
+  setTimeout(() => {
+
+    if (
+      w8PendingBets.get(requestId) !== item
+    ) {
+      return;
+    }
+
+    w8PendingBets.delete(requestId);
+
+    // Không tự động gửi lại,
+    // vì server có thể đã nhận cược.
+    console.warn(
+      "[WHEEL8] Bet acknowledgement timed out:",
+      requestId
+    );
+
+    w8ShowBetError(
+      "BET STATUS UNKNOWN - CHECK YOUR BETS"
+    );
+
+  }, 8000);
+
 }
 
-// 🔒 đã khóa cược
-if(isBetLocked){
-
-text.textContent = "BETTING CLOSED"
-modal.style.display = "flex"
-
-setTimeout(()=> modal.style.display = "none",2000)
-
-return
-}
-
-// ✅ gửi cược (KHÔNG update UI ở đây)
-socket.emit("wheel8-bet",{
-  slot,
-  bet:currentBet
-})
 
 
-// =========================
-// 📜 LƯU HISTORY (OK giữ)
-// =========================
-
-let row = myBetHistory.find(r =>
-r.round === currentRoundId &&
-r.slot === slot
-)
-
-if(row){
-  row.bet += currentBet
-}else{
-  myBetHistory.push({
-    round: currentRoundId,
-    slot: slot,
-    bet: currentBet,
-    win:0,
-    multi:0
-  })
-}
-
-// giữ tối đa
-if(myBetHistory.length > 200){
-  myBetHistory.pop()
-}
-
-
-// =========================
-// 🧠 CHỈ LƯU PENDING
-// =========================
-
-lastBetSlot = slot
-lastBetValue = currentBet
-
-// ❌ KHÔNG update UI ở đây nữa
-
-}
 /* RESULT */
 
 
@@ -10100,6 +10221,11 @@ el.textContent = pool[i]
 
 socket.on("wheel8-round-new",(data)=>{
 
+
+  // Không tự phát lại các cược của vòng cũ
+w8PendingBets.clear();
+
+
 // Xóa lửa của phiên cũ
 w8ClearHotSlot();
 
@@ -10331,46 +10457,87 @@ socket.emit("wheel8-get-my-history")
 
 
 
-socket.on("wheel8-bet-ok",()=>{
 
-if(!lastBetSlot) return
+/* ==========================================
+   WHEEL8 - BET CONFIRMED
+========================================== */
 
-myBets[lastBetSlot-1] += lastBetValue
+socket.on("wheel8-bet-ok", (data) => {
 
-const el = document.getElementById("mybet"+lastBetSlot)
+  const requestId = data?.requestId;
 
-if(el){
+  if (typeof requestId !== "string") {
+    return;
+  }
 
-const value = myBets[lastBetSlot-1]
+  const pending =
+    w8PendingBets.get(requestId);
 
-el.textContent = value
-el.style.display = value > 0 ? "block" : "none"
+  // Không xử lý xác nhận không khớp
+  // hoặc xác nhận trùng đã xử lý.
+  if (!pending) return;
 
-}
+  // Kiểm tra nội dung xác nhận.
+  if (
+    String(data.roundId) !==
+      String(pending.roundId) ||
+    Number(data.slot) !== pending.slot ||
+    Number(data.bet) !== pending.bet
+  ) {
 
-// reset
-lastBetSlot = 0
-lastBetValue = 0
+    console.error(
+      "[WHEEL8] Bet ACK mismatch",
+      requestId
+    );
 
-})
+    return;
+  }
+
+  w8PendingBets.delete(requestId);
+
+  console.debug(
+    "[WHEEL8] Bet confirmed",
+    {
+      requestId,
+      slot: data.slot,
+      bet: data.bet
+    }
+  );
+
+  // Không cộng myBets tại đây.
+  // wheel8-my-bets là dữ liệu chuẩn từ server.
+
+});
 
 
-socket.on("wheel8-bet-fail",(data)=>{
 
-const modal = document.getElementById("betClosedModal")
-const text  = document.getElementById("betClosedText")
 
-text.textContent = data.message || "BET FAILED"
+/* ==========================================
+   WHEEL8 - BET REJECTED
+========================================== */
 
-modal.style.display = "flex"
+socket.on("wheel8-bet-fail", (data) => {
 
-setTimeout(()=> modal.style.display = "none",2000)
+  const requestId = data?.requestId;
 
-// reset
-lastBetSlot = 0
-lastBetValue = 0
+  if (typeof requestId !== "string") {
+    return;
+  }
 
-})
+  const pending =
+    w8PendingBets.get(requestId);
+
+  if (!pending) return;
+
+  w8PendingBets.delete(requestId);
+
+  w8ShowBetError(
+    data?.message || "BET FAILED"
+  );
+
+});
+
+
 
 function openMyBetHistory(){
 
