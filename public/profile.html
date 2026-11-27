@@ -7661,12 +7661,12 @@ body.is-guest .reactions-layer{
 
 
 /* ===== FIX PASS MODAL – CHỐNG NHÌN XUYÊN ===== */
-:is(#passModal, #securityCodeModal){
+:is(#passModal, #securityCodeModal, #deleteAccountModal){
   z-index: 10060; /* cao hơn msgModal */
 }
 
 /* backdrop đậm + blur mạnh */
-:is(#passModal, #securityCodeModal) .modal-backdrop{
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .modal-backdrop{
   background:
     radial-gradient(800px 520px at 30% 20%, rgba(95,168,255,.18), transparent 60%),
     radial-gradient(900px 640px at 70% 30%, rgba(37,240,154,.14), transparent 62%),
@@ -7675,7 +7675,7 @@ body.is-guest .reactions-layer{
 }
 
 /* modal card KHÔNG XUYÊN */
-:is(#passModal, #securityCodeModal) .modal-card{
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .modal-card{
   background: rgba(5,8,18,.90);   /* 🔥 quan trọng */
   border: 1px solid rgba(255,255,255,.18);
   box-shadow:
@@ -7684,30 +7684,30 @@ body.is-guest .reactions-layer{
 }
 
 /* tiêu đề rõ hơn */
-:is(#passModal, #securityCodeModal) h3{
+:is(#passModal, #securityCodeModal, #deleteAccountModal) h3{
   font-weight:900;
   text-shadow: 0 0 22px rgba(95,168,255,.25);
 }
 
 /* input nổi + dễ focus */
-:is(#passModal, #securityCodeModal) input{
+:is(#passModal, #securityCodeModal, #deleteAccountModal) input{
   background: rgba(0,0,0,.45);
   border: 1px solid rgba(255,255,255,.22);
 }
 
-:is(#passModal, #securityCodeModal) input:focus{
+:is(#passModal, #securityCodeModal, #deleteAccountModal) input:focus{
   border-color: rgba(95,168,255,.55);
   box-shadow: 0 0 0 4px rgba(95,168,255,.18);
 }
 
 /* nút hành động */
-:is(#passModal, #securityCodeModal) button{
+:is(#passModal, #securityCodeModal, #deleteAccountModal) button{
   font-weight:900;
 }
 
 
 @media(max-width:520px){
-  :is(#passModal, #securityCodeModal) .modal-card{
+  :is(#passModal, #securityCodeModal, #deleteAccountModal) .modal-card{
     margin: auto 14px;
   }
 }
@@ -7716,17 +7716,17 @@ body.is-guest .reactions-layer{
 /* ===== PASS MODAL -> BOTTOM SHEET (MOBILE) ===== */
 @media (max-width:520px){
 
-  :is(#passModal, #securityCodeModal){
+  :is(#passModal, #securityCodeModal, #deleteAccountModal){
     display:flex;
     align-items:flex-end; /* ép xuống đáy */
   }
 
-  :is(#passModal, #securityCodeModal) .modal-backdrop{
+  :is(#passModal, #securityCodeModal, #deleteAccountModal) .modal-backdrop{
     background: rgba(0,0,0,.65);
     backdrop-filter: blur(6px);
   }
 
-  :is(#passModal, #securityCodeModal) .modal-card{
+  :is(#passModal, #securityCodeModal, #deleteAccountModal) .modal-card{
     width:100%;
     max-width:none;
     margin:0;
@@ -7740,7 +7740,7 @@ body.is-guest .reactions-layer{
   }
 
   /* tay cầm kéo */
-  :is(#passModal, #securityCodeModal) .modal-card::before{
+  :is(#passModal, #securityCodeModal, #deleteAccountModal) .modal-card::before{
     content:"";
     display:block;
     width:46px;
@@ -7802,7 +7802,7 @@ body.keyboard-open .pass-sheet{
 
 /* ===== PASS MODAL: chừa chỗ cho mobile tab bar ===== */
 @media (max-width:520px){
-  :is(#passModal, #securityCodeModal) .modal-card{
+  :is(#passModal, #securityCodeModal, #deleteAccountModal) .modal-card{
     padding-bottom: 96px; /* = chiều cao tab bar + dư */
   }
 }
@@ -16785,10 +16785,10 @@ body.page-profile #profileSheet .ps-footer-brand {
 /* ==========================================
    LIVESTREAM PRO
    LUXURY SECURITY & MESSAGE MODALS
-   Chỉ tác động :is(#passModal, #securityCodeModal) và #msgModal
+   Chỉ tác động :is(#passModal, #securityCodeModal, #deleteAccountModal) và #msgModal
 ========================================== */
 
-:is(#passModal, #securityCodeModal),
+:is(#passModal, #securityCodeModal, #deleteAccountModal),
 #msgModal {
   position: fixed;
   inset: 0;
@@ -16806,12 +16806,12 @@ body.page-profile #profileSheet .ps-footer-brand {
   justify-content: center;
 }
 
-:is(#passModal, #securityCodeModal).hidden,
+:is(#passModal, #securityCodeModal, #deleteAccountModal).hidden,
 #msgModal.hidden {
   display: none !important;
 }
 
-:is(#passModal, #securityCodeModal) .modal-backdrop,
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .modal-backdrop,
 #msgModal .modal-backdrop {
   position: absolute;
   inset: 0;
@@ -16824,7 +16824,7 @@ body.page-profile #profileSheet .ps-footer-brand {
 
 /* CARD */
 
-:is(#passModal, #securityCodeModal) .luxury-modal-card,
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-modal-card,
 #msgModal .luxury-modal-card {
   position: relative;
   z-index: 1;
@@ -16873,14 +16873,14 @@ body.page-profile #profileSheet .ps-footer-brand {
   scrollbar-width: none;
 }
 
-:is(#passModal, #securityCodeModal) .luxury-modal-card::-webkit-scrollbar,
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-modal-card::-webkit-scrollbar,
 #msgModal .luxury-modal-card::-webkit-scrollbar {
   display: none;
 }
 
 /* GOLD LINE */
 
-:is(#passModal, #securityCodeModal) .luxury-modal-accent,
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-modal-accent,
 #msgModal .luxury-modal-accent {
   position: absolute;
   top: 0;
@@ -16901,7 +16901,7 @@ body.page-profile #profileSheet .ps-footer-brand {
 
 /* EYEBROW */
 
-:is(#passModal, #securityCodeModal) .luxury-modal-kicker,
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-modal-kicker,
 #msgModal .luxury-modal-kicker {
   margin-bottom: 18px;
 
@@ -16914,13 +16914,13 @@ body.page-profile #profileSheet .ps-footer-brand {
 
 /* PASSWORD HEADING */
 
-:is(#passModal, #securityCodeModal) .luxury-modal-heading {
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-modal-heading {
   display: flex;
   align-items: center;
   gap: 13px;
 }
 
-:is(#passModal, #securityCodeModal) .luxury-modal-emblem,
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-modal-emblem,
 #msgModal .luxury-message-emblem {
   display: grid;
   place-items: center;
@@ -16944,7 +16944,7 @@ body.page-profile #profileSheet .ps-footer-brand {
   font-size: 25px;
 }
 
-:is(#passModal, #securityCodeModal) .luxury-modal-heading h3 {
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-modal-heading h3 {
   margin: 0 0 5px;
 
   color: #f2ddb9;
@@ -16954,7 +16954,7 @@ body.page-profile #profileSheet .ps-footer-brand {
   line-height: 1.2;
 }
 
-:is(#passModal, #securityCodeModal) .luxury-modal-heading p {
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-modal-heading p {
   margin: 0;
 
   color: #ada397;
@@ -16962,7 +16962,7 @@ body.page-profile #profileSheet .ps-footer-brand {
   line-height: 1.5;
 }
 
-:is(#passModal, #securityCodeModal) .luxury-modal-divider {
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-modal-divider {
   height: 1px;
   margin: 20px 0 18px;
 
@@ -16976,11 +16976,11 @@ body.page-profile #profileSheet .ps-footer-brand {
 
 /* INPUTS */
 
-:is(#passModal, #securityCodeModal) .luxury-form-field {
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-form-field {
   margin-top: 13px;
 }
 
-:is(#passModal, #securityCodeModal) .luxury-form-field label {
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-form-field label {
   display: block;
   margin: 0 0 7px;
 
@@ -16992,7 +16992,7 @@ body.page-profile #profileSheet .ps-footer-brand {
   letter-spacing: .9px;
 }
 
-:is(#passModal, #securityCodeModal) .luxury-form-field input {
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-form-field input {
   display: block;
 
   width: 100%;
@@ -17018,11 +17018,11 @@ body.page-profile #profileSheet .ps-footer-brand {
     box-shadow .2s ease;
 }
 
-:is(#passModal, #securityCodeModal) .luxury-form-field input::placeholder {
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-form-field input::placeholder {
   color: #817c76;
 }
 
-:is(#passModal, #securityCodeModal) .luxury-form-field input:focus {
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-form-field input:focus {
   border-color: #ddba80;
 
   box-shadow:
@@ -17031,7 +17031,7 @@ body.page-profile #profileSheet .ps-footer-brand {
 
 /* SECURITY NOTE */
 
-:is(#passModal, #securityCodeModal) .luxury-modal-note {
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-modal-note {
   margin-top: 17px;
 
   color: #9d9488;
@@ -17042,7 +17042,7 @@ body.page-profile #profileSheet .ps-footer-brand {
 
 /* ACTION BUTTONS */
 
-:is(#passModal, #securityCodeModal) .luxury-modal-actions,
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-modal-actions,
 #msgModal .luxury-modal-actions {
   display: grid;
   grid-template-columns: minmax(0,1fr) minmax(0,1.4fr);
@@ -17051,7 +17051,7 @@ body.page-profile #profileSheet .ps-footer-brand {
   margin-top: 21px;
 }
 
-:is(#passModal, #securityCodeModal) .luxury-btn,
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-btn,
 #msgModal .luxury-btn {
   width: 100%;
   min-width: 0;
@@ -17070,7 +17070,7 @@ body.page-profile #profileSheet .ps-footer-brand {
   box-shadow: none;
 }
 
-:is(#passModal, #securityCodeModal) .luxury-btn-cancel,
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-btn-cancel,
 #msgModal .luxury-btn-cancel {
   border: 1px solid rgba(223,185,124,.28);
 
@@ -17078,7 +17078,7 @@ body.page-profile #profileSheet .ps-footer-brand {
   color: #d0c0aa;
 }
 
-:is(#passModal, #securityCodeModal) .luxury-btn-primary,
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-btn-primary,
 #msgModal .luxury-btn-primary {
   border: 1px solid #dfbf87;
 
@@ -17091,14 +17091,14 @@ body.page-profile #profileSheet .ps-footer-brand {
   color: #2c2013;
 }
 
-:is(#passModal, #securityCodeModal) .luxury-btn:active,
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-btn:active,
 #msgModal .luxury-btn:active {
   transform: scale(.98);
 }
 
 /* FOOT SIGNATURE */
 
-:is(#passModal, #securityCodeModal) .luxury-modal-signature,
+:is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-modal-signature,
 #msgModal .luxury-modal-signature {
   margin-top: 18px;
 
@@ -17164,17 +17164,17 @@ body.page-profile #profileSheet .ps-footer-brand {
 /* SMALL IPHONE */
 
 @media (max-width: 360px) {
-  :is(#passModal, #securityCodeModal) .luxury-modal-card,
+  :is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-modal-card,
   #msgModal .luxury-modal-card {
     width: calc(100% - 22px);
     padding: 20px 15px 17px;
   }
 
-  :is(#passModal, #securityCodeModal) .luxury-modal-heading h3 {
+  :is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-modal-heading h3 {
     font-size: 21px;
   }
 
-  :is(#passModal, #securityCodeModal) .luxury-btn,
+  :is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-btn,
   #msgModal .luxury-btn {
     font-size: 11px;
   }
@@ -17183,28 +17183,28 @@ body.page-profile #profileSheet .ps-footer-brand {
 /* SHORT MOBILE */
 
 @media (max-height: 650px) {
-  :is(#passModal, #securityCodeModal) .luxury-modal-card,
+  :is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-modal-card,
   #msgModal .luxury-modal-card {
     padding-top: 18px;
     padding-bottom: 15px;
   }
 
-  :is(#passModal, #securityCodeModal) .luxury-modal-kicker,
+  :is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-modal-kicker,
   #msgModal .luxury-modal-kicker {
     margin-bottom: 12px;
   }
 
-  :is(#passModal, #securityCodeModal) .luxury-modal-divider {
+  :is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-modal-divider {
     margin: 13px 0;
   }
 
-  :is(#passModal, #securityCodeModal) .luxury-form-field {
+  :is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-form-field {
     margin-top: 9px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :is(#passModal, #securityCodeModal) .luxury-modal-card,
+  :is(#passModal, #securityCodeModal, #deleteAccountModal) .luxury-modal-card,
   #msgModal .luxury-modal-card {
     animation: none;
   }
@@ -18427,7 +18427,7 @@ body.page-profile #profileSheet .ps-cancel {
 ========================================== */
 
 body.page-profile
-:is(#passModal,#securityCodeModal,#msgModal)
+:is(#passModal,#securityCodeModal,#deleteAccountModal,#msgModal)
 .luxury-modal-card {
 
   background: #FFFFFF !important;
@@ -18699,7 +18699,7 @@ body.page-profile #transferSuccessModal .success-status {
 ========================================== */
 
 body.page-profile
-:is(#passModal,#securityCodeModal,#msgModal)
+:is(#passModal,#securityCodeModal,#deleteAccountModal,#msgModal)
 .luxury-btn-primary,
 
 body.page-profile #transferModal .btn-confirm,
@@ -18722,7 +18722,7 @@ body.page-profile .transfer-confirm .btn-confirm {
 }
 
 body.page-profile
-:is(#passModal,#securityCodeModal,#msgModal)
+:is(#passModal,#securityCodeModal,#deleteAccountModal,#msgModal)
 .luxury-btn-cancel,
 
 body.page-profile #transferModal .btn-cancel,
@@ -18988,6 +18988,97 @@ body.page-profile [hidden] {
   display: none !important;
 }
  
+
+ /* ==========================================
+   LIVESTREAM PRO - DELETE ACCOUNT
+========================================== */
+
+#deleteAccountGroup[hidden],
+#deleteAccountForm[hidden] {
+  display: none !important;
+}
+
+body.page-profile
+#deleteAccountModal
+.luxury-modal-card {
+  background: #FFFFFF !important;
+  max-height: 85dvh;
+  overflow-y: auto;
+}
+
+body.page-profile
+#deleteAccountModal
+.luxury-modal-emblem {
+  background: #FCEAE7;
+  color: #B63D3D;
+  border-color: #EBCAC5;
+}
+
+#deleteAccountModal
+.luxury-modal-heading h3 {
+  color: #B63D3D;
+}
+
+#deleteAccountModal
+.luxury-modal-heading p,
+#deleteAccountModal
+.luxury-modal-note {
+  color: #857960;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+#deleteAccountModal
+.luxury-form-field label {
+  color: #706044;
+}
+
+#deleteAccountModal
+.luxury-form-field input {
+  background: #FCFAF5;
+  border-color: #EAE0C8;
+  color: #29251D;
+  font-size: 16px;
+}
+
+body.page-profile
+#deleteAccountModal
+#btnSubmitDeleteAccount {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 18px;
+
+  background: #B63D3D !important;
+  color: #FFFFFF !important;
+
+  border: 1px solid #B63D3D !important;
+  border-radius: 12px;
+}
+
+#deleteAccountModal
+#btnSubmitDeleteAccount:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+#deleteAccountStatus {
+  color: #B63D3D;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+#deleteAccountStatus:empty {
+  display: none;
+}
+
+#deleteAccountModal
+.luxury-modal-actions {
+  grid-template-columns: 1fr;
+  margin-top: 10px;
+}
+
+
 </style>
 
 
@@ -19414,6 +19505,160 @@ body.page-profile [hidden] {
 </div>
 
 
+<!-- ==========================================
+     LIVESTREAM PRO - DELETE ACCOUNT MODAL
+========================================== -->
+
+<div id="deleteAccountModal"
+     class="modal hidden">
+
+  <div class="modal-backdrop"
+       onclick="closeDeleteAccount()">
+  </div>
+
+  <section
+    class="modal-card luxury-modal-card"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="deleteAccountTitle">
+
+    <div class="luxury-modal-heading">
+
+      <div class="luxury-modal-emblem">
+        <svg width="26"
+             height="26"
+             viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="1.6"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+
+          <path d="M3 6h18"/>
+          <path d="M9 6V3h6v3"/>
+          <path d="M5 6l1 15h12l1-15"/>
+          <path d="M10 10v7"/>
+          <path d="M14 10v7"/>
+
+        </svg>
+      </div>
+
+      <div>
+
+        <h3 id="deleteAccountTitle">
+          Delete Account
+        </h3>
+
+        <p>Permanent account deletion</p>
+
+      </div>
+
+    </div>
+
+    <div class="luxury-modal-divider"></div>
+
+    <p class="luxury-modal-note">
+
+      Deletion is irreversible once completed.
+      Your balance and pending transactions
+      will be reviewed before deletion.
+      Your account remains active during review.
+
+    </p>
+
+    <p id="deleteAccountStatus"
+       role="status"
+       aria-live="polite">
+    </p>
+
+    <form id="deleteAccountForm"
+          autocomplete="off">
+
+      <!-- PASSWORD -->
+
+      <div class="luxury-form-field">
+
+        <label for="deleteAccountPassword">
+          PASSWORD
+        </label>
+
+        <input
+          id="deleteAccountPassword"
+          type="password"
+          placeholder="Enter your password"
+          autocomplete="current-password"
+          maxlength="256"
+          required>
+
+      </div>
+
+      <!-- SECURITY CODE -->
+
+      <div class="luxury-form-field">
+
+        <label for="deleteAccountCode">
+          SECURITY CODE
+        </label>
+
+        <input
+          id="deleteAccountCode"
+          type="password"
+          placeholder="Enter security code"
+          autocomplete="off"
+          maxlength="128"
+          required>
+
+      </div>
+
+      <!-- CONFIRMATION -->
+
+      <div class="luxury-form-field">
+
+        <label for="deleteAccountConfirm">
+          TYPE DELETE TO CONFIRM
+        </label>
+
+        <input
+          id="deleteAccountConfirm"
+          type="text"
+          placeholder="DELETE"
+          autocomplete="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          maxlength="6"
+          required>
+
+      </div>
+
+      <button
+        id="btnSubmitDeleteAccount"
+        class="luxury-btn luxury-btn-primary"
+        type="submit">
+
+        Request Deletion
+
+      </button>
+
+    </form>
+
+    <div class="luxury-modal-actions">
+
+      <button
+        class="luxury-btn luxury-btn-cancel"
+        type="button"
+        onclick="closeDeleteAccount()">
+
+        Close
+
+      </button>
+
+    </div>
+
+  </section>
+
+</div>
+
+
 <!-- PREMIUM GLOBAL MESSAGE MODAL -->
 <div id="msgModal" class="modal hidden">
 
@@ -19672,9 +19917,65 @@ body.page-profile [hidden] {
 
     </div>
 
+      <!-- ==========================================
+           ACCOUNT DELETION
+      ========================================== -->
+
+      <div class="ps-group"
+           id="deleteAccountGroup"
+           hidden>
+
+        <div class="ps-group-title">
+          ACCOUNT DELETION
+        </div>
+
+        <button
+          class="sheet-btn danger ps-item"
+          id="btnDeleteAccount"
+          type="button"
+          onclick="openDeleteAccount()">
+
+          <span class="ps-number">
+
+            <svg width="19"
+                 height="19"
+                 viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="1.8"
+                 stroke-linecap="round"
+                 stroke-linejoin="round">
+
+              <path d="M3 6h18"/>
+              <path d="M9 6V3h6v3"/>
+              <path d="M5 6l1 15h12l1-15"/>
+              <path d="M10 10v7"/>
+              <path d="M14 10v7"/>
+
+            </svg>
+
+          </span>
+
+          <span class="ps-item-text">
+
+            <strong>Delete Account</strong>
+
+            <small>
+              Request permanent account deletion
+            </small>
+
+          </span>
+
+          <span class="ps-chevron"></span>
+
+        </button>
+
+      </div>
+
+    </div>
+
     <!-- FOOTER -->
     <div class="ps-footer">
-
       <button class="sheet-btn ghost ps-cancel"
               type="button"
               onclick="closeProfileSheet()">
@@ -19686,6 +19987,9 @@ body.page-profile [hidden] {
       </div>
 
     </div>
+
+
+
 
   </section>
 

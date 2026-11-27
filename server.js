@@ -13531,6 +13531,737 @@ app.post(
 );
 
 
+/* ==========================================
+   LIVESTREAM PRO
+   ACCOUNT DELETION REQUEST V1.0
+========================================== */
+
+const ACCOUNT_DELETE_DIR = path.join(
+
+  path.dirname(USERS_FILE),
+
+  "account-deletion-requests"
+
+);
+
+const accountDeleteAttempts = new Map();
+
+const ACCOUNT_DELETE_WINDOW =
+  15 * 60 * 1000;
+
+
+/* ==========================================
+   CLEAN EXPIRED ATTEMPTS
+========================================== */
+
+setInterval(() => {
+
+  const now = Date.now();
+
+  for (
+    const [uid, state]
+    of accountDeleteAttempts
+  ) {
+
+    if (now >= state.until) {
+
+      accountDeleteAttempts.delete(uid);
+
+    }
+
+  }
+
+}, 60000).unref();
+
+
+/* ==========================================
+   REQUEST FILE PATH
+========================================== */
+
+function accountDeletePath(uid) {
+
+  const hash = crypto
+
+    .createHash("sha256")
+
+    .update(String(uid))
+
+    .digest("hex");
+
+  return path.join(
+    ACCOUNT_DELETE_DIR,
+    hash + ".json"
+  );
+
+}
+
+
+/* ==========================================
+   READ REQUEST
+========================================== */
+
+function readAccountDeleteRequest(uid) {
+
+  try {
+
+    const item = JSON.parse(
+
+      fs.readFileSync(
+        accountDeletePath(uid),
+        "utf8"
+      )
+
+    );
+
+    if (
+
+      item.uid !== uid ||
+
+      item.status !== "pending" ||
+
+      typeof item.requestId !== "string"
+
+    ) {
+
+      throw new Error(
+        "Invalid deletion record"
+      );
+
+    }
+
+    return item;
+
+  } catch (error) {
+
+    if (error.code === "ENOENT") {
+
+      return null;
+
+    }
+
+    throw error;
+
+  }
+
+}
+
+
+/* ==========================================
+   SAVE REQUEST - ATOMIC WRITE
+========================================== */
+
+function persistAccountDeleteRequest(uid) {
+
+  fs.mkdirSync(
+    ACCOUNT_DELETE_DIR,
+    {
+      recursive: true,
+      mode: 0o700
+    }
+  );
+
+
+  const target =
+    accountDeletePath(uid);
+
+
+  const item = {
+
+    requestId: crypto.randomUUID(),
+
+    uid,
+
+    status: "pending",
+
+    requestedAt: new Date().toISOString()
+
+  };
+
+
+  const temp =
+
+    target +
+
+    "." +
+
+    crypto.randomUUID() +
+
+    ".tmp";
+
+
+  let fd;
+
+
+  try {
+
+    fd = fs.openSync(
+      temp,
+      "wx",
+      0o600
+    );
+
+    fs.writeFileSync(
+      fd,
+      JSON.stringify(item, null, 2),
+      "utf8"
+    );
+
+    fs.fsyncSync(fd);
+
+    fs.closeSync(fd);
+
+    fd = undefined;
+
+
+    // Không ghi đè yêu cầu đã tồn tại
+
+    try {
+
+      fs.linkSync(temp, target);
+
+    } catch (error) {
+
+      if (error.code !== "EEXIST") {
+
+        throw error;
+
+      }
+
+      return readAccountDeleteRequest(uid);
+
+    }
+
+
+    return item;
+
+
+  } finally {
+
+    if (fd !== undefined) {
+
+      try {
+        fs.closeSync(fd);
+      } catch {}
+
+    }
+
+    try {
+      fs.unlinkSync(temp);
+    } catch {}
+
+  }
+
+}
+
+
+/* ==========================================
+   RESPONSE HELPER
+========================================== */
+
+function accountDeleteResponse(res, item) {
+
+  return res.json({
+
+    ok: true,
+
+    status: item ? "pending" : "none",
+
+    ...(item ? {
+
+      requestId: item.requestId,
+
+      requestedAt: item.requestedAt
+
+    } : {})
+
+  });
+
+}
+
+
+/* ==========================================
+   GET ACCOUNT DELETION STATUS
+========================================== */
+
+app.get(
+
+  "/api/account/delete-request",
+
+  securityAuth.requireAuth,
+
+  (req, res) => {
+
+    res.set(
+      "Cache-Control",
+      "private, no-store"
+    );
+
+
+    try {
+
+      const uid =
+        String(req.auth.uid);
+
+      const item =
+        readAccountDeleteRequest(uid);
+
+      return accountDeleteResponse(
+        res,
+        item
+      );
+
+    } catch (error) {
+
+      return res.status(503).json({
+
+        ok: false,
+
+        message:
+          "Unable to read deletion request."
+
+      });
+
+    }
+
+  }
+
+);
+
+
+/* ==========================================
+   SUBMIT ACCOUNT DELETION REQUEST
+========================================== */
+
+app.post(
+
+  "/api/account/delete-request",
+
+  securityAuth.requireAuth,
+
+  async (req, res) => {
+
+
+    res.set(
+      "Cache-Control",
+      "private, no-store"
+    );
+
+
+    const fail = (status, message) => {
+
+      return res.status(status).json({
+
+        ok: false,
+
+        message
+
+      });
+
+    };
+
+
+    /* ======================================
+       VERIFY REQUEST ORIGIN
+    ====================================== */
+
+    if (
+
+      !isLspAllowedOrigin(
+        req.get("origin") || ""
+      )
+
+    ) {
+
+      return fail(
+        403,
+        "Invalid request origin."
+      );
+
+    }
+
+
+    if (!req.is("application/json")) {
+
+      return fail(
+        415,
+        "Invalid request format."
+      );
+
+    }
+
+
+    /* ======================================
+       VERIFIED USER ID
+    ====================================== */
+
+    const uid =
+      String(req.auth?.uid || "");
+
+
+    if (!uid) {
+
+      return fail(
+        401,
+        "Please sign in again."
+      );
+
+    }
+
+
+    const {
+
+      password,
+
+      securityCode,
+
+      confirmation
+
+    } = req.body || {};
+
+
+    /* ======================================
+       VALIDATE INPUT
+    ====================================== */
+
+    if (
+
+      typeof password !== "string" ||
+
+      !password ||
+
+      password.length > 256 ||
+
+      typeof securityCode !== "string" ||
+
+      !securityCode ||
+
+      securityCode.length > 128 ||
+
+      confirmation !== "DELETE"
+
+    ) {
+
+      return fail(
+
+        400,
+
+        "Enter your password, security code and DELETE."
+
+      );
+
+    }
+
+
+    try {
+
+
+      /* ====================================
+         CHECK EXISTING REQUEST
+      ==================================== */
+
+      const existing =
+        readAccountDeleteRequest(uid);
+
+
+      if (existing) {
+
+        return accountDeleteResponse(
+          res,
+          existing
+        );
+
+      }
+
+
+      const users = loadUsers();
+
+      const account = users[uid];
+
+
+      if (
+
+        !account?.profile ||
+
+        account.profile.accountBlocked ||
+
+        typeof account.password !== "string" ||
+
+        typeof account.securityCode !== "string"
+
+      ) {
+
+        return fail(
+
+          403,
+
+          "Account unavailable. Contact support."
+
+        );
+
+      }
+
+
+      /* ====================================
+         RATE LIMIT
+         5 ATTEMPTS / 15 MINUTES
+      ==================================== */
+
+      const now = Date.now();
+
+      let attempt =
+        accountDeleteAttempts.get(uid);
+
+
+      if (
+        !attempt ||
+        now >= attempt.until
+      ) {
+
+        attempt = {
+
+          count: 0,
+
+          until:
+            now + ACCOUNT_DELETE_WINDOW
+
+        };
+
+      }
+
+
+      if (attempt.count >= 5) {
+
+        res.set(
+
+          "Retry-After",
+
+          String(
+            Math.ceil(
+              (attempt.until - now) / 1000
+            )
+          )
+
+        );
+
+        return fail(
+
+          429,
+
+          "Too many attempts. Try again later."
+
+        );
+
+      }
+
+
+      if (
+
+        !accountDeleteAttempts.has(uid) &&
+
+        accountDeleteAttempts.size >= 10000
+
+      ) {
+
+        return fail(
+          503,
+          "Please try again later."
+        );
+
+      }
+
+
+      attempt.count++;
+
+      accountDeleteAttempts.set(
+        uid,
+        attempt
+      );
+
+
+      /* ====================================
+         VERIFY SECURITY CODE
+      ==================================== */
+
+      const verified =
+
+        await securityTransaction.verifySecurityCode(
+
+          uid,
+
+          securityCode,
+
+          account.securityCode,
+
+          (value, hash) =>
+
+            bcrypt.compare(value, hash)
+
+        );
+
+
+      if (!verified.ok) {
+
+        if (verified.retryAfter) {
+
+          res.set(
+
+            "Retry-After",
+
+            String(verified.retryAfter)
+
+          );
+
+        }
+
+        const locked = [
+
+          "SECURITY_CODE_LOCKED",
+
+          "TRANSACTION_BUSY",
+
+          "SECURITY_BUSY"
+
+        ].includes(verified.error);
+
+
+        return fail(
+
+          locked ? 429 : 403,
+
+          "Security code verification failed."
+
+        );
+
+      }
+
+
+      /* ====================================
+         VERIFY PASSWORD
+      ==================================== */
+
+      const validPassword =
+
+        await bcrypt.compare(
+
+          password,
+
+          account.password
+
+        );
+
+
+      if (!validPassword) {
+
+        return fail(
+
+          403,
+
+          "Incorrect password or security code."
+
+        );
+
+      }
+
+
+      /* ====================================
+         REVALIDATE ACCOUNT & SESSION
+      ==================================== */
+
+      const identity =
+
+        securityAuth.getIdentity(
+          req.headers.cookie
+        );
+
+
+      const latest = loadUsers()[uid];
+
+
+      if (
+
+        !identity ||
+
+        identity.uid !== uid ||
+
+        identity.sessionId !== req.auth.sessionId ||
+
+        !latest?.profile ||
+
+        latest.profile.accountBlocked ||
+
+        latest.password !== account.password ||
+
+        latest.securityCode !== account.securityCode
+
+      ) {
+
+        return fail(
+
+          409,
+
+          "Account state changed. Sign in again."
+
+        );
+
+      }
+
+
+      /* ====================================
+         CREATE DELETION REQUEST
+      ==================================== */
+
+      const item =
+
+        persistAccountDeleteRequest(uid);
+
+
+      accountDeleteAttempts.delete(uid);
+
+
+      console.log(
+
+        "[ACCOUNT DELETION] Request received:",
+
+        item.requestId
+
+      );
+
+
+      return accountDeleteResponse(
+        res,
+        item
+      );
+
+
+    } catch (error) {
+
+      console.error(
+
+        "[ACCOUNT DELETION REQUEST]",
+
+        error.name
+
+      );
+
+
+      return fail(
+
+        503,
+
+        "Unable to submit deletion request. Please try again."
+
+      );
+
+    }
+
+  }
+
+);
+
+
+
+
+
 app.post("/api/change-password", async (req,res)=>{
   const { username, securityCode, newPassword } = req.body;
   if(!username || !securityCode || !newPassword)
