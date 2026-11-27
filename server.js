@@ -1549,18 +1549,51 @@ function w8PrepareFinalStop(round) {
     multiplier = round.secret.multiplier;
   }
 
-  round.finalStop = {
-    winSlots,
-    multiplier,
-    specialEvent
-  };
+
+/* ==========================================
+   WHEEL8 - LAST SECOND TWIST
+   Server quyết định cả kết quả và hiệu ứng
+========================================== */
+
+const targetSlot = Number(winSlots[0]);
+
+// -1: lùi một ô
+//  0: đứng im
+//  1: tiến một ô
+const finalMove =
+  crypto.randomInt(3) - 1;
+
+// Vị trí dừng ở mốc còn 1 giây.
+// Sau finalMove sẽ luôn tới đúng targetSlot.
+const preStopSlot =
+  ((targetSlot - finalMove - 1 + 8) % 8) + 1;
+
+round.finalStop = {
+  winSlots,
+  multiplier,
+  specialEvent,
+  finalMove,
+  preStopSlot
+};
+
+
 
 
 io.emit("wheel8-final-stop", {
+
   roundId: round.id,
+
+  // Kết quả thật, vẫn từ server
   targetSlot: winSlots[0],
+
   winSlots: [...winSlots],
-  endAt: round.endAt
+
+  endAt: round.endAt,
+
+  // Hiệu ứng kịch tính cuối phiên
+  preStopSlot,
+  finalMove
+
 });
 
 

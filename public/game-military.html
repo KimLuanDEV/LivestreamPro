@@ -8733,12 +8733,58 @@ let w8StopFrame = null;
 let w8StopToken = 0;
 let w8StopRoundId = null;
 
-function w8SmoothStop(targetSlot, endAt) {
+
+/* ==========================================
+   WHEEL8 - LAST SECOND TWIST V1.0
+
+   5s -> 1s: quay giảm tốc
+   1s: dừng tại preStopSlot
+   0.35s: thực hiện finalMove
+   0s: server công bố và thanh toán
+========================================== */
+
+function w8SmoothStop(
+  targetSlot,
+  endAt,
+  preStopSlot,
+  finalMove
+) {
 
   const target = Number(targetSlot);
 
-  if (!Number.isInteger(target) ||
-      target < 1 || target > 8) {
+  if (
+    !Number.isInteger(target) ||
+    target < 1 ||
+    target > 8
+  ) return;
+
+  const finishTime = Number(endAt);
+
+  if (!Number.isFinite(finishTime)) return;
+
+  // Nếu không có dữ liệu hiệu ứng mới,
+  // dừng trực tiếp tại kết quả server.
+  const move = Number(finalMove);
+
+  const hasTwist =
+    [-1, 0, 1].includes(move) &&
+    Number.isInteger(Number(preStopSlot)) &&
+    Number(preStopSlot) >= 1 &&
+    Number(preStopSlot) <= 8;
+
+  const stopSlot = hasTwist
+    ? Number(preStopSlot)
+    : target;
+
+  // Xác minh: bước chuyển cuối phải về
+  // đúng ô do server quyết định.
+  const expected =
+    ((stopSlot + (hasTwist ? move : 0) - 1 + 8) % 8) + 1;
+
+  if (expected !== target) {
+    console.warn(
+      "[WHEEL8] Invalid final move"
+    );
     return;
   }
 
@@ -8746,85 +8792,129 @@ function w8SmoothStop(targetSlot, endAt) {
 
   if (w8StopFrame !== null) {
     cancelAnimationFrame(w8StopFrame);
+    w8StopFrame = null;
   }
 
   const token = ++w8StopToken;
 
-  // Ô hiện tại, không bắt đầu lại từ số 1
   const lastSlot =
     ((highlightIndex + 6) % 8) + 1;
 
-  // Chính xác 2 vòng + khoảng cách tới đích
+  // Chạy thêm hai vòng trước khi dừng.
   const distance =
-    (target - lastSlot + 8) % 8;
+    (stopSlot - lastSlot + 8) % 8;
 
   const totalSteps = 16 + distance;
 
-  const finishTime = Number(endAt);
   const startTime = finishTime - 5000;
+  const pauseTime = finishTime - 1000;
+  const twistTime = finishTime - 350;
 
   let lastStep = -1;
+  let twistDone = false;
 
-  function renderStop() {
+  function paintSlot(slotNumber) {
 
+    slots.forEach(el => {
+      el.classList.remove("win");
+    });
+
+    const active = document.querySelector(
+      ".slot.s" + slotNumber
+    );
+
+    if (active) {
+      active.classList.add("win");
+    }
+
+    highlightIndex = slotNumber % 8 + 1;
+  }
+
+  function animate() {
+
+    // Đã có phiên mới hoặc nhận kết quả:
+    // không chạy animation cũ nữa.
     if (token !== w8StopToken) return;
 
     const now = Date.now();
 
-    const progress = Math.max(
-      0,
-      Math.min(1, (now - startTime) / 5000)
-    );
+    // ==============================
+    // GIAI ĐOẠN 1 - GIẢM TỐC
+    // ==============================
 
+    if (now < pauseTime) {
 
-/* ==========================================
-   PROGRESSIVE MOMENTUM - SMOOTH BRAKING
-========================================== */
-
-// Giảm tốc nhẹ, giữ quán tính lâu hơn.
-// 1.25 = giữ đà tốt, dừng từ từ.
-// Không giảm quá gấp như 2.4.
-const eased =
-  1 - Math.pow(1 - progress, 1.25);
-
-
-    const step = Math.min(
-      totalSteps,
-      Math.floor(eased * totalSteps)
-    );
-
-    if (step !== lastStep) {
-      lastStep = step;
-
-      const currentSlot =
-        ((lastSlot + step - 1 + 80) % 8) + 1;
-
-      slots.forEach(el => {
-        el.classList.remove("win");
-      });
-
-      const active = document.querySelector(
-        ".slot.s" + currentSlot
+      const progress = Math.max(
+        0,
+        Math.min(
+          1,
+          (now - startTime) / 4000
+        )
       );
 
-      if (active) {
-        active.classList.add("win");
+      const eased =
+        1 - Math.pow(1 - progress, 1.25);
+
+      const step = Math.min(
+        totalSteps,
+        Math.floor(eased * totalSteps)
+      );
+
+      if (step !== lastStep) {
+
+        lastStep = step;
+
+        const currentSlot =
+          ((lastSlot + step - 1 + 80) % 8) + 1;
+
+        paintSlot(currentSlot);
       }
 
-      highlightIndex = currentSlot % 8 + 1;
     }
 
-    if (progress < 1) {
+    // ==============================
+    // GIAI ĐOẠN 2 - DỪNG 1 GIÂY
+    // ==============================
+
+    else if (now < twistTime) {
+
+      // Đứng im tại ô gần kết quả
+      paintSlot(stopSlot);
+
+    }
+
+    // ==============================
+    // GIAI ĐOẠN 3 - FINAL TWIST
+    // ==============================
+
+    else {
+
+      if (!twistDone) {
+
+        twistDone = true;
+
+        // Đúng kết quả server, dù
+        // tiến / đứng / lùi.
+        paintSlot(target);
+      }
+
+    }
+
+    if (now < finishTime) {
+
       w8StopFrame =
-        requestAnimationFrame(renderStop);
+        requestAnimationFrame(animate);
+
     } else {
+
+      // Đảm bảo chính xác khi kết thúc.
+      paintSlot(target);
       w8StopFrame = null;
     }
   }
 
-  renderStop();
+  animate();
 }
-
 
 
 /* SET BET */
@@ -9234,7 +9324,14 @@ socket.on("wheel8-final-stop", data => {
 
   // Scratch OFF: giữ hiệu ứng quay như cũ
   if (!w8ScratchEnabled) {
-    w8SmoothStop(data.targetSlot, data.endAt);
+   
+w8SmoothStop(
+  data.targetSlot,
+  data.endAt,
+  data.preStopSlot,
+  data.finalMove
+);
+
     return;
   }
 
@@ -9249,7 +9346,14 @@ socket.on("wheel8-final-stop", data => {
       !Number.isInteger(s) || s < 1 || s > 8
     )
   ) {
-    w8SmoothStop(data.targetSlot, data.endAt);
+   
+w8SmoothStop(
+  data.targetSlot,
+  data.endAt,
+  data.preStopSlot,
+  data.finalMove
+);
+
     return;
   }
 
