@@ -360,6 +360,41 @@ const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "";
 
 const DEFAULT_AVATAR = "/icons/icon-192.png";
 
+
+/* ==========================================
+   LIVESTREAM PRO
+   GLOBAL DEFAULT COVER V2.0
+========================================== */
+
+const DEFAULT_COVER =
+  "/assets/default-cover-v2.jpg";
+
+function normalizeCover(url) {
+
+  if (typeof url !== "string" || !url.trim()) {
+    return DEFAULT_COVER;
+  }
+
+  url = url.trim();
+
+  // Chuyển ảnh cover mặc định cũ sang ảnh mới
+  const legacyCover =
+    /^(?:https:\/\/(?:www\.)?livestreampro\.tv)?\/assets\/default-cover\.(?:jpg|png)(?:[?#].*)?$/i;
+
+  if (legacyCover.test(url)) {
+    return DEFAULT_COVER;
+  }
+
+  // Giữ nguyên ảnh cá nhân lưu trên R2
+  if (url.startsWith("/covers/")) {
+    return R2_PUBLIC_URL + url;
+  }
+
+  return url;
+}
+
+
+
 const LEGACY_DEFAULT_AVATAR =
   "/assets/default-cover.png";
 
@@ -10962,7 +10997,7 @@ function emitAllUsers(){
       uid,
       name: p.name || uid,
       avatar: normalizeAvatar(p.avatar) || "",
-      cover: p.cover || "",
+      cover: normalizeCover(p.cover),
       level: p.level || 1,
       role: acc.role || "user" ,  // 🔥 QUAN TRỌNG
       roles: acc.roles || []   // 🔥 THÊM DÒNG NÀY
@@ -12000,10 +12035,12 @@ if (!username || !password || !securityCode) {
 db[username] = {
   password: hash,
   securityCode: secHash,
-  profile: {
-      uid: username,
-      name: "User",
-      avatar: DEFAULT_AVATAR,
+profile: {
+    uid: username,
+    name: "User",
+    avatar: DEFAULT_AVATAR,
+    cover: "",
+    bio: "",
       bio: "",  
       coins:0,
       coinDeposit:0,
@@ -12289,15 +12326,19 @@ if (SPIRIT_SECRET && SPIRIT_SECRET.length >= 32) {
 
 
 res.json({
-  ok:true,
+  ok: true,
+
   profile: {
     ...acc.profile,
-    role: acc.role || "user" ,  // 🔥 THÊM
-    roles: acc.roles || []     // 🔥 THÊM DÒNG NÀY
+
+    cover: normalizeCover(acc.profile.cover),
+
+    role: acc.role || "user",
+    roles: acc.roles || []
   },
+
   trustedToken: trusted
 });
-
 
 });
 
@@ -12405,9 +12446,11 @@ app.get("/api/me/:uid", (req, res) => {
 
         profile: {
 
-          ...profile,
+       ...profile,
 
-          role: target.role || "user",
+cover: normalizeCover(profile.cover),
+
+role: target.role || "user",
 
           roles: target.roles || []
 
@@ -12431,7 +12474,7 @@ app.get("/api/me/:uid", (req, res) => {
 
         avatar: profile.avatar || "",
 
-        cover: profile.cover || "",
+        cover: normalizeCover(profile.cover),
 
         bio: profile.bio || "",
 
@@ -13027,7 +13070,7 @@ app.get("/api/all-users", (req,res)=>{
       uid,
       name: p.name || uid,
       avatar: normalizeAvatar(p.avatar),
-      cover: p.cover || "",
+      cover: normalizeCover(p.cover),
       bio: p.bio || "",
       level: p.level || 1,
       role: db[uid].role || "user",

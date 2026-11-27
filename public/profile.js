@@ -84,6 +84,58 @@ function fixMedia(url) {
 
   return url;
 }
+
+
+/* ==========================================
+   PROFILE - DEFAULT COVER V2.0
+========================================== */
+
+const DEFAULT_PROFILE_COVER =
+  "/assets/default-cover-v2.jpg";
+
+function resolveProfileCover(url) {
+
+  if (typeof url !== "string" || !url.trim()) {
+    return DEFAULT_PROFILE_COVER;
+  }
+
+  url = url.trim();
+
+  const legacyCover =
+    /^(?:https:\/\/(?:www\.)?livestreampro\.tv)?\/assets\/default-cover\.(?:jpg|png)(?:[?#].*)?$/i;
+
+  if (legacyCover.test(url)) {
+    return DEFAULT_PROFILE_COVER;
+  }
+
+  return fixMedia(url) || DEFAULT_PROFILE_COVER;
+}
+
+
+/* ==========================================
+   RENDER PROFILE COVER
+========================================== */
+
+function renderProfileCover(url) {
+
+  const img =
+    document.getElementById("coverPreview");
+
+  if (!img) return;
+
+  img.onerror = function () {
+
+    // Ngăn vòng lặp khi ảnh mặc định cũng lỗi
+    this.onerror = null;
+
+    this.src = DEFAULT_PROFILE_COVER;
+
+  };
+
+  img.src = resolveProfileCover(url);
+
+}
+
 function isAdminUser(u) {
   return (
     u?.role === "admin" ||
@@ -777,6 +829,7 @@ setInterval(() => {
 const defaultProfile = {
   name: "User",
   avatar: "/icons/icon-192.png",
+  cover: DEFAULT_PROFILE_COVER,
   coins: 0,
   level: 1,
   exp: 0,
@@ -1003,10 +1056,13 @@ if (vipBadgeBox){
   }
 }
 
-if (p.cover && coverPreview) {
- coverPreview.src = fixMedia(p.cover);
-}
+/* ===== OWN PROFILE COVER ===== */
 
+if (!viewUid || viewUid === __profileAuth.uid) {
+
+  renderProfileCover(p.cover);
+
+}
 
 
 // Chỉ cập nhật huy hiệu xác minh trên Profile
@@ -1086,10 +1142,12 @@ document.getElementById("btnSave").onclick = () => {
   const current = JSON.parse(localStorage.getItem(KEY)) || defaultProfile;
   const uid = __profileAuth.uid || current.uid;
 
-  const profile = {
+ const profile = {
     uid,
     name: nameInput.value.trim() || "Guest",
     avatar: fixAvatar(current.avatar) || defaultProfile.avatar,
+
+    cover: resolveProfileCover(current.cover),
 
     coins: Number(coinVal.textContent) || 0,
     level: Number(levelVal.textContent) || 1,
@@ -1877,13 +1935,9 @@ function renderProfileViewOnly(p){
     bioInput.disabled = true;
   }
 
-// ===== FIX COVER =====
-if (coverPreview){
-  coverPreview.src =
-    p.cover
-      ? fixMedia(p.cover)
-      : "/assets/default-cover.jpg";
-}
+/* ===== PUBLIC PROFILE COVER ===== */
+
+renderProfileCover(p.cover);
 
   // ===== BASIC STATS =====
   const level = Number(p.level || 1);
