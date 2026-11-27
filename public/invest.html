@@ -532,26 +532,67 @@
           <img class="iv-logo" src="/icons/icon-192.png" alt="">
         </header>
         <div class="iv-content">
-          <div class="game-showroom-page is-active" data-game-page="1">
-            <div class="iv-grid">
-              <button type="button" class="iv-game" onclick="openSpiritBeastGame()">
-                <img src="/assets/bg/beast.jpg" alt="" onerror="this.onerror=null;this.src='/icons/icon-192.png'">
-                <strong>Spirit Beast</strong>
-              </button>
-              <button type="button" class="iv-game" onclick="openTimeRaceGame()">
-                <img src="/assets/bg/time-race.jpg" alt="" onerror="this.onerror=null;this.src='/icons/icon-192.png'">
-                <strong>Time Race</strong>
-              </button>
-              <button type="button" class="iv-game" onclick="openDragonTigerGame()">
-                <img src="/assets/bg/dragon-tiger.jpg" alt="" onerror="this.onerror=null;this.src='/icons/icon-192.png'">
-                <strong>Dragon Tiger Phoenix</strong>
-              </button>
-              <button type="button" class="iv-game" onclick="openWheel8Game()">
-                <img src="/assets/bg/military.jpg" alt="" onerror="this.onerror=null;this.src='/icons/icon-192.png'">
-                <strong>Military</strong>
-              </button>
-            </div>
-          </div>
+<div class="game-showroom-page is-active"
+     data-game-page="1">
+
+  <div class="iv-grid">
+
+    <!-- SPIRIT BEAST -->
+    <button type="button"
+            class="iv-game"
+            onclick="openSpiritBeastGame()">
+
+      <img src="/assets/bg/beast.jpg?v=20261127-03"
+           alt="Spirit Beast"
+           onerror="handleGameImageError(this)">
+
+      <strong>Spirit Beast</strong>
+
+    </button>
+
+    <!-- TIME RACE -->
+    <button type="button"
+            class="iv-game"
+            onclick="openTimeRaceGame()">
+
+      <img src="/assets/bg/time-race.jpg?v=20261127-03"
+           alt="Time Race"
+           onerror="handleGameImageError(this)">
+
+      <strong>Time Race</strong>
+
+    </button>
+
+    <!-- DRAGON TIGER PHOENIX -->
+    <button type="button"
+            class="iv-game"
+            onclick="openDragonTigerGame()">
+
+      <img src="/assets/bg/dragon-tiger.jpg?v=20261127-03"
+           alt="Dragon Tiger Phoenix"
+           onerror="handleGameImageError(this)">
+
+      <strong>Dragon Tiger Phoenix</strong>
+
+    </button>
+
+    <!-- MILITARY -->
+    <button type="button"
+            class="iv-game"
+            onclick="openWheel8Game()">
+
+      <img src="/assets/bg/military.jpg?v=20261127-03"
+           alt="Military"
+           onerror="handleGameImageError(this)">
+
+      <strong>Military</strong>
+
+    </button>
+
+  </div>
+
+</div>
+
           <div class="game-showroom-page" data-game-page="2" hidden>
             <div class="iv-grid">
               <button type="button" class="iv-game iv-reserved" disabled aria-label="Future Game 5">
@@ -585,7 +626,7 @@
 
     <!-- 04. APPLICATION SCRIPTS -->
     <script src="/socket.io/socket.io.js"></script>
-    <script src="/invest.js"></script>
+    <script src="/invest.js?v=20261127-03"></script>
     <script src="/chat-global.js"></script>
 
     <!-- 05. INVEST RESULT -->

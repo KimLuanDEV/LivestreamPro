@@ -1,3 +1,22 @@
+/* ==========================================
+   GAME CENTER - IMAGE ERROR HANDLER
+========================================== */
+
+function handleGameImageError(img) {
+
+  console.error(
+    "[GAME CENTER] Image load failed:",
+    img.src
+  );
+
+  img.onerror = null;
+
+  img.src = "/icons/icon-192.png";
+
+}
+
+
+
 const me = JSON.parse(localStorage.getItem("user_profile") || "{}");
 
 // 🔒 tạo deviceId cố định cho thiết bị
