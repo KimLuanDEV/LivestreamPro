@@ -1,112 +1,594 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Showroom | Livestream Pro</title>
+  <head>
+    <meta charset="utf-8">
+    <title>Showroom | Livestream Pro</title>
+    <!-- BROWSER ICON -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <link rel="stylesheet" href="/style.css">
+    <script src="/lsp-page-transition.js?v=20261127-02"></script>
+    <meta name="theme-color" content="#FAF6E9">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <style>
+      /* ==========================================
+         01. DESIGN TOKENS
+      ========================================== */
 
-  <!-- BROWSER ICON -->
-<link rel="icon"
-      type="image/png"
-      sizes="192x192"
-      href="/icons/icon-192.png">
+      :root {
+        color-scheme: light;
+        --iv-bg: #FAF6E9;
+        --iv-white: #fff;
+        --iv-cream: #FCFAF5;
+        --iv-gold: #947025;
+        --iv-dark: #70531D;
+        --iv-text: #29251D;
+        --iv-muted: #857960;
+        --iv-line: #EAE0C8;
+        --iv-champagne: #F8EBC9;
+        --iv-gradient: linear-gradient(135deg,#F5E4B5,#E3C47C);
+      }
 
-<link rel="icon"
-      type="image/png"
-      sizes="512x512"
-      href="/icons/icon-512.png">
+
+      /* ==========================================
+         02. BASE & APP LAYOUT
+      ========================================== */
+
+      html, body.page-invest {
+        margin: 0;
+        background: var(--iv-bg);
+        color: var(--iv-text);
+        min-height: 100%;
+      }
+
+      body.page-invest {
+        font: 14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;
+        overflow-x: hidden;
+      }
+
+      body.page-invest.sheet-open {
+        overflow: hidden;
+      }
+
+      body.page-invest .iv-app, body.page-invest .iv-screen {
+        width: 100%;
+        max-width: 430px;
+        margin: 0 auto;
+        background: var(--iv-bg);
+      }
+
+      .iv-app {
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding-bottom: calc(24px + env(safe-area-inset-bottom,0px));
+      }
 
 
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <link rel="stylesheet" href="/style.css">
+      /* ==========================================
+         03. HEADER & NAVIGATION
+      ========================================== */
 
-<script src="/lsp-page-transition.js?v=20261127-02"></script>
+      body.page-invest .iv-header {
+        display: grid;
+        grid-template-columns: 44px minmax(0,1fr) 44px;
+        align-items: center;
+        gap: 10px;
+        padding: calc(10px + env(safe-area-inset-top,0px)) 14px 10px;
+        background: linear-gradient(120deg,#FFFDF7,#F8EBC9);
+        border-bottom: 1px solid var(--iv-line);
+        flex-shrink: 0;
+      }
 
-<meta name="theme-color" content="#FAF6E9">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<style>
-/* LIVESTREAM PRO — CHAMPAGNE SHOWROOM */
-:root { color-scheme: light; --iv-bg:#FAF6E9; --iv-white:#fff; --iv-cream:#FCFAF5; --iv-gold:#947025; --iv-dark:#70531D; --iv-text:#29251D; --iv-muted:#857960; --iv-line:#EAE0C8; --iv-champagne:#F8EBC9; --iv-gradient:linear-gradient(135deg,#F5E4B5,#E3C47C); }
-html, body.page-invest { margin:0; background:var(--iv-bg); color:var(--iv-text); min-height:100%; }
-body.page-invest { font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; overflow-x:hidden; }
-body.page-invest.sheet-open { overflow:hidden; }
-body.page-invest .iv-app, body.page-invest .iv-screen { width:100%; max-width:430px; margin:0 auto; background:var(--iv-bg); }
-.iv-app { min-height:100vh; min-height:100dvh; padding-bottom:calc(24px + env(safe-area-inset-bottom,0px)); }
-body.page-invest .iv-header { display:grid; grid-template-columns:44px minmax(0,1fr) 44px; align-items:center; gap:10px; padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px; background:linear-gradient(120deg,#FFFDF7,#F8EBC9); border-bottom:1px solid var(--iv-line); flex-shrink:0; }
-.iv-header h1,.iv-header h2 { margin:0; font:700 23px/1.2 Georgia,serif; text-align:center; color:var(--iv-text); }
-.iv-logo { width:40px; height:40px; object-fit:contain; }
-body.page-invest .iv-back { display:grid; place-items:center; width:44px; height:44px; padding:0; border-radius:12px; border:1px solid var(--iv-line); color:var(--iv-gold); background:#fff; font-size:26px; line-height:1; box-shadow:none; }
-.iv-content { padding:16px 14px; }
-.iv-intro { padding:18px; margin-bottom:16px; border:1px solid #E3CCA0; border-radius:18px; background:linear-gradient(135deg,#FFFDF7,#F8EBC9); }
-.iv-intro h2 { margin:0 0 4px; font:700 23px/1.3 Georgia,serif; color:var(--iv-dark); }
-.iv-intro p,.iv-caption { margin:0; color:var(--iv-muted); font-size:12px; }
-.iv-entry-grid { display:grid; gap:14px; }
-body.page-invest .iv-entry, body.page-invest .iv-game { display:flex; flex-direction:column; width:100%; min-width:0; padding:0; overflow:hidden; text-align:left; border:1px solid var(--iv-line); border-radius:17px; background:#fff; color:var(--iv-text); box-shadow:0 4px 16px rgba(112,85,28,.06); cursor:pointer; }
-.iv-entry img { display:block; width:100%; height:150px; object-fit:contain; background:var(--iv-cream); }
-.iv-entry-info { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px; width:100%; }
-.iv-entry-info strong { display:block; font-size:17px; color:var(--iv-text); }
-.iv-entry-info small { color:var(--iv-muted); font-size:12px; }
-.iv-arrow { display:grid; place-items:center; width:36px; height:36px; flex-shrink:0; border-radius:11px; background:var(--iv-champagne); color:var(--iv-gold); font-size:24px; }
-body.page-invest .iv-layer { position:fixed; inset:0; z-index:9999; background:var(--iv-bg); }
-body.page-invest .iv-layer.hidden, body.page-invest [hidden], body.page-invest .hidden { display:none!important; }
-body.page-invest .iv-screen { height:100vh; height:100dvh; display:flex; flex-direction:column; overflow-y:auto; overscroll-behavior:contain; }
-.iv-screen .iv-header { position:sticky; top:0; z-index:2; }
-.iv-screen .iv-content { flex:1; }
-.iv-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-body.page-invest .iv-game { text-align:center; align-items:center; }
-.iv-game img { width:100%; aspect-ratio:1/1; object-fit:contain; display:block; background:var(--iv-cream); }
-.iv-game strong { padding:12px 6px; font-size:13px; line-height:1.4; overflow-wrap:anywhere; }
-body.page-invest .iv-reserved { min-height:142px; justify-content:center; gap:8px; padding:12px; border:1px dashed #D9C8A5; background:var(--iv-cream); box-shadow:none; }
-.iv-reserved span { display:grid; place-items:center; width:42px; height:42px; border-radius:12px; background:var(--iv-champagne); color:var(--iv-gold); font-size:24px; }
-.iv-reserved strong { padding:0; color:var(--iv-muted); }
-body.page-invest .iv-game:disabled { opacity:1; cursor:not-allowed; }
-.iv-nav { position:sticky; bottom:0; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:12px; padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px)); background:#fff; border-top:1px solid var(--iv-line); }
-body.page-invest .game-page-control { min-height:44px; padding:8px; border:1px solid var(--iv-line); border-radius:11px; background:var(--iv-gradient); color:#4D3915; font-size:13px; font-weight:700; }
-body.page-invest .game-page-control:disabled { background:var(--iv-cream); color:#A69A85; opacity:1; }
-.game-page-status { text-align:center; color:var(--iv-dark); font-size:12px; font-weight:700; }
-.game-page-dots { display:flex; justify-content:center; gap:4px; margin-top:5px; }
-.game-page-dot { width:6px; height:6px; border-radius:8px; background:#D9C8A5; }
-.game-page-dot.is-active { width:16px; background:var(--iv-gold); }
-body.page-invest .iv-app button:focus-visible,body.page-invest .iv-layer button:focus-visible { outline:2px solid var(--iv-gold); outline-offset:2px; }
-body.page-invest #forceLogoutModal { position:fixed; inset:0; z-index:20000; display:none; align-items:center; justify-content:center; padding:18px; }
-body.page-invest #forceLogoutModal.show { display:flex; }
-body.page-invest #forceLogoutModal .fl-backdrop { position:absolute; inset:0; background:rgba(52,43,25,.35); backdrop-filter:blur(6px); }
-body.page-invest #forceLogoutModal .fl-box { position:relative; width:100%; max-width:350px; padding:24px; border-radius:22px; background:#fff; color:var(--iv-text); text-align:center; border:1px solid var(--iv-line); }
-body.page-invest #forceLogoutModal .fl-title { font-size:19px; font-weight:750; color:var(--iv-text); }
-body.page-invest #forceLogoutModal .fl-msg,body.page-invest #forceLogoutModal .fl-sub { color:var(--iv-muted); font-size:13px; margin-top:10px; overflow-wrap:anywhere; }
-body.page-invest #forceLogoutModal .fl-icon { margin:0 auto 12px; font-size:30px; }
-@media(max-width:360px) { .iv-content { padding:12px 10px; } .iv-grid { gap:8px; } .iv-header h1,.iv-header h2 { font-size:21px; } }
-</style>
-</head>
-<body class="page-invest">
-<main class="iv-app">
-<header class="iv-header"><button type="button" class="iv-back" onclick="location.href='/profile.html'" aria-label="Back">‹</button><h1>Showroom</h1><img class="iv-logo" src="/icons/icon-192.png" alt=""></header>
-<div class="iv-content"><section class="iv-intro"><h2>Explore</h2><p>Choose a center.</p></section><div class="iv-entry-grid">
-<button type="button" class="iv-entry" onclick="openPortfolio()"><img src="/assets/bg/portfolio.jpg" alt=""><span class="iv-entry-info"><span><strong>Trade Center</strong><small>Coming soon</small></span><span class="iv-arrow" aria-hidden="true">›</span></span></button>
-<button type="button" class="iv-entry" onclick="openGameHub()"><img src="/assets/bg/games.jpg" alt=""><span class="iv-entry-info"><span><strong>Game Center</strong><small>4 available games</small></span><span class="iv-arrow" aria-hidden="true">›</span></span></button>
-</div></div></main>
-<div id="portfolioSheet" class="iv-layer hidden" role="dialog" aria-modal="true" aria-label="Trade Center"><div class="iv-screen trade-showroom-box"><header class="iv-header"><button type="button" class="iv-back" onclick="closePortfolio()" aria-label="Back">‹</button><h2>Trade Center</h2><img class="iv-logo" src="/icons/icon-192.png" alt=""></header>
-<div class="iv-content"><p class="iv-caption" style="margin-bottom:14px">Coming soon</p><div class="iv-grid">
-<button type="button" class="iv-game iv-reserved" onclick="openTradeSlot(1)" aria-label="Future Investment 1, coming soon"><span aria-hidden="true">◇</span><strong>Slot 01</strong></button>
-<button type="button" class="iv-game iv-reserved" onclick="openTradeSlot(2)" aria-label="Future Investment 2, coming soon"><span aria-hidden="true">◇</span><strong>Slot 02</strong></button>
-<button type="button" class="iv-game iv-reserved" onclick="openTradeSlot(3)" aria-label="Future Investment 3, coming soon"><span aria-hidden="true">◇</span><strong>Slot 03</strong></button>
-<button type="button" class="iv-game iv-reserved" onclick="openTradeSlot(4)" aria-label="Future Investment 4, coming soon"><span aria-hidden="true">◇</span><strong>Slot 04</strong></button>
-<button type="button" class="iv-game iv-reserved" onclick="openTradeSlot(5)" aria-label="Future Investment 5, coming soon"><span aria-hidden="true">◇</span><strong>Slot 05</strong></button>
-<button type="button" class="iv-game iv-reserved" onclick="openTradeSlot(6)" aria-label="Future Investment 6, coming soon"><span aria-hidden="true">◇</span><strong>Slot 06</strong></button>
-</div></div></div></div>
-<div id="gameHubSheet" class="iv-layer hidden" role="dialog" aria-modal="true" aria-label="Game Center"><div class="iv-screen game-showroom-box"><header class="iv-header"><button type="button" class="iv-back" onclick="closeGameHub()" aria-label="Back">‹</button><h2>Game Center</h2><img class="iv-logo" src="/icons/icon-192.png" alt=""></header>
-<div class="iv-content"><div class="game-showroom-page is-active" data-game-page="1"><div class="iv-grid">
-<button type="button" class="iv-game" onclick="openSpiritBeastGame()"><img src="/icons/icon-512.png" alt="" onerror="this.onerror=null;this.src='/icons/icon-192.png'"><strong>Spirit Beast</strong></button>
-<button type="button" class="iv-game" onclick="openTimeRaceGame()"><img src="/assets/bg/time-race.jpg" alt="" onerror="this.onerror=null;this.src='/icons/icon-192.png'"><strong>Time Race</strong></button>
-<button type="button" class="iv-game" onclick="openDragonTigerGame()"><img src="/assets/bg/dragon-tiger.jpg" alt="" onerror="this.onerror=null;this.src='/icons/icon-192.png'"><strong>Dragon Tiger Phoenix</strong></button>
-<button type="button" class="iv-game" onclick="openWheel8Game()"><img src="/assets/bg/wheel8.jpg" alt="" onerror="this.onerror=null;this.src='/icons/icon-192.png'"><strong>Military</strong></button>
-</div></div><div class="game-showroom-page" data-game-page="2" hidden><div class="iv-grid">
-<button type="button" class="iv-game iv-reserved" disabled aria-label="Future Game 5"><span aria-hidden="true">＋</span><strong>Coming Soon</strong></button>
-<button type="button" class="iv-game iv-reserved" disabled aria-label="Future Game 6"><span aria-hidden="true">＋</span><strong>Coming Soon</strong></button>
-<button type="button" class="iv-game iv-reserved" disabled aria-label="Future Game 7"><span aria-hidden="true">＋</span><strong>Coming Soon</strong></button>
-<button type="button" class="iv-game iv-reserved" disabled aria-label="Future Game 8"><span aria-hidden="true">＋</span><strong>Coming Soon</strong></button>
-</div></div></div><nav class="iv-nav" aria-label="Game Center pages"><button type="button" id="gamePagePrev" class="game-page-control" onclick="changeGameHubPage(-1)" disabled>‹ Prev</button><div class="game-page-status" aria-live="polite"><span id="gamePageCounter">01 / 02</span><div id="gamePageDots" class="game-page-dots" aria-hidden="true"></div></div><button type="button" id="gamePageNext" class="game-page-control" onclick="changeGameHubPage(1)">Next ›</button></nav></div></div>
-<script src="/socket.io/socket.io.js"></script>
-<script src="/invest.js"></script>
-<script src="/chat-global.js"></script>
-<div id="investResult" class="invest-result hidden"></div>
-</body></html>
+      .iv-header h1,.iv-header h2 {
+        margin: 0;
+        font: 700 23px/1.2 Georgia,serif;
+        text-align: center;
+        color: var(--iv-text);
+      }
+
+      .iv-logo {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+      }
+
+      body.page-invest .iv-back {
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        border-radius: 12px;
+        border: 1px solid var(--iv-line);
+        color: var(--iv-gold);
+        background: #fff;
+        font-size: 26px;
+        line-height: 1;
+        box-shadow: none;
+      }
+
+
+      /* ==========================================
+         04. SHOWROOM CONTENT
+      ========================================== */
+
+      .iv-content {
+        padding: 16px 14px;
+      }
+
+      .iv-intro {
+        padding: 18px;
+        margin-bottom: 16px;
+        border: 1px solid #E3CCA0;
+        border-radius: 18px;
+        background: linear-gradient(135deg,#FFFDF7,#F8EBC9);
+      }
+
+      .iv-intro h2 {
+        margin: 0 0 4px;
+        font: 700 23px/1.3 Georgia,serif;
+        color: var(--iv-dark);
+      }
+
+      .iv-intro p,.iv-caption {
+        margin: 0;
+        color: var(--iv-muted);
+        font-size: 12px;
+      }
+
+
+      /* ==========================================
+         05. CENTER ENTRY CARDS
+      ========================================== */
+
+      .iv-entry-grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      body.page-invest .iv-entry, body.page-invest .iv-game {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        min-width: 0;
+        padding: 0;
+        overflow: hidden;
+        text-align: left;
+        border: 1px solid var(--iv-line);
+        border-radius: 17px;
+        background: #fff;
+        color: var(--iv-text);
+        box-shadow: 0 4px 16px rgba(112,85,28,.06);
+        cursor: pointer;
+      }
+
+      .iv-entry img {
+        display: block;
+        width: 100%;
+        height: 150px;
+        object-fit: contain;
+        background: var(--iv-cream);
+      }
+
+      .iv-entry-info {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 14px;
+        width: 100%;
+      }
+
+      .iv-entry-info strong {
+        display: block;
+        font-size: 17px;
+        color: var(--iv-text);
+      }
+
+      .iv-entry-info small {
+        color: var(--iv-muted);
+        font-size: 12px;
+      }
+
+      .iv-arrow {
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+        border-radius: 11px;
+        background: var(--iv-champagne);
+        color: var(--iv-gold);
+        font-size: 24px;
+      }
+
+
+      /* ==========================================
+         06. FULLSCREEN SHEETS
+      ========================================== */
+
+      body.page-invest .iv-layer {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: var(--iv-bg);
+      }
+
+      body.page-invest .iv-layer.hidden, body.page-invest [hidden], body.page-invest .hidden {
+        display: none !important;
+      }
+
+      body.page-invest .iv-screen {
+        height: 100vh;
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
+
+      .iv-screen .iv-header {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+      }
+
+      .iv-screen .iv-content {
+        flex: 1;
+      }
+
+
+      /* ==========================================
+         07. GAME GRID & RESERVED SLOTS
+      ========================================== */
+
+      .iv-grid {
+        display: grid;
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        gap: 12px;
+      }
+
+      body.page-invest .iv-game {
+        text-align: center;
+        align-items: center;
+      }
+
+      .iv-game img {
+        width: 100%;
+        aspect-ratio: 1/1;
+        object-fit: contain;
+        display: block;
+        background: var(--iv-cream);
+      }
+
+      .iv-game strong {
+        padding: 12px 6px;
+        font-size: 13px;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+      }
+
+      body.page-invest .iv-reserved {
+        min-height: 142px;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px;
+        border: 1px dashed #D9C8A5;
+        background: var(--iv-cream);
+        box-shadow: none;
+      }
+
+      .iv-reserved span {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: var(--iv-champagne);
+        color: var(--iv-gold);
+        font-size: 24px;
+      }
+
+      .iv-reserved strong {
+        padding: 0;
+        color: var(--iv-muted);
+      }
+
+      body.page-invest .iv-game:disabled {
+        opacity: 1;
+        cursor: not-allowed;
+      }
+
+
+      /* ==========================================
+         08. PAGINATION
+      ========================================== */
+
+      .iv-nav {
+        position: sticky;
+        bottom: 0;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px calc(12px + env(safe-area-inset-bottom,0px));
+        background: #fff;
+        border-top: 1px solid var(--iv-line);
+      }
+
+      body.page-invest .game-page-control {
+        min-height: 44px;
+        padding: 8px;
+        border: 1px solid var(--iv-line);
+        border-radius: 11px;
+        background: var(--iv-gradient);
+        color: #4D3915;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      body.page-invest .game-page-control:disabled {
+        background: var(--iv-cream);
+        color: #A69A85;
+        opacity: 1;
+      }
+
+      .game-page-status {
+        text-align: center;
+        color: var(--iv-dark);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .game-page-dots {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        margin-top: 5px;
+      }
+
+      .game-page-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 8px;
+        background: #D9C8A5;
+      }
+
+      .game-page-dot.is-active {
+        width: 16px;
+        background: var(--iv-gold);
+      }
+
+
+      /* ==========================================
+         09. ACCESSIBILITY
+      ========================================== */
+
+      body.page-invest .iv-app button:focus-visible,body.page-invest .iv-layer button:focus-visible {
+        outline: 2px solid var(--iv-gold);
+        outline-offset: 2px;
+      }
+
+
+      /* ==========================================
+         10. FORCE LOGOUT MODAL
+      ========================================== */
+
+      body.page-invest #forceLogoutModal {
+        position: fixed;
+        inset: 0;
+        z-index: 20000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+      }
+
+      body.page-invest #forceLogoutModal.show {
+        display: flex;
+      }
+
+      body.page-invest #forceLogoutModal .fl-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(52,43,25,.35);
+        backdrop-filter: blur(6px);
+      }
+
+      body.page-invest #forceLogoutModal .fl-box {
+        position: relative;
+        width: 100%;
+        max-width: 350px;
+        padding: 24px;
+        border-radius: 22px;
+        background: #fff;
+        color: var(--iv-text);
+        text-align: center;
+        border: 1px solid var(--iv-line);
+      }
+
+      body.page-invest #forceLogoutModal .fl-title {
+        font-size: 19px;
+        font-weight: 750;
+        color: var(--iv-text);
+      }
+
+      body.page-invest #forceLogoutModal .fl-msg,body.page-invest #forceLogoutModal .fl-sub {
+        color: var(--iv-muted);
+        font-size: 13px;
+        margin-top: 10px;
+        overflow-wrap: anywhere;
+      }
+
+      body.page-invest #forceLogoutModal .fl-icon {
+        margin: 0 auto 12px;
+        font-size: 30px;
+      }
+
+      /* ==========================================
+         11. RESPONSIVE
+      ========================================== */
+
+      @media (max-width:360px) {
+        .iv-content {
+          padding: 12px 10px;
+        }
+
+        .iv-grid {
+          gap: 8px;
+        }
+
+        .iv-header h1,.iv-header h2 {
+          font-size: 21px;
+        }
+
+      }
+    </style>
+  </head>
+  <body class="page-invest">
+
+    <!-- 01. MAIN SHOWROOM -->
+    <main class="iv-app">
+      <header class="iv-header">
+        <button type="button" class="iv-back" onclick="location.href='/profile.html'" aria-label="Back">‹</button>
+        <h1>Showroom</h1>
+        <img class="iv-logo" src="/icons/icon-192.png" alt="">
+      </header>
+      <div class="iv-content">
+        <section class="iv-intro">
+          <h2>Explore</h2>
+          <p>Choose a center.</p>
+        </section>
+        <div class="iv-entry-grid">
+          <button type="button" class="iv-entry" onclick="openPortfolio()">
+            <img src="/assets/bg/portfolio.jpg" alt="">
+            <span class="iv-entry-info">
+              <span>
+                <strong>Trade Center</strong>
+                <small>Coming soon</small>
+              </span>
+              <span class="iv-arrow" aria-hidden="true">›</span></span>
+          </button>
+          <button type="button" class="iv-entry" onclick="openGameHub()">
+            <img src="/assets/bg/games.jpg" alt="">
+            <span class="iv-entry-info">
+              <span>
+                <strong>Game Center</strong>
+                <small>4 available games</small>
+              </span>
+              <span class="iv-arrow" aria-hidden="true">›</span></span>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- 02. TRADE CENTER -->
+    <div id="portfolioSheet" class="iv-layer hidden" role="dialog" aria-modal="true" aria-label="Trade Center">
+      <div class="iv-screen trade-showroom-box">
+        <header class="iv-header">
+          <button type="button" class="iv-back" onclick="closePortfolio()" aria-label="Back">‹</button>
+          <h2>Trade Center</h2>
+          <img class="iv-logo" src="/icons/icon-192.png" alt="">
+        </header>
+        <div class="iv-content">
+          <p class="iv-caption" style="margin-bottom:14px">Coming soon</p>
+          <div class="iv-grid">
+            <button type="button" class="iv-game iv-reserved" onclick="openTradeSlot(1)" aria-label="Future Investment 1, coming soon">
+              <span aria-hidden="true">◇</span>
+              <strong>Slot 01</strong>
+            </button>
+            <button type="button" class="iv-game iv-reserved" onclick="openTradeSlot(2)" aria-label="Future Investment 2, coming soon">
+              <span aria-hidden="true">◇</span>
+              <strong>Slot 02</strong>
+            </button>
+            <button type="button" class="iv-game iv-reserved" onclick="openTradeSlot(3)" aria-label="Future Investment 3, coming soon">
+              <span aria-hidden="true">◇</span>
+              <strong>Slot 03</strong>
+            </button>
+            <button type="button" class="iv-game iv-reserved" onclick="openTradeSlot(4)" aria-label="Future Investment 4, coming soon">
+              <span aria-hidden="true">◇</span>
+              <strong>Slot 04</strong>
+            </button>
+            <button type="button" class="iv-game iv-reserved" onclick="openTradeSlot(5)" aria-label="Future Investment 5, coming soon">
+              <span aria-hidden="true">◇</span>
+              <strong>Slot 05</strong>
+            </button>
+            <button type="button" class="iv-game iv-reserved" onclick="openTradeSlot(6)" aria-label="Future Investment 6, coming soon">
+              <span aria-hidden="true">◇</span>
+              <strong>Slot 06</strong>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03. GAME CENTER -->
+    <div id="gameHubSheet" class="iv-layer hidden" role="dialog" aria-modal="true" aria-label="Game Center">
+      <div class="iv-screen game-showroom-box">
+        <header class="iv-header">
+          <button type="button" class="iv-back" onclick="closeGameHub()" aria-label="Back">‹</button>
+          <h2>Game Center</h2>
+          <img class="iv-logo" src="/icons/icon-192.png" alt="">
+        </header>
+        <div class="iv-content">
+          <div class="game-showroom-page is-active" data-game-page="1">
+            <div class="iv-grid">
+              <button type="button" class="iv-game" onclick="openSpiritBeastGame()">
+                <img src="/icons/icon-512.png" alt="" onerror="this.onerror=null;this.src='/icons/icon-192.png'">
+                <strong>Spirit Beast</strong>
+              </button>
+              <button type="button" class="iv-game" onclick="openTimeRaceGame()">
+                <img src="/assets/bg/time-race.jpg" alt="" onerror="this.onerror=null;this.src='/icons/icon-192.png'">
+                <strong>Time Race</strong>
+              </button>
+              <button type="button" class="iv-game" onclick="openDragonTigerGame()">
+                <img src="/assets/bg/dragon-tiger.jpg" alt="" onerror="this.onerror=null;this.src='/icons/icon-192.png'">
+                <strong>Dragon Tiger Phoenix</strong>
+              </button>
+              <button type="button" class="iv-game" onclick="openWheel8Game()">
+                <img src="/assets/bg/wheel8.jpg" alt="" onerror="this.onerror=null;this.src='/icons/icon-192.png'">
+                <strong>Military</strong>
+              </button>
+            </div>
+          </div>
+          <div class="game-showroom-page" data-game-page="2" hidden>
+            <div class="iv-grid">
+              <button type="button" class="iv-game iv-reserved" disabled aria-label="Future Game 5">
+                <span aria-hidden="true">＋</span>
+                <strong>Coming Soon</strong>
+              </button>
+              <button type="button" class="iv-game iv-reserved" disabled aria-label="Future Game 6">
+                <span aria-hidden="true">＋</span>
+                <strong>Coming Soon</strong>
+              </button>
+              <button type="button" class="iv-game iv-reserved" disabled aria-label="Future Game 7">
+                <span aria-hidden="true">＋</span>
+                <strong>Coming Soon</strong>
+              </button>
+              <button type="button" class="iv-game iv-reserved" disabled aria-label="Future Game 8">
+                <span aria-hidden="true">＋</span>
+                <strong>Coming Soon</strong>
+              </button>
+            </div>
+          </div>
+        </div>
+        <nav class="iv-nav" aria-label="Game Center pages">
+          <button type="button" id="gamePagePrev" class="game-page-control" onclick="changeGameHubPage(-1)" disabled>‹ Prev</button>
+          <div class="game-page-status" aria-live="polite">
+            <span id="gamePageCounter">01 / 02</span>
+            <div id="gamePageDots" class="game-page-dots" aria-hidden="true"></div></div>
+          <button type="button" id="gamePageNext" class="game-page-control" onclick="changeGameHubPage(1)">Next ›</button>
+        </nav>
+      </div>
+    </div>
+
+    <!-- 04. APPLICATION SCRIPTS -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/invest.js"></script>
+    <script src="/chat-global.js"></script>
+
+    <!-- 05. INVEST RESULT -->
+    <div id="investResult" class="invest-result hidden"></div>
+  </body>
+</html>
