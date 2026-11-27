@@ -1755,38 +1755,114 @@ async function loadFriendCount(){
   }
 }
 
+/* ==========================================
+   PROFILE - FRIEND NOTIFICATION REALTIME
+========================================== */
 
-socket.on("friend-updated", ()=>{
+function refreshProfileFriendBadges() {
+
+  if (!__profileAuth.uid) return;
+
   loadFriendCount();
   loadFriendRequestCount();
+
+}
+
+// Đồng bộ khi có thay đổi danh sách bạn bè
+socket.on(
+  "friend-updated",
+  refreshProfileFriendBadges
+);
+
+// Nhận lời mời mới
+socket.on(
+  "friend-request",
+  refreshProfileFriendBadges
+);
+
+// Chấp nhận kết bạn
+socket.on(
+  "friend-accepted",
+  refreshProfileFriendBadges
+);
+
+// Phản hồi lời mời
+socket.on(
+  "friend-respond",
+  refreshProfileFriendBadges
+);
+
+// Hủy kết bạn
+socket.on(
+  "friend-removed",
+  refreshProfileFriendBadges
+);
+
+// Đồng bộ khi kết nối lại server
+socket.on(
+  "connect",
+  refreshProfileFriendBadges
+);
+
+// Đồng bộ khi quay lại ứng dụng
+document.addEventListener("visibilitychange", () => {
+
+  if (document.visibilityState === "visible") {
+
+    refreshProfileFriendBadges();
+
+  }
+
 });
 
 
 
-async function loadFriendRequestCount(){
-  const uid = __profileAuth.uid;
-  if(!uid) return;
+/* ==========================================
+   PROFILE - INCOMING REQUEST COUNTER
+========================================== */
 
-  try{
-    const res = await fetch("/api/friends/" + uid);
+async function loadFriendRequestCount() {
+
+  const uid = __profileAuth.uid;
+
+  if (!uid) return;
+
+  try {
+
+    const res = await fetch(
+      "/api/friends/" + encodeURIComponent(uid),
+      {
+        cache: "no-store",
+        credentials: "same-origin"
+      }
+    );
+
+    if (!res.ok) return;
+
     const data = await res.json();
 
-    const pending = (data.requests || []).length;
-    const badge = document.getElementById("friendReqCount");
+    const pending = Array.isArray(data.requests)
+      ? data.requests.length
+      : 0;
 
-    if(!badge) return;
+    const badge =
+      document.getElementById("friendReqCount");
 
-    if(pending > 0){
-      badge.textContent = pending;
-      badge.hidden = false;
-    }else{
-      badge.hidden = true;
-    }
-  }catch(e){
-    console.warn("loadFriendRequestCount failed", e);
+    if (!badge) return;
+
+    badge.textContent = pending;
+    badge.hidden = pending === 0;
+
+  } catch (error) {
+
+    console.warn(
+      "[FRIEND REQUEST COUNT]",
+      error
+    );
+
   }
-}
 
+}
 function renderProfileViewOnly(p){
 
   // avatar + name

@@ -16008,6 +16008,10 @@ uTo.profile.friendRequests.push(from);
 
 saveUsers(db);
 
+// REALTIME - FRIEND NOTIFICATION
+emitToUser(String(to), "friend-updated", {});
+emitToUser(String(from), "friend-updated", {});
+
 // REALTIME - FOLLOW LIVE ROOM
 emitLobbyUpdate();
 
@@ -16053,7 +16057,9 @@ socket.on("friend-respond", ({ from, accept }) => {
   }
 
 saveUsers(db);
-
+// REALTIME - UPDATE FRIEND BADGES
+emitToUser(String(from), "friend-updated", {});
+emitToUser(String(to), "friend-updated", {});
 // Refresh live lobby
 emitLobbyUpdate();
 
@@ -16121,7 +16127,9 @@ socket.on("friend-cancel", ({ uid }) => {
       .filter(id => String(id) !== meUid);
 
 saveUsers(db);
-
+// REALTIME - REMOVE FRIEND NOTIFICATION
+emitToUser(meUid, "friend-updated", {});
+emitToUser(targetUid, "friend-updated", {});
 // Refresh live lobby
 emitLobbyUpdate();
 
@@ -20154,6 +20162,10 @@ socket.on("sfu:friend:request", (data, ack) => {
 receiver.profile.friendRequests.push(from);
 
 saveUsers(db);
+
+// REALTIME - FRIEND NOTIFICATION
+emitToUser(String(to), "friend-updated", {});
+emitToUser(String(from), "friend-updated", {});
 
 // REALTIME - FOLLOW LIVE ROOM
 emitLobbyUpdate();
