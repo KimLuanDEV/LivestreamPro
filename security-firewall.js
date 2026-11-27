@@ -19,6 +19,18 @@ const activeConnections = new Map();
 
 const MAX_CONNECTIONS_PER_IP = 80;
 
+/* ==========================================
+   GAME EVENT RATE LIMIT CONFIGURATION
+========================================== */
+
+const GAME_EVENT_LIMITS = Object.freeze({
+  "wheel8-bet": 100,
+  "dtp-bet": 100,
+  "time-race-bet": 100
+});
+
+const GAME_EVENT_WINDOW_MS = 10000;
+
 
 const stats = {
   httpBlocked: 0,
@@ -605,24 +617,27 @@ if ([
 
       }
 
-      // Game event flood protection
-      if ([
-        "wheel8-bet",
-        "dtp-bet",
-        "time-race-bet"
-      ].includes(event)) {
+/* ==========================================
+   GAME EVENT FLOOD PROTECTION V2.0
+   INDEPENDENT GAME RATE LIMIT
+========================================== */
 
-        if (!consume(
-          socketBuckets,
-          `game:${actor}`,
-          30,
-          10000
-        )) {
+if (Object.hasOwn(GAME_EVENT_LIMITS, event)) {
 
-          return block("GAME_EVENT_LIMIT");
-        }
+  const limit = GAME_EVENT_LIMITS[event];
 
-      }
+  if (!consume(
+    socketBuckets,
+    `game:${actor}:${event}`,
+    limit,
+    GAME_EVENT_WINDOW_MS
+  )) {
+
+    return block("GAME_EVENT_LIMIT");
+
+  }
+
+}
 
       done();
 
@@ -687,7 +702,7 @@ function getStats() {
 
   return {
 
-    version: "1.2.0",
+    version: "1.3.0",
 
     status: "ACTIVE",
 
