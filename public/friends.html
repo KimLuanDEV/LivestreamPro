@@ -1457,29 +1457,62 @@ const icon = name =>
 
 /* ===== TẢI DANH SÁCH ===== */
 
+/* ==========================================
+   FRIENDS - REALTIME DATA SYNC
+========================================== */
+
+let friendsLoadVersion = 0;
+
 async function loadFriends() {
+
   if (!profile.uid) return;
 
+  const version = ++friendsLoadVersion;
+
   try {
-    const res = await fetch("/api/friends/" + encodeURIComponent(profile.uid));
-   if (!res.ok) {
-  throw new Error("Unable to load your friends list.");
-}
+
+    const res = await fetch(
+      "/api/friends/" + encodeURIComponent(profile.uid),
+      {
+        cache: "no-store",
+        credentials: "same-origin"
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error("Unable to load your friends list.");
+    }
 
     const data = await res.json();
+
+    // Prevent older responses from overwriting new data
+    if (version !== friendsLoadVersion) return;
+
     __lastData = {
-      requests: Array.isArray(data.requests) ? data.requests : [],
-      friends: Array.isArray(data.friends) ? data.friends : []
+
+      requests: Array.isArray(data.requests)
+        ? data.requests
+        : [],
+
+      friends: Array.isArray(data.friends)
+        ? data.friends
+        : []
+
     };
 
+    // Preserve the current search
     applySearch();
+
   } catch (err) {
-    showToast(
-  err.message || "Failed to load data. Please try again.",
-  "error"
-);
+
+    if (version !== friendsLoadVersion) return;
+
+    console.warn("[FRIENDS SYNC]", err);
+
   }
+
 }
+
 
 /* ===== AVATAR ===== */
 
@@ -2054,7 +2087,86 @@ socket.on("force-logout", data => {
   setTimeout(() => location.href = "/login.html", 3000);
 });
 
+/* ==========================================
+   FRIENDS - REALTIME EVENT LISTENERS
+========================================== */
+
+let friendsRefreshTimer = null;
+
+function scheduleFriendsRefresh() {
+
+  clearTimeout(friendsRefreshTimer);
+
+  friendsRefreshTimer = setTimeout(() => {
+
+    loadFriends();
+
+  }, 100);
+
+}
+
+
+// New friend request
+socket.on("friend-request", scheduleFriendsRefresh);
+
+
+// Friend relationship updated
+socket.on("friend-updated", scheduleFriendsRefresh);
+
+
+// Friend request accepted
+socket.on("friend-accepted", scheduleFriendsRefresh);
+
+
+// Friend request accepted or declined
+socket.on("friend-respond", scheduleFriendsRefresh);
+
+
+// Friend removed
+socket.on("friend-removed", scheduleFriendsRefresh);
+
+
+// User blocked
+socket.on("user-blocked", scheduleFriendsRefresh);
+
+
+// User unblocked
+socket.on("user-unblocked", scheduleFriendsRefresh);
+
+socket.on("user-unblocked-by", scheduleFriendsRefresh);
+
+
+// Restore data after reconnecting
+socket.on("connect", scheduleFriendsRefresh);
+
+
+// Restore when returning to the page
+window.addEventListener("pageshow", event => {
+
+  if (event.persisted) {
+
+    scheduleFriendsRefresh();
+
+  }
+
+});
+
+
+// Restore when returning to the app
+document.addEventListener("visibilitychange", () => {
+
+  if (document.visibilityState === "visible") {
+
+    scheduleFriendsRefresh();
+
+  }
+
+});
+
+
+// INITIAL LOAD
 loadFriends();
+
 </script>
 </body>
 </html>

@@ -15914,7 +15914,12 @@ uMe.profile.friendRequests =
       (uYou.profile.friendRequests || []).filter(x => x !== me);
   }
 
-  saveUsers(db);
+saveUsers(db);
+
+// REALTIME - FRIEND STATUS
+emitToUser(String(me), "friend-updated", {});
+emitToUser(String(uid), "friend-updated", {});
+
 emitLobbyUpdate();
 /* =====================================
    REFRESH SOCIAL FEED AFTER BLOCK
@@ -16157,9 +16162,13 @@ socket.on("friend-remove", ({ uid }) => {
   uMe.profile.friends = uMe.profile.friends.filter(x => x !== uid);
   uYou.profile.friends = uYou.profile.friends.filter(x => x !== me);
 
-  saveUsers(db);
+saveUsers(db);
 
-  emitLobbyUpdate();
+// REALTIME - FRIEND STATUS
+emitToUser(String(me), "friend-updated", {});
+emitToUser(String(uid), "friend-updated", {});
+
+emitLobbyUpdate();
 
   refreshSocialFeedForUser(me);
 refreshSocialFeedForUser(uid);
