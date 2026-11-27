@@ -1302,30 +1302,6 @@ setInterval(() => {
 
 
 
-/* ==========================================
-   WHEEL8 - REQUEST ID DEDUPLICATION V1.0
-========================================== */
-
-const w8AcceptedRequestIds = new Map();
-
-const W8_RECEIPT_TTL_MS = 10 * 60 * 1000;
-
-function w8PruneAcceptedReceipts(now = Date.now()) {
-
-  for (const [key, value] of w8AcceptedRequestIds) {
-
-    if (now - value.savedAt > W8_RECEIPT_TTL_MS) {
-      w8AcceptedRequestIds.delete(key);
-    }
-
-  }
-
-}
-
-
-
-
-
 // ================================
 // 🎡 LUCKY WHEEL 8 ENGINE
 // ================================
@@ -3861,259 +3837,156 @@ if (meNow?.role === "admin" && timeRaceRound) {
 // 🎡 WHEEL8 BET
 // ================================
 
+const betCooldown = new Map()
 
-/* ==========================================
-   WHEEL8 - BET REQUEST ID V1.0
-========================================== */
+socket.on("wheel8-bet",({slot,bet})=>{
 
-socket.on("wheel8-bet", ({
-  slot,
-  bet,
-  requestId,
-  roundId
-} = {}) => {
+const uid = socket.data.uid
+if(!uid) return
 
-  const uid = socket.data.uid;
+// =====================
+// 🚫 ANTI SPAM
+// =====================
+const now = Date.now()
+const last = betCooldown.get(uid) || 0
 
-  if (!uid) return;
+if(now - last < 80){
+return
+}
 
-  const id =
-    typeof requestId === "string"
-      ? requestId
-      : "";
+betCooldown.set(uid, now)
 
-  const sendFail = (message) => {
 
-    socket.emit("wheel8-bet-fail", {
-      requestId: id,
-      message
-    });
+// =====================
+// ⏱ TIME CHECK
+// =====================
+const remain = Math.max(
+0,
+Math.floor((wheel8Round.endAt - Date.now()) / 1000)
+)
 
-  };
+if(remain <= 5){
+socket.emit("wheel8-bet-fail",{
+  message:"Betting closed"
+})
+return
+}
 
-  // ==============================
-  // VALIDATE REQUEST ID
-  // ==============================
 
-  if (!/^[a-zA-Z0-9_-]{16,100}$/.test(id)) {
-    return sendFail("Invalid bet request ID");
-  }
+// =====================
+// 👤 USER
+// =====================
+const users = loadUsers()
+const me = users[uid]
 
-  // ==============================
-  // CHECK DUPLICATE
-  // ==============================
+if(!me?.profile) return
 
-  const key = `${uid}:${id}`;
 
-  const previous =
-    w8AcceptedRequestIds.get(key);
+// =====================
+// 🔧 FIX INPUT
+// =====================
+slot = Number(slot) || 0
+bet  = Math.floor(Number(bet) || 0)
 
-  if (previous) {
+if(slot < 1 || slot > 8){
+socket.emit("wheel8-bet-fail",{message:"Invalid slot"})
+return
+}
 
-    // Không cho dùng cùng ID
-    // với nội dung cược khác.
-    if (
-      previous.slot !== Number(slot) ||
-      previous.bet !== Number(bet) ||
-      String(previous.roundId) !== String(roundId)
-    ) {
-      return sendFail(
-        "Request ID reused with different bet"
-      );
-    }
+if(bet <= 0){
+socket.emit("wheel8-bet-fail",{message:"Invalid bet"})
+return
+}
 
-    // Gửi lại xác nhận cũ.
-    // KHÔNG trừ kim cương lần nữa.
-    socket.emit("wheel8-bet-ok", {
-      ...previous.reply,
-      duplicate: true
-    });
 
-    if (
-      String(previous.roundId) ===
-      String(wheel8Round.id)
-    ) {
+// =====================
+// 💰 CHECK COIN
+// =====================
+if(me.profile.coins < bet){
+socket.emit("wheel8-bet-fail",{
+  message:"Not enough coins"
+})
+return
+}
 
-      socket.emit(
-        "wheel8-my-bets",
-        [
-          ...(wheel8Round.userBets?.[uid] ||
-            [0,0,0,0,0,0,0,0])
-        ]
-      );
 
-    }
+// =====================
+// 💸 TRỪ COIN
+// =====================
+me.profile.coins -= bet
 
-    return;
-  }
 
-  // ==============================
-  // VERIFY ROUND
-  // ==============================
+// =====================
+// 📥 LƯU BET (THEO USER)
+// =====================
 
-  if (
-    String(roundId) !==
-    String(wheel8Round.id)
-  ) {
-    return sendFail("Round has changed");
-  }
+// 🔥 FIX QUAN TRỌNG
+if(!wheel8Round.userBets){
+  wheel8Round.userBets = {}
+}
 
-  // ==============================
-  // TIME CHECK
-  // ==============================
+if(!wheel8Round.userBets[uid]){
+  wheel8Round.userBets[uid] = [0,0,0,0,0,0,0,0]
+}
 
-  if (
-    wheel8Round.endAt - Date.now() <= 5000
-  ) {
-    return sendFail("Betting closed");
-  }
+wheel8Round.userBets[uid][slot-1] += bet
 
-  // ==============================
-  // VALIDATE INPUT
-  // ==============================
 
-  slot = Number(slot);
-  bet = Number(bet);
+// =====================
+// 📦 LƯU LOG (GIỮ NGUYÊN)
+// =====================
+wheel8Round.bets.push({
+uid,
+slot,
+bet
+})
 
-  if (
-    !Number.isInteger(slot) ||
-    slot < 1 ||
-    slot > 8
-  ) {
-    return sendFail("Invalid slot");
-  }
 
-  if (
-    !Number.isSafeInteger(bet) ||
-    bet <= 0
-  ) {
-    return sendFail("Invalid bet");
-  }
+// =====================
+// 💎 POOL
+// =====================
+wheel8Round.slotPool ||= [0,0,0,0,0,0,0,0]
+wheel8Round.slotPool[slot-1] += bet
 
-  // ==============================
-  // LOAD ACCOUNT
-  // ==============================
 
-  const users = loadUsers();
+// =====================
+// 💾 SAVE
+// =====================
+saveUsers(users)
 
-  const me = users[uid];
 
-  if (!me?.profile) {
-    return sendFail("Account unavailable");
-  }
+// =====================
+// 💰 UPDATE COIN
+// =====================
+emitCoinUpdate(uid)
 
-  if (
-    !Number.isFinite(me.profile.coins) ||
-    me.profile.coins < bet
-  ) {
-    return sendFail("Not enough coins");
-  }
 
-  // ==============================
-  // DEBIT WALLET
-  // ==============================
+// =====================
+// 🎡 UPDATE POOL
+// =====================
+io.emit("wheel8-pool-update", wheel8Round.slotPool)
 
-  me.profile.coins -= bet;
 
-  try {
+// =====================
+// ✅ CONFIRM
+// =====================
+socket.emit("wheel8-bet-ok")
 
-    saveUsers(users);
 
-  } catch (error) {
+// =====================
+// 🔥 SYNC CHUẨN (ANTI LỆCH)
+// =====================
+socket.emit("wheel8-my-bets",
+  wheel8Round.userBets[uid]
+)
 
-    console.error(
-      "[WHEEL8 BET] Wallet save failed",
-      error
-    );
 
-    return sendFail(
-      "Unable to save bet - try again"
-    );
 
-  }
+emitWheel8Admin("admin-wheel8-bets-update", getAdminWheel8Data())
 
-  // ==============================
-  // RECORD USER BET
-  // ==============================
+})
 
-  wheel8Round.userBets ||= {};
 
-  wheel8Round.userBets[uid] ||=
-    [0,0,0,0,0,0,0,0];
-
-  wheel8Round.userBets[uid][slot - 1] += bet;
-
-  // ==============================
-  // RECORD BET LOG
-  // ==============================
-
-  wheel8Round.bets.push({
-    uid,
-    slot,
-    bet,
-    requestId: id
-  });
-
-  // ==============================
-  // UPDATE POOL
-  // ==============================
-
-  wheel8Round.slotPool ||=
-    [0,0,0,0,0,0,0,0];
-
-  wheel8Round.slotPool[slot - 1] += bet;
-
-  // ==============================
-  // SAVE CONFIRMATION
-  // ==============================
-
-  const reply = {
-    requestId: id,
-    roundId: wheel8Round.id,
-    slot,
-    bet,
-    balance: me.profile.coins
-  };
-
-  w8AcceptedRequestIds.set(key, {
-    slot,
-    bet,
-    roundId: wheel8Round.id,
-    savedAt: Date.now(),
-    reply
-  });
-
-  if (w8AcceptedRequestIds.size > 10000) {
-    w8PruneAcceptedReceipts();
-  }
-
-  // ==============================
-  // EMIT UPDATES
-  // ==============================
-
-  emitCoinUpdate(uid);
-
-  io.emit(
-    "wheel8-pool-update",
-    wheel8Round.slotPool
-  );
-
-  socket.emit(
-    "wheel8-bet-ok",
-    reply
-  );
-
-  socket.emit(
-    "wheel8-my-bets",
-    [...wheel8Round.userBets[uid]]
-  );
-
-  emitWheel8Admin(
-    "admin-wheel8-bets-update",
-    getAdminWheel8Data()
-  );
-
-});
 
 
 
