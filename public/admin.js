@@ -2047,6 +2047,141 @@ if (r.stage === "ready") {
   }
 
 
+
+  /* ==========================================
+   R2 MEDIA CLEANUP STATUS V3.1
+========================================== */
+
+if (state === "local_done") {
+
+
+  const r2Labels = {
+
+    pending:
+      "Đang chờ dọn media R2 V3.1",
+
+    running:
+      "Đang kiểm tra và xóa media R2 V3.1",
+
+    retry:
+      "R2 lỗi · tự động thử lại",
+
+    review:
+      "R2 còn file cần kiểm tra quyền sở hữu / tham chiếu",
+
+    done:
+      "Đã xác minh vùng media V3.1 trống"
+
+  };
+
+
+  card.append(
+
+    node(
+
+      "p",
+
+      r2Labels[r.r2State || "pending"],
+
+      "adm-delete-state"
+
+    )
+
+  );
+
+
+  /* REMAINING MEDIA */
+
+  if (r.r2Remaining != null) {
+
+    card.append(
+
+      node(
+
+        "p",
+
+        `Số file V3.1 còn lại (lần quét gần nhất): ${r.r2Remaining}`
+
+      )
+
+    );
+
+  }
+
+
+  /* R2 ERROR */
+
+  if (r.r2Error) {
+
+    card.append(
+
+      node(
+
+        "p",
+
+        r.r2Error,
+
+        "adm-delete-warning"
+
+      )
+
+    );
+
+  }
+
+
+  /* MANUAL REVIEW */
+
+  if (r.r2Review?.length) {
+
+    const details =
+      document.createElement("details");
+
+
+    details.append(
+
+      node(
+
+        "summary",
+
+        "File V3.1 cần rà soát"
+
+      )
+
+    );
+
+
+    for (const key of r.r2Review) {
+
+      details.append(
+        node("p", key)
+      );
+
+    }
+
+
+    card.append(details);
+
+  }
+
+
+  card.append(
+
+    node(
+
+      "p",
+
+      "Media cũ, cache CDN, backup và dữ liệu ngoài vẫn cần kiểm tra thủ công.",
+
+      "adm-delete-warning"
+
+    )
+
+  );
+
+}
+
+
   /* MEDIA REVIEW */
 
   if (r.mediaCandidates?.length) {
@@ -2126,7 +2261,10 @@ if (r.stage === "ready") {
 
   /* COMPLETE BUTTON */
 
-  if (state === "local_done") {
+  if (
+  state === "local_done" &&
+  r.r2State === "done"
+) {
 
     const b = node(
 
@@ -2468,12 +2606,52 @@ async function engineAction(r, action) {
 }
 
 
-  // Refresh only while an online deletion is pending and this tab is open.
-  setInterval(() => {
-    if (!document.hidden && tab.classList.contains("active") && !busy &&
-        rows.some(r => r.engineMode === "online-v3" && !r.engineError &&
-          ["queued", "purging"].includes(r.engineState))) load();
-  }, 3000);
+/* ==========================================
+   AUTO REFRESH DELETION V3.1
+========================================== */
+
+setInterval(() => {
+
+  if (
+
+    !document.hidden &&
+
+    tab.classList.contains("active") &&
+
+    !busy &&
+
+    rows.some(r =>
+
+      (
+
+        r.engineMode === "online-v3" &&
+
+        !r.engineError &&
+
+        ["queued", "purging"]
+          .includes(r.engineState)
+
+      ) ||
+
+      (
+
+        r.stage === "ready" &&
+
+        r.engineState === "local_done" &&
+
+        r.r2State !== "done"
+
+      )
+
+    )
+
+  ) {
+
+    load();
+
+  }
+
+}, 3000);
 
   tab.addEventListener("click", load);
 

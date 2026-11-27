@@ -364,7 +364,12 @@ const webpush = require("web-push");
 const { uploadToR2 } = require("./r2");
 
 
+/* ==========================================
+   R2 MEDIA CLEANUP V3.1
+========================================== */
 
+const r2MediaCleanup =
+  require("./r2-media-cleanup");
 
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "";
 
@@ -8373,190 +8378,232 @@ const msg = reason
 
 
 
+/* ==========================================
+   R2 MEDIA UPLOAD V3.1
+   VERIFIED MEDIA OWNER
+========================================== */
 
-app.post("/api/upload-chat-image",
+function lspOwnedMediaHandler(kind) {
+
+  return async (req, res) => {
+
+    lspDeletionAsyncInFlight++;
+
+    try {
+
+      const uid = String(
+
+        req.auth?.uid ||
+
+        req.spiritUid ||
+
+        ""
+
+      );
+
+
+      const account =
+        uid && loadUsers()[uid];
+
+
+      /* VERIFY ACCOUNT */
+
+      if (
+
+        !account?.profile ||
+
+        account.profile.accountBlocked ||
+
+        lspDeletionTombstones.has(uid)
+
+      ) {
+
+        return res.status(403).json({
+
+          error: "ACCOUNT_UNAVAILABLE"
+
+        });
+
+      }
+
+
+      /* VERIFY FILE */
+
+      if (!req.file) {
+
+        return res.status(400).json({
+
+          error: "NO_FILE"
+
+        });
+
+      }
+
+
+      /* UPLOAD WITH OWNER METADATA */
+
+      const url = await r2MediaCleanup.upload(
+
+        uid,
+
+        kind,
+
+        req.file
+
+      );
+
+
+      return res.json({ url });
+
+
+    } catch (e) {
+
+      console.error(
+
+        "[R2 MEDIA] Upload failed:",
+
+        e.name
+
+      );
+
+
+      return res.status(
+
+        e.message === "INVALID_MEDIA_TYPE"
+
+          ? 400
+
+          : 503
+
+      ).json({
+
+        error: "MEDIA_UPLOAD_FAILED"
+
+      });
+
+
+    } finally {
+
+      lspDeletionAsyncInFlight--;
+
+    }
+
+  };
+
+}
+
+
+/* ==========================================
+   CHAT IMAGE
+========================================== */
+
+app.post(
+
+  "/api/upload-chat-image",
+
   spiritAuth,
+
   chatUpload.single("image"),
-  async (req, res) => {
-  lspDeletionAsyncInFlight++;
-  try {
+
+  lspOwnedMediaHandler("chat-image")
+
+);
 
 
-  if (!req.file) return res.status(400).json({ error: "No file" });
+/* ==========================================
+   CHAT VIDEO
+========================================== */
 
-const safeName = req.file.originalname
-  .normalize("NFD")
-  .replace(/[\u0300-\u036f]/g, "") // bỏ dấu tiếng Việt
-  .replace(/[^a-zA-Z0-9._-]/g, "_");
+app.post(
 
+  "/api/upload-chat-video",
 
-const key = `chat/images/${Date.now()}_${safeName}`;
-
-
-  const url = await uploadToR2(
-    req.file.buffer,
-    key,
-    req.file.mimetype
-  );
-
-  res.json({ url });
-
-  } finally { lspDeletionAsyncInFlight--; }
-});
-
-app.post("/api/upload-chat-video",
   spiritAuth,
+
   chatUpload.single("video"),
-  async (req, res) => {
-  lspDeletionAsyncInFlight++;
-  try {
+
+  lspOwnedMediaHandler("chat-video")
+
+);
 
 
-  if (!req.file) return res.status(400).json({ error: "No file" });
-
-const safeName = req.file.originalname
-  .normalize("NFD")
-  .replace(/[\u0300-\u036f]/g, "") // bỏ dấu tiếng Việt
-  .replace(/[^a-zA-Z0-9._-]/g, "_");
-
-
-const key = `chat/videos/${Date.now()}_${safeName}`;
-
-  const url = await uploadToR2(
-    req.file.buffer,
-    key,
-    req.file.mimetype
-  );
-
-  res.json({ url });
-
-  } finally { lspDeletionAsyncInFlight--; }
-});
+/* ==========================================
+   HOME REDIRECT
+========================================== */
 
 app.get("/", (_, res) => {
+
   res.redirect("/social.html");
+
 });
 
 
+/* ==========================================
+   AVATAR
+========================================== */
 
-app.post("/api/upload-avatar",
+app.post(
+
+  "/api/upload-avatar",
+
   spiritAuth,
+
   avatarCoverUpload.single("avatar"),
-  async (req, res) => {
-  lspDeletionAsyncInFlight++;
-  try {
 
+  lspOwnedMediaHandler("avatar")
 
-    if (!req.file) return res.status(400).json({ error: "No file" });
-
-    const safeName = req.file.originalname
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-zA-Z0-9._-]/g, "_");
-
-    const uid = req.spiritUid;
-
-    const key = `avatars/${uid}_${Date.now()}_${safeName}`;
-
-    const url = await uploadToR2(
-      req.file.buffer,
-      key,
-      req.file.mimetype
-    );
-
-    res.json({ url });
-  
-  } finally { lspDeletionAsyncInFlight--; }
-}
 );
 
-app.post("/api/upload-cover",
+
+/* ==========================================
+   COVER
+========================================== */
+
+app.post(
+
+  "/api/upload-cover",
+
   spiritAuth,
+
   avatarCoverUpload.single("cover"),
-  async (req, res) => {
-  lspDeletionAsyncInFlight++;
-  try {
 
+  lspOwnedMediaHandler("cover")
 
-    if (!req.file) return res.status(400).json({ error: "No file" });
-
-    const safeName = req.file.originalname
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-zA-Z0-9._-]/g, "_");
-
-    const uid = req.spiritUid;
-
-    const key = `covers/${uid}_${Date.now()}_${safeName}`;
-
-    const url = await uploadToR2(
-      req.file.buffer,
-      key,
-      req.file.mimetype
-    );
-
-    res.json({ url });
-  
-  } finally { lspDeletionAsyncInFlight--; }
-}
 );
 
-app.post("/api/upload-post-image",
+
+/* ==========================================
+   POST IMAGE
+========================================== */
+
+app.post(
+
+  "/api/upload-post-image",
+
   spiritAuth,
+
   postMediaUpload.single("image"),
-  async (req, res) => {
-  lspDeletionAsyncInFlight++;
-  try {
+
+  lspOwnedMediaHandler("post-image")
+
+);
 
 
-  if (!req.file) return res.status(400).json({ error: "No file" });
+/* ==========================================
+   POST VIDEO
+========================================== */
 
-  const safeName = req.file.originalname
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9._-]/g, "_");
+app.post(
 
-  const key = `posts/images/${Date.now()}_${safeName}`;
+  "/api/upload-post-video",
 
-  const url = await uploadToR2(
-    req.file.buffer,
-    key,
-    req.file.mimetype
-  );
-
-  res.json({ url });
-
-  } finally { lspDeletionAsyncInFlight--; }
-});
-
-app.post("/api/upload-post-video",
   spiritAuth,
+
   postMediaUpload.single("video"),
-  async (req, res) => {
-  lspDeletionAsyncInFlight++;
-  try {
 
+  lspOwnedMediaHandler("post-video")
 
-  if (!req.file) return res.status(400).json({ error: "No file" });
-
-  const safeName = req.file.originalname
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9._-]/g, "_");
-
-  const key = `posts/videos/${Date.now()}_${safeName}`;
-
-  const url = await uploadToR2(
-    req.file.buffer,
-    key,
-    req.file.mimetype
-  );
-
-  res.json({ url });
-
-  } finally { lspDeletionAsyncInFlight--; }
-});
-
+);
 
 
 
@@ -15051,6 +15098,19 @@ engineError:
 mediaCandidates:
   item.mediaCandidates || [],
 
+r2State:
+  item.r2State || null,
+
+r2Remaining:
+  item.r2Remaining ?? null,
+
+r2Review:
+  item.r2Review || [],
+
+r2Error:
+  item.r2Error || null,
+
+
 blockers:
 
   item.status === "completed" ||
@@ -15537,6 +15597,397 @@ function lspRunDeletionQueue() {
   }
 }
 
+
+/* ==========================================
+   ACCOUNT DELETION ENGINE V3.1
+   R2 CLEANUP WORKER
+========================================== */
+
+let lspR2CleanupBusy = false;
+
+
+/* ==========================================
+   CHECK MEDIA REFERENCES
+========================================== */
+
+function lspR2MediaReferenced(key) {
+
+  function contains(text) {
+
+    for (let i = 0; i < 3; i++) {
+
+      if (text.includes(key)) {
+
+        return true;
+
+      }
+
+      text = text.replace(
+
+        /%([a-f0-9]{2})/gi,
+
+        (_, n) =>
+          String.fromCharCode(parseInt(n, 16))
+
+      );
+
+    }
+
+    return false;
+
+  }
+
+
+  /* CHECK CURRENT RAM DATA */
+
+  if (
+
+    contains(JSON.stringify([
+
+      lpPosts,
+
+      Object.fromEntries(userInbox)
+
+    ]))
+
+  ) {
+
+    return true;
+
+  }
+
+
+  /* CHECK CURRENT DATABASE FILES */
+
+  for (
+
+    const entry of fs.readdirSync(
+
+      lspDeletionDataDir,
+
+      { withFileTypes: true }
+
+    )
+
+  ) {
+
+    if (
+
+      !entry.isFile() ||
+
+      !entry.name.endsWith(".json")
+
+    ) {
+
+      continue;
+
+    }
+
+
+    const raw = fs.readFileSync(
+
+      path.join(
+        lspDeletionDataDir,
+        entry.name
+      ),
+
+      "utf8"
+
+    );
+
+
+    if (
+
+      contains(
+
+        JSON.stringify(
+          JSON.parse(raw)
+        )
+
+      )
+
+    ) {
+
+      return true;
+
+    }
+
+  }
+
+
+  return false;
+
+}
+
+
+/* ==========================================
+   AUTOMATIC R2 CLEANUP
+========================================== */
+
+async function lspRunR2Cleanup() {
+
+
+  /* PREVENT OVERLAPPING WORKERS */
+
+  if (
+
+    lspR2CleanupBusy ||
+
+    lspDeletionRunning ||
+
+    lspDeletionAsyncInFlight
+
+  ) {
+
+    return;
+
+  }
+
+
+  lspR2CleanupBusy = true;
+
+  let job;
+
+
+  try {
+
+
+    /* FIND ELIGIBLE ACCOUNT */
+
+    job = deletionManagerRecords()
+
+      .filter(r =>
+
+        r.status === "pending" &&
+
+        r.stage === "ready" &&
+
+        r.engineState === "local_done" &&
+
+        r.r2State !== "done" &&
+
+        Number(r.r2NextAt || 0) <= Date.now()
+
+      )
+
+      .sort((a, b) =>
+
+        Number(a.r2NextAt || 0) -
+
+        Number(b.r2NextAt || 0)
+
+      )[0];
+
+
+    if (!job) return;
+
+
+    /* CONFIRM ACCOUNT REMOVED */
+
+    if (
+
+      Object.hasOwn(loadUsers(), job.uid) ||
+
+      !lspDeletionTombstones.has(job.uid)
+
+    ) {
+
+      throw new Error("R2_OWNER_NOT_DELETED");
+
+    }
+
+
+    /* SAVE PROCESSING STATUS */
+
+    deletionManagerSave({
+
+      ...job,
+
+      r2State: "running",
+
+      r2Error: null
+
+    });
+
+
+    /* PROCESS R2 MEDIA */
+
+    const result = await r2MediaCleanup.cleanup(
+
+      job.uid,
+
+      key => {
+
+        if (
+
+          lspDeletionRunning ||
+
+          lspDeletionAsyncInFlight
+
+        ) {
+
+          throw new Error(
+            "R2_REFERENCE_CHECK_BUSY"
+          );
+
+        }
+
+        return lspR2MediaReferenced(key);
+
+      }
+
+    );
+
+
+    /* RELOAD CURRENT REQUEST */
+
+    const latest =
+      readAccountDeleteRequest(job.uid);
+
+
+    if (
+
+      latest?.requestId !== job.requestId ||
+
+      latest.status !== "pending" ||
+
+      latest.engineState !== "local_done"
+
+    ) {
+
+      return;
+
+    }
+
+
+    /* SAVE R2 RESULT */
+
+    deletionManagerSave({
+
+      ...latest,
+
+      r2State: result.state,
+
+      r2Remaining: result.remaining,
+
+      r2Review: result.review,
+
+      r2Attempts: 0,
+
+      r2Error: null,
+
+      r2NextAt:
+
+        result.state === "review"
+
+          ? Date.now() + 300000
+
+          : result.state === "pending"
+
+            ? Date.now() + 5000
+
+            : 0,
+
+      r2CheckedAt:
+        new Date().toISOString()
+
+    });
+
+
+  } catch (e) {
+
+
+    console.error(
+
+      "[R2 CLEANUP] Retry:",
+
+      e.name
+
+    );
+
+
+    /* AUTOMATIC RETRY */
+
+    if (job) {
+
+      try {
+
+        const latest =
+          readAccountDeleteRequest(job.uid);
+
+
+        if (
+
+          latest?.requestId === job.requestId &&
+
+          latest.status === "pending" &&
+
+          latest.engineState === "local_done"
+
+        ) {
+
+          const attempts = Math.min(
+
+            10,
+
+            (Number(latest.r2Attempts) || 0) + 1
+
+          );
+
+
+          deletionManagerSave({
+
+            ...latest,
+
+            r2State: "retry",
+
+            r2Attempts: attempts,
+
+            r2Error:
+
+              "Chưa thể xác minh hoặc xóa media R2. Kiểm tra cấu hình / kết nối.",
+
+            r2NextAt:
+
+              Date.now() +
+
+              Math.min(
+
+                900000,
+
+                30000 * 2 ** (attempts - 1)
+
+              )
+
+          });
+
+        }
+
+
+      } catch (saveError) {
+
+        console.error(
+
+          "[R2 CLEANUP] Status save failed:",
+
+          saveError.name
+
+        );
+
+      }
+
+    }
+
+
+  } finally {
+
+    lspR2CleanupBusy = false;
+
+  }
+
+}
+
+
 /* ==========================================
    ACCOUNT DELETION ENGINE V3.0
    ADMIN API
@@ -15703,13 +16154,38 @@ app.post(
 
         }
 
+/* ==========================================
+   REQUIRE R2 CLEANUP BEFORE COMPLETION
+========================================== */
 
-        const {
-          mediaCandidates,
-          engineError,
-          coreWriteReady,
-          ...minimal
-        } = updated;
+if (item.r2State !== "done") {
+
+  return fail(
+
+    409,
+
+    "R2 V3.1 chưa dọn xong."
+
+  );
+
+}
+
+
+const {
+
+  mediaCandidates,
+
+  r2Review,
+
+  r2Error,
+
+  engineError,
+
+  coreWriteReady,
+
+  ...minimal
+
+} = updated;
 
 
         deletionManagerSave({
@@ -26867,6 +27343,16 @@ for (const record of deletionManagerRecords()) {
   }
 }
 setInterval(lspRunDeletionQueue, 1000).unref();
+
+/* ==========================================
+   AUTO R2 CLEANUP V3.1
+========================================== */
+
+setInterval(
+  lspRunR2Cleanup,
+  5000
+).unref();
+
 
 const PORT = process.env.PORT || 3000;
 
