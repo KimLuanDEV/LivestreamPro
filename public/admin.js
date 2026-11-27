@@ -1710,3 +1710,545 @@ if (typeof io === "function") {
     () => loadAdminTransfers()
   );
 }
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   ACCOUNT DELETION MANAGER V1.0
+========================================== */
+
+(() => {
+
+  const el = id =>
+    document.getElementById(id);
+
+  const tab = document.querySelector(
+    '[data-tab="account-deletions"]'
+  );
+
+  if (!tab || !el("admDeleteList")) return;
+
+  let rows = [];
+  let page = 1;
+  let busy = false;
+  let loaded = false;
+
+  const PAGE_LIMIT = 8;
+
+  const labels = {
+    pending: "Chờ duyệt",
+    reviewing: "Đang kiểm tra",
+    ready: "Chờ xóa dữ liệu",
+    completed: "Đã hoàn tất"
+  };
+
+
+  /* ========================================
+     HELPERS
+  ======================================== */
+
+  function message(text) {
+    el("admDeleteStatus").textContent = text;
+  }
+
+  function node(tag, text, cls) {
+
+    const n = document.createElement(tag);
+
+    n.textContent = text;
+
+    if (cls) n.className = cls;
+
+    return n;
+
+  }
+
+  function amount(value) {
+
+    return value == null
+      ? "—"
+      : Number(value).toLocaleString("vi-VN");
+
+  }
+
+  function date(value) {
+
+    return value
+      ? new Date(value).toLocaleString("vi-VN")
+      : "—";
+
+  }
+
+
+  /* ========================================
+     SECURE ADMIN API
+  ======================================== */
+
+  async function api(url, body) {
+
+    const options = {
+      credentials: "same-origin",
+      cache: "no-store"
+    };
+
+    if (body) {
+
+      options.method = "POST";
+
+      options.headers = {
+        "Content-Type": "application/json"
+      };
+
+      options.body = JSON.stringify(body);
+
+    }
+
+    const res = await fetch(url, options);
+
+    const data = await res.json();
+
+    if (!res.ok || !data.ok) {
+
+      throw new Error(
+        data.message ||
+        data.error ||
+        "Không thể xử lý yêu cầu."
+      );
+
+    }
+
+    return data;
+
+  }
+
+
+  /* ========================================
+     RENDER REQUESTS
+  ======================================== */
+
+  function render() {
+
+    const wrap = el("admDeleteList");
+
+    wrap.replaceChildren();
+
+    const count = stage =>
+      rows.filter(r => r.stage === stage).length;
+
+
+    // STATISTICS
+
+    el("admDeleteStats").textContent =
+
+      `Chờ duyệt: ${count("pending")}` +
+
+      ` · Đang kiểm tra: ${count("reviewing")}` +
+
+      ` · Chờ xóa: ${count("ready")}` +
+
+      ` · Hoàn tất: ${count("completed")}`;
+
+
+    // SEARCH & FILTER
+
+    const q = el("admDeleteSearch")
+      .value.trim().toLowerCase();
+
+    const filter =
+      el("admDeleteFilter").value;
+
+    const list = rows.filter(r =>
+
+      (
+        filter === "all" ||
+        r.stage === filter
+      ) &&
+
+      (
+        !q ||
+        `${r.uid} ${r.name}`
+          .toLowerCase()
+          .includes(q)
+      )
+
+    );
+
+
+    // PAGINATION
+
+    const pages = Math.max(
+      1,
+      Math.ceil(list.length / PAGE_LIMIT)
+    );
+
+    page = Math.min(
+      Math.max(1, page),
+      pages
+    );
+
+    el("admDeletePage").textContent =
+      `${page} / ${pages}`;
+
+    el("admDeletePrev").disabled =
+      page <= 1;
+
+    el("admDeleteNext").disabled =
+      page >= pages;
+
+
+    if (!list.length) {
+
+      wrap.append(
+        node(
+          "p",
+          loaded
+            ? "Không có yêu cầu phù hợp."
+            : "Chưa tải được danh sách."
+        )
+      );
+
+      return;
+
+    }
+
+
+    const items = list.slice(
+      (page - 1) * PAGE_LIMIT,
+      page * PAGE_LIMIT
+    );
+
+
+    for (const r of items) {
+
+      const card = node(
+        "article",
+        "",
+        "adm-delete-item"
+      );
+
+
+      // ACCOUNT INFORMATION
+
+      card.append(
+
+        node(
+          "strong",
+          `${r.name || "Tài khoản"} · ${r.uid}`
+        ),
+
+        node(
+          "p",
+          labels[r.stage] || r.stage,
+          "adm-delete-state"
+        ),
+
+        node(
+          "p",
+          `Gửi: ${date(r.requestedAt)}`
+        ),
+
+        node(
+          "p",
+          `Mã yêu cầu: ${r.requestId}`
+        ),
+
+        node(
+          "p",
+          `Kim cương: ${amount(r.coins)}` +
+          ` · Ví rút: ${amount(r.wallet)}`
+        )
+
+      );
+
+
+      // ADMIN HISTORY
+
+      if (r.updatedAt) {
+
+        card.append(
+          node(
+            "p",
+            `Cập nhật: ${date(r.updatedAt)}` +
+            ` · ${r.updatedBy || ""}`
+          )
+        );
+
+      }
+
+
+      // FINANCIAL WARNINGS
+
+      if (r.blockers?.length) {
+
+        card.append(
+          node(
+            "p",
+            r.blockers.join(" · "),
+            "adm-delete-warning"
+          )
+        );
+
+      }
+
+
+      // READY STATUS
+
+      if (r.stage === "ready") {
+
+        card.append(
+          node(
+            "p",
+            r.blocked
+              ? "Đã khóa. Chờ xóa dữ liệu offline."
+              : "Cảnh báo: tài khoản chưa khóa.",
+            "adm-delete-warning"
+          )
+        );
+
+      }
+
+
+      // ACTION BUTTONS
+
+      if (
+        ["pending", "reviewing"].includes(r.stage)
+      ) {
+
+        const actions = node(
+          "div",
+          "",
+          "adm-delete-actions"
+        );
+
+
+        // REVIEW
+
+        if (r.stage === "pending") {
+
+          const review = node(
+            "button",
+            "Bắt đầu kiểm tra",
+            "btn-mini"
+          );
+
+          review.type = "button";
+          review.disabled = busy;
+
+          review.onclick = () =>
+            act(r, "review");
+
+          actions.append(review);
+
+        }
+
+
+        // PREPARE DELETION
+
+        const prepare = node(
+          "button",
+          "Khóa để xóa",
+          "btn-mini lux-action-danger"
+        );
+
+        prepare.type = "button";
+
+        prepare.disabled =
+          busy || !!r.blockers?.length;
+
+        prepare.onclick = () =>
+          act(r, "prepare");
+
+        actions.append(prepare);
+
+        card.append(actions);
+
+      }
+
+      wrap.append(card);
+
+    }
+
+  }
+
+
+  /* ========================================
+     LOAD REQUESTS
+  ======================================== */
+
+  async function load() {
+
+    if (busy) return;
+
+    busy = true;
+
+    message("Đang tải...");
+
+    render();
+
+    try {
+
+      const data = await api(
+        "/api/admin/account-deletions"
+      );
+
+      rows = data.list || [];
+
+      loaded = true;
+
+      message("");
+
+    } catch (error) {
+
+      rows = [];
+
+      loaded = false;
+
+      message(error.message);
+
+    } finally {
+
+      busy = false;
+
+      render();
+
+    }
+
+  }
+
+
+  /* ========================================
+     ADMIN ACTION
+  ======================================== */
+
+  async function act(r, action) {
+
+    if (busy) return;
+
+    busy = true;
+
+    render();
+
+    try {
+
+      let confirmation = "";
+
+
+      if (action === "prepare") {
+
+        confirmation = await showModal({
+
+          title: "Khóa tài khoản để xóa",
+
+          body:
+
+            "Chỉ thực hiện khi tài sản " +
+
+            "và giao dịch đã được xử lý.<br><br>" +
+
+            "Nhập <b>" +
+
+            adminWithdrawEscape(
+              "LOCK " + r.uid
+            ) +
+
+            "</b> để xác nhận.",
+
+          input: true,
+
+          confirm: true
+
+        });
+
+
+        if (
+          confirmation !== "LOCK " + r.uid
+        ) {
+          return;
+        }
+
+      }
+
+
+      await api(
+        "/api/admin/account-deletions/action",
+        {
+
+          uid: r.uid,
+
+          requestId: r.requestId,
+
+          action,
+
+          confirmation
+
+        }
+      );
+
+
+      message("Đã cập nhật yêu cầu.");
+
+
+    } catch (error) {
+
+      await showModal({
+
+        title: "Không hoàn tất",
+
+        body: adminWithdrawEscape(
+          error.message
+        )
+
+      });
+
+    } finally {
+
+      busy = false;
+
+      await load();
+
+    }
+
+  }
+
+
+  /* ========================================
+     EVENTS
+  ======================================== */
+
+  tab.addEventListener("click", load);
+
+  el("admDeleteRefresh").onclick = load;
+
+  el("admDeleteSearch").oninput = () => {
+
+    page = 1;
+
+    render();
+
+  };
+
+  el("admDeleteFilter").onchange = () => {
+
+    page = 1;
+
+    render();
+
+  };
+
+  el("admDeletePrev").onclick = () => {
+
+    page--;
+
+    render();
+
+  };
+
+  el("admDeleteNext").onclick = () => {
+
+    page++;
+
+    render();
+
+  };
+
+})();

@@ -3155,6 +3155,108 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
 }
 
 
+/* ==========================================
+   ACCOUNT DELETION MANAGER
+   LUXURY BLACK & GOLD
+========================================== */
+
+#admDeletePanel {
+  overflow-wrap: anywhere;
+}
+
+#admDeletePanel h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  color: #dfbd89;
+}
+
+.adm-delete-head,
+.adm-delete-pager,
+.adm-delete-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.adm-delete-head {
+  justify-content: space-between;
+}
+
+.adm-delete-stats {
+  margin: 14px 0;
+  color: #dfbd89;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+#admDeleteFilter {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+
+  border: 1px solid #4b402f;
+  border-radius: 10px;
+
+  color: #ead9ba;
+  background: #171511;
+}
+
+#admDeleteList {
+  display: grid;
+  gap: 10px;
+}
+
+.adm-delete-item {
+  padding: 14px;
+
+  border: 1px solid #514331;
+  border-radius: 14px;
+
+  background: #151412;
+  color: #f2e5cf;
+}
+
+.adm-delete-item p {
+  margin: 7px 0;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.adm-delete-item .adm-delete-warning {
+  color: #f3b4a4;
+}
+
+.adm-delete-item .adm-delete-state {
+  color: #dfbd89;
+}
+
+.adm-delete-actions {
+  margin-top: 12px;
+}
+
+.adm-delete-actions button {
+  flex: 1;
+  min-height: 38px;
+}
+
+.adm-delete-actions button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.adm-delete-pager {
+  justify-content: space-between;
+  margin-top: 14px;
+}
+
+#admDeleteStatus {
+  font-size: 13px;
+  color: #dfbd89;
+}
+
+
+
 
 </style>
 
@@ -3389,6 +3491,14 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
           data-tab="lives">
     Phòng Live
   </button>
+
+<!-- ACCOUNT DELETION TAB -->
+
+<button type="button"
+        class="tab"
+        data-tab="account-deletions">
+  Xóa tài khoản
+</button>
 
   <button type="button"
           class="tab"
@@ -3710,6 +3820,117 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
 
 
 
+<!-- ==========================================
+     ACCOUNT DELETION MANAGER V1.0
+========================================== -->
+
+<div class="admin-section hidden"
+     data-section="account-deletions">
+
+  <div class="card" id="admDeletePanel">
+
+    <div class="adm-delete-head">
+
+      <div>
+        <h2>Account Deletion Manager</h2>
+        <small>Yêu cầu xóa tài khoản</small>
+      </div>
+
+      <button
+        type="button"
+        class="btn-mini"
+        id="admDeleteRefresh">
+
+        Làm mới
+
+      </button>
+
+    </div>
+
+    <!-- STATISTICS -->
+
+    <div
+      class="adm-delete-stats"
+      id="admDeleteStats">
+    </div>
+
+    <!-- SEARCH -->
+
+    <input
+      id="admDeleteSearch"
+      type="search"
+      placeholder="Tìm UID / tên"
+      autocomplete="off">
+
+    <!-- FILTER -->
+
+    <select
+      id="admDeleteFilter"
+      aria-label="Trạng thái">
+
+      <option value="all">
+        Tất cả trạng thái
+      </option>
+
+      <option value="pending">
+        Chờ duyệt
+      </option>
+
+      <option value="reviewing">
+        Đang kiểm tra
+      </option>
+
+      <option value="ready">
+        Chờ xóa dữ liệu
+      </option>
+
+      <option value="completed">
+        Đã hoàn tất
+      </option>
+
+    </select>
+
+    <!-- STATUS -->
+
+    <p id="admDeleteStatus"
+       role="status"
+       aria-live="polite">
+    </p>
+
+    <!-- REQUEST LIST -->
+
+    <div id="admDeleteList"></div>
+
+    <!-- PAGINATION -->
+
+    <div class="adm-delete-pager">
+
+      <button
+        type="button"
+        class="btn-mini"
+        id="admDeletePrev">
+
+        Trước
+
+      </button>
+
+      <span id="admDeletePage"></span>
+
+      <button
+        type="button"
+        class="btn-mini"
+        id="admDeleteNext">
+
+        Sau
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
 
 <script src="/socket.io/socket.io.js"></script>
 
@@ -3745,7 +3966,7 @@ body.lsp-admin-locked > :not(#lspAdminGate):not(script) {
 
   const script = document.createElement("script");
 
-script.src = "/admin.js?v=20261125-soc-final-v20";
+script.src = "/admin.js?v=20261127-account-deletion-v1";
 
     script.onload = () => {
       document.body.classList.remove("lsp-admin-locked");

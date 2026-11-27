@@ -8222,6 +8222,36 @@ if (user.role === "admin" || targetUid === adminUid) {
 }
 
 
+
+/* ==========================================
+   PROTECT ACCOUNT PENDING DELETION
+========================================== */
+
+if (
+
+  !lock &&
+
+  readAccountDeleteRequest(
+    String(targetUid)
+  )?.stage === "ready"
+
+) {
+
+  return res.status(409).json({
+
+    ok: false,
+
+    error: "DELETION_READY",
+
+    message:
+      "Account is pending permanent deletion."
+
+  });
+
+}
+
+
+
   user.profile.accountBlocked = !!lock;
 
   user.profile.blockedAt = lock ? Date.now() : null;
@@ -12069,11 +12099,73 @@ if (!username || !password || !securityCode) {
   return res.json({ error: "missing" });
 }
 
-  const db = loadUsers();
-  if(db[username]) return res.json({error:"exists"});
+/* ==========================================
+   PREVENT DELETED UID REUSE
+========================================== */
 
-  const hash = await bcrypt.hash(password,10);
-  const secHash = await bcrypt.hash(securityCode,10);
+if (
+
+  typeof username !== "string" ||
+
+  !username ||
+
+  username.length > 256
+
+) {
+
+  return res.status(400).json({
+
+    error: "invalid"
+
+  });
+
+}
+
+
+if (
+
+  Object.hasOwn(loadUsers(), username) ||
+
+  readAccountDeleteRequest(username)
+
+) {
+
+  return res.json({
+
+    error: "exists"
+
+  });
+
+}
+
+
+const hash =
+  await bcrypt.hash(password, 10);
+
+const secHash =
+  await bcrypt.hash(securityCode, 10);
+
+
+// Reload database after asynchronous hashing
+
+const db = loadUsers();
+
+
+if (
+
+  Object.hasOwn(db, username) ||
+
+  readAccountDeleteRequest(username)
+
+) {
+
+  return res.json({
+
+    error: "exists"
+
+  });
+
+}
 
 db[username] = {
   password: hash,
@@ -12297,16 +12389,20 @@ if (acc.profile?.accountBlocked) {
 
 let okSec = false;
 
+let verifiedBySecurityCode = false;
+
 // 1. Verify the actual security code
 if (
   typeof securityCode === "string" &&
   securityCode.length > 0 &&
   typeof acc.securityCode === "string"
 ) {
+
   okSec = await bcrypt.compare(
     securityCode,
     acc.securityCode
   );
+ verifiedBySecurityCode = okSec;
 }
 
 // 2. Verify a previously trusted device
@@ -12347,12 +12443,112 @@ if (!okPass || !okSec) {
 
 }
 
-  const trusted = crypto.randomBytes(24).toString("hex");
+/* ==========================================
+   REVALIDATE ACCOUNT BEFORE LOGIN
+========================================== */
 
-acc.trusted = acc.trusted || {};
-acc.trusted[trusted] = Date.now() + 30*24*60*60*1000; // 30 ngày
+const latestDb = loadUsers();
 
-saveUsers(db);
+const latest = latestDb[username];
+
+
+if (
+
+  !latest?.profile ||
+
+  latest.profile.accountBlocked ||
+
+  latest.password !== acc.password ||
+
+  latest.securityCode !== acc.securityCode ||
+
+  latest.authVersion !== acc.authVersion
+
+) {
+
+  return res.status(403).json({
+
+    error: "blocked",
+
+    message:
+      "Account unavailable. Sign in again."
+
+  });
+
+}
+
+
+/* ==========================================
+   ACCOUNT DELETION CHECK
+========================================== */
+
+const deletion =
+  readAccountDeleteRequest(username);
+
+
+if (
+
+  deletion?.stage === "ready" ||
+
+  deletion?.status === "completed"
+
+) {
+
+  return res.status(403).json({
+
+    error: "blocked",
+
+    message:
+      "Account deletion is being processed."
+
+  });
+
+}
+
+
+/* ==========================================
+   REVALIDATE TRUSTED TOKEN
+========================================== */
+
+if (
+
+  !verifiedBySecurityCode &&
+
+  !(
+    Number(
+      latest.trusted?.[trustedToken]
+    ) > Date.now()
+  )
+
+) {
+
+  return res.json({
+
+    error: "invalid"
+
+  });
+
+}
+
+
+/* ==========================================
+   CREATE TRUSTED DEVICE TOKEN
+========================================== */
+
+const trusted = crypto
+  .randomBytes(24)
+  .toString("hex");
+
+latest.trusted ||= {};
+
+latest.trusted[trusted] =
+
+  Date.now() +
+
+  30 * 24 * 60 * 60 * 1000;
+
+
+saveUsers(latestDb);
 
 
 
@@ -12371,14 +12567,19 @@ if (SPIRIT_SECRET && SPIRIT_SECRET.length >= 32) {
 res.json({
   ok: true,
 
-  profile: {
-    ...acc.profile,
+profile: {
 
-    cover: normalizeCover(acc.profile.cover),
+  ...latest.profile,
 
-    role: acc.role || "user",
-    roles: acc.roles || []
-  },
+  cover: normalizeCover(
+    latest.profile.cover
+  ),
+
+  role: latest.role || "user",
+
+  roles: latest.roles || []
+
+},
 
   trustedToken: trusted
 });
@@ -13617,7 +13818,9 @@ function readAccountDeleteRequest(uid) {
 
       item.uid !== uid ||
 
-      item.status !== "pending" ||
+
+
+     !["pending", "completed"].includes(item.status) ||
 
       typeof item.requestId !== "string"
 
@@ -13764,7 +13967,7 @@ function accountDeleteResponse(res, item) {
 
     ok: true,
 
-    status: item ? "pending" : "none",
+    status: item ? item.status : "none",
 
     ...(item ? {
 
@@ -14259,6 +14462,936 @@ app.post(
 );
 
 
+
+
+/* ==========================================
+   ACCOUNT DELETION MANAGER V1.0
+   FINANCIAL SAFETY CHECK
+========================================== */
+
+function deletionBlockers(
+  uid,
+  users,
+  withdrawals,
+  market,
+  payments
+) {
+
+  const account = users[uid];
+
+  const profile = account?.profile;
+
+  const issues = [];
+
+
+  if (!profile) {
+
+    return ["Không tìm thấy tài khoản"];
+
+  }
+
+
+  // PROTECT ADMIN
+
+  if (
+    account.role === "admin" ||
+    account.roles?.includes("admin")
+  ) {
+
+    issues.push("Tài khoản quản trị");
+
+  }
+
+
+  // DIAMOND BALANCES
+
+  for (const [key, label] of [
+
+    ["coins", "Kim cương sử dụng"],
+
+    ["coinReceived", "Ví rút tiền"]
+
+  ]) {
+
+    const value = Number(profile[key] ?? 0);
+
+    if (
+      !Number.isSafeInteger(value) ||
+      value !== 0
+    ) {
+
+      issues.push(label + " chưa về 0");
+
+    }
+
+  }
+
+
+  // WITHDRAW REQUESTS
+
+  if (
+
+    withdrawals.some(w =>
+
+      w.uid === uid &&
+
+      !["approved", "rejected"]
+        .includes(w.status)
+
+    )
+
+  ) {
+
+    issues.push("Rút tiền chưa hoàn tất");
+
+  }
+
+
+  // WITHDRAW HOLD
+
+  if (
+
+    (profile.withdrawHold || []).some(w =>
+
+      !withdrawals.some(x =>
+
+        x.id === w.id &&
+
+        x.uid === uid &&
+
+        ["approved", "rejected"]
+          .includes(x.status)
+
+      )
+
+    )
+
+  ) {
+
+    issues.push(
+      "Khoản giữ rút tiền cần đối soát"
+    );
+
+  }
+
+
+  // PENDING TRANSFERS
+
+  if (
+
+    Object.entries(users).some(([owner, u]) =>
+
+      (u?.transferRequests || []).some(t =>
+
+        (
+          owner === uid ||
+          t.fromUid === uid ||
+          t.toUid === uid
+        ) &&
+
+        !["approved", "rejected"]
+          .includes(t.status)
+
+      )
+
+    )
+
+  ) {
+
+    issues.push(
+      "Chuyển kim cương chưa hoàn tất"
+    );
+
+  }
+
+
+  // PAYMENT ORDERS
+
+  if (
+
+    Object.values(payments).some(o =>
+
+      o?.uid === uid &&
+
+      !["paid", "sandbox_confirmed"]
+        .includes(o.status)
+
+    )
+
+  ) {
+
+    issues.push(
+      "Đơn nạp tiền cần đối soát"
+    );
+
+  }
+
+
+  // MARKET ORDERS
+
+  if (
+
+    Object.values(market).some(b =>
+
+      b &&
+
+      (
+
+        b.ownerUid === uid ||
+
+        (b.orders || []).some(o =>
+
+          o.buyerUid === uid &&
+
+          !["done", "refunded", "cancelled"]
+            .includes(o.status)
+
+        )
+
+      )
+
+    )
+
+  ) {
+
+    issues.push(
+      "Gian hàng hoặc đơn hàng cần xử lý"
+    );
+
+  }
+
+
+  // SPIRIT BEAST
+
+  if ((account.spiritBeasts || []).length) {
+
+    issues.push(
+      "Còn linh thú cần xử lý"
+    );
+
+  }
+
+
+  // UNSETTLED REWARDS
+
+  if (
+    account.wheel8DoubleOffer?.status === "pending"
+  ) {
+
+    issues.push("Thưởng chưa quyết toán");
+
+  }
+
+
+  return issues;
+
+}
+
+
+/* ==========================================
+   ACCOUNT DELETION - STORAGE
+========================================== */
+
+function deletionManagerRecords() {
+
+  let files;
+
+  try {
+
+    files = fs.readdirSync(
+      ACCOUNT_DELETE_DIR
+    );
+
+  } catch (error) {
+
+    if (error.code === "ENOENT") {
+
+      return [];
+
+    }
+
+    throw error;
+
+  }
+
+
+  return files
+
+    .filter(f => /^[a-f0-9]{64}\.json$/.test(f))
+
+    .map(f => {
+
+      const item = JSON.parse(
+
+        fs.readFileSync(
+
+          path.join(
+            ACCOUNT_DELETE_DIR,
+            f
+          ),
+
+          "utf8"
+
+        )
+
+      );
+
+
+      if (
+
+        typeof item.uid !== "string" ||
+
+        !item.uid ||
+
+        path.basename(
+          accountDeletePath(item.uid)
+        ) !== f ||
+
+        typeof item.requestId !== "string" ||
+
+        !["pending", "completed"]
+          .includes(item.status)
+
+      ) {
+
+        throw new Error(
+          "Invalid deletion request"
+        );
+
+      }
+
+
+      return item;
+
+    });
+
+}
+
+
+/* ==========================================
+   ATOMIC UPDATE
+========================================== */
+
+function deletionManagerSave(item) {
+
+  const target =
+    accountDeletePath(item.uid);
+
+  const temp =
+
+    target +
+
+    "." +
+
+    crypto.randomUUID() +
+
+    ".tmp";
+
+
+  let fd;
+
+
+  try {
+
+    fd = fs.openSync(
+      temp,
+      "wx",
+      0o600
+    );
+
+    fs.writeFileSync(
+
+      fd,
+
+      JSON.stringify(item, null, 2),
+
+      "utf8"
+
+    );
+
+    fs.fsyncSync(fd);
+
+    fs.closeSync(fd);
+
+    fd = undefined;
+
+    fs.renameSync(temp, target);
+
+  } finally {
+
+    if (fd !== undefined) {
+
+      try {
+        fs.closeSync(fd);
+      } catch {}
+
+    }
+
+    try {
+      fs.unlinkSync(temp);
+    } catch {}
+
+  }
+
+}
+
+
+/* ==========================================
+   ADMIN AUTHORIZATION
+========================================== */
+
+function deletionManagerAdmin(req, res, next) {
+
+  const uid = req.lspAdminActorUid;
+
+  const actor = uid && loadUsers()[uid];
+
+  res.set(
+    "Cache-Control",
+    "private, no-store"
+  );
+
+
+  if (
+
+    !actor ||
+
+    actor.role !== "admin" ||
+
+    actor.profile?.accountBlocked
+
+  ) {
+
+    return res.status(403).json({
+
+      ok: false,
+
+      message: "Admin authorization required."
+
+    });
+
+  }
+
+  next();
+
+}
+
+
+/* ==========================================
+   DATA SNAPSHOT
+========================================== */
+
+function deletionManagerSnapshot() {
+
+  return {
+
+    users: loadUsers(),
+
+    withdrawals: loadWithdraws(),
+
+    market: loadMarket(),
+
+    payments: pgLoadOrders()
+
+  };
+
+}
+
+
+/* ==========================================
+   CHECK ACTIVE SESSIONS
+========================================== */
+
+function deletionManagerIssues(uid, data) {
+
+  const issues = deletionBlockers(
+
+    uid,
+
+    data.users,
+
+    data.withdrawals,
+
+    data.market,
+
+    data.payments
+
+  );
+
+
+  if (
+
+    [wheel8Round, dtpRound, timeRaceRound]
+
+      .some(r =>
+
+        (r.bets || []).some(
+          b => b.uid === uid
+        )
+
+      )
+
+  ) {
+
+    issues.push(
+      "Còn phiên trò chơi chưa kết thúc"
+    );
+
+  }
+
+
+  if (
+
+    [...rooms.values()].some(r =>
+
+      (r.broadcasterId || r.streamReady) &&
+
+      (
+        r.ownerUid === uid ||
+        r.hostProfile?.uid === uid
+      )
+
+    )
+
+  ) {
+
+    issues.push("Đang phát livestream");
+
+  }
+
+
+  return issues;
+
+}
+
+
+/* ==========================================
+   ADMIN - GET ACCOUNT DELETION REQUESTS
+========================================== */
+
+app.get(
+
+  "/api/admin/account-deletions",
+
+  deletionManagerAdmin,
+
+  (req, res) => {
+
+    try {
+
+      const data =
+        deletionManagerSnapshot();
+
+
+      const list = deletionManagerRecords()
+
+        .map(item => {
+
+          const profile =
+            data.users[item.uid]?.profile;
+
+          return {
+
+            uid: item.uid,
+
+            requestId: item.requestId,
+
+            requestedAt: item.requestedAt,
+
+            stage:
+
+              item.status === "completed"
+
+                ? "completed"
+
+                : item.stage || "pending",
+
+            name: profile?.name || "",
+
+            coins: profile?.coins ?? null,
+
+            wallet: profile?.coinReceived ?? null,
+
+            blocked: !!profile?.accountBlocked,
+
+            blockers:
+
+              item.status === "completed"
+
+                ? []
+
+                : deletionManagerIssues(
+                    item.uid,
+                    data
+                  ),
+
+            updatedAt:
+
+              item.updatedAt ||
+
+              item.completedAt ||
+
+              null,
+
+            updatedBy:
+
+              item.updatedBy || null
+
+          };
+
+        })
+
+        .sort((a, b) =>
+
+          String(b.requestedAt)
+
+            .localeCompare(
+              String(a.requestedAt)
+            )
+
+        );
+
+
+      return res.json({
+
+        ok: true,
+
+        list
+
+      });
+
+
+    } catch (error) {
+
+      console.error(
+
+        "[DELETION MANAGER] list",
+
+        error.name
+
+      );
+
+
+      return res.status(503).json({
+
+        ok: false,
+
+        message:
+          "Không đọc được dữ liệu yêu cầu."
+
+      });
+
+    }
+
+  }
+
+);
+
+
+/* ==========================================
+   ADMIN - PROCESS ACCOUNT DELETION
+========================================== */
+
+app.post(
+
+  "/api/admin/account-deletions/action",
+
+  deletionManagerAdmin,
+
+  (req, res) => {
+
+
+    const fail = (status, message) =>
+
+      res.status(status).json({
+
+        ok: false,
+
+        message
+
+      });
+
+
+    /* ======================================
+       ORIGIN CHECK
+    ====================================== */
+
+    if (
+
+      !req.is("application/json") ||
+
+      !isLspAllowedOrigin(
+        req.get("origin") || ""
+      ) ||
+
+      !lspAdminSameOrigin(req)
+
+    ) {
+
+      return fail(
+        403,
+        "Invalid request origin or format."
+      );
+
+    }
+
+
+    const {
+
+      uid,
+
+      requestId,
+
+      action,
+
+      confirmation
+
+    } = req.body || {};
+
+
+    /* ======================================
+       VALIDATION
+    ====================================== */
+
+    if (
+
+      typeof uid !== "string" ||
+
+      !uid ||
+
+      uid.length > 256 ||
+
+      typeof requestId !== "string" ||
+
+      !["review", "prepare"].includes(action)
+
+    ) {
+
+      return fail(
+        400,
+        "Invalid request."
+      );
+
+    }
+
+
+    try {
+
+      const item =
+        readAccountDeleteRequest(uid);
+
+
+      if (
+
+        !item ||
+
+        item.requestId !== requestId ||
+
+        item.status !== "pending"
+
+      ) {
+
+        return fail(
+          409,
+          "Yêu cầu không còn hợp lệ."
+        );
+
+      }
+
+
+      const data =
+        deletionManagerSnapshot();
+
+      const account = data.users[uid];
+
+
+      /* ====================================
+         PROTECT ADMIN
+      ==================================== */
+
+      if (
+
+        !account?.profile ||
+
+        account.role === "admin" ||
+
+        account.roles?.includes("admin") ||
+
+        uid === req.lspAdminActorUid
+
+      ) {
+
+        return fail(
+          403,
+          "Không thể xử lý tài khoản này."
+        );
+
+      }
+
+
+      if (item.stage === "ready") {
+
+        return fail(
+          409,
+          "Tài khoản đã được chuẩn bị xóa."
+        );
+
+      }
+
+
+      /* ====================================
+         PREPARE ACCOUNT DELETION
+      ==================================== */
+
+      if (action === "prepare") {
+
+
+        if (
+          confirmation !== "LOCK " + uid
+        ) {
+
+          return fail(
+            400,
+            "Mã xác nhận không đúng."
+          );
+
+        }
+
+
+        // Recheck all known blockers
+
+        const blockers =
+          deletionManagerIssues(uid, data);
+
+
+        if (blockers.length) {
+
+          return fail(
+            409,
+            blockers.join("; ")
+          );
+
+        }
+
+
+        /* ==================================
+           LOCK ACCOUNT
+        ================================== */
+
+        account.profile.accountBlocked = true;
+
+        account.profile.blockedAt = Date.now();
+
+
+        // Remove trusted devices
+
+        account.trusted = {};
+
+
+        // Revoke account sessions
+
+        securityAuth.revokeAccount(account);
+
+
+        // Save account state
+
+        saveUsers(data.users);
+
+
+        // Remove in-memory push subscription
+
+        pushSubs.delete(uid);
+
+
+        /* ==================================
+           DISCONNECT ALL USER SOCKETS
+        ================================== */
+
+        for (
+
+          const client
+
+          of io.sockets.sockets.values()
+
+        ) {
+
+          if (client.data.uid === uid) {
+
+            client.emit("auth-error", {
+
+              message:
+
+                "Account deletion is being processed."
+
+            });
+
+            client.disconnect(true);
+
+          }
+
+        }
+
+      }
+
+
+      /* ====================================
+         SAVE REQUEST STATUS
+      ==================================== */
+
+      deletionManagerSave({
+
+        ...item,
+
+        stage:
+
+          action === "prepare"
+
+            ? "ready"
+
+            : "reviewing",
+
+        updatedAt:
+          new Date().toISOString(),
+
+        updatedBy:
+          req.lspAdminActorUid
+
+      });
+
+
+      return res.json({
+
+        ok: true
+
+      });
+
+
+    } catch (error) {
+
+      console.error(
+
+        "[DELETION MANAGER] action",
+
+        error.name
+
+      );
+
+
+      return fail(
+
+        503,
+
+        "Không hoàn tất được thao tác. " +
+
+        "Tải lại để kiểm tra trạng thái."
+
+      );
+
+    }
+
+  }
+
+);
 
 
 
