@@ -7008,17 +7008,57 @@ if(profile.uid){
   socket.emit("auth-login", { uid: profile.uid });
 }
 
-if (profile.uid) {
-  fetch("/api/friends/" + profile.uid)
-    .then(r => r.json())
-    .then(data => {
-      MY_FRIENDS = data.friends.map(f => f.uid);
-      MY_REQUESTS = data.requests.map(r => r.uid);
-      MY_BLOCKED = data.blocked || [];   // 🚫 BLOCK
-      renderPlayerLobbyAll();
-    });
+/* ==========================================
+   RESTORE FRIEND & FOLLOW STATUS
+========================================== */
+
+async function refreshFriendStatus() {
+
+  if (!profile.uid || isGuest) return;
+
+  try {
+
+    const response = await fetch(
+      "/api/friends/" + encodeURIComponent(profile.uid),
+      {
+        cache: "no-store",
+        credentials: "same-origin"
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to load friend status");
+    }
+
+    const data = await response.json();
+
+    MY_FRIENDS = Array.isArray(data.friends)
+      ? data.friends.map(f => String(f.uid))
+      : [];
+
+    MY_REQUESTS = Array.isArray(data.sentRequests)
+      ? data.sentRequests.map(String)
+      : [];
+
+    MY_BLOCKED = Array.isArray(data.blocked)
+      ? data.blocked.map(String)
+      : [];
+
+    renderPlayerLobbyAll();
+
+  } catch (error) {
+
+    console.error("[FRIEND STATUS]", error);
+
+  }
+
 }
 
+// Restore status on page load
+refreshFriendStatus();
+
+// Restore status after reconnect
+socket.on("connect", refreshFriendStatus);
 
 
 
@@ -8930,9 +8970,9 @@ btnPlayerLobby.onclick = async () => {
           .filter(Boolean)
       : [];
 
-    MY_REQUESTS = Array.isArray(data.requests)
-      ? data.requests.map(r => String(r.uid || ""))
-      : [];
+   MY_REQUESTS = Array.isArray(data.sentRequests)
+  ? data.sentRequests.map(String)
+  : [];
 
     MY_BLOCKED = Array.isArray(data.blocked)
       ? data.blocked
@@ -9057,8 +9097,8 @@ if (!list.length) {
     const isOn = ONLINE_UIDS.includes(u.uid);
     const isMe = u.uid === profile.uid;
 
-    const isFriend = MY_FRIENDS.includes(u.uid);
-    const isPending = MY_REQUESTS.includes(u.uid);
+    const isFriend = MY_FRIENDS.includes(uid);
+    const isPending = MY_REQUESTS.includes(uid);
 
     const avatar = fixAvatar(u.avatar || "");
     const initial = Array.from(name.trim())[0] || "U";
@@ -9272,6 +9312,48 @@ document.getElementById("playerList")
     }
 
   });
+
+
+
+  /* ==========================================
+   FRIEND STATUS - REALTIME SYNC
+========================================== */
+
+// Accept or reject friend request
+socket.on("friend-respond", () => {
+
+  refreshFriendStatus();
+
+});
+
+// Friendship accepted
+socket.on("friend-accepted", () => {
+
+  refreshFriendStatus();
+
+});
+
+// Restore when returning to the page
+window.addEventListener("pageshow", event => {
+
+  if (event.persisted) {
+
+    refreshFriendStatus();
+
+  }
+
+});
+
+// Restore when returning to the app
+document.addEventListener("visibilitychange", () => {
+
+  if (document.visibilityState === "visible") {
+
+    refreshFriendStatus();
+
+  }
+
+});
 
 
 

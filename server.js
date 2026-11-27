@@ -15903,7 +15903,7 @@ uMe.profile.blockedUsers ||= [];
 uMe.profile.friendRequests =
   (uMe.profile.friendRequests || [])
     .filter(x => String(x) !== String(uid));
-    
+
   const uYou = db[uid];
   if (uYou) {
     uYou.profile.friends =
@@ -17098,7 +17098,40 @@ app.get(
     };
   }).filter(Boolean);
 
-  res.json({ friends, requests });
+  /* ==========================================
+   OUTGOING FRIEND REQUESTS - FOLLOW STATUS
+========================================== */
+
+const sentRequests = Object.keys(db).filter(targetUid => {
+
+  if (String(targetUid) === String(uid)) {
+    return false;
+  }
+
+  const incoming = db[targetUid]?.profile?.friendRequests;
+
+  if (!Array.isArray(incoming)) {
+    return false;
+  }
+
+  return incoming.some(
+    senderUid => String(senderUid) === String(uid)
+  );
+
+});
+
+const blocked = Array.isArray(me.profile.blockedUsers)
+  ? me.profile.blockedUsers.map(String)
+  : [];
+
+res.setHeader("Cache-Control", "no-store");
+
+res.json({
+  friends,
+  requests,
+  sentRequests,
+  blocked
+});
 });
 
 
