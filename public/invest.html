@@ -163,13 +163,14 @@
         cursor: pointer;
       }
 
-      .iv-entry img {
-        display: block;
-        width: 100%;
-        height: 150px;
-        object-fit: contain;
-        background: var(--iv-cream);
-      }
+.iv-entry img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 8 / 3;
+  object-fit: cover;
+  background: var(--iv-cream);
+}
 
       .iv-entry-info {
         display: flex;
@@ -462,7 +463,10 @@
         </section>
         <div class="iv-entry-grid">
           <button type="button" class="iv-entry" onclick="openPortfolio()">
-            <img src="/assets/bg/portfolio.jpg" alt="">
+            <img src="/assets/bg/portfolio.jpg?v=20261127-04"
+     alt="Trade Center"
+     onerror="handleGameImageError(this)">
+
             <span class="iv-entry-info">
               <span>
                 <strong>Trade Center</strong>
@@ -471,7 +475,9 @@
               <span class="iv-arrow" aria-hidden="true">›</span></span>
           </button>
           <button type="button" class="iv-entry" onclick="openGameHub()">
-            <img src="/assets/bg/games.jpg" alt="">
+            <img src="/assets/bg/games.jpg?v=20261127-04"
+     alt="Game Center"
+     onerror="handleGameImageError(this)">
             <span class="iv-entry-info">
               <span>
                 <strong>Game Center</strong>
