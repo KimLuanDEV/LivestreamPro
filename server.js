@@ -1,3 +1,23 @@
+/* ==========================================
+   LIVESTREAM PRO
+   ACCOUNT DELETION ENGINE V2.0
+========================================== */
+
+if (
+  process.env.LSP_DELETION_STARTUP_EXCLUSIVE === "true"
+) {
+
+  require("./account-deletion-engine")(
+
+    "/opt/render/project/data",
+
+    deletionBlockers
+
+  );
+
+}
+
+
 
 
 const MAX_VIEWERS = 20;
@@ -15014,9 +15034,19 @@ app.get(
 
             blocked: !!profile?.accountBlocked,
 
-            blockers:
+            engineState:
+  item.engineState || null,
 
-              item.status === "completed"
+engineError:
+  item.engineError || null,
+
+mediaCandidates:
+  item.mediaCandidates || [],
+
+blockers:
+
+  item.status === "completed" ||
+  item.engineState === "local_done"
 
                 ? []
 
@@ -15385,6 +15415,272 @@ app.post(
 
         "Tải lại để kiểm tra trạng thái."
 
+      );
+
+    }
+
+  }
+
+);
+
+
+/* ==========================================
+   ACCOUNT DELETION ENGINE V2.0
+   ADMIN API
+========================================== */
+
+app.post(
+
+  "/api/admin/account-deletions/engine",
+
+  deletionManagerAdmin,
+
+  (req, res) => {
+
+    const fail = (status, message) =>
+      res.status(status).json({
+        ok: false,
+        message
+      });
+
+
+    if (
+      !req.is("application/json") ||
+      !lspAdminSameOrigin(req) ||
+      !isLspAllowedOrigin(
+        req.get("origin") || ""
+      )
+    ) {
+
+      return fail(403, "Invalid request origin.");
+
+    }
+
+
+    const {
+      uid,
+      requestId,
+      action,
+      confirmation
+    } = req.body || {};
+
+
+    if (
+      typeof uid !== "string" ||
+      !uid ||
+      uid.length > 256 ||
+      typeof requestId !== "string" ||
+      !["queue", "complete"].includes(action)
+    ) {
+
+      return fail(400, "Invalid request.");
+
+    }
+
+
+    if (uid === req.lspAdminActorUid) {
+
+      return fail(403, "Protected account.");
+
+    }
+
+
+    const expected =
+
+      (
+        action === "queue"
+          ? "DELETE "
+          : "COMPLETE "
+      ) + uid;
+
+
+    if (confirmation !== expected) {
+
+      return fail(400, "Mã xác nhận không đúng.");
+
+    }
+
+
+    try {
+
+      const item =
+        readAccountDeleteRequest(uid);
+
+
+      if (
+        !item ||
+        item.requestId !== requestId ||
+        item.status !== "pending" ||
+        item.stage !== "ready"
+      ) {
+
+        return fail(
+          409,
+          "Yêu cầu chưa sẵn sàng."
+        );
+
+      }
+
+
+      const updated = {
+
+        ...item,
+
+        updatedAt:
+          new Date().toISOString(),
+
+        updatedBy:
+          req.lspAdminActorUid
+
+      };
+
+
+      /* ====================================
+         QUEUE ACCOUNT DELETION
+      ==================================== */
+
+      if (action === "queue") {
+
+        if (
+          ![undefined, null, "error", "queued"]
+            .includes(item.engineState)
+        ) {
+
+          return fail(
+            409,
+            "Yêu cầu đã được xử lý hoặc đang chờ khởi động lại."
+          );
+
+        }
+
+
+        const data =
+          deletionManagerSnapshot();
+
+        const account =
+          data.users[uid];
+
+
+        if (
+          !account?.profile?.accountBlocked ||
+          account.role === "admin" ||
+          account.profile.role === "admin" ||
+          account.roles?.includes("admin")
+        ) {
+
+          return fail(
+            409,
+            "Tài khoản chưa khóa hoặc được bảo vệ."
+          );
+
+        }
+
+
+        const issues =
+          deletionManagerIssues(uid, data);
+
+
+        if (issues.length) {
+
+          return fail(
+            409,
+            issues.join("; ")
+          );
+
+        }
+
+
+        if (
+          [...io.sockets.sockets.values()]
+            .some(s => s.data.uid === uid)
+        ) {
+
+          return fail(
+            409,
+            "Tài khoản vẫn còn kết nối."
+          );
+
+        }
+
+
+        deletionManagerSave({
+
+          ...updated,
+
+          engineState: "queued",
+
+          engineError: null,
+
+          queuedAt: updated.updatedAt
+
+        });
+
+      }
+
+
+      /* ====================================
+         COMPLETE ACCOUNT DELETION
+      ==================================== */
+
+      else {
+
+        if (
+          item.engineState !== "local_done" ||
+          Object.hasOwn(loadUsers(), uid)
+        ) {
+
+          return fail(
+            409,
+            "Chưa hoàn tất xóa dữ liệu cục bộ."
+          );
+
+        }
+
+
+        const {
+          mediaCandidates,
+          engineError,
+          coreWriteReady,
+          ...minimal
+        } = updated;
+
+
+        deletionManagerSave({
+
+          ...minimal,
+
+          status: "completed",
+
+          stage: "completed",
+
+          engineState: "completed",
+
+          completedAt:
+            updated.updatedAt,
+
+          externalReviewAttestedAt:
+            updated.updatedAt
+
+        });
+
+      }
+
+
+      return res.json({
+        ok: true
+      });
+
+
+    } catch (e) {
+
+      console.error(
+        "[DELETION ENGINE] Admin action failed:",
+        e.name
+      );
+
+      return fail(
+        503,
+        "Không thể lưu thao tác. Tải lại và kiểm tra."
       );
 
     }

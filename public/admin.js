@@ -1991,22 +1991,168 @@ if (typeof io === "function") {
       }
 
 
-      // READY STATUS
+ /* ==========================================
+   ACCOUNT DELETION ENGINE V2.0
+========================================== */
 
-      if (r.stage === "ready") {
+if (r.stage === "ready") {
 
-        card.append(
-          node(
-            "p",
-            r.blocked
-              ? "Đã khóa. Chờ xóa dữ liệu offline."
-              : "Cảnh báo: tài khoản chưa khóa.",
-            "adm-delete-warning"
-          )
-        );
+  const state =
+    r.engineState || "ready";
 
-      }
 
+  const states = {
+
+    ready:
+      "Đã khóa · Sẵn sàng đưa vào hàng đợi",
+
+    queued:
+      "Đã xếp hàng · Chờ server khởi động lại",
+
+    purging:
+      "Đang xử lý / cần khởi động lại để tiếp tục",
+
+    error:
+      "Kiểm tra thất bại",
+
+    local_done:
+      "Đã xóa dữ liệu cục bộ · Chờ xác nhận dữ liệu ngoài"
+
+  };
+
+
+  card.append(
+
+    node(
+      "p",
+      states[state] || state,
+      "adm-delete-state"
+    )
+
+  );
+
+
+  if (r.engineError) {
+
+    card.append(
+
+      node(
+        "p",
+        r.engineError,
+        "adm-delete-warning"
+      )
+
+    );
+
+  }
+
+
+  /* MEDIA REVIEW */
+
+  if (r.mediaCandidates?.length) {
+
+    const details =
+      document.createElement("details");
+
+    details.append(
+
+      node(
+        "summary",
+        `Media cần kiểm tra (${r.mediaCandidates.length})`
+      )
+
+    );
+
+
+    for (const value of r.mediaCandidates) {
+
+      details.append(
+        node("p", value)
+      );
+
+    }
+
+    card.append(details);
+
+  }
+
+
+  const actions = node(
+    "div",
+    "",
+    "adm-delete-actions"
+  );
+
+
+  /* QUEUE DELETE BUTTON */
+
+  if (
+    ["ready", "error"].includes(state)
+  ) {
+
+    const b = node(
+
+      "button",
+
+      "Xếp hàng xóa dữ liệu",
+
+      "btn-mini lux-action-danger"
+
+    );
+
+
+    b.type = "button";
+
+
+    b.disabled =
+
+      busy ||
+
+      !r.blocked ||
+
+      !!r.blockers?.length;
+
+
+    b.onclick = () =>
+      engineAction(r, "queue");
+
+
+    actions.append(b);
+
+  }
+
+
+  /* COMPLETE BUTTON */
+
+  if (state === "local_done") {
+
+    const b = node(
+
+      "button",
+
+      "Xác nhận hoàn tất",
+
+      "btn-mini"
+
+    );
+
+
+    b.type = "button";
+
+    b.disabled = busy;
+
+    b.onclick = () =>
+      engineAction(r, "complete");
+
+
+    actions.append(b);
+
+  }
+
+
+  card.append(actions);
+
+}
 
       // ACTION BUTTONS
 
@@ -2214,6 +2360,111 @@ if (typeof io === "function") {
   /* ========================================
      EVENTS
   ======================================== */
+
+
+  /* ==========================================
+   ACCOUNT DELETION ENGINE ACTION
+========================================== */
+
+async function engineAction(r, action) {
+
+  if (busy) return;
+
+  busy = true;
+
+  render();
+
+
+  try {
+
+    const expected =
+
+      (
+        action === "queue"
+          ? "DELETE "
+          : "COMPLETE "
+      ) + r.uid;
+
+
+    const warning =
+
+      action === "queue"
+
+        ? "Đã đối soát tài sản, lưu các chứng từ cần giữ và xác nhận xóa không thể hoàn tác. Hệ thống xóa khi khởi động lại với mọi tiến trình ghi cũ đã dừng."
+
+        : "Chỉ xác nhận nếu đã xử lý R2, dữ liệu ngoài, dữ liệu sao lưu và các bản ghi còn lại theo chính sách lưu trữ.";
+
+
+    const confirmation = await showModal({
+
+      title: "Xác nhận xóa tài khoản",
+
+      body:
+
+        warning +
+
+        "<br><br>Nhập <b>" +
+
+        adminWithdrawEscape(expected) +
+
+        "</b>",
+
+      input: true,
+
+      confirm: true
+
+    });
+
+
+    if (confirmation !== expected) {
+
+      return;
+
+    }
+
+
+    await api(
+
+      "/api/admin/account-deletions/engine",
+
+      {
+
+        uid: r.uid,
+
+        requestId: r.requestId,
+
+        action,
+
+        confirmation
+
+      }
+
+    );
+
+
+  } catch (error) {
+
+    await showModal({
+
+      title: "Không hoàn tất",
+
+      body:
+        adminWithdrawEscape(
+          error.message
+        )
+
+    });
+
+  } finally {
+
+    busy = false;
+
+    await load();
+
+  }
+
+}
+
 
   tab.addEventListener("click", load);
 
