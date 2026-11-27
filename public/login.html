@@ -1094,9 +1094,14 @@ html.ios-auth-height-fix .login-status-overlay {
 
 
 <!-- LOGIN FORM -->
-<section
+<form
+  id="lspLoginForm"
   class="login-panel"
-  aria-label="Account Sign In">
+  aria-label="Account Sign In"
+  method="post"
+  action="/api/login"
+  autocomplete="on"
+  onsubmit="event.preventDefault(); login();">
 
   <div class="panel-top">
     <h2>Sign In</h2>
@@ -1112,12 +1117,12 @@ html.ios-auth-height-fix .login-status-overlay {
 
     <input
       id="username"
+      name="username"
       type="text"
       placeholder="Enter your username"
       autocomplete="username"
       autocapitalize="none"
       spellcheck="false"
-      onkeydown="if(event.key==='Enter')document.getElementById('password').focus()"
     >
 
   </div>
@@ -1133,10 +1138,10 @@ html.ios-auth-height-fix .login-status-overlay {
 
       <input
         id="password"
+        name="password"
         type="password"
         placeholder="Enter your password"
         autocomplete="current-password"
-        onkeydown="if(event.key==='Enter')login()"
       >
 
       <button
@@ -1161,15 +1166,14 @@ html.ios-auth-height-fix .login-status-overlay {
 
   <!-- SIGN IN -->
   <button
-    type="button"
-    class="login-btn login-submit"
-    onclick="login()">
+    type="submit"
+    class="login-btn login-submit">
     SIGN IN
   </button>
 
 
 
-</section>
+</form>
 
     <!-- REGISTER -->
 <div class="register-line">
@@ -1542,6 +1546,54 @@ async function submitForgot() {
 })();
 
 
+/* ==========================================
+   REMEMBER LAST LOGIN - DEVICE PASSWORD MANAGER
+   Only a username hint is stored by this app.
+========================================== */
+
+const LSP_LAST_LOGIN_COOKIE = "__Host-lsp_last_login";
+
+function restoreLastLogin() {
+  try {
+    const prefix = LSP_LAST_LOGIN_COOKIE + "=";
+    const entry = document.cookie.split(";")
+      .map(value => value.trim())
+      .find(value => value.startsWith(prefix));
+
+    const field = document.getElementById("username");
+
+    if (entry && field && !field.value) {
+      field.value = decodeURIComponent(entry.slice(prefix.length));
+    }
+  } catch {
+    // Storage restrictions must not prevent normal sign-in.
+  }
+}
+
+async function rememberSuccessfulCredentials(username, password) {
+  try {
+    document.cookie = LSP_LAST_LOGIN_COOKIE + "=" +
+      encodeURIComponent(username) +
+      "; Max-Age=15552000; Path=/; Secure; SameSite=Lax";
+  } catch {}
+
+  // Optional browser API. The browser owns password storage and consent.
+  // Other browsers can use normal form-based password autofill.
+  if (typeof window.PasswordCredential !== "function" ||
+      typeof navigator.credentials?.store !== "function") return;
+
+  try {
+    await navigator.credentials.store(new PasswordCredential({
+      id: username,
+      password: password
+    }));
+  } catch {
+    // Declined or unsupported password saving must not block login.
+  }
+}
+
+restoreLastLogin();
+
 let __loginUser = null;
 let __loginPass = null;
 
@@ -1893,6 +1945,7 @@ async function login() {
         ) {
 
           saveSuccessfulLogin(result.data, u);
+          await rememberSuccessfulCredentials(u, p);
 
           // Keep the loading state visible briefly
           const elapsed = Date.now() - startTime;
@@ -2074,6 +2127,8 @@ async function submitSecurity() {
       __loginUser
     );
 
+    await rememberSuccessfulCredentials(__loginUser, __loginPass);
+
     closeSec();
 
     // Show success before navigating
@@ -2105,6 +2160,8 @@ async function submitSecurity() {
 function closeSec(){
   document.getElementById("secModal").classList.add("hidden");
   document.getElementById("secInput").value = "";
+  __loginUser = null;
+  __loginPass = null;
 }
 
 
