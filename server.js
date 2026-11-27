@@ -5731,6 +5731,49 @@ app.get(
 
 
 
+
+/* ==========================================
+   LIVESTREAM PRO - GUEST MODE DISABLED
+========================================== */
+
+const LSP_GUEST_MODE_ENABLED = false;
+
+app.get([
+
+  "/lobby",
+  "/lobby.html",
+  "/social.html",
+  "/profile.html",
+  "/friends.html",
+  "/messages.html",
+  "/viewer.html",
+  "/broadcast-sfu.html",
+  "/virtual-room.html"
+
+], (req, res, next) => {
+
+  if (LSP_GUEST_MODE_ENABLED) {
+    return next();
+  }
+
+  const identity = securityAuth.getIdentity(
+    req.headers.cookie || ""
+  );
+
+  if (!identity?.uid) {
+
+    res.setHeader("Cache-Control", "no-store");
+
+    return res.redirect(302, "/login.html");
+
+  }
+
+  return next();
+
+});
+
+
+
 /* ==========================================
    LEGACY VIEWER REDIRECT TO LIVEKIT SFU
 ========================================== */
@@ -24298,6 +24341,32 @@ io.on("connection", socket => {
   // Người xem vào phòng ảo
 
   socket.on("virtual-live:join", (data = {}, callback) => {
+
+    if (
+
+  !LSP_GUEST_MODE_ENABLED &&
+
+  (
+    socket.data.authenticated !== true ||
+    !socket.data.uid
+  )
+
+) {
+
+  if (typeof callback === "function") {
+
+    callback({
+      ok: false,
+      error: "AUTH_REQUIRED",
+      message: "Please sign in to continue."
+    });
+
+  }
+
+  return;
+
+}
+
 
     const roomId = String(data?.roomId || "");
 
