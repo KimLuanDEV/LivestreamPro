@@ -4036,3 +4036,679 @@ if (
   }
 
 }
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   ACCOUNT DELETION REQUEST V1.0
+========================================== */
+
+(() => {
+
+  const modal =
+    document.getElementById("deleteAccountModal");
+
+  const group =
+    document.getElementById("deleteAccountGroup");
+
+  const form =
+    document.getElementById("deleteAccountForm");
+
+  const status =
+    document.getElementById("deleteAccountStatus");
+
+  const submit =
+    document.getElementById("btnSubmitDeleteAccount");
+
+  const password =
+    document.getElementById("deleteAccountPassword");
+
+  const code =
+    document.getElementById("deleteAccountCode");
+
+  const confirm =
+    document.getElementById("deleteAccountConfirm");
+
+
+  // Chỉ cho phép trên profile của chính mình
+
+  const ownAccount =
+
+    !!__profileAuth?.uid &&
+
+    (
+      !viewUid ||
+      viewUid === __profileAuth.uid
+    );
+
+
+  if (
+    !modal ||
+    !group ||
+    !form ||
+    !status ||
+    !submit ||
+    !password ||
+    !code ||
+    !confirm ||
+    !ownAccount
+  ) {
+    return;
+  }
+
+
+  group.hidden = false;
+
+  let busy = false;
+  let openVersion = 0;
+
+
+  /* ==========================================
+     PENDING REQUEST
+  ========================================== */
+
+  function pending(data) {
+
+    form.reset();
+
+    form.hidden = true;
+
+    status.textContent =
+
+      "Deletion request received. " +
+
+      "Status: Pending review. " +
+
+      "Reference: " +
+
+      data.requestId;
+
+  }
+
+
+  /* ==========================================
+     OPEN DELETE ACCOUNT
+  ========================================== */
+
+  window.openDeleteAccount = async () => {
+
+    if (busy) return;
+
+    const version = ++openVersion;
+
+    closeProfileSheet();
+
+    hideTabbar();
+
+    form.reset();
+
+    form.hidden = true;
+
+    status.textContent =
+      "Checking request status...";
+
+    modal.classList.remove("hidden");
+
+
+    try {
+
+      const response = await fetch(
+        "/api/account/delete-request",
+        {
+          credentials: "same-origin",
+          cache: "no-store"
+        }
+      );
+
+      const data = await response.json();
+
+      if (version !== openVersion) return;
+
+      if (!response.ok || !data.ok) {
+
+        throw new Error(
+          data.message ||
+          "Unable to check request status."
+        );
+
+      }
+
+      if (data.status === "pending") {
+
+        pending(data);
+
+      } else {
+
+        status.textContent = "";
+
+        form.hidden = false;
+
+      }
+
+    } catch (error) {
+
+      if (version === openVersion) {
+
+        status.textContent =
+          "Unable to check request status. Close and try again.";
+
+      }
+
+    }
+
+  };
+
+
+  /* ==========================================
+     CLOSE DELETE ACCOUNT
+  ========================================== */
+
+  window.closeDeleteAccount = () => {
+
+    if (busy) return;
+
+    ++openVersion;
+
+    form.reset();
+
+    modal.classList.add("hidden");
+
+    document.body.classList.remove(
+      "keyboard-open"
+    );
+
+    showTabbar();
+
+  };
+
+
+  /* ==========================================
+     SUBMIT DELETE REQUEST
+  ========================================== */
+
+  form.addEventListener("submit", async event => {
+
+    event.preventDefault();
+
+    if (busy || form.hidden) return;
+
+
+    if (confirm.value.trim() !== "DELETE") {
+
+      status.textContent =
+        "Type DELETE to confirm.";
+
+      return;
+
+    }
+
+
+    busy = true;
+
+    submit.disabled = true;
+
+    submit.textContent = "Submitting...";
+
+    status.textContent = "";
+
+
+    try {
+
+      const response = await fetch(
+        "/api/account/delete-request",
+        {
+
+          method: "POST",
+
+          credentials: "same-origin",
+
+          cache: "no-store",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+
+            password: password.value,
+
+            securityCode: code.value,
+
+            confirmation: confirm.value.trim()
+
+          })
+
+        }
+      );
+
+
+      const data = await response.json();
+
+
+      if (
+        !response.ok ||
+        !data.ok ||
+        data.status !== "pending"
+      ) {
+
+        throw new Error(
+
+          data.message ||
+
+          "Unable to submit deletion request."
+
+        );
+
+      }
+
+
+      pending(data);
+
+
+    } catch (error) {
+
+      status.textContent =
+
+        error.message ||
+
+        "Unable to submit request. Try again.";
+
+
+    } finally {
+
+      password.value = "";
+
+      code.value = "";
+
+      busy = false;
+
+      submit.disabled = false;
+
+      submit.textContent = "Request Deletion";
+
+    }
+
+  });
+
+
+  /* ==========================================
+     MOBILE KEYBOARD
+  ========================================== */
+
+  form.querySelectorAll("input").forEach(input => {
+
+    input.addEventListener("focus", () => {
+
+      document.body.classList.add(
+        "keyboard-open"
+      );
+
+    });
+
+    input.addEventListener("blur", () => {
+
+      document.body.classList.remove(
+        "keyboard-open"
+      );
+
+    });
+
+  });
+
+})();
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   ACCOUNT DELETION CLIENT V2.0
+========================================== */
+
+const deleteAccountGroup =
+  document.getElementById("deleteAccountGroup");
+
+const deleteAccountModal =
+  document.getElementById("deleteAccountModal");
+
+const deleteAccountForm =
+  document.getElementById("deleteAccountForm");
+
+const deleteAccountStatus =
+  document.getElementById("deleteAccountStatus");
+
+const btnSubmitDeleteAccount =
+  document.getElementById("btnSubmitDeleteAccount");
+
+let accountDeletionBusy = false;
+
+
+/* ==========================================
+   CHECK ACCOUNT OWNER
+========================================== */
+
+function isDeleteAccountOwner() {
+
+  return Boolean(
+    __profileAuth?.uid &&
+    (
+      !viewUid ||
+      String(viewUid) === String(__profileAuth.uid)
+    )
+  );
+
+}
+
+
+/* ==========================================
+   SHOW DELETE ACCOUNT BUTTON
+========================================== */
+
+function updateDeleteAccountVisibility() {
+
+  if (!deleteAccountGroup) return;
+
+  deleteAccountGroup.hidden =
+    !isDeleteAccountOwner();
+
+}
+
+updateDeleteAccountVisibility();
+
+window.addEventListener(
+  "pageshow",
+  updateDeleteAccountVisibility
+);
+
+
+/* ==========================================
+   RESET FORM
+========================================== */
+
+function resetDeleteAccountForm() {
+
+  deleteAccountForm?.reset();
+
+  if (deleteAccountStatus) {
+    deleteAccountStatus.textContent = "";
+  }
+
+}
+
+
+/* ==========================================
+   RENDER REQUEST STATUS
+========================================== */
+
+function renderDeleteAccountStatus(data) {
+
+  const status = data?.status;
+
+  deleteAccountForm.hidden =
+    status !== "none";
+
+  switch (status) {
+
+    case "none":
+
+      deleteAccountStatus.textContent = "";
+      break;
+
+    case "pending":
+
+      deleteAccountStatus.textContent =
+        "Your deletion request is pending review.";
+
+      break;
+
+    case "completed":
+
+      deleteAccountStatus.textContent =
+        "Your account deletion has been completed.";
+
+      break;
+
+    default:
+
+      deleteAccountStatus.textContent =
+        "Unable to determine deletion status.";
+
+  }
+
+}
+
+
+/* ==========================================
+   LOAD REQUEST STATUS
+========================================== */
+
+async function loadDeleteAccountStatus() {
+
+  deleteAccountForm.hidden = true;
+
+  deleteAccountStatus.textContent =
+    "Checking account status...";
+
+  try {
+
+    const response = await fetch(
+      "/api/account/delete-request",
+      {
+        method: "GET",
+        credentials: "same-origin",
+        cache: "no-store"
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+
+      throw new Error(
+        data.message || "Unable to check status."
+      );
+
+    }
+
+    renderDeleteAccountStatus(data);
+
+  } catch (error) {
+
+    deleteAccountStatus.textContent =
+      error.message || "Connection failed.";
+
+  }
+
+}
+
+
+/* ==========================================
+   OPEN DELETE ACCOUNT MODAL
+========================================== */
+
+async function openDeleteAccount() {
+
+  if (!isDeleteAccountOwner()) return;
+
+  if (accountDeletionBusy) return;
+
+  closeProfileSheet();
+
+  resetDeleteAccountForm();
+
+  hideTabbar();
+
+  deleteAccountModal?.classList.remove("hidden");
+
+  accountDeletionBusy = true;
+
+  try {
+
+    await loadDeleteAccountStatus();
+
+  } finally {
+
+    accountDeletionBusy = false;
+
+  }
+
+}
+
+
+/* ==========================================
+   CLOSE DELETE ACCOUNT MODAL
+========================================== */
+
+function closeDeleteAccount() {
+
+  if (accountDeletionBusy) return;
+
+  deleteAccountModal?.classList.add("hidden");
+
+  document.body.classList.remove(
+    "keyboard-open"
+  );
+
+  resetDeleteAccountForm();
+
+  showTabbar();
+
+}
+
+
+/* ==========================================
+   SUBMIT ACCOUNT DELETION REQUEST
+========================================== */
+
+deleteAccountForm?.addEventListener(
+  "submit",
+  async function (event) {
+
+    event.preventDefault();
+
+    if (accountDeletionBusy) return;
+
+    if (!isDeleteAccountOwner()) return;
+
+    const password =
+      document.getElementById(
+        "deleteAccountPassword"
+      ).value;
+
+    const securityCode =
+      document.getElementById(
+        "deleteAccountCode"
+      ).value;
+
+    const confirmation =
+      document.getElementById(
+        "deleteAccountConfirm"
+      ).value.trim();
+
+
+    if (
+      !password ||
+      !securityCode ||
+      confirmation !== "DELETE"
+    ) {
+
+      deleteAccountStatus.textContent =
+        "Enter your password, security code and DELETE.";
+
+      return;
+
+    }
+
+
+    accountDeletionBusy = true;
+
+    btnSubmitDeleteAccount.disabled = true;
+
+    btnSubmitDeleteAccount.textContent =
+      "Submitting...";
+
+    deleteAccountStatus.textContent = "";
+
+
+    try {
+
+      const response = await fetch(
+        "/api/account/delete-request",
+        {
+          method: "POST",
+
+          credentials: "same-origin",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+            password,
+            securityCode,
+            confirmation
+          })
+        }
+      );
+
+      const data = await response.json();
+
+
+      if (!response.ok || !data.ok) {
+
+        throw new Error(
+          data.message ||
+          "Unable to submit deletion request."
+        );
+
+      }
+
+
+      resetDeleteAccountForm();
+
+      renderDeleteAccountStatus(data);
+
+
+    } catch (error) {
+
+      deleteAccountStatus.textContent =
+        error.message || "Connection failed.";
+
+    } finally {
+
+      accountDeletionBusy = false;
+
+      btnSubmitDeleteAccount.disabled = false;
+
+      btnSubmitDeleteAccount.textContent =
+        "Request Deletion";
+
+    }
+
+  }
+);
+
+
+/* ==========================================
+   MOBILE KEYBOARD SUPPORT
+========================================== */
+
+document
+  .querySelectorAll("#deleteAccountModal input")
+  .forEach(input => {
+
+    input.addEventListener("focus", () => {
+
+      document.body.classList.add(
+        "keyboard-open"
+      );
+
+    });
+
+    input.addEventListener("blur", () => {
+
+      document.body.classList.remove(
+        "keyboard-open"
+      );
+
+    });
+
+  });
