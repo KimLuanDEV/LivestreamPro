@@ -1,24 +1,19 @@
 /* ==========================================
-   LIVESTREAM PRO
-   ACCOUNT DELETION ENGINE V2.0
+   ACCOUNT DELETION ENGINE V3.0 - ONLINE
+   Single Node.js writer only.
 ========================================== */
+const lspDeletionEngine = require("./account-deletion-engine");
+const lspDeletionDataDir = "/opt/render/project/data";
+const lspDeletionTombstones = lspDeletionEngine.loadTombstones(lspDeletionDataDir);
+const lspDeletionQueue = new Set();
+let lspDeletionAsyncInFlight = 0;
+let lspDeletionRunning = false;
 
-if (
-  process.env.LSP_DELETION_STARTUP_EXCLUSIVE === "true"
-) {
-
-  require("./account-deletion-engine")(
-
-    "/opt/render/project/data",
-
-    deletionBlockers
-
-  );
-
+function lspDeletionGuardUserSave(db) {
+  for (const uid of lspDeletionTombstones) {
+    if (Object.hasOwn(db, uid)) throw new Error("DELETED_UID_WRITE_REJECTED");
+  }
 }
-
-
-
 
 const MAX_VIEWERS = 20;
 const SOFT_CAP = 15;
@@ -3389,6 +3384,9 @@ let wheel8LoginFailures = 0;
 let wheel8LoginBlockedUntil = 0;
 
 socket.on("wheel8-admin-login", async (data, callback) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
   const reply = typeof callback === "function"
     ? callback
     : () => {};
@@ -3454,6 +3452,8 @@ socket.on("wheel8-admin-login", async (data, callback) => {
     "admin-wheel8-bets-update",
     getAdminWheel8Data()
   );
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 // ========================================
@@ -5028,6 +5028,7 @@ io.on("connection", socket => {
   socket.use((packet, next) => {
 
     if (
+      lspDeletionTombstones.has(String(socket.data.uid || "")) ||
       !securityAuth.getSocketIdentity(socket)
     ) {
 
@@ -5444,6 +5445,9 @@ app.get(
   "/api/admin/security-database/stats",
 
   async (req, res) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
     res.setHeader(
       "Cache-Control",
@@ -5495,7 +5499,9 @@ app.get(
 
     }
 
-  }
+  
+  } finally { lspDeletionAsyncInFlight--; }
+}
 
 );
 
@@ -5510,6 +5516,9 @@ app.post(
   "/api/admin/security-database/backup",
 
   async (req, res) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
     res.setHeader(
       "Cache-Control",
@@ -5596,7 +5605,9 @@ app.post(
 
     }
 
-  }
+  
+  } finally { lspDeletionAsyncInFlight--; }
+}
 
 );
 
@@ -6952,6 +6963,9 @@ app.post("/api/upload-dispute-media",
   spiritAuth,
   postMediaUpload.single("file"),
   async (req, res) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
     if (!req.file)
       return res.status(400).json({ error: "NO_FILE" });
@@ -6976,7 +6990,9 @@ app.post("/api/upload-dispute-media",
         ? "video"
         : "image"
     });
-  }
+  
+  } finally { lspDeletionAsyncInFlight--; }
+}
 );
 
 
@@ -7281,6 +7297,9 @@ app.post("/api/upload-product-image",
   spiritAuth,
   postMediaUpload.single("image"),
   async (req, res) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
   if (!req.file)
     return res.status(400).json({ error: "No file" });
@@ -7299,6 +7318,8 @@ app.post("/api/upload-product-image",
   );
 
   res.json({ url });
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
@@ -8357,6 +8378,9 @@ app.post("/api/upload-chat-image",
   spiritAuth,
   chatUpload.single("image"),
   async (req, res) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
   if (!req.file) return res.status(400).json({ error: "No file" });
 
@@ -8376,12 +8400,17 @@ const key = `chat/images/${Date.now()}_${safeName}`;
   );
 
   res.json({ url });
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 app.post("/api/upload-chat-video",
   spiritAuth,
   chatUpload.single("video"),
   async (req, res) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
   if (!req.file) return res.status(400).json({ error: "No file" });
 
@@ -8400,6 +8429,8 @@ const key = `chat/videos/${Date.now()}_${safeName}`;
   );
 
   res.json({ url });
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 app.get("/", (_, res) => {
@@ -8412,6 +8443,9 @@ app.post("/api/upload-avatar",
   spiritAuth,
   avatarCoverUpload.single("avatar"),
   async (req, res) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
     if (!req.file) return res.status(400).json({ error: "No file" });
 
@@ -8431,13 +8465,18 @@ app.post("/api/upload-avatar",
     );
 
     res.json({ url });
-  }
+  
+  } finally { lspDeletionAsyncInFlight--; }
+}
 );
 
 app.post("/api/upload-cover",
   spiritAuth,
   avatarCoverUpload.single("cover"),
   async (req, res) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
     if (!req.file) return res.status(400).json({ error: "No file" });
 
@@ -8457,13 +8496,18 @@ app.post("/api/upload-cover",
     );
 
     res.json({ url });
-  }
+  
+  } finally { lspDeletionAsyncInFlight--; }
+}
 );
 
 app.post("/api/upload-post-image",
   spiritAuth,
   postMediaUpload.single("image"),
   async (req, res) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
   if (!req.file) return res.status(400).json({ error: "No file" });
 
@@ -8481,12 +8525,17 @@ app.post("/api/upload-post-image",
   );
 
   res.json({ url });
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 app.post("/api/upload-post-video",
   spiritAuth,
   postMediaUpload.single("video"),
   async (req, res) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
   if (!req.file) return res.status(400).json({ error: "No file" });
 
@@ -8504,6 +8553,8 @@ app.post("/api/upload-post-video",
   );
 
   res.json({ url });
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
@@ -8598,6 +8649,9 @@ app.post(
   "/api/diamonds/convert",
   spiritAuth,
   async (req, res) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
     res.set("Cache-Control", "no-store");
 
@@ -8885,48 +8939,10 @@ if (
         ...history
       ];
 
-      // Step 6: Atomic file replacement.
-      // Suitable as a single-process interim measure.
-      const tempFile =
-        USERS_FILE + ".convert." +
-        process.pid + "." +
-        crypto.randomBytes(6).toString("hex");
+      // Central wallet write (no await between final read and commit).
+      saveUsers(db);
+      securityTransaction.record("successfulTransactions", uid);
 
-      try {
-        fs.writeFileSync(
-          tempFile,
-          JSON.stringify(db, null, 2),
-          { mode: 0o600 }
-        );
-
-        fs.renameSync(tempFile, USERS_FILE);
-
-        securityTransaction.record(
-  "successfulTransactions",
-  uid
-);
-
-
-        try {
-
-  securityAuth.syncAccounts(db);
-
-} catch {
-
-  securityAuth.invalidateCache();
-
-}
-
-
-
-      } finally {
-        try {
-          if (fs.existsSync(tempFile)) {
-            fs.unlinkSync(tempFile);
-          }
-} catch (_) {}
-          
-      }
 
       // Step 7: Notify the user's clients.
       emitCoinUpdate(uid);
@@ -8957,7 +8973,9 @@ if (
   });
 }
 
-  }
+  
+  } finally { lspDeletionAsyncInFlight--; }
+}
 );
 
 /* ==========================================
@@ -8965,6 +8983,9 @@ if (
 ========================================== */
 
 app.post("/api/withdraw-request", async (req, res) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
   const uid = req.auth?.uid;
 
@@ -9424,6 +9445,8 @@ if (hasUnrecoveredWithdrawal) {
 
   }
 
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
@@ -10465,6 +10488,9 @@ async function setSfuVoicePermission(
   uid,
   enabled
 ) {
+  lspDeletionAsyncInFlight++;
+  try {
+
   const service = pkRoomServiceClient();
 
   if (!service) {
@@ -10486,6 +10512,8 @@ canPublishSources: enabled
 
     }
   );
+
+  } finally { lspDeletionAsyncInFlight--; }
 }
 
 function clearSfuVoiceRoom(roomId) {
@@ -10586,6 +10614,9 @@ pkInviteSweep.unref?.();
 
 // Disconnect PK-only LiveKit viewers.
 async function pkRevokePeerParticipants(match) {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
   const client = pkRoomServiceClient();
 
@@ -10597,6 +10628,9 @@ async function pkRevokePeerParticipants(match) {
 
   const tasks = participants.map(
     async ({ peerRoom, identity }) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
       try {
         await client.removeParticipant(
           `lsp_${peerRoom}`,
@@ -10608,10 +10642,14 @@ async function pkRevokePeerParticipants(match) {
           error.message
         );
       }
-    }
+    
+  } finally { lspDeletionAsyncInFlight--; }
+}
   );
 
   await Promise.allSettled(tasks);
+
+  } finally { lspDeletionAsyncInFlight--; }
 }
 
 
@@ -11104,7 +11142,7 @@ function emitAllUsers(){
 
 
 function pushNotify(uid, payload){
-  if(!uid) return;
+  if(!uid || lspDeletionTombstones.has(String(uid))) return;
   if(!userInbox.has(uid)) userInbox.set(uid, []);
   userInbox.get(uid).unshift({
     ...payload,
@@ -11239,6 +11277,7 @@ function loadUsers() {
 
 
 function saveUsers(db) {
+  lspDeletionGuardUserSave(db);
 
   const tempFile =
     USERS_FILE + "." + crypto.randomUUID() + ".tmp";
@@ -11261,7 +11300,8 @@ function saveUsers(db) {
     fd = undefined;
 
     fs.renameSync(tempFile, USERS_FILE);
-
+    const parent = fs.openSync(path.dirname(USERS_FILE), "r");
+    try { fs.fsyncSync(parent); } finally { fs.closeSync(parent); }
 
     // Synchronize authentication state after saving
 try {
@@ -11302,62 +11342,7 @@ try {
 ========================================== */
 
 function saveLinkedGiftUsers(db) {
-
-  const tempFile =
-    USERS_FILE + ".linked-gift-" +
-    crypto.randomUUID() + ".tmp";
-
-  let fd;
-
-  try {
-
-    fd = fs.openSync(tempFile, "wx", 0o600);
-
-    fs.writeFileSync(
-      fd,
-      JSON.stringify(db, null, 2),
-      "utf8"
-    );
-
-    fs.fsyncSync(fd);
-
-    fs.closeSync(fd);
-
-    fd = undefined;
-
-    fs.renameSync(tempFile, USERS_FILE);
-
-try {
-
-  securityAuth.syncAccounts(db);
-
-} catch (error) {
-
-  securityAuth.invalidateCache();
-
-  console.error(
-    "[AUTH CACHE] Linked gift sync failed:",
-    error.message
-  );
-
-}
-
-  } finally {
-
-    if (fd !== undefined) {
-      try {
-        fs.closeSync(fd);
-      } catch {}
-    }
-
-    if (fs.existsSync(tempFile)) {
-      try {
-        fs.unlinkSync(tempFile);
-      } catch {}
-    }
-
-  }
-
+  return saveUsers(db);
 }
 
 
@@ -12112,6 +12097,9 @@ sendPushToUser(targetUid, {
 
 
 app.post("/api/register", async (req,res)=>{
+  lspDeletionAsyncInFlight++;
+  try {
+
 
 const { username, password, securityCode } = req.body;
 
@@ -12209,10 +12197,15 @@ profile: {
 
   saveUsers(db);
   res.json({ok:true});
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
 app.post("/api/prelogin", async (req,res)=>{
+  lspDeletionAsyncInFlight++;
+  try {
+
   const { username, password } = req.body;
   const db = loadUsers();
 
@@ -12264,6 +12257,8 @@ if (acc.profile?.accountBlocked) {
 
   // Đúng user + pass → cho phép nhập mã bảo mật
   res.json({ ok:true });
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
@@ -12359,6 +12354,9 @@ function mhVerifiedUid(cookieHeader) {
 
 
 app.post("/api/login", async (req,res)=>{
+  lspDeletionAsyncInFlight++;
+  try {
+
   const {
     username,
     password,
@@ -12604,6 +12602,8 @@ profile: {
   trustedToken: trusted
 });
 
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 app.post("/api/check-trusted", (req,res)=>{
@@ -12826,29 +12826,10 @@ function pgLoadOrders() {
 }
 
 function pgAtomicSave(filename, data) {
+  if (filename === USERS_FILE) return saveUsers(data);
   const temp = filename + "." + process.pid + ".tmp";
-
-  fs.writeFileSync(
-    temp,
-    JSON.stringify(data, null, 2),
-    { mode: 0o600 }
-  );
-
+  fs.writeFileSync(temp, JSON.stringify(data, null, 2), { mode: 0o600 });
   fs.renameSync(temp, filename);
-
-  if (filename === USERS_FILE) {
-
-  try {
-
-    securityAuth.syncAccounts(data);
-
-  } catch {
-
-    securityAuth.invalidateCache();
-
-  }
-
-}
 }
 
 function pgVerifySecret(actual, expected) {
@@ -12887,6 +12868,9 @@ app.post(
   "/api/card-topup/create",
   spiritAuth,
   async (req, res) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
     res.set("Cache-Control", "no-store");
 
@@ -13024,7 +13008,9 @@ if (
       });
 
     }
-  }
+  
+  } finally { lspDeletionAsyncInFlight--; }
+}
 );
 
 /* ==========================================
@@ -13362,6 +13348,9 @@ app.post(
   securityAuth.requireAuth,
 
   async (req, res) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
     res.set("Cache-Control", "no-store");
 
@@ -13747,7 +13736,9 @@ app.post(
 
     }
 
-  }
+  
+  } finally { lspDeletionAsyncInFlight--; }
+}
 
 );
 
@@ -14062,6 +14053,9 @@ app.post(
   securityAuth.requireAuth,
 
   async (req, res) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
 
     res.set(
@@ -14477,7 +14471,9 @@ app.post(
 
     }
 
-  }
+  
+  } finally { lspDeletionAsyncInFlight--; }
+}
 
 );
 
@@ -14515,10 +14511,12 @@ function deletionBlockers(
 
   if (
     account.role === "admin" ||
-    account.roles?.includes("admin")
+    account.profile?.role === "admin" ||
+    account.roles?.includes("admin") ||
+    account.role === "agent" ||
+    account.roles?.includes("agent")
   ) {
-
-    issues.push("Tài khoản quản trị");
+    issues.push("Tài khoản quản trị / đại lý cần xử lý riêng");
 
   }
 
@@ -14836,6 +14834,8 @@ function deletionManagerSave(item) {
     fd = undefined;
 
     fs.renameSync(temp, target);
+    const parent = fs.openSync(path.dirname(target), "r");
+    try { fs.fsyncSync(parent); } finally { fs.closeSync(parent); }
 
   } finally {
 
@@ -14980,7 +14980,13 @@ function deletionManagerIssues(uid, data) {
   }
 
 
-  return issues;
+  if (Object.values(VIRTUAL_LIVE_ROOMS).some(r => r.ownerUid === uid)) {
+    issues.push("Tài khoản đang được gán cho phòng live liên kết");
+  }
+  if ([...rooms.values()].some(r => r.ownerUid === uid || r.hostProfile?.uid === uid)) {
+    issues.push("Còn phòng live cần đóng");
+  }
+  return [...new Set(issues)];
 
 }
 
@@ -15036,6 +15042,8 @@ app.get(
 
             engineState:
   item.engineState || null,
+engineMode: item.engineMode || null,
+recoveryReady: item.engineState === "purging" && item.coreWriteReady === true && !profile,
 
 engineError:
   item.engineError || null,
@@ -15046,7 +15054,8 @@ mediaCandidates:
 blockers:
 
   item.status === "completed" ||
-  item.engineState === "local_done"
+  item.engineState === "local_done" ||
+  (item.engineState === "purging" && item.coreWriteReady && !profile)
 
                 ? []
 
@@ -15274,7 +15283,9 @@ app.post(
       ==================================== */
 
       if (action === "prepare") {
-
+        if (lspDeletionAsyncInFlight || lspDeletionRunning) {
+          return fail(409, "Hệ thống đang xử lý tác vụ. Thử lại để khóa tài khoản.");
+        }
 
         if (
           confirmation !== "LOCK " + uid
@@ -15425,7 +15436,109 @@ app.post(
 
 
 /* ==========================================
-   ACCOUNT DELETION ENGINE V2.0
+   ACCOUNT DELETION V3 - ONLINE WORKER
+========================================== */
+function lspDeletionReadJson(filename, fallback, validate) {
+  let value;
+  try { value = JSON.parse(fs.readFileSync(filename, "utf8")); }
+  catch (e) { if (e.code !== "ENOENT") throw e; value = fallback; }
+  if (!validate(value)) throw new Error("Invalid data: " + path.basename(filename));
+  return value;
+}
+function lspDeletionObject(x) {
+  return x && typeof x === "object" && !Array.isArray(x);
+}
+function lspDeletionReadCaches() {
+  return {
+    social: lspDeletionReadJson(SOCIAL_FILE, [], Array.isArray),
+    inbox: lspDeletionReadJson(INBOX_FILE, {}, lspDeletionObject),
+    wheel: lspDeletionReadJson(WHEEL8_USER_HISTORY_FILE, {}, lspDeletionObject)
+  };
+}
+function lspDeletionApplyCache(name, value) {
+  // Refresh the corresponding RAM cache immediately after its atomic disk write.
+  if (name === "social") {
+    lpPosts.length = 0;
+    for (const post of value) lpPosts.push(post);
+  } else if (name === "inbox") {
+    userInbox = new Map(Object.entries(value));
+  } else if (name === "wheel") {
+    wheel8UserHistory = value;
+  }
+}
+function lspRunDeletionQueue() {
+  if (lspDeletionRunning || lspDeletionAsyncInFlight !== 0 || !lspDeletionQueue.size) return;
+  const uid = lspDeletionQueue.values().next().value;
+  lspDeletionRunning = true;
+  try {
+    const item = readAccountDeleteRequest(uid);
+    if (!item || item.status !== "pending" || item.stage !== "ready" ||
+        item.engineMode !== "online-v3" || !["queued", "purging"].includes(item.engineState)) {
+      lspDeletionQueue.delete(uid);
+      return;
+    }
+    const data = deletionManagerSnapshot();
+    const account = data.users[uid];
+    const recovery = !account && item.engineState === "purging" && item.coreWriteReady === true;
+    if (!recovery) {
+      if (!account?.profile?.accountBlocked) throw new Error("Account is not locked");
+      const issues = deletionManagerIssues(uid, data);
+      if (issues.length) throw new Error(issues.join("; "));
+    }
+    if ([...io.sockets.sockets.values()].some(s => s.data.uid === uid)) throw new Error("Account still connected");
+    // Validate disk data, then pass authoritative RAM snapshots so unsaved inbox
+    // notifications and seen flags belonging to other users are preserved.
+    lspDeletionReadCaches();
+    const liveCaches = {
+      social: lpPosts,
+      inbox: Object.fromEntries(userInbox),
+      wheel: wheel8UserHistory
+    };
+    // No await from final check through commit and RAM refresh.
+    function afterCommit() {
+      lspDeletionTombstones.add(uid);
+      pushSubs.delete(uid);
+      activeUsers.delete(uid);
+      securityAuth.invalidateCache();
+    }
+    try {
+      lspDeletionEngine(lspDeletionDataDir, deletionBlockers, {
+        uid,
+        commitUsers: saveUsers,
+        liveCaches,
+        onCacheWritten: lspDeletionApplyCache,
+        afterCommit
+      });
+    } catch (error) {
+      // Recover after a partial file write without permitting a deleted UID to return.
+      if (!Object.hasOwn(loadUsers(), uid)) afterCommit();
+      // Any successfully written cache was already updated via onCacheWritten.
+      // Preserve unpersisted changes in the other caches for the next retry.
+      throw error;
+    }
+    const result = readAccountDeleteRequest(uid);
+    if (result.engineState !== "local_done") throw new Error("Local cleanup did not complete");
+    console.log("[DELETION V3] Local cleanup completed:", result.requestId);
+  } catch (e) {
+    try {
+      const latest = readAccountDeleteRequest(uid);
+      if (latest?.status === "pending" && latest.engineState !== "local_done") {
+        deletionManagerSave({ ...latest,
+          engineState: latest.engineState === "purging" ? "purging" : "error",
+          engineError: String(e.message).slice(0, 500),
+          updatedAt: new Date().toISOString()
+        });
+      }
+    } catch (saveError) { console.error("[DELETION V3] Status save failed", saveError.name); }
+    console.error("[DELETION V3] Cleanup paused", e.name);
+  } finally {
+    lspDeletionQueue.delete(uid);
+    lspDeletionRunning = false;
+  }
+}
+
+/* ==========================================
+   ACCOUNT DELETION ENGINE V3.0
    ADMIN API
 ========================================== */
 
@@ -15540,81 +15653,35 @@ app.post(
       ==================================== */
 
       if (action === "queue") {
-
-        if (
-          ![undefined, null, "error", "queued"]
-            .includes(item.engineState)
-        ) {
-
-          return fail(
-            409,
-            "Yêu cầu đã được xử lý hoặc đang chờ khởi động lại."
-          );
-
+        if (![undefined, null, "error", "queued", "purging"].includes(item.engineState)) {
+          return fail(409, "Yêu cầu đã được xử lý.");
         }
-
-
-        const data =
-          deletionManagerSnapshot();
-
-        const account =
-          data.users[uid];
-
-
-        if (
-          !account?.profile?.accountBlocked ||
-          account.role === "admin" ||
-          account.profile.role === "admin" ||
-          account.roles?.includes("admin")
-        ) {
-
-          return fail(
-            409,
-            "Tài khoản chưa khóa hoặc được bảo vệ."
-          );
-
+        const data = deletionManagerSnapshot();
+        const account = data.users[uid];
+        const recovery = !account && item.engineState === "purging" && item.coreWriteReady === true;
+        if (!recovery) {
+          if (!account?.profile?.accountBlocked || account.role === "admin" ||
+              account.profile.role === "admin" || account.roles?.includes("admin")) {
+            return fail(409, "Tài khoản chưa khóa hoặc được bảo vệ.");
+          }
+          const issues = deletionManagerIssues(uid, data);
+          if (issues.length) return fail(409, issues.join("; "));
         }
-
-
-        const issues =
-          deletionManagerIssues(uid, data);
-
-
-        if (issues.length) {
-
-          return fail(
-            409,
-            issues.join("; ")
-          );
-
+        if ([...io.sockets.sockets.values()].some(s => s.data.uid === uid)) {
+          return fail(409, "Tài khoản vẫn còn kết nối.");
         }
-
-
-        if (
-          [...io.sockets.sockets.values()]
-            .some(s => s.data.uid === uid)
-        ) {
-
-          return fail(
-            409,
-            "Tài khoản vẫn còn kết nối."
-          );
-
-        }
-
-
         deletionManagerSave({
-
           ...updated,
-
-          engineState: "queued",
-
+          engineMode: "online-v3",
+          engineState: item.engineState === "purging" ? "purging" : "queued",
           engineError: null,
-
           queuedAt: updated.updatedAt
-
         });
-
+        lspDeletionQueue.add(uid);
+        // A synchronous worker can run now, or the interval will pick it up.
+        lspRunDeletionQueue();
+        const result = readAccountDeleteRequest(uid);
+        return res.json({ok: true, engineState: result.engineState, engineError: result.engineError || null});
       }
 
 
@@ -15692,6 +15759,9 @@ app.post(
 
 
 app.post("/api/change-password", async (req,res)=>{
+  lspDeletionAsyncInFlight++;
+  try {
+
   const { username, securityCode, newPassword } = req.body;
   if(!username || !securityCode || !newPassword)
     return res.json({ error:"missing" });
@@ -15738,6 +15808,8 @@ res.clearCookie("lsp_spirit_sid", {
 });
 
   res.json({ ok:true });
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
@@ -16079,6 +16151,9 @@ app.post(
   "/api/sfu/token",
   securityAuth.requireAuth,
   async (req, res) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
   res.set("Cache-Control", "no-store");
 
   try {
@@ -16322,6 +16397,8 @@ grant.addGrant({
       error: "SFU_TOKEN_FAILED"
     });
   }
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
@@ -16334,6 +16411,9 @@ app.post(
   "/api/sfu/pk-token",
   securityAuth.requireAuth,
   async (req, res) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
 
   res.set("Cache-Control", "no-store");
@@ -16528,6 +16608,8 @@ return res.json({
       error: "PK_TOKEN_FAILED"
     });
   }
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
@@ -17079,6 +17161,9 @@ client.emit("lobby-update", {
 ========================================== */
 
 async function sendPushToUser(uid, payload) {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
   uid = String(uid);
 
@@ -17148,6 +17233,8 @@ async function sendPushToUser(uid, payload) {
 
   }
 
+
+  } finally { lspDeletionAsyncInFlight--; }
 }
 
 
@@ -17367,6 +17454,9 @@ socket.on("disconnect", () => {
 // 🔔 USER ĐÃ CHUYỂN KHOẢN (TOPUP)
 // ================================
 socket.on("topup-transferred", async ({ fromUid, agentUid, time }) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
   if (!fromUid || !agentUid) return;
 
   console.log("💸 TOPUP TRANSFER:", fromUid, "→", agentUid);
@@ -17429,6 +17519,8 @@ socket.on("topup-transferred", async ({ fromUid, agentUid, time }) => {
     }
   }
 
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
@@ -17464,6 +17556,9 @@ socket.on("auth-login", () => {
 
 
 socket.on("lp-gift-post", async ({ postId, toUid, fromUid, giftId, coin }) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
   // 🔒 CHẶN USER BỊ KHOÁ
   if (blockIfLocked(socket)) return;
@@ -17607,6 +17702,8 @@ emitPrivateSocialEvent(
     tag: "post-gift"
   });
 
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
@@ -17622,6 +17719,9 @@ emitPrivateSocialEvent(
 
 
 socket.on("coin-transfer", async (payload = {}, ack) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
   const respond = (data) => {
     if (typeof ack === "function") ack(data);
@@ -17907,6 +18007,8 @@ if (
   io.emit("diamond-transfer-update", {
     ts: now
   });
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
@@ -18432,6 +18534,9 @@ refreshSocialFeedForUser(uid);
 });
 
 socket.on("lp-like-reply", async ({ postId, commentIndex, replyId, uid }) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
   const post = getPost(postId);
   if (!post) return;
 
@@ -18479,6 +18584,8 @@ emitPrivateSocialEvent(
       url: `/social.html#post-${postId}`
     });
   }
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 socket.on("lp-reply-child", ({ postId, commentIndex, replyId, uid, name, avatar, text })=>{
@@ -18526,6 +18633,9 @@ emitPrivateSocialEvent(
 });
 
 socket.on("lp-like-comment", async ({ postId, index, uid }) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
   const post = getPost(postId);
   if (!post || !post.comments || !post.comments[index]) return;
 
@@ -18566,6 +18676,8 @@ emitPrivateSocialEvent(
       url: `/social.html#post-${postId}`
     });
   }
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
@@ -18796,6 +18908,9 @@ try {
 
 
 socket.on("lp-like", async ({ postId, uid }) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
 const post = getPost(postId);
 const actorUid = socket.data.uid;
@@ -18835,10 +18950,15 @@ emitPrivateSocialEvent(
       url: `/social.html#post-${postId}`
     });
   }
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
 socket.on("lp-comment", async ({ postId, uid, name, avatar, text }) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
  
 const post = getPost(postId);
 const actorUid = socket.data.uid;
@@ -18886,11 +19006,16 @@ emitPrivateSocialEvent(
       url: `/social.html#post-${postId}`
     });
   }
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
 
 socket.on("lp-reply", async ({ postId, commentIndex, uid, name, avatar, text }) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
 const post = getPost(postId);
 const actorUid = socket.data.uid;
@@ -18937,6 +19062,8 @@ emitPrivateSocialEvent(
       url: `/social.html#post-${postId}`
     });
   }
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
@@ -19049,6 +19176,9 @@ emitPrivateSocialEvent(
 
 
 socket.on("lp-like-reply-child", async ({ postId, commentIndex, replyId, childId, uid }) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
   const post = getPost(postId);
   if (!post) return;
 
@@ -19099,12 +19229,17 @@ emitPrivateSocialEvent(
       url: `/social.html#post-${postId}`
     });
   }
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
 
 
 socket.on("private-message", async ({ to, text, type, media, msgId }) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
 
   if (blockIfLocked(socket)) return;
@@ -19323,6 +19458,8 @@ await sendPushToUser(to, {
     msgId: id,
     status: sockets ? "delivered" : "stored"
   });
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
@@ -19484,7 +19621,8 @@ function blockIfLocked(socket){
   if (!uid) return false;
 
   const db = loadUsers();
- if (db[uid]?.profile?.accountBlocked) {
+ if (lspDeletionTombstones.has(String(uid)) || db[uid]?.profile?.accountBlocked ||
+     (socket.data.authenticated === true && !db[uid]?.profile)) {
 
     socket.emit("account-blocked", {
       message: "Your account has been locked"
@@ -20144,6 +20282,9 @@ socket.on("room-generate-id", (_, cb) => {
 socket.on(
   "private-room:unlock",
   async (data, cb) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
     if (typeof cb !== "function") return;
 
@@ -20424,11 +20565,16 @@ if (!canAccessLiveRoomById(room, uid)) {
 
     }
 
-  }
+  
+  } finally { lspDeletionAsyncInFlight--; }
+}
 );
 
 
 socket.on("room-check", async (data, cb) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
   if (typeof cb !== "function") return;
 
@@ -20589,6 +20735,8 @@ return cb({
   liveTopic
 });
 
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
@@ -21472,6 +21620,9 @@ const W8_SHARE_DIRECTORY_ROOM = "w8share:directory";
 ========================================== */
 
 app.post("/api/w8share/sfu-token", async (req, res) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
   res.set("Cache-Control", "no-store");
 
   try {
@@ -21596,6 +21747,8 @@ app.post("/api/w8share/sfu-token", async (req, res) => {
       error: "SFU_TOKEN_ERROR"
     });
   }
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
@@ -22547,6 +22700,9 @@ socket.on("sfu:voice:request", (data, ack) => {
 
 
 socket.on("sfu:voice:respond", async (data, ack) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
   if (typeof ack !== "function") return;
 
   const access = getAuthorizedSfuChatRoom(
@@ -22682,10 +22838,15 @@ socket.on("sfu:voice:respond", async (data, ack) => {
       error: "VOICE_PERMISSION_FAILED"
     });
   }
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
 socket.on("sfu:voice:leave", async (data, ack) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
   if (typeof ack !== "function") return;
 
   const access = getAuthorizedSfuChatRoom(
@@ -22733,10 +22894,15 @@ socket.on("sfu:voice:leave", async (data, ack) => {
       error: "VOICE_LEAVE_FAILED"
     });
   }
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
 socket.on("sfu:voice:revoke", async (data, ack) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
   if (typeof ack !== "function") return;
 
   const access = getAuthorizedSfuChatRoom(
@@ -22790,6 +22956,8 @@ socket.on("sfu:voice:revoke", async (data, ack) => {
       error: "VOICE_REVOKE_FAILED"
     });
   }
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 socket.on("disconnect", () => {
@@ -22850,6 +23018,9 @@ socket.on("disconnect", () => {
 ========================================== */
 
 socket.on("sfu:viewer:moderate", async (data, ack) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
   if (typeof ack !== "function") return;
 
@@ -23172,6 +23343,8 @@ mediaWarning: failed.length > 0,
 
   }
 
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
@@ -25864,6 +26037,9 @@ let yt3State = {
 };
 
 async function yt3Api(endpoint, params) {
+  lspDeletionAsyncInFlight++;
+  try {
+
   const url = new URL(
     `https://www.googleapis.com/youtube/v3/${endpoint}`
   );
@@ -25886,9 +26062,14 @@ async function yt3Api(endpoint, params) {
   }
 
   return response.json();
+
+  } finally { lspDeletionAsyncInFlight--; }
 }
 
 async function refreshYoutube3() {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
   if (!YT3_API_KEY) {
     yt3State = {
@@ -25911,6 +26092,9 @@ async function refreshYoutube3() {
   yt3LastCheck = Date.now();
 
   yt3Checking = (async () => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
     try {
 
@@ -25986,13 +26170,17 @@ async function refreshYoutube3() {
 
     return yt3State;
 
-  })();
+  
+  } finally { lspDeletionAsyncInFlight--; }
+})();
 
   try {
     return await yt3Checking;
   } finally {
     yt3Checking = null;
   }
+
+  } finally { lspDeletionAsyncInFlight--; }
 }
 
 // Periodic timer; API cache prevents excessive calls.
@@ -26029,6 +26217,9 @@ let yt2State = {
 };
 
 async function refreshYoutube2() {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
   if (!YT3_API_KEY) {
     yt2State = {
@@ -26057,6 +26248,9 @@ async function refreshYoutube2() {
   yt2LastCheck = Date.now();
 
   yt2Checking = (async () => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
     try {
 
@@ -26157,7 +26351,9 @@ async function refreshYoutube2() {
 
     return yt2State;
 
-  })();
+  
+  } finally { lspDeletionAsyncInFlight--; }
+})();
 
   try {
 
@@ -26168,6 +26364,8 @@ async function refreshYoutube2() {
     yt2Checking = null;
 
   }
+
+  } finally { lspDeletionAsyncInFlight--; }
 }
 
 // Periodic check - actual API calls are cached
@@ -26211,6 +26409,9 @@ let yt1State = {
 };
 
 async function refreshYoutube1() {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
   // Reuse the API key already used by Youtube2/3.
   if (!YT3_API_KEY) {
@@ -26236,6 +26437,9 @@ async function refreshYoutube1() {
   yt1LastCheck = Date.now();
 
   yt1Checking = (async () => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
     try {
 
@@ -26311,13 +26515,17 @@ async function refreshYoutube1() {
 
     return yt1State;
 
-  })();
+  
+  } finally { lspDeletionAsyncInFlight--; }
+})();
 
   try {
     return await yt1Checking;
   } finally {
     yt1Checking = null;
   }
+
+  } finally { lspDeletionAsyncInFlight--; }
 }
 
 // Timer checks cache first; does not call
@@ -26405,6 +26613,9 @@ function broadcastVirtualLiveCounts() {
 // 5. API lấy thông tin video
 
 app.get("/api/virtual-live/rooms/:roomId", async (req, res) => {
+  lspDeletionAsyncInFlight++;
+  try {
+
 
   const roomId = String(req.params.roomId || "");
 
@@ -26479,6 +26690,8 @@ res.json({
 });
 
 
+
+  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
@@ -26644,6 +26857,16 @@ app.use((err, req, res, next) => {
 });
 
 
+
+// Restore authorized online jobs only. V2 queued records require a new admin confirmation.
+for (const record of deletionManagerRecords()) {
+  if (record.status === "pending" && record.stage === "ready" &&
+      record.engineMode === "online-v3" && !record.engineError &&
+      ["queued", "purging"].includes(record.engineState)) {
+    lspDeletionQueue.add(record.uid);
+  }
+}
+setInterval(lspRunDeletionQueue, 1000).unref();
 
 const PORT = process.env.PORT || 3000;
 

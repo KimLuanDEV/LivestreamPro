@@ -2004,13 +2004,13 @@ if (r.stage === "ready") {
   const states = {
 
     ready:
-      "Đã khóa · Sẵn sàng đưa vào hàng đợi",
+      "Đã khóa · Sẵn sàng xóa",
 
     queued:
-      "Đã xếp hàng · Chờ server khởi động lại",
+      "Đang chờ tác vụ đang chạy kết thúc",
 
     purging:
-      "Đang xử lý / cần khởi động lại để tiếp tục",
+      "Đang xử lý / có thể thử lại nếu lỗi",
 
     error:
       "Kiểm tra thất bại",
@@ -2087,14 +2087,16 @@ if (r.stage === "ready") {
   /* QUEUE DELETE BUTTON */
 
   if (
-    ["ready", "error"].includes(state)
+    ["ready", "error"].includes(state) ||
+    (state === "queued" && r.engineMode !== "online-v3") ||
+    (state === "purging" && (r.engineError || r.engineMode !== "online-v3"))
   ) {
 
     const b = node(
 
       "button",
 
-      "Xếp hàng xóa dữ liệu",
+      "Xóa dữ liệu ngay",
 
       "btn-mini lux-action-danger"
 
@@ -2108,7 +2110,7 @@ if (r.stage === "ready") {
 
       busy ||
 
-      !r.blocked ||
+      (!r.blocked && !r.recoveryReady) ||
 
       !!r.blockers?.length;
 
@@ -2390,7 +2392,7 @@ async function engineAction(r, action) {
 
       action === "queue"
 
-        ? "Đã đối soát tài sản, lưu các chứng từ cần giữ và xác nhận xóa không thể hoàn tác. Hệ thống xóa khi khởi động lại với mọi tiến trình ghi cũ đã dừng."
+        ? "Đã đối soát tài sản, lưu chứng từ cần giữ và xác nhận xóa không thể hoàn tác. Server sẽ tự xử lý dữ liệu cục bộ khi không còn tác vụ đang chạy, không cần khởi động lại."
 
         : "Chỉ xác nhận nếu đã xử lý R2, dữ liệu ngoài, dữ liệu sao lưu và các bản ghi còn lại theo chính sách lưu trữ.";
 
@@ -2465,6 +2467,13 @@ async function engineAction(r, action) {
 
 }
 
+
+  // Refresh only while an online deletion is pending and this tab is open.
+  setInterval(() => {
+    if (!document.hidden && tab.classList.contains("active") && !busy &&
+        rows.some(r => r.engineMode === "online-v3" && !r.engineError &&
+          ["queued", "purging"].includes(r.engineState))) load();
+  }, 3000);
 
   tab.addEventListener("click", load);
 
