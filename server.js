@@ -10762,10 +10762,12 @@ function getPost(id){
 
 
 /* ==========================================
-   LIVESTREAM PRO - SOCIAL POST PRIVACY
+   LIVESTREAM PRO
+   SOCIAL POST - FRIENDS + FOLLOW
 ========================================== */
 
 function canViewSocialPost(viewerUid, post, db) {
+
   if (!viewerUid || !post?.uid) return false;
 
   const viewerId = String(viewerUid);
@@ -10779,25 +10781,64 @@ function canViewSocialPost(viewerUid, post, db) {
   // Chủ bài luôn được xem
   if (viewerId === ownerId) return true;
 
-  // Admin có quyền quản lý và xem tất cả
+  // Admin được quản lý tất cả bài đăng
   if (viewer.role === "admin") return true;
 
-  // Bài của Admin công khai cho mọi tài khoản
+  // Bài đăng Admin công khai
   if (owner.role === "admin") return true;
 
-  const viewerFriends = Array.isArray(viewer.profile?.friends)
+  // Kiểm tra chặn người dùng
+  const viewerBlocked = Array.isArray(
+    viewer.profile?.blockedUsers
+  )
+    ? viewer.profile.blockedUsers.map(String)
+    : [];
+
+  const ownerBlocked = Array.isArray(
+    owner.profile?.blockedUsers
+  )
+    ? owner.profile.blockedUsers.map(String)
+    : [];
+
+  if (
+    viewerBlocked.includes(ownerId) ||
+    ownerBlocked.includes(viewerId)
+  ) {
+    return false;
+  }
+
+  // Danh sách bạn bè
+  const viewerFriends = Array.isArray(
+    viewer.profile?.friends
+  )
     ? viewer.profile.friends.map(String)
     : [];
 
-  const ownerFriends = Array.isArray(owner.profile?.friends)
+  const ownerFriends = Array.isArray(
+    owner.profile?.friends
+  )
     ? owner.profile.friends.map(String)
     : [];
 
-  // Bắt buộc kết bạn hai chiều
-  return (
+  // Đã kết bạn hai chiều
+  const isFriend =
     viewerFriends.includes(ownerId) &&
-    ownerFriends.includes(viewerId)
-  );
+    ownerFriends.includes(viewerId);
+
+  if (isFriend) return true;
+
+  // Người xem đã Follow chủ bài
+  const incomingRequests = Array.isArray(
+    owner.profile?.friendRequests
+  )
+    ? owner.profile.friendRequests.map(String)
+    : [];
+
+  const isFollowing =
+    incomingRequests.includes(viewerId);
+
+  return isFollowing;
+
 }
 
 function getVisibleSocialPosts(uid, db = loadUsers()) {
@@ -15857,6 +15898,12 @@ uMe.profile.blockedUsers ||= [];
 
   // 🔥 BLOCK → TỰ HUỶ KẾT BẠN NẾU CÓ
   uMe.profile.friends = (uMe.profile.friends || []).filter(x => x !== uid);
+
+  // Remove incoming follow request
+uMe.profile.friendRequests =
+  (uMe.profile.friendRequests || [])
+    .filter(x => String(x) !== String(uid));
+    
   const uYou = db[uid];
   if (uYou) {
     uYou.profile.friends =
@@ -15964,6 +16011,9 @@ saveUsers(db);
 // REALTIME - FOLLOW LIVE ROOM
 emitLobbyUpdate();
 
+// REALTIME - FOLLOW SOCIAL POSTS
+refreshSocialFeedForUser(from);
+
   // realtime nếu online
   const sockets = activeUsers.get(to);
   if (sockets) {
@@ -16004,13 +16054,12 @@ socket.on("friend-respond", ({ from, accept }) => {
 
 saveUsers(db);
 
-// Refresh lobby on acceptance or rejection
+// Refresh live lobby
 emitLobbyUpdate();
 
-  if (accept) {
-  refreshSocialFeedForUser(from);
-  refreshSocialFeedForUser(to);
-}
+// Refresh social feed
+refreshSocialFeedForUser(from);
+refreshSocialFeedForUser(to);
 
 
   // báo realtime cho người gửi
@@ -16071,10 +16120,13 @@ socket.on("friend-cancel", ({ uid }) => {
     (other.profile.friendRequests || [])
       .filter(id => String(id) !== meUid);
 
-  saveUsers(db);
+saveUsers(db);
 
-  // Refresh live lobby
-  emitLobbyUpdate();
+// Refresh live lobby
+emitLobbyUpdate();
+
+// Refresh social feed
+refreshSocialFeedForUser(meUid);
 
 });
 
@@ -20066,12 +20118,15 @@ socket.on("sfu:friend:request", (data, ack) => {
     });
   }
 
-  receiver.profile.friendRequests.push(from);
+receiver.profile.friendRequests.push(from);
 
 saveUsers(db);
 
 // REALTIME - FOLLOW LIVE ROOM
 emitLobbyUpdate();
+
+// REALTIME - FOLLOW SOCIAL POSTS
+refreshSocialFeedForUser(from);
 
   // Reuse the existing realtime friend notification.
   emitToUser(to, "friend-request", {

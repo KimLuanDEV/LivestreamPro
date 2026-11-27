@@ -919,9 +919,8 @@ socket.emit("lp-post", {
 
 
 /* =====================================
-   SOCIAL FEED - FRIENDS ONLY
+   SOCIAL FEED - FRIENDS + FOLLOW
 ===================================== */
-
 function requestSocialFeed() {
   if (!auth.uid) return;
 
