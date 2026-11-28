@@ -9350,11 +9350,16 @@ if (
 
     }
 
-    /* RELOAD CURRENT DATABASE */
+/* ==========================================
+   UNIFIED WALLET TRANSACTION V1.0
+   WITHDRAWAL REQUEST
+========================================== */
 
-    db = loadUsers();
+const tx = lspWalletStorage.begin([
+  uid
+]);
 
-    user = db[uid];
+user = tx.users[uid];
 
     if (
       !user?.profile ||
@@ -9558,9 +9563,15 @@ if (hasUnrecoveredWithdrawal) {
 
     });
 
-    // No await between loading, updating,
-    // and saving the balance.
-    saveUsers(db);
+/* ==========================================
+   COMMIT WITHDRAWAL WALLET TRANSACTION
+
+   Balance + Hold + Recovery Record
+========================================== */
+
+tx.commit([
+  uid
+]);
 
     /* SAVE WITHDRAWAL REQUEST */
 
@@ -10209,8 +10220,7 @@ app.post("/api/admin/withdraw-action", (req, res) => {
     });
   }
 
-  const db = loadUsers();
-  const list = loadWithdraws();
+const list = loadWithdraws();
 
   const reqItem = list.find(
     x => String(x.id) === wid
@@ -10233,7 +10243,42 @@ app.post("/api/admin/withdraw-action", (req, res) => {
     });
   }
 
-  const user = db[reqItem.uid];
+  /* ==========================================
+   UNIFIED WALLET TRANSACTION V1.0
+   WITHDRAWAL SETTLEMENT
+========================================== */
+
+let tx;
+
+try {
+
+  tx = lspWalletStorage.begin([
+
+    reqItem.uid
+
+  ]);
+
+} catch (error) {
+
+  console.error(
+
+    "[WITHDRAW WALLET SNAPSHOT]",
+
+    error.message
+
+  );
+
+  return res.status(503).json({
+
+    ok: false,
+
+    error: "WALLET_SOURCE_UNAVAILABLE"
+
+  });
+
+}
+
+const user = tx.users[reqItem.uid];
 
   if (!user?.profile) {
     return res.status(404).json({
@@ -10385,9 +10430,17 @@ if (existingRefund && action !== "reject") {
 
       });
 
-      // Balance and refund marker are
-      // committed in the same JSON file.
-      saveUsers(db);
+/* ==========================================
+   UNIFIED WALLET REFUND COMMIT
+
+   Balance + Refund Receipt
+========================================== */
+
+tx.commit([
+
+  reqItem.uid
+
+]);
 
     }
 
