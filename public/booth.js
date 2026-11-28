@@ -597,67 +597,74 @@ function openExtendModalInBooth() {
 
 }
 
-async function confirmExtendBooth(days, price){
-  const me = JSON.parse(localStorage.getItem("user_profile"));
-  if(!me || !me.uid){
-    showModal({
-  title: "Sign In Required",
-  message: "Please sign in to continue."
-});
+/* ==========================================
+   BOOTH EXTENSION PAYMENT V1.4B
+========================================== */
 
-    return;
-  }
+async function confirmExtendBooth(days, price) {
 
-  try{
-    const res = await fetch("/api/market/extend",{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "x-uid": me.uid
-      },
-      body: JSON.stringify({ boothId, days, price })
+  if (lspMarketPaymentBusy) return;
+
+
+  const booth = window.__lastBooth;
+
+  const uid = lspMarketCurrentUid();
+
+
+  if (!uid) {
+
+    return showModal({
+
+      title: "Sign In Required",
+
+      message: "Please sign in to continue."
+
     });
 
-
-const data = await res.json();
-
-if (!data.ok) {
-
-  if (data.error === "not_enough_coin") {
-    showModal({
-      title: "Insufficient Diamonds",
-      message: "Your diamond balance is insufficient."
-    });
-    return;
   }
 
-  showModal({
-    title: "Extension Failed",
-    message: "Unable to extend the booth rental. Please try again."
+
+  if (
+
+    !booth ||
+
+    booth.ownerUid !== uid ||
+
+    booth.locked ||
+
+    !Number.isSafeInteger(
+      Number(booth.expireAt)
+    )
+
+  ) {
+
+    return showModal({
+
+      title: "Booth Unavailable",
+
+      message: "Please refresh the booth."
+
+    });
+
+  }
+
+
+  await lspMarketPay("extend", {
+
+    boothId,
+
+    days,
+
+    price,
+
+    plan: "fixed",
+
+    expectedExpireAt:
+      Number(booth.expireAt)
+
   });
 
-  return;
 }
-
-// Chỉ báo thành công khi server trả về ok
-showModal({
-  title: "Extension Successful",
-  message: "Your booth rental has been extended successfully."
-});
-
-
-    syncMyCoin();
-    loadBooth();
-
-  }catch(e){
-    showModal({
-  title:"Connection Error",
-  message:"Unable to connect to the server. Please try again."
-});
-
-  }
-}
-
 
 async function submitProduct(){
   if(isSubmittingProduct) return;
@@ -1170,22 +1177,70 @@ if (me?.phone) buyPhone.value = me.phone;
 
 
 
-async function syncMyCoin(){
-  const me = JSON.parse(localStorage.getItem("user_profile"));
-  if(!me?.uid) return;
+async function syncMyCoin() {
+
+  const uid = lspMarketCurrentUid();
+
+  if (!uid) return;
+
 
   const res = await fetch("/api/me/coin", {
-    headers: { "x-uid": me.uid }
+
+    credentials: "same-origin",
+
+    cache: "no-store",
+
+    headers: {
+
+      "x-uid": uid
+
+    }
+
   });
+
+
   const data = await res.json();
-  if(!data.ok) return;
 
-  me.coins = data.coins;
-  localStorage.setItem("user_profile", JSON.stringify(me));
+
+  if (
+
+    !res.ok ||
+
+    !data.ok ||
+
+    !Number.isSafeInteger(data.coins) ||
+
+    data.coins < 0
+
+  ) {
+
+    return;
+
+  }
+
+
+  const current = JSON.parse(
+
+    localStorage.getItem("user_profile") || "{}"
+
+  );
+
+
+  if (current.uid !== uid) return;
+
+
+  current.coins = data.coins;
+
+
+  localStorage.setItem(
+
+    "user_profile",
+
+    JSON.stringify(current)
+
+  );
+
 }
-
-
-
 /* ==========================================
    MINIMAL UI - REMOVE DECORATIVE EMOJI
 ========================================== */
@@ -1246,67 +1301,220 @@ function closeBuyForm(){
   document.getElementById("buyFormModal").classList.add("hidden");
 }
 
-async function submitBuyForm(){
-  const me = JSON.parse(localStorage.getItem("user_profile"));
+
+
+/* ==========================================
+   MARKET PRODUCT PURCHASE V1.4B
+   SECURE ESCROW PAYMENT
+========================================== */
+
+async function submitBuyForm() {
+
+  if (lspMarketPaymentBusy) return;
+
+
+  const uid = lspMarketCurrentUid();
+
+  const booth = window.__lastBooth;
+
+
+  if (!uid) {
+
+    return showModal({
+
+      title: "Sign In Required",
+
+      message: "Please sign in to continue."
+
+    });
+
+  }
+
+
+  if (
+
+    !booth ||
+
+    booth.locked ||
+
+    booth.ownerUid === uid
+
+  ) {
+
+    return showModal({
+
+      title: "Booth Unavailable",
+
+      message: "Purchases are currently unavailable."
+
+    });
+
+  }
+
+
+  /* ======================================
+     GET PRODUCT INFORMATION
+  ====================================== */
+
+  const product = booth.products?.find(
+
+    p => p.id === buyingProductId
+
+  );
+
+
+  if (!product) {
+
+    return showModal({
+
+      title: "Product Unavailable",
+
+      message: "Please refresh the product list."
+
+    });
+
+  }
+
+
+  /* ======================================
+     VALIDATE PURCHASE QUANTITY
+  ====================================== */
+
+  const qty = Number(buyQty.value);
+
+  const price = Number(product.price);
+
+  const stock = Number(product.stock);
+
+  const expectedTotal = qty * price;
+
+
+  if (
+
+    !Number.isSafeInteger(qty) ||
+
+    qty <= 0 ||
+
+    !Number.isSafeInteger(price) ||
+
+    price <= 0 ||
+
+    !Number.isSafeInteger(stock) ||
+
+    stock < qty ||
+
+    !Number.isSafeInteger(expectedTotal)
+
+  ) {
+
+    return showModal({
+
+      title: "Invalid Quantity",
+
+      message: "Please check the quantity and available stock."
+
+    });
+
+  }
+
+
+  /* ======================================
+     DELIVERY INFORMATION
+  ====================================== */
 
   const info = {
+
     name: buyName.value.trim(),
+
     phone: buyPhone.value.trim(),
+
     address: buyAddress.value.trim(),
-    qty: Math.max(1, Number(buyQty.value) || 1),
+
+    qty,
 
     note: buyNote.value.trim()
+
   };
 
-  if(!info.name || !info.phone || !info.address || info.qty <= 0){
-    showModal({
-      title:"Missing Information",
-      message:"Please complete all required purchase details."
+
+  if (
+
+    !info.name ||
+
+    !info.phone ||
+
+    !info.address ||
+
+    info.name.length > 150 ||
+
+    info.phone.length > 50 ||
+
+    info.address.length > 1000 ||
+
+    info.note.length > 1000
+
+  ) {
+
+    return showModal({
+
+      title: "Invalid Information",
+
+      message: "Please check your delivery information."
+
     });
-    return;
+
   }
 
-  const res = await fetch("/api/market/product/buy",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "x-uid": me.uid
-    },
-    body: JSON.stringify({
-      boothId,
-      productId: buyingProductId,
-      buyerInfo: info
-    })
-  });
 
-  const data = await res.json();
-  if(!data.ok){
-    showModal({
-      title:"Operation Failed",
-      message:"Unable to place your order."
-    });
-    return;
-  }
+  /* ======================================
+     PAYMENT CONFIRMATION
+  ====================================== */
+
+  const payload = {
+
+    boothId,
+
+    productId: product.id,
+
+    expectedSellerUid: booth.ownerUid,
+
+    expectedTotal,
+
+    buyerInfo: info
+
+  };
+
 
   closeBuyForm();
 
-buyName.value = "";
-buyPhone.value = "";
-buyAddress.value = "";
-buyQty.value = 1;
-buyNote.value = "";
-
 
   showModal({
-    title:"Order Placed Successfully",
-    message:	"The seller will contact you as soon as possible."
+
+    title: "Confirm Purchase",
+
+    message:
+
+      `Quantity: ${qty}<br>` +
+
+      `Total: <b>${expectedTotal.toLocaleString("en-US")} 💎</b>`,
+
+    confirm: true,
+
+    onOk: () => {
+
+      lspMarketPay(
+
+        "buy",
+
+        payload
+
+      );
+
+    }
+
   });
 
-  syncMyCoin();
-  loadBooth();
 }
-
-
 
 
 document.querySelectorAll(".booth-tabs .tab")
@@ -2213,3 +2421,634 @@ socket.on("force-logout", (data) => {
     location.href = "/login.html";
   }, 3000);
 });
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   MARKET PAYMENT CLIENT V1.4B
+   DURABLE REQUEST ID / SAFE RETRY
+========================================== */
+
+let lspMarketPaymentBusy = false;
+
+
+/* CURRENT ACCOUNT */
+
+function lspMarketCurrentUid() {
+
+  const me = JSON.parse(
+    localStorage.getItem("user_profile") || "{}"
+  );
+
+  return typeof me.uid === "string"
+    ? me.uid
+    : null;
+
+}
+
+
+/* ACCOUNT-SCOPED PENDING STORAGE */
+
+function lspMarketPaymentKey(uid) {
+
+  return "lsp:market:payment:v14:" +
+    encodeURIComponent(uid);
+
+}
+
+
+function lspMarketReadPending(uid) {
+
+  const raw = sessionStorage.getItem(
+    lspMarketPaymentKey(uid)
+  );
+
+  if (raw === null) return null;
+
+  const pending = JSON.parse(raw);
+
+  if (
+
+    !pending ||
+
+    !["rent", "extend", "buy"]
+      .includes(pending.kind) ||
+
+    !pending.payload ||
+
+    pending.payload.expectedBuyerUid !== uid ||
+
+    !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/
+      .test(pending.payload.requestId)
+
+  ) {
+
+    throw new Error("INVALID_MARKET_PENDING");
+
+  }
+
+  return pending;
+
+}
+
+
+/* ==========================================
+   PENDING PAYMENT BUTTON
+========================================== */
+
+const lspMarketRetryButton =
+  document.createElement("button");
+
+lspMarketRetryButton.type = "button";
+
+lspMarketRetryButton.hidden = true;
+
+lspMarketRetryButton.style.cssText = `
+  display:block;
+  width:calc(100% - 28px);
+  margin:10px auto;
+  padding:12px;
+  border:1px solid #DFC382;
+  border-radius:12px;
+  background:#FFF4D9;
+  color:#70531D;
+  font-size:12px;
+  font-weight:750;
+`;
+
+const lspMarketPageHeader =
+  document.querySelector(
+    ".market-header, .booth-header"
+  );
+
+if (lspMarketPageHeader) {
+
+  lspMarketPageHeader.after(
+    lspMarketRetryButton
+  );
+
+} else {
+
+  document.body.prepend(
+    lspMarketRetryButton
+  );
+
+}
+
+
+function lspMarketUpdateRetryButton() {
+
+  try {
+
+    const uid = lspMarketCurrentUid();
+
+    const pending = uid
+
+      ? lspMarketReadPending(uid)
+
+      : null;
+
+    lspMarketRetryButton.hidden = !pending;
+
+    lspMarketRetryButton.style.display =
+      pending ? "block" : "none";
+
+    lspMarketRetryButton.disabled =
+      lspMarketPaymentBusy;
+
+
+    if (pending) {
+
+      const cost =
+        pending.kind === "buy"
+
+          ? pending.payload.expectedTotal
+
+          : pending.payload.price;
+
+
+      const label = pending.kind.toUpperCase();
+
+      lspMarketRetryButton.textContent =
+        lspMarketPaymentBusy
+
+          ? "CHECKING TRANSACTION..."
+
+          : `CHECK / RETRY ${label} · Booth ${pending.payload.boothId} · ${Number(cost).toLocaleString("en-US")} 💎`;
+
+    }
+
+  } catch {
+
+    lspMarketRetryButton.hidden = false;
+
+    lspMarketRetryButton.style.display = "block";
+
+    lspMarketRetryButton.disabled = true;
+
+    lspMarketRetryButton.textContent =
+      "Pending payment unavailable. Contact support.";
+
+  }
+
+}
+
+
+/* ==========================================
+   SECURE MARKET PAYMENT REQUEST
+========================================== */
+
+async function lspMarketPay(kind, payload) {
+
+  if (lspMarketPaymentBusy) return false;
+
+  lspMarketPaymentBusy = true;
+
+  let uid;
+  let pending;
+  let controller;
+  let timeout;
+
+
+  try {
+
+    uid = lspMarketCurrentUid();
+
+    if (!uid) {
+
+      lspMarketPaymentNotice(
+        "Sign In Required",
+        "Please sign in to continue."
+      );
+
+      return false;
+
+    }
+
+
+    /* CHECK EXISTING PENDING PAYMENT */
+
+    pending = lspMarketReadPending(uid);
+
+
+    if (pending && payload) {
+
+      lspMarketPaymentNotice(
+
+        "Pending Transaction",
+
+        "Resolve your previous payment using CHECK / RETRY first."
+
+      );
+
+      return false;
+
+    }
+
+
+    /* CREATE ONLY ONE REQUEST ID */
+
+    if (!pending) {
+
+      if (!payload) return false;
+
+      if (!["rent", "extend", "buy"].includes(kind)) {
+        throw new Error("INVALID_PAYMENT_KIND");
+      }
+
+      pending = {
+
+        kind,
+
+        payload: {
+
+          ...payload,
+
+          expectedBuyerUid: uid,
+
+          requestId: crypto.randomUUID()
+
+        }
+
+      };
+
+
+      /* STORE BEFORE NETWORK REQUEST */
+
+      sessionStorage.setItem(
+
+        lspMarketPaymentKey(uid),
+
+        JSON.stringify(pending)
+
+      );
+
+    }
+
+
+    lspMarketUpdateRetryButton();
+
+
+    /* ======================================
+       SELECT SERVER ENDPOINT
+    ====================================== */
+
+    const endpoints = {
+
+      rent: "/api/market/rent",
+
+      extend: "/api/market/extend",
+
+      buy: "/api/market/product/buy"
+
+    };
+
+
+    controller = new AbortController();
+
+    timeout = setTimeout(() => {
+      controller.abort();
+    }, 15000);
+
+
+    const response = await fetch(
+
+      endpoints[pending.kind],
+
+      {
+
+        method: "POST",
+
+        credentials: "same-origin",
+
+        cache: "no-store",
+
+        signal: controller.signal,
+
+        headers: {
+
+          "Content-Type": "application/json",
+
+          "x-uid": uid
+
+        },
+
+        body: JSON.stringify(
+          pending.payload
+        )
+
+      }
+
+    );
+
+
+    const reply = await response.json();
+
+
+    /* ======================================
+       VALIDATE ACKNOWLEDGEMENT
+    ====================================== */
+
+    if (
+
+      !reply ||
+
+      reply.requestId !==
+        pending.payload.requestId ||
+
+      reply.retrySameRequest === true ||
+
+      !(
+
+        (response.ok && reply.ok === true) ||
+
+        (
+          reply.ok === false &&
+          reply.retrySameRequest === false
+        )
+
+      )
+
+    ) {
+
+      throw new Error(
+        "MARKET_PAYMENT_UNCERTAIN"
+      );
+
+    }
+
+
+    /* ======================================
+       CLEAR ONLY CONFIRMED TRANSACTION
+    ====================================== */
+
+    const currentPending =
+      lspMarketReadPending(uid);
+
+    if (
+
+      !currentPending ||
+
+      currentPending.payload.requestId !==
+        pending.payload.requestId
+
+    ) {
+
+      throw new Error("PENDING_PAYMENT_CHANGED");
+
+    }
+
+
+    sessionStorage.removeItem(
+      lspMarketPaymentKey(uid)
+    );
+
+
+    // Không cập nhật giao diện tài khoản khác.
+
+    if (lspMarketCurrentUid() !== uid) {
+
+      return reply.ok === true;
+
+    }
+
+
+    /* ======================================
+       SUCCESS
+    ====================================== */
+
+    if (reply.ok === true) {
+
+      try {
+
+        lspMarketPaymentComplete(
+
+          pending.kind,
+
+          pending.payload,
+
+          reply
+
+        );
+
+      } catch (error) {
+
+        console.error(
+          "[MARKET UI UPDATE]",
+          error
+        );
+
+      }
+
+      return true;
+
+    }
+
+
+    /* CONFIRMED REJECTION */
+
+    const messages = {
+
+      not_enough_coin:
+        "Insufficient diamonds.",
+
+      already_have_booth:
+        "You already own a booth.",
+
+      already_rented:
+        "This booth is already rented.",
+
+      trial_used:
+        "You have already used your free trial.",
+
+      booth_locked:
+        "This booth is locked.",
+
+      booth_not_found:
+        "This booth is unavailable.",
+
+      product_not_found:
+        "This product is unavailable.",
+
+      out_of_stock:
+        "Insufficient product stock.",
+
+      PRODUCT_PRICE_CHANGED:
+        "The product price changed. Please refresh.",
+
+      RENTAL_PRICE_CHANGED:
+        "The rental price changed. Please refresh.",
+
+      BOOTH_CHANGED:
+        "The booth has changed. Please refresh."
+
+    };
+
+    lspMarketPaymentNotice(
+
+      "Request Failed",
+
+      Object.hasOwn(messages, reply.error)
+
+        ? messages[reply.error]
+
+        : "The request was rejected. Please check and try again."
+
+    );
+
+
+    return false;
+
+
+  } catch (error) {
+
+    console.error(
+
+      "[MARKET PAYMENT]",
+
+      error.message
+
+    );
+
+    lspMarketPaymentNotice(
+
+      "Transaction Check Required",
+
+      "If a payment is pending, use CHECK / RETRY. Do not create another payment."
+
+    );
+
+    return false;
+
+
+  } finally {
+
+    clearTimeout(timeout);
+
+    lspMarketPaymentBusy = false;
+
+    lspMarketUpdateRetryButton();
+
+  }
+
+}
+
+
+/* ==========================================
+   MANUAL RETRY
+   SAME ORIGINAL REQUEST ID
+========================================== */
+
+lspMarketRetryButton.onclick = () => {
+
+  lspMarketPay(null, null);
+
+};
+
+
+window.addEventListener(
+
+  "pageshow",
+
+  lspMarketUpdateRetryButton
+
+);
+
+window.addEventListener(
+
+  "focus",
+
+  lspMarketUpdateRetryButton
+
+);
+
+window.addEventListener(
+
+  "storage",
+
+  lspMarketUpdateRetryButton
+
+);
+
+
+lspMarketUpdateRetryButton();
+
+
+
+/* ==========================================
+   BOOTH PAYMENT NOTIFICATIONS
+========================================== */
+
+function lspMarketPaymentNotice(title, message) {
+
+  showModal({
+
+    title,
+
+    message
+
+  });
+
+}
+
+
+/* ==========================================
+   BOOTH PAYMENT COMPLETED
+========================================== */
+
+function lspMarketPaymentComplete(
+  kind,
+  payload,
+  reply
+) {
+
+  if (kind === "buy") {
+
+    closeBuyForm();
+
+    buyName.value = "";
+
+    buyPhone.value = "";
+
+    buyAddress.value = "";
+
+    buyQty.value = 1;
+
+    buyNote.value = "";
+
+
+    showModal({
+
+      title: "Order Placed Successfully",
+
+      message:
+
+        "The seller will contact you as soon as possible."
+
+    });
+
+  } else {
+
+    showModal({
+
+      title: "Transaction Successful",
+
+      message:
+
+        kind === "extend"
+
+          ? "Your booth rental has been extended successfully."
+
+          : "Your booth has been rented successfully."
+
+    });
+
+  }
+
+
+  syncMyCoin().catch(console.error);
+
+  loadBooth();
+
+}
+

@@ -603,15 +603,683 @@ function loadInbox(){
 
 
 
-const MARKET_FILE = "/opt/render/project/data/market_booths.json";
+/* ==========================================
+   LIVESTREAM PRO
+   MARKET DATABASE STORAGE V1.4
+========================================== */
 
-function loadMarket(){
-  if(!fs.existsSync(MARKET_FILE)) return {};
-  return JSON.parse(fs.readFileSync(MARKET_FILE,"utf8"));
+const MARKET_FILE =
+  "/opt/render/project/data/market_booths.json";
+
+
+let lspMarketReady = false;
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   MARKET RENTAL PRICING V1.4B
+========================================== */
+
+const LSP_MARKET_RENT_PLANS = Object.freeze({
+  7: 1000,
+  30: 3500,
+  90: 9000
+});
+
+const LSP_MARKET_CUSTOM_DAY_PRICE = 150;
+const LSP_MARKET_MAX_CUSTOM_DAYS = 180;
+const LSP_MARKET_DAY_MS = 86400000;
+
+
+/* ==========================================
+   SERVER CONTROLLED RENTAL PRICE
+========================================== */
+
+function lspMarketRentalPrice(kind, plan, days) {
+
+  if (!Number.isSafeInteger(days) || days <= 0) {
+    throw new Error("INVALID_RENTAL_DAYS");
+  }
+
+  if (plan === "trial") {
+
+    if (kind !== "rent" || days !== 30) {
+      throw new Error("INVALID_TRIAL_PLAN");
+    }
+
+    return 0;
+
+  }
+
+  if (plan === "fixed") {
+
+    if (!Object.hasOwn(LSP_MARKET_RENT_PLANS, days)) {
+      throw new Error("INVALID_RENTAL_PLAN");
+    }
+
+    return LSP_MARKET_RENT_PLANS[days];
+
+  }
+
+  if (plan === "custom") {
+
+    if (
+      kind !== "rent" ||
+      days > LSP_MARKET_MAX_CUSTOM_DAYS
+    ) {
+      throw new Error("INVALID_CUSTOM_PLAN");
+    }
+
+    return days * LSP_MARKET_CUSTOM_DAY_PRICE;
+
+  }
+
+  throw new Error("INVALID_RENTAL_PLAN");
+
 }
-function saveMarket(db){
-  fs.writeFileSync(MARKET_FILE, JSON.stringify(db,null,2));
+
+
+
+/* STRICT OBJECT VALIDATION */
+
+function lspMarketObject(value) {
+
+  return value !== null &&
+    typeof value === "object" &&
+    !Array.isArray(value);
+
 }
+
+
+/* STRICT INTEGER VALIDATION */
+
+function lspMarketNumber(value) {
+
+  const n =
+    typeof value === "string" &&
+    /^\d+$/.test(value)
+
+      ? Number(value)
+      : value;
+
+  if (!Number.isSafeInteger(n) || n < 0) {
+
+    throw new Error("INVALID_MARKET_NUMBER");
+
+  }
+
+  return n;
+
+}
+
+
+/* READ MARKET DATABASE */
+
+function lspMarketReadRaw() {
+
+  let raw;
+
+  try {
+
+    raw = fs.readFileSync(MARKET_FILE, "utf8");
+
+  } catch (error) {
+
+    if (error.code === "ENOENT") return {};
+
+    throw error;
+
+  }
+
+  const db = JSON.parse(raw);
+
+  if (!lspMarketObject(db)) {
+
+    throw new Error("INVALID_MARKET_DATABASE");
+
+  }
+
+  return db;
+
+}
+
+
+/* PUBLIC MARKET READER */
+
+function loadMarket() {
+
+  if (!lspMarketReady) {
+
+    throw new Error("MARKET_RECOVERY_PENDING");
+
+  }
+
+  return lspMarketReadRaw();
+
+}
+
+
+/* DATABASE CHECKSUM */
+
+function lspMarketHash(db) {
+
+  return crypto
+    .createHash("sha256")
+    .update(JSON.stringify(db))
+    .digest("hex");
+
+}
+
+
+/* ATOMIC MARKET FILE WRITER */
+
+function lspMarketWriteRaw(db) {
+
+  if (!lspMarketObject(db)) {
+
+    throw new Error("INVALID_MARKET_DATABASE");
+
+  }
+
+  const temp =
+    MARKET_FILE + "." +
+    crypto.randomUUID() + ".tmp";
+
+  let fd;
+
+  try {
+
+    fd = fs.openSync(temp, "wx", 0o600);
+
+    fs.writeFileSync(
+      fd,
+      JSON.stringify(db, null, 2),
+      "utf8"
+    );
+
+    fs.fsyncSync(fd);
+
+    fs.closeSync(fd);
+
+    fd = undefined;
+
+    fs.renameSync(temp, MARKET_FILE);
+
+    lspSocialGiftSyncDir(MARKET_FILE);
+
+  } finally {
+
+    if (fd !== undefined) {
+
+      try {
+        fs.closeSync(fd);
+      } catch {}
+
+    }
+
+    try {
+      fs.unlinkSync(temp);
+    } catch {}
+
+  }
+
+}
+
+
+/* STANDARD MARKET WRITER */
+
+function saveMarket(db) {
+
+  if (!lspMarketReady) {
+
+    throw new Error("MARKET_RECOVERY_PENDING");
+
+  }
+
+  try {
+
+    lspMarketWriteRaw(db);
+
+  } catch (error) {
+
+    lspMarketReady = false;
+
+    throw error;
+
+  }
+
+}
+
+
+/* ==========================================
+   MARKET WALLET JOURNAL V1.4
+========================================== */
+
+function lspMarketReceipts(user) {
+
+  const records = user.marketWalletReceipts;
+
+  if (records === undefined) return {};
+
+  if (!lspMarketObject(records)) {
+
+    throw new Error("INVALID_MARKET_RECEIPTS");
+
+  }
+
+  return records;
+
+}
+
+
+/* ==========================================
+   RECOVER COMMITTED MARKET TRANSACTION
+========================================== */
+
+function lspRecoverMarketWallet() {
+
+  lspMarketReady = false;
+
+  try {
+
+    const users =
+      lspReadExistingDeletionUsers();
+
+
+      /* ==========================================
+   MARKET SOURCE LOSS PROTECTION
+========================================== */
+
+if (
+  !fs.existsSync(MARKET_FILE) &&
+  Object.values(users).some(user =>
+
+    user.lspMarketPending !== undefined ||
+
+    Object.keys(
+      lspMarketReceipts(user)
+    ).length > 0
+
+  )
+) {
+
+  throw new Error(
+    "MARKET_SOURCE_MISSING_WITH_WALLET_RECEIPTS"
+  );
+
+}
+
+
+    const pending = Object.entries(users)
+
+      .filter(([, user]) =>
+        user.lspMarketPending !== undefined
+      );
+
+
+    // Chỉ cho phép một journal chưa hoàn tất.
+
+    if (pending.length > 1) {
+
+      throw new Error(
+        "MULTIPLE_PENDING_MARKET_TRANSACTIONS"
+      );
+
+    }
+
+
+    if (!pending.length) {
+
+      lspMarketReadRaw();
+
+      lspSocialGiftSyncDir(MARKET_FILE);
+
+      lspMarketReady = true;
+
+      return true;
+
+    }
+
+
+    const [uid, user] = pending[0];
+
+    const journal = user.lspMarketPending;
+
+    const receipts = lspMarketReceipts(user);
+
+
+    /* VALIDATE JOURNAL */
+
+    if (
+
+      !lspMarketObject(journal) ||
+
+      typeof journal.boothId !== "string" ||
+
+      !/^[a-zA-Z0-9_-]{1,64}$/
+        .test(journal.boothId) ||
+
+      ["__proto__", "constructor", "prototype"]
+        .includes(journal.boothId) ||
+
+      typeof journal.receiptKey !== "string" ||
+
+      !Object.hasOwn(
+        receipts,
+        journal.receiptKey
+      ) ||
+
+      !lspMarketObject(journal.afterBooth) ||
+
+      !/^[a-f0-9]{64}$/
+        .test(journal.beforeHash) ||
+
+      !/^[a-f0-9]{64}$/
+        .test(journal.afterHash) ||
+
+      journal.beforeHash === journal.afterHash
+
+    ) {
+
+      throw new Error("INVALID_MARKET_JOURNAL");
+
+    }
+
+
+    // Xác nhận dữ liệu ví đã được lưu bền vững.
+
+    lspSocialGiftSyncDir(USERS_FILE);
+
+
+    const market = lspMarketReadRaw();
+
+    const currentHash = lspMarketHash(market);
+
+
+    /* MARKET NOT UPDATED YET */
+
+    if (currentHash === journal.beforeHash) {
+
+      market[journal.boothId] =
+        structuredClone(journal.afterBooth);
+
+
+      if (
+        lspMarketHash(market) !== journal.afterHash
+      ) {
+
+        throw new Error(
+          "MARKET_RECOVERY_HASH_MISMATCH"
+        );
+
+      }
+
+
+      lspMarketWriteRaw(market);
+
+
+    } else if (currentHash === journal.afterHash) {
+
+      // File Market đã được cập nhật trước đó.
+      // Không thực hiện lại giao dịch.
+
+      lspSocialGiftSyncDir(MARKET_FILE);
+
+
+    } else {
+
+      // Không tự ghi đè khi dữ liệu đã thay đổi
+      // ngoài hai trạng thái được xác nhận.
+
+      throw new Error(
+        "MARKET_RECOVERY_STATE_CONFLICT"
+      );
+
+    }
+
+
+    /* CLEAR RECOVERY JOURNAL */
+
+    const tx = lspWalletStorage.begin([uid]);
+
+    const account = tx.users[uid];
+
+    if (
+
+      !account ||
+
+      JSON.stringify(account.lspMarketPending) !==
+        JSON.stringify(journal)
+
+    ) {
+
+      throw new Error("MARKET_JOURNAL_CHANGED");
+
+    }
+
+
+    delete account.lspMarketPending;
+
+    tx.commit([uid]);
+
+
+    lspMarketReady = true;
+
+    console.log("[MARKET RECOVERY] SUCCESS");
+
+    return true;
+
+
+  } catch (error) {
+
+    lspMarketReady = false;
+
+    console.error(
+      "[MARKET RECOVERY]",
+      error.message
+    );
+
+    return false;
+
+  }
+
+}
+
+
+/* ==========================================
+   COMMIT WALLET + MARKET JOURNAL
+========================================== */
+
+function lspCommitMarketWallet({
+
+  tx,
+
+  receiptUid,
+
+  changedUids,
+
+  receiptKey,
+
+  receipt,
+
+  boothId,
+
+  beforeHash,
+
+  market
+
+}) {
+
+  if (!lspMarketReady) {
+
+    throw new Error("MARKET_RECOVERY_PENDING");
+
+  }
+
+
+  if (
+
+    lspMarketHash(
+      lspMarketReadRaw()
+    ) !== beforeHash
+
+  ) {
+
+    throw new Error("MARKET_SNAPSHOT_CHANGED");
+
+  }
+
+
+  const user = tx.users[receiptUid];
+
+  if (
+
+    !user ||
+
+    !changedUids.includes(receiptUid) ||
+
+    user.lspMarketPending !== undefined ||
+
+    !lspMarketObject(market[boothId])
+
+  ) {
+
+    throw new Error("INVALID_MARKET_COMMIT");
+
+  }
+
+
+  const records = lspMarketReceipts(user);
+
+  if (Object.hasOwn(records, receiptKey)) {
+
+    throw new Error("MARKET_RECEIPT_EXISTS");
+
+  }
+
+
+  const afterHash = lspMarketHash(market);
+
+  if (afterHash === beforeHash) {
+
+    throw new Error("EMPTY_MARKET_TRANSACTION");
+
+  }
+
+
+  /* PERSISTENT FINANCIAL RECEIPT */
+
+  user.marketWalletReceipts = {
+
+    ...records,
+
+    [receiptKey]: receipt
+
+  };
+
+
+  /* DURABLE RECOVERY JOURNAL */
+
+  user.lspMarketPending = {
+
+    boothId,
+
+    receiptKey,
+
+    beforeHash,
+
+    afterHash,
+
+    afterBooth: structuredClone(
+      market[boothId]
+    )
+
+  };
+
+
+  /* BLOCK OTHER MARKET WRITERS */
+
+  lspMarketReady = false;
+
+
+  /* COMMIT WALLET + RECEIPT + JOURNAL */
+
+  tx.commit(changedUids);
+
+
+  /* SYNCHRONIZE MARKET DATABASE */
+
+  if (!lspRecoverMarketWallet()) {
+
+    throw new Error(
+      "MARKET_SYNC_PENDING"
+    );
+
+  }
+
+}
+
+
+/* ==========================================
+   MARKET ACCOUNT VALIDATION
+========================================== */
+
+function lspMarketAccount(tx, uid) {
+
+  const account = tx.users[uid];
+
+  if (
+
+    !account?.profile ||
+
+    lspDeletionTombstones.has(uid)
+
+  ) {
+
+    throw new Error(
+      "MARKET_ACCOUNT_UNAVAILABLE"
+    );
+
+  }
+
+  return account;
+
+}
+
+
+/* ==========================================
+   SAFE MARKET IDENTIFIERS
+========================================== */
+
+function lspMarketId(value) {
+
+  const id =
+    typeof value === "string"
+
+      ? value
+
+      : Number.isSafeInteger(value)
+        ? String(value)
+        : "";
+
+  if (
+
+    !/^[a-zA-Z0-9_-]{1,64}$/.test(id) ||
+
+    ["__proto__", "constructor", "prototype"]
+      .includes(id)
+
+  ) {
+
+    throw new Error("INVALID_MARKET_ID");
+
+  }
+
+  return id;
+
+}
+
+
 
 
 // 🔒 HELPER: CHẶN MỌI HÀNH ĐỘNG KHI BOOTH BỊ KHOÁ
@@ -645,30 +1313,104 @@ if (blockIfBoothLockedById(boothId, uid)) {
 }
 
 
+/* ==========================================
+   MARKET ACTIVE ESCROW PROTECTION
+========================================== */
 
-function cleanupExpiredBooths(){
-  const market = loadMarket();
-  let changed = false;
-  const now = Date.now();
+function lspMarketHasOpenOrders(booth) {
 
-  Object.keys(market).forEach(id=>{
-    const booth = market[id];
-    if(!booth) return;
+  const orders = booth.orders ?? [];
 
-    if(booth.expireAt && booth.expireAt < now){
-      console.log("⏱ Booth expired:", id);
-      market[id] = null;
-      changed = true;
-    }
+  if (!Array.isArray(orders)) {
+
+    throw new Error("INVALID_BOOTH_ORDERS");
+
+  }
+
+  return orders.some(order => {
+
+    if (!lspMarketObject(order)) return true;
+
+    const terminal = [
+
+      "done",
+
+      "cancelled",
+
+      "refunded"
+
+    ].includes(order.status);
+
+    return (
+
+      !terminal ||
+
+      lspMarketNumber(order.escrow ?? 0) !== 0
+
+    );
+
   });
 
-  if(changed){
-    saveMarket(market);
-  }
 }
 
 
+/* ==========================================
+   SAFE EXPIRED BOOTH CLEANUP
+========================================== */
 
+function cleanupExpiredBooths() {
+
+  if (!lspMarketReady) return;
+
+
+  const market = loadMarket();
+
+  let changed = false;
+
+  const now = Date.now();
+
+
+  for (const [boothId, booth] of Object.entries(market)) {
+
+    if (!booth) continue;
+
+
+    if (
+
+      !booth.expireAt ||
+
+      lspMarketNumber(booth.expireAt) >= now
+
+    ) {
+
+      continue;
+
+    }
+
+
+    /* NEVER REMOVE UNSETTLED ORDERS */
+
+    if (lspMarketHasOpenOrders(booth)) {
+
+      continue;
+
+    }
+
+
+    market[boothId] = null;
+
+    changed = true;
+
+  }
+
+
+  if (changed) {
+
+    saveMarket(market);
+
+  }
+
+}
 
 
 
@@ -6789,68 +7531,848 @@ app.get("/lsp-admin-128995.html", (req, res) => {
 });
 
 
-app.post("/api/admin/market/approve-dispute", (req,res)=>{
-  const { adminUid, orderId } = req.body;
 
-  const users = loadUsers();
-  if(!users[adminUid] || users[adminUid].role !== "admin")
-    return res.status(403).json({ error:"not_admin" });
+/* ==========================================
+   LIVESTREAM PRO
+   MARKET ORDER SETTLEMENT V1.4
+========================================== */
 
-  const market = loadMarket();
-  let found, booth, boothId;
+function lspMarketFindOrder(market, orderId) {
 
-  for(const [id,b] of Object.entries(market)){
-    const o = (b.orders||[]).find(x=>x.id===orderId);
-    if(o){
-      found=o; booth=b; boothId=id;
-      break;
+  let result = null;
+
+  for (const [boothId, booth] of Object.entries(market)) {
+
+    if (!booth) continue;
+
+    for (const order of booth.orders || []) {
+
+      if (order.id !== orderId) continue;
+
+      if (result) {
+
+        throw new Error("DUPLICATE_ORDER_ID");
+
+      }
+
+      result = {
+
+        boothId: lspMarketId(boothId),
+
+        booth,
+
+        order
+
+      };
+
     }
+
   }
 
-  if(!found || found.status !== "dispute"){
-    return res.json({ ok:false, error:"NOT_DISPUTE" });
-  }
+  return result;
 
-  // ✅ set done
-  found.status = "done";
-  found.doneAt = Date.now();
-  found.adminApproved = true;   // 🧑‍⚖️ ĐÁNH DẤU ADMIN DUYỆT
-  found.adminApprovedAt = Date.now();
+}
 
 
-  // 💰 trả tiền cho seller
-  const seller = users[booth.ownerUid];
-  const amount = Number(found.escrow || 0);
+/* ==========================================
+   UNIFIED MARKET SETTLEMENT
+========================================== */
 
-  if(seller?.profile && amount > 0){
-    seller.profile.coinReceived =
-      (seller.profile.coinReceived || 0) + amount;
-    found.escrow = 0;
-  }
+function lspMarketSettleOrder(req, res, action) {
 
-  saveUsers(users);
-  saveMarket(market);
+  const fail = (
+    error,
+    retrySameRequest = false,
+    status = 400
+  ) => res.status(status).json({
 
-  emitCoinUpdate(booth.ownerUid);
+    ok: false,
 
-  io.emit("order-updated",{ boothId, order: found });
+    error,
 
-  // 🔔 notify buyer + seller
-  sendPushToUser(found.buyerUid,{
-    title:"Dispute resolved",
-    body:"An admin has approved the order.",
-    tag:"dispute-approved"
+    retrySameRequest
+
   });
 
-  sendPushToUser(booth.ownerUid,{
-    title:"Order approved",
-    body:`An admin has approved order ${found.productName}`,
-    tag:"dispute-approved"
-  });
 
-  res.json({ ok:true });
-});
+  try {
 
+    if (!lspMarketReady) {
+
+      return fail(
+        "MARKET_RECOVERY_PENDING",
+        true,
+        503
+      );
+
+    }
+
+
+    /* ======================================
+       VALIDATE ACTION
+    ====================================== */
+
+    const adminAction =
+
+      action === "approve-dispute" ||
+
+      action === "refund";
+
+
+    if (![
+
+      "done",
+
+      "cancel",
+
+      "approve-dispute",
+
+      "refund"
+
+    ].includes(action)) {
+
+      return fail("INVALID_ACTION");
+
+    }
+
+
+    const actorUid = adminAction
+
+      ? req.lspAdminActorUid
+
+      : req.auth?.uid;
+
+
+    if (!actorUid) {
+
+      return fail("NOT_LOGIN", true, 401);
+
+    }
+
+
+    const orderId =
+      lspMarketId(req.body?.orderId);
+
+
+    /* ======================================
+       LOAD CURRENT MARKET STATE
+    ====================================== */
+
+    const market = loadMarket();
+
+    const beforeHash = lspMarketHash(market);
+
+
+    const result = lspMarketFindOrder(
+      market,
+      orderId
+    );
+
+
+    if (!result) {
+
+      return fail("ORDER_NOT_FOUND");
+
+    }
+
+
+    const {
+
+      boothId,
+
+      booth,
+
+      order
+
+    } = result;
+
+
+    const buyerUid = order.buyerUid;
+
+    const sellerUid = booth.ownerUid;
+
+
+    if (
+
+      typeof buyerUid !== "string" ||
+
+      !buyerUid ||
+
+      typeof sellerUid !== "string" ||
+
+      !sellerUid ||
+
+      buyerUid === sellerUid
+
+    ) {
+
+      throw new Error("INVALID_ORDER_OWNER");
+
+    }
+
+
+    /* ======================================
+       VERIFY PERMISSIONS
+    ====================================== */
+
+    if (adminAction) {
+
+      const view = lspReadUsersView();
+
+      if (
+
+        !Object.hasOwn(view, actorUid) ||
+
+        view[actorUid]?.role !== "admin"
+
+      ) {
+
+        return fail(
+          "not_admin",
+          false,
+          403
+        );
+
+      }
+
+    } else if (action === "cancel") {
+
+      if (actorUid !== buyerUid) {
+
+        return fail(
+          "NO_PERMISSION",
+          false,
+          403
+        );
+
+      }
+
+    } else {
+
+      if (actorUid !== sellerUid) {
+
+        return fail(
+          "NO_PERMISSION",
+          false,
+          403
+        );
+
+      }
+
+    }
+
+
+    /* ======================================
+       LEGACY ORDER PROTECTION
+    ====================================== */
+
+    if (order.walletVersion !== "MARKET_V14") {
+
+      return fail(
+        "LEGACY_ORDER_RECONCILIATION_REQUIRED",
+        false,
+        409
+      );
+
+    }
+
+
+    if (order.sellerUid !== sellerUid) {
+
+      throw new Error("SELLER_OWNER_CONFLICT");
+
+    }
+
+
+    /* ======================================
+       PREPARE WALLET TRANSACTION
+    ====================================== */
+
+    const tx = lspWalletStorage.begin([
+
+      buyerUid,
+
+      sellerUid
+
+    ]);
+
+
+    const buyer = lspMarketAccount(
+      tx,
+      buyerUid
+    );
+
+    const buyerRecords =
+      lspMarketReceipts(buyer);
+
+
+    const receiptKey =
+      "settle:" + orderId;
+
+
+    const finalStatus =
+
+      action === "cancel"
+
+        ? "cancelled"
+
+        : action === "refund"
+
+          ? "refunded"
+
+          : "done";
+
+
+    /* ======================================
+       DUPLICATE SETTLEMENT PROTECTION
+    ====================================== */
+
+    if (Object.hasOwn(
+      buyerRecords,
+      receiptKey
+    )) {
+
+      const old =
+        buyerRecords[receiptKey];
+
+
+      if (
+
+        old.kind !== "settlement" ||
+
+        old.orderId !== orderId ||
+
+        old.boothId !== boothId ||
+
+        old.buyerUid !== buyerUid ||
+
+        old.sellerUid !== sellerUid ||
+
+        old.amount !== order.totalPrice ||
+
+        old.finalStatus !== finalStatus ||
+
+        order.status !== finalStatus ||
+
+        order.escrow !== 0
+
+      ) {
+
+        return fail(
+          "SETTLEMENT_CONFLICT",
+          true,
+          409
+        );
+
+      }
+
+
+      lspSocialGiftSyncDir(USERS_FILE);
+
+
+      return res.json({
+
+        ok: true,
+
+        duplicate: true,
+
+        orderId,
+
+        status: finalStatus
+
+      });
+
+    }
+
+
+    /* ======================================
+       VERIFY PURCHASE RECEIPT
+    ====================================== */
+
+    const purchaseKey =
+      "buy:" + order.purchaseRequestId;
+
+
+    const purchase = Object.hasOwn(
+      buyerRecords,
+      purchaseKey
+    )
+
+      ? buyerRecords[purchaseKey]
+
+      : null;
+
+
+    const amount =
+      lspMarketNumber(order.escrow);
+
+    const totalPrice =
+      lspMarketNumber(order.totalPrice);
+
+    const qty =
+      lspMarketNumber(order.qty);
+
+
+    if (
+
+      !purchase ||
+
+      purchase.kind !== "buy" ||
+
+      purchase.orderId !== orderId ||
+
+      purchase.boothId !== boothId ||
+
+      purchase.buyerUid !== buyerUid ||
+
+      purchase.sellerUid !== sellerUid ||
+
+      purchase.productId !== order.productId ||
+
+      purchase.qty !== qty ||
+
+      purchase.amount !== totalPrice ||
+
+      amount <= 0 ||
+
+      amount !== totalPrice ||
+
+      qty <= 0
+
+    ) {
+
+      return fail(
+        "ESCROW_RECONCILIATION_REQUIRED",
+        false,
+        409
+      );
+
+    }
+
+
+    /* ======================================
+       VERIFY ORDER STATUS
+    ====================================== */
+
+    const expectedStatus = {
+
+      done: "buyer_received",
+
+      cancel: "pending",
+
+      "approve-dispute": "dispute",
+
+      refund: "dispute"
+
+    }[action];
+
+
+    if (order.status !== expectedStatus) {
+
+      return fail(
+        "INVALID_ORDER_STATUS",
+        false,
+        409
+      );
+
+    }
+
+
+    const now = Date.now();
+
+    let changedUids = [buyerUid];
+
+
+    /* ======================================
+       PAY SELLER
+    ====================================== */
+
+    if (
+
+      action === "done" ||
+
+      action === "approve-dispute"
+
+    ) {
+
+      const seller = lspMarketAccount(
+        tx,
+        sellerUid
+      );
+
+
+      if (seller.profile.accountBlocked) {
+
+        return fail(
+          "SELLER_ACCOUNT_BLOCKED",
+          false,
+          409
+        );
+
+      }
+
+
+      const received =
+        lspMarketNumber(
+          seller.profile.coinReceived ?? 0
+        );
+
+
+      if (
+
+        !Number.isSafeInteger(
+          received + amount
+        )
+
+      ) {
+
+        return fail("BALANCE_OVERFLOW");
+
+      }
+
+
+      seller.profile.coinReceived =
+        received + amount;
+
+
+      // Không cộng vào seller.profile.coins.
+
+      changedUids = [
+
+        buyerUid,
+
+        sellerUid
+
+      ];
+
+
+      order.doneAt = now;
+
+
+      if (action === "approve-dispute") {
+
+        order.adminApproved = true;
+
+        order.adminApprovedAt = now;
+
+      }
+
+
+    /* ======================================
+       REFUND BUYER
+    ====================================== */
+
+    } else {
+
+      const balance =
+        lspMarketNumber(
+          buyer.profile.coins
+        );
+
+
+      if (
+
+        !Number.isSafeInteger(
+          balance + amount
+        )
+
+      ) {
+
+        return fail("BALANCE_OVERFLOW");
+
+      }
+
+
+      /* CANCEL BEFORE DELIVERY */
+
+      if (action === "cancel") {
+
+        const sent =
+          lspMarketNumber(
+            buyer.profile.coinSent ?? 0
+          );
+
+
+        if (sent < amount) {
+
+          return fail(
+            "INVALID_COIN_SENT",
+            false,
+            409
+          );
+
+        }
+
+
+        const products =
+          (booth.products || []).filter(
+
+            p => p.id === order.productId
+
+          );
+
+
+        if (products.length !== 1) {
+
+          return fail(
+            "PRODUCT_STOCK_RECONCILIATION_REQUIRED",
+            false,
+            409
+          );
+
+        }
+
+
+        const product = products[0];
+
+        const stock =
+          lspMarketNumber(product.stock);
+
+
+        if (
+
+          !Number.isSafeInteger(stock + qty)
+
+        ) {
+
+          return fail("STOCK_OVERFLOW");
+
+        }
+
+
+        product.stock = stock + qty;
+
+        buyer.profile.coinSent =
+          sent - amount;
+
+        order.cancelledAt = now;
+
+
+      } else {
+
+        order.refundedAt = now;
+
+      }
+
+
+      buyer.profile.coins =
+        balance + amount;
+
+
+      // Không trừ coinReceived của người bán.
+      // Tiền đơn hàng vẫn đang nằm trong escrow.
+
+    }
+
+
+    /* ======================================
+       CLOSE ESCROW
+    ====================================== */
+
+    order.status = finalStatus;
+
+    order.escrow = 0;
+
+    order.settledAt = now;
+
+    order.settledBy = actorUid;
+
+
+    /* ======================================
+       COMMIT SETTLEMENT + RECEIPT
+    ====================================== */
+
+    lspCommitMarketWallet({
+
+      tx,
+
+      receiptUid: buyerUid,
+
+      changedUids,
+
+      receiptKey,
+
+      boothId,
+
+      beforeHash,
+
+      market,
+
+      receipt: {
+
+        kind: "settlement",
+
+        action,
+
+        finalStatus,
+
+        orderId,
+
+        boothId,
+
+        buyerUid,
+
+        sellerUid,
+
+        amount,
+
+        actorUid,
+
+        ts: now
+
+      }
+
+    });
+
+
+    /* TRANSACTION SUCCESS */
+
+    res.json({
+
+      ok: true,
+
+      duplicate: false,
+
+      orderId,
+
+      status: finalStatus
+
+    });
+
+
+    /* ======================================
+       POST-COMMIT REALTIME
+    ====================================== */
+
+    try {
+
+      for (const uid of changedUids) {
+
+        emitCoinUpdate(uid);
+
+      }
+
+
+      // Chỉ gửi dữ liệu đơn cho các bên liên quan.
+
+      for (const uid of [buyerUid, sellerUid]) {
+
+        emitToUser(uid, "order-updated", {
+
+          boothId,
+
+          order
+
+        });
+
+      }
+
+
+      emitMarketUpdate("order-updated", boothId);
+
+
+      const notifyUid =
+
+        finalStatus === "cancelled"
+
+          ? sellerUid
+
+          : buyerUid;
+
+
+      const notifyText =
+
+        `Order ${finalStatus}: ` +
+
+        `${order.productName} ×${qty}`;
+
+
+      emitToUser(notifyUid, "system-notify", {
+
+        type: "order-" + finalStatus,
+
+        boothId,
+
+        orderId,
+
+        text: notifyText,
+
+        ts: now
+
+      });
+
+
+      Promise.resolve(
+
+        sendPushToUser(notifyUid, {
+
+          title: "Order " + finalStatus,
+
+          body: notifyText,
+
+          tag: "order-" + finalStatus
+
+        })
+
+      ).catch(error => {
+
+        console.error(
+          "[MARKET PUSH]",
+          error.message
+        );
+
+      });
+
+
+    } catch (error) {
+
+      console.error(
+        "[MARKET SETTLEMENT NOTIFY]",
+        error.message
+      );
+
+    }
+
+
+  } catch (error) {
+
+    console.error(
+      "[MARKET SETTLEMENT V1.4]",
+      error.message
+    );
+
+
+    if (!res.headersSent) {
+
+      return fail(
+
+        "MARKET_TRANSACTION_UNCERTAIN",
+
+        true,
+
+        503
+
+      );
+
+    }
+
+  }
+
+}
+
+
+app.post(
+  "/api/admin/market/approve-dispute",
+  (req, res) => {
+
+    return lspMarketSettleOrder(
+      req,
+      res,
+      "approve-dispute"
+    );
+
+  }
+);
 
 
 app.get("/api/admin/market/disputes", (req,res)=>{
@@ -6943,7 +8465,23 @@ app.get("/api/market", (req,res)=>{
     });
   });
 
-  res.json({ ok:true, market });
+ /* PUBLIC MARKET DATA ONLY */
+
+for (const booth of Object.values(market)) {
+
+  if (!booth) continue;
+
+  delete booth.orders;
+
+}
+
+res.setHeader("Cache-Control", "no-store");
+
+res.json({
+  ok: true,
+  market
+});
+
 });
 
 
@@ -6957,7 +8495,7 @@ app.post("/api/market/order/received", (req,res)=>{
   let found, booth, boothId;
 
   for(const [id,b] of Object.entries(market)){
-    const o = (b.orders || []).find(x=>x.id===orderId);
+    const o = (b?.orders || []).find(x=>x.id===orderId);
     if(o){
       found = o;
       booth = b;
@@ -6984,7 +8522,11 @@ app.post("/api/market/order/received", (req,res)=>{
 
   saveMarket(market);
 
-  io.emit("order-updated",{ boothId, order: found });
+lspEmitPrivateMarketOrder(
+  boothId,
+  booth,
+  found
+);
 
 
 // =========================
@@ -7030,7 +8572,7 @@ app.post("/api/market/order/dispute", (req,res)=>{
   let found, booth, boothId;
 
   for(const [id,b] of Object.entries(market)){
-    const o = (b.orders||[]).find(x=>x.id===orderId);
+    const o = (b?.orders || []).find(x=>x.id===orderId);
     if(o){
       found=o; booth=b; boothId=id;
       break;
@@ -7062,7 +8604,11 @@ found.dispute = {
 
   saveMarket(market);
 
-  io.emit("order-updated",{ boothId, order: found });
+  lspEmitPrivateMarketOrder(
+  boothId,
+  booth,
+  found
+);
 
   // 🔔 notify seller
   sendPushToUser(booth.ownerUid,{
@@ -7075,46 +8621,19 @@ found.dispute = {
 });
 
 
+app.post(
+  "/api/admin/market/refund",
+  (req, res) => {
 
-app.post("/api/admin/market/refund", (req,res)=>{
-  const { adminUid, orderId } = req.body;
+    return lspMarketSettleOrder(
+      req,
+      res,
+      "refund"
+    );
 
-  const users = loadUsers();
-  if(!users[adminUid] || users[adminUid].role!=="admin")
-    return res.status(403).json({ error:"not_admin" });
-
-  const market = loadMarket();
-  let found, booth, boothId;
-
-  for(const [id,b] of Object.entries(market)){
-    const o=(b.orders||[]).find(x=>x.id===orderId);
-    if(o){
-      found=o; booth=b; boothId=id;
-      break;
-    }
   }
+);
 
-  if(!found || found.status!=="dispute")
-    return res.json({ ok:false, error:"NOT_DISPUTE" });
-
-  const buyer = users[found.buyerUid];
-  if(buyer?.profile){
-    buyer.profile.coins += found.escrow;
-  }
-
-  found.status = "refunded";
-  found.escrow = 0;
-  found.refundedAt = Date.now();
-
-  saveUsers(users);
-  saveMarket(market);
-
-  emitCoinUpdate(found.buyerUid);
-
-  io.emit("order-updated",{ boothId, order: found });
-
-  res.json({ ok:true });
-});
 
 
 app.post("/api/market/order/hide", (req, res) => {
@@ -7129,7 +8648,7 @@ app.post("/api/market/order/hide", (req, res) => {
 
   // ✅ PHẢI LẤY boothId TỪ KEY
   for (const [id, b] of Object.entries(market)) {
-    const o = (b.orders || []).find(x => x.id === orderId);
+    const o = (b?.orders || []).find(x => x.id === orderId);
     if (o) {
       order = o;
       booth = b;
@@ -7168,10 +8687,11 @@ if (!["done", "cancelled", "refunded"].includes(order.status)) {
   saveMarket(market);
 
   // 🔄 realtime update ĐÚNG boothId
-  io.emit("order-updated", {
-    boothId,
-    order
-  });
+lspEmitPrivateMarketOrder(
+  boothId,
+  booth,
+  order
+);
 
   res.json({ ok:true });
 });
@@ -7217,102 +8737,18 @@ app.post("/api/upload-dispute-media",
 
 
 
+app.post(
+  "/api/market/order/done",
+  (req, res) => {
 
-app.post("/api/market/order/done", (req, res) => {
-  const uid = req.headers["x-uid"];
-  const { orderId } = req.body;
+    return lspMarketSettleOrder(
+      req,
+      res,
+      "done"
+    );
 
-  if (!uid) return res.json({ ok: false, error: "NOT_LOGIN" });
-
-  const market = loadMarket();
-  let found, booth, boothId;
-
-  // 🔍 tìm đơn + boothId ĐÚNG
-  for (const [id, b] of Object.entries(market)) {
-    const o = (b.orders || []).find(x => x.id === orderId);
-    if (o) {
-      found = o;
-      booth = b;
-      boothId = id;
-      break;
-    }
   }
-
-  if (!found) return res.json({ ok: false, error: "ORDER_NOT_FOUND" });
-
-  // 🔒 chỉ chủ shop
-  if (booth.ownerUid !== uid)
-    return res.json({ ok: false, error: "NO_PERMISSION" });
-
-  // 🔒 chỉ khi người mua đã nhận hàng
-  if (found.status !== "buyer_received") {
-    return res.json({
-      ok: false,
-      error: "WAIT_BUYER",
-      message: "Waiting for the buyer to confirm receipt."
-    });
-  }
-
-  // =========================
-  // ✅ 1️⃣ cập nhật trạng thái
-  // =========================
-  found.status = "done";
-  found.doneAt = Date.now();
-
-  // =========================
-  // 💰 2️⃣ TRẢ TIỀN CHO SELLER
-  // =========================
-  const users = loadUsers();
-  const seller = users[booth.ownerUid];
-
-  const amount = Number(found.escrow || found.totalPrice || 0);
-
-  if (seller && seller.profile && amount > 0) {
-    seller.profile.coinReceived =
-      (seller.profile.coinReceived || 0) + amount;
-
-    // 🔓 giải phóng escrow
-    found.escrow = 0;
-  }
-
-  saveUsers(users);
-  saveMarket(market);
-
-  // 🔄 realtime update ĐÚNG boothId
-  io.emit("order-updated", {
-    boothId,
-    order: found
-  });
-
-  // 🔄 realtime update coin cho seller
-  emitCoinUpdate(booth.ownerUid);
-
-  // =========================
-  // 🔔 notify buyer
-  // =========================
- const notifyText = `Order completed: ${found.productName} ×${found.qty}`;
-
-  const sockets = activeUsers.get(found.buyerUid);
-  if (sockets) {
-    for (const sid of sockets) {
-      io.to(sid).emit("system-notify", {
-        type: "order-done",
-        boothId,
-        text: notifyText,
-        ts: Date.now()
-      });
-    }
-  }
-
-  sendPushToUser(found.buyerUid, {
-    title: "Order completed",
-    body: notifyText,
-    tag: "order-done"
-  });
-
-  res.json({ ok: true });
-});
-
+);
 
 
 
@@ -7327,7 +8763,7 @@ app.post("/api/market/order/contact", (req, res) => {
   let found, booth;
 
   for (const b of Object.values(market)) {
-    const o = (b.orders || []).find(x => x.id === orderId);
+    const o = (b?.orders || []).find(x => x.id === orderId);
     if (o) {
       found = o;
       booth = b;
@@ -7357,10 +8793,11 @@ app.post("/api/market/order/contact", (req, res) => {
   saveMarket(market);
 
   // 🔄 realtime update booth
-io.emit("order-updated", {
-  boothId: booth.boothId,
-  order: found
-});
+lspEmitPrivateMarketOrder(
+  booth.boothId,
+  booth,
+  found
+);
 
 
 
@@ -7390,125 +8827,18 @@ io.emit("order-updated", {
 
 
 
-app.post("/api/market/order/cancel", (req,res)=>{
-  const uid = req.headers["x-uid"];
-  const { orderId } = req.body;
+app.post(
+  "/api/market/order/cancel",
+  (req, res) => {
 
-  if(!uid) return res.json({ ok:false, error:"NOT_LOGIN" });
-
-  const market = loadMarket();
-  let found, booth, product;
-
-  for(const b of Object.values(market)){
-    const o = (b.orders || []).find(x => x.id === orderId);
-    if(o){
-      found = o;
-      booth = b;
-      product = (b.products || []).find(p => p.id === o.productId);
-      break;
-    }
-  }
-
-  if(!found) return res.json({ ok:false, error:"ORDER_NOT_FOUND" });
-  if(found.buyerUid !== uid)
-    return res.json({ ok:false, error:"NO_PERMISSION" });
-
-if(found.status === "contacted"){
-  return res.json({
-    ok:false,
-    error:"ORDER_CONTACTED",
-    message:"The seller has already contacted the buyer. This order cannot be canceled."
-  });
-}
-
-if(found.status !== "pending"){
-  return res.json({
-    ok:false,
-    error:"CANNOT_CANCEL",
-    message:"This order cannot be canceled."
-  });
-}
-
-
-  // =========================
-  // 1️⃣ cập nhật trạng thái
-  // =========================
-  found.status = "cancelled";
-  found.cancelledAt = Date.now();
-
-  // =========================
-  // 2️⃣ hoàn stock
-  // =========================
-  if(product) product.stock += found.qty;
-
-  // =========================
-  // 3️⃣ HOÀN / ĐIỀU CHỈNH COIN
-  // =========================
-  const users = loadUsers();
-
-  // 👤 BUYER
-  const buyer = users[found.buyerUid];
-  if(buyer && buyer.profile){
-    buyer.profile.coins += found.totalPrice;
-    buyer.profile.coinSent = Math.max(
-      0,
-      (buyer.profile.coinSent || 0) - found.totalPrice
+    return lspMarketSettleOrder(
+      req,
+      res,
+      "cancel"
     );
+
   }
-
-  // 🏪 SELLER
-  const owner = users[booth.ownerUid];
-  if(owner && owner.profile){
-    owner.profile.coinReceived = Math.max(
-      0,
-      (owner.profile.coinReceived || 0) - found.totalPrice
-    );
-  }
-
-  saveUsers(users);
-  saveMarket(market);
-
-  // 🔄 REALTIME UPDATE COIN
-  emitCoinUpdate(found.buyerUid);
-  emitCoinUpdate(booth.ownerUid);
-
-  // =========================
-  // 4️⃣ notify chủ gian
-  // =========================
-  const notifyText = `Order canceled: ${found.productName} ×${found.qty}`;
-
-  const sockets = activeUsers.get(booth.ownerUid);
-  if(sockets){
-    for(const sid of sockets){
-      io.to(sid).emit("system-notify",{
-        type:"order-cancel",
-        boothId: booth.id,
-        text: notifyText,
-        ts: Date.now()
-      });
-    }
-  }
-
-  sendPushToUser(booth.ownerUid,{
-    title:"Order canceled",
-    body: notifyText,
-    tag:"order-cancel"
-  });
-
-
-// 🔄 REALTIME ORDER UPDATE (KHÔNG RELOAD)
-io.emit("order-updated", {
-  boothId: booth.boothId,
-  order: found
-});
-
-
-
-
-  res.json({ ok:true });
-});
-
-
+);
 
 
 
@@ -7647,135 +8977,570 @@ if (Array.isArray(product.images) && product.images.length) {
 });
 
 
-// ===== BUY PRODUCT =====
-// ===== BUY PRODUCT =====
-// ===== BUY PRODUCT (FIXED) =====
+/* ==========================================
+   BUY PRODUCT V1.4
+   SECURE ESCROW WALLET TRANSACTION
+========================================== */
+
 app.post("/api/market/product/buy", (req, res) => {
-  const buyerUid = req.headers["x-uid"];
-  const { boothId, productId, buyerInfo } = req.body || {};
 
-  if (!buyerUid || !boothId || !productId || !buyerInfo)
-    return res.status(400).json({ error: "missing" });
+  const buyerUid = req.auth?.uid;
 
-  const qty = Math.max(1, Number(buyerInfo.qty || 1));
+  const data = req.body || {};
 
-  const users = loadUsers();
-  const buyer = users[buyerUid];
-  if (!buyer || !buyer.profile)
-    return res.status(403).json({ error: "no_auth" });
+  const requestId =
+    typeof data.requestId === "string"
 
-  const market = loadMarket();
+      ? data.requestId.toLowerCase()
 
-  const booth = market[boothId];
-  if (!booth)
-    return res.status(404).json({ error: "booth_not_found" });
+      : "";
 
-  // 🔒 BOOTH BỊ KHOÁ → KHÔNG CHO MUA
-if (blockIfBoothLockedById(boothId, buyerUid)) {
-  return res.status(403).json({
+
+  const fail = (
+    error,
+    retrySameRequest = false,
+    status = 400
+  ) => res.status(status).json({
+
     ok: false,
-    error: "booth_locked"
-  });
-}
 
+    requestId,
 
-  const product = (booth.products || []).find(p => p.id === productId);
-  if (!product)
-    return res.status(404).json({ error: "product_not_found" });
+    error,
 
-  if (product.stock < qty)
-    return res.json({ ok: false, error: "out_of_stock" });
+    retrySameRequest
 
-  const price = Number(product.price || 0);
-  const totalPrice = price * qty;
-  const buyerCoins = Number(buyer.profile.coins || 0);
-
-  if (buyerCoins < totalPrice)
-    return res.json({ ok: false, error: "not_enough_coin" });
-
-  // 💎 TRỪ COIN NGƯỜI MUA
-  buyer.profile.coins -= totalPrice;
-  buyer.profile.coinSent =
-    (buyer.profile.coinSent || 0) + totalPrice;
-
-
-  // 📦 TRỪ STOCK
-  product.stock -= qty;
-
-  // 🧾 LƯU ĐƠN HÀNG
-  booth.orders ||= [];
-  booth.orders.unshift({
-    id: "o_" + Date.now(),
-    productId,
-    productName: product.name,
-    price,
-    qty,
-    totalPrice,
-    buyerUid,
-    buyerInfo,
-    status: "pending", // pending | contacted | done
-    escrow: totalPrice,
-    createdAt: Date.now()
   });
 
-  saveUsers(users);
-  saveMarket(market);
 
-  emitMarketUpdate("product-buy", boothId);
-  emitCoinUpdate(buyerUid);
-  emitCoinUpdate(booth.ownerUid);
+  if (!buyerUid) {
 
-  // 🔔 INBOX CHO CHỦ SHOP
-  if (!userInbox.has(booth.ownerUid))
-    userInbox.set(booth.ownerUid, []);
+    return fail("NOT_LOGIN", true, 401);
 
-  userInbox.get(booth.ownerUid).unshift({
-    type: "market-order",
-    boothId,
-    text: `New order: ${product.name} ×${qty}`,
-    time: Date.now(),
-    read: false
-  });
-
-  saveInbox(Object.fromEntries(userInbox));
-
-
-
-// ===============================
-// 🔔 REALTIME + PUSH NOTIFY CHỦ GIAN
-// ===============================
-const notifyText = `New order: ${product.name} ×${qty}`;
-
-// 1️⃣ REALTIME NẾU CHỦ GIAN ĐANG ONLINE
-const sockets = activeUsers.get(booth.ownerUid);
-if (sockets) {
-  for (const sid of sockets) {
-    io.to(sid).emit("system-notify", {
-      type: "market-order",
-      boothId,
-      productId,
-      text: notifyText,
-      ts: Date.now()
-    });
   }
-}
 
-// 2️⃣ PUSH NOTIFICATION (KHI OFFLINE / TAB KHÁC)
-sendPushToUser(booth.ownerUid, {
-  title: "New order",
-  body: `${product.name} ×${qty} — ${totalPrice.toLocaleString()} 💎`,
-  tag: "market-order"
+
+  try {
+
+    if (!lspMarketReady) {
+
+      return fail(
+        "MARKET_RECOVERY_PENDING",
+        true,
+        503
+      );
+
+    }
+
+
+    if (!LSP_SOCIAL_GIFT_UUID.test(requestId)) {
+
+      return fail("INVALID_REQUEST_ID");
+
+    }
+
+
+    const boothId = lspMarketId(data.boothId);
+
+    const productId = lspMarketId(data.productId);
+
+    const sellerUid = data.expectedSellerUid;
+
+
+    if (
+
+      typeof sellerUid !== "string" ||
+
+      !sellerUid ||
+
+      sellerUid === buyerUid ||
+
+      data.expectedBuyerUid !== buyerUid ||
+
+      !lspMarketObject(data.buyerInfo)
+
+    ) {
+
+      return fail("INVALID_ORDER_DETAILS");
+
+    }
+
+
+    const buyerInfo =
+      structuredClone(data.buyerInfo);
+
+    const qty = lspMarketNumber(
+      buyerInfo.qty ?? 1
+    );
+
+    const expectedTotal =
+      lspMarketNumber(data.expectedTotal);
+
+
+    if (
+
+      qty <= 0 ||
+
+      expectedTotal <= 0 ||
+
+      JSON.stringify(buyerInfo).length > 8192
+
+    ) {
+
+      return fail("INVALID_ORDER_DETAILS");
+
+    }
+
+
+    /* ======================================
+       REQUEST FINGERPRINT
+    ====================================== */
+
+    const receiptKey = "buy:" + requestId;
+
+    const fingerprint = crypto
+
+      .createHash("sha256")
+
+      .update(JSON.stringify([
+
+        boothId,
+
+        productId,
+
+        sellerUid,
+
+        expectedTotal,
+
+        buyerInfo
+
+      ]))
+
+      .digest("hex");
+
+
+    /* VERIFY CURRENT BUYER */
+
+    const tx = lspWalletStorage.begin([
+
+      buyerUid,
+
+      sellerUid
+
+    ]);
+
+    const buyer = lspMarketAccount(
+      tx,
+      buyerUid
+    );
+
+    const receipts = lspMarketReceipts(buyer);
+
+
+    /* ======================================
+       DUPLICATE PURCHASE PROTECTION
+    ====================================== */
+
+    if (Object.hasOwn(receipts, receiptKey)) {
+
+      const old = receipts[receiptKey];
+
+
+      if (
+
+        old.kind !== "buy" ||
+
+        old.fingerprint !== fingerprint
+
+      ) {
+
+        return fail(
+          "REQUEST_ID_CONFLICT",
+          true,
+          409
+        );
+
+      }
+
+
+      lspSocialGiftSyncDir(USERS_FILE);
+
+
+      return res.json({
+
+        ok: true,
+
+        duplicate: true,
+
+        requestId,
+
+        orderId: old.orderId
+
+      });
+
+    }
+
+
+    /* ======================================
+       LOAD PRODUCT AND STOCK
+    ====================================== */
+
+    const market = loadMarket();
+
+    const beforeHash = lspMarketHash(market);
+
+    const booth = market[boothId];
+
+
+    if (
+
+      !booth ||
+
+      booth.ownerUid !== sellerUid ||
+
+      booth.locked ||
+
+      lspMarketNumber(booth.expireAt) <= Date.now()
+
+    ) {
+
+      return fail("booth_not_found");
+
+    }
+
+
+    const seller = lspMarketAccount(
+      tx,
+      sellerUid
+    );
+
+
+    if (
+
+      buyer.profile.accountBlocked ||
+
+      seller.profile.accountBlocked
+
+    ) {
+
+      return fail("ACCOUNT_UNAVAILABLE");
+
+    }
+
+
+    const products = (booth.products || [])
+
+      .filter(p => p.id === productId);
+
+
+    if (products.length !== 1) {
+
+      return fail("product_not_found");
+
+    }
+
+
+    const product = products[0];
+
+    const stock = lspMarketNumber(product.stock);
+
+    const price = lspMarketNumber(product.price);
+
+    const totalPrice = price * qty;
+
+
+    if (
+
+      price <= 0 ||
+
+      !Number.isSafeInteger(totalPrice) ||
+
+      totalPrice !== expectedTotal
+
+    ) {
+
+      return fail("PRODUCT_PRICE_CHANGED");
+
+    }
+
+
+    if (stock < qty) {
+
+      return fail("out_of_stock");
+
+    }
+
+
+    /* ======================================
+       WALLET VALIDATION
+    ====================================== */
+
+    const balance =
+      lspMarketNumber(buyer.profile.coins);
+
+    const sent =
+      lspMarketNumber(
+        buyer.profile.coinSent ?? 0
+      );
+
+
+    if (balance < totalPrice) {
+
+      return fail("not_enough_coin");
+
+    }
+
+
+    if (!Number.isSafeInteger(sent + totalPrice)) {
+
+      return fail("BALANCE_OVERFLOW");
+
+    }
+
+
+    /* ======================================
+       CREATE ESCROW ORDER
+    ====================================== */
+
+    const now = Date.now();
+
+    const order = {
+
+      id: "o_" + crypto.randomUUID(),
+
+      walletVersion: "MARKET_V14",
+
+      purchaseRequestId: requestId,
+
+      productId,
+
+      productName: product.name,
+
+      sellerUid,
+
+      buyerUid,
+
+      price,
+
+      qty,
+
+      totalPrice,
+
+      buyerInfo,
+
+      status: "pending",
+
+      escrow: totalPrice,
+
+      createdAt: now
+
+    };
+
+
+    if (booth.orders === undefined) {
+
+      booth.orders = [];
+
+    }
+
+
+    if (!Array.isArray(booth.orders)) {
+
+      throw new Error("INVALID_BOOTH_ORDERS");
+
+    }
+
+
+    /* DEBIT BUYER */
+
+    buyer.profile.coins =
+      balance - totalPrice;
+
+    buyer.profile.coinSent =
+      sent + totalPrice;
+
+
+    /* UPDATE PRODUCT STOCK */
+
+    product.stock = stock - qty;
+
+
+    /* ADD NEW ORDER */
+
+    booth.orders.unshift(order);
+
+
+    /* ======================================
+       COMMIT MARKET TRANSACTION
+    ====================================== */
+
+    lspCommitMarketWallet({
+
+      tx,
+
+      receiptUid: buyerUid,
+
+      changedUids: [buyerUid],
+
+      receiptKey,
+
+      boothId,
+
+      beforeHash,
+
+      market,
+
+      receipt: {
+
+        kind: "buy",
+
+        fingerprint,
+
+        orderId: order.id,
+
+        boothId,
+
+        buyerUid,
+
+        sellerUid,
+
+        productId,
+
+        qty,
+
+        amount: totalPrice,
+
+        ts: now
+
+      }
+
+    });
+
+
+    /* TRANSACTION SUCCESS */
+
+    res.json({
+
+      ok: true,
+
+      duplicate: false,
+
+      requestId,
+
+      orderId: order.id
+
+    });
+
+
+    /* ======================================
+       POST-COMMIT NOTIFICATIONS
+    ====================================== */
+
+    try {
+
+      emitMarketUpdate("product-buy", boothId);
+
+      emitCoinUpdate(buyerUid);
+
+
+      if (!userInbox.has(sellerUid)) {
+
+        userInbox.set(sellerUid, []);
+
+      }
+
+
+      const text =
+        `New order: ${product.name} ×${qty}`;
+
+
+      userInbox.get(sellerUid).unshift({
+
+        type: "market-order",
+
+        boothId,
+
+        text,
+
+        time: now,
+
+        read: false
+
+      });
+
+
+      saveInbox(
+        Object.fromEntries(userInbox)
+      );
+
+
+      emitToUser(sellerUid, "system-notify", {
+
+        type: "market-order",
+
+        boothId,
+
+        productId,
+
+        text,
+
+        ts: now
+
+      });
+
+
+      Promise.resolve(
+
+        sendPushToUser(sellerUid, {
+
+          title: "New order",
+
+          body: `${text} — ${totalPrice.toLocaleString()} 💎`,
+
+          tag: "market-order"
+
+        })
+
+      ).catch(error => {
+
+        console.error(
+          "[MARKET PUSH]",
+          error.message
+        );
+
+      });
+
+
+    } catch (error) {
+
+      console.error(
+        "[MARKET ORDER NOTIFY]",
+        error.message
+      );
+
+    }
+
+
+  } catch (error) {
+
+    console.error(
+      "[MARKET BUY V1.4]",
+      error.message
+    );
+
+    if (!res.headersSent) {
+
+      return fail(
+        "MARKET_TRANSACTION_UNCERTAIN",
+        true,
+        503
+      );
+
+    }
+
+  }
+
 });
-
-
-
-  res.json({ ok: true });
-
-
-
-  
-});
-
 
 
 
@@ -7814,6 +9579,39 @@ app.post("/api/market/product/delete", (req, res) => {
   if (booth.ownerUid !== uid)
     return res.status(403).json({ error: "not_owner" });
 
+/* ==========================================
+   ACTIVE PRODUCT ORDER PROTECTION
+========================================== */
+
+const activeProductOrders =
+
+  (booth.orders || []).filter(
+
+    order => order.productId === productId
+
+  );
+
+
+if (lspMarketHasOpenOrders({
+
+  orders: activeProductOrders
+
+})) {
+
+  return res.status(409).json({
+
+    ok: false,
+
+    error: "PRODUCT_HAS_ACTIVE_ORDERS",
+
+    message:
+      "This product has unfinished orders."
+
+  });
+
+}
+
+
   booth.products = (booth.products || []).filter(p => p.id !== productId);
 
   saveMarket(market);
@@ -7823,66 +9621,463 @@ app.post("/api/market/product/delete", (req, res) => {
 });
 
 
-app.post("/api/market/extend", (req, res) => {
-  const uid = req.headers["x-uid"];
-  const { boothId, days, price } = req.body || {};
 
-  if (!uid || !boothId || !days || !price)
-    return res.status(400).json({ error: "missing" });
+/* ==========================================
+   LIVESTREAM PRO
+   UNIFIED MARKET RENTAL ENGINE V1.4B
+   RENT / TRIAL / EXTEND
+========================================== */
 
-  const users = loadUsers();
-  const user = users[uid];
-  if (!user || !user.profile)
-    return res.status(403).json({ error: "no_auth" });
+function lspMarketRentalTransaction(req, res, kind) {
 
-  if ((user.profile.coins || 0) < price)
-    return res.status(400).json({ error: "not_enough_coin" });
+  const data = req.body || {};
+  const uid = req.auth?.uid;
 
-  const market = loadMarket();
-  const booth = market[boothId];
+  const requestId =
+    typeof data.requestId === "string"
+      ? data.requestId.toLowerCase()
+      : "";
 
-  if (!booth)
-    return res.status(404).json({ error: "booth_not_found" });
+  const fail = (
+    error,
+    retrySameRequest = false,
+    status = 400
+  ) => res.status(status).json({
+    ok: false,
+    requestId,
+    error,
+    retrySameRequest
+  });
 
-  if (booth.ownerUid !== uid)
-    return res.status(403).json({ error: "not_owner" });
+  if (!uid || data.expectedBuyerUid !== uid) {
 
-// 🔒 BOOTH BỊ KHOÁ → KHÔNG CHO GIA HẠN
-if (blockIfBoothLockedById(boothId, uid)) {
-  return res.status(403).json({ error: "booth_locked" });
+    return fail("ACCOUNT_MISMATCH", true, 401);
+
+  }
+
+  try {
+
+    if (!lspMarketReady) {
+
+      return fail(
+        "MARKET_RECOVERY_PENDING",
+        true,
+        503
+      );
+
+    }
+
+    if (!["rent", "extend"].includes(kind)) {
+      return fail("INVALID_RENTAL_ACTION");
+    }
+
+    if (!LSP_SOCIAL_GIFT_UUID.test(requestId)) {
+      return fail("INVALID_REQUEST_ID");
+    }
+
+    const boothId = lspMarketId(data.boothId);
+
+    const days = data.days;
+    const plan = data.plan;
+
+    if (
+      !/^[1-9]\d*$/.test(boothId) ||
+      !Number.isSafeInteger(Number(boothId)) ||
+      !Number.isSafeInteger(days) ||
+      days <= 0 ||
+      !Number.isSafeInteger(data.price) ||
+      data.price < 0 ||
+      !["trial", "fixed", "custom"].includes(plan) ||
+      (
+        kind === "extend" &&
+        (
+          !Number.isSafeInteger(data.expectedExpireAt) ||
+          data.expectedExpireAt <= 0
+        )
+      )
+    ) {
+      return fail("INVALID_RENTAL_DETAILS");
+    }
+
+
+    /* ======================================
+       IDEMPOTENCY FINGERPRINT
+    ====================================== */
+
+    const receiptKey = kind + ":" + requestId;
+
+    const fingerprint = crypto
+      .createHash("sha256")
+      .update(JSON.stringify([
+        kind,
+        uid,
+        boothId,
+        plan,
+        days,
+        data.price,
+        kind === "extend"
+          ? data.expectedExpireAt
+          : null
+      ]))
+      .digest("hex");
+
+
+    /* ======================================
+       SELECTIVE WALLET SNAPSHOT
+    ====================================== */
+
+    const tx = lspWalletStorage.begin([uid]);
+
+    const user = lspMarketAccount(tx, uid);
+
+    const records = lspMarketReceipts(user);
+
+
+    /* ======================================
+       DUPLICATE PAYMENT PROTECTION
+    ====================================== */
+
+    if (Object.hasOwn(records, receiptKey)) {
+
+      const old = records[receiptKey];
+
+      if (
+        old.kind !== kind ||
+        old.fingerprint !== fingerprint ||
+        old.boothId !== boothId ||
+        old.uid !== uid
+      ) {
+
+        return fail(
+          "REQUEST_ID_CONFLICT",
+          true,
+          409
+        );
+
+      }
+
+      lspSocialGiftSyncDir(USERS_FILE);
+
+      return res.json({
+        ok: true,
+        duplicate: true,
+        requestId,
+        boothId,
+        trial: old.plan === "trial",
+        expireAt: old.expireAt,
+        coins: lspMarketNumber(user.profile.coins)
+      });
+
+    }
+
+
+    /* ======================================
+       SERVER PRICE VALIDATION
+    ====================================== */
+
+    let cost;
+
+    try {
+
+      cost = lspMarketRentalPrice(
+        kind,
+        plan,
+        days
+      );
+
+    } catch {
+
+      return fail("INVALID_RENTAL_PLAN");
+
+    }
+
+    if (data.price !== cost) {
+
+      return fail("RENTAL_PRICE_CHANGED");
+
+    }
+
+    if (user.profile.accountBlocked) {
+
+      return fail("ACCOUNT_UNAVAILABLE");
+
+    }
+
+
+    /* ======================================
+       LOAD MARKET DATABASE
+    ====================================== */
+
+    const market = loadMarket();
+
+    const beforeHash = lspMarketHash(market);
+
+    const now = Date.now();
+
+    let booth = market[boothId];
+
+
+    /* ======================================
+       RENT NEW BOOTH
+    ====================================== */
+
+    if (kind === "rent") {
+
+      // Giữ giới hạn số gian theo giao diện Market.
+      const totalSlots = Math.max(
+        12,
+        Object.keys(market).length
+      );
+
+      if (Number(boothId) > totalSlots) {
+
+        return fail("INVALID_BOOTH_ID");
+
+      }
+
+      const alreadyHaveBooth =
+        Object.values(market).some(
+          b => b && b.ownerUid === uid
+        );
+
+      if (alreadyHaveBooth) {
+
+        return fail("already_have_booth");
+
+      }
+
+      if (booth) {
+
+        return fail("already_rented");
+
+      }
+
+      if (
+        plan === "trial" &&
+        user.profile.hasUsedTrial
+      ) {
+
+        return fail("trial_used");
+
+      }
+
+      booth = {
+        boothId: Number(boothId),
+        ownerUid: uid,
+        name: user.profile.name,
+        logo: user.profile.avatar,
+        expireAt: now + days * LSP_MARKET_DAY_MS,
+        locked: false,
+        products: [],
+        orders: []
+      };
+
+      if (plan === "trial") {
+
+        booth.trial = true;
+        user.profile.hasUsedTrial = true;
+
+      }
+
+      market[boothId] = booth;
+
+
+    /* ======================================
+       EXTEND EXISTING BOOTH
+    ====================================== */
+
+    } else {
+
+      if (!booth) {
+        return fail("booth_not_found");
+      }
+
+      if (booth.ownerUid !== uid) {
+        return fail("not_owner");
+      }
+
+      if (booth.locked) {
+        return fail("booth_locked");
+      }
+
+      const currentExpiry =
+        lspMarketNumber(booth.expireAt);
+
+      // Không sử dụng yêu cầu gia hạn của
+      // một trạng thái gian hàng đã thay đổi.
+      if (currentExpiry !== data.expectedExpireAt) {
+
+        return fail("BOOTH_CHANGED");
+
+      }
+
+      booth.expireAt =
+        Math.max(currentExpiry, now) +
+        days * LSP_MARKET_DAY_MS;
+
+    }
+
+    if (!Number.isSafeInteger(booth.expireAt)) {
+
+      return fail("INVALID_EXPIRY");
+
+    }
+
+
+    /* ======================================
+       STRICT WALLET VALIDATION
+    ====================================== */
+
+    const balance =
+      lspMarketNumber(user.profile.coins);
+
+    const sent =
+      lspMarketNumber(user.profile.coinSent ?? 0);
+
+    if (balance < cost) {
+
+      return fail("not_enough_coin");
+
+    }
+
+    if (!Number.isSafeInteger(sent + cost)) {
+
+      return fail("BALANCE_OVERFLOW");
+
+    }
+
+
+    /* ======================================
+       APPLY WALLET TRANSACTION
+    ====================================== */
+
+    user.profile.coins = balance - cost;
+
+    user.profile.coinSent = sent + cost;
+
+
+    /* ======================================
+       DURABLE COMMIT + MARKET JOURNAL
+    ====================================== */
+
+    lspCommitMarketWallet({
+
+      tx,
+
+      receiptUid: uid,
+
+      changedUids: [uid],
+
+      receiptKey,
+
+      boothId,
+
+      beforeHash,
+
+      market,
+
+      receipt: {
+        kind,
+        fingerprint,
+        uid,
+        boothId,
+        plan,
+        days,
+        amount: cost,
+        expireAt: booth.expireAt,
+        ts: now
+      }
+
+    });
+
+
+    /* ======================================
+       SUCCESS ACKNOWLEDGEMENT
+    ====================================== */
+
+    res.json({
+      ok: true,
+      duplicate: false,
+      requestId,
+      boothId,
+      trial: plan === "trial",
+      expireAt: booth.expireAt,
+      coins: user.profile.coins
+    });
+
+
+    /* REALTIME AFTER COMMIT */
+
+    try {
+
+      emitCoinUpdate(uid);
+
+      emitMarketUpdate(kind, boothId);
+
+    } catch (error) {
+
+      console.error(
+        "[MARKET RENTAL NOTIFY]",
+        error.message
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "[MARKET RENTAL V1.4B]",
+      error.message
+    );
+
+    if (!res.headersSent) {
+
+      return fail(
+        "MARKET_TRANSACTION_UNCERTAIN",
+        true,
+        503
+      );
+
+    }
+
+  }
+
 }
 
 
-  
-  // ➕ GIA HẠN
-  booth.expireAt = Math.max(booth.expireAt, Date.now())
-    + days * 24 * 60 * 60 * 1000;
+app.post("/api/market/extend", (req, res) => {
 
-  // ➖ TRỪ COIN
-  user.profile.coins -= price;
-  user.profile.coinSent = (user.profile.coinSent || 0) + price;
+  return lspMarketRentalTransaction(
+    req,
+    res,
+    "extend"
+  );
 
-  saveUsers(users);
-  saveMarket(market);
-  emitCoinUpdate(uid);
-  emitMarketUpdate("extend", boothId);
-
-  res.json({
-    ok: true,
-    expireAt: booth.expireAt,
-    coins: user.profile.coins
-  });
 });
-
 
 
 app.get("/api/market/booth/:id", (req, res) => {
   const boothId = req.params.id;
-  const uid = req.headers["x-uid"];
 
-  const users = loadUsers();
-  const me = uid ? users[uid] : null;
-  const isAdmin = me?.role === "admin";
+/* VERIFIED ACCOUNT IDENTITY */
+
+const identity = securityAuth.getIdentity(
+  req.headers.cookie || ""
+);
+
+const uid = identity?.uid || null;
+
+const users = lspReadUsersView();
+
+const me =
+  uid && Object.hasOwn(users, uid)
+    ? users[uid]
+    : null;
+
+const isAdmin = me?.role === "admin";
+
+res.setHeader("Cache-Control", "no-store");
+res.vary("Cookie");
 
   const market = loadMarket();
   const booth = market[boothId];
@@ -7910,9 +10105,35 @@ app.get("/api/market/booth/:id", (req, res) => {
   }
 });
 
+/* PRIVATE ORDER VISIBILITY */
+
+const allowedOrders = (booth.orders || [])
+  .filter(order =>
+
+    isAdmin ||
+
+    (
+      uid &&
+      (
+        booth.ownerUid === uid ||
+        order.buyerUid === uid
+      )
+    )
+
+  );
+
 res.json({
+
   ok: true,
-  booth
+
+  booth: {
+
+    ...booth,
+
+    orders: allowedOrders
+
+  }
+
 });
 
 });
@@ -8014,9 +10235,29 @@ app.post("/api/admin/market/revoke", (req,res)=>{
   if(!market[boothId])
     return res.status(404).json({ error:"not_found" });
 
-market[boothId] = null;
-saveMarket(market);
+/* ==========================================
+   PROTECT ACTIVE MARKET ESCROW
+========================================== */
 
+if (lspMarketHasOpenOrders(market[boothId])) {
+
+  return res.status(409).json({
+
+    ok: false,
+
+    error: "BOOTH_HAS_ACTIVE_ORDERS",
+
+    message:
+      "Resolve all pending orders before revoking this booth."
+
+  });
+
+}
+
+
+market[boothId] = null;
+
+saveMarket(market);
 emitMarketUpdate("revoke", boothId); // 🔥 REALTIME
 
 res.json({ ok:true });
@@ -8026,106 +10267,15 @@ res.json({ ok:true });
 
 
 
-app.post("/api/market/rent", (req,res)=>{
-  const uid = req.headers["x-uid"];
-  const { boothId, days, price, trial } = req.body || {};
+app.post("/api/market/rent", (req, res) => {
 
-  if(!uid || !boothId || !days)
-    return res.status(400).json({ error:"missing" });
-
-  const db = loadUsers();
-  const user = db[uid];
-  if(!user || !user.profile)
-    return res.status(403).json({ error:"no_auth" });
-
-  const market = loadMarket();
-
-  // 🔒 MỖI USER CHỈ ĐƯỢC 1 GIAN
-  const alreadyHaveBooth = Object.values(market).some(
-    b => b && b.ownerUid === uid
+  return lspMarketRentalTransaction(
+    req,
+    res,
+    "rent"
   );
-  if (alreadyHaveBooth) {
-    return res.status(400).json({ error: "already_have_booth" });
-  }
 
-  if(market[boothId])
-    return res.status(400).json({ error:"already_rented" });
-
-  // =================================================
-  // 🎁 TRIAL MODE – DÙNG THỬ MIỄN PHÍ 30 NGÀY
-  // =================================================
-  if(trial === true){
-
-    if(user.profile.hasUsedTrial){
-      return res.status(400).json({ error:"trial_used" });
-    }
-
-    market[boothId] = {
-      boothId,
-      ownerUid: uid,
-      name: user.profile.name,
-      logo: user.profile.avatar,
-      expireAt: Date.now() + 30*24*60*60*1000,
-      locked: false,
-      trial: true,
-      products: []
-    };
-
-    user.profile.hasUsedTrial = true;
-
-    saveUsers(db);
-    saveMarket(market);
-
-    emitMarketUpdate("rent", boothId);
-
-    return res.json({
-      ok: true,
-      trial: true,
-      booth: market[boothId]
-    });
-  }
-
-  // =================================================
-  // 💎 RENT THƯỜNG – TRỪ COIN
-  // =================================================
-  const cost = Number(price || 0);
-  const coins = Number(user.profile.coins || 0);
-
-  if(cost <= 0)
-    return res.status(400).json({ error:"invalid_price" });
-
-  if(coins < cost)
-    return res.status(400).json({ error:"not_enough_coin" });
-
-  // ➖ TRỪ COIN
-  user.profile.coins -= cost;
-  user.profile.coinSent = (user.profile.coinSent || 0) + cost;
-
-  market[boothId] = {
-    boothId,
-    ownerUid: uid,
-    name: user.profile.name,
-    logo: user.profile.avatar,
-    expireAt: Date.now() + days*24*60*60*1000,
-    locked: false,
-    products: []
-  };
-
-  saveUsers(db);
-  saveMarket(market);
-
-  emitCoinUpdate(uid);
-  emitMarketUpdate("rent", boothId);
-
-  res.json({
-    ok:true,
-    booth: market[boothId],
-    coins: user.profile.coins
-  });
 });
-
-
-
 
 // ===== ADMIN DELETE COMMENT / REPLY =====
 app.post("/api/admin/delete-comment", (req, res) => {
@@ -14482,6 +16632,43 @@ function emitWithdrawUpdate() {
 
 
 
+
+/* ==========================================
+   MARKET PRIVATE ORDER UPDATE
+========================================== */
+
+function lspEmitPrivateMarketOrder(
+  boothId,
+  booth,
+  order
+) {
+
+  const recipients = new Set([
+
+    booth.ownerUid,
+
+    order.buyerUid
+
+  ]);
+
+  for (const uid of recipients) {
+
+    if (!uid) continue;
+
+    emitToUser(uid, "order-updated", {
+
+      boothId,
+
+      order
+
+    });
+
+  }
+
+}
+
+
+
 function emitMarketUpdate(action, boothId){
   io.emit("market-update", {
     action,      // "lock" | "unlock" | "revoke" | "rent" | "extend"
@@ -17591,7 +19778,7 @@ function deletionBlockers(
 
         b.ownerUid === uid ||
 
-        (b.orders || []).some(o =>
+        (b?.orders || []).some(o =>
 
           o.buyerUid === uid &&
 
@@ -18485,13 +20672,21 @@ function lspDeletionApplyCache(name, value) {
 
 function lspRunDeletionQueue() {
 
-  /* WAIT FOR SOCIAL GIFT RECOVERY */
+/* ==========================================
+   FINANCIAL RECOVERY PROTECTION
+========================================== */
 
-  if (lspSocialGiftRecoveryNeeded) {
+if (
 
-    return;
+  lspSocialGiftRecoveryNeeded ||
 
-  }
+  !lspMarketReady
+
+) {
+
+  return;
+
+}
 
   if (lspDeletionRunning || lspDeletionAsyncInFlight !== 0 || !lspDeletionQueue.size) return;
   const uid = lspDeletionQueue.values().next().value;
@@ -31830,6 +34025,32 @@ setInterval(() => {
   }
 
 }, 15000).unref();
+
+
+
+/* ==========================================
+   MARKET WALLET AUTO RECOVERY V1.4
+========================================== */
+
+if (lspRecoverMarketWallet()) {
+
+  console.log(
+    "[MARKET WALLET] V1.4 JSON_ONLY ready"
+  );
+
+}
+
+
+setInterval(() => {
+
+  if (!lspMarketReady) {
+
+    lspRecoverMarketWallet();
+
+  }
+
+}, 15000).unref();
+
 
 
 server.listen(PORT, () => {

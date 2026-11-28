@@ -37,7 +37,11 @@ function showModal({ title="Notification", content="", confirm=false }) {
 let booths = []; // sẽ load từ server
 /* ===== STATE MODAL ===== */
 let currentBoothId = null;
-let selectedPlan = { days: 7, price: 1000 };
+let selectedPlan = {
+  days: 7,
+  price: 1000,
+  plan: "fixed"
+};
 let rentMode = "rent"; // "rent" | "extend"
 const BOOTHS_PER_TAB = 8;
 let currentTab = 0;
@@ -624,7 +628,11 @@ showModal({
 
 
 // reset gói mặc định
-selectedPlan = { days: 7, price: 1000 };
+selectedPlan = {
+  days: 7,
+  price: 1000,
+  plan: "fixed"
+};
 
 if(range){
   range.value = 7;
@@ -665,10 +673,18 @@ document.querySelectorAll(".rent-option").forEach(opt=>{
     const price = +opt.dataset.price;
     const isTrial = opt.dataset.trial === "true";
 
-    selectedPlan = {
+selectedPlan = {
+
   days,
+
   price,
-  trial: isTrial
+
+  trial: isTrial,
+
+  plan: isTrial
+    ? "trial"
+    : "fixed"
+
 };
 
     if(range){
@@ -694,7 +710,17 @@ if(range){
     daysVal.textContent = days;
     priceVal.textContent = price.toLocaleString("en-US");
 
-    selectedPlan = { days, price };
+   selectedPlan = {
+
+  days,
+
+  price,
+
+  trial: false,
+
+  plan: "custom"
+
+};
 
     // bỏ active quick plan
     document.querySelectorAll(".rent-option")
@@ -705,120 +731,66 @@ if(range){
 }
 
 
-/* ===== CONFIRM RENT ===== */
-document.getElementById("confirmRent").onclick = async ()=>{
+/* ==========================================
+   CONFIRM MARKET RENT V1.4B
+========================================== */
+
+document.getElementById("confirmRent").onclick =
+  async () => {
+
+    if (lspMarketPaymentBusy) return;
 
 
+    if (!currentBoothId || !selectedPlan) {
+
+      return;
+
+    }
 
 
-const me = JSON.parse(localStorage.getItem("user_profile"));
-if(!me || !me.uid){
-showModal({
-
-  title: "Sign In Required",
-
-  content:
-    "Please sign in to use this feature."
-
-});
-
-  return;
-}
+    const btn =
+      document.getElementById("confirmRent");
 
 
-const uid = me.uid;
+    const payload = {
+
+      boothId: currentBoothId,
+
+      days: selectedPlan.days,
+
+      price: selectedPlan.price,
+
+      plan: selectedPlan.plan
+
+    };
 
 
-try{
-  const api = "/api/market/rent";
-
-  const res = await fetch(api,{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "x-uid": uid
-    },
-
-    body: JSON.stringify({
-  boothId: currentBoothId,
-  days: selectedPlan.days,
-  price: selectedPlan.price,
-  trial: selectedPlan.trial === true
-})
-  });
-
-  const data = await res.json();
-
- 
-
-if (!data.ok) {
-
-  let msg = "Unable to complete your request.";
-
-  if (data.error === "already_have_booth") {
-
-    msg = "You can only rent one booth at a time.";
-
-  } else if (data.error === "not_enough_coin") {
-
-    msg = "Insufficient diamonds.";
-
-  } else if (data.error === "not_owner") {
-
-    msg = "You are not the owner of this booth.";
-
-  } else if (data.error === "trial_used") {
-
-    msg = "You have already used your free trial.";
-
-  }
-
-  // ⛔ Ẩn modal thuê trước
-document.getElementById("rentBackdrop")
-  ?.classList.add("hidden");
-
-  await showModal({
-    title: "Request Failed",
-    content: msg
-  });
-
-  // 🔄 Mở lại modal thuê nếu cần
-document.getElementById("rentBackdrop")
-  ?.classList.remove("hidden");
-  
-  return;
-}
+    btn.disabled = true;
 
 
-  document.getElementById("rentBackdrop").classList.add("hidden");
-  loadMarketFromServer();
+    try {
 
-await showModal({
-
-  title: "Success",
-
-  content:
-    rentMode === "extend"
-      ? "Your booth rental has been extended successfully."
-      : "Your booth has been rented successfully."
-
-});
+      document
+        .getElementById("rentBackdrop")
+        .classList.add("hidden");
 
 
-}catch(e){
-await showModal({
+      await lspMarketPay(
 
-  title: "Connection Error",
+        "rent",
 
-  content:
-    "Unable to connect to the server. Please try again."
+        payload
 
-});
-}
+      );
 
 
-};
+    } finally {
 
+      checkRentAffordable();
+
+    }
+
+  };
 
 
 
@@ -1356,4 +1328,645 @@ window.addEventListener("pageshow", (event) => {
 
 });
 
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   MARKET PAYMENT CLIENT V1.4B
+   DURABLE REQUEST ID / SAFE RETRY
+========================================== */
+
+let lspMarketPaymentBusy = false;
+
+
+/* CURRENT ACCOUNT */
+
+function lspMarketCurrentUid() {
+
+  const me = JSON.parse(
+    localStorage.getItem("user_profile") || "{}"
+  );
+
+  return typeof me.uid === "string"
+    ? me.uid
+    : null;
+
+}
+
+
+/* ACCOUNT-SCOPED PENDING STORAGE */
+
+function lspMarketPaymentKey(uid) {
+
+  return "lsp:market:payment:v14:" +
+    encodeURIComponent(uid);
+
+}
+
+
+function lspMarketReadPending(uid) {
+
+  const raw = sessionStorage.getItem(
+    lspMarketPaymentKey(uid)
+  );
+
+  if (raw === null) return null;
+
+  const pending = JSON.parse(raw);
+
+  if (
+
+    !pending ||
+
+    !["rent", "extend", "buy"]
+      .includes(pending.kind) ||
+
+    !pending.payload ||
+
+    pending.payload.expectedBuyerUid !== uid ||
+
+    !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/
+      .test(pending.payload.requestId)
+
+  ) {
+
+    throw new Error("INVALID_MARKET_PENDING");
+
+  }
+
+  return pending;
+
+}
+
+
+/* ==========================================
+   PENDING PAYMENT BUTTON
+========================================== */
+
+const lspMarketRetryButton =
+  document.createElement("button");
+
+lspMarketRetryButton.type = "button";
+
+lspMarketRetryButton.hidden = true;
+
+lspMarketRetryButton.style.cssText = `
+  display:block;
+  width:calc(100% - 28px);
+  margin:10px auto;
+  padding:12px;
+  border:1px solid #DFC382;
+  border-radius:12px;
+  background:#FFF4D9;
+  color:#70531D;
+  font-size:12px;
+  font-weight:750;
+`;
+
+const lspMarketPageHeader =
+  document.querySelector(
+    ".market-header, .booth-header"
+  );
+
+if (lspMarketPageHeader) {
+
+  lspMarketPageHeader.after(
+    lspMarketRetryButton
+  );
+
+} else {
+
+  document.body.prepend(
+    lspMarketRetryButton
+  );
+
+}
+
+
+function lspMarketUpdateRetryButton() {
+
+  try {
+
+    const uid = lspMarketCurrentUid();
+
+    const pending = uid
+
+      ? lspMarketReadPending(uid)
+
+      : null;
+
+    lspMarketRetryButton.hidden = !pending;
+
+    lspMarketRetryButton.style.display =
+      pending ? "block" : "none";
+
+    lspMarketRetryButton.disabled =
+      lspMarketPaymentBusy;
+
+
+    if (pending) {
+
+      const cost =
+        pending.kind === "buy"
+
+          ? pending.payload.expectedTotal
+
+          : pending.payload.price;
+
+
+      const label = pending.kind.toUpperCase();
+
+      lspMarketRetryButton.textContent =
+        lspMarketPaymentBusy
+
+          ? "CHECKING TRANSACTION..."
+
+          : `CHECK / RETRY ${label} · Booth ${pending.payload.boothId} · ${Number(cost).toLocaleString("en-US")} 💎`;
+
+    }
+
+  } catch {
+
+    lspMarketRetryButton.hidden = false;
+
+    lspMarketRetryButton.style.display = "block";
+
+    lspMarketRetryButton.disabled = true;
+
+    lspMarketRetryButton.textContent =
+      "Pending payment unavailable. Contact support.";
+
+  }
+
+}
+
+
+/* ==========================================
+   SECURE MARKET PAYMENT REQUEST
+========================================== */
+
+async function lspMarketPay(kind, payload) {
+
+  if (lspMarketPaymentBusy) return false;
+
+  lspMarketPaymentBusy = true;
+
+  let uid;
+  let pending;
+  let controller;
+  let timeout;
+
+
+  try {
+
+    uid = lspMarketCurrentUid();
+
+    if (!uid) {
+
+      lspMarketPaymentNotice(
+        "Sign In Required",
+        "Please sign in to continue."
+      );
+
+      return false;
+
+    }
+
+
+    /* CHECK EXISTING PENDING PAYMENT */
+
+    pending = lspMarketReadPending(uid);
+
+
+    if (pending && payload) {
+
+      lspMarketPaymentNotice(
+
+        "Pending Transaction",
+
+        "Resolve your previous payment using CHECK / RETRY first."
+
+      );
+
+      return false;
+
+    }
+
+
+    /* CREATE ONLY ONE REQUEST ID */
+
+    if (!pending) {
+
+      if (!payload) return false;
+
+      if (!["rent", "extend", "buy"].includes(kind)) {
+        throw new Error("INVALID_PAYMENT_KIND");
+      }
+
+      pending = {
+
+        kind,
+
+        payload: {
+
+          ...payload,
+
+          expectedBuyerUid: uid,
+
+          requestId: crypto.randomUUID()
+
+        }
+
+      };
+
+
+      /* STORE BEFORE NETWORK REQUEST */
+
+      sessionStorage.setItem(
+
+        lspMarketPaymentKey(uid),
+
+        JSON.stringify(pending)
+
+      );
+
+    }
+
+
+    lspMarketUpdateRetryButton();
+
+
+    /* ======================================
+       SELECT SERVER ENDPOINT
+    ====================================== */
+
+    const endpoints = {
+
+      rent: "/api/market/rent",
+
+      extend: "/api/market/extend",
+
+      buy: "/api/market/product/buy"
+
+    };
+
+
+    controller = new AbortController();
+
+    timeout = setTimeout(() => {
+      controller.abort();
+    }, 15000);
+
+
+    const response = await fetch(
+
+      endpoints[pending.kind],
+
+      {
+
+        method: "POST",
+
+        credentials: "same-origin",
+
+        cache: "no-store",
+
+        signal: controller.signal,
+
+        headers: {
+
+          "Content-Type": "application/json",
+
+          "x-uid": uid
+
+        },
+
+        body: JSON.stringify(
+          pending.payload
+        )
+
+      }
+
+    );
+
+
+    const reply = await response.json();
+
+
+    /* ======================================
+       VALIDATE ACKNOWLEDGEMENT
+    ====================================== */
+
+    if (
+
+      !reply ||
+
+      reply.requestId !==
+        pending.payload.requestId ||
+
+      reply.retrySameRequest === true ||
+
+      !(
+
+        (response.ok && reply.ok === true) ||
+
+        (
+          reply.ok === false &&
+          reply.retrySameRequest === false
+        )
+
+      )
+
+    ) {
+
+      throw new Error(
+        "MARKET_PAYMENT_UNCERTAIN"
+      );
+
+    }
+
+
+    /* ======================================
+       CLEAR ONLY CONFIRMED TRANSACTION
+    ====================================== */
+
+    const currentPending =
+      lspMarketReadPending(uid);
+
+    if (
+
+      !currentPending ||
+
+      currentPending.payload.requestId !==
+        pending.payload.requestId
+
+    ) {
+
+      throw new Error("PENDING_PAYMENT_CHANGED");
+
+    }
+
+
+    sessionStorage.removeItem(
+      lspMarketPaymentKey(uid)
+    );
+
+
+    // Không cập nhật giao diện tài khoản khác.
+
+    if (lspMarketCurrentUid() !== uid) {
+
+      return reply.ok === true;
+
+    }
+
+
+    /* ======================================
+       SUCCESS
+    ====================================== */
+
+    if (reply.ok === true) {
+
+      try {
+
+        lspMarketPaymentComplete(
+
+          pending.kind,
+
+          pending.payload,
+
+          reply
+
+        );
+
+      } catch (error) {
+
+        console.error(
+          "[MARKET UI UPDATE]",
+          error
+        );
+
+      }
+
+      return true;
+
+    }
+
+
+    /* CONFIRMED REJECTION */
+
+    const messages = {
+
+      not_enough_coin:
+        "Insufficient diamonds.",
+
+      already_have_booth:
+        "You already own a booth.",
+
+      already_rented:
+        "This booth is already rented.",
+
+      trial_used:
+        "You have already used your free trial.",
+
+      booth_locked:
+        "This booth is locked.",
+
+      booth_not_found:
+        "This booth is unavailable.",
+
+      product_not_found:
+        "This product is unavailable.",
+
+      out_of_stock:
+        "Insufficient product stock.",
+
+      PRODUCT_PRICE_CHANGED:
+        "The product price changed. Please refresh.",
+
+      RENTAL_PRICE_CHANGED:
+        "The rental price changed. Please refresh.",
+
+      BOOTH_CHANGED:
+        "The booth has changed. Please refresh."
+
+    };
+
+    lspMarketPaymentNotice(
+
+      "Request Failed",
+
+      Object.hasOwn(messages, reply.error)
+
+        ? messages[reply.error]
+
+        : "The request was rejected. Please check and try again."
+
+    );
+
+
+    return false;
+
+
+  } catch (error) {
+
+    console.error(
+
+      "[MARKET PAYMENT]",
+
+      error.message
+
+    );
+
+    lspMarketPaymentNotice(
+
+      "Transaction Check Required",
+
+      "If a payment is pending, use CHECK / RETRY. Do not create another payment."
+
+    );
+
+    return false;
+
+
+  } finally {
+
+    clearTimeout(timeout);
+
+    lspMarketPaymentBusy = false;
+
+    lspMarketUpdateRetryButton();
+
+  }
+
+}
+
+
+/* ==========================================
+   MANUAL RETRY
+   SAME ORIGINAL REQUEST ID
+========================================== */
+
+lspMarketRetryButton.onclick = () => {
+
+  lspMarketPay(null, null);
+
+};
+
+
+window.addEventListener(
+
+  "pageshow",
+
+  lspMarketUpdateRetryButton
+
+);
+
+window.addEventListener(
+
+  "focus",
+
+  lspMarketUpdateRetryButton
+
+);
+
+window.addEventListener(
+
+  "storage",
+
+  lspMarketUpdateRetryButton
+
+);
+
+
+lspMarketUpdateRetryButton();
+
+
+/* ==========================================
+   MARKET PAYMENT NOTIFICATIONS
+========================================== */
+
+function lspMarketPaymentNotice(title, message) {
+
+  document
+    .getElementById("rentBackdrop")
+    ?.classList.add("hidden");
+
+  showModal({
+
+    title,
+
+    content: message
+
+  });
+
+}
+
+
+/* ==========================================
+   MARKET PAYMENT COMPLETED
+========================================== */
+
+function lspMarketPaymentComplete(
+  kind,
+  payload,
+  reply
+) {
+
+  const me = JSON.parse(
+    localStorage.getItem("user_profile") || "{}"
+  );
+
+
+  if (me.uid === payload.expectedBuyerUid) {
+
+    if (Number.isSafeInteger(reply.coins)) {
+
+      me.coins = reply.coins;
+
+    }
+
+    if (reply.trial === true) {
+
+      me.hasUsedTrial = true;
+
+    }
+
+    localStorage.setItem(
+
+      "user_profile",
+
+      JSON.stringify(me)
+
+    );
+
+  }
+
+
+  updateRentCoin();
+
+  loadMarketFromServer();
+
+
+  const message =
+
+    kind === "rent"
+
+      ? "Your booth has been rented successfully."
+
+      : kind === "extend"
+
+        ? "Your booth rental has been extended successfully."
+
+        : "Your order has been placed successfully.";
+
+
+  lspMarketPaymentNotice(
+
+    "Transaction Successful",
+
+    message
+
+  );
+
+}
 
