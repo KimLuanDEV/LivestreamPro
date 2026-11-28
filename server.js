@@ -42,6 +42,15 @@ function lspDeletionGuardUserSave(db) {
 
 const LSP_GAME_WALLET_ACCEPT_NEW_BETS = false;
 
+/* ==========================================
+   LIVESTREAM PRO
+   PERSISTENT GAME LEDGER V1.6B
+========================================== */
+
+const lspGameLedger =
+  require("./game-wallet-ledger");
+
+  
 const MAX_VIEWERS = 20;
 const SOFT_CAP = 15;
 
@@ -20178,15 +20187,20 @@ function deletionBlockers(
 
   }
 
-  /* ==========================================
-   ACTIVE GAME TRANSACTION PROTECTION
+/* ==========================================
+   PERSISTENT GAME LEDGER PROTECTION
 ========================================== */
 
 try {
 
   issues.push(
 
-    ...lspGameDeletionBlockers(uid)
+    ...lspGameDeletionBlockers(uid),
+
+    ...lspGameLedger.deletionIssues(
+      uid,
+      account
+    )
 
   );
 
@@ -20199,7 +20213,6 @@ try {
   );
 
 }
-
 
   return issues;
 
@@ -35510,6 +35523,42 @@ setInterval(() => {
   }
 
 }, 15000).unref();
+
+
+
+/* ==========================================
+   GAME LEDGER STARTUP AUDIT V1.6B
+========================================== */
+
+try {
+
+  const report = lspGameLedger.auditUsers(
+
+    lspReadExistingDeletionUsers()
+
+  );
+
+
+  console.log(
+
+    "[GAME LEDGER V1.6B]",
+
+    JSON.stringify(report)
+
+  );
+
+
+} catch (error) {
+
+  console.error(
+
+    "[GAME LEDGER V1.6B] AUDIT FAILED",
+
+    error.code || error.message
+
+  );
+
+}
 
 
 
