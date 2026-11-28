@@ -334,6 +334,38 @@ if (!present) {
 }
 
     if (!account.profile?.accountBlocked || account.role === "admin" || account.profile.role === "admin" || account.roles?.includes("admin")) throw new Error("Account not safely locked or protected role");
+    
+    /* ==========================================
+   FINANCIAL RECEIPT RETENTION V1.8A
+   CORE DELETION PROTECTION
+========================================== */
+
+const retention =
+  require("./wallet-receipt-retention");
+
+const retentionIssues = [
+
+  ...new Set([
+
+    ...retention.deletionIssues(
+      account
+    ),
+
+    ...retention.deletionIssues(
+      diskUsers[uid]
+    )
+
+  ])
+
+];
+
+if (retentionIssues.length) {
+
+  throw new Error(
+    retentionIssues.join("; ")
+  );
+
+}
     const issues = financialCheck(uid, users,
       read(file("withdraw_requests.json"), [], Array.isArray),
       read(file("market_booths.json"), {}, object),

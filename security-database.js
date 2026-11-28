@@ -1072,17 +1072,20 @@ async function verifyCandidate(snapshot) {
 
     /* VERIFY BALANCES AND LEGACY RECEIPTS */
 
-    for (
+for (
 
-      const script of [
+  const script of [
 
-        "wallet-migration.js",
+    "wallet-migration.js",
 
-        "wallet-legacy-receipts.js"
+    "wallet-legacy-receipts.js",
 
-      ]
+    "wallet-financial-receipts.js"
 
-    ) {
+  ]
+
+)
+    {
 
       execFileSync(
 
@@ -3135,6 +3138,112 @@ if (
         ledger.compareBackupWithLive(users),
 
       activationAllowed: false
+
+    }, null, 2)
+
+  );
+
+  return;
+
+}
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   FINANCIAL RECEIPT RETENTION AUDIT V1.8A
+   READ ONLY
+========================================== */
+
+if (
+
+  command === "receipt-retention-audit" &&
+
+  input &&
+
+  !output &&
+
+  !extra.length
+
+) {
+
+  initializeKey();
+
+
+  /* VERIFY ENCRYPTED BACKUP */
+
+  const snapshot = await verifyBackup(
+
+    path.resolve(input)
+
+  );
+
+
+  /* READ ARCHIVED USERS */
+
+  const entry = snapshot.files.find(
+
+    f => f.name === "users.json"
+
+  );
+
+  const archived = JSON.parse(
+
+    Buffer.from(
+
+      entry.content,
+
+      "base64"
+
+    ).toString("utf8")
+
+  );
+
+
+  /* LOAD RETENTION ENGINE */
+
+  const retention = require(
+
+    "./wallet-receipt-retention"
+
+  );
+
+
+  /* READ CURRENT PRODUCTION DATABASE */
+
+  const current = retention.readUsers(
+
+    path.join(
+
+      DATA_DIR,
+
+      "users.json"
+
+    )
+
+  );
+
+
+  /* COMPARE FINANCIAL RECORDS */
+
+  console.log(
+
+    JSON.stringify({
+
+      backupVerified: true,
+
+      backupCreatedAt:
+
+        new Date(
+          snapshot.createdAt
+        ).toISOString(),
+
+      ...retention.compare(
+
+        archived,
+
+        current
+
+      )
 
     }, null, 2)
 

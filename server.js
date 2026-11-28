@@ -24,6 +24,13 @@ console.log(
    Single Node.js writer only.
 ========================================== */
 const lspDeletionEngine = require("./account-deletion-engine");
+/* ==========================================
+   FINANCIAL RECEIPT RETENTION V1.8A
+========================================== */
+
+const lspReceiptRetention =
+  require("./wallet-receipt-retention");
+
 const lspDeletionDataDir = "/opt/render/project/data";
 const lspDeletionTombstones = lspDeletionEngine.loadTombstones(lspDeletionDataDir);
 const lspDeletionQueue = new Set();
@@ -16703,44 +16710,13 @@ if (
         }
       }
 
-      // 2. Clean processed requests only
-      if (Array.isArray(user.transferRequests)) {
+ /* ==========================================
+   FINANCIAL RECORD RETENTION V1.8A
 
-        const before = user.transferRequests.length;
+   Preserve transferRequests.
+   Display history remains daily.
+========================================== */
 
-        user.transferRequests =
-          user.transferRequests.filter(r => {
-
-            // NEVER delete pending transfers
-            if (r.status === "pending") {
-              return true;
-            }
-
-            // Preserve unknown states for safety
-            if (
-              r.status !== "approved" &&
-              r.status !== "rejected"
-            ) {
-              return true;
-            }
-
-            const ts = Number(
-              r.processedAt || r.createdAt || 0
-            );
-
-            return (
-              Number.isFinite(ts) &&
-              ts >= todayStart &&
-              ts < todayEnd
-            );
-
-          });
-
-        if (before !== user.transferRequests.length) {
-          removed += before - user.transferRequests.length;
-          changed = true;
-        }
-      }
     }
 
     // Avoid unnecessary disk writes
@@ -20188,7 +20164,7 @@ function deletionBlockers(
   }
 
 /* ==========================================
-   PERSISTENT GAME LEDGER PROTECTION
+   UNIFIED FINANCIAL RETENTION PROTECTION
 ========================================== */
 
 try {
@@ -20200,6 +20176,10 @@ try {
     ...lspGameLedger.deletionIssues(
       uid,
       account
+    ),
+
+    ...lspReceiptRetention.deletionIssues(
+      account
     )
 
   );
@@ -20208,7 +20188,7 @@ try {
 
   issues.push(
 
-    "Không thể xác minh giao dịch game đang chờ"
+    "Không thể xác minh dữ liệu tài chính"
 
   );
 
