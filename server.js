@@ -12072,6 +12072,30 @@ committed = true;
 
 }
 
+/* ==========================================
+   LIVESTREAM PRO
+   WALLET STORAGE ADAPTER V1.0
+========================================== */
+
+const lspWalletStorage =
+
+  require("./wallet-storage-adapter")
+
+    .createJsonWalletAdapter({
+
+      begin: lspWalletBegin
+
+    });
+
+
+console.log(
+
+  "[WALLET STORAGE] V1.0",
+
+  lspWalletStorage.mode
+
+);
+
 
 
 /* ==========================================
@@ -13448,7 +13472,7 @@ const {
 
 /* WALLET TRANSACTION V2.0 */
 
-const tx = lspWalletBegin([
+const tx = lspWalletStorage.begin([
   adminUid,
   targetUid
 ]);
@@ -13702,7 +13726,7 @@ const {
 
 /* WALLET TRANSACTION V2.0 */
 
-const tx = lspWalletBegin([
+const tx = lspWalletStorage.begin([
   adminUid,
   targetUid
 ]);
@@ -14911,7 +14935,7 @@ app.post("/api/card-topup/ipn", (req, res) => {
 
  /* PAYMENT WALLET TRANSACTION V2.0 */
 
-const tx = lspWalletBegin([
+const tx = lspWalletStorage.begin([
   order.uid
 ]);
 

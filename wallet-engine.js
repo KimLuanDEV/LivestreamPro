@@ -869,7 +869,7 @@ function closeWallet(uid, requestId) {
        WALLET TRANSACTION COMMIT
     ==================================== */
 
-    function commit(input) {
+    function commit(input, legacyGuard) {
 
       const started =
         performance.now();
@@ -886,6 +886,89 @@ function closeWallet(uid, requestId) {
 
 
         const result = atomic(db, () => {
+
+
+            /* ==========================================
+   WALLET STORAGE ADAPTER V1.0
+   LEGACY RECEIPT GUARD
+========================================== */
+
+const migrated = db.prepare(
+
+  "SELECT value FROM wallet_meta " +
+
+  "WHERE key='migration_source_sha256'"
+
+).get();
+
+
+if (
+
+  migrated ||
+
+  legacyGuard !== undefined
+
+) {
+
+
+  /* REQUIRE TRUSTED STORAGE ADAPTER */
+
+  if (
+
+    !migrated ||
+
+    typeof legacyGuard !== "function"
+
+  ) {
+
+    fail("WALLET_ADAPTER_REQUIRED");
+
+  }
+
+
+  /* VERIFY HISTORICAL RECEIPTS */
+
+  const status = legacyGuard(db);
+
+
+  if (status === "CONFLICT") {
+
+    fail("REQUEST_ID_CONFLICT");
+
+  }
+
+
+  /* HISTORICAL DUPLICATE */
+
+  if (status === "DUPLICATE") {
+
+    return {
+
+      ok: true,
+
+      duplicate: true,
+
+      legacy: true,
+
+      actor: op.actor,
+
+      requestId: op.requestId,
+
+      changes: []
+
+    };
+
+  }
+
+
+  if (status !== "NOT_FOUND") {
+
+    fail("INVALID_LEGACY_DECISION");
+
+  }
+
+}
+
 
 
           /* DUPLICATE PROTECTION */
