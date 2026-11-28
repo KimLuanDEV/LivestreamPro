@@ -1,4 +1,25 @@
 /* ==========================================
+   LIVESTREAM PRO
+   FINAL WALLET ACTIVATION GUARD V1.0
+========================================== */
+
+const lspWalletActivationMode =
+
+  require("./wallet-activation-guard")
+
+    .assertJsonOnly();
+
+
+console.log(
+
+  "[WALLET ACTIVATION]",
+
+  lspWalletActivationMode
+
+);
+
+
+/* ==========================================
    ACCOUNT DELETION ENGINE V3.0 - ONLINE
    Single Node.js writer only.
 ========================================== */
