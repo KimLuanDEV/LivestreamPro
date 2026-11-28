@@ -36,6 +36,12 @@ function lspDeletionGuardUserSave(db) {
   }
 }
 
+/* ==========================================
+   GAME WALLET MIGRATION SAFETY LOCK
+========================================== */
+
+const LSP_GAME_WALLET_ACCEPT_NEW_BETS = false;
+
 const MAX_VIEWERS = 20;
 const SOFT_CAP = 15;
 
@@ -2532,86 +2538,301 @@ function generateWheel8Prediction(){
 
 const W8_DOUBLE_TIMEOUT = 60000;
 
-// Thanh toán một lời mời nhân đôi
+/* ==========================================
+   LIVESTREAM PRO
+   GAME REWARD WALLET SETTLEMENT V1.6A
+   EXISTING REWARD ONLY
+========================================== */
+
 function settleWheel8Double(uid, action) {
-  const users = loadUsers();
-  const user = users[uid];
 
-  if (!user?.profile) {
-    return { ok: false, message: "Account not found" };
-  }
-
-  const offer = user.wheel8DoubleOffer;
-
-  if (!offer || offer.status !== "pending") {
-    return { ok: false, message: "No pending reward" };
-  }
-
-  if (!["keep", "red", "black"].includes(action)) {
-    return { ok: false, message: "Invalid selection" };
-  }
-
-  const profit = Math.floor(Number(offer.profit));
-
-  if (!Number.isSafeInteger(profit) || profit <= 0) {
-    return { ok: false, message: "Invalid reward" };
-  }
-
-  // Hết thời gian thì tự động giữ phần lãi
-  if (Date.now() >= offer.expiresAt) {
-    action = "keep";
-  }
-
-  let color = null;
-  let win = false;
-  let reward = profit;
+  const fail = message => ({
+    ok: false,
+    message
+  });
 
   if (action !== "keep") {
-    color = crypto.randomInt(2) === 0
-      ? "red"
-      : "black";
 
-    win = action === color;
-    reward = win ? profit * 2 : 0;
+    return fail(
+      "Only existing reward collection is available."
+    );
+
   }
 
-  if (!Number.isSafeInteger(reward)) {
-    return { ok: false, message: "Reward exceeds limit" };
+  let result;
+
+  try {
+
+    /* SELECTIVE WALLET SNAPSHOT */
+
+    const tx = lspWalletStorage.begin([uid]);
+
+    const user = tx.users[uid];
+
+    if (
+
+      !user?.profile ||
+
+      lspDeletionTombstones.has(uid)
+
+    ) {
+
+      return fail("Account unavailable.");
+
+    }
+
+
+    /* CHECK EXISTING REWARD */
+
+    const offer = user.wheel8DoubleOffer;
+
+    if (!offer || offer.status !== "pending") {
+
+      return fail("No pending reward.");
+
+    }
+
+
+    /* VALIDATE REWARD AMOUNT */
+
+    const profit = offer.profit;
+
+    if (
+
+      !Number.isSafeInteger(profit) ||
+
+      profit <= 0 ||
+
+      !Number.isSafeInteger(offer.totalBet) ||
+
+      offer.totalBet <= 0 ||
+
+      !Number.isSafeInteger(offer.totalWin) ||
+
+      offer.totalWin - offer.totalBet !== profit ||
+
+      !Number.isSafeInteger(offer.roundId) ||
+
+      offer.roundId <= 0 ||
+
+      !Number.isSafeInteger(offer.expiresAt) ||
+
+      offer.expiresAt <= 0
+
+    ) {
+
+      return fail(
+        "Reward requires reconciliation."
+      );
+
+    }
+
+
+    /* STRICT BALANCE VALIDATION */
+
+    const balance = spiritInt(
+      user.profile.coins
+    );
+
+    if (
+
+      !Number.isSafeInteger(balance + profit)
+
+    ) {
+
+      return fail("Invalid wallet balance.");
+
+    }
+
+
+    /* PERSISTENT SETTLEMENT ID */
+
+    const receiptId = crypto
+
+      .createHash("sha256")
+
+      .update(JSON.stringify([
+
+        "WHEEL8_KEEP_V16",
+
+        uid,
+
+        offer.roundId,
+
+        offer.expiresAt,
+
+        offer.totalBet,
+
+        offer.totalWin,
+
+        profit
+
+      ]))
+
+      .digest("hex");
+
+
+    const receipts =
+
+      user.gameRewardReceipts ?? {};
+
+
+    if (
+
+      !receipts ||
+
+      typeof receipts !== "object" ||
+
+      Array.isArray(receipts)
+
+    ) {
+
+      throw new Error(
+        "INVALID_GAME_REWARD_RECEIPTS"
+      );
+
+    }
+
+
+    /* PREVENT DUPLICATE SETTLEMENT */
+
+    if (Object.hasOwn(receipts, receiptId)) {
+
+      throw new Error(
+        "GAME_REWARD_STATE_CONFLICT"
+      );
+
+    }
+
+
+    const now = Date.now();
+
+
+    /* CREDIT EXISTING REWARD */
+
+    user.profile.coins = balance + profit;
+
+
+    /* COMPLETE OFFER */
+
+    offer.status = "completed";
+
+    offer.action = "keep";
+
+    offer.color = null;
+
+    offer.win = false;
+
+    offer.reward = profit;
+
+    offer.completedAt = now;
+
+
+    /* DURABLE FINANCIAL RECEIPT */
+
+    user.gameRewardReceipts = {
+
+      ...receipts,
+
+      [receiptId]: {
+
+        id: receiptId,
+
+        game: "wheel8",
+
+        kind: "existing_reward",
+
+        roundId: offer.roundId,
+
+        amount: profit,
+
+        ts: now
+
+      }
+
+    };
+
+
+    /* ONE ATOMIC JSON COMMIT */
+
+    tx.commit([uid]);
+
+
+    result = {
+
+      ok: true,
+
+      roundId: offer.roundId,
+
+      action: "keep",
+
+      color: null,
+
+      win: false,
+
+      profit,
+
+      reward: profit
+
+    };
+
+
+  } catch (error) {
+
+    console.error(
+
+      "[GAME REWARD V1.6A]",
+
+      error.message
+
+    );
+
+    return {
+
+      ok: false,
+
+      retrySameRequest: true,
+
+      message:
+        "Reward status uncertain. Please check your wallet."
+
+    };
+
   }
 
-  const balance = Number(user.profile.coins || 0);
 
-  if (!Number.isSafeInteger(balance) ||
-      !Number.isSafeInteger(balance + reward)) {
-    return { ok: false, message: "Invalid balance" };
+  /* NOTIFY ONLY AFTER COMMIT */
+
+  try {
+
+    emitCoinUpdate(uid);
+
+    emitToUser(
+
+      uid,
+
+      "wheel8-double-result",
+
+      result
+
+    );
+
+  } catch (error) {
+
+    console.error(
+
+      "[GAME REWARD NOTIFY]",
+
+      error.message
+
+    );
+
   }
-
-  user.profile.coins = balance + reward;
-
-  offer.status = "completed";
-  offer.action = action;
-  offer.color = color;
-  offer.win = win;
-  offer.reward = reward;
-  offer.completedAt = Date.now();
-
-  saveUsers(users);
-  emitCoinUpdate(uid);
-
-  const result = {
-    ok: true,
-    roundId: offer.roundId,
-    action,
-    color,
-    win,
-    profit,
-    reward
-  };
-
-  emitToUser(uid, "wheel8-double-result", result);
 
   return result;
+
 }
+
 
 // Tự động trả phần lãi khi người chơi không lựa chọn
 setInterval(() => {
@@ -4557,7 +4778,22 @@ socket.on("toggle-top-name", ()=>{
 ========================================== */
 
 socket.on("wheel8-double-get", () => {
-  const uid = socket.data.uid;
+  const uid = getVerifiedTransferUid(socket);
+
+if (
+
+  !uid ||
+
+  socket.data.authenticated !== true ||
+
+  socket.data.uid !== uid
+
+) {
+
+  return;
+
+}
+
   if (!uid) return;
 
 const offer =
@@ -4582,7 +4818,21 @@ socket.on("wheel8-double-select", (data, callback) => {
     ? callback
     : () => {};
 
-  const uid = socket.data.uid;
+  const uid = getVerifiedTransferUid(socket);
+
+if (
+
+  !uid ||
+
+  socket.data.authenticated !== true ||
+
+  socket.data.uid !== uid
+
+) {
+
+  return;
+
+}
 
   if (!uid) {
     return reply({
@@ -4763,6 +5013,18 @@ if (meNow?.role === "admin" && timeRaceRound) {
 const betCooldown = new Map()
 
 socket.on("wheel8-bet",({slot,bet})=>{
+
+  if (!LSP_GAME_WALLET_ACCEPT_NEW_BETS) {
+
+  return socket.emit("wheel8-bet-fail", {
+
+    message: "Game wallet under maintenance."
+
+  });
+
+}
+
+
 
 const uid = socket.data.uid
 if(!uid) return
@@ -5010,6 +5272,19 @@ socket.emit("dtp-my-bet", myBetRestore);
 
 socket.on("dtp-bet", ({ side, bet }) => {
 
+  if (!LSP_GAME_WALLET_ACCEPT_NEW_BETS) {
+
+  return socket.emit("notify", {
+
+    type: "bad",
+
+    message: "Game wallet under maintenance."
+
+  });
+
+}
+
+
   const uid = socket.data.uid;
   if (!uid) return;
 
@@ -5202,6 +5477,20 @@ socket.emit("time-race-round-count",{
 
 
 socket.on("time-race-bet", data=>{
+
+
+  if (!LSP_GAME_WALLET_ACCEPT_NEW_BETS) {
+
+  return socket.emit("time-race-error", {
+
+    message: "GAME_WALLET_MAINTENANCE"
+
+  });
+
+}
+
+
+
   const uid = socket.data.uid;
   if(!uid) return;
 
@@ -19606,6 +19895,74 @@ app.post(
    FINANCIAL SAFETY CHECK
 ========================================== */
 
+
+/* ==========================================
+   LIVESTREAM PRO
+   GAME WALLET OBLIGATION PROTECTION V1.6
+========================================== */
+
+function lspGameDeletionBlockers(uid) {
+
+  const issues = [];
+
+  const rounds = [
+
+    {
+      name: "Military / Wheel8",
+      round: wheel8Round
+    },
+
+    {
+      name: "Dragon Tiger Phoenix",
+      round: dtpRound
+    },
+
+    {
+      name: "Time Race",
+      round: timeRaceRound
+    }
+
+  ];
+
+  for (const item of rounds) {
+
+    if (
+      !item.round ||
+      !Array.isArray(item.round.bets)
+    ) {
+
+      issues.push(
+        item.name + ": unable to verify active bets"
+      );
+
+      continue;
+
+    }
+
+    const hasBet = item.round.bets.some(
+
+      bet => bet?.uid === uid
+
+    );
+
+    if (hasBet) {
+
+      issues.push(
+
+        item.name +
+        ": account has an active round obligation"
+
+      );
+
+    }
+
+  }
+
+  return issues;
+
+}
+
+
 function deletionBlockers(
   uid,
   users,
@@ -19820,6 +20177,28 @@ function deletionBlockers(
     issues.push("Thưởng chưa quyết toán");
 
   }
+
+  /* ==========================================
+   ACTIVE GAME TRANSACTION PROTECTION
+========================================== */
+
+try {
+
+  issues.push(
+
+    ...lspGameDeletionBlockers(uid)
+
+  );
+
+} catch (error) {
+
+  issues.push(
+
+    "Không thể xác minh giao dịch game đang chờ"
+
+  );
+
+}
 
 
   return issues;
