@@ -3254,6 +3254,120 @@ if (
 }
 
 
+/* ==========================================
+   LIVESTREAM PRO
+   INDEPENDENT RECEIPT ARCHIVE V1.8B
+========================================== */
+
+if (
+
+  command === "receipt-archive-create" &&
+
+  input &&
+
+  !output &&
+
+  !extra.length
+
+) {
+
+  initializeKey();
+
+
+  /* AUTHENTICATE EXISTING DATABASE BACKUP */
+
+  const snapshot = await verifyBackup(
+
+    path.resolve(input)
+
+  );
+
+
+  const archive = require(
+    "./wallet-receipt-archive"
+  );
+
+  const ctx = archive.config();
+
+  try {
+
+    const report = await archive.create(
+
+      snapshot,
+
+      ctx.key,
+
+      ctx.store
+
+    );
+
+    console.log(
+      JSON.stringify(report, null, 2)
+    );
+
+  } finally {
+
+    ctx.close();
+
+  }
+
+  return;
+
+}
+
+
+/* ==========================================
+   INDEPENDENT REMOTE ARCHIVE VERIFICATION
+========================================== */
+
+if (
+
+  command === "receipt-archive-verify" &&
+
+  input &&
+
+  output &&
+
+  !extra.length
+
+) {
+
+  const archive = require(
+    "./wallet-receipt-archive"
+  );
+
+  const ctx = archive.config();
+
+  try {
+
+    const report = await archive.verify(
+
+      input,
+
+      output,
+
+      ctx.key,
+
+      ctx.store
+
+    );
+
+    console.log(
+      JSON.stringify(report, null, 2)
+    );
+
+  } finally {
+
+    ctx.close();
+
+  }
+
+  return;
+
+}
+
+
+
   /* VALIDATE COMMAND */
 
   if (
