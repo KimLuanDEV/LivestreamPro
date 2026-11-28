@@ -32496,519 +32496,1600 @@ const SPIRIT_TYPES = Object.freeze({
 });
 
 
+/* ==========================================
+   LIVESTREAM PRO
+   SPIRIT BEAST - UNIFIED WALLET V1.5
+========================================== */
 
-// Đồng bộ chu kỳ thưởng và trạng thái tử vong.
-// Trả thưởng tại các mốc 24 giờ nếu được
-// cho ăn và vệ sinh đúng hạn.
+const SPIRIT_REQUEST_ID =
+  /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
+
+
+/* ==========================================
+   STRICT WALLET VALIDATION
+========================================== */
+
+function spiritInt(value) {
+
+  const n =
+    typeof value === "string" &&
+    /^\d+$/.test(value)
+      ? Number(value)
+      : value;
+
+  if (!Number.isSafeInteger(n) || n < 0) {
+    throw new Error("INVALID_SPIRIT_NUMBER");
+  }
+
+  return n;
+
+}
+
+
+/* ==========================================
+   PERSISTENT RECEIPT STORAGE
+========================================== */
+
+function spiritMap(user, field) {
+
+  const map = user[field];
+
+  if (map === undefined) return {};
+
+  if (
+    !map ||
+    typeof map !== "object" ||
+    Array.isArray(map)
+  ) {
+    throw new Error("INVALID_SPIRIT_RECEIPTS");
+  }
+
+  return map;
+
+}
+
+
+/* ==========================================
+   REWARD CHECKPOINT VALIDATION
+========================================== */
+
+function spiritCheckpoint(user, pet) {
+
+  const map = spiritMap(
+    user,
+    "spiritRewardReceipts"
+  );
+
+  /* LEGACY BEAST COMPATIBILITY */
+
+  if (!Object.hasOwn(map, pet.id)) {
+
+    return {
+      type: pet.type,
+      baseCycle: pet.rewardCycles,
+      baseEarned: pet.totalEarned
+    };
+
+  }
+
+  const r = map[pet.id];
+
+  if (
+
+    !r ||
+
+    r.closed ||
+
+    r.type !== pet.type ||
+
+    r.lastCycle !== pet.rewardCycles ||
+
+    r.totalEarned !== pet.totalEarned ||
+
+    r.nextRewardAt !== pet.nextRewardAt ||
+
+    !Number.isSafeInteger(r.baseCycle) ||
+
+    r.baseCycle < 0 ||
+
+    r.baseCycle > r.lastCycle ||
+
+    !Number.isSafeInteger(r.baseEarned) ||
+
+    r.baseEarned < 0 ||
+
+    r.baseEarned > r.totalEarned
+
+  ) {
+
+    throw new Error(
+      "SPIRIT_REWARD_CURSOR_CONFLICT"
+    );
+
+  }
+
+  return r;
+
+}
+
+
+/* ==========================================
+   SAVE DURABLE REWARD CHECKPOINT
+========================================== */
+
+function spiritSaveCheckpoint(
+  user,
+  pet,
+  base,
+  now,
+  closed = null
+) {
+
+  user.spiritRewardReceipts = {
+
+    ...spiritMap(
+      user,
+      "spiritRewardReceipts"
+    ),
+
+    [pet.id]: {
+
+      ...base,
+
+      lastCycle: pet.rewardCycles,
+
+      totalEarned: pet.totalEarned,
+
+      nextRewardAt: pet.nextRewardAt,
+
+      updatedAt: now,
+
+      closed
+
+    }
+
+  };
+
+}
+
+
+/* ==========================================
+   SPIRIT REWARD ENGINE V1.5
+   8 HOURS / 90 CYCLES
+========================================== */
 
 function spiritTickUser(user, now) {
-  if (!Array.isArray(user.spiritBeasts)) {
+
+  if (user.spiritBeasts === undefined) {
     user.spiritBeasts = [];
   }
 
+  if (!Array.isArray(user.spiritBeasts)) {
+
+    throw new Error(
+      "INVALID_SPIRIT_BEASTS"
+    );
+
+  }
+
+
+  const balance = spiritInt(
+    user.profile.coins
+  );
+
+
+  const ids = new Set();
+
   let changed = false;
+
   let earned = 0;
 
+  const alive = [];
+
+
+  /* ======================================
+     PROCESS ALL OWNED BEASTS
+  ====================================== */
+
   for (const pet of user.spiritBeasts) {
-    if (pet.dead) continue;
 
-    const kind = SPIRIT_TYPES[pet.type];
-    if (!kind) continue;
+    /* STRICT BEAST VALIDATION */
 
-    const deathAt = pet.lastFedAt + SPIRIT_DEATH;
+    if (
 
-    // Không trả thưởng sau thời điểm lẽ ra đã chết.
-    const maxTime = Math.min(now, deathAt);
+      !pet ||
 
-    while (
-      pet.rewardCycles < SPIRIT_MAX_REWARDS &&
-      pet.nextRewardAt <= maxTime
+      typeof pet.id !== "string" ||
+
+      !/^[a-zA-Z0-9_-]{1,128}$/.test(pet.id) ||
+
+      ["__proto__", "constructor", "prototype"]
+        .includes(pet.id) ||
+
+      ids.has(pet.id) ||
+
+      !Object.hasOwn(SPIRIT_TYPES, pet.type) ||
+
+      !Number.isSafeInteger(pet.rewardCycles) ||
+
+      pet.rewardCycles < 0 ||
+
+      pet.rewardCycles > SPIRIT_MAX_REWARDS ||
+
+      !Number.isSafeInteger(pet.totalEarned) ||
+
+      pet.totalEarned < 0 ||
+
+      ![
+
+        pet.lastFedAt,
+
+        pet.lastCleanAt,
+
+        pet.nextRewardAt
+
+      ].every(t =>
+
+        Number.isSafeInteger(t) && t > 0
+
+      )
+
     ) {
-      const due = pet.nextRewardAt;
 
-      // Phải cho ăn và vệ sinh trong 24 giờ
-      // tính tới thời điểm trả thưởng.
-const fed =
-  pet.lastFedAt <= due &&
-  due - pet.lastFedAt <= SPIRIT_FEED;
+      throw new Error(
+        "INVALID_SPIRIT_BEAST_RECORD"
+      );
 
-const clean =
-  pet.lastCleanAt <= due &&
-  due - pet.lastCleanAt <= SPIRIT_CLEAN;
-
-
-/* ==========================================
-   SPIRIT BEAST - REWARD EVERY 8 HOURS
-   90 CYCLES / 30 DAYS
-   KEEP ORIGINAL TOTAL REWARD
-========================================== */
-
-if (fed && clean) {
-
-  // Tổng thưởng theo chính sách cũ:
-  // 30 ngày x thưởng mỗi ngày
-  const maxTotalReward = kind.reward * 30;
-
-  const nextCycle = pet.rewardCycles + 1;
-
-  // Phân bổ nguyên kim cương cho 90 chu kỳ
-  const previousTarget = Math.floor(
-    maxTotalReward * pet.rewardCycles /
-    SPIRIT_MAX_REWARDS
-  );
-
-  const currentTarget = Math.floor(
-    maxTotalReward * nextCycle /
-    SPIRIT_MAX_REWARDS
-  );
-
-  const plannedReward =
-    currentTarget - previousTarget;
-
-  // Không cho vượt tổng thưởng đã quy định
-  const alreadyEarned = Math.max(
-    0,
-    Number(pet.totalEarned || 0)
-  );
-
-  const remainingBudget = Math.max(
-    0,
-    maxTotalReward - alreadyEarned
-  );
-
-  const rewardAmount = Math.max(
-    0,
-    Math.min(plannedReward, remainingBudget)
-  );
-
-  if (rewardAmount > 0) {
-    earned += rewardAmount;
-
-    pet.totalEarned =
-      alreadyEarned + rewardAmount;
-  }
-}
-
-
-      pet.rewardCycles++;
-      pet.nextRewardAt += SPIRIT_DAY;
-      changed = true;
     }
 
-    if (now >= deathAt) {
-      pet.dead = true;
-      pet.diedAt = deathAt;
-      changed = true;
-    }
-  }
+
+    ids.add(pet.id);
 
 
-/* ==========================================
-   SPIRIT BEAST - AUTO REMOVE DEAD BEASTS
-   RELEASE HABITAT SLOTS
-========================================== */
+    /* VERIFY REWARD HISTORY */
 
-// Remove deceased beasts from the active habitat.
-// Rewards earned before death remain unchanged.
-
-const originalCount = user.spiritBeasts.length;
-
-user.spiritBeasts = user.spiritBeasts.filter(
-  pet => pet && pet.dead !== true
-);
-
-const removedCount =
-  originalCount - user.spiritBeasts.length;
-
-if (removedCount > 0) {
-  changed = true;
-
-  console.log(
-    `[SPIRIT] Removed ${removedCount} deceased beast(s).`
-  );
-}
-
-// Preserve all earned diamonds.
-if (earned > 0) {
-  user.profile.coins =
-    Number(user.profile.coins || 0) + earned;
-}
-
-return {
-  changed,
-  earned,
-  removedCount
-};
-
-}
-
-function spiritPublicState(user) {
-  return {
-    balance: Math.floor(Number(user.profile.coins || 0)),
-    pets: user.spiritBeasts || [],
-    types: SPIRIT_TYPES,
-    serverTime: Date.now()
-  };
-}
-
-app.get("/api/spirit/state", spiritAuth, (req, res) => {
-  try {
-    const db = loadUsers();
-    const user = db[req.spiritUid];
-
-    const result = spiritTickUser(user, Date.now());
-
-    if (result.changed) {
-      saveUsers(db);
-      if (result.earned) emitCoinUpdate(req.spiritUid);
-    }
-
-    res.json({
-      ok: true,
-      ...spiritPublicState(user)
-    });
-
-  } catch (error) {
-    console.error("[SPIRIT STATE]", error);
-    res.status(500).json({
-      ok: false,
-      message: "Unable to load spirit beasts."
-    });
-  }
-});
-
-app.post("/api/spirit/buy", spiritAuth, (req, res) => {
-  try {
-    const type = String(req.body?.type || "");
-    const kind = SPIRIT_TYPES[type];
-
-    if (!kind) {
-      return res.status(400).json({
-        ok: false, message: "Invalid beast type."
-      });
-    }
-
-    const db = loadUsers();
-    const user = db[req.spiritUid];
-
-  
-const now = Date.now();
-
-// Update rewards and remove deceased beasts.
-const tickResult = spiritTickUser(user, now);
-
-// Persist changes even if the purchase is rejected later.
-if (tickResult.changed) {
-  saveUsers(db);
-
-  if (tickResult.earned > 0) {
-    emitCoinUpdate(req.spiritUid);
-  }
-}
-
-// The habitat now contains only living beasts.
-const pets = user.spiritBeasts;
-
-
-    if (pets.length >= SPIRIT_MAX) {
-      return res.status(400).json({
-        ok: false, message: "Your habitat is full."
-      });
-    }
-
-    const balance = Number(user.profile.coins || 0);
-
-    if (!Number.isSafeInteger(balance) ||
-        balance < kind.price) {
-      return res.status(400).json({
-        ok: false, message: "Not enough diamonds."
-      });
-    }
-
-    user.profile.coins = balance - kind.price;
-
-    pets.push({
-      id: crypto.randomUUID(),
-      type,
-      name: kind.name,
-      level: 1,
-      createdAt: now,
-      lastFedAt: now,
-      lastCleanAt: now,
-      lastRestAt: now,
-
-// Lần chăm sóc đầu tiên không cần chờ
-careActions: {
-  feed: 0,
-  clean: 0,
-  rest: 0
-},
-
-      nextRewardAt: now + SPIRIT_DAY,
-      rewardCycles: 0,
-      totalEarned: 0,
-      dead: false,
-      diedAt: null
-    });
-
-    saveUsers(db);
-    emitCoinUpdate(req.spiritUid);
-
-    res.json({
-      ok: true,
-      message: "Beast purchased successfully.",
-      ...spiritPublicState(user)
-    });
-
-  } catch (error) {
-    console.error("[SPIRIT BUY]", error);
-    res.status(500).json({
-      ok: false, message: "Purchase failed."
-    });
-  }
-});
-
-
-
-
-/* ==========================================
-   SPIRIT BEAST - RELEASE BEAST API
-   REMOVE OWNED BEAST / FREE HABITAT SLOT
-========================================== */
-
-app.post("/api/spirit/release", spiritAuth, (req, res) => {
-
-  try {
-
-    // Beast ID supplied by the client
-    const id = String(req.body?.id || "");
-
-    if (!id || id.length > 128) {
-      return res.status(400).json({
-        ok: false,
-        message: "Invalid beast ID."
-      });
-    }
-
-    // Get authenticated user from server session
-    const uid = req.spiritUid;
-
-    const db = loadUsers();
-    const user = db[uid];
-
-    if (!user || !user.profile) {
-      return res.status(404).json({
-        ok: false,
-        message: "Account not found."
-      });
-    }
-
-    const now = Date.now();
-
-    // Process pending rewards and remove dead beasts
-    const tickResult = spiritTickUser(user, now);
-
-    const pets = user.spiritBeasts;
-
-    // Find beast owned by this user
-    const index = pets.findIndex(
-      pet => pet && pet.id === id
+    const base = spiritCheckpoint(
+      user,
+      pet
     );
 
-    if (index === -1) {
 
-      if (tickResult.changed) {
-        saveUsers(db);
+    let petChanged = false;
 
-        if (tickResult.earned > 0) {
-          emitCoinUpdate(uid);
+
+    const deathAt =
+      pet.lastFedAt + SPIRIT_DEATH;
+
+
+    if (!Number.isSafeInteger(deathAt)) {
+
+      throw new Error(
+        "INVALID_SPIRIT_TIME"
+      );
+
+    }
+
+
+    /* ======================================
+       PROCESS DUE REWARDS
+    ====================================== */
+
+    if (pet.dead !== true) {
+
+      const kind = SPIRIT_TYPES[pet.type];
+
+      const maxTime = Math.min(
+        now,
+        deathAt
+      );
+
+      const maxTotalReward =
+        kind.reward * 30;
+
+
+      while (
+
+        pet.rewardCycles < SPIRIT_MAX_REWARDS &&
+
+        pet.nextRewardAt <= maxTime
+
+      ) {
+
+        const due = pet.nextRewardAt;
+
+
+        /* FEED REQUIREMENT */
+
+        const fed =
+
+          pet.lastFedAt <= due &&
+
+          due - pet.lastFedAt <= SPIRIT_FEED;
+
+
+        /* CLEAN REQUIREMENT */
+
+        const clean =
+
+          pet.lastCleanAt <= due &&
+
+          due - pet.lastCleanAt <= SPIRIT_CLEAN;
+
+
+        const cycle = pet.rewardCycles;
+
+
+        /* ORIGINAL REWARD FORMULA */
+
+        const planned =
+
+          Math.floor(
+
+            maxTotalReward * (cycle + 1) /
+            SPIRIT_MAX_REWARDS
+
+          ) -
+
+          Math.floor(
+
+            maxTotalReward * cycle /
+            SPIRIT_MAX_REWARDS
+
+          );
+
+
+        /* ==================================
+           APPLY VALID REWARD
+        ================================== */
+
+        if (fed && clean) {
+
+          const amount = Math.min(
+
+            planned,
+
+            Math.max(
+
+              0,
+
+              maxTotalReward - pet.totalEarned
+
+            )
+
+          );
+
+
+          earned += amount;
+
+          pet.totalEarned += amount;
+
         }
+
+
+        /* ==================================
+           ADVANCE REWARD CURSOR
+        ================================== */
+
+        pet.rewardCycles++;
+
+        pet.nextRewardAt += SPIRIT_DAY;
+
+
+        if (!Number.isSafeInteger(
+          pet.nextRewardAt
+        )) {
+
+          throw new Error(
+            "INVALID_SPIRIT_TIME"
+          );
+
+        }
+
+
+        petChanged = true;
+
       }
 
-      return res.status(404).json({
-        ok: false,
-        message: "Spirit beast not found."
-      });
+
+      /* ======================================
+         STARVATION CHECK
+      ====================================== */
+
+      if (now >= deathAt) {
+
+        pet.dead = true;
+
+        pet.diedAt = deathAt;
+
+      }
+
     }
 
-    // Remove ONLY the selected beast
-    const [releasedBeast] = pets.splice(index, 1);
 
-    // Save updated user data
-    saveUsers(db);
+    /* ======================================
+       REMOVE DECEASED BEASTS
+       KEEP FINANCIAL CHECKPOINT
+    ====================================== */
 
-    // Notify balance change only if pending rewards were added
-    if (tickResult.earned > 0) {
-      emitCoinUpdate(uid);
+    if (pet.dead === true) {
+
+      spiritSaveCheckpoint(
+
+        user,
+
+        pet,
+
+        base,
+
+        now,
+
+        "dead"
+
+      );
+
+      changed = true;
+
+
+    } else {
+
+      alive.push(pet);
+
+
+      if (petChanged) {
+
+        spiritSaveCheckpoint(
+
+          user,
+
+          pet,
+
+          base,
+
+          now
+
+        );
+
+        changed = true;
+
+      }
+
     }
-
-    console.log(
-      "[SPIRIT RELEASE]",
-      uid,
-      releasedBeast.type,
-      releasedBeast.id
-    );
-
-    // Return updated state to client
-    return res.json({
-      ok: true,
-      message: "Spirit beast released successfully.",
-      ...spiritPublicState(user)
-    });
-
-  } catch (error) {
-
-    console.error("[SPIRIT RELEASE]", error);
-
-    return res.status(500).json({
-      ok: false,
-      message: "Unable to release spirit beast."
-    });
 
   }
 
-});
+
+  /* ======================================
+     WALLET OVERFLOW PROTECTION
+  ====================================== */
+
+  if (
+
+    !Number.isSafeInteger(earned) ||
+
+    !Number.isSafeInteger(balance + earned)
+
+  ) {
+
+    throw new Error(
+      "SPIRIT_BALANCE_OVERFLOW"
+    );
+
+  }
 
 
+  /* SAVE LIVING BEASTS ONLY */
 
-app.post("/api/spirit/care", spiritAuth, (req, res) => {
-  try {
-    const id = String(req.body?.id || "");
-    const action = String(req.body?.action || "");
+  if (changed) {
 
-    if (!["feed", "clean", "rest"].includes(action)) {
-      return res.status(400).json({
-        ok: false, message: "Invalid care action."
-      });
-    }
+    user.spiritBeasts = alive;
 
-    const db = loadUsers();
-    const user = db[req.spiritUid];
-    const now = Date.now();
+  }
 
-    const result = spiritTickUser(user, now);
-    const pet = user.spiritBeasts.find(p => p.id === id);
 
-    if (!pet) {
-      if (result.changed) saveUsers(db);
-      if (result.earned) emitCoinUpdate(req.spiritUid);
-      return res.status(404).json({
-        ok: false, message: "Beast not found."
-      });
-    }
+  /* CREDIT EARNED DIAMONDS */
 
-    if (pet.dead) {
-      if (result.changed) saveUsers(db);
-      if (result.earned) emitCoinUpdate(req.spiritUid);
-      return res.status(400).json({
-        ok: false,
-        message: "This spirit beast has died."
-      });
-    }
+  if (earned > 0) {
 
-    const field = {
-      feed: "lastFedAt",
-      clean: "lastCleanAt",
-      rest: "lastRestAt"
-    }[action];
+    user.profile.coins =
+      balance + earned;
 
-    
+  }
 
-/* ==========================================
-   SPIRIT BEAST - CARE COOLDOWN V2
-   First care is immediately available
-========================================== */
 
-if (!pet.careActions ||
-    typeof pet.careActions !== "object") {
-  pet.careActions = {};
+  return {
+
+    changed,
+
+    earned
+
+  };
+
 }
 
-const lastActionAt = Number(
-  pet.careActions[action] || 0
-);
 
-const CARE_COOLDOWN = 60 * 60 * 1000;
+/* ==========================================
+   SPIRIT PUBLIC STATE
+========================================== */
 
-const remaining =
-  CARE_COOLDOWN - (now - lastActionAt);
+function spiritPublicState(user, uid) {
 
-if (lastActionAt > 0 && remaining > 0) {
+  return {
 
-  if (result.changed) saveUsers(db);
-  if (result.earned) emitCoinUpdate(req.spiritUid);
+    uid,
 
-  return res.status(400).json({
+    balance: spiritInt(
+      user.profile.coins
+    ),
+
+    pets: user.spiritBeasts || [],
+
+    types: SPIRIT_TYPES,
+
+    serverTime: Date.now()
+
+  };
+
+}
+
+
+/* ==========================================
+   SAFE WALLET NOTIFICATION
+========================================== */
+
+function spiritNotify(uid) {
+
+  try {
+
+    emitCoinUpdate(uid);
+
+  } catch (error) {
+
+    console.error(
+
+      "[SPIRIT NOTIFY]",
+
+      error.message
+
+    );
+
+  }
+
+}
+
+
+/* ==========================================
+   UNIFIED SPIRIT TRANSACTION HANDLER
+========================================== */
+
+function spiritHandle(req, res, action) {
+
+  res.setHeader(
+    "Cache-Control",
+    "no-store"
+  );
+
+
+  const uid =
+    req.auth?.uid || req.spiritUid;
+
+
+  const data = req.body || {};
+
+
+  const requestId =
+
+    typeof data.requestId === "string"
+
+      ? data.requestId.toLowerCase()
+
+      : "";
+
+
+  const fail = (
+
+    status,
+
+    message,
+
+    retrySameRequest = false,
+
+    extra = {}
+
+  ) => res.status(status).json({
+
     ok: false,
-    code: "CARE_COOLDOWN",
-    remainingMs: remaining,
 
-message:
-  "Please wait another " +
-  Math.ceil(remaining / 60000) +
-  " minute(s) before caring for your beast again."
+    uid,
+
+    requestId,
+
+    message,
+
+    retrySameRequest,
+
+    ...extra
 
   });
+
+
+  /* ======================================
+     VERIFIED ACCOUNT IDENTITY
+  ====================================== */
+
+  if (
+
+    typeof uid !== "string" ||
+
+    !uid ||
+
+    (
+
+      req.auth?.uid &&
+
+      req.spiritUid &&
+
+      req.auth.uid !== req.spiritUid
+
+    )
+
+  ) {
+
+    return fail(
+      401,
+      "Please sign in.",
+      true
+    );
+
+  }
+
+
+  /* ACCOUNT SWITCH PROTECTION */
+
+  if (
+
+    action !== "state" &&
+
+    data.expectedUid !== uid
+
+  ) {
+
+    return fail(
+
+      409,
+
+      "Account changed. Please refresh.",
+
+      true
+
+    );
+
+  }
+
+
+  try {
+
+    /* ======================================
+       SELECTIVE WALLET TRANSACTION
+    ====================================== */
+
+    const tx = lspWalletStorage.begin([
+
+      uid
+
+    ]);
+
+
+    const user = tx.users[uid];
+
+
+    if (
+
+      !user?.profile ||
+
+      lspDeletionTombstones.has(uid)
+
+    ) {
+
+      return fail(
+
+        404,
+
+        "Account unavailable.",
+
+        true
+
+      );
+
+    }
+
+
+    const now = Date.now();
+
+
+    /* PROCESS REWARDS BEFORE ACTION */
+
+    const tick = spiritTickUser(
+      user,
+      now
+    );
+
+
+    let changed = tick.changed;
+
+    let walletChanged = tick.earned > 0;
+
+
+    /* ======================================
+       SINGLE ATOMIC COMMIT
+    ====================================== */
+
+    function commit() {
+
+      if (changed) {
+
+        tx.commit([uid]);
+
+      }
+
+
+      if (walletChanged) {
+
+        spiritNotify(uid);
+
+      }
+
+    }
+
+
+    /* CONFIRMED REJECTION */
+
+    function reject(
+      status,
+      message,
+      retry = false,
+      extra = {}
+    ) {
+
+      commit();
+
+      return fail(
+        status,
+        message,
+        retry,
+        extra
+      );
+
+    }
+
+
+    /* SUCCESS ACKNOWLEDGEMENT */
+
+    function success(message, extra = {}) {
+
+      commit();
+
+
+      return res.json({
+
+        ok: true,
+
+        requestId,
+
+        message,
+
+        ...spiritPublicState(user, uid),
+
+        ...extra
+
+      });
+
+    }
+
+
+    /* ======================================
+       LOAD SPIRIT STATE
+    ====================================== */
+
+    if (action === "state") {
+
+      return success("State loaded.");
+
+    }
+
+
+    /* ======================================
+       BUY SPIRIT BEAST
+    ====================================== */
+
+    if (action === "buy") {
+
+      if (
+
+        !SPIRIT_REQUEST_ID.test(requestId) ||
+
+        typeof data.type !== "string" ||
+
+        !Number.isSafeInteger(
+          data.expectedPrice
+        ) ||
+
+        data.expectedPrice <= 0
+
+      ) {
+
+        return reject(
+
+          400,
+
+          "Invalid purchase request."
+
+        );
+
+      }
+
+
+      const records = spiritMap(
+
+        user,
+
+        "spiritPurchaseReceipts"
+
+      );
+
+
+      /* ==================================
+         DUPLICATE PURCHASE PROTECTION
+      ================================== */
+
+      if (Object.hasOwn(records, requestId)) {
+
+        const r = records[requestId];
+
+
+        if (
+
+          !r ||
+
+          r.id !== requestId ||
+
+          r.type !== data.type ||
+
+          r.amount !== data.expectedPrice ||
+
+          typeof r.beastId !== "string"
+
+        ) {
+
+          return reject(
+
+            409,
+
+            "Purchase request conflict. Contact support.",
+
+            true
+
+          );
+
+        }
+
+
+        /* CONFIRM PREVIOUS COMMIT */
+
+        lspSocialGiftSyncDir(USERS_FILE);
+
+
+        return success(
+
+          "Purchase already completed.",
+
+          {
+
+            duplicate: true,
+
+            beastId: r.beastId
+
+          }
+
+        );
+
+      }
+
+
+      /* ==================================
+         ACCOUNT SECURITY
+      ================================== */
+
+      if (user.profile.accountBlocked) {
+
+        return reject(
+
+          403,
+
+          "Account unavailable."
+
+        );
+
+      }
+
+
+      /* SERVER CONTROLLED BEAST PRICE */
+
+      if (!Object.hasOwn(
+        SPIRIT_TYPES,
+        data.type
+      )) {
+
+        return reject(
+
+          400,
+
+          "Invalid beast type."
+
+        );
+
+      }
+
+
+      const kind = SPIRIT_TYPES[data.type];
+
+
+      if (kind.price !== data.expectedPrice) {
+
+        return reject(
+
+          409,
+
+          "Beast price changed. Refresh the shop."
+
+        );
+
+      }
+
+
+      /* HABITAT CAPACITY */
+
+      if (user.spiritBeasts.length >= SPIRIT_MAX) {
+
+        return reject(
+
+          400,
+
+          "Your habitat is full."
+
+        );
+
+      }
+
+
+      const balance = spiritInt(
+        user.profile.coins
+      );
+
+
+      if (balance < kind.price) {
+
+        return reject(
+
+          400,
+
+          "Not enough diamonds."
+
+        );
+
+      }
+
+
+      /* ==================================
+         CREATE NEW SPIRIT BEAST
+      ================================== */
+
+      const pet = {
+
+        id: crypto.randomUUID(),
+
+        type: data.type,
+
+        name: kind.name,
+
+        level: 1,
+
+        createdAt: now,
+
+        lastFedAt: now,
+
+        lastCleanAt: now,
+
+        lastRestAt: now,
+
+        careActions: {
+
+          feed: 0,
+
+          clean: 0,
+
+          rest: 0
+
+        },
+
+        nextRewardAt: now + SPIRIT_DAY,
+
+        rewardCycles: 0,
+
+        totalEarned: 0,
+
+        dead: false,
+
+        diedAt: null
+
+      };
+
+
+      /* UNIQUE BEAST ID PROTECTION */
+
+      if (
+
+        Object.hasOwn(
+
+          spiritMap(
+            user,
+            "spiritRewardReceipts"
+          ),
+
+          pet.id
+
+        ) ||
+
+        user.spiritBeasts.some(
+          p => p.id === pet.id
+        )
+
+      ) {
+
+        throw new Error(
+          "SPIRIT_ID_CONFLICT"
+        );
+
+      }
+
+
+      /* ==================================
+         DEBIT PURCHASE PRICE
+      ================================== */
+
+      user.profile.coins =
+        balance - kind.price;
+
+
+      user.spiritBeasts.push(pet);
+
+
+      /* INITIAL REWARD CHECKPOINT */
+
+      spiritSaveCheckpoint(
+
+        user,
+
+        pet,
+
+        spiritCheckpoint(user, pet),
+
+        now
+
+      );
+
+
+      /* ==================================
+         PERSISTENT PURCHASE RECEIPT
+      ================================== */
+
+      user.spiritPurchaseReceipts = {
+
+        ...records,
+
+        [requestId]: {
+
+          id: requestId,
+
+          type: data.type,
+
+          amount: kind.price,
+
+          beastId: pet.id,
+
+          ts: now
+
+        }
+
+      };
+
+
+      changed = true;
+
+      walletChanged = true;
+
+
+      return success(
+
+        "Beast purchased successfully.",
+
+        {
+
+          duplicate: false,
+
+          beastId: pet.id
+
+        }
+
+      );
+
+    }
+
+
+    /* ======================================
+       VERIFY OWNED BEAST
+    ====================================== */
+
+    const id =
+
+      typeof data.id === "string"
+
+        ? data.id
+
+        : "";
+
+
+    if (!id || id.length > 128) {
+
+      return reject(
+
+        400,
+
+        "Invalid beast ID."
+
+      );
+
+    }
+
+
+    const index =
+      user.spiritBeasts.findIndex(
+
+        p => p.id === id
+
+      );
+
+
+    if (index < 0) {
+
+      return reject(
+
+        404,
+
+        "Spirit beast not found."
+
+      );
+
+    }
+
+
+    const pet = user.spiritBeasts[index];
+
+
+    if (user.profile.accountBlocked) {
+
+      return reject(
+
+        403,
+
+        "Account unavailable."
+
+      );
+
+    }
+
+
+    /* ======================================
+       RELEASE SPIRIT BEAST
+       NO PURCHASE REFUND
+    ====================================== */
+
+    if (action === "release") {
+
+      /* KEEP FINAL REWARD RECORD */
+
+      spiritSaveCheckpoint(
+
+        user,
+
+        pet,
+
+        spiritCheckpoint(user, pet),
+
+        now,
+
+        "released"
+
+      );
+
+
+      /* REMOVE ONLY SELECTED BEAST */
+
+      user.spiritBeasts.splice(index, 1);
+
+
+      changed = true;
+
+
+      return success(
+
+        "Spirit beast released successfully."
+
+      );
+
+    }
+
+
+    /* ======================================
+       CARE SPIRIT BEAST
+    ====================================== */
+
+    if (
+
+      action !== "care" ||
+
+      !["feed", "clean", "rest"]
+        .includes(data.action)
+
+    ) {
+
+      return reject(
+
+        400,
+
+        "Invalid care action."
+
+      );
+
+    }
+
+
+    const field = {
+
+      feed: "lastFedAt",
+
+      clean: "lastCleanAt",
+
+      rest: "lastRestAt"
+
+    }[data.action];
+
+
+    /* ======================================
+       CARE COOLDOWN - 1 HOUR
+    ====================================== */
+
+    if (pet.careActions === undefined) {
+
+      pet.careActions = {};
+
+    }
+
+
+    if (
+
+      !pet.careActions ||
+
+      typeof pet.careActions !== "object" ||
+
+      Array.isArray(pet.careActions)
+
+    ) {
+
+      throw new Error(
+        "INVALID_SPIRIT_CARE_ACTIONS"
+      );
+
+    }
+
+
+    const last = spiritInt(
+
+      pet.careActions[data.action] ?? 0
+
+    );
+
+
+    const remaining =
+
+      3600000 - (now - last);
+
+
+    if (last > 0 && remaining > 0) {
+
+      return reject(
+
+        400,
+
+        "Please wait another " +
+
+        Math.ceil(remaining / 60000) +
+
+        " minute(s) before caring for your beast again.",
+
+        false,
+
+        {
+
+          code: "CARE_COOLDOWN",
+
+          remainingMs: remaining
+
+        }
+
+      );
+
+    }
+
+
+    /* UPDATE CARE TIMESTAMPS */
+
+    pet.careActions[data.action] = now;
+
+    pet[field] = now;
+
+
+    changed = true;
+
+
+    return success("Care completed.");
+
+
+  } catch (error) {
+
+    console.error(
+
+      "[SPIRIT V1.5]",
+
+      action,
+
+      error.message
+
+    );
+
+
+    if (!res.headersSent) {
+
+      return fail(
+
+        503,
+
+        "Transaction status uncertain. Please check again.",
+
+        true
+
+      );
+
+    }
+
+  }
+
 }
 
-// Ghi nhận thời gian thực hiện hành động
-pet.careActions[action] = now;
 
-// Cập nhật trạng thái chăm sóc
-pet[field] = now;
+/* ==========================================
+   SPIRIT API ROUTES
+========================================== */
+
+app.get(
+
+  "/api/spirit/state",
+
+  spiritAuth,
+
+  (req, res) =>
+    spiritHandle(req, res, "state")
+
+);
 
 
-    saveUsers(db);
-    if (result.earned) emitCoinUpdate(req.spiritUid);
+app.post(
 
-    res.json({
-      ok: true,
-      message: "Care completed.",
-      ...spiritPublicState(user)
-    });
+  "/api/spirit/buy",
 
-  } catch (error) {
-    console.error("[SPIRIT CARE]", error);
-    res.status(500).json({
-      ok: false, message: "Care action failed."
-    });
-  }
-});
+  spiritAuth,
 
-// Server kiểm tra thú offline mỗi 60 giây.
-// Khởi động lại server vẫn tính đúng theo timestamp.
+  (req, res) =>
+    spiritHandle(req, res, "buy")
+
+);
+
+
+app.post(
+
+  "/api/spirit/care",
+
+  spiritAuth,
+
+  (req, res) =>
+    spiritHandle(req, res, "care")
+
+);
+
+
+app.post(
+
+  "/api/spirit/release",
+
+  spiritAuth,
+
+  (req, res) =>
+    spiritHandle(req, res, "release")
+
+);
+
+
+/* ==========================================
+   SMART SPIRIT TICK DETECTION
+========================================== */
+
+function spiritNeedsTick(user, now) {
+
+  return Array.isArray(user?.spiritBeasts) &&
+
+    user.spiritBeasts.some(p =>
+
+      !p ||
+
+      p.dead === true ||
+
+      !Number.isSafeInteger(p.lastFedAt) ||
+
+      !Number.isSafeInteger(p.nextRewardAt) ||
+
+      now >= p.lastFedAt + SPIRIT_DEATH ||
+
+      (
+
+        p.rewardCycles < SPIRIT_MAX_REWARDS &&
+
+        now >= p.nextRewardAt
+
+      )
+
+    );
+
+}
+
+
+/* ==========================================
+   SPIRIT BACKGROUND ENGINE V1.5
+   BATCH WALLET TRANSACTION
+   SELECTIVE SNAPSHOT
+========================================== */
 
 setInterval(() => {
+
   try {
-    const db = loadUsers();
-    let changed = false;
+
+    const now = Date.now();
+
+
+    /* READ ONLY RAM VIEW */
+
+    const view = lspReadUsersView();
+
+
+    /* SELECT ONLY ACCOUNTS THAT NEED UPDATE */
+
+    const uids = Object.keys(view).filter(
+
+      uid =>
+
+        view[uid]?.profile &&
+
+        !lspDeletionTombstones.has(uid) &&
+
+        spiritNeedsTick(view[uid], now)
+
+    );
+
+
+    /* NO DUE REWARDS - NO DATABASE WRITE */
+
+    if (!uids.length) return;
+
+
+    /* BATCH WALLET SNAPSHOT */
+
+    const tx = lspWalletStorage.begin(uids);
+
+
+    const changed = [];
+
     const credited = [];
 
-    for (const [uid, user] of Object.entries(db)) {
-      if (!user?.profile ||
-          !Array.isArray(user.spiritBeasts)) continue;
 
-      const result = spiritTickUser(user, Date.now());
+    /* PROCESS SELECTED ACCOUNTS */
 
-      if (result.changed) changed = true;
-      if (result.earned) credited.push(uid);
-    }
+    for (const uid of uids) {
 
-    if (changed) {
-      saveUsers(db);
+      try {
 
-      for (const uid of credited) {
-        emitCoinUpdate(uid);
+        const user = tx.users[uid];
+
+        if (!user?.profile) continue;
+
+
+        const result = spiritTickUser(
+
+          user,
+
+          now
+
+        );
+
+
+        if (result.changed) {
+
+          changed.push(uid);
+
+        }
+
+
+        if (result.earned > 0) {
+
+          credited.push(uid);
+
+        }
+
+
+      } catch (error) {
+
+        console.error(
+
+          "[SPIRIT ACCOUNT TICK]",
+
+          error.message
+
+        );
+
       }
+
     }
+
+
+    /* ======================================
+       ONE COMMIT FOR THE ENTIRE BATCH
+    ====================================== */
+
+    if (!changed.length) return;
+
+
+    tx.commit(changed);
+
+
+    /* REALTIME WALLET UPDATE */
+
+    for (const uid of credited) {
+
+      spiritNotify(uid);
+
+    }
+
 
   } catch (error) {
-    console.error("[SPIRIT ENGINE]", error);
+
+    console.error(
+
+      "[SPIRIT ENGINE V1.5]",
+
+      error.message
+
+    );
+
   }
-}, 60000);
 
-
-
+}, 60000).unref();
 
 
 /* ==========================================

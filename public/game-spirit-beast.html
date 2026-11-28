@@ -3338,13 +3338,18 @@ function countdown(ms) {
     .join(":");
 }
 
+
+
 async function request(url, data) {
   const options = {
     credentials: "same-origin",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json"
     }
   };
+
+
 
   if (data !== undefined) {
     options.method = "POST";
@@ -3385,7 +3390,28 @@ if (!response.ok || !result?.ok) {
 
 
 function applyState(result) {
+
+  if (
+
+    typeof result?.uid !== "string" ||
+
+    !result.uid ||
+
+    !Array.isArray(result.pets)
+
+  ) {
+
+    throw new Error(
+
+      "Invalid Spirit session. Please refresh."
+
+    );
+
+  }
+
   gameState = result;
+
+
   serverOffset = result.serverTime - Date.now();
 
   if (!gameState.pets.some(p => p.id === selectedId)) {
@@ -3431,19 +3457,556 @@ function showError(error) {
   openDialog("NOTICE", error.message);
 }
 
+/* ==========================================
+   SPIRIT SECURE ACTION V1.5
+========================================== */
+
 async function execute(url, data) {
+
   if (busy) return;
+
+
+  const uid = gameState?.uid;
+
+
+  if (
+
+    !uid ||
+
+    (
+
+      data?.expectedUid !== undefined &&
+
+      data.expectedUid !== uid
+
+    )
+
+  ) {
+
+    return showError(
+
+      new Error(
+        "Account changed. Please refresh."
+      )
+
+    );
+
+  }
+
 
   busy = true;
 
+
   try {
-    const result = await request(url, data);
+
+    const result = await request(
+
+      url,
+
+      {
+
+        ...data,
+
+        expectedUid: uid
+
+      }
+
+    );
+
+
+    if (
+
+      result.uid !== uid ||
+
+      gameState?.uid !== uid
+
+    ) {
+
+      throw new Error(
+
+        "Account changed. Please refresh."
+
+      );
+
+    }
+
+
     applyState(result);
+
+
   } catch (error) {
+
     showError(error);
+
+
   } finally {
+
     busy = false;
+
   }
+
+}
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   SPIRIT PURCHASE RETRY V1.5
+========================================== */
+
+function spiritPendingKey(uid) {
+
+  return "lsp:spirit:buy:v15:" +
+
+    encodeURIComponent(uid);
+
+}
+
+
+/* ==========================================
+   READ PENDING PURCHASE
+========================================== */
+
+function spiritReadPending(uid) {
+
+  const raw = sessionStorage.getItem(
+
+    spiritPendingKey(uid)
+
+  );
+
+
+  if (raw === null) return null;
+
+
+  const p = JSON.parse(raw);
+
+
+  if (
+
+    !p ||
+
+    p.expectedUid !== uid ||
+
+    typeof p.type !== "string" ||
+
+    !Number.isSafeInteger(
+      p.expectedPrice
+    ) ||
+
+    p.expectedPrice <= 0 ||
+
+    !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/
+      .test(p.requestId)
+
+  ) {
+
+    throw new Error(
+
+      "Pending purchase is invalid. Contact support."
+
+    );
+
+  }
+
+
+  return p;
+
+}
+
+
+/* ==========================================
+   SECURE SPIRIT PURCHASE
+========================================== */
+
+async function spiritBuy(type, price, uid) {
+
+  if (busy) return;
+
+
+  if (
+
+    !uid ||
+
+    gameState?.uid !== uid
+
+  ) {
+
+    return showError(
+
+      new Error(
+
+        "Account changed. Please refresh."
+
+      )
+
+    );
+
+  }
+
+
+  busy = true;
+
+  let timeout;
+
+
+  try {
+
+    let pending = spiritReadPending(uid);
+
+
+    /* ======================================
+       RESOLVE OLD PURCHASE FIRST
+    ====================================== */
+
+    if (pending && type !== null) {
+
+      return showError(
+
+        new Error(
+
+          "Resolve your previous purchase using CHECK / RETRY first."
+
+        )
+
+      );
+
+    }
+
+
+    /* ======================================
+       CREATE ORIGINAL REQUEST ID
+    ====================================== */
+
+    if (!pending) {
+
+      if (type === null) return;
+
+
+      pending = {
+
+        expectedUid: uid,
+
+        type,
+
+        expectedPrice: price,
+
+        requestId: crypto.randomUUID()
+
+      };
+
+
+      /* SAVE BEFORE NETWORK REQUEST */
+
+      sessionStorage.setItem(
+
+        spiritPendingKey(uid),
+
+        JSON.stringify(pending)
+
+      );
+
+    }
+
+
+    /* ======================================
+       REQUEST TIMEOUT
+    ====================================== */
+
+    const controller =
+      new AbortController();
+
+
+    timeout = setTimeout(
+
+      () => controller.abort(),
+
+      15000
+
+    );
+
+
+    /* ======================================
+       SEND PURCHASE REQUEST
+    ====================================== */
+
+    const response = await fetch(
+
+      "/api/spirit/buy",
+
+      {
+
+        method: "POST",
+
+        credentials: "same-origin",
+
+        cache: "no-store",
+
+        headers: {
+
+          "Content-Type": "application/json"
+
+        },
+
+        body: JSON.stringify(pending),
+
+        signal: controller.signal
+
+      }
+
+    );
+
+
+    const reply = await response.json();
+
+
+    /* ======================================
+       VALIDATE SERVER ACKNOWLEDGEMENT
+    ====================================== */
+
+    if (
+
+      !reply ||
+
+      reply.uid !== uid ||
+
+      reply.requestId !== pending.requestId ||
+
+      reply.retrySameRequest === true ||
+
+      !(
+
+        (
+
+          response.ok &&
+
+          reply.ok === true
+
+        ) ||
+
+        (
+
+          response.status >= 400 &&
+
+          response.status < 500 &&
+
+          reply.ok === false &&
+
+          reply.retrySameRequest === false
+
+        )
+
+      )
+
+    ) {
+
+      throw new Error(
+
+        "Purchase status unknown. Use CHECK / RETRY in the shop."
+
+      );
+
+    }
+
+
+    /* ======================================
+       VERIFY PENDING REQUEST
+    ====================================== */
+
+    if (
+
+      spiritReadPending(uid)?.requestId !==
+
+      pending.requestId
+
+    ) {
+
+      throw new Error(
+
+        "Pending purchase changed. Contact support."
+
+      );
+
+    }
+
+
+    /* CLEAR CONFIRMED PURCHASE ONLY */
+
+    sessionStorage.removeItem(
+
+      spiritPendingKey(uid)
+
+    );
+
+
+    /* DO NOT UPDATE A DIFFERENT ACCOUNT */
+
+    if (gameState?.uid !== uid) return;
+
+
+    /* ======================================
+       PURCHASE SUCCESS
+    ====================================== */
+
+    if (reply.ok) {
+
+      applyState(reply);
+
+
+      openDialog(
+
+        "PURCHASE COMPLETE",
+
+        reply.message ||
+
+        "Beast purchased successfully."
+
+      );
+
+
+    } else {
+
+      showError(
+
+        new Error(
+
+          reply.message ||
+
+          "Purchase rejected."
+
+        )
+
+      );
+
+    }
+
+
+  } catch (error) {
+
+    console.error(
+
+      "[SPIRIT BUY]",
+
+      error.message
+
+    );
+
+
+    showError(
+
+      new Error(
+
+        "Purchase could not be confirmed. If pending, use CHECK / RETRY in the shop."
+
+      )
+
+    );
+
+
+  } finally {
+
+    clearTimeout(timeout);
+
+    busy = false;
+
+    render();
+
+  }
+
+}
+
+
+/* ==========================================
+   PENDING PURCHASE INTERFACE
+========================================== */
+
+function spiritRenderPending(shop) {
+
+  const uid = gameState?.uid;
+
+  if (!uid) return;
+
+
+  try {
+
+    const p = spiritReadPending(uid);
+
+    if (!p) return;
+
+
+    const box =
+      document.createElement("div");
+
+    box.className = "empty";
+
+
+    const text =
+      document.createElement("p");
+
+
+    text.textContent =
+
+      "Unconfirmed purchase: " +
+
+      (
+
+        gameState.types[p.type]?.name ||
+
+        p.type
+
+      ) +
+
+      " · " +
+
+      formatNum(p.expectedPrice) +
+
+      " 💎";
+
+
+    const button =
+      document.createElement("button");
+
+
+    button.className = "buy";
+
+    button.type = "button";
+
+    button.textContent = "CHECK / RETRY";
+
+
+    button.onclick = () =>
+
+      spiritBuy(null, null, uid);
+
+
+    box.append(
+
+      text,
+
+      button
+
+    );
+
+
+    shop.appendChild(box);
+
+
+  } catch (error) {
+
+    const box =
+      document.createElement("div");
+
+
+    box.className = "empty";
+
+    box.textContent =
+
+      "Pending purchase unavailable. Contact support.";
+
+
+    shop.appendChild(box);
+
+  }
+
 }
 
 function makeCard(pet) {
@@ -3527,7 +4090,10 @@ releaseButton.onclick = () => {
 
   if (busy) return;
 
-  const beastName = kind?.name || "Spirit Beast";
+  const beastName =
+  kind?.name || "Spirit Beast";
+
+const ownerUid = gameState.uid;
 
   openDialog(
     "RELEASE SPIRIT BEAST",
@@ -3536,10 +4102,19 @@ releaseButton.onclick = () => {
     `This action is permanent. ` +
     `Your purchase will not be refunded.`,
 
-    () => execute(
-      "/api/spirit/release",
-      { id: pet.id }
-    )
+() => execute(
+
+  "/api/spirit/release",
+
+  {
+
+    id: pet.id,
+
+    expectedUid: ownerUid
+
+  }
+
+)
   );
 
 };
@@ -3603,13 +4178,35 @@ reward.textContent =
   button.textContent = "BUY BEAST";
 
 
+/* ==========================================
+   SECURE PURCHASE CONFIRMATION V1.5
+========================================== */
+
 button.onclick = () => {
+
+  const ownerUid = gameState.uid;
+
+
   openDialog(
+
     "CONFIRM PURCHASE",
+
     `Purchase ${kind.name} for ` +
+
     `${formatNum(kind.price)} diamonds?`,
-    () => execute("/api/spirit/buy", {type})
+
+    () => spiritBuy(
+
+      type,
+
+      kind.price,
+
+      ownerUid
+
+    )
+
   );
+
 };
 
 
@@ -3696,8 +4293,16 @@ function render() {
   const farm = el("farmPanel");
   const shop = el("shopPanel");
 
-  farm.replaceChildren();
-  shop.replaceChildren();
+farm.replaceChildren();
+
+shop.replaceChildren();
+
+
+/* ==========================================
+   RESTORE PENDING SPIRIT PURCHASE
+========================================== */
+
+spiritRenderPending(shop);
 
   for (const p of gameState.pets) {
     farm.appendChild(makeCard(p));
@@ -4134,13 +4739,41 @@ el("exitBtn").onclick = () => {
   location.href = "/invest.html";
 };
 
+/* ==========================================
+   SPIRIT STATE SYNCHRONIZATION V1.5
+========================================== */
+
 async function refresh() {
+
+  if (busy || !gameState) return;
+
+
+  busy = true;
+
+
   try {
-    const result = await request("/api/spirit/state");
+
+    const result = await request(
+
+      "/api/spirit/state"
+
+    );
+
+
     applyState(result);
+
+
   } catch (error) {
+
     showError(error);
+
+
+  } finally {
+
+    busy = false;
+
   }
+
 }
 
 /* ==========================================
