@@ -4554,6 +4554,60 @@ if (
 
 
 
+/* ==========================================
+   FINANCIAL EVIDENCE REMEDIATION V1.14B
+   READ ONLY
+========================================== */
+
+if (
+
+  command === "financial-remediation-audit" &&
+
+  input &&
+
+  !extra.length
+
+) {
+
+  initializeKey();
+
+
+  const snapshot = await verifyBackup(
+
+    path.resolve(input)
+
+  );
+
+
+  const report = require(
+
+    "./wallet-financial-remediation"
+
+  ).run(
+
+    snapshot,
+
+    output
+
+      ? path.resolve(output)
+
+      : null
+
+  );
+
+
+  console.log(
+
+    JSON.stringify(report, null, 2)
+
+  );
+
+
+  return;
+
+}
+
+
   /* VALIDATE COMMAND */
 
   if (
