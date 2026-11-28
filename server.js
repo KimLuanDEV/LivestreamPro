@@ -9842,33 +9842,203 @@ function handleDiamondTransferAction(req, res) {
     });
   }
 
-  const users = loadUsers();
+ /* ==========================================
+   LIVESTREAM PRO
+   UNIFIED WALLET TRANSACTION V1.1
+   TRANSFER SETTLEMENT ENGINE
+========================================== */
 
-  let request = null;
-  let sender = null;
+let tx;
 
-  // Tìm yêu cầu theo ID
-  for (const user of Object.values(users)) {
+let request;
 
-    if (!Array.isArray(user?.transferRequests)) continue;
+let sender;
 
-    const found = user.transferRequests.find(
-      item => item.id === id
+let senderUid;
+
+
+try {
+
+  /* READ ONLY DATABASE VIEW */
+
+  const view = lspReadUsersView();
+
+  let located = null;
+
+
+  /* ======================================
+     FIND UNIQUE TRANSFER REQUEST
+  ====================================== */
+
+  for (
+
+    const [uid, user] of Object.entries(view)
+
+  ) {
+
+    if (
+
+      !Array.isArray(user?.transferRequests)
+
+    ) {
+
+      continue;
+
+    }
+
+
+    for (const item of user.transferRequests) {
+
+      if (item?.id !== id) continue;
+
+
+      /* DUPLICATE TRANSFER PROTECTION */
+
+      if (located) {
+
+        throw new Error(
+
+          "DUPLICATE_TRANSFER_ID"
+
+        );
+
+      }
+
+
+      located = {
+
+        uid,
+
+        item
+
+      };
+
+    }
+
+  }
+
+
+  /* REQUEST NOT FOUND */
+
+  if (!located) {
+
+    return res.status(404).json({
+
+      ok: false,
+
+      error: "REQUEST_NOT_FOUND"
+
+    });
+
+  }
+
+
+  senderUid = located.uid;
+
+  const toUid = located.item.toUid;
+
+
+  /* ======================================
+     VERIFY TRANSACTION OWNERSHIP
+  ====================================== */
+
+  if (
+
+    located.item.fromUid !== senderUid ||
+
+    typeof toUid !== "string" ||
+
+    !toUid ||
+
+    toUid === senderUid
+
+  ) {
+
+    throw new Error(
+
+      "TRANSFER_OWNER_CONFLICT"
+
     );
 
-    if (found) {
-      request = found;
-      sender = user;
-      break;
-    }
   }
 
-  if (!request || !sender?.profile) {
-    return res.status(404).json({
-      ok: false,
-      error: "REQUEST_NOT_FOUND"
-    });
+
+  /* ======================================
+     CREATE SELECTIVE WALLET SNAPSHOT
+  ====================================== */
+
+  tx = lspWalletStorage.begin(
+
+    action === "approve"
+
+      ? [senderUid, toUid]
+
+      : [senderUid]
+
+  );
+
+
+  sender = tx.users[senderUid];
+
+
+  request = sender?.transferRequests?.find(
+
+    item => item.id === id
+
+  );
+
+
+  /* ======================================
+     VERIFY CURRENT TRANSACTION STATE
+  ====================================== */
+
+  if (
+
+    !sender?.profile ||
+
+    !request ||
+
+    request.fromUid !== senderUid ||
+
+    request.toUid !== toUid ||
+
+    request.amount !== located.item.amount ||
+
+    request.status !== located.item.status ||
+
+    lspDeletionTombstones.has(senderUid)
+
+  ) {
+
+    throw new Error(
+
+      "TRANSFER_STATE_CHANGED"
+
+    );
+
   }
+
+
+} catch (err) {
+
+  console.error(
+
+    "[TRANSFER WALLET SNAPSHOT]",
+
+    err.message
+
+  );
+
+
+  return res.status(409).json({
+
+    ok: false,
+
+    error: "TRANSFER_STATE_UNAVAILABLE"
+
+  });
+
+}
 
   if (request.status !== "pending") {
     return res.status(409).json({
@@ -9877,7 +10047,7 @@ function handleDiamondTransferAction(req, res) {
     });
   }
 
-  const recipient = users[request.toUid];
+  const recipient = tx.users[request.toUid];
   const amount = Number(request.amount);
 
   if (!Number.isSafeInteger(amount) || amount <= 0) {
@@ -9890,34 +10060,92 @@ function handleDiamondTransferAction(req, res) {
   const now = Date.now();
 
   if (action === "approve") {
+/* ==========================================
+   TRANSFER ACCOUNT PROTECTION
+========================================== */
 
-    if (
-      !recipient?.profile ||
-      recipient.profile.accountBlocked
-    ) {
+if (
+
+  !recipient?.profile ||
+
+  recipient.profile.accountBlocked ||
+
+  sender.profile.accountBlocked ||
+
+  lspDeletionTombstones.has(request.toUid)
+
+) {
       return res.status(400).json({
         ok: false,
         error: "RECIPIENT_UNAVAILABLE"
       });
     }
 
-    const current = Number(recipient.profile.coins || 0);
+/* ==========================================
+   STRICT TRANSFER CREDIT VALIDATION
+========================================== */
 
-    if (
-      !Number.isSafeInteger(current) ||
-      !Number.isSafeInteger(current + amount)
-    ) {
-      return res.status(400).json({
-        ok: false,
-        error: "INVALID_RECIPIENT_BALANCE"
-      });
-    }
+const current =
 
-    // Chỉ đến đây mới cộng kim cương
-    recipient.profile.coins = current + amount;
+  securityTransaction.parseBalance(
 
-    sender.profile.coinSent =
-      Number(sender.profile.coinSent || 0) + amount;
+    recipient.profile.coins,
+
+    request.toUid
+
+  );
+
+
+const sent =
+
+  securityTransaction.parseBalance(
+
+    sender.profile.coinSent ?? 0,
+
+    senderUid
+
+  );
+
+
+/* ==========================================
+   BALANCE OVERFLOW PROTECTION
+========================================== */
+
+if (
+
+  current === null ||
+
+  sent === null ||
+
+  !Number.isSafeInteger(current + amount) ||
+
+  !Number.isSafeInteger(sent + amount)
+
+) {
+
+  return res.status(400).json({
+
+    ok: false,
+
+    error: "INVALID_RECIPIENT_BALANCE"
+
+  });
+
+}
+
+
+/* ==========================================
+   APPLY TRANSFER CREDIT
+========================================== */
+
+recipient.profile.coins =
+
+  current + amount;
+
+
+sender.profile.coinSent =
+
+  sent + amount;
 
     sender.transferHistory ||= [];
     recipient.transferHistory ||= [];
@@ -9970,13 +10198,28 @@ recipient.transferHistory =
 
   } else {
 
-    // Từ chối - hoàn trả kim cương bị tạm giữ
-    const current = Number(sender.profile.coins || 0);
+/* ==========================================
+   STRICT TRANSFER REFUND VALIDATION
+========================================== */
 
-    if (
-      !Number.isSafeInteger(current) ||
-      !Number.isSafeInteger(current + amount)
-    ) {
+const current =
+
+  securityTransaction.parseBalance(
+
+    sender.profile.coins,
+
+    senderUid
+
+  );
+
+
+if (
+
+  current === null ||
+
+  !Number.isSafeInteger(current + amount)
+
+) {
       return res.status(400).json({
         ok: false,
         error: "INVALID_SENDER_BALANCE"
@@ -9988,11 +10231,36 @@ recipient.transferHistory =
     request.status = "rejected";
   }
 
-  request.processedAt = now;
-  request.processedBy = adminUid;
+request.processedAt = now;
 
-  try {
-    saveUsers(users);
+request.processedBy = adminUid;
+
+
+/* ==========================================
+   UNIFIED TRANSFER COMMIT V1.1
+========================================== */
+
+try {
+
+  tx.commit(
+
+    action === "approve"
+
+      ? [
+
+          senderUid,
+
+          request.toUid
+
+        ]
+
+      : [
+
+          senderUid
+
+        ]
+
+  );
   } catch (err) {
     console.error("[TRANSFER APPROVAL SAVE]", err);
 
@@ -20334,8 +20602,17 @@ if (!securityCode || securityCode.length > 128) {
   });
 }
 
-let users = loadUsers();
-let from = users[fromUid];
+/* ==========================================
+   DIAMOND TRANSFER V1.1
+   READ ONLY ACCOUNT LOOKUP
+========================================== */
+
+let users = lspReadUsersView();
+
+let from = Object.hasOwn(users, fromUid)
+  ? users[fromUid]
+  : null;
+
 
 if (!from?.profile || from.profile.accountBlocked) {
   return respond({
@@ -20427,10 +20704,15 @@ if (
 
 }
 
-// Reload the latest account data after bcrypt verification.
-// This prevents using the balance snapshot taken before await.
-users = loadUsers();
-from = users[fromUid];
+/* ==========================================
+   REFRESH ACCOUNT AFTER SECURITY CHECK
+========================================== */
+
+users = lspReadUsersView();
+
+from = Object.hasOwn(users, fromUid)
+  ? users[fromUid]
+  : null;
 
 
 if (from?.securityCode !== securityHashAtVerification) {
@@ -20474,7 +20756,7 @@ if (
     }
   }
 
-  const to = toUid ? users[toUid] : null;
+  let to = toUid ? users[toUid] : null;
 
   if (!to?.profile || to.profile.accountBlocked) {
     return respond({
@@ -20490,7 +20772,102 @@ if (
     });
   }
 
-  const balance = Number(from.profile.coins || 0);
+  /* ==========================================
+   LIVESTREAM PRO
+   UNIFIED WALLET TRANSACTION V1.1
+   DIAMOND TRANSFER REQUEST
+========================================== */
+
+let tx;
+
+try {
+
+  tx = lspWalletStorage.begin([
+
+    fromUid,
+
+    toUid
+
+  ]);
+
+} catch (err) {
+
+  console.error(
+
+    "[TRANSFER WALLET SNAPSHOT]",
+
+    err.message
+
+  );
+
+  return respond({
+
+    ok: false,
+
+    message: "Wallet temporarily unavailable."
+
+  });
+
+}
+
+
+/* ==========================================
+   SELECT TRANSACTION ACCOUNTS
+========================================== */
+
+from = tx.users[fromUid];
+
+to = tx.users[toUid];
+
+
+/* ==========================================
+   REVALIDATE ACCOUNT STATE
+========================================== */
+
+if (
+
+  !from?.profile ||
+
+  !to?.profile ||
+
+  from.securityCode !==
+    securityHashAtVerification ||
+
+  from.profile.accountBlocked ||
+
+  to.profile.accountBlocked ||
+
+  lspDeletionTombstones.has(fromUid) ||
+
+  lspDeletionTombstones.has(toUid)
+
+) {
+
+  return respond({
+
+    ok: false,
+
+    message:
+      "Account state changed. Please try again."
+
+  });
+
+}
+
+
+/* ==========================================
+   STRICT WALLET BALANCE VALIDATION
+========================================== */
+
+const balance =
+
+  securityTransaction.parseBalance(
+
+    from.profile.coins,
+
+    fromUid
+
+  );
 
   if (
     !Number.isSafeInteger(balance) ||
@@ -20527,13 +20904,25 @@ if (
     note: ""
   });
 
- try {
+try {
 
-  saveUsers(users);
+  /* ======================================
+     COMMIT TRANSFER HOLD TRANSACTION
+  ====================================== */
+
+  tx.commit([
+
+    fromUid
+
+  ]);
+
 
   securityTransaction.record(
+
     "successfulTransactions",
+
     fromUid
+
   );
 
 } catch (err) {
