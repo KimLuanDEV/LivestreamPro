@@ -4359,6 +4359,136 @@ if (
 }
 
 
+
+/* ==========================================
+   LIVESTREAM PRO
+   PRODUCTION READINESS V1.13
+   READ ONLY
+========================================== */
+
+if (
+
+  command === "production-readiness-audit" &&
+
+  input &&
+
+  output &&
+
+  extra.length === 2 &&
+
+  extra[1] === "SEPAY_NEVER_USED_DECLARED"
+
+) {
+
+  initializeKey();
+
+
+  /* VERIFY DATABASE BACKUP */
+
+  const snapshot = await verifyBackup(
+
+    path.resolve(input)
+
+  );
+
+
+  /* VERIFY INDEPENDENT REGISTRY */
+
+  const registry = require(
+
+    "./wallet-anchor-registry"
+
+  );
+
+
+  const chain = registry.readRegistry(
+
+    path.resolve(output),
+
+    extra[0]
+
+  );
+
+
+  /* CONNECT TO RECEIPT ARCHIVE */
+
+  const ctx = require(
+
+    "./wallet-receipt-archive"
+
+  ).config();
+
+
+  try {
+
+    const anchor = await registry.audit(
+
+      snapshot,
+
+      chain,
+
+      extra[0],
+
+      ctx
+
+    );
+
+
+    /* INSPECT CURRENT SOURCE CODE */
+
+    const source = await fsp.readFile(
+
+      path.join(
+        __dirname,
+        "server.js"
+      ),
+
+      "utf8"
+
+    );
+
+
+    /* GENERATE READINESS REPORT */
+
+    const report = require(
+
+      "./wallet-production-readiness"
+
+    ).build(
+
+      snapshot,
+
+      source,
+
+      anchor,
+
+      await receiptQueue.stats(),
+
+      process.env,
+
+      true
+
+    );
+
+
+    console.log(
+
+      JSON.stringify(report, null, 2)
+
+    );
+
+
+  } finally {
+
+    ctx.close();
+
+  }
+
+
+  return;
+
+}
+
   /* VALIDATE COMMAND */
 
   if (
