@@ -3938,6 +3938,53 @@ if (
 }
 
 
+/* ==========================================
+   LIVESTREAM PRO
+   FINANCIAL EVIDENCE RECONCILIATION V1.10
+   VERIFIED BACKUP - READ ONLY
+========================================== */
+
+if (
+
+  command === "financial-evidence-audit" &&
+
+  input &&
+
+  !output &&
+
+  !extra.length
+
+) {
+
+  initializeKey();
+
+
+  const snapshot = await verifyBackup(
+
+    path.resolve(input)
+
+  );
+
+
+  const report = require(
+
+    "./wallet-evidence-reconciliation"
+
+  ).run(snapshot);
+
+
+  console.log(
+
+    JSON.stringify(report, null, 2)
+
+  );
+
+
+  return;
+
+}
+
+
   /* VALIDATE COMMAND */
 
   if (
