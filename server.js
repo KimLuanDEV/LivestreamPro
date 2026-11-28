@@ -16732,11 +16732,62 @@ function deletionManagerAdmin(req, res, next) {
    DATA SNAPSHOT
 ========================================== */
 
+
+/* ==========================================
+   LIVESTREAM PRO
+   ACCOUNT DELETION SOURCE GUARD V4.1
+========================================== */
+
+function lspReadExistingDeletionUsers() {
+
+  const signature =
+    lspUsersFileSignature();
+
+  if (signature === null) {
+
+    throw new Error("USERS_SOURCE_MISSING");
+
+  }
+
+  if (!fs.lstatSync(USERS_FILE).isFile()) {
+
+    throw new Error("INVALID_USERS_SOURCE");
+
+  }
+
+  const users = loadUsers();
+
+  const meta =
+    lspUsersSnapshotMeta.get(users);
+
+  if (
+
+    !lspDeletionObject(users) ||
+
+    !meta ||
+
+    meta.signature !== signature ||
+
+    meta.revision !== lspUsersRevision ||
+
+    lspUsersFileSignature() !== signature
+
+  ) {
+
+    throw new Error("USERS_SOURCE_CHANGED");
+
+  }
+
+  return users;
+
+}
+
+
 function deletionManagerSnapshot() {
 
   return {
 
-    users: loadUsers(),
+    users: lspReadExistingDeletionUsers(),
 
     withdrawals: loadWithdraws(),
 
@@ -16747,7 +16798,6 @@ function deletionManagerSnapshot() {
   };
 
 }
-
 
 /* ==========================================
    CHECK ACTIVE SESSIONS
@@ -16874,7 +16924,14 @@ app.get(
             engineState:
   item.engineState || null,
 engineMode: item.engineMode || null,
-recoveryReady: item.engineState === "purging" && item.coreWriteReady === true && !profile,
+
+recoveryReady:
+
+  item.engineState === "purging" &&
+
+  item.coreWriteReady === true &&
+
+  !Object.hasOwn(data.users, item.uid),
 
 engineError:
   item.engineError || null,
@@ -16899,7 +16956,16 @@ blockers:
 
   item.status === "completed" ||
   item.engineState === "local_done" ||
-  (item.engineState === "purging" && item.coreWriteReady && !profile)
+
+ (
+
+  item.engineState === "purging" &&
+
+  item.coreWriteReady === true &&
+
+  !Object.hasOwn(data.users, item.uid)
+
+)
 
                 ? []
 
@@ -17323,7 +17389,13 @@ function lspRunDeletionQueue() {
     }
     const data = deletionManagerSnapshot();
     const account = data.users[uid];
-    const recovery = !account && item.engineState === "purging" && item.coreWriteReady === true;
+    const recovery =
+
+  !Object.hasOwn(data.users, uid) &&
+
+  item.engineState === "purging" &&
+
+  item.coreWriteReady === true;
     if (!recovery) {
       if (!account?.profile?.accountBlocked) throw new Error("Account is not locked");
       const issues = deletionManagerIssues(uid, data);
@@ -17357,7 +17429,7 @@ lspDeletionEngine(
 
     uid,
 
-    readUsers: loadUsers,
+    readUsers: lspReadExistingDeletionUsers,
 
     commitUsers: saveUsers,
 
@@ -17373,7 +17445,48 @@ lspDeletionEngine(
 
     } catch (error) {
       // Recover after a partial file write without permitting a deleted UID to return.
-      if (!Object.hasOwn(loadUsers(), uid)) afterCommit();
+      /* ==========================================
+   SAFE PARTIAL DELETION RECOVERY
+========================================== */
+
+try {
+
+  const latest =
+    readAccountDeleteRequest(uid);
+
+  if (
+
+    latest?.engineState === "purging" &&
+
+    latest.coreWriteReady === true &&
+
+    !Object.hasOwn(
+      lspReadExistingDeletionUsers(),
+      uid
+    )
+
+  ) {
+
+    lspDeletionEngine.confirmRemoved(
+      lspDeletionDataDir,
+      uid
+    );
+
+    afterCommit();
+
+  }
+
+} catch (recoveryError) {
+
+  console.error(
+
+    "[DELETION V4.1] Recovery confirmation paused",
+
+    recoveryError.message
+
+  );
+
+}
       // Any successfully written cache was already updated via onCacheWritten.
       // Preserve unpersisted changes in the other caches for the next retry.
       throw error;
@@ -17588,7 +17701,10 @@ async function lspRunR2Cleanup() {
 
     if (
 
-      Object.hasOwn(loadUsers(), job.uid) ||
+     Object.hasOwn(
+  lspReadExistingDeletionUsers(),
+  job.uid
+) ||
 
       !lspDeletionTombstones.has(job.uid)
 
@@ -17634,7 +17750,26 @@ async function lspRunR2Cleanup() {
 
         }
 
-        return lspR2MediaReferenced(key);
+    /* ==========================================
+   REVALIDATE R2 OWNER DELETION
+========================================== */
+
+if (
+
+  Object.hasOwn(
+    lspReadExistingDeletionUsers(),
+    job.uid
+  ) ||
+
+  !lspDeletionTombstones.has(job.uid)
+
+) {
+
+  throw new Error("R2_OWNER_NOT_DELETED");
+
+}
+
+return lspR2MediaReferenced(key);
 
       }
 
@@ -17660,6 +17795,26 @@ async function lspRunR2Cleanup() {
       return;
 
     }
+
+
+/* ==========================================
+   VERIFY OWNER BEFORE SAVING R2 RESULT
+========================================== */
+
+if (
+
+  Object.hasOwn(
+    lspReadExistingDeletionUsers(),
+    job.uid
+  ) ||
+
+  !lspDeletionTombstones.has(job.uid)
+
+) {
+
+  throw new Error("R2_OWNER_NOT_DELETED");
+
+}
 
 
     /* SAVE R2 RESULT */
@@ -17911,7 +18066,13 @@ app.post(
         }
         const data = deletionManagerSnapshot();
         const account = data.users[uid];
-        const recovery = !account && item.engineState === "purging" && item.coreWriteReady === true;
+        const recovery =
+
+  !Object.hasOwn(data.users, uid) &&
+
+  item.engineState === "purging" &&
+
+  item.coreWriteReady === true;
         if (!recovery) {
           if (!account?.profile?.accountBlocked || account.role === "admin" ||
               account.profile.role === "admin" || account.roles?.includes("admin")) {
@@ -17944,10 +18105,22 @@ app.post(
 
       else {
 
-        if (
-          item.engineState !== "local_done" ||
-          Object.hasOwn(loadUsers(), uid)
-        ) {
+ /* ==========================================
+   FINAL ACCOUNT DELETION VERIFICATION
+========================================== */
+
+if (
+
+  item.engineState !== "local_done" ||
+
+  Object.hasOwn(
+    lspReadExistingDeletionUsers(),
+    uid
+  ) ||
+
+  !lspDeletionTombstones.has(uid)
+
+) {
 
           return fail(
             409,

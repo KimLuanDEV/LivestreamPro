@@ -3,6 +3,125 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
+/* ==========================================
+   LIVESTREAM PRO
+   ACCOUNT DELETION ENGINE V4.1
+   STRICT DATABASE SOURCE PROTECTION
+========================================== */
+
+function readExistingUsers(dir) {
+
+  const file = path.join(dir, "users.json");
+
+  let fd;
+
+  try {
+
+    fd = fs.openSync(
+      file,
+      fs.constants.O_RDONLY |
+      fs.constants.O_NOFOLLOW
+    );
+
+  } catch (e) {
+
+    if (e.code === "ENOENT") {
+
+      throw new Error("USERS_SOURCE_MISSING");
+
+    }
+
+    throw e;
+
+  }
+
+  try {
+
+    if (!fs.fstatSync(fd).isFile()) {
+
+      throw new Error("INVALID_USERS_SOURCE");
+
+    }
+
+    const users = JSON.parse(
+      fs.readFileSync(fd, "utf8")
+    );
+
+    if (
+
+      !users ||
+
+      typeof users !== "object" ||
+
+      Array.isArray(users)
+
+    ) {
+
+      throw new Error("INVALID_USERS_SOURCE");
+
+    }
+
+    return users;
+
+  } finally {
+
+    fs.closeSync(fd);
+
+  }
+
+}
+
+
+/* ==========================================
+   CONFIRM DURABLE ACCOUNT REMOVAL
+========================================== */
+
+function confirmRemoved(dir, uid) {
+
+  if (
+
+    Object.hasOwn(
+      readExistingUsers(dir),
+      uid
+    )
+
+  ) {
+
+    throw new Error(
+      "USER_CORE_REMOVAL_NOT_CONFIRMED"
+    );
+
+  }
+
+  const fd = fs.openSync(dir, "r");
+
+  try {
+
+    fs.fsyncSync(fd);
+
+  } finally {
+
+    fs.closeSync(fd);
+
+  }
+
+  if (
+
+    Object.hasOwn(
+      readExistingUsers(dir),
+      uid
+    )
+
+  ) {
+
+    throw new Error(
+      "USER_CORE_REMOVAL_NOT_CONFIRMED"
+    );
+
+  }
+
+}
+
 // V3: synchronous local purge. Caller MUST hold the exclusive in-process write window.
 module.exports = function runDeletionEngine(dir, financialCheck, options) {
 if (
@@ -58,6 +177,8 @@ if (
    GLOBAL SNAPSHOT COMPATIBILITY
 ====================================== */
 
+const diskUsers = readExistingUsers(dir);
+
 const users = options.readUsers();
 
 if (!object(users)) {
@@ -67,17 +188,151 @@ if (!object(users)) {
   );
 
 }
-    const account = Object.hasOwn(users, uid) ? users[uid] : null;
+/* ==========================================
+   ACCOUNT SNAPSHOT VERIFICATION V4.1
+========================================== */
+
+const present = Object.hasOwn(users, uid);
+
+if (
+
+  present !== Object.hasOwn(diskUsers, uid)
+
+) {
+
+  throw new Error("USERS_SNAPSHOT_MISMATCH");
+
+}
+
+const account = present
+  ? users[uid]
+  : null;
+
+if (
+
+  present &&
+
+  (
+    !object(account) ||
+    !object(account.profile)
+  )
+
+) {
+
+  throw new Error("INVALID_USER_ACCOUNT");
+
+}
+
+
+/* ==========================================
+   OPTIONAL SQLITE WALLET CLOSURE
+   INTERNAL REHEARSAL ONLY
+========================================== */
+
+const closure = options.walletClosure;
+
+if (
+
+  (
+    record.walletClosureRequired === true ||
+    closure !== undefined
+  ) &&
+
+  (
+    !closure ||
+    typeof closure.closeWallet !== "function" ||
+    typeof closure.assertClosed !== "function"
+  )
+
+) {
+
+  throw new Error("WALLET_CLOSURE_REQUIRED");
+
+}
+
+
+function verifyClosure() {
+
+  if (!closure) return;
+
+  const r = closure.assertClosed(
+    uid,
+    record.requestId
+  );
+
+  if (
+
+    !r ||
+
+    r.uid !== uid ||
+
+    r.request_id !== record.requestId.toLowerCase()
+
+  ) {
+
+    throw new Error(
+      "WALLET_CLOSURE_NOT_CONFIRMED"
+    );
+
+  }
+
+}
+
+
     const saveRequest = changes => {
       record = { ...record, ...changes, updatedAt: now() };
       write(requestFile, record);
     };
-    if (!account) {
-      if (!record.coreWriteReady || record.engineState !== "purging") throw new Error("Account missing before verified core removal");
-      options.afterCommit?.();
-      saveRequest({ engineState: "local_done", localDeletedAt: now(), engineError: null });
-      return;
-    }
+
+/* ==========================================
+   DELETION RECOVERY PROTECTION V4.1
+========================================== */
+
+if (!present) {
+
+  if (
+
+    record.coreWriteReady !== true ||
+
+    record.engineState !== "purging"
+
+  ) {
+
+    throw new Error(
+      "Account missing before verified core removal"
+    );
+
+  }
+
+  /* VERIFY WALLET CLOSURE IF REQUIRED */
+
+  verifyClosure();
+
+
+  /* VERIFY PERSISTED USER REMOVAL */
+
+  confirmRemoved(dir, uid);
+
+
+  /* REFRESH TOMBSTONES & RAM STATE */
+
+  options.afterCommit?.();
+
+
+  saveRequest({
+
+    engineState: "local_done",
+
+    localDeletedAt: now(),
+
+    engineError: null
+
+  });
+
+  return;
+
+}
+
     if (!account.profile?.accountBlocked || account.role === "admin" || account.profile.role === "admin" || account.roles?.includes("admin")) throw new Error("Account not safely locked or protected role");
     const issues = financialCheck(uid, users,
       read(file("withdraw_requests.json"), [], Array.isArray),
@@ -109,7 +364,45 @@ if (!object(users)) {
         const match = m.text.match(/^\/(?:img|video) (.+)$/); if (match) candidate(match[1]);
       }
     }
-    saveRequest({ engineState: "purging", coreWriteReady: false, mediaCandidates: [...media], engineError: null });
+
+  /* ==========================================
+   DURABLE DELETION STATE
+========================================== */
+
+saveRequest({
+
+  engineState: "purging",
+
+  coreWriteReady: false,
+
+  mediaCandidates: [...media],
+
+  engineError: null,
+
+  ...(closure
+    ? { walletClosureRequired: true }
+    : {})
+
+});
+
+
+/* ==========================================
+   PERMANENT WALLET CLOSURE
+   WHEN SQLITE ADAPTER IS PROVIDED
+========================================== */
+
+if (closure) {
+
+  closure.closeWallet(
+    uid,
+    record.requestId
+  );
+
+  verifyClosure();
+
+}
+
+
     function cleanSocial(node) {
       if (!object(node)) throw new Error("Invalid social entry");
       if (Array.isArray(node.likes)) node.likes = node.likes.filter(x => x !== uid);
@@ -144,10 +437,50 @@ if (!object(users)) {
       try { fs.unlinkSync(path.join(dir, "health", uid + ".json")); } catch (e) { if (e.code !== "ENOENT") throw e; }
     }
     // Core must be the LAST data file written. A crash can be safely retried.
-    saveRequest({ coreWriteReady: true });
-    options.commitUsers(users);
-    options.afterCommit?.();
-    saveRequest({ engineState: "local_done", localDeletedAt: now(), engineError: null });
+/* ==========================================
+   FINAL CORE COMMIT V4.1
+========================================== */
+
+saveRequest({
+
+  coreWriteReady: true
+
+});
+
+
+/* COMMIT USER DATABASE */
+
+options.commitUsers(users);
+
+
+/* VERIFY WALLET CLOSURE */
+
+verifyClosure();
+
+
+/* VERIFY ACTUAL REMOVAL ON DISK */
+
+confirmRemoved(dir, uid);
+
+
+/* REFRESH TOMBSTONE & AUTH CACHE */
+
+options.afterCommit?.();
+
+
+/* MARK LOCAL CLEANUP COMPLETED */
+
+saveRequest({
+
+  engineState: "local_done",
+
+  localDeletedAt: now(),
+
+  engineError: null
+
+});
+
+
   }
   let names;
   try { names = fs.readdirSync(requests); } catch (e) { if (e.code === "ENOENT") return; throw e; }
@@ -180,17 +513,51 @@ module.exports.loadTombstones = function loadTombstones(dir) {
     if (err.code === "ENOENT") return result;
     throw err;
   }
-  const usersFile = path.join(dir, "users.json");
-  const users = fs.existsSync(usersFile) ? JSON.parse(fs.readFileSync(usersFile, "utf8")) : {};
-  for (const name of files.filter(n => /^[a-f0-9]{64}\.json$/.test(n))) {
+
+
+/* ==========================================
+   STRICT TOMBSTONE SOURCE VERIFICATION
+========================================== */
+
+const records = files.filter(
+
+  n => /^[a-f0-9]{64}\.json$/.test(n)
+
+);
+
+if (!records.length) {
+
+  return result;
+
+}
+
+const users = readExistingUsers(dir);
+
+for (const name of records) {
+
+
     const r = JSON.parse(fs.readFileSync(path.join(folder, name), "utf8"));
     if (typeof r.uid !== "string" || crypto.createHash("sha256").update(r.uid).digest("hex") + ".json" !== name) throw new Error("Invalid deletion record");
     if (r.status === "completed" || r.engineState === "local_done") {
       if (Object.hasOwn(users, r.uid)) throw new Error("Deleted UID found in restored users database; reconcile backup before starting");
       result.add(r.uid);
-    } else if (r.engineState === "purging" && r.coreWriteReady && !Object.hasOwn(users, r.uid)) {
+   } else if (
+
+  r.engineState === "purging" &&
+
+  r.coreWriteReady === true &&
+
+  !Object.hasOwn(users, r.uid)
+
+) {
       result.add(r.uid);
     }
   }
   return result;
 };
+
+
+
+module.exports.readExistingUsers = readExistingUsers;
+
+module.exports.confirmRemoved = confirmRemoved;
