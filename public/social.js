@@ -91,6 +91,79 @@ let selectedPostGift = null;
 let giftSendPending = false;
 
 
+/* ==========================================
+   SOCIAL GIFT PENDING TRANSACTION V1.3
+========================================== */
+
+const postGiftPendingKey =
+
+  "lsp:post-gift:v13:" +
+  String(auth.uid || "");
+
+
+let postGiftPending = null;
+
+let postGiftStorageError = false;
+
+
+try {
+
+  const raw = sessionStorage.getItem(
+    postGiftPendingKey
+  );
+
+
+  if (raw !== null) {
+
+    const p = JSON.parse(raw);
+
+
+    if (
+
+      !p ||
+
+      p.fromUid !== auth.uid ||
+
+      typeof p.postId !== "string" ||
+
+      !p.postId ||
+
+      typeof p.toUid !== "string" ||
+
+      !p.toUid ||
+
+      typeof p.giftId !== "string" ||
+
+      !p.giftId ||
+
+      !Number.isSafeInteger(p.coin) ||
+
+      p.coin <= 0 ||
+
+      !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/
+        .test(p.requestId)
+
+    ) {
+
+      throw new Error(
+        "INVALID_PENDING_GIFT"
+      );
+
+    }
+
+
+    postGiftPending = p;
+
+  }
+
+} catch {
+
+  postGiftStorageError = true;
+
+}
+
+
+
 let composeImages = []; // 🔥 danh sách ảnh đang preview
 let isPosting = false;
 
@@ -2810,10 +2883,37 @@ const POST_GIFT_NAMES = {
 
 function openGift(postId, ownerUid) {
 
-  giftPostId = postId;
-  giftPostOwner = ownerUid;
+  if (giftSendPending) return;
 
-  selectedPostGift = null;
+
+  if (postGiftStorageError) {
+
+    return showToast(
+
+      "Gift storage unavailable. Contact support.",
+
+      "error"
+
+    );
+
+  }
+
+
+  giftPostId =
+    postGiftPending?.postId ?? postId;
+
+
+  giftPostOwner =
+    postGiftPending?.toUid ?? ownerUid;
+
+
+  selectedPostGift = postGiftPending
+
+    ? POST_GIFTS.find(
+        g => g.id === postGiftPending.giftId
+      ) ?? null
+
+    : null;
 
   const modal = document.getElementById("giftModal");
   const box = document.getElementById("giftList");
@@ -2895,6 +2995,18 @@ art.appendChild(img);
 
 function selectPostGift(giftId) {
 
+  if (
+
+    giftSendPending ||
+
+    postGiftPending
+
+  ) {
+
+    return;
+
+  }
+
   const gift = POST_GIFTS.find(
     g => g.id === giftId
   );
@@ -2942,6 +3054,68 @@ function updateGiftSelection() {
 
   });
 
+
+  /* ==========================================
+   SOCIAL GIFT RETRY INTERFACE
+========================================== */
+
+document.querySelectorAll(
+
+  "#giftList .lp-gift-card"
+
+).forEach(card => {
+
+  card.disabled =
+
+    giftSendPending ||
+
+    Boolean(postGiftPending);
+
+});
+
+
+sendBtn.firstElementChild.textContent =
+  "Send Gift";
+
+
+if (postGiftPending) {
+
+  nameEl.textContent =
+
+    "Unconfirmed gift: " +
+
+    (
+      POST_GIFT_NAMES[postGiftPending.giftId] ||
+      postGiftPending.giftId
+    );
+
+
+  costEl.textContent =
+
+    postGiftPending.coin.toLocaleString(
+      "en-US"
+    );
+
+
+  amountEl.textContent = "";
+
+
+  sendBtn.firstElementChild.textContent =
+
+    giftSendPending
+
+      ? "CHECKING..."
+
+      : "CHECK / RETRY";
+
+
+  sendBtn.disabled = giftSendPending;
+
+  return;
+
+}
+
+
   if (!selectedPostGift) {
 
     nameEl.textContent = "Select a gift";
@@ -2970,89 +3144,373 @@ nameEl.textContent =
 
 
 /* ==========================================
-   CONFIRM SEND
+   SOCIAL GIFT CONFIRMATION V1.3
 ========================================== */
 
 function confirmSelectedGift() {
 
   if (giftSendPending) return;
 
-  if (!selectedPostGift) return;
 
-  if (!giftPostId || !giftPostOwner) return;
+  if (postGiftStorageError) {
 
-  if (!socket.connected) {
+    return showToast(
 
-    showToast(
-      "Connection lost. Please try again.",
+      "Gift storage unavailable. Contact support.",
+
       "error"
+
     );
 
-    return;
   }
 
-  const g = selectedPostGift;
 
-  sendGift(g.id, g.coin);
+  /* RETRY ORIGINAL TRANSACTION */
+
+  if (postGiftPending) {
+
+    return sendGift(
+
+      postGiftPending.giftId,
+
+      postGiftPending.coin
+
+    );
+
+  }
+
+
+  if (
+
+    !selectedPostGift ||
+
+    !giftPostId ||
+
+    !giftPostOwner
+
+  ) {
+
+    return;
+
+  }
+
+
+  sendGift(
+
+    selectedPostGift.id,
+
+    selectedPostGift.coin
+
+  );
 
 }
 
 
 /* ==========================================
-   SEND GIFT - KEEP EXISTING SOCKET EVENT
+   SECURE SOCIAL GIFT SEND V1.3
 ========================================== */
 
 function sendGift(giftId, coin) {
 
-  if (!giftPostId || !giftPostOwner) return;
+  if (
 
-  if (giftSendPending) return;
+    giftSendPending ||
 
-  // Only allow items from existing gift catalog
+    postGiftStorageError ||
 
-  const gift = POST_GIFTS.find(
-    g => g.id === giftId
-  );
+    !auth.uid
 
-  if (!gift || Number(gift.coin) !== Number(coin)) {
+  ) {
+
     return;
+
   }
+
+
+  if (!socket.connected) {
+
+    return showToast(
+
+      "Connection lost. Please retry.",
+
+      "error"
+
+    );
+
+  }
+
+
+  /* ======================================
+     CREATE NEW TRANSACTION
+  ====================================== */
+
+  if (!postGiftPending) {
+
+    const gift = POST_GIFTS.find(
+
+      g => g.id === giftId
+
+    );
+
+
+    if (
+
+      !giftPostId ||
+
+      !giftPostOwner ||
+
+      !gift ||
+
+      gift.coin !== coin
+
+    ) {
+
+      return;
+
+    }
+
+
+    const p = {
+
+      postId: giftPostId,
+
+      toUid: giftPostOwner,
+
+      fromUid: auth.uid,
+
+      giftId: gift.id,
+
+      coin: gift.coin,
+
+      requestId: crypto.randomUUID()
+
+    };
+
+
+    /* SAVE BEFORE SENDING */
+
+    try {
+
+      sessionStorage.setItem(
+
+        postGiftPendingKey,
+
+        JSON.stringify(p)
+
+      );
+
+
+      postGiftPending = p;
+
+
+    } catch {
+
+      return showToast(
+
+        "Unable to secure gift transaction.",
+
+        "error"
+
+      );
+
+    }
+
+  }
+
+
+  const pending = postGiftPending;
+
+
+  /* ======================================
+     VERIFY ORIGINAL SENDER
+  ====================================== */
+
+  if (pending.fromUid !== auth.uid) {
+
+    return showToast(
+
+      "Gift sender account mismatch.",
+
+      "error"
+
+    );
+
+  }
+
 
   giftSendPending = true;
 
-  const sendBtn =
-    document.getElementById("confirmGiftBtn");
+  updateGiftSelection();
 
-  if (sendBtn) {
-    sendBtn.disabled = true;
-  }
 
-  socket.emit("lp-gift-post", {
+  /* ======================================
+     SEND WITH SERVER ACKNOWLEDGEMENT
+  ====================================== */
 
-    postId: giftPostId,
-    toUid: giftPostOwner,
-    fromUid: auth.uid,
-    giftId: gift.id,
-    coin: gift.coin
+  socket.timeout(10000).emit(
 
-  });
+    "lp-gift-post-v13",
 
-  // Existing implementation does not expose an
-  // acknowledgement callback; emitting is not
-  // proof that the gift was accepted by server.
+    pending,
 
-  giftSendPending = false;
+    (error, reply) => {
 
-  closeGift();
+
+      giftSendPending = false;
+
+
+      /* ==================================
+         CONNECTION / COMMIT UNCERTAIN
+      ================================== */
+
+      if (
+
+        error ||
+
+        !reply ||
+
+        reply.requestId !== pending.requestId ||
+
+        reply.retrySameRequest === true ||
+
+        (
+
+          reply.ok !== true &&
+
+          !(
+
+            reply.ok === false &&
+
+            reply.retrySameRequest === false
+
+          )
+
+        )
+
+      ) {
+
+        showToast(
+
+          "Gift status unknown. Use CHECK / RETRY.",
+
+          "warn"
+
+        );
+
+
+        updateGiftSelection();
+
+        return;
+
+      }
+
+
+      /* ==================================
+         CLEAR CONFIRMED TRANSACTION
+      ================================== */
+
+      try {
+
+        sessionStorage.removeItem(
+          postGiftPendingKey
+        );
+
+        postGiftPending = null;
+
+
+      } catch {
+
+        showToast(
+
+          "Unable to clear pending gift. Retry to check.",
+
+          "warn"
+
+        );
+
+        updateGiftSelection();
+
+        return;
+
+      }
+
+
+      /* ==================================
+         GIFT SUCCESS
+      ================================== */
+
+      if (reply.ok === true) {
+
+        closeGift();
+
+        requestSocialFeed();
+
+
+        showToast(
+
+          reply.postMissing
+
+            ? "Gift paid. Original post is unavailable."
+
+            : "Gift sent successfully.",
+
+          "success"
+
+        );
+
+        return;
+
+      }
+
+
+      /* ==================================
+         SERVER REJECTED TRANSACTION
+      ================================== */
+
+      const errors = {
+
+        NOT_ENOUGH_COIN:
+          "Insufficient diamonds.",
+
+        GIFT_PRICE_CHANGED:
+          "Gift price changed. Refresh this page.",
+
+        POST_UNAVAILABLE:
+          "This post is unavailable.",
+
+        ACCOUNT_UNAVAILABLE:
+          "Account unavailable."
+
+      };
+
+
+      const message = Object.hasOwn(
+        errors,
+        reply.error
+      )
+
+        ? errors[reply.error]
+
+        : "Gift rejected. Please check and try again.";
+
+
+      showToast(message, "error");
+
+      updateGiftSelection();
+
+    }
+
+  );
 
 }
-
 
 /* ==========================================
    CLOSE GIFT COLLECTION
 ========================================== */
 
 function closeGift() {
+
+  if (giftSendPending) return;
 
   document.getElementById("giftModal")
     ?.classList.add("hidden");
@@ -3067,7 +3525,17 @@ function closeGift() {
 
 
 // 🔁 REALTIME UPDATE QUÀ + NGƯỜI TẶNG
-socket.on("lp-gift-post", ({ postId, total, fromUid, amount }) => {
+socket.on("lp-gift-post", ({
+
+  postId,
+
+  total,
+
+  fromUid,
+
+  byUserAmount
+
+}) => {
 
   // 1️⃣ cập nhật tổng quà
   const el = document.getElementById("g_" + postId);
@@ -3081,10 +3549,31 @@ socket.on("lp-gift-post", ({ postId, total, fromUid, amount }) => {
   post.gifts.total = total;
 
   // 3️⃣ cập nhật người tặng (realtime)
-  if (fromUid && amount) {
-    post.gifts.byUser[fromUid] =
-      (post.gifts.byUser[fromUid] || 0) + amount;
-  }
+/* ==========================================
+   AUTHORITATIVE GIFT TOTAL
+   PREVENT DUPLICATE UI INCREMENT
+========================================== */
+
+if (
+
+  fromUid &&
+
+  Number.isSafeInteger(byUserAmount) &&
+
+  byUserAmount >= 0
+
+) {
+
+  post.gifts.byUser[fromUid] =
+    byUserAmount;
+
+} else {
+
+  requestSocialFeed();
+
+  return;
+
+}
 
   // 4️⃣ update UI danh sách người tặng nếu đang mở
   const box = document.querySelector(

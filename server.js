@@ -807,31 +807,91 @@ function saveLiveState(state) {
   }
 }
 
-function loadSocial(){
-  try{
-    if(!fs.existsSync(SOCIAL_FILE)) return [];
-    return JSON.parse(fs.readFileSync(SOCIAL_FILE,"utf8"));
-  }catch(e){
-    console.error("Load social failed",e);
-    return [];
+function loadSocial() {
+
+  try {
+
+    const rows = JSON.parse(
+      fs.readFileSync(SOCIAL_FILE, "utf8")
+    );
+
+    if (!Array.isArray(rows)) {
+      throw new Error("INVALID_SOCIAL_DATABASE");
+    }
+
+    return rows;
+
+  } catch (error) {
+
+    if (error.code === "ENOENT") return [];
+
+    throw error;
+
   }
+
 }
 
+/* ==========================================
+   SOCIAL DATABASE STORAGE V1.3
+   ATOMIC FILE WRITE
+========================================== */
 
-function saveSocial() {
+function saveSocial(requireDurable = false) {
+
+  const tmp =
+    SOCIAL_FILE + "." +
+    crypto.randomUUID() + ".tmp";
+
+  let fd;
+  let renamed = false;
+
   try {
+
+    fd = fs.openSync(tmp, "wx", 0o600);
+
     fs.writeFileSync(
-      SOCIAL_FILE,
-      JSON.stringify(lpPosts, null, 2)
+      fd,
+      JSON.stringify(lpPosts, null, 2),
+      "utf8"
     );
+
+    fs.fsyncSync(fd);
+
+    fs.closeSync(fd);
+    fd = undefined;
+
+    fs.renameSync(tmp, SOCIAL_FILE);
+
+    renamed = true;
+
+    lspSocialGiftSyncDir(SOCIAL_FILE);
+
     return true;
 
   } catch (error) {
-    console.error("Save social failed", error);
-    return false;
-  }
-}
 
+    console.error(
+      "[SOCIAL SAVE]",
+      error.message
+    );
+
+    return renamed && !requireDurable;
+
+  } finally {
+
+    if (fd !== undefined) {
+      try {
+        fs.closeSync(fd);
+      } catch {}
+    }
+
+    try {
+      fs.unlinkSync(tmp);
+    } catch {}
+
+  }
+
+}
 
 /* ==========================================
    LIVESTREAM PRO - GLOBAL DOMAIN CONFIG
@@ -11416,6 +11476,565 @@ function pkRecordGift(roomId, amount) {
 const lpPosts = loadSocial();
 
 
+/* ==========================================
+   LIVESTREAM PRO
+   SOCIAL GIFT TRANSACTION ENGINE V1.3
+========================================== */
+
+const LSP_POST_GIFT_PRICES = Object.freeze({
+
+  rose: 10,
+  beer: 20,
+  cake: 50,
+  diamond: 100,
+  rocket: 200,
+  crown: 500,
+  car: 1000,
+  castle: 2000,
+  sword: 5000,
+  phoenix: 10000,
+  dragon: 20000
+
+});
+
+
+/* ==========================================
+   TRANSACTION ID VALIDATION
+========================================== */
+
+const LSP_SOCIAL_GIFT_UUID =
+  /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
+
+
+let lspSocialGiftRecoveryNeeded = true;
+
+
+/* ==========================================
+   VALIDATION HELPERS
+========================================== */
+
+function lspSocialGiftObject(x) {
+
+  return x !== null &&
+    typeof x === "object" &&
+    !Array.isArray(x);
+
+}
+
+
+function lspSocialGiftNumber(value) {
+
+  const n =
+
+    typeof value === "string" &&
+    /^\d+$/.test(value)
+
+      ? Number(value)
+      : value;
+
+  if (!Number.isSafeInteger(n) || n < 0) {
+
+    throw new Error(
+      "INVALID_SOCIAL_GIFT_NUMBER"
+    );
+
+  }
+
+  return n;
+
+}
+
+
+/* ==========================================
+   DIRECTORY DURABILITY
+========================================== */
+
+function lspSocialGiftSyncDir(filename) {
+
+  const fd = fs.openSync(
+    path.dirname(filename),
+    "r"
+  );
+
+  try {
+
+    fs.fsyncSync(fd);
+
+  } finally {
+
+    fs.closeSync(fd);
+
+  }
+
+}
+
+
+/* ==========================================
+   PERSISTENT SOCIAL GIFT RECEIPTS
+========================================== */
+
+function lspSocialGiftReceipts(user) {
+
+  const r = user.socialGiftReceipts;
+
+  if (r === undefined) return {};
+
+  if (!lspSocialGiftObject(r)) {
+
+    throw new Error(
+      "INVALID_SOCIAL_GIFT_RECEIPTS"
+    );
+
+  }
+
+  return r;
+
+}
+
+
+function lspSocialGiftValidateReceipt(r, uid, key) {
+
+  if (
+
+    !lspSocialGiftObject(r) ||
+
+    r.id !== key ||
+
+    !LSP_SOCIAL_GIFT_UUID.test(key) ||
+
+    key !== key.toLowerCase() ||
+
+    r.fromUid !== uid ||
+
+    typeof r.postId !== "string" ||
+
+    !r.postId ||
+
+    typeof r.toUid !== "string" ||
+
+    !r.toUid ||
+
+    r.toUid === uid ||
+
+    typeof r.giftId !== "string" ||
+
+    !r.giftId ||
+
+    !Number.isSafeInteger(r.amount) ||
+
+    r.amount <= 0 ||
+
+    !Number.isSafeInteger(r.ts) ||
+
+    r.ts <= 0
+
+  ) {
+
+    throw new Error(
+      "INVALID_SOCIAL_GIFT_RECEIPT"
+    );
+
+  }
+
+}
+
+
+/* ==========================================
+   EXP & LEVEL ENGINE
+========================================== */
+
+function lspSocialGiftAddExp(p, amount) {
+
+  let level =
+    lspSocialGiftNumber(p.level ?? 1);
+
+  let exp =
+    lspSocialGiftNumber(p.exp ?? 0);
+
+  if (
+
+    !level ||
+
+    !Number.isSafeInteger(level * 100) ||
+
+    exp >= level * 100 ||
+
+    !Number.isSafeInteger(exp + amount)
+
+  ) {
+
+    throw new Error(
+      "INVALID_SOCIAL_GIFT_LEVEL"
+    );
+
+  }
+
+  exp += amount;
+
+  while (exp >= level * 100) {
+
+    exp -= level * 100;
+
+    level++;
+
+    if (!Number.isSafeInteger(level * 100)) {
+
+      throw new Error(
+        "INVALID_SOCIAL_GIFT_LEVEL"
+      );
+
+    }
+
+  }
+
+  p.level = level;
+
+  p.exp = exp;
+
+}
+
+
+/* ==========================================
+   SOCIAL GIFT PROJECTION PLANNER
+========================================== */
+
+function lspSocialGiftPlan(r) {
+
+  const posts = lpPosts.filter(
+    p => p.id === r.postId
+  );
+
+  if (posts.length > 1) {
+
+    throw new Error(
+      "DUPLICATE_POST_ID"
+    );
+
+  }
+
+  const post = posts[0];
+
+  if (!post) {
+
+    return {
+
+      post: null,
+
+      changed: false
+
+    };
+
+  }
+
+  if (post.uid !== r.toUid) {
+
+    throw new Error(
+      "SOCIAL_GIFT_OWNER_CONFLICT"
+    );
+
+  }
+
+
+  /* UNIQUE PROJECTION KEY */
+
+  const key = crypto
+
+    .createHash("sha256")
+
+    .update(
+      JSON.stringify([
+        r.fromUid,
+        r.id
+      ])
+    )
+
+    .digest("hex");
+
+
+  const applied = post.lspGiftApplied ?? {};
+
+  const gifts = post.gifts ?? {
+
+    total: 0,
+
+    byUser: {}
+
+  };
+
+
+  /* VALIDATE POST DATABASE */
+
+  if (
+
+    !lspSocialGiftObject(applied) ||
+
+    !lspSocialGiftObject(gifts) ||
+
+    !lspSocialGiftObject(gifts.byUser)
+
+  ) {
+
+    throw new Error(
+      "INVALID_SOCIAL_GIFT_POST"
+    );
+
+  }
+
+
+  /* PREVENT DOUBLE PROJECTION */
+
+  if (Object.hasOwn(applied, key)) {
+
+    if (applied[key] !== true) {
+
+      throw new Error(
+        "INVALID_SOCIAL_GIFT_MARKER"
+      );
+
+    }
+
+    return {
+
+      post,
+
+      changed: false
+
+    };
+
+  }
+
+
+  /* CALCULATE GIFT TOTALS */
+
+  const old = Object.hasOwn(
+    gifts.byUser,
+    r.fromUid
+  )
+
+    ? lspSocialGiftNumber(
+        gifts.byUser[r.fromUid]
+      )
+
+    : 0;
+
+
+  const total =
+    lspSocialGiftNumber(gifts.total) +
+    r.amount;
+
+
+  const byUserAmount =
+    old + r.amount;
+
+
+  if (
+
+    !Number.isSafeInteger(total) ||
+
+    !Number.isSafeInteger(byUserAmount)
+
+  ) {
+
+    throw new Error(
+      "SOCIAL_GIFT_TOTAL_OVERFLOW"
+    );
+
+  }
+
+
+  return {
+
+    post,
+
+    changed: true,
+
+    gifts: {
+
+      ...gifts,
+
+      total,
+
+      byUser: {
+
+        ...gifts.byUser,
+
+        [r.fromUid]: byUserAmount
+
+      }
+
+    },
+
+    applied: {
+
+      ...applied,
+
+      [key]: true
+
+    }
+
+  };
+
+}
+
+
+/* ==========================================
+   APPLY POST PROJECTION
+========================================== */
+
+function lspSocialGiftApply(plan) {
+
+  if (!plan.changed) return;
+
+  plan.post.gifts = plan.gifts;
+
+  plan.post.lspGiftApplied = plan.applied;
+
+}
+
+
+/* ==========================================
+   SOCIAL GIFT RECOVERY ENGINE
+========================================== */
+
+function lspRecoverSocialGifts() {
+
+  try {
+
+    const users =
+      lspReadExistingDeletionUsers();
+
+    lspSocialGiftSyncDir(USERS_FILE);
+
+    let count = 0;
+
+    let missingPosts = 0;
+
+
+    for (const [uid, user] of Object.entries(users)) {
+
+      for (const [key, r] of Object.entries(
+        lspSocialGiftReceipts(user)
+      )) {
+
+        lspSocialGiftValidateReceipt(
+          r,
+          uid,
+          key
+        );
+
+
+        if (!fs.existsSync(SOCIAL_FILE)) {
+
+          throw new Error(
+            "SOCIAL_SOURCE_MISSING_WITH_RECEIPTS"
+          );
+
+        }
+
+
+        const plan =
+          lspSocialGiftPlan(r);
+
+
+        if (!plan.post) {
+
+          missingPosts++;
+
+        }
+
+
+        lspSocialGiftApply(plan);
+
+        count++;
+
+      }
+
+    }
+
+
+    if (count && !saveSocial(true)) {
+
+      throw new Error(
+        "SOCIAL_RECOVERY_SAVE_FAILED"
+      );
+
+    }
+
+
+    lspSocialGiftRecoveryNeeded = false;
+
+
+    console.log(
+
+      "[SOCIAL GIFT RECOVERY]",
+
+      {
+
+        receipts: count,
+
+        missingPosts
+
+      }
+
+    );
+
+  } catch (error) {
+
+    lspSocialGiftRecoveryNeeded = true;
+
+    console.error(
+
+      "[SOCIAL GIFT RECOVERY]",
+
+      error.message
+
+    );
+
+  }
+
+}
+
+
+/* ==========================================
+   REALTIME GIFT TOTALS
+========================================== */
+
+function lspEmitSocialGift(r, post) {
+
+  if (!post) return;
+
+  emitPrivateSocialEvent(
+
+    "lp-gift-post",
+
+    post,
+
+    {
+
+      postId: r.postId,
+
+      total: post.gifts.total,
+
+      fromUid: r.fromUid,
+
+      amount: r.amount,
+
+      byUserAmount: Object.hasOwn(
+        post.gifts.byUser,
+        r.fromUid
+      )
+
+        ? post.gifts.byUser[r.fromUid]
+
+        : 0
+
+    }
+
+  );
+
+}
+
+
 
 // 🔴🟢 EMIT REALTIME ONLINE / OFFLINE ĐẠI LÝ
 function emitAgentStatus(uid, online) {
@@ -17860,7 +18479,20 @@ function lspDeletionApplyCache(name, value) {
     wheel8UserHistory = value;
   }
 }
+
+
+
+
 function lspRunDeletionQueue() {
+
+  /* WAIT FOR SOCIAL GIFT RECOVERY */
+
+  if (lspSocialGiftRecoveryNeeded) {
+
+    return;
+
+  }
+
   if (lspDeletionRunning || lspDeletionAsyncInFlight !== 0 || !lspDeletionQueue.size) return;
   const uid = lspDeletionQueue.values().next().value;
   lspDeletionRunning = true;
@@ -20525,156 +21157,682 @@ socket.on("auth-login", () => {
 });
 
 
+/* ==========================================
+   LIVESTREAM PRO
+   SOCIAL GIFT ENGINE V1.3
+   UNIFIED WALLET TRANSACTION
+========================================== */
 
-socket.on("lp-gift-post", async ({ postId, toUid, fromUid, giftId, coin }) => {
+socket.on("lp-gift-post-v13", async (data, ack) => {
+
+  if (typeof ack !== "function") return;
+
+
+  const requestId =
+
+    typeof data?.requestId === "string"
+
+      ? data.requestId.toLowerCase()
+
+      : "";
+
+
+  const fail = (
+    error,
+    retrySameRequest = false
+  ) => ack({
+
+    ok: false,
+
+    requestId,
+
+    error,
+
+    retrySameRequest
+
+  });
+
+
   lspDeletionAsyncInFlight++;
+
+
   try {
 
+    /* ======================================
+       VERIFIED SENDER IDENTITY
+    ====================================== */
 
-  // 🔒 CHẶN USER BỊ KHOÁ
-  if (blockIfLocked(socket)) return;
+    const uid = getVerifiedTransferUid(socket);
 
-  // 🚫 CHẶN GUEST
-  if (String(socket.data.uid || "").startsWith("guest_")) {
-    socket.emit("need-login", { feature: "gift" });
-    return;
+
+    if (
+
+      !uid ||
+
+      socket.data.authenticated !== true ||
+
+      socket.data.uid !== uid ||
+
+      data?.fromUid !== uid ||
+
+      uid.startsWith("guest_")
+
+    ) {
+
+      return fail(
+        "ACCOUNT_MISMATCH",
+        true
+      );
+
+    }
+
+
+    /* ======================================
+       VALIDATE TRANSACTION REQUEST
+    ====================================== */
+
+    if (
+
+      !LSP_SOCIAL_GIFT_UUID.test(requestId) ||
+
+      typeof data.postId !== "string" ||
+
+      !data.postId ||
+
+      data.postId.length > 128 ||
+
+      typeof data.toUid !== "string" ||
+
+      !data.toUid ||
+
+      typeof data.giftId !== "string" ||
+
+      !Number.isSafeInteger(data.coin) ||
+
+      data.coin <= 0
+
+    ) {
+
+      return fail("INVALID_GIFT_REQUEST");
+
+    }
+
+
+    if (lspSocialGiftRecoveryNeeded) {
+
+      return fail(
+        "GIFT_RECOVERY_PENDING",
+        true
+      );
+
+    }
+
+
+    /* ======================================
+       READ CURRENT WALLET SOURCE
+    ====================================== */
+
+    const signature =
+      lspUsersFileSignature();
+
+    if (signature === null) {
+
+      return fail(
+        "WALLET_UNAVAILABLE",
+        true
+      );
+
+    }
+
+
+    const view = lspReadUsersView();
+
+
+    if (
+      lspUsersFileSignature() !== signature
+    ) {
+
+      return fail(
+        "WALLET_UNAVAILABLE",
+        true
+      );
+
+    }
+
+
+    const current = Object.hasOwn(view, uid)
+
+      ? view[uid]
+
+      : null;
+
+
+    if (
+
+      !current?.profile ||
+
+      lspDeletionTombstones.has(uid)
+
+    ) {
+
+      return fail(
+        "ACCOUNT_UNAVAILABLE",
+        true
+      );
+
+    }
+
+
+    /* ======================================
+       PERSISTENT DUPLICATE PROTECTION
+    ====================================== */
+
+    const receipts =
+      lspSocialGiftReceipts(current);
+
+
+    if (Object.hasOwn(receipts, requestId)) {
+
+      const r = receipts[requestId];
+
+
+      lspSocialGiftValidateReceipt(
+
+        r,
+
+        uid,
+
+        requestId
+
+      );
+
+
+      /* REQUEST ID CONFLICT */
+
+      if (
+
+        r.postId !== data.postId ||
+
+        r.toUid !== data.toUid ||
+
+        r.giftId !== data.giftId ||
+
+        r.amount !== data.coin
+
+      ) {
+
+        return fail(
+          "REQUEST_ID_CONFLICT",
+          true
+        );
+
+      }
+
+
+      /* CONFIRM ORIGINAL WALLET COMMIT */
+
+      lspSocialGiftSyncDir(USERS_FILE);
+
+
+      /* RECOVER POST IF REQUIRED */
+
+      const plan =
+        lspSocialGiftPlan(r);
+
+
+      if (plan.changed) {
+
+        lspSocialGiftRecoveryNeeded = true;
+
+        lspSocialGiftApply(plan);
+
+
+        if (!saveSocial(true)) {
+
+          return fail(
+            "GIFT_SYNC_PENDING",
+            true
+          );
+
+        }
+
+
+        lspSocialGiftRecoveryNeeded = false;
+
+      }
+
+
+      /* RETURN EXISTING TRANSACTION */
+
+      ack({
+
+        ok: true,
+
+        requestId,
+
+        duplicate: true,
+
+        postMissing: !plan.post
+
+      });
+
+
+      try {
+
+        emitCoinUpdate(uid);
+
+        lspEmitSocialGift(r, plan.post);
+
+      } catch (e) {
+
+        console.error(
+
+          "[SOCIAL GIFT UPDATE]",
+
+          e.message
+
+        );
+
+      }
+
+      return;
+
+    }
+
+
+    /* ======================================
+       SERVER SIDE GIFT PRICE
+    ====================================== */
+
+    if (!Object.hasOwn(
+      LSP_POST_GIFT_PRICES,
+      data.giftId
+    )) {
+
+      return fail("INVALID_GIFT");
+
+    }
+
+
+    const cost =
+      LSP_POST_GIFT_PRICES[data.giftId];
+
+
+    /* CLIENT PRICE IS EXPECTED PRICE ONLY */
+
+    if (data.coin !== cost) {
+
+      return fail("GIFT_PRICE_CHANGED");
+
+    }
+
+
+    /* ======================================
+       VALIDATE POST AND PERMISSIONS
+    ====================================== */
+
+    const post = getPost(data.postId);
+
+
+    if (
+
+      !post ||
+
+      !canInteractSocialPost(socket, post) ||
+
+      post.uid !== data.toUid ||
+
+      post.uid === uid
+
+    ) {
+
+      return fail("POST_UNAVAILABLE");
+
+    }
+
+
+    const toUid = post.uid;
+
+
+    /* ======================================
+       UNIFIED WALLET TRANSACTION V1.3
+    ====================================== */
+
+    const tx = lspWalletStorage.begin([
+
+      uid,
+
+      toUid
+
+    ]);
+
+
+    const from = tx.users[uid];
+
+    const to = tx.users[toUid];
+
+
+    if (
+
+      !from?.profile ||
+
+      !to?.profile ||
+
+      from.profile.accountBlocked ||
+
+      to.profile.accountBlocked ||
+
+      lspDeletionTombstones.has(uid) ||
+
+      lspDeletionTombstones.has(toUid)
+
+    ) {
+
+      return fail("ACCOUNT_UNAVAILABLE");
+
+    }
+
+
+    const recordMap =
+      lspSocialGiftReceipts(from);
+
+
+    if (Object.hasOwn(recordMap, requestId)) {
+
+      return fail(
+        "WALLET_CHANGED",
+        true
+      );
+
+    }
+
+
+    const sp = from.profile;
+
+    const rp = to.profile;
+
+
+    /* ======================================
+       STRICT WALLET BALANCE VALIDATION
+    ====================================== */
+
+    const balance =
+      lspSocialGiftNumber(sp.coins);
+
+
+    const sent =
+      lspSocialGiftNumber(sp.coinSent ?? 0);
+
+
+    const received =
+      lspSocialGiftNumber(rp.coinReceived ?? 0);
+
+
+    if (balance < cost) {
+
+      return fail("NOT_ENOUGH_COIN");
+
+    }
+
+
+    if (
+
+      !Number.isSafeInteger(sent + cost) ||
+
+      !Number.isSafeInteger(received + cost)
+
+    ) {
+
+      return fail("BALANCE_OVERFLOW");
+
+    }
+
+
+    /* ======================================
+       CREATE GIFT RECEIPT
+    ====================================== */
+
+    const r = {
+
+      id: requestId,
+
+      fromUid: uid,
+
+      toUid,
+
+      postId: post.id,
+
+      giftId: data.giftId,
+
+      amount: cost,
+
+      ts: Date.now()
+
+    };
+
+
+    /* PREPARE POST UPDATE BEFORE PAYMENT */
+
+    const plan =
+      lspSocialGiftPlan(r);
+
+
+    if (!plan.changed) {
+
+      return fail(
+        "POST_RECEIPT_WITHOUT_WALLET",
+        true
+      );
+
+    }
+
+
+    /* ======================================
+       APPLY WALLET TRANSFER
+    ====================================== */
+
+    sp.coins = balance - cost;
+
+    sp.coinSent = sent + cost;
+
+    rp.coinReceived = received + cost;
+
+
+    /* ======================================
+       EXP & LEVEL
+    ====================================== */
+
+    lspSocialGiftAddExp(
+
+      sp,
+
+      Math.floor(cost * 0.5)
+
+    );
+
+
+    lspSocialGiftAddExp(
+
+      rp,
+
+      cost
+
+    );
+
+
+    /* ======================================
+       PERSISTENT RECEIPT
+    ====================================== */
+
+    from.socialGiftReceipts = {
+
+      ...recordMap,
+
+      [requestId]: r
+
+    };
+
+
+    /* ======================================
+       COMMIT WALLET + RECEIPT
+    ====================================== */
+
+    lspSocialGiftRecoveryNeeded = true;
+
+
+    tx.commit([
+
+      uid,
+
+      toUid
+
+    ]);
+
+
+    /* ======================================
+       UPDATE POST AFTER WALLET COMMIT
+    ====================================== */
+
+    lspSocialGiftApply(plan);
+
+
+    if (!saveSocial(true)) {
+
+      return fail(
+
+        "GIFT_SYNC_PENDING",
+
+        true
+
+      );
+
+    }
+
+
+    lspSocialGiftRecoveryNeeded = false;
+
+
+    /* ======================================
+       TRANSACTION SUCCESS
+    ====================================== */
+
+    ack({
+
+      ok: true,
+
+      requestId,
+
+      duplicate: false
+
+    });
+
+
+    /* ======================================
+       POST-COMMIT REALTIME NOTIFICATIONS
+    ====================================== */
+
+    try {
+
+      emitCoinUpdate(uid);
+
+      emitCoinUpdate(toUid);
+
+      lspEmitSocialGift(r, post);
+
+
+      /* ====================================
+         INBOX NOTIFICATION
+      ==================================== */
+
+      const giftText =
+        `🎁 ${sp.name || "User"} gifted you ${cost.toLocaleString()} 💎`;
+
+
+      if (!userInbox.has(toUid)) {
+
+        userInbox.set(toUid, []);
+
+      }
+
+
+      userInbox.get(toUid).unshift({
+
+        type: "post-gift",
+
+        from: uid,
+
+        text: giftText,
+
+        postId: post.id,
+
+        amount: cost,
+
+        time: r.ts,
+
+        read: false
+
+      });
+
+
+      saveInbox(
+        Object.fromEntries(userInbox)
+      );
+
+
+      /* PUSH NOTIFICATION */
+
+      await sendPushToUser(toUid, {
+
+        title: "You received a gift",
+
+        body: giftText,
+
+        url: `/social.html#post-${post.id}`,
+
+        tag: "post-gift"
+
+      });
+
+
+    } catch (error) {
+
+      console.error(
+
+        "[SOCIAL GIFT NOTIFICATION]",
+
+        error.message
+
+      );
+
+    }
+
+
+  } catch (error) {
+
+    console.error(
+
+      "[SOCIAL GIFT V1.3]",
+
+      error.message
+
+    );
+
+
+    return fail(
+
+      "GIFT_STATUS_UNCERTAIN",
+
+      true
+
+    );
+
+
+  } finally {
+
+    lspDeletionAsyncInFlight--;
+
   }
 
-  if (!postId || !toUid || !fromUid || !coin) return;
-
-  const db = loadUsers();
-  const from = db[fromUid];
-  const to   = db[toUid];
-  const post = getPost(postId);
-
-  if (!from || !to || !post) return;
-
-
-if (!socket.data.uid) return;
-
-if (String(fromUid) !== String(socket.data.uid)) {
-  return;
-}
-
-if (String(toUid) !== String(post.uid)) {
-  return;
-}
-
-if (!canInteractSocialPost(socket, post)) {
-  return;
-}
-
-
-  // 🚫 không cho tự tặng chính mình
-  if (fromUid === toUid) return;
-
-  const cost = Number(coin);
-  if (!Number.isFinite(cost) || cost <= 0) return;
-
-  // 🚫 không đủ kim cương
-  if ((from.profile.coins || 0) < cost) {
-    socket.emit("gift-failed", { reason: "not_enough_coin" });
-    return;
-  }
-
-  // =========================
-  // 💰 TRỪ / CỘNG COIN
-  // =========================
-  from.profile.coins -= cost;
-  from.profile.coinSent = (from.profile.coinSent || 0) + cost;
-
-  to.profile.coinReceived =
-    (to.profile.coinReceived || 0) + cost;
-
-  // =========================
-  // ⭐ EXP + LEVEL (NGƯỜI NHẬN)
-  // =========================
-  let toLevelUp = false;
-
-  to.profile.exp = (to.profile.exp || 0) + cost;
-
-  while (to.profile.exp >= (to.profile.level || 1) * 100) {
-    to.profile.exp -= (to.profile.level || 1) * 100;
-    to.profile.level = (to.profile.level || 1) + 1;
-    toLevelUp = true;
-  }
-
-  // =========================
-  // ⭐ EXP + LEVEL (NGƯỜI TẶNG)
-  // =========================
-  let fromLevelUp = false;
-
-  // tặng quà nhận ít exp hơn
-  from.profile.exp =
-    (from.profile.exp || 0) + Math.floor(cost * 0.5);
-
-  while (from.profile.exp >= (from.profile.level || 1) * 100) {
-    from.profile.exp -= (from.profile.level || 1) * 100;
-    from.profile.level = (from.profile.level || 1) + 1;
-    fromLevelUp = true;
-  }
-
-  // =========================
-  // 🎁 LƯU GIFT VÀO POST
-  // =========================
-  post.gifts ||= { total: 0, byUser: {} };
-
-  post.gifts.total += cost;
-
-  post.gifts.byUser[fromUid] =
-    (post.gifts.byUser[fromUid] || 0) + cost;
-
-  saveUsers(db);
-  saveSocial();
-
-  // =========================
-  // 🔄 REALTIME UPDATE
-  // =========================
-
-emitPrivateSocialEvent(
-  "lp-gift-post",
-  post,
-  {
-    postId,
-    total: post.gifts.total,
-    fromUid,
-    amount: cost
-  }
-);
-
-
-  emitCoinUpdate(fromUid);
-  emitCoinUpdate(toUid);
-
-  // =========================
-  // 🔔 INBOX + PUSH
-  // =========================
-  const giftText =
-    `🎁 ${from.profile.name} gifted you ${cost.toLocaleString()} 💎`;
-
-  if (!userInbox.has(toUid)) userInbox.set(toUid, []);
-
-  userInbox.get(toUid).unshift({
-    type: "post-gift",
-    from: fromUid,
-    text: giftText,
-    postId,
-    amount: cost,
-    time: Date.now(),
-    read: false
-  });
-
-  saveInbox(Object.fromEntries(userInbox));
-
-  await sendPushToUser(toUid, {
-    title: "You received a gift",
-    body: giftText,
-    url: `/social.html#post-${postId}`,
-    tag: "post-gift"
-  });
-
-
-  } finally { lspDeletionAsyncInFlight--; }
 });
 
 
@@ -30650,6 +31808,28 @@ setInterval(
 
 
 const PORT = process.env.PORT || 3000;
+
+
+/* ==========================================
+   SOCIAL GIFT AUTO RECOVERY V1.3
+========================================== */
+
+// Recover committed gifts after restart.
+
+lspRecoverSocialGifts();
+
+
+// Retry failed post synchronization.
+
+setInterval(() => {
+
+  if (lspSocialGiftRecoveryNeeded) {
+
+    lspRecoverSocialGifts();
+
+  }
+
+}, 15000).unref();
 
 
 server.listen(PORT, () => {
