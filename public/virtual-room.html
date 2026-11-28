@@ -671,6 +671,8 @@ let lgSourceLive = false;
 let lgEffectTimer = null;
 let lgPending = null;
 
+let lgSenderUid = null;
+
 const lgFormat = value =>
   Number(value || 0).toLocaleString("en-US");
 
@@ -775,18 +777,48 @@ function updateLgSend() {
 
   /* PENDING TRANSACTION */
 
-  if (lgPending) {
+/* ==========================================
+   PENDING TRANSACTION OWNER VALIDATION
+========================================== */
 
-    btn.disabled = !(
-      socket.connected &&
-      lgJoined
-    );
+if (lgPending) {
 
-    btn.textContent = "CHECK / RETRY";
+  const sameAccount =
 
-    return;
+    !!lgSenderUid &&
+
+    lgPending.expectedSenderUid === lgSenderUid;
+
+
+  btn.disabled = !(
+
+    socket.connected &&
+
+    lgJoined &&
+
+    sameAccount
+
+  );
+
+
+  btn.textContent = sameAccount
+
+    ? "CHECK / RETRY"
+
+    : "ACCOUNT CHECK";
+
+
+  if (lgSenderUid && !sameAccount) {
+
+    lg("lgMessage").textContent =
+
+      "Unconfirmed gift belongs to an unverified sender. Contact support.";
 
   }
+
+  return;
+
+}
 
   /* GIFT UNAVAILABLE */
 
@@ -965,6 +997,8 @@ function loadLgCatalog() {
 
   lgEnabled = false;
 
+  lgSenderUid = null;
+
   updateLgSend();
 
   socket.timeout(8000).emit(
@@ -991,7 +1025,11 @@ function loadLgCatalog() {
 
       }
 
-      renderLinkedOwner(reply.owner);
+      lgSenderUid = reply.authenticated
+  ? reply.senderUid
+  : null;
+
+renderLinkedOwner(reply.owner);
 
       lgCatalog = Array.isArray(reply.gifts)
         ? reply.gifts
@@ -1114,6 +1152,34 @@ lg("lgSend").onclick = () => {
   ) return;
 
 
+
+  /* ==========================================
+   VERIFY PENDING TRANSACTION OWNER
+========================================== */
+
+if (
+
+  !lgSenderUid ||
+
+  (
+    lgPending &&
+
+    lgPending.expectedSenderUid !== lgSenderUid
+  )
+
+) {
+
+  lg("lgMessage").textContent =
+
+    "Unconfirmed gift belongs to an unverified sender. Contact support.";
+
+  updateLgSend();
+
+  return;
+
+}
+
+
   if (!lgPending) {
 
     if (
@@ -1129,21 +1195,23 @@ lg("lgSend").onclick = () => {
     if (lgCoins < total) return;
 
 
-    lgPending = {
+lgPending = {
 
-      roomId,
+  roomId,
 
-      giftId: lgSelected.id,
+  giftId: lgSelected.id,
 
-      quantity: lgQuantity,
+  quantity: lgQuantity,
 
-      expectedOwnerUid: lgOwner.uid,
+  expectedOwnerUid: lgOwner.uid,
 
-      expectedCost: total,
+  expectedSenderUid: lgSenderUid,
 
-      requestId: crypto.randomUUID()
+  expectedCost: total,
 
-    };
+  requestId: crypto.randomUUID()
+
+};
 
   }
 
@@ -1157,18 +1225,16 @@ lg("lgSend").onclick = () => {
       JSON.stringify(lgPending)
     );
 
-  } catch {
+} catch {
 
-    lgPending = null;
+  lg("lgMessage").textContent =
+    "Unable to secure transaction. Please retry.";
 
-    lg("lgMessage").textContent =
-      "Unable to secure transaction. Please retry.";
+  updateLgSend();
 
-    updateLgSend();
+  return;
 
-    return;
-
-  }
+}
 
 
   lgSending = true;
@@ -1205,12 +1271,34 @@ lg("lgSend").onclick = () => {
       }
 
 
-      lgPending = null;
+/* ==========================================
+   VIRTUAL LIVE GIFT
+   SAFE TRANSACTION RETRY V1.2
+========================================== */
 
-      sessionStorage.removeItem(lgPendingKey);
+if (reply.retrySameRequest === true) {
+
+  lg("lgMessage").textContent =
+
+    reply.error ||
+
+    "Payment status unknown. Retry the same transaction.";
+
+  updateLgSend();
+
+  return;
+
+}
 
 
-      if (!reply.ok) {
+/* CLEAR ONLY AFTER SERVER RESPONSE */
+
+lgPending = null;
+
+sessionStorage.removeItem(lgPendingKey);
+
+
+if (!reply.ok) {
 
         lg("lgMessage").textContent =
           reply.error || "Unable to send gift.";
@@ -1319,6 +1407,8 @@ giftImage.alt = data.giftName || "Gift";
 socket.on("disconnect", () => {
 
   lgJoined = false;
+
+  lgSenderUid = null;
 
   lgEnabled = false;
 

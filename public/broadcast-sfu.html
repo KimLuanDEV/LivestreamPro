@@ -15012,13 +15012,37 @@ giftConfirm.addEventListener("click", () => {
 
       liveGiftSending = false;
 
-      if (error) {
-        giftFeedback.textContent =
-          "Connection uncertain. Retry the same combo to check the transaction.";
+if (error || !response) {
 
+  giftFeedback.textContent =
+    "Connection uncertain. Retry the same combo to check the transaction.";
+
+          
         updateLiveGiftButton();
         return;
       }
+
+
+      /* ==========================================
+   SFU GIFT - SAFE TRANSACTION RETRY
+========================================== */
+
+if (
+
+  response?.retrySameRequest === true
+
+) {
+
+  giftFeedback.textContent =
+
+    "Transaction status uncertain. Please retry.";
+
+  updateLiveGiftButton();
+
+  return;
+
+}
+
 
       if (!response?.ok) {
 

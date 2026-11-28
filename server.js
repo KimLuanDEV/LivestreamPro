@@ -13343,11 +13343,153 @@ lspTrackUsersSnapshot(
    LINKED LIVE - ATOMIC WALLET SAVE
 ========================================== */
 
-function saveLinkedGiftUsers(db) {
-  return saveUsers(db);
+/* ==========================================
+   LIVESTREAM PRO
+   UNIFIED LIVE GIFT RECEIPTS V1.2
+========================================== */
+
+function lspLiveGiftIsRetry(profile, expected) {
+
+  const id = expected.id.toLowerCase();
+
+  const found = [];
+
+  /* PERSISTENT RECEIPTS */
+
+  for (const [field, source] of [
+
+    ["linkedGiftReceipts", "linked-live"],
+
+    ["sfuGiftReceipts", "sfu-live"]
+
+  ]) {
+
+    const records = profile[field];
+
+    if (records === undefined) continue;
+
+    if (
+      !records ||
+      typeof records !== "object" ||
+      Array.isArray(records)
+    ) {
+      throw new Error("INVALID_GIFT_RECEIPTS");
+    }
+
+    for (const [key, receipt] of Object.entries(records)) {
+
+      if (key.toLowerCase() === id) {
+
+        found.push({
+          receipt,
+          source
+        });
+
+      }
+
+    }
+
+  }
+
+
+  /* LEGACY HISTORY COMPATIBILITY */
+
+  const history = profile.liveGiftHistory ?? [];
+
+  if (!Array.isArray(history)) {
+
+    throw new Error("INVALID_GIFT_HISTORY");
+
+  }
+
+  for (const receipt of history) {
+
+    if (
+      receipt?.direction === "sent" &&
+      typeof receipt.id === "string" &&
+      receipt.id.toLowerCase() === id
+    ) {
+
+      found.push({
+        receipt,
+        source: receipt.source ?? "sfu-live"
+      });
+
+    }
+
+  }
+
+
+  /* NEW TRANSACTION */
+
+  if (!found.length) return false;
+
+
+  /* REQUEST ID CONFLICT PROTECTION */
+
+  for (const { receipt: r, source } of found) {
+
+    if (
+
+      !r ||
+
+      typeof r.id !== "string" ||
+
+      r.id.toLowerCase() !== id ||
+
+      source !== expected.source ||
+
+      (
+        r.source !== undefined &&
+        r.source !== source
+      ) ||
+
+      r.fromUid !== expected.fromUid ||
+
+      r.toUid !== expected.toUid ||
+
+      r.roomId !== expected.roomId ||
+
+      r.giftId !== expected.giftId ||
+
+      r.quantity !== expected.quantity ||
+
+      r.amount !== expected.amount
+
+    ) {
+
+      throw new Error(
+        "GIFT_REQUEST_ID_CONFLICT"
+      );
+
+    }
+
+  }
+
+
+  /* CONFIRM DATABASE DURABILITY */
+
+  const parent = fs.openSync(
+
+    path.dirname(USERS_FILE),
+
+    "r"
+
+  );
+
+  try {
+
+    fs.fsyncSync(parent);
+
+  } finally {
+
+    fs.closeSync(parent);
+
+  }
+
+  return true;
+
 }
-
-
 /* ==========================================
    DIAMOND TRANSFER - DAILY CLEANUP
    Reset at 00:00 Vietnam time
@@ -26862,15 +27004,18 @@ socket.on("virtual-live:gift:catalog", (data, ack) => {
       !account.profile.accountBlocked
     );
 
-    ack({
+ack({
 
-      ok: true,
+  ok: true,
 
-      owner,
+  owner,
 
-      authenticated,
+  authenticated,
 
-      enabled: Boolean(
+  senderUid: authenticated ? uid : null,
+
+  enabled: Boolean(
+
         authenticated &&
         owner &&
         owner.uid !== uid &&
@@ -26911,6 +27056,10 @@ socket.on("virtual-live:gift:catalog", (data, ack) => {
 /* ==========================================
    LINKED LIVE - SECURE GIFT TRANSACTION
 ========================================== */
+/* ==========================================
+   VIRTUAL LIVE GIFT ENGINE V1.2
+   UNIFIED WALLET TRANSACTION
+========================================== */
 
 socket.on("virtual-live:gift:send", (data, ack) => {
 
@@ -26939,6 +27088,26 @@ socket.on("virtual-live:gift:send", (data, ack) => {
     ) {
       return fail("Please sign in first.");
     }
+
+
+
+    /* ==========================================
+   GIFT SENDER IDENTITY PROTECTION
+========================================== */
+
+if (data?.expectedSenderUid !== uid) {
+
+  return ack({
+
+    ok: false,
+
+    retrySameRequest: true,
+
+    error: "Gift sender account mismatch."
+
+  });
+
+}
 
 
     /* VALIDATE ROOM */
@@ -26988,11 +27157,13 @@ socket.on("virtual-live:gift:send", (data, ack) => {
     }
 
 
-    /* LOAD ACCOUNTS */
+    /* READ ONLY ACCOUNT LOOKUP */
 
-    const db = loadUsers();
+    const db = lspReadUsersView();
 
-    const sender = db[uid];
+    const sender = Object.hasOwn(db, uid)
+      ? db[uid]
+      : null;
 
     if (
       !sender?.profile ||
@@ -27001,32 +27172,44 @@ socket.on("virtual-live:gift:send", (data, ack) => {
       return fail("Account unavailable.");
     }
 
-    const sp = sender.profile;
+    const senderView = sender.profile;
 
 
     /* PREVENT DUPLICATE PAYMENT */
 
-    sp.linkedGiftReceipts ||= {};
+    if (lspLiveGiftIsRetry(senderView, {
 
-    const previous = sp.linkedGiftReceipts[requestId];
+      id: requestId,
 
-    if (previous) {
+      source: "linked-live",
 
-      if (
-        previous.roomId !== roomId ||
-        previous.giftId !== giftId ||
-        previous.quantity !== quantity ||
-        previous.toUid !== data?.expectedOwnerUid ||
-        previous.amount !== data?.expectedCost
-      ) {
-        return fail("Transaction ID already used.");
-      }
+      fromUid: uid,
+
+      toUid: data?.expectedOwnerUid,
+
+      roomId,
+
+      giftId,
+
+      quantity,
+
+      amount: data?.expectedCost
+
+    })) {
 
       return ack({
+
         ok: true,
+
         duplicate: true,
+
         transactionId: requestId,
-        coins: Number(sp.coins || 0)
+
+        coins: securityTransaction.parseBalance(
+          senderView.coins,
+          uid
+        )
+
       });
 
     }
@@ -27046,8 +27229,8 @@ socket.on("virtual-live:gift:send", (data, ack) => {
       return fail("You cannot send gifts to yourself.");
     }
 
-    // Prevent payment if recipient or price changed
-    // after the gift panel was opened.
+
+    /* VERIFY EXPECTED GIFT DETAILS */
 
     if (
       data?.expectedOwnerUid !== hostUid ||
@@ -27064,51 +27247,107 @@ socket.on("virtual-live:gift:send", (data, ack) => {
     }
 
 
+    /* ======================================
+       SELECTIVE WALLET TRANSACTION
+    ====================================== */
+
+    const tx = lspWalletStorage.begin([
+
+      uid,
+
+      hostUid
+
+    ]);
+
+    const sp = tx.users[uid]?.profile;
+
+    const rp = tx.users[hostUid]?.profile;
+
+
+    /* ACCOUNT PROTECTION */
+
+    if (
+
+      !sp ||
+
+      !rp ||
+
+      sp.accountBlocked ||
+
+      rp.accountBlocked ||
+
+      lspDeletionTombstones.has(uid) ||
+
+      lspDeletionTombstones.has(hostUid)
+
+    ) {
+
+      return fail("Account unavailable.");
+
+    }
+
+
     /* RATE LIMIT */
 
     const now = Date.now();
 
     if (
-      now - Number(
-        sp.lastLinkedGiftAt || 0
-      ) < 1000
+      now - Number(sp.lastLinkedGiftAt || 0) < 1000
     ) {
       return fail("Please wait before sending again.");
     }
 
 
-    /* WALLET VALIDATION */
+    /* ======================================
+       STRICT WALLET VALIDATION
+    ====================================== */
 
-    const receiver = db[hostUid];
+    const balance =
+      securityTransaction.parseBalance(
+        sp.coins,
+        uid
+      );
 
-    const rp = receiver.profile;
+    const received =
+      securityTransaction.parseBalance(
+        rp.coinReceived,
+        hostUid
+      );
 
-    const balance = Number(sp.coins ?? 0);
-
-    const received = Number(rp.coinReceived ?? 0);
-
-    const sent = Number(sp.coinSent ?? 0);
+    const sent =
+      securityTransaction.parseBalance(
+        sp.coinSent,
+        uid
+      );
 
     if (
-      !Number.isSafeInteger(balance) ||
-      balance < cost
-    ) {
-      return fail("Insufficient diamonds.");
-    }
 
-    if (
-      !Number.isSafeInteger(received) ||
-      received < 0 ||
+      balance === null ||
+
+      received === null ||
+
+      sent === null ||
+
       !Number.isSafeInteger(received + cost) ||
-      !Number.isSafeInteger(sent) ||
-      sent < 0 ||
+
       !Number.isSafeInteger(sent + cost)
+
     ) {
+
       return fail("Invalid wallet balance.");
+
+    }
+
+    if (balance < cost) {
+
+      return fail("Insufficient diamonds.");
+
     }
 
 
-    /* TRANSFER REAL DIAMONDS */
+    /* ======================================
+       APPLY WALLET TRANSACTION
+    ====================================== */
 
     sp.coins = balance - cost;
 
@@ -27148,8 +27387,18 @@ socket.on("virtual-live:gift:send", (data, ack) => {
     };
 
 
-    sp.linkedGiftReceipts[requestId] = transaction;
+    /* ======================================
+       PERSISTENT GIFT RECEIPT
+    ====================================== */
 
+    sp.linkedGiftReceipts ??= {};
+
+    sp.linkedGiftReceipts[
+      requestId.toLowerCase()
+    ] = transaction;
+
+
+    /* SENDER HISTORY */
 
     sp.liveGiftHistory = [
 
@@ -27165,6 +27414,8 @@ socket.on("virtual-live:gift:send", (data, ack) => {
     ].slice(-200);
 
 
+    /* RECEIVER HISTORY */
+
     rp.liveGiftHistory = [
 
       ...(Array.isArray(rp.liveGiftHistory)
@@ -27179,9 +27430,43 @@ socket.on("virtual-live:gift:send", (data, ack) => {
     ].slice(-200);
 
 
-    /* SAVE BOTH WALLETS TOGETHER */
+    /* ======================================
+       ATOMIC WALLET COMMIT
+    ====================================== */
 
-    saveLinkedGiftUsers(db);
+    try {
+
+      tx.commit([
+
+        uid,
+
+        hostUid
+
+      ]);
+
+    } catch (error) {
+
+      console.error(
+
+        "[LINKED GIFT COMMIT]",
+
+        error
+
+      );
+
+      return ack({
+
+        ok: false,
+
+        retrySameRequest: true,
+
+        error:
+          "Gift status uncertain. Retry the same transaction ID."
+
+      });
+
+    }
+
 
     coins = sp.coins;
 
@@ -27189,25 +27474,40 @@ socket.on("virtual-live:gift:send", (data, ack) => {
       sp.name || "Viewer"
     ).slice(0, 50);
 
+
   } catch (error) {
 
-    console.error("[LINKED LIVE GIFT]", error);
+    console.error(
+
+      "[LINKED LIVE GIFT]",
+
+      error
+
+    );
 
     return fail("Unable to process gift.");
 
   }
 
 
-  /* TRANSACTION SUCCESS */
+  /* ==========================================
+     TRANSACTION SUCCESS
+  ========================================== */
 
   ack({
+
     ok: true,
+
     transactionId: transaction.id,
+
     coins
+
   });
 
 
-  /* REALTIME ACCOUNT UPDATES */
+  /* ==========================================
+     REALTIME ACCOUNT UPDATES
+  ========================================== */
 
   try {
 
@@ -27216,10 +27516,12 @@ socket.on("virtual-live:gift:send", (data, ack) => {
     emitCoinUpdate(transaction.toUid);
 
 
-    /* BROADCAST GIFT TO VIEWERS */
+    /* BROADCAST GIFT ANIMATION */
 
     io.to(
+
       virtualLiveChannel(transaction.roomId)
+
     ).emit("virtual-live:gift:new", {
 
       roomId: transaction.roomId,
@@ -27243,19 +27545,33 @@ socket.on("virtual-live:gift:send", (data, ack) => {
     });
 
 
+    /* NOTIFY RECEIVER */
+
     emitToUser(
+
       transaction.toUid,
+
       "virtual-live:gift:received",
+
       transaction
+
     );
+
 
   } catch (error) {
 
-    console.error("[LINKED GIFT BROADCAST]", error);
+    console.error(
+
+      "[LINKED GIFT BROADCAST]",
+
+      error
+
+    );
 
   }
 
 });
+
 
 // Return authenticated viewer's real balance.
 socket.on("sfu:gift:balance", (data, ack) => {
@@ -27337,386 +27653,870 @@ socket.on("sfu:supporters:get", (data, ack) => {
 });
 
 
+/* ==========================================
+   LIVESTREAM PRO
+   SFU LIVE GIFT ENGINE V1.2
+   UNIFIED WALLET TRANSACTION
+========================================== */
 
 socket.on("sfu:gift:send", (data, ack) => {
 
   if (typeof ack !== "function") return;
 
-  const reply = (error) => ack({
+  const reply = error => ack({
+
     ok: false,
+
     error
+
   });
-
-  // Must be a verified, active Viewer in this room.
-  const access = getAuthorizedSfuChatRoom(data?.roomId);
-
-  if (
-    !access ||
-    access.isHost ||
-    socket.data.authenticated !== true
-  ) {
-    return reply("You must be a signed-in viewer.");
-  }
-
-  const room = access.room;
-
-  if (!room.liveStartTs || !room.broadcasterId) {
-    return reply("The livestream is not active.");
-  }
-
-  const hostSocket = io.sockets.sockets.get(
-    room.broadcasterId
-  );
-
-  const hostUid = String(room.ownerUid || "");
-
-  if (
-    !hostSocket?.connected ||
-    hostSocket.data.authenticated !== true ||
-    String(hostSocket.data.uid || "") !== hostUid ||
-    !hostUid ||
-    hostUid === access.uid
-  ) {
-    return reply("Host is not available.");
-  }
-
-
-const giftId = String(data?.giftId || "");
-
-if (
-  !Object.hasOwn(SFU_LIVE_GIFTS, giftId)
-) {
-  return reply("Invalid gift.");
-}
-
-const gift = SFU_LIVE_GIFTS[giftId];
-
-if (
-  !gift ||
-  !Number.isSafeInteger(gift.cost) ||
-  gift.cost <= 0
-) {
-  return reply("Invalid gift configuration.");
-}
-
-
-
-/* ======================================
-   SFU GIFT COMBO - SERVER VALIDATION
-====================================== */
-
-const quantity = Number(data?.quantity ?? 1);
-
-if (![1, 5, 10, 20, 50].includes(quantity)) {
-  return reply("Invalid gift quantity.");
-}
-
-const cost = gift.cost * quantity;
-
-if (
-  !Number.isSafeInteger(cost) ||
-  cost <= 0
-) {
-  return reply("Invalid combo total.");
-}
-
-
-
-  const requestId = String(data?.requestId || "");
-
-  if (!/^[a-f0-9-]{36}$/i.test(requestId)) {
-    return reply("Invalid transaction ID.");
-  }
-
-  const db = loadUsers();
-
-  const sender = db[access.uid];
-  const receiver = db[hostUid];
-
-  if (
-    !sender?.profile ||
-    !receiver?.profile ||
-    sender.profile.accountBlocked ||
-    receiver.profile.accountBlocked
-  ) {
-    return reply("Account unavailable.");
-  }
-
-  const senderProfile = sender.profile;
-  const hostProfile = receiver.profile;
-
-  const history = Array.isArray(senderProfile.liveGiftHistory)
-    ? senderProfile.liveGiftHistory
-    : [];
-
-  // Idempotency: an acknowledged transaction cannot
-  // be charged again if the same request is retried.
-  const previous = history.find(
-    tx => tx.id === requestId && tx.direction === "sent"
-  );
-
-  if (previous) {
-    return ack({
-      ok: true,
-      duplicate: true,
-      transactionId: requestId,
-      coins: Math.floor(Number(senderProfile.coins) || 0)
-    });
-  }
-
-  const now = Date.now();
-
-  if (now - (socket.data.lastSfuGiftAt || 0) < 1000) {
-    return reply("Please wait before sending another gift.");
-  }
-
-  
-  const balance = Math.floor(Number(senderProfile.coins));
-
-  if (!Number.isSafeInteger(balance) || balance < 0) {
-    return reply("Invalid account balance.");
-  }
-
-  if (balance < cost) {
-    return ack({
-      ok: false,
-      error: "Insufficient diamonds.",
-      coins: balance
-    });
-  }
-
-
-/* ======================================
-   HOST RECEIVING WALLET VALIDATION
-====================================== */
-
-const hostWallet = Number(
-  hostProfile.coinReceived ?? 0
-);
-
-if (
-  !Number.isSafeInteger(hostWallet) ||
-  hostWallet < 0 ||
-  hostWallet > Number.MAX_SAFE_INTEGER - cost
-) {
-  return reply("Host receiving wallet is unavailable.");
-}
-
-
-
-  const senderName = String(
-    senderProfile.name || "Viewer"
-  ).slice(0, 50);
-
-  const ts = Date.now();
-
-
-/* ======================================
-   SFU GIFT - CORRECT WALLET TRANSFER
-====================================== */
-
-// Viewer pays from usable diamonds.
-senderProfile.coins = balance - cost;
-
-// Track diamonds sent by Viewer.
-senderProfile.coinSent =
-  (Number(senderProfile.coinSent) || 0) + cost;
-
-// Host receives gifts into receiving Wallet.
-hostProfile.coinReceived = hostWallet + cost;
-
-// IMPORTANT:
-// Do NOT increase hostProfile.coins.
-// Received gifts belong to the Wallet,
-// not the usable diamond balance.
-
-
-    
-
-const transaction = {
-  id: requestId,
-  roomId: access.id,
-
-  giftId,
-  giftName: gift.name,
-
-  quantity,
-  unitCost: gift.cost,
-  amount: cost,
-
-  fromUid: access.uid,
-  toUid: hostUid,
-  ts
-};
-
-  // Maintain recent audit history on both accounts.
-  senderProfile.liveGiftHistory = [
-    ...history,
-    { ...transaction, direction: "sent" }
-  ].slice(-200);
-
-
-  hostProfile.liveGiftHistory = [
-    ...(Array.isArray(hostProfile.liveGiftHistory)
-      ? hostProfile.liveGiftHistory
-      : []),
-    { ...transaction, direction: "received" }
-  ].slice(-200);
-
-
-  /* ==========================================
-   SFU - SAVE DAILY GIFT SUPPORTER
-========================================== */
-
-const dailyDayTs = getTodayStartTsVN();
-
-const previousDaily =
-  hostProfile.sfuDailySupporters;
-
-
-// RESET OLD DAY DATA
-
-const dailyEntries =
-
-  previousDaily?.dayTs === dailyDayTs &&
-  Array.isArray(previousDaily.entries)
-
-    ? previousDaily.entries
-    : [];
-
-
-// FIND EXISTING SUPPORTER
-
-const donorIndex = dailyEntries.findIndex(
-
-  item =>
-
-    String(item.uid) === String(access.uid)
-
-);
-
-
-// ACCUMULATE GIFT VALUE
-
-const donorRecord = {
-
-  uid: String(access.uid),
-
-  name: senderName,
-
-  avatar: String(
-    senderProfile.avatar || ""
-  ),
-
-  amount:
-
-    (Number(
-      dailyEntries[donorIndex]?.amount
-    ) || 0) + cost
-
-};
-
-
-// UPDATE OR CREATE SUPPORTER
-
-if (donorIndex === -1) {
-
-  dailyEntries.push(donorRecord);
-
-} else {
-
-  dailyEntries[donorIndex] = donorRecord;
-
-}
-
-
-// SAVE DAILY STATISTICS
-
-hostProfile.sfuDailySupporters = {
-
-  dayTs: dailyDayTs,
-
-  entries: dailyEntries
-
-};
-
-
 
 
   try {
-    // Synchronous persistence before success is returned.
-    saveUsers(db);
+
+    /* ======================================
+       VERIFIED VIEWER ACCESS
+    ====================================== */
+
+    const access = getAuthorizedSfuChatRoom(
+      data?.roomId
+    );
+
+    if (
+
+      !access ||
+
+      access.isHost ||
+
+      socket.data.authenticated !== true ||
+
+      getVerifiedTransferUid(socket) !== access.uid
+
+    ) {
+
+      return reply(
+        "You must be a signed-in viewer."
+      );
+
+    }
+
+
+    /* ======================================
+       VALIDATE ACTIVE LIVE ROOM
+    ====================================== */
+
+    const room = access.room;
+
+    if (
+
+      !room.liveStartTs ||
+
+      !room.broadcasterId
+
+    ) {
+
+      return reply(
+        "The livestream is not active."
+      );
+
+    }
+
+
+    /* ======================================
+       VERIFY HOST
+    ====================================== */
+
+    const hostSocket = io.sockets.sockets.get(
+
+      room.broadcasterId
+
+    );
+
+    const hostUid = String(
+      room.ownerUid || ""
+    );
+
+
+    if (
+
+      !hostSocket?.connected ||
+
+      hostSocket.data.authenticated !== true ||
+
+      String(hostSocket.data.uid || "") !== hostUid ||
+
+      !hostUid ||
+
+      hostUid === access.uid
+
+    ) {
+
+      return reply(
+        "Host is not available."
+      );
+
+    }
+
+
+    /* ======================================
+       SERVER GIFT VALIDATION
+    ====================================== */
+
+    const giftId = String(
+      data?.giftId || ""
+    );
+
+    if (
+
+      !Object.hasOwn(SFU_LIVE_GIFTS, giftId)
+
+    ) {
+
+      return reply("Invalid gift.");
+
+    }
+
+
+    const gift = SFU_LIVE_GIFTS[giftId];
+
+    if (
+
+      !gift ||
+
+      !Number.isSafeInteger(gift.cost) ||
+
+      gift.cost <= 0
+
+    ) {
+
+      return reply(
+        "Invalid gift configuration."
+      );
+
+    }
+
+
+    /* ======================================
+       GIFT COMBO VALIDATION
+    ====================================== */
+
+    const quantity = Number(
+      data?.quantity ?? 1
+    );
+
+    if (
+
+      ![1, 5, 10, 20, 50].includes(quantity)
+
+    ) {
+
+      return reply(
+        "Invalid gift quantity."
+      );
+
+    }
+
+
+    const cost = gift.cost * quantity;
+
+    if (
+
+      !Number.isSafeInteger(cost) ||
+
+      cost <= 0
+
+    ) {
+
+      return reply(
+        "Invalid combo total."
+      );
+
+    }
+
+
+    /* ======================================
+       TRANSACTION ID VALIDATION
+    ====================================== */
+
+    const requestId = String(
+      data?.requestId || ""
+    );
+
+    if (
+
+      !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i
+        .test(requestId)
+
+    ) {
+
+      return reply(
+        "Invalid transaction ID."
+      );
+
+    }
+
+
+    /* ======================================
+       SELECTIVE WALLET TRANSACTION
+    ====================================== */
+
+    const tx = lspWalletStorage.begin([
+
+      access.uid,
+
+      hostUid
+
+    ]);
+
+
+    const sender = tx.users[access.uid];
+
+    const receiver = tx.users[hostUid];
+
+
+    /* ======================================
+       ACCOUNT SECURITY
+    ====================================== */
+
+    if (
+
+      !sender?.profile ||
+
+      !receiver?.profile ||
+
+      sender.profile.accountBlocked ||
+
+      receiver.profile.accountBlocked ||
+
+      lspDeletionTombstones.has(access.uid) ||
+
+      lspDeletionTombstones.has(hostUid)
+
+    ) {
+
+      return reply(
+        "Account unavailable."
+      );
+
+    }
+
+
+    const senderProfile = sender.profile;
+
+    const hostProfile = receiver.profile;
+
+
+    const history = Array.isArray(
+      senderProfile.liveGiftHistory
+    )
+
+      ? senderProfile.liveGiftHistory
+
+      : [];
+
+
+    /* ======================================
+       PERSISTENT DUPLICATE PROTECTION
+    ====================================== */
+
+    if (
+
+      lspLiveGiftIsRetry(senderProfile, {
+
+        id: requestId,
+
+        source: "sfu-live",
+
+        fromUid: access.uid,
+
+        toUid: hostUid,
+
+        roomId: access.id,
+
+        giftId,
+
+        quantity,
+
+        amount: cost
+
+      })
+
+    ) {
+
+      return ack({
+
+        ok: true,
+
+        duplicate: true,
+
+        transactionId: requestId,
+
+        coins: securityTransaction.parseBalance(
+
+          senderProfile.coins,
+
+          access.uid
+
+        )
+
+      });
+
+    }
+
+
+    /* ======================================
+       GIFT RATE LIMIT
+    ====================================== */
+
+    const now = Date.now();
+
+    if (
+
+      now - (socket.data.lastSfuGiftAt || 0) < 1000
+
+    ) {
+
+      return reply(
+        "Please wait before sending another gift."
+      );
+
+    }
+
+
+    /* ======================================
+       SENDER WALLET VALIDATION
+    ====================================== */
+
+    const balance =
+      securityTransaction.parseBalance(
+
+        senderProfile.coins,
+
+        access.uid
+
+      );
+
+
+    if (
+
+      !Number.isSafeInteger(balance) ||
+
+      balance < 0
+
+    ) {
+
+      return reply(
+        "Invalid account balance."
+      );
+
+    }
+
+
+    if (balance < cost) {
+
+      return ack({
+
+        ok: false,
+
+        error: "Insufficient diamonds.",
+
+        coins: balance
+
+      });
+
+    }
+
+
+    /* ======================================
+       HOST RECEIVING WALLET VALIDATION
+    ====================================== */
+
+    const hostWallet =
+      securityTransaction.parseBalance(
+
+        hostProfile.coinReceived,
+
+        hostUid
+
+      );
+
+
+    const sent =
+      securityTransaction.parseBalance(
+
+        senderProfile.coinSent,
+
+        access.uid
+
+      );
+
+
+    if (
+
+      sent === null ||
+
+      !Number.isSafeInteger(sent + cost)
+
+    ) {
+
+      return reply(
+        "Invalid sender wallet."
+      );
+
+    }
+
+
+    if (
+
+      !Number.isSafeInteger(hostWallet) ||
+
+      hostWallet < 0 ||
+
+      hostWallet > Number.MAX_SAFE_INTEGER - cost
+
+    ) {
+
+      return reply(
+        "Host receiving wallet is unavailable."
+      );
+
+    }
+
+
+    /* ======================================
+       PREPARE TRANSACTION
+    ====================================== */
+
+    const senderName = String(
+
+      senderProfile.name || "Viewer"
+
+    ).slice(0, 50);
+
+
+    const ts = Date.now();
+
+
+    /* ======================================
+       APPLY WALLET TRANSFER
+    ====================================== */
+
+    // Deduct usable diamonds from Viewer.
+
+    senderProfile.coins = balance - cost;
+
+
+    // Track diamonds sent by Viewer.
+
+    senderProfile.coinSent = sent + cost;
+
+
+    // Host receiving wallet.
+
+    hostProfile.coinReceived =
+      hostWallet + cost;
+
+
+    // IMPORTANT:
+    // Never increase hostProfile.coins.
+
+
+    /* ======================================
+       CREATE GIFT TRANSACTION RECORD
+    ====================================== */
+
+    const transaction = {
+
+      id: requestId,
+
+      source: "sfu-live",
+
+      roomId: access.id,
+
+      giftId,
+
+      giftName: gift.name,
+
+      quantity,
+
+      unitCost: gift.cost,
+
+      amount: cost,
+
+      fromUid: access.uid,
+
+      toUid: hostUid,
+
+      ts
+
+    };
+
+
+    /* ======================================
+       SAVE PERSISTENT GIFT RECEIPT
+    ====================================== */
+
+    senderProfile.sfuGiftReceipts ??= {};
+
+    senderProfile.sfuGiftReceipts[
+      requestId.toLowerCase()
+    ] = transaction;
+
+
+    /* ======================================
+       SENDER TRANSACTION HISTORY
+    ====================================== */
+
+    senderProfile.liveGiftHistory = [
+
+      ...history,
+
+      {
+
+        ...transaction,
+
+        direction: "sent"
+
+      }
+
+    ].slice(-200);
+
+
+    /* ======================================
+       HOST TRANSACTION HISTORY
+    ====================================== */
+
+    hostProfile.liveGiftHistory = [
+
+      ...(Array.isArray(hostProfile.liveGiftHistory)
+
+        ? hostProfile.liveGiftHistory
+
+        : []),
+
+      {
+
+        ...transaction,
+
+        direction: "received"
+
+      }
+
+    ].slice(-200);
+
+
+    /* ======================================
+       DAILY GIFT SUPPORTERS
+       VIETNAM TIME GMT+7
+    ====================================== */
+
+    const dailyDayTs = getTodayStartTsVN();
+
+    const previousDaily =
+      hostProfile.sfuDailySupporters;
+
+
+    /* RESET OLD DAY DATA */
+
+    const dailyEntries =
+
+      previousDaily?.dayTs === dailyDayTs &&
+
+      Array.isArray(previousDaily.entries)
+
+        ? previousDaily.entries
+
+        : [];
+
+
+    /* FIND EXISTING SUPPORTER */
+
+    const donorIndex = dailyEntries.findIndex(
+
+      item =>
+
+        String(item.uid) === String(access.uid)
+
+    );
+
+
+    /* VALIDATE DAILY GIFT AMOUNT */
+
+    const dailyAmount =
+      securityTransaction.parseBalance(
+
+        dailyEntries[donorIndex]?.amount,
+
+        hostUid
+
+      );
+
+
+    if (
+
+      dailyAmount === null ||
+
+      !Number.isSafeInteger(dailyAmount + cost)
+
+    ) {
+
+      return reply(
+        "Invalid daily supporter balance."
+      );
+
+    }
+
+
+    /* CREATE SUPPORTER RECORD */
+
+    const donorRecord = {
+
+      uid: String(access.uid),
+
+      name: senderName,
+
+      avatar: String(
+
+        senderProfile.avatar || ""
+
+      ),
+
+      amount: dailyAmount + cost
+
+    };
+
+
+    /* UPDATE OR ADD SUPPORTER */
+
+    if (donorIndex === -1) {
+
+      dailyEntries.push(donorRecord);
+
+    } else {
+
+      dailyEntries[donorIndex] = donorRecord;
+
+    }
+
+
+    /* SAVE DAILY SUPPORTER DATA */
+
+    hostProfile.sfuDailySupporters = {
+
+      dayTs: dailyDayTs,
+
+      entries: dailyEntries
+
+    };
+
+
+    /* ==========================================
+       UNIFIED WALLET COMMIT V1.2
+       BOTH ACCOUNTS + RECEIPT + HISTORY
+    ========================================== */
+
+    try {
+
+      tx.commit([
+
+        access.uid,
+
+        hostUid
+
+      ]);
+
+    } catch (error) {
+
+      console.error(
+
+        "[SFU GIFT SAVE]",
+
+        error
+
+      );
+
+      return ack({
+
+        ok: false,
+
+        retrySameRequest: true,
+
+        error:
+          "Gift status uncertain. Retry the same transaction ID."
+
+      });
+
+    }
+
+
+    /* ==========================================
+       TRANSACTION SUCCESS
+    ========================================== */
+
+    socket.data.lastSfuGiftAt = now;
+
+
+    ack({
+
+      ok: true,
+
+      transactionId: requestId,
+
+      coins: senderProfile.coins
+
+    });
+
+
+    /* ==========================================
+       REALTIME POST-COMMIT UPDATES
+    ========================================== */
+
+    try {
+
+      /* UPDATE REAL ACCOUNT WALLETS */
+
+      emitCoinUpdate(access.uid);
+
+      emitCoinUpdate(hostUid);
+
+
+      /* ======================================
+         HOST LIVE EARNINGS
+      ====================================== */
+
+      room.giftTotal =
+
+        (Number(room.giftTotal) || 0) + cost;
+
+
+      /* ======================================
+         ROOM GIFT SUPPORTERS
+      ====================================== */
+
+      room.giftByUser ||= new Map();
+
+
+      room.giftByUser.set(
+
+        access.uid,
+
+        (Number(
+          room.giftByUser.get(access.uid)
+        ) || 0) + cost
+
+      );
+
+
+      /* ======================================
+         PK BATTLE SCORE
+      ====================================== */
+
+      pkRecordGift(
+
+        access.id,
+
+        cost
+
+      );
+
+
+      /* ======================================
+         GIFT ANIMATION PAYLOAD
+      ====================================== */
+
+      const payload = {
+
+        roomId: access.id,
+
+        transactionId: requestId,
+
+        donor: senderName,
+
+        giftId,
+
+        giftName: gift.name,
+
+        emoji: gift.emoji,
+
+        quantity,
+
+        unitCost: gift.cost,
+
+        cost,
+
+        totalCoins: room.giftTotal,
+
+        ts
+
+      };
+
+
+      /* SEND EFFECT TO CURRENT LIVE ROOM */
+
+      io.to(access.id).emit(
+
+        "sfu:gift:new",
+
+        payload
+
+      );
+
+
+      /* ======================================
+         REALTIME DAILY SUPPORTERS
+      ====================================== */
+
+      io.to(access.id).emit(
+
+        "sfu:supporters:daily",
+
+        {
+
+          roomId: access.id,
+
+          ...getSfuDailySupporters(
+
+            room,
+
+            hostProfile
+
+          )
+
+        }
+
+      );
+
+
+    } catch (error) {
+
+      console.error(
+
+        "[SFU GIFT BROADCAST]",
+
+        error
+
+      );
+
+    }
+
+
   } catch (error) {
-    console.error("[SFU GIFT SAVE]", error);
-    return reply("Unable to save gift transaction.");
+
+    console.error(
+
+      "[SFU GIFT]",
+
+      error
+
+    );
+
+    return reply(
+      "Unable to process gift."
+    );
+
   }
 
-  socket.data.lastSfuGiftAt = now;
-
-  // Update both real profile wallets.
-  emitCoinUpdate(access.uid);
-  emitCoinUpdate(hostUid);
-
-  // Room gift statistics.
-  room.giftTotal = (Number(room.giftTotal) || 0) + cost;
-
-  room.giftByUser ||= new Map();
-  room.giftByUser.set(
-    access.uid,
-    (Number(room.giftByUser.get(access.uid)) || 0) + cost
-  );
-
-// Count verified gift value toward the active PK battle.
-pkRecordGift(access.id, cost);
-
-const payload = {
-  roomId: access.id,
-  transactionId: requestId,
-
-  donor: senderName,
-
-  giftId,
-  giftName: gift.name,
-  emoji: gift.emoji,
-
-  quantity,
-  unitCost: gift.cost,
-  cost,
-
-  totalCoins: room.giftTotal,
-
-  ts
-};
-
-
-
-  // Only this room sees the gift animation.
-  io.to(access.id).emit("sfu:gift:new", payload);
-
-  /* ==========================================
-   SFU - REALTIME SUPPORTER UPDATE
-========================================== */
-
-io.to(access.id).emit("sfu:supporters:daily", {
-
-  roomId: access.id,
-
-  ...getSfuDailySupporters(
-    room,
-    hostProfile
-  )
-
 });
-
-  ack({
-    ok: true,
-    transactionId: requestId,
-    coins: senderProfile.coins
-  });
-
-});
-
-
 
 
 
