@@ -308,6 +308,22 @@ function openWallet(
 
         ) STRICT;
 
+        CREATE TABLE wallet_closures (
+
+  uid TEXT PRIMARY KEY
+    REFERENCES wallet_accounts(uid),
+
+  request_id TEXT NOT NULL UNIQUE,
+
+  closed_at INTEGER NOT NULL
+    CHECK(closed_at > 0),
+
+  last_tx_seq INTEGER NOT NULL
+    CHECK(last_tx_seq >= 0)
+
+) STRICT;
+
+
 
         CREATE INDEX wallet_entries_uid
 
@@ -438,6 +454,239 @@ function openWallet(
     /* ====================================
        PERFORMANCE METRICS
     ==================================== */
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   WALLET CLOSURE ENGINE V4.0
+   TEST MODE ONLY
+========================================== */
+
+const findClosure = db.prepare(
+  "SELECT * FROM wallet_closures WHERE uid = ?"
+);
+
+const findClosureRequest = db.prepare(
+  "SELECT * FROM wallet_closures WHERE request_id = ?"
+);
+
+const latestSeq = db.prepare(
+  "SELECT COALESCE(MAX(seq), 0) AS seq FROM wallet_transactions"
+);
+
+const insertClosure = db.prepare(
+  "INSERT INTO wallet_closures " +
+  "(uid, request_id, closed_at, last_tx_seq) VALUES (?, ?, ?, ?)"
+);
+
+
+/* ==========================================
+   VALIDATE CLOSURE REQUEST ID
+========================================== */
+
+const closureId = id => {
+
+  if (
+
+    typeof id !== "string" ||
+
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      .test(id)
+
+  ) {
+
+    fail("INVALID_CLOSURE_REQUEST_ID");
+
+  }
+
+  return id.toLowerCase();
+
+};
+
+
+/* ==========================================
+   GET WALLET CLOSURE STATUS
+========================================== */
+
+function getClosure(uid) {
+
+  if (!validText(uid, 128)) {
+
+    fail("INVALID_UID");
+
+  }
+
+  const row = findClosure.get(uid);
+
+  return row
+    ? { ...row }
+    : null;
+
+}
+
+
+/* ==========================================
+   VERIFY CLOSED WALLET
+========================================== */
+
+function assertClosed(uid, requestId) {
+
+  const id = closureId(requestId);
+
+  const row = getClosure(uid);
+
+
+  if (!row || row.request_id !== id) {
+
+    fail(
+      "WALLET_CLOSURE_MISSING_OR_MISMATCH"
+    );
+
+  }
+
+
+  const balance = account.get(uid);
+
+
+  if (
+
+    !balance ||
+
+    balance.coins !== 0 ||
+
+    balance.coin_received !== 0
+
+  ) {
+
+    fail("CLOSED_WALLET_BALANCE_INVALID");
+
+  }
+
+  return row;
+
+}
+
+
+/* ==========================================
+   PERMANENT WALLET CLOSURE
+========================================== */
+
+// Caller must verify authorization
+// and outstanding financial obligations first.
+
+function closeWallet(uid, requestId) {
+
+  if (!validText(uid, 128)) {
+
+    fail("INVALID_UID");
+
+  }
+
+
+  const id = closureId(requestId);
+
+
+  return atomic(db, () => {
+
+
+    /* DUPLICATE CLOSURE PROTECTION */
+
+    const existing =
+      findClosure.get(uid);
+
+
+    if (existing) {
+
+      if (existing.request_id !== id) {
+
+        fail("WALLET_ALREADY_CLOSED");
+
+      }
+
+
+      return {
+
+        ...assertClosed(uid, id),
+
+        duplicate: true
+
+      };
+
+    }
+
+
+    /* REQUEST ID CONFLICT */
+
+    if (findClosureRequest.get(id)) {
+
+      fail(
+        "CLOSURE_REQUEST_ID_CONFLICT"
+      );
+
+    }
+
+
+    /* VERIFY CURRENT WALLET */
+
+    const balance = account.get(uid);
+
+
+    if (!balance) {
+
+      fail("ACCOUNT_NOT_FOUND");
+
+    }
+
+
+    validateBalances(
+
+      values(balance)
+
+    );
+
+
+    /* PROTECT REMAINING FUNDS */
+
+    if (
+
+      balance.coins !== 0 ||
+
+      balance.coin_received !== 0
+
+    ) {
+
+      fail("WALLET_BALANCE_NOT_ZERO");
+
+    }
+
+
+    /* PERSIST WALLET CLOSURE */
+
+    insertClosure.run(
+
+      uid,
+
+      id,
+
+      Date.now(),
+
+      latestSeq.get().seq
+
+    );
+
+
+    return {
+
+      ...assertClosed(uid, id),
+
+      duplicate: false
+
+    };
+
+  });
+
+}
+
 
     const stats = {
 
@@ -667,6 +916,29 @@ function openWallet(
             );
 
           }
+
+
+
+          /* ==========================================
+   CLOSED WALLET TRANSACTION PROTECTION
+========================================== */
+
+if (findClosure.get(op.actor)) {
+
+  fail("WALLET_ACTOR_CLOSED");
+
+}
+
+
+for (const c of op.changes) {
+
+  if (findClosure.get(c.uid)) {
+
+    fail("WALLET_ACCOUNT_CLOSED");
+
+  }
+
+}
 
 
           /* CREATE TRANSACTION RECORD */
@@ -970,6 +1242,98 @@ function openWallet(
         }
 
 
+/* ==========================================
+   VERIFY CLOSED WALLET ACCOUNTS
+========================================== */
+
+const closures = db.prepare(
+
+  "SELECT * FROM wallet_closures"
+
+).all();
+
+
+const laterEntry = db.prepare(
+
+  "SELECT 1 FROM wallet_entries " +
+
+  "WHERE uid = ? AND tx_seq > ? LIMIT 1"
+
+);
+
+
+const laterActor = db.prepare(
+
+  "SELECT 1 FROM wallet_transactions " +
+
+  "WHERE actor = ? AND seq > ? LIMIT 1"
+
+);
+
+
+for (const c of closures) {
+
+  if (
+
+    !Number.isSafeInteger(c.last_tx_seq) ||
+
+    c.last_tx_seq < 0 ||
+
+    c.last_tx_seq > latestSeq.get().seq ||
+
+    !Number.isSafeInteger(c.closed_at) ||
+
+    c.closed_at <= 0
+
+  ) {
+
+    fail("INVALID_CLOSURE_RECORD");
+
+  }
+
+
+  assertClosed(
+
+    c.uid,
+
+    c.request_id
+
+  );
+
+
+  if (
+
+    laterEntry.get(
+
+      c.uid,
+
+      c.last_tx_seq
+
+    ) ||
+
+    laterActor.get(
+
+      c.uid,
+
+      c.last_tx_seq
+
+    )
+
+  ) {
+
+    fail(
+
+      "TRANSACTION_AFTER_WALLET_CLOSURE"
+
+    );
+
+  }
+
+}
+
+
+
+
         /* VERIFY CURRENT BALANCES */
 
         const current = db.prepare(
@@ -1042,10 +1406,17 @@ function openWallet(
       },
 
 
-      commit,
+commit,
 
+/* ACCOUNT DELETION V4.0 */
 
-      reconcile,
+closeWallet,
+
+getClosure,
+
+assertClosed,
+
+reconcile,
 
 
       getStats() {
