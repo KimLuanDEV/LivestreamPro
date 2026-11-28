@@ -1246,6 +1246,108 @@ async function test() {
   );
 
 
+  /* ======================================
+   ACCOUNT EVIDENCE COVERAGE TEST V1.8C
+====================================== */
+
+const check = s => auditAccount(
+
+  s,
+
+  "A",
+
+  first.archiveId,
+
+  first.cipherSha256,
+
+  key,
+
+  store
+
+);
+
+
+const coverage = await check(snapshot);
+
+assert.equal(
+  coverage.currentRelated,
+  2
+);
+
+assert.equal(
+  coverage.exactMatches,
+  2
+);
+
+assert.equal(
+  coverage.retentionGuardBlocked,
+  true
+);
+
+assert.equal(
+  coverage.deletionAllowed,
+  false
+);
+
+
+/* SIMULATE NEW AND MODIFIED RECORDS */
+
+const updated =
+  structuredClone(snapshot);
+
+const data = JSON.parse(
+  raw.toString("utf8")
+);
+
+data.A.profile.linkedGiftReceipts.r1.amount++;
+
+data.A.profile.linkedGiftReceipts.r2 = {
+
+  amount: 8
+
+};
+
+const nextRaw = Buffer.from(
+  JSON.stringify(data)
+);
+
+updated.files[0] = {
+
+  name: "users.json",
+
+  size: nextRaw.length,
+
+  sha256: sha(nextRaw),
+
+  content: nextRaw.toString("base64")
+
+};
+
+
+const changed = await check(updated);
+
+assert.equal(
+  changed.changed,
+  1
+);
+
+assert.equal(
+  changed.missing,
+  1
+);
+
+assert.equal(
+  changed.exactMatches,
+  1
+);
+
+assert.equal(
+  changed.deletionAllowed,
+  false
+);
+
+
+
   /* TAMPERED ARCHIVE REJECTION */
 
   const b = objects.get(
@@ -1288,11 +1390,350 @@ async function test() {
 }
 
 
+/* ==========================================
+   LIVESTREAM PRO
+   ACCOUNT EVIDENCE COVERAGE AUDIT V1.8C
+
+   READ ONLY
+   NEVER AUTHORIZES DELETION
+========================================== */
+
+async function auditAccount(
+  snapshot,
+  uid,
+  id,
+  digest,
+  key,
+  store
+) {
+
+  need(
+
+    typeof uid === "string" &&
+    uid.length > 0 &&
+    uid.length <= 128,
+
+    "INVALID_UID"
+
+  );
+
+  need(
+
+    typeof digest === "string" &&
+    HEX.test(digest),
+
+    "EXPECTED_CIPHER_SHA256_REQUIRED"
+
+  );
+
+
+  /* DOWNLOAD AND VERIFY REMOTE ARCHIVE */
+
+  const bytes = await store.get(
+    objectKey(id)
+  );
+
+  need(
+
+    sha(bytes) === digest,
+
+    "CIPHER_SHA256_MISMATCH"
+
+  );
+
+  const archived = decode(
+    bytes,
+    key,
+    id
+  );
+
+  const current = collect(snapshot);
+
+
+  /* ======================================
+     VALIDATE RECORD INDEX
+  ====================================== */
+
+  function index(doc) {
+
+    const result = new Map();
+
+    for (const r of doc.rows) {
+
+      need(
+
+        Array.isArray(r) &&
+
+        r.length === 5 &&
+
+        r.slice(0, 3).every(
+          x => typeof x === "string"
+        ) &&
+
+        typeof r[3] === "string" &&
+
+        HEX.test(r[3]) &&
+
+        obj(r[4]),
+
+        "INVALID_ARCHIVE_ROW"
+
+      );
+
+      const k = JSON.stringify(
+        r.slice(0, 3)
+      );
+
+      need(
+
+        !result.has(k),
+
+        "DUPLICATE_SOURCE_KEY"
+
+      );
+
+      result.set(k, r);
+
+    }
+
+    return result;
+
+  }
+
+
+  const old = index(archived);
+
+  const now = index(current);
+
+
+  /* ACCOUNT REFERENCES */
+
+  const refs = [
+
+    "uid",
+
+    "fromUid",
+
+    "toUid",
+
+    "targetUid",
+
+    "adminUid",
+
+    "buyerUid",
+
+    "sellerUid"
+
+  ];
+
+
+  const related = r =>
+
+    r[1] === uid ||
+
+    refs.some(
+      f => r[4][f] === uid
+    );
+
+
+  /* ======================================
+     ACCOUNT VERIFICATION REPORT
+  ====================================== */
+
+  const result = {
+
+    mode: "ACCOUNT_EVIDENCE_COVERAGE_READ_ONLY",
+
+    archiveVerified: true,
+
+    archiveSnapshotCreatedAt:
+      archived.snapshotCreatedAt,
+
+    currentSnapshotCreatedAt:
+      current.snapshotCreatedAt,
+
+    currentRelated: 0,
+
+    exactMatches: 0,
+
+    missing: 0,
+
+    changed: 0,
+
+    archivedOnlyRelated: 0,
+
+    currentMissingSources:
+      Object.keys(current.sourceHashes)
+        .filter(k =>
+          current.sourceHashes[k] === null
+        ),
+
+    archiveMissingSources:
+      Object.keys(archived.sourceHashes)
+        .filter(k =>
+          archived.sourceHashes[k] === null
+        ),
+
+    sourceHashDifferences: [],
+
+    deletionDirectoryPresent:
+      current.deletionDirectoryPresent,
+
+    deletionAllowed: false,
+
+    activationAllowed: false
+
+  };
+
+
+  /* ======================================
+     COMPARE ACCOUNT FINANCIAL RECORDS
+  ====================================== */
+
+  for (const [k, r] of now) {
+
+    if (
+
+      !related(r) &&
+
+      !(old.has(k) && related(old.get(k)))
+
+    ) {
+
+      continue;
+
+    }
+
+    result.currentRelated++;
+
+    if (!old.has(k)) {
+
+      result.missing++;
+
+    } else if (
+
+      JSON.stringify(old.get(k)) !==
+      JSON.stringify(r)
+
+    ) {
+
+      result.changed++;
+
+    } else {
+
+      result.exactMatches++;
+
+    }
+
+  }
+
+
+  /* RECORDS ONLY PRESENT IN ARCHIVE */
+
+  for (const [k, r] of old) {
+
+    if (related(r) && !now.has(k)) {
+
+      result.archivedOnlyRelated++;
+
+    }
+
+  }
+
+
+  /* ======================================
+     SOURCE DATABASE COMPARISON
+  ====================================== */
+
+  for (const f of new Set([
+
+    ...Object.keys(archived.sourceHashes),
+
+    ...Object.keys(current.sourceHashes)
+
+  ])) {
+
+    if (
+
+      archived.sourceHashes[f] !==
+      current.sourceHashes[f]
+
+    ) {
+
+      const name =
+
+        f.startsWith(
+          "account-deletion-requests/"
+        )
+
+          ? "account-deletion-requests/*"
+
+          : f;
+
+
+      if (
+
+        !result.sourceHashDifferences
+          .includes(name)
+
+      ) {
+
+        result.sourceHashDifferences
+          .push(name);
+
+      }
+
+    }
+
+  }
+
+
+  /* ======================================
+     EXISTING RETENTION GUARD
+  ====================================== */
+
+  const users = JSON.parse(
+
+    Buffer.from(
+
+      snapshot.files.find(
+        f => f.name === "users.json"
+      ).content,
+
+      "base64"
+
+    ).toString("utf8")
+
+  );
+
+
+  result.accountPresent =
+    Object.hasOwn(users, uid);
+
+
+  result.retentionGuardBlocked =
+
+    result.accountPresent
+
+      ? require("./wallet-receipt-retention")
+          .deletionIssues(users[uid])
+          .length > 0
+
+      : null;
+
+
+  return result;
+
+}
+
+
 module.exports = {
 
   create,
 
   verify,
+
+  auditAccount,
 
   config
 

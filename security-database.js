@@ -2459,6 +2459,247 @@ for (const filename of files.slice(limit)) {
    CREATE DATABASE BACKUP
 ========================================== */
 
+
+/* ==========================================
+   LIVESTREAM PRO
+   RECEIPT ARCHIVE AUTOMATION V1.8C
+   EVIDENCE ONLY
+========================================== */
+
+const receiptArchiveState = {
+
+  running: false,
+
+  lastAttemptAt: null,
+
+  lastVerifiedAt: null,
+
+  snapshotCreatedAt: null,
+
+  successfulRuns: 0,
+
+  failedRuns: 0,
+
+  records: null,
+
+  deletionDirectoryPresent: null,
+
+  missingSources: [],
+
+  archiveId: null,
+
+  cipherSha256: null,
+
+  lastError: null
+
+};
+
+
+function receiptArchiveEnabled() {
+
+  return process.env.LSP_RECEIPT_ARCHIVE_AUTO === "true";
+
+}
+
+
+/* ==========================================
+   ARCHIVE MONITORING
+========================================== */
+
+function getReceiptArchiveStats() {
+
+  const s = receiptArchiveState;
+
+  const status =
+
+    !receiptArchiveEnabled()
+
+      ? "DISABLED"
+
+      : s.running
+
+        ? "ARCHIVING"
+
+        : s.lastError
+
+          ? "DEGRADED"
+
+          : !s.lastVerifiedAt
+
+            ? "WAITING"
+
+            : Date.now() - s.snapshotCreatedAt >
+                BACKUP_INTERVAL * 2
+
+              ? "STALE"
+
+              : (
+                  s.missingSources.length ||
+                  s.deletionDirectoryPresent !== true
+                )
+
+                ? "INCOMPLETE"
+
+                : "VERIFIED";
+
+
+  return {
+
+    ...s,
+
+    missingSources: [...s.missingSources],
+
+    status,
+
+    mode: "EVIDENCE_PROJECTION_ONLY",
+
+    activationAllowed: false
+
+  };
+
+}
+
+
+/* ==========================================
+   AUTOMATIC VERIFIED RECEIPT ARCHIVE
+========================================== */
+
+async function archiveVerifiedBackup(snapshot) {
+
+  if (
+    !receiptArchiveEnabled() ||
+    receiptArchiveState.running
+  ) {
+
+    return;
+
+  }
+
+
+  const s = receiptArchiveState;
+
+  s.running = true;
+
+  s.lastAttemptAt = Date.now();
+
+  let ctx;
+
+
+  try {
+
+    const archive = require(
+      "./wallet-receipt-archive"
+    );
+
+    ctx = archive.config();
+
+
+    /* CREATE AND DOWNLOAD REMOTE ARCHIVE */
+
+    const r = await archive.create(
+
+      snapshot,
+
+      ctx.key,
+
+      ctx.store
+
+    );
+
+
+    /* VERIFY ARCHIVE RESULT */
+
+    if (
+
+      r.archiveVerified !== true ||
+
+      r.snapshotCreatedAt !==
+        new Date(snapshot.createdAt).toISOString()
+
+    ) {
+
+      throw new Error(
+        "ARCHIVE_VERIFICATION_FAILED"
+      );
+
+    }
+
+
+    /* UPDATE MONITORING STATE */
+
+    s.lastVerifiedAt = Date.now();
+
+    s.snapshotCreatedAt = snapshot.createdAt;
+
+    s.successfulRuns++;
+
+    s.records = r.records;
+
+    s.deletionDirectoryPresent =
+      snapshot.deletionDirectoryPresent === true;
+
+    s.missingSources = [...r.missingSources];
+
+    s.archiveId = r.archiveId;
+
+    s.cipherSha256 = r.cipherSha256;
+
+    s.lastError = null;
+
+
+    console.log(
+
+      "[RECEIPT ARCHIVE V1.8C] VERIFIED",
+
+      JSON.stringify({
+
+        archiveId: r.archiveId,
+
+        cipherSha256: r.cipherSha256,
+
+        records: r.records,
+
+        missingSources: r.missingSources,
+
+        snapshotCreatedAt: r.snapshotCreatedAt
+
+      })
+
+    );
+
+
+  } catch {
+
+    s.failedRuns++;
+
+    s.lastError =
+      "ARCHIVE_CREATE_OR_READBACK_FAILED";
+
+    console.error(
+
+      "[RECEIPT ARCHIVE V1.8C]",
+
+      s.lastError
+
+    );
+
+
+  } finally {
+
+    try {
+
+      ctx?.close();
+
+    } catch {}
+
+    s.running = false;
+
+  }
+
+}
+
+
+
 async function createBackup(reason = "automatic") {
 
   if (!backupKey) {
@@ -2546,13 +2787,16 @@ async function createBackup(reason = "automatic") {
       encrypted
     );
 
-    /* VERIFY BACKUP BEFORE ROTATION */
+/* VERIFY BACKUP BEFORE ROTATION */
 
-    try {
+let verifiedSnapshot;
 
-      await verifyBackup(hourlyPath);
+try {
 
-    } catch (error) {
+  verifiedSnapshot =
+    await verifyBackup(hourlyPath);
+
+} catch (error) {
 
       stats.integrityFailures++;
 
@@ -2616,9 +2860,19 @@ await syncOffsite(hourlyName);
     stats.lastBackupSize =
       encrypted.length;
 
-    stats.lastError = null;
+stats.lastError = null;
 
-    console.log("[DATABASE BACKUP] SUCCESS", {
+
+/* ==========================================
+   AUTOMATIC RECEIPT ARCHIVE V1.8C
+========================================== */
+
+await archiveVerifiedBackup(
+  verifiedSnapshot
+);
+
+
+console.log("[DATABASE BACKUP] SUCCESS", {
 
       reason,
 
@@ -2847,9 +3101,12 @@ version: "2.1.0",
 
     backupRunning,
 
-    ...stats,
+  ...stats,
 
-    storage,
+receiptArchive:
+  getReceiptArchiveStats(),
+
+storage,
 
     recentBackups:
       recentBackups.slice(0, 20)
@@ -3354,6 +3611,73 @@ if (
 
     console.log(
       JSON.stringify(report, null, 2)
+    );
+
+  } finally {
+
+    ctx.close();
+
+  }
+
+  return;
+
+}
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   ACCOUNT DELETION EVIDENCE AUDIT V1.8C
+========================================== */
+
+if (
+
+  command === "receipt-archive-deletion-audit" &&
+
+  input &&
+
+  output &&
+
+  extra.length === 1
+
+) {
+
+  const snapshot = captureSnapshot();
+
+  const archive = require(
+    "./wallet-receipt-archive"
+  );
+
+  const ctx = archive.config();
+
+
+  try {
+
+    console.log(
+
+      JSON.stringify(
+
+        await archive.auditAccount(
+
+          snapshot,
+
+          extra[0],
+
+          input,
+
+          output,
+
+          ctx.key,
+
+          ctx.store
+
+        ),
+
+        null,
+
+        2
+
+      )
+
     );
 
   } finally {

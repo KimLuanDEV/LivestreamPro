@@ -784,7 +784,9 @@ function observeStatus(source, status) {
 
     "TEST_MODE",
 
-    "UNVERIFIED"
+    "UNVERIFIED",
+
+    "INCOMPLETE"
 
   ].includes(status);
 
@@ -1039,11 +1041,20 @@ async function collect() {
 
         backupStatus(db),
 
-      offsite:
+offsite:
 
-        offsiteStatus(db?.offsite),
+  offsiteStatus(db?.offsite),
 
-      ids:
+
+/* RECEIPT ARCHIVE V1.8C */
+
+receiptArchive:
+
+  db?.receiptArchive?.status ||
+  "UNAVAILABLE",
+
+
+ids:
 
         idsData?.status === "ACTIVE"
 
@@ -1182,6 +1193,15 @@ async function collect() {
               : null
 
       },
+
+      /* ======================================
+   FINANCIAL RECEIPT ARCHIVE MONITOR
+====================================== */
+
+receiptArchive:
+
+  db?.receiptArchive || null,
+
 
       backup: {
 
