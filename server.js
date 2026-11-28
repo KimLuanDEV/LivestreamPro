@@ -35527,12 +35527,13 @@ setInterval(() => {
 
 
 /* ==========================================
-   GAME LEDGER STARTUP AUDIT V1.6B
+   LIVESTREAM PRO
+   GAME SETTLEMENT & RECOVERY AUDIT V1.6C
 ========================================== */
 
 try {
 
-  const report = lspGameLedger.auditUsers(
+  const report = lspGameLedger.recoveryReport(
 
     lspReadExistingDeletionUsers()
 
@@ -35541,7 +35542,7 @@ try {
 
   console.log(
 
-    "[GAME LEDGER V1.6B]",
+    "[GAME RECOVERY V1.6C]",
 
     JSON.stringify(report)
 
@@ -35552,7 +35553,7 @@ try {
 
   console.error(
 
-    "[GAME LEDGER V1.6B] AUDIT FAILED",
+    "[GAME RECOVERY V1.6C] AUDIT FAILED",
 
     error.code || error.message
 

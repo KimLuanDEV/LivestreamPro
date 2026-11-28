@@ -991,6 +991,906 @@ function test() {
 }
 
 
+
+/* ==========================================
+   LIVESTREAM PRO
+   GAME WALLET RECOVERY V1.6C
+   READ ONLY RECOVERY AUDIT
+========================================== */
+
+function recoveryReport(users) {
+
+  const report = auditUsers(users);
+
+  let invalidBalances = 0;
+  let legacyCompletedOffers = 0;
+  let invalidOfferStates = 0;
+
+  const pendingByGame = {
+
+    wheel8: 0n,
+
+    dtp: 0n,
+
+    "time-race": 0n
+
+  };
+
+
+  /* ======================================
+     ACCOUNT FINANCIAL INVENTORY
+  ====================================== */
+
+  for (const [uid, user] of Object.entries(users)) {
+
+    if (!nonnegative(user?.profile?.coins)) {
+
+      invalidBalances++;
+
+    }
+
+
+    /* LEGACY DOUBLE REWARD INVENTORY */
+
+    const offer = user?.wheel8DoubleOffer;
+
+    if (offer !== undefined) {
+
+      if (offer?.status === "completed") {
+
+        legacyCompletedOffers++;
+
+      } else if (offer?.status !== "pending") {
+
+        invalidOfferStates++;
+
+      }
+
+    }
+
+
+    /* PENDING OBLIGATIONS BY GAME */
+
+    try {
+
+      for (
+        const [, r] of inspectAccount(uid, user).entries
+      ) {
+
+        if (r.status === "pending") {
+
+          pendingByGame[r.game] += BigInt(r.amount);
+
+        }
+
+      }
+
+    } catch {
+
+      // Invalid accounts are recorded by auditUsers.
+
+    }
+
+  }
+
+
+  /* ======================================
+     PRODUCTION ACTIVATION BLOCKERS
+  ====================================== */
+
+  const blockers = [
+
+    "LIVE_ROUND_OBLIGATIONS_NOT_VERIFIED",
+
+    "INDEPENDENT_FINANCIAL_EVIDENCE_NOT_VERIFIED",
+
+    "BACKUP_FORWARD_RECOVERY_NOT_VERIFIED",
+
+    "PRODUCTION_SETTLEMENT_NOT_ENABLED"
+
+  ];
+
+
+  if (
+
+    report.invalidAccounts ||
+
+    report.conflicts ||
+
+    invalidBalances ||
+
+    invalidOfferStates
+
+  ) {
+
+    blockers.push("INVALID_FINANCIAL_DATA");
+
+  }
+
+
+  if (
+
+    report.pending ||
+
+    report.pendingDoubleOffers
+
+  ) {
+
+    blockers.push("UNRESOLVED_OBLIGATIONS");
+
+  }
+
+
+  /* ======================================
+     FINAL RECOVERY REPORT
+  ====================================== */
+
+  return {
+
+    ...report,
+
+    mode: "RECOVERY_READ_ONLY",
+
+    invalidBalances,
+
+    legacyCompletedOffers,
+
+    invalidOfferStates,
+
+    pendingByGame: Object.fromEntries(
+
+      Object.entries(pendingByGame).map(
+
+        ([k, v]) => [k, v.toString()]
+
+      )
+
+    ),
+
+    pendingTotalsPartial:
+
+      report.invalidAccounts > 0 ||
+
+      report.conflicts > 0,
+
+    blockers,
+
+    activationAllowed: false
+
+  };
+
+}
+
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   SETTLEMENT & RECOVERY TEST V1.6C
+
+   SYNTHETIC DATA ONLY
+   NO PRODUCTION WALLET ACCESS
+========================================== */
+
+function recoveryTest() {
+
+  const { createJsonWalletAdapter } =
+
+    require("./wallet-storage-adapter");
+
+
+  const root = fs.mkdtempSync(
+
+    path.join(
+
+      os.tmpdir(),
+
+      "lsp-recovery-test-"
+
+    )
+
+  );
+
+
+  const file = path.join(
+
+    root,
+
+    "users.json"
+
+  );
+
+
+  const uid = "TEST_A";
+
+  const id = crypto.randomUUID();
+
+  const roundKey = crypto.randomUUID();
+
+  const evidenceId = crypto.randomUUID();
+
+
+  /* ======================================
+     SIMULATED INDEPENDENT REFUND EVIDENCE
+  ====================================== */
+
+  const evidence = Object.freeze({
+
+    uid,
+
+    id,
+
+    roundKey,
+
+    amount: 100,
+
+    evidenceId
+
+  });
+
+
+  /* ======================================
+     TEST ACCOUNT DATABASE
+  ====================================== */
+
+  const initial = {
+
+    TEST_A: {
+
+      profile: {
+
+        coins: 900
+
+      },
+
+      [FIELD]: {
+
+        version: 1,
+
+        entries: {
+
+          [id]: {
+
+            id,
+
+            uid,
+
+            game: "wheel8",
+
+            roundKey,
+
+            amount: 100,
+
+            createdAt: 1,
+
+            status: "pending",
+
+            resolution: null
+
+          }
+
+        }
+
+      }
+
+    },
+
+
+    TEST_B: {
+
+      profile: {
+
+        coins: 500
+
+      }
+
+    }
+
+  };
+
+
+  let fault = "";
+
+
+  /* ======================================
+     ATOMIC TEST FILE STORAGE
+  ====================================== */
+
+  function writeFixture(users) {
+
+    const tmp = path.join(
+
+      root,
+
+      crypto.randomUUID() + ".tmp"
+
+    );
+
+
+    const fd = fs.openSync(
+
+      tmp,
+
+      "wx",
+
+      0o600
+
+    );
+
+
+    try {
+
+      fs.writeFileSync(
+
+        fd,
+
+        JSON.stringify(users)
+
+      );
+
+      fs.fsyncSync(fd);
+
+    } finally {
+
+      fs.closeSync(fd);
+
+    }
+
+
+    fs.renameSync(tmp, file);
+
+
+    const dir = fs.openSync(root, "r");
+
+    try {
+
+      fs.fsyncSync(dir);
+
+    } finally {
+
+      fs.closeSync(dir);
+
+    }
+
+  }
+
+
+  /* ======================================
+     TEST WALLET ADAPTER
+
+     USES REAL JSON ADAPTER INTERFACE
+     WITH A SIMULATED STORAGE BACKEND
+  ====================================== */
+
+  function openAdapter() {
+
+    return createJsonWalletAdapter({
+
+      begin(uids) {
+
+        need(
+
+          uids.length === 1 &&
+
+          uids[0] === uid,
+
+          "TEST_UID_ONLY"
+
+        );
+
+
+        const before = fs.readFileSync(
+
+          file,
+
+          "utf8"
+
+        );
+
+
+        const snapshot = JSON.parse(before);
+
+
+        const users = {
+
+          [uid]: structuredClone(snapshot[uid])
+
+        };
+
+
+        let committed = false;
+
+
+        return {
+
+          users,
+
+
+          commit(changed) {
+
+            need(
+
+              !committed &&
+
+              changed.length === 1 &&
+
+              changed[0] === uid,
+
+              "TEST_COMMIT_INVALID"
+
+            );
+
+
+            need(
+
+              fs.readFileSync(file, "utf8") === before,
+
+              "TEST_STALE_SNAPSHOT"
+
+            );
+
+
+            /* FAILURE BEFORE COMMIT */
+
+            if (fault === "before") {
+
+              throw new Error(
+
+                "TEST_BEFORE_COMMIT"
+
+              );
+
+            }
+
+
+            snapshot[uid] = users[uid];
+
+
+            /* DURABLE COMMIT */
+
+            writeFixture(snapshot);
+
+            committed = true;
+
+
+            /* FAILURE AFTER COMMIT */
+
+            if (fault === "after") {
+
+              throw new Error(
+
+                "TEST_AFTER_COMMIT"
+
+              );
+
+            }
+
+          }
+
+        };
+
+      }
+
+    });
+
+  }
+
+
+  /* ======================================
+     REFUND SETTLEMENT REHEARSAL
+
+     PRIVATE TEST FUNCTION ONLY
+  ====================================== */
+
+  function refundFixture(adapter, proof) {
+
+    /* VERIFY SIMULATED TRUSTED EVIDENCE */
+
+    need(
+
+      proof &&
+
+      Object.keys(evidence).every(
+
+        k => proof[k] === evidence[k]
+
+      ),
+
+      "TEST_EVIDENCE_MISMATCH"
+
+    );
+
+
+    const tx = adapter.begin([uid]);
+
+    const user = tx.users[uid];
+
+
+    inspectAccount(uid, user);
+
+
+    const r = user[FIELD].entries[id];
+
+
+    /* VERIFY OBLIGATION */
+
+    need(
+
+      r &&
+
+      r.uid === proof.uid &&
+
+      r.roundKey === proof.roundKey &&
+
+      r.amount === proof.amount,
+
+      "TEST_OBLIGATION_MISMATCH"
+
+    );
+
+
+    /* ==================================
+       DUPLICATE REFUND PROTECTION
+    ================================== */
+
+    if (r.status === "refunded") {
+
+      need(
+
+        r.resolution.evidenceId === proof.evidenceId &&
+
+        r.resolution.amount === proof.amount,
+
+        "TEST_RESOLUTION_CONFLICT"
+
+      );
+
+
+      return "duplicate";
+
+    }
+
+
+    /* ONLY REFUND PENDING OBLIGATIONS */
+
+    need(
+
+      r.status === "pending",
+
+      "TEST_NOT_PENDING"
+
+    );
+
+
+    /* STRICT BALANCE VALIDATION */
+
+    const coins = user.profile.coins;
+
+
+    need(
+
+      nonnegative(coins) &&
+
+      nonnegative(coins + r.amount),
+
+      "TEST_BALANCE_OVERFLOW"
+
+    );
+
+
+    /* CREDIT ORIGINAL AMOUNT */
+
+    user.profile.coins = coins + r.amount;
+
+
+    /* SAVE RESOLUTION RECEIPT */
+
+    r.status = "refunded";
+
+
+    r.resolution = {
+
+      evidenceId: proof.evidenceId,
+
+      amount: r.amount,
+
+      at: Date.now()
+
+    };
+
+
+    inspectAccount(uid, user);
+
+
+    /* ATOMIC WALLET + RECEIPT COMMIT */
+
+    tx.commit([uid]);
+
+
+    return "refunded";
+
+  }
+
+
+  /* ======================================
+     RUN RECOVERY TEST SUITE
+  ====================================== */
+
+  try {
+
+    writeFixture(initial);
+
+
+    /* INITIAL PENDING INVENTORY */
+
+    assert.equal(
+
+      recoveryReport(
+        readUsers(file)
+      ).pendingAmount,
+
+      "100"
+
+    );
+
+
+    /* REJECT INVALID REFUND EVIDENCE */
+
+    assert.throws(
+
+      () => refundFixture(
+
+        openAdapter(),
+
+        {
+
+          ...evidence,
+
+          amount: 99
+
+        }
+
+      ),
+
+      /TEST_EVIDENCE_MISMATCH/
+
+    );
+
+
+    /* ==================================
+       SIMULATE FAILURE BEFORE COMMIT
+    ================================== */
+
+    fault = "before";
+
+
+    assert.throws(
+
+      () => refundFixture(
+
+        openAdapter(),
+
+        evidence
+
+      ),
+
+      /TEST_BEFORE_COMMIT/
+
+    );
+
+
+    /* ORIGINAL DATA MUST BE UNCHANGED */
+
+    assert.deepEqual(
+
+      readUsers(file),
+
+      initial
+
+    );
+
+
+    /* ==================================
+       SIMULATE FAILURE AFTER COMMIT
+    ================================== */
+
+    fault = "after";
+
+
+    assert.throws(
+
+      () => refundFixture(
+
+        openAdapter(),
+
+        evidence
+
+      ),
+
+      /TEST_AFTER_COMMIT/
+
+    );
+
+
+    fault = "";
+
+
+    /* ==================================
+       REOPEN ADAPTER AND RETRY
+    ================================== */
+
+    assert.equal(
+
+      refundFixture(
+
+        openAdapter(),
+
+        evidence
+
+      ),
+
+      "duplicate"
+
+    );
+
+
+    const result = readUsers(file);
+
+
+    /* WALLET CREDIT EXACTLY ONCE */
+
+    assert.equal(
+
+      result.TEST_A.profile.coins,
+
+      1000
+
+    );
+
+
+    /* PRESERVE OTHER ACCOUNTS */
+
+    assert.deepEqual(
+
+      result.TEST_B,
+
+      initial.TEST_B
+
+    );
+
+
+    /* NO OUTSTANDING OBLIGATIONS */
+
+    assert.equal(
+
+      recoveryReport(result).pendingAmount,
+
+      "0"
+
+    );
+
+
+    assert.equal(
+
+      recoveryReport(result).refunded,
+
+      1
+
+    );
+
+
+    /* PRODUCTION REMAINS DISABLED */
+
+    assert.equal(
+
+      recoveryReport(result).activationAllowed,
+
+      false
+
+    );
+
+
+    /* FINANCIAL RECEIPT RETENTION */
+
+    assert.equal(
+
+      deletionIssues(
+
+        uid,
+
+        result.TEST_A
+
+      ).length,
+
+      1
+
+    );
+
+
+    /* CROSS-ACCOUNT EVIDENCE PROTECTION */
+
+    assert.throws(
+
+      () => refundFixture(
+
+        openAdapter(),
+
+        {
+
+          ...evidence,
+
+          uid: "TEST_B"
+
+        }
+
+      ),
+
+      /TEST_EVIDENCE_MISMATCH/
+
+    );
+
+
+    /* ==================================
+       WALLET OVERFLOW PROTECTION
+    ================================== */
+
+    const bad = structuredClone(initial);
+
+
+    bad.TEST_A.profile.coins =
+
+      Number.MAX_SAFE_INTEGER;
+
+
+    writeFixture(bad);
+
+
+    assert.throws(
+
+      () => refundFixture(
+
+        openAdapter(),
+
+        evidence
+
+      ),
+
+      /TEST_BALANCE_OVERFLOW/
+
+    );
+
+
+    assert.deepEqual(
+
+      readUsers(file),
+
+      bad
+
+    );
+
+
+    console.log(
+
+      "[GAME RECOVERY TEST] PASS"
+
+    );
+
+
+  } finally {
+
+    fs.rmSync(root, {
+
+      recursive: true,
+
+      force: true
+
+    });
+
+  }
+
+}
+
+
+
 /* ==========================================
    MODULE EXPORTS
 ========================================== */
@@ -999,37 +1899,47 @@ module.exports = {
 
   auditUsers,
 
-  deletionIssues
+  deletionIssues,
+
+  recoveryReport
 
 };
 
 
 /* ==========================================
-   COMMAND LINE TOOLS
+   GAME WALLET COMMAND LINE TOOLS V1.6C
 ========================================== */
 
 if (require.main === module) {
 
   try {
 
-    if (
+    const command = process.argv[2];
 
-      process.argv[2] === "test" &&
+    if (process.argv.length !== 3) {
 
-      process.argv.length === 3
+      throw new Error("INVALID_ARGUMENTS");
 
-    ) {
+    }
+
+
+    /* V1.6B ORIGINAL TEST */
+
+    if (command === "test") {
 
       test();
 
 
-    } else if (
+    /* V1.6C RECOVERY TEST */
 
-      process.argv[2] === "audit" &&
+    } else if (command === "recovery-test") {
 
-      process.argv.length === 3
+      recoveryTest();
 
-    ) {
+
+    /* V1.6B ORIGINAL AUDIT */
+
+    } else if (command === "audit") {
 
       console.log(
 
@@ -1054,11 +1964,38 @@ if (require.main === module) {
       );
 
 
+    /* V1.6C RECOVERY AUDIT */
+
+    } else if (command === "recovery-audit") {
+
+      console.log(
+
+        JSON.stringify(
+
+          recoveryReport(
+
+            readUsers(
+
+              "/opt/render/project/data/users.json"
+
+            )
+
+          ),
+
+          null,
+
+          2
+
+        )
+
+      );
+
+
     } else {
 
       throw new Error(
 
-        "Usage: test | audit"
+        "Usage: test | audit | recovery-test | recovery-audit"
 
       );
 
