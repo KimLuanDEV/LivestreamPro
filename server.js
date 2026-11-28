@@ -58,7 +58,7 @@ const securityMonitor =
 
 
 
-const ROOM_RELEASE_DELAY = 90000; // 90 seconds
+const ROOM_RELEASE_DELAY = 180000; // 3 minutes
 
 const multer = require("multer");
 const express = require("express");
@@ -1103,8 +1103,8 @@ const io = new Server(server, {
   // Maximum incoming message: 1 MB
   maxHttpBufferSize: 1024 * 1024,
 
-  pingInterval: 25000,
-  pingTimeout: 20000,
+  pingInterval: 20000,
+pingTimeout: 45000,
 
 allowRequest: (req, callback) => {
 
@@ -20326,9 +20326,15 @@ socket.on("host-reconnect", (data = {}, ack) => {
     }
   }
 
-  room.broadcasterId = socket.id;
-  room.pendingRelease = false;
+  const sameHostSocket =
+  room.broadcasterId === socket.id;
+
+room.broadcasterId = socket.id;
+room.pendingRelease = false;
+
+if (!sameHostSocket) {
   room.streamReady = false;
+}
 
   if (room.releaseTimer) {
     clearTimeout(room.releaseTimer);
@@ -20640,8 +20646,19 @@ if (!room.streamReady) {
   return;
 }
 
-  const vc = safeMap(room.viewerProfiles).size;
-if(vc >= MAX_VIEWERS){
+const currentViewerUid =
+  String(socket.data.uid || "");
+
+const viewerProfiles =
+  safeMap(room.viewerProfiles);
+
+const alreadyInRoom =
+  viewerProfiles.has(currentViewerUid);
+
+if (
+  !alreadyInRoom &&
+  viewerProfiles.size >= MAX_VIEWERS
+) {
   socket.emit("room-full");
   return;
 }

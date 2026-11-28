@@ -13017,7 +13017,48 @@ document.body.classList.toggle(
 );
 
 const socket = io({
-  reconnection: true
+
+  reconnection: true,
+
+  reconnectionAttempts: Infinity,
+
+  reconnectionDelay: 1000,
+
+  reconnectionDelayMax: 5000,
+
+  randomizationFactor: 0.3,
+
+  timeout: 20000
+
+});
+
+
+socket.on("disconnect", (reason) => {
+
+  console.warn("[SOCKET DISCONNECTED]", {
+    reason,
+    online: navigator.onLine,
+    time: new Date().toISOString()
+  });
+
+});
+
+socket.on("connect_error", (error) => {
+
+  console.warn(
+    "[SOCKET CONNECT ERROR]",
+    error.message
+  );
+
+});
+
+socket.on("connect", () => {
+
+  console.log(
+    "[SOCKET CONNECTED]",
+    socket.io.engine.transport.name
+  );
+
 });
 
 let lkRoom = null;
@@ -18888,7 +18929,13 @@ if (!isViewer) {
   scheduleViewerRecovery(0);
 });
 
-lkRoom.on(RoomEvent.Disconnected, () => {
+lkRoom.on(RoomEvent.Disconnected, (reason) => {
+
+  console.warn("[LIVEKIT DISCONNECTED]", {
+    reason,
+    online: navigator.onLine,
+    time: new Date().toISOString()
+  });
 
   if (lkRoom !== monitoredRoom) return;
 
@@ -18926,14 +18973,14 @@ if (!isViewer) {
 });
 
 
-    await lkRoom.connect(
-      credentials.url,
-      credentials.token,
-      {
-        autoSubscribe: true,
-        maxRetries: 0
-      }
-    );
+await lkRoom.connect(
+  credentials.url,
+  credentials.token,
+  {
+    autoSubscribe: true,
+    maxRetries: 3
+  }
+);
 
     sfuNextConnectAt = 0;
 
@@ -18942,7 +18989,7 @@ if (!isViewer) {
   } catch (error) {
 
     // Prevent repeated failed connections.
-    sfuNextConnectAt = Date.now() + 60000;
+   sfuNextConnectAt = Date.now() + 5000;
 
     const failedRoom = lkRoom;
     lkRoom = null;
@@ -18951,9 +18998,10 @@ if (!isViewer) {
       await failedRoom.disconnect().catch(() => {});
     }
 
-    console.warn(
-      "[SFU] Connection failed. Cooldown: 60 seconds."
-    );
+ console.warn(
+  "[SFU] Connection failed. Cooldown: 5 seconds.",
+  error
+);
 
     throw error;
 
@@ -18984,6 +19032,23 @@ function showHostRecovery(message) {
     return;
   }
 
+
+  // Keep the video visible if SFU is still connected.
+if (hostLiveKitOK()) {
+
+  $("sfuRecoveryOverlay")
+    .classList.add("hidden");
+
+  $("connectionLabel").textContent =
+    "RECONNECTING";
+
+  setChatReady(false);
+
+  return;
+
+}
+
+
   const overlay = $("sfuRecoveryOverlay");
   const title = $("sfuRecoveryTitle");
   const description = $("sfuRecoveryDescription");
@@ -19008,8 +19073,7 @@ function hideHostRecovery() {
   hostRecoveryAttempts = 0;
 }
 
-
-function scheduleHostRecovery(delay = 15000) {
+function scheduleHostRecovery(delay = 3000) {
 
   if (
     isViewer ||
@@ -19019,18 +19083,13 @@ function scheduleHostRecovery(delay = 15000) {
   ) return;
 
   if (hostRecoveryTimer) {
-    return;
+
+    if (delay > 0) return;
+
+    clearTimeout(hostRecoveryTimer);
+    hostRecoveryTimer = null;
+
   }
-
-  const cooldown = Math.max(
-    0,
-    sfuNextConnectAt - Date.now()
-  );
-
-  const safeDelay = Math.max(
-    delay,
-    cooldown
-  );
 
   hostRecoveryTimer = setTimeout(() => {
 
@@ -19038,7 +19097,7 @@ function scheduleHostRecovery(delay = 15000) {
 
     void recoverHostConnection();
 
-  }, safeDelay);
+  }, Math.max(0, delay));
 
 }
 
@@ -19253,11 +19312,11 @@ await syncCameraFacingToServer();
 
 scheduleHostRecovery(
   Math.min(
-    15000 * Math.pow(
+    2000 * Math.pow(
       2,
       Math.min(hostRecoveryAttempts - 1, 3)
     ),
-    120000
+    10000
   )
 );
 
@@ -20070,6 +20129,26 @@ function showViewerRecovery(message) {
     return;
   }
 
+// Do not cover an active livestream.
+if (viewerLiveKitConnected()) {
+
+  $("sfuRecoveryOverlay")
+    .classList.add("hidden");
+
+  $("connectionLabel").textContent =
+    "RECONNECTING";
+
+  setChatReady(false);
+
+  giftConfirm.disabled = true;
+  giftToggle.disabled = true;
+
+  return;
+
+}
+
+
+
   const overlay = $("sfuRecoveryOverlay");
   const description = $("sfuRecoveryDescription");
 
@@ -20105,7 +20184,7 @@ function hideViewerRecovery() {
 }
 
 
-function scheduleViewerRecovery(delay = 15000) {
+function scheduleViewerRecovery(delay = 3000) {
 
   if (
     !isViewer ||
@@ -20114,18 +20193,13 @@ function scheduleViewerRecovery(delay = 15000) {
   ) return;
 
   if (viewerRecoveryTimer) {
-    return;
+
+    if (delay > 0) return;
+
+    clearTimeout(viewerRecoveryTimer);
+    viewerRecoveryTimer = null;
+
   }
-
-  const cooldown = Math.max(
-    0,
-    sfuNextConnectAt - Date.now()
-  );
-
-  const safeDelay = Math.max(
-    delay,
-    cooldown
-  );
 
   viewerRecoveryTimer = setTimeout(() => {
 
@@ -20133,10 +20207,9 @@ function scheduleViewerRecovery(delay = 15000) {
 
     void recoverViewerConnection();
 
-  }, safeDelay);
+  }, Math.max(0, delay));
 
 }
-
 
 async function recoverViewerConnection() {
 
@@ -20819,6 +20892,10 @@ socket.on("room-full", () => {
 
 socket.on("wait-host-stream", () => {
   if (!isViewer) return;
+
+  if (viewerLiveKitConnected()) {
+    return;
+  }
 
   setStatus("WAITING");
   setPlaceholder(true, "Waiting for host");
