@@ -11369,6 +11369,194 @@ const USERS_FILE = path.join("/opt/render/project/data", "users.json");
 const LSP_USERS_RAM_CACHE_ENABLED =
   process.env.LSP_USERS_RAM_CACHE !== "false";
 
+
+  /* ==========================================
+   LIVESTREAM PRO
+   GLOBAL SNAPSHOT PROTECTION V1.0
+========================================== */
+
+const LSP_USERS_SNAPSHOT_MODE =
+  process.env.LSP_USERS_SNAPSHOT_MODE ||
+  "monitor";
+
+
+if (
+  !["monitor", "enforce"]
+    .includes(LSP_USERS_SNAPSHOT_MODE)
+) {
+
+  throw new Error(
+    "INVALID_USERS_SNAPSHOT_MODE"
+  );
+
+}
+
+
+/* ==========================================
+   DATABASE REVISION TRACKING
+========================================== */
+
+const lspUsersSnapshotMeta =
+  new WeakMap();
+
+let lspUsersRevision = 0;
+
+let lspSnapshotLastLog = 0;
+
+
+/* ==========================================
+   REGISTER SNAPSHOT
+========================================== */
+
+function lspTrackUsersSnapshot(
+  db,
+  signature,
+  revision = lspUsersRevision
+) {
+
+  lspUsersSnapshotMeta.set(db, {
+
+    signature,
+
+    revision
+
+  });
+
+  return db;
+
+}
+
+
+/* ==========================================
+   SNAPSHOT CONFLICT DETECTION
+========================================== */
+
+function lspSnapshotConflict(
+  code,
+  force = false
+) {
+
+  const m =
+    lspUsersCacheMetrics;
+
+
+  if (
+    code === "USERS_SNAPSHOT_UNTRACKED"
+  ) {
+
+    m.untrackedWrites++;
+
+  } else {
+
+    m.snapshotConflicts++;
+
+  }
+
+
+  const blocked =
+
+    force ||
+
+    LSP_USERS_SNAPSHOT_MODE === "enforce";
+
+
+  if (blocked) {
+
+    m.snapshotBlockedWrites++;
+
+  }
+
+
+  /* ======================================
+     RATE-LIMIT CONFLICT LOGS
+  ====================================== */
+
+  const now = Date.now();
+
+  if (
+    now - lspSnapshotLastLog >= 5000
+  ) {
+
+    lspSnapshotLastLog = now;
+
+    console.warn(
+
+      "[USERS SNAPSHOT]",
+
+      code,
+
+      {
+
+        mode: LSP_USERS_SNAPSHOT_MODE,
+
+        blocked,
+
+        revision: lspUsersRevision,
+
+        caller: new Error()
+          .stack
+          ?.split("\n")
+          .slice(3, 6)
+          .join(" | ")
+
+      }
+
+    );
+
+  }
+
+
+  if (blocked) {
+
+    throw new Error(code);
+
+  }
+
+}
+
+
+/* ==========================================
+   VALIDATE DATABASE SNAPSHOT
+========================================== */
+
+function lspCheckUsersSnapshot(db) {
+
+  const signature =
+    lspUsersFileSignature();
+
+  const meta =
+    lspUsersSnapshotMeta.get(db);
+
+
+  // Snapshot chưa được đăng ký
+
+  if (!meta) {
+
+    lspSnapshotConflict(
+      "USERS_SNAPSHOT_UNTRACKED"
+    );
+
+  } else if (
+
+    meta.signature !== signature ||
+
+    meta.revision !== lspUsersRevision
+
+  ) {
+
+    // Snapshot không còn là phiên bản mới nhất
+
+    lspSnapshotConflict(
+      "USERS_SNAPSHOT_STALE"
+    );
+
+  }
+
+  return signature;
+
+}
+
+
 const lspUsersRamCache = {
   signature: null,
   data: null,
@@ -11385,6 +11573,15 @@ const lspUsersCacheMetrics = {
   partialSnapshots: 0,
   readOnlyViews: 0,
   skippedWrites: 0,
+
+  // GLOBAL SNAPSHOT PROTECTION
+
+snapshotConflicts: 0,
+
+untrackedWrites: 0,
+
+snapshotBlockedWrites: 0,
+
   hits: 0,
   misses: 0,
 
@@ -11743,6 +11940,401 @@ function getUsersSnapshots(uids) {
 }
 
 
+
+/* ==========================================
+   LIVESTREAM PRO
+   WALLET TRANSACTION ENGINE V2.0
+   COMPATIBILITY MODE
+========================================== */
+
+function lspWalletBegin(uids) {
+
+  const revision =
+    lspUsersRevision;
+
+  const signature =
+    lspUsersFileSignature();
+
+  if (signature === null) {
+
+    throw new Error(
+      "WALLET_SOURCE_MISSING"
+    );
+
+  }
+
+  // Chỉ sao chép các tài khoản liên quan
+  const users = getUsersSnapshots(uids);
+
+  // Kiểm tra snapshot
+  if (
+    lspUsersFileSignature() !== signature
+  ) {
+
+    throw new Error(
+      "WALLET_SNAPSHOT_CHANGED"
+    );
+
+  }
+
+  let committed = false;
+
+  return {
+
+    users,
+
+    commit(changedUids) {
+
+      // Không cho commit hai lần
+      if (committed) {
+
+        throw new Error(
+          "WALLET_ALREADY_COMMITTED"
+        );
+
+      }
+
+      const latest =
+        lspReadUsersView();
+
+/* ======================================
+   WALLET SNAPSHOT VALIDATION V2.0
+====================================== */
+
+if (
+
+  lspUsersRevision !== revision ||
+
+  lspUsersFileSignature() !== signature
+
+) {
+
+  throw new Error(
+    "WALLET_SNAPSHOT_CHANGED"
+  );
+
+}
+
+      // Tạo bản sao cấp ngoài
+      const next = { ...latest };
+
+      for (
+        const uid of new Set(changedUids)
+      ) {
+
+        if (
+
+          !Object.hasOwn(users, uid) ||
+
+          !Object.hasOwn(latest, uid) ||
+
+          lspDeletionTombstones.has(uid)
+
+        ) {
+
+          throw new Error(
+            "WALLET_ACCOUNT_UNAVAILABLE"
+          );
+
+        }
+
+        // Chỉ cập nhật tài khoản có giao dịch
+        next[uid] = users[uid];
+
+      }
+
+/* ======================================
+   REGISTER WALLET SNAPSHOT
+====================================== */
+
+lspTrackUsersSnapshot(
+
+  next,
+
+  signature,
+
+  revision
+
+);
+
+
+/* ======================================
+   COMMIT WALLET TRANSACTION
+====================================== */
+
+saveUsers(next);
+
+committed = true;
+
+    }
+
+  };
+
+}
+
+
+
+/* ==========================================
+   WALLET IDEMPOTENCY PROTECTION
+   ADMIN TRANSACTIONS
+========================================== */
+
+/* ==========================================
+   LIVESTREAM PRO
+   ADMIN TRANSACTION PROTECTION V1.0
+========================================== */
+
+function lspWalletAdminRequest(
+  req,
+  res,
+  user,
+  admin,
+  adminUid,
+  targetUid,
+  kind,
+  amount,
+  note
+) {
+
+  const requestId = req.body?.requestId;
+
+  const reject = (status, error) => {
+
+    res.status(status).json({
+      ok: false,
+      error,
+      requestId
+    });
+
+    return null;
+
+  };
+
+
+  // REQUEST ID REQUIRED
+
+  if (!securityTransaction.isValidRequestId(requestId)) {
+
+    return reject(400, "INVALID_REQUEST_ID");
+
+  }
+
+
+  // VERIFY ADMIN ACTOR
+
+  if (req.body.walletActorUid !== adminUid) {
+
+    return reject(409, "WALLET_ACTOR_CHANGED");
+
+  }
+
+
+  // VALIDATE NOTE
+
+  if (
+    note !== undefined &&
+    (
+      typeof note !== "string" ||
+      note.length > 500
+    )
+  ) {
+
+    return reject(400, "INVALID_NOTE");
+
+  }
+
+
+  /* ======================================
+     TRANSACTION FINGERPRINT
+  ====================================== */
+
+  const hash = value => crypto
+    .createHash("sha256")
+    .update(JSON.stringify(value))
+    .digest("hex");
+
+  const key = hash([
+    adminUid,
+    requestId
+  ]);
+
+  const fingerprint = hash([
+    kind,
+    targetUid,
+    amount,
+    note || ""
+  ]);
+
+
+  function readReceipt(map) {
+
+    if (map === undefined) return undefined;
+
+    if (
+      !map ||
+      typeof map !== "object" ||
+      Array.isArray(map)
+    ) {
+
+      throw new Error("WALLET_RECEIPTS_INVALID");
+
+    }
+
+    return Object.hasOwn(map, key)
+      ? map[key]
+      : undefined;
+
+  }
+
+
+  /* ======================================
+     ADMIN TRANSACTION RECEIPTS
+  ====================================== */
+
+  const records = [];
+
+  const recent = readReceipt(
+    admin.lspAdminWalletReceipts
+  );
+
+  if (recent !== undefined) {
+
+    records.push(recent);
+
+  }
+
+
+  // SUPPORT LEGACY WALLET RECEIPTS
+
+  if (!records.length) {
+
+    for (
+      const account of Object.values(lspReadUsersView())
+    ) {
+
+      const legacy = readReceipt(
+        account?.lspWalletReceipts
+      );
+
+      if (legacy !== undefined) {
+
+        records.push(legacy);
+
+      }
+
+    }
+
+  }
+
+
+  /* ======================================
+     DUPLICATE TRANSACTION PROTECTION
+  ====================================== */
+
+  if (records.length) {
+
+    securityTransaction.record(
+      "duplicateRequests",
+      targetUid
+    );
+
+
+    if (
+      records.some(
+        r => r?.fingerprint !== fingerprint
+      )
+    ) {
+
+      return reject(
+        409,
+        "REQUEST_ID_CONFLICT"
+      );
+
+    }
+
+
+    // Confirm directory durability
+
+    try {
+
+      const parent = fs.openSync(
+        path.dirname(USERS_FILE),
+        "r"
+      );
+
+      try {
+
+        fs.fsyncSync(parent);
+
+      } finally {
+
+        fs.closeSync(parent);
+
+      }
+
+    } catch (error) {
+
+      securityTransaction.record(
+        "storageErrors",
+        targetUid
+      );
+
+      return reject(
+        503,
+        "WALLET_COMMIT_UNCONFIRMED"
+      );
+
+    }
+
+
+    res.json({
+
+      ok: true,
+
+      uid: targetUid,
+
+      coins: user.profile.coins,
+
+      duplicate: true,
+
+      requestId
+
+    });
+
+    return null;
+
+  }
+
+
+  /* ======================================
+     CREATE DURABLE TRANSACTION RECEIPT
+  ====================================== */
+
+  return {
+
+    mark() {
+
+      admin.lspAdminWalletReceipts ||= {};
+
+      admin.lspAdminWalletReceipts[key] = {
+
+        fingerprint,
+
+        targetUid,
+
+        kind,
+
+        amount,
+
+        at: Date.now()
+
+      };
+
+    }
+
+  };
+
+}
 /* ==========================================
    LIVESTREAM PRO
    USERS CACHE PERFORMANCE MONITOR V1.0
@@ -11840,6 +12432,23 @@ function lspStartUsersCacheMonitor() {
         readOnlyViews: m.readOnlyViews,
 
         skippedWrites: m.skippedWrites,
+        /* GLOBAL SNAPSHOT MONITOR */
+
+snapshotMode:
+  LSP_USERS_SNAPSHOT_MODE,
+
+usersRevision:
+  lspUsersRevision,
+
+snapshotConflicts:
+  m.snapshotConflicts,
+
+untrackedWrites:
+  m.untrackedWrites,
+
+snapshotBlockedWrites:
+  m.snapshotBlockedWrites,
+
         hits: m.hits,
 
         misses: m.misses,
@@ -12005,36 +12614,93 @@ function rewardDailySocialPost(user, postId) {
 
 
 /* ==========================================
-   LOAD USERS - RAM CACHE V1.0
+   LOAD USERS
+   GLOBAL SNAPSHOT PROTECTION V1.0
 ========================================== */
 
 function loadUsers() {
 
   lspUsersCacheMetrics.fullSnapshots++;
 
-  const db = lspGetUsersCacheData();
 
-  if (!LSP_USERS_RAM_CACHE_ENABLED) {
+  // Phiên bản trước khi đọc
 
-    return db;
+  const signature =
+    lspUsersFileSignature();
 
-  }
+  const revision =
+    lspUsersRevision;
 
-  const started = lspPerf.now();
+
+  // Đọc database từ RAM Cache hoặc ổ đĩa
+
+  const db =
+    lspGetUsersCacheData();
+
+
+  const started =
+    lspPerf.now();
+
 
   try {
 
-    return structuredClone(db);
+
+    const snapshot =
+
+      LSP_USERS_RAM_CACHE_ENABLED
+
+        ? structuredClone(db)
+
+        : db;
+
+
+    /* ====================================
+       VERIFY SNAPSHOT CONSISTENCY
+    ==================================== */
+
+    if (
+
+      lspUsersFileSignature() !== signature ||
+
+      lspUsersRevision !== revision
+
+    ) {
+
+      lspSnapshotConflict(
+
+        "USERS_SNAPSHOT_READ_CHANGED",
+
+        true
+
+      );
+
+    }
+
+
+    /* ====================================
+       REGISTER SNAPSHOT VERSION
+    ==================================== */
+
+    return lspTrackUsersSnapshot(
+
+      snapshot,
+
+      signature,
+
+      revision
+
+    );
+
 
   } finally {
 
     lspUsersCacheMetrics.cloneMs +=
+
       lspPerf.now() - started;
 
   }
 
 }
-
 /* ==========================================
    SAVE USERS - ATOMIC RAM CACHE V1.0
 ========================================== */
@@ -12074,10 +12740,18 @@ function saveUsers(db) {
   let tempFile;
   let fd;
 
-  try {
+try {
 
-    const serialized =
-      JSON.stringify(db, null, 2);
+  /* ======================================
+     GLOBAL SNAPSHOT VALIDATION
+  ====================================== */
+
+  const writeSignature =
+    lspCheckUsersSnapshot(db);
+
+
+  const serialized =
+    JSON.stringify(db, null, 2);
 
 
     /* ======================================
@@ -12100,12 +12774,22 @@ function saveUsers(db) {
 
     ) {
 
-      lspUsersCacheMetrics.skippedWrites++;
+lspUsersCacheMetrics.skippedWrites++;
 
-      lspSyncUsersAuthAfterSave(db);
 
-      return;
+/* ======================================
+   REFRESH SNAPSHOT METADATA
+====================================== */
 
+lspTrackUsersSnapshot(
+  db,
+  writeSignature
+);
+
+
+lspSyncUsersAuthAfterSave(db);
+
+return;
     }
 
 
@@ -12144,11 +12828,43 @@ function saveUsers(db) {
 
     fd = undefined;
 
-    fs.renameSync(
-      tempFile,
-      USERS_FILE
-    );
+ /* ======================================
+   FINAL SNAPSHOT VALIDATION
+====================================== */
 
+if (
+
+  lspUsersFileSignature() !==
+  writeSignature
+
+) {
+
+  lspSnapshotConflict(
+
+    "USERS_SNAPSHOT_WRITE_CHANGED",
+
+    true
+
+  );
+
+}
+
+
+/* ======================================
+   ATOMIC DATABASE COMMIT
+====================================== */
+
+fs.renameSync(
+  tempFile,
+  USERS_FILE
+);
+
+
+/* ======================================
+   INCREASE DATABASE REVISION
+====================================== */
+
+lspUsersRevision++;
 
     // DIRECTORY DURABILITY
 
@@ -12175,6 +12891,32 @@ function saveUsers(db) {
     lspRememberUsersCommit(serialized);
 
 
+/* ======================================
+   REFRESH COMMITTED SNAPSHOT
+====================================== */
+
+const committedSignature =
+  lspUsersFileSignature();
+
+
+if (committedSignature === null) {
+
+  throw new Error(
+    "USERS_COMMIT_SIGNATURE_MISSING"
+  );
+
+}
+
+
+lspTrackUsersSnapshot(
+
+  db,
+
+  committedSignature
+
+);
+
+
     /* ======================================
        PERFORMANCE STATISTICS
     ====================================== */
@@ -12197,15 +12939,19 @@ function saveUsers(db) {
     lspSyncUsersAuthAfterSave(db);
 
 
-  } catch (error) {
+} catch (error) {
 
-    lspUsersCacheMetrics.saveFailures++;
+  lspUsersCacheMetrics.saveFailures++;
 
-    lspInvalidateUsersRamCache();
+  lspInvalidateUsersRamCache();
 
-    throw error;
+  // REFRESH SECURITY AUTH AFTER STORAGE ERROR
+  securityAuth.invalidateCache();
 
-  } finally {
+  throw error;
+
+}
+  finally {
 
     if (fd !== undefined) {
 
@@ -12700,9 +13446,18 @@ const {
     return res.status(400).json({ error: "missing" });
   }
 
-  const db = loadUsers();
-  const admin = db[adminUid];
-  const user  = db[targetUid];
+/* WALLET TRANSACTION V2.0 */
+
+const tx = lspWalletBegin([
+  adminUid,
+  targetUid
+]);
+
+const db = tx.users;
+
+const admin = db[adminUid];
+
+const user = db[targetUid];
 
   // 🔐 check admin
   if (!admin || admin.role !== "admin") {
@@ -12740,9 +13495,40 @@ if (add === null) {
 
 }
 
+
+/* WALLET REQUEST PROTECTION */
+
+const walletOp = lspWalletAdminRequest(
+
+  req,
+
+  res,
+
+  user,
+
+  admin,
+
+  adminUid,
+
+  targetUid,
+
+  "topup",
+
+  add,
+
+  note
+
+);
+
+if (!walletOp) return;
+
+
+
 if (
   current === null ||
   deposited === null ||
+
+
   !securityTransaction.canCredit(
     current,
     add,
@@ -12803,7 +13589,38 @@ user.profile.depositLogs.unshift({
     ts: Date.now()
   });
 
-  saveUsers(db);
+/* ==========================================
+   WALLET DURABLE COMMIT
+========================================== */
+
+walletOp.mark();
+
+try {
+
+  tx.commit([
+  adminUid,
+  targetUid
+]);
+
+} catch (error) {
+
+  console.error(
+
+    "[WALLET COMMIT]",
+
+    error.message
+
+  );
+
+  return res.status(503).json({
+
+    ok: false,
+
+    error: "WALLET_COMMIT_UNCONFIRMED"
+
+  });
+
+}
 
 securityTransaction.record(
   "successfulTransactions",
@@ -12852,11 +13669,21 @@ sendPushToUser(targetUid, {
 
 
 
-  res.json({
-    ok: true,
-    uid: targetUid,
-    coins: user.profile.coins
-  });
+res.json({
+
+  ok: true,
+
+  uid: targetUid,
+
+  coins: user.profile.coins,
+
+  requestId: req.body.requestId,
+
+  duplicate: false
+
+});
+
+
 });
 
 // ===== ADMIN WITHDRAW COIN =====
@@ -12873,9 +13700,18 @@ const {
     return res.status(400).json({ error: "missing" });
   }
 
-  const db = loadUsers();
-  const admin = db[adminUid];
-  const user  = db[targetUid];
+/* WALLET TRANSACTION V2.0 */
+
+const tx = lspWalletBegin([
+  adminUid,
+  targetUid
+]);
+
+const db = tx.users;
+
+const admin = db[adminUid];
+
+const user = db[targetUid];
 
   // 🔐 chỉ admin
   if (!admin || admin.role !== "admin") {
@@ -12914,6 +13750,33 @@ if (sub <= 0) {
   return res.status(400).json({ error: "invalid_amount" });
 }
 
+
+/* WALLET REQUEST PROTECTION */
+
+const walletOp = lspWalletAdminRequest(
+
+  req,
+
+  res,
+
+  user,
+
+  admin,
+
+  adminUid,
+
+  targetUid,
+
+  "withdraw",
+
+  sub,
+
+  note
+
+);
+
+if (!walletOp) return;
+
 if (cur < sub) {
   return res.status(400).json({ error: "not_enough_coin" });
 }
@@ -12933,7 +13796,40 @@ user.profile.adminLogs.unshift({
   ts: Date.now()
 });
 
-  saveUsers(db);
+
+
+/* WALLET DURABLE COMMIT */
+
+walletOp.mark();
+
+try {
+
+ tx.commit([
+  adminUid,
+  targetUid
+]);
+
+} catch (error) {
+
+  console.error(
+
+    "[WALLET COMMIT]",
+
+    error.message
+
+  );
+
+  return res.status(503).json({
+
+    ok: false,
+
+    error: "WALLET_COMMIT_UNCONFIRMED"
+
+  });
+
+}
+
+
 
 securityTransaction.record(
   "successfulTransactions",
@@ -12978,11 +13874,21 @@ sendPushToUser(targetUid, {
   tag: "admin-withdraw"
 });
 
-  res.json({
-    ok: true,
-    uid: targetUid,
-    coins: user.profile.coins
-  });
+res.json({
+
+  ok: true,
+
+  uid: targetUid,
+
+  coins: user.profile.coins,
+
+  requestId: req.body.requestId,
+
+  duplicate: false
+
+});
+
+
 });
 
 
@@ -14003,8 +14909,15 @@ app.post("/api/card-topup/ipn", (req, res) => {
       return res.json({ success: true });
     }
 
-    const users = loadUsers();
-    const user = users[order.uid];
+ /* PAYMENT WALLET TRANSACTION V2.0 */
+
+const tx = lspWalletBegin([
+  order.uid
+]);
+
+const users = tx.users;
+
+const user = users[order.uid];
 
     if (!user?.profile) {
       return res.status(409).json({
@@ -14046,7 +14959,7 @@ app.post("/api/card-topup/ipn", (req, res) => {
         at: Date.now()
       };
 
-      pgAtomicSave(USERS_FILE, users);
+      tx.commit([order.uid]);
     }
 
     if (order.status !== "paid") {
@@ -16409,13 +17322,31 @@ function lspRunDeletionQueue() {
       securityAuth.invalidateCache();
     }
     try {
-      lspDeletionEngine(lspDeletionDataDir, deletionBlockers, {
-        uid,
-        commitUsers: saveUsers,
-        liveCaches,
-        onCacheWritten: lspDeletionApplyCache,
-        afterCommit
-      });
+
+lspDeletionEngine(
+
+  lspDeletionDataDir,
+
+  deletionBlockers,
+
+  {
+
+    uid,
+
+    readUsers: loadUsers,
+
+    commitUsers: saveUsers,
+
+    liveCaches,
+
+    onCacheWritten: lspDeletionApplyCache,
+
+    afterCommit
+
+  }
+
+);
+
     } catch (error) {
       // Recover after a partial file write without permitting a deleted UID to return.
       if (!Object.hasOwn(loadUsers(), uid)) afterCommit();
@@ -28268,6 +29199,17 @@ server.listen(PORT, () => {
   ======================================== */
 
   lspStartUsersCacheMonitor();
+
+
+  /* GLOBAL SNAPSHOT PROTECTION STATUS */
+
+console.log(
+
+  "[USERS SNAPSHOT] V1.0",
+
+  LSP_USERS_SNAPSHOT_MODE.toUpperCase()
+
+);
 
 
   console.log(

@@ -5,9 +5,27 @@ const crypto = require("crypto");
 
 // V3: synchronous local purge. Caller MUST hold the exclusive in-process write window.
 module.exports = function runDeletionEngine(dir, financialCheck, options) {
-  if (!options || typeof options.uid !== "string" || typeof options.commitUsers !== "function") {
-    throw new Error("Online deletion requires a selected UID and central user writer");
-  }
+if (
+
+  !options ||
+
+  typeof options.uid !== "string" ||
+
+  typeof options.readUsers !== "function" ||
+
+  typeof options.commitUsers !== "function"
+
+) {
+
+  throw new Error(
+
+    "Online deletion requires " +
+    "a selected UID and central database engine"
+
+  );
+
+}
+
   const requests = path.join(dir, "account-deletion-requests");
   const file = name => path.join(dir, name);
   const object = x => x && typeof x === "object" && !Array.isArray(x);
@@ -36,7 +54,19 @@ module.exports = function runDeletionEngine(dir, financialCheck, options) {
   const now = () => new Date().toISOString();
   function purge(record, requestFile) {
     const uid = record.uid;
-    const users = read(file("users.json"), undefined, object);
+    /* ======================================
+   GLOBAL SNAPSHOT COMPATIBILITY
+====================================== */
+
+const users = options.readUsers();
+
+if (!object(users)) {
+
+  throw new Error(
+    "Invalid users snapshot"
+  );
+
+}
     const account = Object.hasOwn(users, uid) ? users[uid] : null;
     const saveRequest = changes => {
       record = { ...record, ...changes, updatedAt: now() };

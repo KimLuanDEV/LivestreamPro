@@ -212,33 +212,496 @@ if (adminUidLabel) {
 }
 
 
-async function topup(){
-  const uid = document.getElementById("uid").value.trim();
-  const amount = Number(document.getElementById("amount").value);
-  const note = document.getElementById("note").value;
 
-  const res = await fetch("/api/admin/topup", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      adminUid: admin.uid,
-      targetUid: uid,
-      amount,
-      note
-    })
-  });
+/* ==========================================
+   LIVESTREAM PRO
+   ADMIN WALLET REQUEST ENGINE V1.0
+========================================== */
 
-  const data = await res.json();
+const ADMIN_WALLET_PENDING =
+  "lsp.admin.wallet.pending.v1";
 
-if (data.ok) {
-  document.getElementById("log").textContent =
-    `Đã nạp ${amount.toLocaleString()} coin cho ${uid}`;
-  loadUsers(); // refresh bảng
-} else {
-  document.getElementById("log").textContent =
-    "Nạp coin thất bại";
+
+/* ==========================================
+   SECURE FETCH WITH TIMEOUT
+========================================== */
+
+async function lspAdminWalletFetch(
+  url,
+  options = {}
+) {
+
+  const controller = new AbortController();
+
+  const timer = setTimeout(
+    () => controller.abort(),
+    15000
+  );
+
+  try {
+
+    const res = await fetch(url, {
+
+      ...options,
+
+      credentials: "same-origin",
+
+      cache: "no-store",
+
+      signal: controller.signal
+
+    });
+
+    return {
+
+      res,
+
+      data: await res.json()
+
+    };
+
+  } finally {
+
+    clearTimeout(timer);
+
+  }
+
 }
 
+
+/* ==========================================
+   ADMIN WALLET TRANSACTION CONTROLLER
+========================================== */
+
+async function lspAdminWalletRun(makeOperation) {
+
+  if (
+    !navigator.locks ||
+    !window.crypto?.randomUUID
+  ) {
+
+    alert(
+      "Trình duyệt chưa hỗ trợ bảo vệ giao dịch. " +
+      "Hãy dùng Chrome/Edge mới qua HTTPS."
+    );
+
+    return;
+
+  }
+
+
+  try {
+
+    await navigator.locks.request(
+
+      ADMIN_WALLET_PENDING,
+
+      { ifAvailable: true },
+
+      async lock => {
+
+
+        /* ==================================
+           PREVENT CONCURRENT TRANSACTIONS
+        ================================== */
+
+        if (!lock) {
+
+          alert(
+            "Đang xử lý giao dịch ở tab khác."
+          );
+
+          return;
+
+        }
+
+
+        /* ==================================
+           VERIFY ADMIN SESSION
+        ================================== */
+
+        const auth = await lspAdminWalletFetch(
+          "/api/admin/auth/status"
+        );
+
+        const actor = auth.data.actorUid;
+
+        if (
+          !auth.res.ok ||
+          auth.data.authenticated !== true ||
+          !actor
+        ) {
+
+          alert(
+            "Phiên admin hết hạn. Hãy đăng nhập lại."
+          );
+
+          return;
+
+        }
+
+
+        /* ==================================
+           RECOVER PENDING TRANSACTION
+        ================================== */
+
+        const saved = localStorage.getItem(
+          ADMIN_WALLET_PENDING
+        );
+
+        const retry = saved !== null;
+
+        let op;
+
+
+        if (retry) {
+
+          op = JSON.parse(saved);
+
+          if (op.walletActorUid !== actor) {
+
+            alert(
+              "Giao dịch đang chờ thuộc admin khác. " +
+              "Hãy đăng nhập đúng tài khoản."
+            );
+
+            return;
+
+          }
+
+
+          const action = op.kind === "topup"
+            ? "Cộng"
+            : "Trừ";
+
+
+          if (!confirm(
+
+            `Có giao dịch chưa xác nhận:\n\n` +
+
+            `${action} ${op.amount} coin\n` +
+
+            `UID: ${op.targetUid}\n` +
+
+            `ID: ${op.requestId}\n\n` +
+
+            `Gửi lại đúng giao dịch này?`
+
+          )) {
+
+            return;
+
+          }
+
+        } else {
+
+
+          /* ================================
+             CREATE NEW TRANSACTION
+          ================================ */
+
+          op = await makeOperation();
+
+          if (!op) return;
+
+          op.walletActorUid = actor;
+
+          op.requestId = crypto.randomUUID();
+
+        }
+
+
+        /* ==================================
+           VALIDATE TRANSACTION DATA
+        ================================== */
+
+        if (
+
+          !op ||
+
+          !["topup", "withdraw"].includes(op.kind) ||
+
+          typeof op.targetUid !== "string" ||
+
+          !op.targetUid ||
+
+          op.targetUid.length > 256 ||
+
+          !Number.isSafeInteger(op.amount) ||
+
+          op.amount <= 0 ||
+
+          op.amount > 1000000000 ||
+
+          typeof op.note !== "string" ||
+
+          op.note.length > 500 ||
+
+          !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+            .test(op.requestId)
+
+        ) {
+
+          alert(
+            "Dữ liệu giao dịch không hợp lệ. " +
+            "Không gửi lên server."
+          );
+
+          return;
+
+        }
+
+
+        // CONFIRM NEW TRANSACTION
+
+        if (!retry && !confirm(
+
+          `${op.kind === "topup" ? "Cộng" : "Trừ"} ` +
+
+          `${op.amount.toLocaleString("vi-VN")} coin ` +
+
+          `cho UID ${op.targetUid}?`
+
+        )) {
+
+          return;
+
+        }
+
+
+        /* ==================================
+           SAVE BEFORE SENDING
+        ================================== */
+
+        localStorage.setItem(
+
+          ADMIN_WALLET_PENDING,
+
+          JSON.stringify(op)
+
+        );
+
+
+        try {
+
+
+          /* ================================
+             SEND WALLET TRANSACTION
+          ================================ */
+
+          const { res, data } =
+            await lspAdminWalletFetch(
+
+              `/api/admin/${op.kind}`,
+
+              {
+
+                method: "POST",
+
+                headers: {
+                  "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                  targetUid: op.targetUid,
+
+                  amount: op.amount,
+
+                  note: op.note,
+
+                  requestId: op.requestId,
+
+                  walletActorUid: op.walletActorUid
+
+                })
+
+              }
+
+            );
+
+
+          /* ================================
+             TRANSACTION CONFIRMED
+          ================================ */
+
+          if (
+
+            res.ok &&
+
+            data.ok === true &&
+
+            data.requestId === op.requestId &&
+
+            data.uid === op.targetUid
+
+          ) {
+
+            localStorage.removeItem(
+              ADMIN_WALLET_PENDING
+            );
+
+
+            alert(
+
+              data.duplicate
+
+                ? "Giao dịch đã được xử lý trước đó. Không thực hiện lại."
+
+                : "Giao dịch thành công."
+
+            );
+
+
+            try {
+
+              await loadUsers();
+
+            } catch {
+
+              alert(
+                "Đã lưu giao dịch, nhưng chưa tải lại được danh sách."
+              );
+
+            }
+
+            return;
+
+          }
+
+
+          /* ================================
+             DEFINITIVE REJECTION
+          ================================ */
+
+          const rejected = new Set([
+
+            "missing",
+
+            "INVALID_AMOUNT",
+
+            "INVALID_BALANCE",
+
+            "INVALID_TRANSACTION",
+
+            "invalid_amount",
+
+            "not_enough_coin",
+
+            "user_not_found",
+
+            "not_admin",
+
+            "INVALID_REQUEST_ID",
+
+            "INVALID_NOTE",
+
+            "WALLET_ACTOR_CHANGED",
+
+            "ADMIN_AUTH_REQUIRED",
+
+            "INVALID_ORIGIN"
+
+          ]);
+
+
+          if (
+
+            !retry &&
+
+            [400, 401, 403, 404, 409]
+              .includes(res.status) &&
+
+            rejected.has(data.error)
+
+          ) {
+
+            localStorage.removeItem(
+              ADMIN_WALLET_PENDING
+            );
+
+            alert(
+              "Giao dịch bị từ chối: " + data.error
+            );
+
+            return;
+
+          }
+
+
+          /* ================================
+             UNCERTAIN TRANSACTION
+          ================================ */
+
+          alert(
+
+            "Chưa xác nhận được giao dịch. " +
+
+            "Giữ nguyên Request ID. Lỗi: " +
+
+            (data.error || res.status)
+
+          );
+
+
+        } catch (error) {
+
+
+          // DO NOT REMOVE PENDING TRANSACTION
+
+          alert(
+
+            "Mất kết nối hoặc chưa xác nhận được giao dịch. " +
+
+            "Bấm lại Cộng/Trừ Coin để gửi lại đúng Request ID cũ."
+
+          );
+
+        }
+
+      }
+
+    );
+
+  } catch (error) {
+
+    alert(
+      "Không thể xử lý giao dịch an toàn: " +
+      error.message
+    );
+
+  }
+
+}
+
+
+/* ==========================================
+   ADMIN TOPUP - SECURE WALLET
+========================================== */
+
+async function topup() {
+
+  return lspAdminWalletRun(async () => ({
+
+    kind: "topup",
+
+    targetUid: document
+      .getElementById("uid")
+      .value.trim(),
+
+    amount: Number(
+
+      document
+        .getElementById("amount")
+        .value
+
+    ),
+
+    note: document
+      .getElementById("note")
+      .value
+
+  }));
 
 }
 
@@ -339,32 +802,44 @@ function renderUsers(list){
 
 
 
+/* ==========================================
+   QUICK TOPUP - SECURE WALLET
+========================================== */
+
+async function quickTopup(uid) {
+
+  return lspAdminWalletRun(async () => {
+
+    const amount = await showModal({
+
+      title: "Cộng Coin",
+
+      body: "Nhập số coin:",
+
+      input: true,
+
+      confirm: true
+
+    });
+
+    if (!amount) return null;
 
 
-async function quickTopup(uid){
-  const amount = await showModal({
-    title: "Cộng Coin",
-    body: "Nhập số coin:",
-    input: true,
-    confirm: true
-  });
-  if (!amount) return;
+    return {
 
-  await fetch("/api/admin/topup", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      adminUid: admin.uid,
+      kind: "topup",
+
       targetUid: uid,
-      amount: Number(amount)
-    })
+
+      amount: Number(amount),
+
+      note: ""
+
+    };
+
   });
 
-  loadUsers();
 }
-
-
-
 
 
 async function toggleLock(uid, isBlocked){
@@ -634,36 +1109,60 @@ async function closeLiveRoom(){
 }
 
 
-async function quickWithdraw(uid){
-  const amount = await showModal({
-    title: "Trừ Coin",
-    body: "Nhập số coin cần rút:",
-    input: true,
-    confirm: true
-  });
-  if (!amount) return;
+/* ==========================================
+   QUICK WITHDRAW - SECURE WALLET
+========================================== */
 
-  const note = await showModal({
-    title: "Ghi chú",
-    body: "Nhập lý do rút coin:",
-    input: true,
-    confirm: true
-  });
-  if (note === false) return;
+async function quickWithdraw(uid) {
 
-  await fetch("/api/admin/withdraw", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      adminUid: admin.uid,
+  return lspAdminWalletRun(async () => {
+
+    const amount = await showModal({
+
+      title: "Trừ Coin",
+
+      body: "Nhập số coin cần rút:",
+
+      input: true,
+
+      confirm: true
+
+    });
+
+    if (!amount) return null;
+
+
+    const note = await showModal({
+
+      title: "Ghi chú",
+
+      body: "Nhập lý do rút coin:",
+
+      input: true,
+
+      confirm: true
+
+    });
+
+    if (note === false) return null;
+
+
+    return {
+
+      kind: "withdraw",
+
       targetUid: uid,
+
       amount: Number(amount),
+
       note
-    })
+
+    };
+
   });
 
-  loadUsers();
 }
+
 
 
 
