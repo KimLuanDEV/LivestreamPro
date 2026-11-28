@@ -2438,6 +2438,25 @@ async function rotateBackups(prefix, limit) {
 
 for (const filename of files.slice(limit)) {
 
+/* ==========================================
+   RECEIPT QUEUE ROTATION PROTECTION
+========================================== */
+
+if (!(await receiptQueue.canRotate(filename))) {
+
+  console.warn(
+
+    "[RECEIPT QUEUE V1.9] RETAINED",
+
+    filename
+
+  );
+
+  continue;
+
+}
+
+
   await fsp.unlink(
 
     path.join(BACKUP_DIR, filename)
@@ -2449,6 +2468,20 @@ for (const filename of files.slice(limit)) {
     receiptPath(filename)
 
   ).catch(() => {});
+
+
+  /* REMOVE COMPLETED LOCAL QUEUE MARKER */
+
+if (filename.startsWith("hourly-")) {
+
+  await fsp.unlink(
+
+    receiptQueue.ack(filename)
+
+  ).catch(() => {});
+
+}
+
 
 }
 
@@ -2668,6 +2701,8 @@ async function archiveVerifiedBackup(snapshot) {
     );
 
 
+    return r;
+
   } catch {
 
     s.failedRuns++;
@@ -2698,6 +2733,27 @@ async function archiveVerifiedBackup(snapshot) {
 
 }
 
+
+
+/* ==========================================
+   PERSISTENT RECEIPT QUEUE V1.9A
+========================================== */
+
+const receiptQueue =
+
+  require("./wallet-receipt-queue")
+    .createQueue({
+
+      dir: BACKUP_DIR,
+
+      verifyBackup,
+
+      archiveBackup:
+        archiveVerifiedBackup,
+
+      atomicWrite
+
+    });
 
 
 async function createBackup(reason = "automatic") {
@@ -2839,7 +2895,20 @@ try {
 await syncOffsite(hourlyName);
 
 
-    /* REMOVE OLD BACKUPS */
+/* ==========================================
+   PROCESS PERSISTENT RECEIPT QUEUE
+========================================== */
+
+if (receiptArchiveEnabled()) {
+
+  await receiptQueue.run(
+    hourlyName
+  );
+
+}
+
+
+/* REMOVE OLD BACKUPS */
 
     await rotateBackups(
       "hourly-",
@@ -2867,9 +2936,6 @@ stats.lastError = null;
    AUTOMATIC RECEIPT ARCHIVE V1.8C
 ========================================== */
 
-await archiveVerifiedBackup(
-  verifiedSnapshot
-);
 
 
 console.log("[DATABASE BACKUP] SUCCESS", {
@@ -3103,8 +3169,14 @@ version: "2.1.0",
 
   ...stats,
 
-receiptArchive:
-  getReceiptArchiveStats(),
+receiptArchive: {
+
+  ...getReceiptArchiveStats(),
+
+  queue:
+    await receiptQueue.stats()
+
+},
 
 storage,
 
@@ -3665,6 +3737,81 @@ if (
           input,
 
           output,
+
+          ctx.key,
+
+          ctx.store
+
+        ),
+
+        null,
+
+        2
+
+      )
+
+    );
+
+  } finally {
+
+    ctx.close();
+
+  }
+
+  return;
+
+}
+
+/* ==========================================
+   LIVESTREAM PRO
+   INDEPENDENT FINANCIAL ANCHOR AUDIT V1.9B
+========================================== */
+
+if (
+
+  command === "receipt-anchor-audit" &&
+
+  input &&
+
+  output &&
+
+  extra.length === 1
+
+) {
+
+  initializeKey();
+
+
+  /* VERIFY CANDIDATE BACKUP */
+
+  const snapshot = await verifyBackup(
+
+    path.resolve(input)
+
+  );
+
+
+  const archive = require(
+
+    "./wallet-receipt-archive"
+
+  );
+
+  const ctx = archive.config();
+
+  try {
+
+    console.log(
+
+      JSON.stringify(
+
+        await archive.auditRecovery(
+
+          snapshot,
+
+          output,
+
+          extra[0],
 
           ctx.key,
 

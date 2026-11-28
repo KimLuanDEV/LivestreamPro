@@ -1727,6 +1727,423 @@ async function auditAccount(
 }
 
 
+/* ==========================================
+   LIVESTREAM PRO
+   SELECTED FINANCIAL ANCHOR AUDIT V1.9B
+
+   READ ONLY
+   NO TRANSACTION REPLAY
+========================================== */
+
+async function auditRecovery(
+  snapshot,
+  id,
+  digest,
+  key,
+  store
+) {
+
+  need(
+
+    typeof digest === "string" &&
+    HEX.test(digest),
+
+    "EXPECTED_CIPHER_SHA256_REQUIRED"
+
+  );
+
+
+  /* VERIFY INDEPENDENT ARCHIVE */
+
+  const bytes = await store.get(
+    objectKey(id)
+  );
+
+  need(
+
+    sha(bytes) === digest,
+
+    "CIPHER_SHA256_MISMATCH"
+
+  );
+
+  const old = decode(
+    bytes,
+    key,
+    id
+  );
+
+  const now = collect(snapshot);
+
+
+  /* ======================================
+     ARRAY BASED SOURCE RECORDS
+
+     Ignore array positions but retain
+     record multiplicity.
+  ====================================== */
+
+  const lists = new Set([
+
+    "withdrawRefundRecords",
+    "transferRequests",
+    "transferHistory",
+    "spiritBeasts",
+    "dtpHistory",
+    "timeRaceHistory",
+
+    "profile.withdrawHold",
+    "profile.liveGiftHistory",
+    "profile.depositLogs",
+
+    "withdraw_requests.json",
+    "market_booths.json.orders",
+    "wheel8_user_history.json"
+
+  ]);
+
+
+  function counts(doc) {
+
+    const out = new Map();
+    const keys = new Set();
+
+    for (const r of doc.rows) {
+
+      need(
+
+        Array.isArray(r) &&
+
+        r.length === 5 &&
+
+        r.slice(0, 3).every(
+          x => typeof x === "string"
+        ) &&
+
+        typeof r[3] === "string" &&
+
+        HEX.test(r[3]) &&
+
+        obj(r[4]),
+
+        "INVALID_ANCHOR_ROW"
+
+      );
+
+
+      const k = JSON.stringify(
+        r.slice(0, 3)
+      );
+
+      need(
+
+        !keys.has(k),
+
+        "DUPLICATE_SOURCE_KEY"
+
+      );
+
+      keys.add(k);
+
+
+      const signature = JSON.stringify([
+
+        r[0],
+
+        r[1],
+
+        lists.has(r[0])
+          ? ""
+          : r[2],
+
+        r[3]
+
+      ]);
+
+
+      out.set(
+
+        signature,
+
+        (out.get(signature) || 0) + 1
+
+      );
+
+    }
+
+    return out;
+
+  }
+
+
+  /* ======================================
+     FINANCIAL EVIDENCE COMPARISON
+  ====================================== */
+
+  const a = counts(old);
+  const b = counts(now);
+
+  let anchorOnly = 0;
+  let candidateOnly = 0;
+
+
+  for (const [k, n] of a) {
+
+    anchorOnly += Math.max(
+
+      0,
+
+      n - (b.get(k) || 0)
+
+    );
+
+  }
+
+
+  for (const [k, n] of b) {
+
+    candidateOnly += Math.max(
+
+      0,
+
+      n - (a.get(k) || 0)
+
+    );
+
+  }
+
+
+  /* ======================================
+     INDEPENDENT TOMBSTONE VERIFICATION
+  ====================================== */
+
+  const users = JSON.parse(
+
+    Buffer.from(
+
+      snapshot.files.find(
+
+        f => f.name === "users.json"
+
+      ).content,
+
+      "base64"
+
+    ).toString("utf8")
+
+  );
+
+
+  const deletions = new Map(
+
+    now.rows
+
+      .filter(
+        r => r[0] === "deletion_record"
+      )
+
+      .map(
+        r => [r[2], r[4]]
+      )
+
+  );
+
+
+  const terminal = r =>
+
+    r.status === "completed" ||
+
+    r.engineState === "local_done";
+
+
+  let anchoredTombstones = 0;
+  let resurrected = 0;
+  let missingTombstones = 0;
+  let ambiguousDeletionRecords = 0;
+
+
+  for (
+
+    const r of old.rows.filter(
+
+      r => r[0] === "deletion_record"
+
+    )
+
+  ) {
+
+    const t = r[4];
+
+    need(
+
+      typeof t.uid === "string" &&
+
+      t.uid &&
+
+      typeof t.requestId === "string" &&
+
+      t.requestId &&
+
+      r[2] ===
+
+        "account-deletion-requests/" +
+
+        sha(t.uid) +
+
+        ".json",
+
+      "INVALID_ANCHORED_DELETION_RECORD"
+
+    );
+
+
+    if (!terminal(t)) {
+
+      ambiguousDeletionRecords++;
+
+      continue;
+
+    }
+
+
+    anchoredTombstones++;
+
+
+    /* DETECT DELETED USER RESURRECTION */
+
+    if (Object.hasOwn(users, t.uid)) {
+
+      resurrected++;
+
+    }
+
+
+    /* VERIFY DELETION REQUEST ID */
+
+    const n = deletions.get(r[2]);
+
+    if (
+
+      !n ||
+
+      n.uid !== t.uid ||
+
+      n.requestId !== t.requestId ||
+
+      !terminal(n)
+
+    ) {
+
+      missingTombstones++;
+
+    }
+
+  }
+
+
+  /* ======================================
+     SOURCE DATABASE CHECKSUM COMPARISON
+  ====================================== */
+
+  const differences = [...new Set([
+
+    ...Object.keys(old.sourceHashes),
+
+    ...Object.keys(now.sourceHashes)
+
+  ]
+
+    .filter(f =>
+
+      old.sourceHashes[f] !==
+      now.sourceHashes[f]
+
+    )
+
+    .map(f =>
+
+      f.startsWith(
+        "account-deletion-requests/"
+      )
+
+        ? "account-deletion-requests/*"
+
+        : f
+
+    )
+
+  )];
+
+
+  /* ======================================
+     FINAL READ ONLY RECOVERY REPORT
+  ====================================== */
+
+  return {
+
+    mode: "FORWARD_RECOVERY_READ_ONLY",
+
+    anchorVerified: true,
+
+    anchorSnapshotCreatedAt:
+      old.snapshotCreatedAt,
+
+    candidateSnapshotCreatedAt:
+      now.snapshotCreatedAt,
+
+    olderThanAnchor:
+
+      now.snapshotCreatedAt <
+      old.snapshotCreatedAt,
+
+    anchorOnly,
+
+    candidateOnly,
+
+    sourceHashDifferences:
+      differences,
+
+    anchorMissingSources:
+
+      Object.keys(old.sourceHashes)
+
+        .filter(
+          f => old.sourceHashes[f] === null
+        ),
+
+    candidateMissingSources:
+
+      Object.keys(now.sourceHashes)
+
+        .filter(
+          f => now.sourceHashes[f] === null
+        ),
+
+    anchorDeletionDirectoryPresent:
+      old.deletionDirectoryPresent,
+
+    candidateDeletionDirectoryPresent:
+      now.deletionDirectoryPresent,
+
+    anchoredTombstones,
+
+    resurrected,
+
+    missingTombstones,
+
+    ambiguousDeletionRecords,
+
+    latestAnchorCertified: false,
+
+    replayAllowed: false,
+
+    activationAllowed: false
+
+  };
+
+}
+
+
 module.exports = {
 
   create,
@@ -1734,6 +2151,8 @@ module.exports = {
   verify,
 
   auditAccount,
+
+  auditRecovery,
 
   config
 
