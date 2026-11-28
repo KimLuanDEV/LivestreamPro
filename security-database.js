@@ -3985,6 +3985,111 @@ if (
 }
 
 
+/* ==========================================
+   EXTERNAL FINANCIAL EVIDENCE V1.11
+   READ ONLY CLI
+========================================== */
+
+if (
+
+  command === "external-evidence-packet" &&
+
+  input &&
+
+  !output &&
+
+  !extra.length
+
+) {
+
+  initializeKey();
+
+
+  const snapshot = await verifyBackup(
+
+    path.resolve(input)
+
+  );
+
+
+  const report = require(
+
+    "./wallet-external-evidence"
+
+  ).packet(snapshot);
+
+
+  console.log(
+
+    JSON.stringify(report, null, 2)
+
+  );
+
+
+  return;
+
+}
+
+
+/* ==========================================
+   EXTERNAL EVIDENCE MANIFEST CHECK
+========================================== */
+
+if (
+
+  command === "external-evidence-check" &&
+
+  input &&
+
+  output &&
+
+  !extra.length
+
+) {
+
+  initializeKey();
+
+
+  const snapshot = await verifyBackup(
+
+    path.resolve(input)
+
+  );
+
+
+  const evidence = require(
+
+    "./wallet-external-evidence"
+
+  );
+
+
+  const packet = evidence.packet(
+    snapshot
+  );
+
+
+  const report = evidence.check(
+
+    packet,
+
+    path.resolve(output)
+
+  );
+
+
+  console.log(
+
+    JSON.stringify(report, null, 2)
+
+  );
+
+
+  return;
+
+}
+
+
   /* VALIDATE COMMAND */
 
   if (
