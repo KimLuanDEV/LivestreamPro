@@ -4090,6 +4090,275 @@ if (
 }
 
 
+/* ==========================================
+   INDEPENDENT ANCHOR REGISTRY V1.12
+========================================== */
+
+if (
+
+  (
+
+    command === "anchor-registry-genesis" &&
+
+    input &&
+
+    output &&
+
+    extra.length === 1
+
+  ) ||
+
+  (
+
+    command === "anchor-registry-extend" &&
+
+    input &&
+
+    output &&
+
+    extra.length === 3
+
+  )
+
+) {
+
+  initializeKey();
+
+
+  const snapshot = await verifyBackup(
+
+    path.resolve(input)
+
+  );
+
+
+  const registry = require(
+
+    "./wallet-anchor-registry"
+
+  );
+
+
+  const previous =
+
+    command === "anchor-registry-extend"
+
+      ? registry.readRegistry(
+
+          path.resolve(extra[1]),
+
+          extra[2]
+
+        )
+
+      : null;
+
+
+  const ctx = require(
+
+    "./wallet-receipt-archive"
+
+  ).config();
+
+
+  try {
+
+    const r = await registry.propose(
+
+      snapshot,
+
+      output,
+
+      extra[0],
+
+      ctx,
+
+      previous,
+
+      previous ? extra[2] : null
+
+    );
+
+
+    console.log(
+
+      JSON.stringify(r, null, 2)
+
+    );
+
+
+  } finally {
+
+    ctx.close();
+
+  }
+
+
+  return;
+
+}
+
+
+/* ==========================================
+   TRUSTED ANCHOR AUDIT & REHEARSAL
+========================================== */
+
+if (
+
+  [
+
+    "anchor-registry-audit",
+
+    "anchor-registry-rehearse"
+
+  ].includes(command) &&
+
+  input &&
+
+  output &&
+
+  extra.length === 1
+
+) {
+
+  initializeKey();
+
+
+  const registry = require(
+
+    "./wallet-anchor-registry"
+
+  );
+
+
+  const chain = registry.readRegistry(
+
+    path.resolve(output),
+
+    extra[0]
+
+  );
+
+
+  const snapshot = await verifyBackup(
+
+    path.resolve(input)
+
+  );
+
+
+  const ctx = require(
+
+    "./wallet-receipt-archive"
+
+  ).config();
+
+
+  try {
+
+    const r = await registry.audit(
+
+      snapshot,
+
+      chain,
+
+      extra[0],
+
+      ctx
+
+    );
+
+
+    /* ====================================
+       PRIVATE DISK LOSS REHEARSAL
+    ==================================== */
+
+    if (
+
+      command === "anchor-registry-rehearse"
+
+    ) {
+
+      if (!r.matchesTrustedHead) {
+
+        throw Error(
+
+          "TRUSTED_SNAPSHOT_REQUIRED"
+
+        );
+
+      }
+
+
+      const dir = await fsp.mkdtemp(
+
+        path.join(
+
+          os.tmpdir(),
+
+          "lsp-anchor-rehearsal-"
+
+        )
+
+      );
+
+
+      try {
+
+        await extractSnapshot(
+
+          snapshot,
+
+          dir,
+
+          true
+
+        );
+
+
+        r.restoredFilesVerified = true;
+
+        r.restoredFileCount =
+          snapshot.files.length;
+
+        r.downloadProvenanceVerified =
+          false;
+
+
+      } finally {
+
+        await fsp.rm(dir, {
+
+          recursive: true,
+
+          force: true
+
+        });
+
+      }
+
+    }
+
+
+    console.log(
+
+      JSON.stringify(r, null, 2)
+
+    );
+
+
+  } finally {
+
+    ctx.close();
+
+  }
+
+
+  return;
+
+}
+
+
   /* VALIDATE COMMAND */
 
   if (
