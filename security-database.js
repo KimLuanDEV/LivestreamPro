@@ -3838,6 +3838,105 @@ if (
 }
 
 
+/* ==========================================
+   LIVESTREAM PRO
+   FINANCIAL FORWARD RECOVERY V1.9C
+
+   PRIVATE SQLITE REHEARSAL ONLY
+========================================== */
+
+if (
+
+  command === "receipt-forward-rehearsal" &&
+
+  input &&
+
+  output &&
+
+  extra.length === 2
+
+) {
+
+  initializeKey();
+
+
+  /* AUTHENTICATE BOTH BACKUPS */
+
+  const base = await verifyBackup(
+
+    path.resolve(input)
+
+  );
+
+
+  const newer = await verifyBackup(
+
+    path.resolve(output)
+
+  );
+
+
+  /* INDEPENDENT R2 ARCHIVE */
+
+  const archive = require(
+
+    "./wallet-receipt-archive"
+
+  );
+
+
+  const ctx = archive.config();
+
+
+  try {
+
+    const r = await require(
+
+      "./wallet-forward-recovery"
+
+    ).run(
+
+      base,
+
+      newer,
+
+      extractSnapshot,
+
+      s => archive.auditRecovery(
+
+        s,
+
+        extra[0],
+
+        extra[1],
+
+        ctx.key,
+
+        ctx.store
+
+      )
+
+    );
+
+
+    console.log(
+
+      JSON.stringify(r, null, 2)
+
+    );
+
+
+  } finally {
+
+    ctx.close();
+
+  }
+
+
+  return;
+
+}
+
 
   /* VALIDATE COMMAND */
 
