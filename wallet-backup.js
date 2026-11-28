@@ -162,13 +162,25 @@ function syncDir(dir) {
    WALLET INTEGRITY & RECONCILIATION
 ========================================== */
 
+/* ==========================================
+   LIVESTREAM PRO
+   WALLET BACKUP RECONCILIATION V2.1
+========================================== */
+
 function reconcile(file) {
 
   const wallet = openWallet(file);
 
+  let report;
+
+
+  /* ======================================
+     WALLET LEDGER VERIFICATION
+  ====================================== */
+
   try {
 
-    return wallet.reconcile();
+    report = wallet.reconcile();
 
   } finally {
 
@@ -176,8 +188,116 @@ function reconcile(file) {
 
   }
 
-}
 
+  /* ======================================
+     LEGACY RECEIPT VERIFICATION
+  ====================================== */
+
+  const db = new DatabaseSync(file, {
+
+    readOnly: true
+
+  });
+
+
+  try {
+
+    const meta = db.prepare(
+
+      "SELECT value FROM wallet_meta " +
+
+      "WHERE key=?"
+
+    );
+
+
+    const migration = meta.get(
+
+      "migration_source_sha256"
+
+    );
+
+
+    const manifest = meta.get(
+
+      "legacy_receipt_manifest_v1"
+
+    );
+
+
+    /* CHECK LEGACY RECEIPT TABLES */
+
+    const tables = db.prepare(
+
+      "SELECT COUNT(*) AS n " +
+
+      "FROM sqlite_schema " +
+
+      "WHERE type='table' " +
+
+      "AND name IN (" +
+
+      "'legacy_admin_receipts'," +
+
+      "'legacy_admin_receipt_sources'," +
+
+      "'legacy_payment_receipts'" +
+
+      ")"
+
+    ).get().n;
+
+
+    /* MIGRATED WALLET PROTECTION */
+
+    if (
+
+      migration ||
+
+      manifest ||
+
+      tables
+
+    ) {
+
+      if (
+
+        !migration ||
+
+        !manifest ||
+
+        tables !== 3
+
+      ) {
+
+        throw new Error(
+
+          "INCOMPLETE_LEGACY_RECEIPTS"
+
+        );
+
+      }
+
+
+      /* VERIFY LEGACY RECEIPT INTEGRITY */
+
+      require("./wallet-storage-adapter")
+
+        .verifyLegacy(db);
+
+    }
+
+
+    return report;
+
+
+  } finally {
+
+    db.close();
+
+  }
+
+}
 
 /* ==========================================
    AES-256-GCM BACKUP ENCRYPTION

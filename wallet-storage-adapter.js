@@ -651,6 +651,8 @@ module.exports = {
 
   createJsonWalletAdapter,
 
-  openRehearsalAdapter
+  openRehearsalAdapter,
+
+  verifyLegacy
 
 };

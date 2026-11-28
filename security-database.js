@@ -12,6 +12,12 @@ const path = require("path");
 const crypto = require("crypto");
 const zlib = require("zlib");
 
+const os = require("node:os");
+
+const {
+  execFileSync
+} = require("node:child_process");
+
 const { promisify } = require("util");
 
 const gzip = promisify(zlib.gzip);
@@ -180,116 +186,1414 @@ function validateJSON(filename, raw) {
    in the same Node.js process from writing
    between these reads.
 ========================================== */
+/* ==========================================
+   LIVESTREAM PRO
+   DATABASE SNAPSHOT ENGINE V2.1
+========================================== */
 
-function captureSnapshot() {
+const DELETION_DIR =
+  "account-deletion-requests";
+
+const DELETION_NAME =
+  /^[a-f0-9]{64}\.json$/;
+
+const DELETION_PATH =
+  /^account-deletion-requests\/[a-f0-9]{64}\.json$/;
+
+const SQLITE_PATH =
+  "candidate/wallet-test.sqlite";
+
+const MAX_DELETION_RECORDS = 10000;
+
+const MAX_WALLET_BYTES =
+  32 * 1024 * 1024;
+
+
+/* ==========================================
+   VALIDATE ACCOUNT DELETION RECORD
+========================================== */
+
+function validateDeletion(
+  name,
+  bytes,
+  users
+) {
+
+  const r = validateJSON(name, bytes);
+
+  if (
+
+    typeof r.uid !== "string" ||
+
+    !r.uid ||
+
+    typeof r.requestId !== "string" ||
+
+    !r.requestId ||
+
+    !["pending", "completed"]
+      .includes(r.status) ||
+
+    name !== DELETION_DIR + "/" +
+
+      checksum(Buffer.from(r.uid)) +
+
+      ".json"
+
+  ) {
+
+    throw new Error(
+      "INVALID_DELETION_RECORD"
+    );
+
+  }
+
+
+  /* PREVENT DELETED ACCOUNT RESURRECTION */
+
+  if (
+
+    (
+
+      r.status === "completed" ||
+
+      r.engineState === "local_done"
+
+    ) &&
+
+    Object.hasOwn(users, r.uid)
+
+  ) {
+
+    throw new Error(
+      "DELETED_UID_PRESENT"
+    );
+
+  }
+
+  return r;
+
+}
+
+
+/* ==========================================
+   CAPTURE DATABASE SNAPSHOT V2.1
+========================================== */
+
+function captureSnapshot(
+  dataDir = DATA_DIR
+) {
 
   const files = [];
 
   let totalBytes = 0;
 
-  for (const filename of BACKUP_FILES) {
 
-    const fullPath = path.join(
-      DATA_DIR,
-      filename
+  function capture(
+    name,
+    optional = false
+  ) {
+
+    const full = path.join(
+      dataDir,
+      name
     );
 
-    let info;
+    let fd;
+
 
     try {
 
-      info = fs.lstatSync(fullPath);
+      fd = fs.openSync(
 
-    } catch (error) {
+        full,
+
+        fs.constants.O_RDONLY |
+        fs.constants.O_NOFOLLOW
+
+      );
+
+    } catch (e) {
 
       if (
-        error.code === "ENOENT" &&
-        !REQUIRED_FILES.includes(filename)
+
+        optional &&
+
+        e.code === "ENOENT"
+
       ) {
-        continue;
+
+        return;
+
       }
 
-      throw error;
+      throw e;
 
     }
 
-    if (!info.isFile() || info.isSymbolicLink()) {
-
-      throw new Error(
-        `Invalid database file: ${filename}`
-      );
-
-    }
-
-    totalBytes += info.size;
-
-    if (totalBytes > MAX_SOURCE_BYTES) {
-
-      throw new Error(
-        "Database exceeds backup size limit"
-      );
-
-    }
-
-    const raw = fs.readFileSync(fullPath);
-
-    totalBytes += raw.length - info.size;
-
-    if (totalBytes > MAX_SOURCE_BYTES) {
-
-      throw new Error(
-        "Database exceeds backup size limit"
-      );
-
-    }
 
     try {
 
-      validateJSON(filename, raw);
+      const st = fs.fstatSync(fd);
 
-    } catch {
 
-      stats.integrityFailures++;
+      if (
 
-      throw new Error(
-        `JSON integrity check failed: ${filename}`
-      );
+        !st.isFile() ||
+
+        totalBytes + st.size >
+          MAX_SOURCE_BYTES
+
+      ) {
+
+        throw new Error(
+          "INVALID_SOURCE_OR_SIZE"
+        );
+
+      }
+
+
+      const raw = fs.readFileSync(fd);
+
+
+      if (
+
+        raw.length !== st.size ||
+
+        totalBytes + raw.length >
+          MAX_SOURCE_BYTES
+
+      ) {
+
+        throw new Error(
+          "SOURCE_CHANGED_OR_TOO_LARGE"
+        );
+
+      }
+
+
+      totalBytes += raw.length;
+
+
+      validateJSON(name, raw);
+
+
+      files.push({
+
+        name,
+
+        size: raw.length,
+
+        sha256: checksum(raw),
+
+        content:
+          raw.toString("base64")
+
+      });
+
+
+    } finally {
+
+      fs.closeSync(fd);
 
     }
 
-    files.push({
-
-      name: filename,
-
-      size: raw.length,
-
-      sha256: checksum(raw),
-
-      content: raw.toString("base64")
-
-    });
-
   }
 
-  if (!files.length) {
 
-    throw new Error(
-      "No database files found"
+  /* CAPTURE STANDARD JSON DATABASES */
+
+  for (const name of BACKUP_FILES) {
+
+    capture(
+
+      name,
+
+      !REQUIRED_FILES.includes(name)
+
     );
 
   }
 
-  return {
 
-    version: "1.0.0",
+  /* ======================================
+     ACCOUNT DELETION RECORDS
+  ====================================== */
+
+  const folder = path.join(
+
+    dataDir,
+
+    DELETION_DIR
+
+  );
+
+
+  let present = true;
+
+
+  try {
+
+    if (
+
+      !fs.lstatSync(folder)
+        .isDirectory()
+
+    ) {
+
+      throw new Error(
+        "INVALID_DELETION_DIRECTORY"
+      );
+
+    }
+
+  } catch (e) {
+
+    if (e.code !== "ENOENT") {
+
+      throw e;
+
+    }
+
+    present = false;
+
+  }
+
+
+  if (present) {
+
+    const names = fs.readdirSync(folder)
+
+      .filter(n => DELETION_NAME.test(n))
+
+      .sort();
+
+
+    if (
+
+      names.length >
+      MAX_DELETION_RECORDS
+
+    ) {
+
+      throw new Error(
+        "TOO_MANY_DELETION_RECORDS"
+      );
+
+    }
+
+
+    for (const name of names) {
+
+      capture(
+        DELETION_DIR + "/" + name
+      );
+
+    }
+
+  }
+
+
+  /* BUILD BACKUP MANIFEST */
+
+  const snapshot = {
+
+    version: "2.1.0",
+
+    scope: "JSON_ONLY",
 
     createdAt: Date.now(),
 
     vietnamDay: getVietnamDay(),
 
+    deletionDirectoryPresent: present,
+
     files
 
   };
+
+
+  validateSnapshot(snapshot);
+
+
+  return snapshot;
+
+}
+
+
+/* ==========================================
+   BACKUP MANIFEST VALIDATION V2.1
+   BACKWARD COMPATIBLE WITH V1
+========================================== */
+
+function validateSnapshot(snapshot) {
+
+  const old =
+    snapshot?.version === "1.0.0";
+
+  const bundle =
+    snapshot?.scope === "SQLITE_CANDIDATE";
+
+
+  if (
+
+    !snapshot ||
+
+    (
+
+      !old &&
+
+      (
+
+        snapshot.version !== "2.1.0" ||
+
+        ![
+          "JSON_ONLY",
+          "SQLITE_CANDIDATE"
+        ].includes(snapshot.scope) ||
+
+        typeof snapshot
+          .deletionDirectoryPresent !== "boolean"
+
+      )
+
+    ) ||
+
+    (old && bundle) ||
+
+    !Array.isArray(snapshot.files) ||
+
+    !snapshot.files.length ||
+
+    snapshot.files.length >
+
+      BACKUP_FILES.length +
+      MAX_DELETION_RECORDS + 1 ||
+
+    !Number.isSafeInteger(
+      snapshot.createdAt
+    ) ||
+
+    snapshot.createdAt <= 0
+
+  ) {
+
+    throw new Error(
+      "INVALID_BACKUP_MANIFEST"
+    );
+
+  }
+
+
+  const names = new Set();
+
+  const deletions = [];
+
+  let users;
+
+  let total = 0;
+
+
+  for (const item of snapshot.files) {
+
+    const isDeletion =
+
+      !old &&
+
+      typeof item?.name === "string" &&
+
+      DELETION_PATH.test(item.name);
+
+
+    const isSQLite =
+
+      !old &&
+
+      bundle &&
+
+      item?.name === SQLITE_PATH;
+
+
+    if (
+
+      !item ||
+
+      typeof item.content !== "string" ||
+
+      !Number.isSafeInteger(item.size) ||
+
+      item.size < 0 ||
+
+      !(
+
+        BACKUP_FILES.includes(item.name) ||
+
+        isDeletion ||
+
+        isSQLite
+
+      ) ||
+
+      names.has(item.name)
+
+    ) {
+
+      throw new Error(
+        "INVALID_BACKUP_ENTRY"
+      );
+
+    }
+
+
+    names.add(item.name);
+
+    total += item.size;
+
+
+    if (total > MAX_SOURCE_BYTES) {
+
+      throw new Error(
+        "BACKUP_TOO_LARGE"
+      );
+
+    }
+
+
+    const bytes = Buffer.from(
+
+      item.content,
+
+      "base64"
+
+    );
+
+
+    /* SHA-256 CHECKSUM VERIFICATION */
+
+    if (
+
+      bytes.length !== item.size ||
+
+      checksum(bytes) !== item.sha256
+
+    ) {
+
+      throw new Error(
+        "CHECKSUM_MISMATCH"
+      );
+
+    }
+
+
+    /* SQLITE FORMAT VERIFICATION */
+
+    if (isSQLite) {
+
+      if (
+
+        bytes.length > MAX_WALLET_BYTES ||
+
+        !bytes.subarray(0, 16).equals(
+
+          Buffer.from("SQLite format 3\0")
+
+        )
+
+      ) {
+
+        throw new Error(
+          "INVALID_SQLITE"
+        );
+
+      }
+
+
+    } else {
+
+
+      const value = validateJSON(
+
+        item.name,
+
+        bytes
+
+      );
+
+
+      if (item.name === "users.json") {
+
+        users = value;
+
+      }
+
+
+      if (isDeletion) {
+
+        deletions.push([
+
+          item.name,
+
+          bytes
+
+        ]);
+
+      }
+
+    }
+
+  }
+
+
+  /* REQUIRED DATABASE PROTECTION */
+
+  for (const name of REQUIRED_FILES) {
+
+    if (!names.has(name)) {
+
+      throw new Error(
+        "REQUIRED_FILE_MISSING"
+      );
+
+    }
+
+  }
+
+
+  /* DELETION MANIFEST PROTECTION */
+
+  if (
+
+    deletions.length >
+      MAX_DELETION_RECORDS ||
+
+    (
+
+      deletions.length &&
+
+      !snapshot.deletionDirectoryPresent
+
+    )
+
+  ) {
+
+    throw new Error(
+      "INVALID_DELETION_MANIFEST"
+    );
+
+  }
+
+
+  for (
+
+    const [name, bytes] of deletions
+
+  ) {
+
+    validateDeletion(
+
+      name,
+
+      bytes,
+
+      users
+
+    );
+
+  }
+
+
+  /* SQLITE MIGRATION BUNDLE PROTECTION */
+
+  if (
+
+    bundle &&
+
+    (
+
+      !snapshot.deletionDirectoryPresent ||
+
+      !names.has(SQLITE_PATH) ||
+
+      !names.has("lsp_pg_orders.json")
+
+    )
+
+  ) {
+
+    throw new Error(
+      "INCOMPLETE_CANDIDATE_BUNDLE"
+    );
+
+  }
+
+
+  return snapshot;
+
+}
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   DATABASE RECOVERY ENGINE V2.1
+========================================== */
+
+async function extractSnapshot(
+
+  snapshot,
+
+  dest,
+
+  alreadyCreated = false
+
+) {
+
+
+  /* CREATE PRIVATE RECOVERY DIRECTORY */
+
+  if (!alreadyCreated) {
+
+    await fsp.mkdir(dest, {
+
+      mode: 0o700
+
+    });
+
+  }
+
+
+  try {
+
+    const dirs = [dest];
+
+
+    /* RESTORE ACCOUNT DELETION RECORDS */
+
+    if (snapshot.deletionDirectoryPresent) {
+
+      const d = path.join(
+
+        dest,
+
+        DELETION_DIR
+
+      );
+
+
+      await fsp.mkdir(d, {
+
+        mode: 0o700
+
+      });
+
+
+      dirs.push(d);
+
+    }
+
+
+    /* RESTORE SQLITE CANDIDATE */
+
+    if (
+
+      snapshot.scope ===
+      "SQLITE_CANDIDATE"
+
+    ) {
+
+      const d = path.join(
+
+        dest,
+
+        "candidate"
+
+      );
+
+
+      await fsp.mkdir(d, {
+
+        mode: 0o700
+
+      });
+
+
+      dirs.push(d);
+
+    }
+
+
+    /* RESTORE VERIFIED FILES */
+
+    for (const item of snapshot.files) {
+
+      const filename = path.join(
+
+        dest,
+
+        item.name
+
+      );
+
+
+      const handle = await fsp.open(
+
+        filename,
+
+        "wx",
+
+        0o600
+
+      );
+
+
+      try {
+
+        await handle.writeFile(
+
+          Buffer.from(
+
+            item.content,
+
+            "base64"
+
+          )
+
+        );
+
+
+        await handle.sync();
+
+
+      } finally {
+
+        await handle.close();
+
+      }
+
+
+      /* VERIFY RESTORED CHECKSUM */
+
+      if (
+
+        checksum(
+
+          await fsp.readFile(filename)
+
+        ) !== item.sha256
+
+      ) {
+
+        throw new Error(
+          "EXTRACT_CHECKSUM_MISMATCH"
+        );
+
+      }
+
+    }
+
+
+    /* PERSIST DIRECTORY METADATA */
+
+    const syncOrder = [
+
+      ...dirs.reverse(),
+
+      path.dirname(dest)
+
+    ];
+
+
+    for (const d of syncOrder) {
+
+      const fd = await fsp.open(d, "r");
+
+
+      try {
+
+        await fd.sync();
+
+      } finally {
+
+        await fd.close();
+
+      }
+
+    }
+
+
+  } catch (e) {
+
+    await fsp.rm(dest, {
+
+      recursive: true,
+
+      force: true
+
+    });
+
+
+    throw e;
+
+  }
+
+}
+
+
+/* ==========================================
+   SQLITE MIGRATION CANDIDATE VERIFICATION
+========================================== */
+
+async function verifyCandidate(snapshot) {
+
+  const root = fs.mkdtempSync(
+
+    path.join(
+
+      os.tmpdir(),
+
+      "lsp-wallet-migration-"
+
+    )
+
+  );
+
+
+  try {
+
+    await extractSnapshot(
+
+      snapshot,
+
+      root,
+
+      true
+
+    );
+
+
+    /* VERIFY BALANCES AND LEGACY RECEIPTS */
+
+    for (
+
+      const script of [
+
+        "wallet-migration.js",
+
+        "wallet-legacy-receipts.js"
+
+      ]
+
+    ) {
+
+      execFileSync(
+
+        process.execPath,
+
+        [
+
+          path.join(__dirname, script),
+
+          "verify",
+
+          root
+
+        ],
+
+        {
+
+          stdio: "ignore",
+
+          timeout: 120000
+
+        }
+
+      );
+
+    }
+
+
+  } finally {
+
+    fs.rmSync(root, {
+
+      recursive: true,
+
+      force: true
+
+    });
+
+  }
+
+}
+
+
+/* ==========================================
+   INDEPENDENT TOMBSTONE VERIFICATION
+========================================== */
+
+function checkCurrentDeletionRecords(
+
+  snapshot,
+
+  trustedDir
+
+) {
+
+  if (!snapshot.deletionDirectoryPresent) {
+
+    throw new Error(
+      "BACKUP_HAS_NO_DELETION_DIRECTORY"
+    );
+
+  }
+
+
+  const dir = fs.realpathSync(trustedDir);
+
+
+  if (
+
+    path.basename(dir) !== DELETION_DIR ||
+
+    !fs.lstatSync(dir).isDirectory()
+
+  ) {
+
+    throw new Error(
+      "TRUSTED_DELETION_DIRECTORY_REQUIRED"
+    );
+
+  }
+
+
+  const names = fs.readdirSync(dir)
+
+    .filter(n => DELETION_NAME.test(n))
+
+    .sort();
+
+
+  const archived = new Map(
+
+    snapshot.files
+
+      .filter(f => DELETION_PATH.test(f.name))
+
+      .map(f => [
+
+        path.basename(f.name),
+
+        f.sha256
+
+      ])
+
+  );
+
+
+  /* VERIFY DELETION RECORD COUNT */
+
+  if (
+
+    names.length !== archived.size ||
+
+    names.length > MAX_DELETION_RECORDS
+
+  ) {
+
+    throw new Error(
+      "DELETION_RECORD_SET_CHANGED"
+    );
+
+  }
+
+
+  let total = 0;
+
+
+  /* VERIFY EVERY DELETION RECORD */
+
+  for (const name of names) {
+
+    const fd = fs.openSync(
+
+      path.join(dir, name),
+
+      fs.constants.O_RDONLY |
+      fs.constants.O_NOFOLLOW
+
+    );
+
+
+    try {
+
+      const st = fs.fstatSync(fd);
+
+
+      if (
+
+        !st.isFile() ||
+
+        total + st.size >
+          MAX_SOURCE_BYTES
+
+      ) {
+
+        throw new Error(
+          "UNSAFE_TRUSTED_RECORD"
+        );
+
+      }
+
+
+      const raw = fs.readFileSync(fd);
+
+      total += raw.length;
+
+
+      if (
+
+        raw.length !== st.size ||
+
+        total > MAX_SOURCE_BYTES ||
+
+        checksum(raw) !== archived.get(name)
+
+      ) {
+
+        throw new Error(
+          "DELETION_RECORD_CHANGED"
+        );
+
+      }
+
+
+    } finally {
+
+      fs.closeSync(fd);
+
+    }
+
+  }
+
+
+  console.log(
+
+    "[RECOVERY] DELETION RECORDS MATCH; " +
+
+    "activationAllowed=false"
+
+  );
+
+}
+
+
+/* ==========================================
+   SQLITE MIGRATION BACKUP BUNDLE V2.1
+========================================== */
+
+async function createCandidateBundle(dir) {
+
+  const root = fs.realpathSync(dir);
+
+  const st = fs.statSync(root);
+
+
+  /* REQUIRE PRIVATE MIGRATION DIRECTORY */
+
+  if (
+
+    path.dirname(root) !==
+      fs.realpathSync(os.tmpdir()) ||
+
+    !path.basename(root)
+      .startsWith("lsp-wallet-migration-") ||
+
+    !st.isDirectory() ||
+
+    (st.mode & 0o077)
+
+  ) {
+
+    throw new Error(
+      "PRIVATE_MIGRATION_DIRECTORY_REQUIRED"
+    );
+
+  }
+
+
+  const candidateDir = path.join(
+
+    root,
+
+    "candidate"
+
+  );
+
+
+  const cs = fs.lstatSync(candidateDir);
+
+
+  const file = path.join(
+
+    root,
+
+    SQLITE_PATH
+
+  );
+
+
+  const info = fs.lstatSync(file);
+
+
+  if (
+
+    !cs.isDirectory() ||
+
+    (cs.mode & 0o077) ||
+
+    !info.isFile() ||
+
+    (info.mode & 0o077) ||
+
+    info.size > MAX_WALLET_BYTES
+
+  ) {
+
+    throw new Error(
+      "UNSAFE_CANDIDATE"
+    );
+
+  }
+
+
+  /* CAPTURE JSON DATABASES */
+
+  const snapshot = captureSnapshot(root);
+
+
+  const work = fs.mkdtempSync(
+
+    path.join(root, ".bundle-")
+
+  );
+
+
+  try {
+
+    const {
+
+      DatabaseSync,
+
+      backup
+
+    } = require("node:sqlite");
+
+
+    const dest = path.join(
+
+      work,
+
+      "snapshot.sqlite"
+
+    );
+
+
+    /* SQLITE ONLINE BACKUP */
+
+    const db = new DatabaseSync(
+
+      file,
+
+      {
+
+        readOnly: true
+
+      }
+
+    );
+
+
+    try {
+
+      await backup(db, dest);
+
+    } finally {
+
+      db.close();
+
+    }
+
+
+    if (
+
+      fs.statSync(dest).size >
+        MAX_WALLET_BYTES
+
+    ) {
+
+      throw new Error(
+        "SQLITE_TOO_LARGE"
+      );
+
+    }
+
+
+    const bytes = fs.readFileSync(dest);
+
+
+    /* VERIFY JSON SOURCE DID NOT CHANGE */
+
+    const after = captureSnapshot(root);
+
+
+    if (
+
+      JSON.stringify(after.files) !==
+        JSON.stringify(snapshot.files) ||
+
+      after.deletionDirectoryPresent !==
+        snapshot.deletionDirectoryPresent
+
+    ) {
+
+      throw new Error(
+        "BUNDLE_SOURCE_CHANGED"
+      );
+
+    }
+
+
+    /* ADD SQLITE TO BACKUP MANIFEST */
+
+    snapshot.scope =
+      "SQLITE_CANDIDATE";
+
+
+    snapshot.files.push({
+
+      name: SQLITE_PATH,
+
+      size: bytes.length,
+
+      sha256: checksum(bytes),
+
+      content: bytes.toString("base64")
+
+    });
+
+
+    validateSnapshot(snapshot);
+
+
+    /* VERIFY BALANCES AND RECEIPTS */
+
+    await verifyCandidate(snapshot);
+
+
+    /* COMPRESS AND ENCRYPT */
+
+    const encrypted = encryptBackup(
+
+      await gzip(
+
+        Buffer.from(
+
+          JSON.stringify(snapshot)
+
+        ),
+
+        {
+
+          level: 6
+
+        }
+
+      )
+
+    );
+
+
+    if (
+
+      encrypted.length >
+        MAX_ENCRYPTED_BYTES
+
+    ) {
+
+      throw new Error(
+        "BACKUP_TOO_LARGE"
+      );
+
+    }
+
+
+    const tmp = path.join(
+
+      work,
+
+      "bundle.lspbak"
+
+    );
+
+
+    await atomicWrite(tmp, encrypted);
+
+
+    /* VERIFY ENCRYPTED BACKUP */
+
+    await verifyBackup(tmp);
+
+
+    /* PUBLISH WITHOUT OVERWRITING */
+
+    await fsp.link(
+
+      tmp,
+
+      path.join(
+
+        root,
+
+        "migration-candidate.lspbak"
+
+      )
+
+    );
+
+
+    const fd = await fsp.open(root, "r");
+
+
+    try {
+
+      await fd.sync();
+
+    } finally {
+
+      await fd.close();
+
+    }
+
+
+    console.log(
+
+      "[RECOVERY] CANDIDATE BUNDLE VERIFIED; " +
+
+      "activationAllowed=false"
+
+    );
+
+
+  } finally {
+
+    fs.rmSync(work, {
+
+      recursive: true,
+
+      force: true
+
+    });
+
+  }
 
 }
 
@@ -477,16 +1781,20 @@ async function atomicWrite(filename, buffer) {
 ========================================== */
 
 /* ==========================================
-   VERIFY ENCRYPTED BACKUP V1.1
+   VERIFY ENCRYPTED BACKUP V2.1
 ========================================== */
 
 async function verifyBackup(filename) {
 
   const info = await fsp.lstat(filename);
 
+
   if (
+
     !info.isFile() ||
+
     info.size > MAX_ENCRYPTED_BYTES
+
   ) {
 
     throw new Error(
@@ -495,10 +1803,17 @@ async function verifyBackup(filename) {
 
   }
 
+
   const encrypted =
+
     await fsp.readFile(filename);
 
-  if (encrypted.length > MAX_ENCRYPTED_BYTES) {
+
+  if (
+
+    encrypted.length > MAX_ENCRYPTED_BYTES
+
+  ) {
 
     throw new Error(
       "Backup too large"
@@ -506,128 +1821,54 @@ async function verifyBackup(filename) {
 
   }
 
+
+  /* AES-256-GCM DECRYPTION */
+
   const compressed =
+
     decryptBackup(encrypted);
+
+
+  /* GZIP DECOMPRESSION */
 
   const raw = await gunzip(compressed, {
 
     maxOutputLength:
+
       MAX_SOURCE_BYTES * 2
 
   });
 
+
   const snapshot = JSON.parse(
+
     raw.toString("utf8")
+
   );
+
+
+  /* VALIDATE BACKUP MANIFEST */
+
+  validateSnapshot(snapshot);
+
+
+  /* VERIFY SQLITE MIGRATION BUNDLE */
 
   if (
 
-    snapshot.version !== "1.0.0" ||
-
-    !Array.isArray(snapshot.files) ||
-
-    snapshot.files.length === 0 ||
-
-    snapshot.files.length > BACKUP_FILES.length ||
-
-    !Number.isSafeInteger(snapshot.createdAt) ||
-
-    snapshot.createdAt <= 0
+    snapshot.scope ===
+    "SQLITE_CANDIDATE"
 
   ) {
 
-    throw new Error(
-      "Invalid backup manifest"
-    );
+    await verifyCandidate(snapshot);
 
   }
 
-  const names = new Set();
-
-  let totalBytes = 0;
-
-  for (const item of snapshot.files) {
-
-    if (
-
-      !item ||
-
-      typeof item.content !== "string" ||
-
-      !Number.isSafeInteger(item.size) ||
-
-      item.size < 0 ||
-
-      !BACKUP_FILES.includes(item.name) ||
-
-      names.has(item.name)
-
-    ) {
-
-      throw new Error(
-        "Invalid backup file entry"
-      );
-
-    }
-
-    names.add(item.name);
-
-    const content = Buffer.from(
-
-      item.content,
-
-      "base64"
-
-    );
-
-    if (
-
-      content.length !== item.size ||
-
-      checksum(content) !== item.sha256
-
-    ) {
-
-      throw new Error(
-        `Checksum mismatch: ${item.name}`
-      );
-
-    }
-
-    totalBytes += content.length;
-
-    if (totalBytes > MAX_SOURCE_BYTES) {
-
-      throw new Error(
-        "Snapshot exceeds size limit"
-      );
-
-    }
-
-    validateJSON(
-      item.name,
-      content
-    );
-
-  }
-
-  for (const required of REQUIRED_FILES) {
-
-    if (!names.has(required)) {
-
-      throw new Error(
-        `Missing required database: ${required}`
-      );
-
-    }
-
-  }
 
   return snapshot;
 
 }
-
-
 /* ==========================================
    LIVESTREAM PRO
    OFFSITE BACKUP ENGINE V1.1
@@ -795,9 +2036,27 @@ async function uploadVerifiedBackup(filename) {
     filename
   );
 
-  /* VERIFY LOCAL BACKUP FIRST */
+/* ==========================================
+   VERIFY OFFSITE BACKUP SCOPE
+========================================== */
+
+const verified =
 
   await verifyBackup(local);
+
+
+if (
+
+  verified.scope ===
+  "SQLITE_CANDIDATE"
+
+) {
+
+  throw new Error(
+    "INVALID_OFFSITE_SCOPE"
+  );
+
+}
 
   const bytes =
     await fsp.readFile(local);
@@ -1533,7 +2792,7 @@ async function getStats() {
 
 return {
 
-  version: "1.1.0",
+version: "2.1.0",
 
   offsite: {
 
@@ -1659,8 +2918,12 @@ initOffsite();
   }, 30000).unref();
 
 console.log(
-  "[DATABASE SECURITY] V1.1 enabled"
+
+  "[DATABASE SECURITY] V2.1 JSON_ONLY enabled"
+
 );
+
+
   console.log(
     "[DATABASE BACKUP] AES-256-GCM encryption enabled"
   );
@@ -1690,8 +2953,7 @@ module.exports = {
 
 /* ==========================================
    LIVESTREAM PRO
-   OFFLINE DATABASE RECOVERY V1.1
-
+   OFFLINE DATABASE RECOVERY V2.1
    NO PRODUCTION OVERWRITE
 ========================================== */
 
@@ -1710,6 +2972,66 @@ async function recoveryCli() {
   ] = process.argv.slice(2);
 
 
+  /* ======================================
+     SQLITE MIGRATION BACKUP BUNDLE
+  ====================================== */
+
+  if (
+
+    command === "bundle" &&
+
+    input &&
+
+    !output &&
+
+    !extra.length
+
+  ) {
+
+    initializeKey();
+
+    return createCandidateBundle(input);
+
+  }
+
+
+  /* ======================================
+     INDEPENDENT TOMBSTONE VERIFICATION
+  ====================================== */
+
+  if (
+
+    command === "check-tombstones" &&
+
+    input &&
+
+    output &&
+
+    !extra.length
+
+  ) {
+
+    initializeKey();
+
+
+    const snapshot = await verifyBackup(
+
+      path.resolve(input)
+
+    );
+
+
+    return checkCurrentDeletionRecords(
+
+      snapshot,
+
+      output
+
+    );
+
+  }
+
+
   /* VALIDATE COMMAND */
 
   if (
@@ -1718,19 +3040,34 @@ async function recoveryCli() {
 
     !input ||
 
-    !["verify", "extract"].includes(command) ||
+    !["verify", "extract"]
+      .includes(command) ||
 
     (
+
       command === "extract"
+
         ? !output
+
         : Boolean(output)
+
     )
 
   ) {
 
     throw new Error(
 
-      "Usage: node security-database.js verify BACKUP | extract BACKUP NEW_DIRECTORY"
+      "Usage: node security-database.js " +
+
+      "verify BACKUP | " +
+
+      "extract BACKUP NEW_DIRECTORY | " +
+
+      "bundle PRIVATE_MIGRATION_DIRECTORY | " +
+
+      "check-tombstones BACKUP " +
+
+      "TRUSTED_DELETION_DIRECTORY"
 
     );
 
@@ -1750,11 +3087,13 @@ async function recoveryCli() {
 
   );
 
+
   const names = snapshot.files.map(
 
     item => item.name
 
   );
+
 
   const missing = BACKUP_FILES.filter(
 
@@ -1772,8 +3111,22 @@ async function recoveryCli() {
     JSON.stringify({
 
       createdAt:
+
         new Date(snapshot.createdAt)
           .toISOString(),
+
+      scope:
+
+        snapshot.scope ||
+
+        "LEGACY_JSON_ONLY",
+
+      deletionDirectoryPresent:
+
+        snapshot.deletionDirectoryPresent ??
+        null,
+
+      activationAllowed: false,
 
       files: names,
 
@@ -1783,6 +3136,20 @@ async function recoveryCli() {
 
   );
 
+
+  console.warn(
+
+    "[RECOVERY] Historical snapshot only. " +
+
+    "Compare latest independent deletion " +
+
+    "records and newer financial transactions " +
+
+    "before any activation."
+
+  );
+
+
   if (command === "verify") {
 
     return;
@@ -1790,15 +3157,19 @@ async function recoveryCli() {
   }
 
 
-  /* VALIDATE RECOVERY DESTINATION */
+  /* ======================================
+     VALIDATE RECOVERY DESTINATION
+  ====================================== */
 
   const target = path.resolve(output);
+
 
   const parent = await fsp.realpath(
 
     path.dirname(target)
 
   );
+
 
   const dest = path.join(
 
@@ -1808,13 +3179,17 @@ async function recoveryCli() {
 
   );
 
+
   const isWithin = (candidate, root) =>
 
     candidate === root ||
 
     candidate.startsWith(
+
       root + path.sep
+
     );
+
 
   const appPublic = path.join(
 
@@ -1824,16 +3199,22 @@ async function recoveryCli() {
 
   );
 
-  // Resolve existing protected directories
-  // to prevent common symlink bypasses.
 
   const productionRoot =
+
     await fsp.realpath(DATA_DIR)
+
       .catch(() => DATA_DIR);
 
+
   const publicRoot =
+
     await fsp.realpath(appPublic)
+
       .catch(() => appPublic);
+
+
+  /* BLOCK PRODUCTION OVERWRITE */
 
   if (
 
@@ -1849,83 +3230,24 @@ async function recoveryCli() {
 
     throw new Error(
 
-      "Recovery destination must be outside live data and public directories"
+      "Recovery destination must be " +
+
+      "outside live data and public directories"
 
     );
 
   }
 
 
-  /* CREATE NEW PRIVATE DIRECTORY */
+  /* RESTORE VERIFIED BACKUP */
 
-  await fsp.mkdir(dest, {
+  await extractSnapshot(
 
-    mode: 0o700
+    snapshot,
 
-  });
+    dest
 
-
-  /* RECOVER VERIFIED FILES */
-
-  for (const item of snapshot.files) {
-
-    const filename = path.join(
-
-      dest,
-
-      item.name
-
-    );
-
-    const bytes = Buffer.from(
-
-      item.content,
-
-      "base64"
-
-    );
-
-    const handle = await fsp.open(
-
-      filename,
-
-      "wx",
-
-      0o600
-
-    );
-
-    try {
-
-      await handle.writeFile(bytes);
-
-      await handle.sync();
-
-    } finally {
-
-      await handle.close();
-
-    }
-
-
-    /* VERIFY EXTRACTED FILE */
-
-    const recovered =
-      await fsp.readFile(filename);
-
-    if (
-      checksum(recovered) !== item.sha256
-    ) {
-
-      throw new Error(
-
-        "Extracted file checksum mismatch"
-
-      );
-
-    }
-
-  }
+  );
 
 
   /* RECOVERY REPORT */
@@ -1938,6 +3260,7 @@ async function recoveryCli() {
 
   );
 
+
   console.log(
 
     "[RECOVERY] No production files were changed."
@@ -1945,8 +3268,6 @@ async function recoveryCli() {
   );
 
 }
-
-
 /* ==========================================
    RUN CLI ONLY WHEN EXECUTED DIRECTLY
 ========================================== */
