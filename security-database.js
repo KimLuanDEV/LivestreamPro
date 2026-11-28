@@ -4489,6 +4489,71 @@ if (
 
 }
 
+
+/* ==========================================
+   FINANCIAL SAFETY AUDIT V1.14A
+   READ ONLY
+========================================== */
+
+if (
+
+  command === "financial-safety-audit" &&
+
+  input &&
+
+  !output &&
+
+  !extra.length
+
+) {
+
+  initializeKey();
+
+
+  const snapshot = await verifyBackup(
+
+    path.resolve(input)
+
+  );
+
+
+  const source = await fsp.readFile(
+
+    path.join(__dirname, "server.js"),
+
+    "utf8"
+
+  );
+
+
+  const report = require(
+
+    "./wallet-safety-audit"
+
+  ).run(
+
+    snapshot,
+
+    source,
+
+    process.env
+
+  );
+
+
+  console.log(
+
+    JSON.stringify(report, null, 2)
+
+  );
+
+
+  return;
+
+}
+
+
+
   /* VALIDATE COMMAND */
 
   if (
