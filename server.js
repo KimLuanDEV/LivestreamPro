@@ -132,7 +132,7 @@ console.error("❌ Save wheel8 user history failed",e)
 
 function getAdminWheel8Data(){
 
-  const users = loadUsers()
+  const users = lspReadUsersView();
 
   const slotPool = [0,0,0,0,0,0,0,0]
 
@@ -1397,6 +1397,29 @@ function emitWheel8Admin(event, data) {
   io.to(WHEEL8_ADMIN_ROOM).emit(event, data);
 }
 
+/* ==========================================
+   WHEEL8 - ADMIN PERFORMANCE OPTIMIZATION
+========================================== */
+
+function emitWheel8AdminBets() {
+
+  const adminRoom =
+    io.sockets.adapter.rooms.get(
+      WHEEL8_ADMIN_ROOM
+    );
+
+  if (!adminRoom?.size) return;
+
+  emitWheel8Admin(
+
+    "admin-wheel8-bets-update",
+
+    getAdminWheel8Data()
+
+  );
+
+}
+
 
 
 
@@ -1769,7 +1792,7 @@ function settleWheel8Double(uid, action) {
 
 // Tự động trả phần lãi khi người chơi không lựa chọn
 setInterval(() => {
-  const users = loadUsers();
+  const users = lspReadUsersView();
   const expired = [];
 
   for (const [uid, user] of Object.entries(users)) {
@@ -1795,7 +1818,10 @@ setInterval(() => {
 // ================================
 setInterval(()=>{
 
-const users = loadUsers()
+const users =
+  wheel8Round.bets.length
+    ? loadUsers()
+    : {};
 
 
 // ==========================================
@@ -1970,13 +1996,17 @@ for (const [uid, totals] of wheel8Totals) {
 }
 
 
-// 💾 LƯU LỊCH SỬ CHỈ TRONG NGÀY
-cleanWheel8UserHistory(true)
+cleanWheel8UserHistory(
+  wheel8Round.bets.length > 0
+);
 
 
-// lưu user
-saveUsers(users)
+// SAVE ONLY WHEN ROUND HAS BETS
+if (wheel8Round.bets.length > 0) {
 
+  saveUsers(users);
+
+}
 
 // Thông báo riêng cho từng người chơi có lãi
 for (const item of wheel8NewOffers) {
@@ -1987,14 +2017,23 @@ for (const item of wheel8NewOffers) {
   });
 }
 
-// =======================
-// 💎 REALTIME COIN UPDATE
-// =======================
+/* ==========================================
+   WHEEL8 - UNIQUE WALLET UPDATE
+========================================== */
 
-wheel8Round.bets.forEach(o=>{
-emitCoinUpdate(o.uid)
-})
+const wheel8UpdatedUsers = new Set(
 
+  wheel8Round.bets.map(
+    bet => bet.uid
+  )
+
+);
+
+for (const uid of wheel8UpdatedUsers) {
+
+  emitCoinUpdate(uid);
+
+}
 
 // =======================
 // 🏆 TOP WINNERS
@@ -2011,9 +2050,8 @@ wheel8Round.bets.forEach(o=>{
     win = o.bet * slotMulti
   }
 
-  if(win > 0){
+if(win > 0){
 
-const users = loadUsers()
 const user = users[o.uid]
 
 let displayName = "???"
@@ -2257,14 +2295,7 @@ if(todayStart !== wheel8RoundDayTs){
 }
 
 
-wheel8Round = createWheel8Round()
-
-
-
-saveWheel8Round({
-dayTs: wheel8RoundDayTs,
-count: wheel8RoundCounter
-})
+wheel8Round = createWheel8Round();
 
 
 
@@ -2295,7 +2326,7 @@ setTimeout(()=>{
 },5000)
 
 
-emitWheel8Admin("admin-wheel8-bets-update", getAdminWheel8Data())
+emitWheel8AdminBets();
 
 },35000)
 
@@ -2423,7 +2454,7 @@ function getDtpPool(){
 
 function getAdminDtpBetList(){
 
-const users = loadUsers();
+const users = lspReadUsersView();
 
 const map = {};
 
@@ -2456,15 +2487,45 @@ total:p.dragon + p.tiger + p.phoenix
 
 
 
+/* ==========================================
+   DTP - ADMIN PERFORMANCE OPTIMIZATION
+========================================== */
+
 function emitAdminDtpBets() {
 
-  emitToDtpAdmins(
-    "admin-dtp-bets-update",
-    {
-      round: dtpRound.id,
-      pool: getDtpPool(),
-      bets: getAdminDtpBetList()
+  let hasAdmin = false;
+
+  for (
+    const client of
+    io.sockets.sockets.values()
+  ) {
+
+    if (isDtpAdminSocket(client)) {
+
+      hasAdmin = true;
+
+      break;
+
     }
+
+  }
+
+  if (!hasAdmin) return;
+
+  emitToDtpAdmins(
+
+    "admin-dtp-bets-update",
+
+    {
+
+      round: dtpRound.id,
+
+      pool: getDtpPool(),
+
+      bets: getAdminDtpBetList()
+
+    }
+
   );
 
 }
@@ -2597,7 +2658,10 @@ let dtpRound = {
 
 setInterval(()=>{
 
-  const users = loadUsers();
+  const users =
+    dtpRound.bets.length
+      ? loadUsers()
+      : {};
 
 const winner = dtpRound.secretResult || pickDtpWinner();
 
@@ -2684,11 +2748,30 @@ me.dtpHistory = me.dtpHistory.slice(0,30);
 
   
 
+// SAVE DATABASE ONLY WHEN NECESSARY
+
+if (dtpRound.bets.length > 0) {
+
   saveUsers(users);
 
-  dtpRound.bets.forEach(o=>{
-    emitCoinUpdate(o.uid);
-  });
+}
+
+
+// UNIQUE WALLET UPDATE
+
+const dtpUpdatedUsers = new Set(
+
+  dtpRound.bets.map(
+    bet => bet.uid
+  )
+
+);
+
+for (const uid of dtpUpdatedUsers) {
+
+  emitCoinUpdate(uid);
+
+}
 
   io.emit("dtp-result",{
     roundId: dtpRound.id,
@@ -3025,7 +3108,7 @@ startFakeBotFlow();
 
 function emitTimeRacePlayers(){
 
-  const users = loadUsers();
+  const users = lspReadUsersView();
 
   const list = timeRaceRound.bets.map(b=>{
     const me = users[b.uid];
@@ -3103,10 +3186,21 @@ if(multiplier >= timeRaceRound.crashPoint){
     timeRaceHistory
   );
 
-  const users = loadUsers();
+const hasUnstopped =
+  timeRaceRound.bets.some(b =>
 
-  // 🔥 xử lý tất cả người chơi
-  timeRaceRound.bets.forEach(b=>{
+    !timeRaceRound.stopped.includes(b.uid)
+
+  );
+
+const users = hasUnstopped
+  ? loadUsers()
+  : {};
+
+let usersChanged = false;
+
+// 🔥 xử lý tất cả người chơi
+timeRaceRound.bets.forEach(b=>{
 
     const me = users[b.uid];
     if(!me?.profile) return;
@@ -3129,6 +3223,8 @@ if(multiplier >= timeRaceRound.crashPoint){
 me.timeRaceHistory = filterTimeRaceHistoryToday(
   me.timeRaceHistory
 );
+
+usersChanged = true;
 
 me.timeRaceHistory.unshift({
   roundId: timeRaceRound.id,
@@ -3154,10 +3250,14 @@ me.timeRaceHistory =
 
   });
 
+if (usersChanged) {
+
   saveUsers(users);
 
+}
 
 const displayCrash =
+
   timeRaceRound.crashPoint <= 1
     ? 0
     : timeRaceRound.crashPoint;
@@ -3637,8 +3737,8 @@ socket.on("wheel8-double-get", () => {
   const uid = socket.data.uid;
   if (!uid) return;
 
-  const users = loadUsers();
-  const offer = users[uid]?.wheel8DoubleOffer;
+const offer =
+  getUserSnapshot(uid)?.wheel8DoubleOffer;
 
   if (!offer || offer.status !== "pending") return;
 
@@ -3982,7 +4082,7 @@ socket.emit("wheel8-my-bets",
 
 
 
-emitWheel8Admin("admin-wheel8-bets-update", getAdminWheel8Data())
+emitWheel8AdminBets();
 
 })
 
@@ -8436,7 +8536,7 @@ function lspOwnedMediaHandler(kind) {
 
 
       const account =
-        uid && loadUsers()[uid];
+        uid && getUserSnapshot(uid);
 
 
       /* VERIFY ACCOUNT */
@@ -9922,7 +10022,8 @@ function runTransferAutoApproval() {
   transferAutoProcessing = true;
 
   try {
-    const users = loadUsers();
+    const users = lspReadUsersView();
+
     const now = Date.now();
     const expired = [];
 
@@ -10378,8 +10479,8 @@ app.get("/api/profile/bank-default", (req, res) => {
   const uid = req.headers["x-uid"];
   if (!uid) return res.status(403).json({ error: "no_auth" });
 
-  const db = loadUsers();
-  const user = db[uid];
+const user = getUserSnapshot(uid);
+
   if (!user || !user.profile) {
     return res.json({ ok: true, bank: null });
   }
@@ -11087,14 +11188,39 @@ function canViewSocialPost(viewerUid, post, db) {
 
 }
 
-function getVisibleSocialPosts(uid, db = loadUsers()) {
-  return lpPosts
-    .filter(post => canViewSocialPost(uid, post, db))
-    .slice(0, 50);
+/* ==========================================
+   SOCIAL FEED PERFORMANCE V1.0
+========================================== */
+
+function getVisibleSocialPosts(
+  uid,
+  db = lspReadUsersView()
+) {
+
+  const result = [];
+
+  for (const post of lpPosts) {
+
+    if (
+      !canViewSocialPost(uid, post, db)
+    ) {
+      continue;
+    }
+
+    result.push(post);
+
+    if (result.length === 50) {
+      break;
+    }
+
+  }
+
+  return result;
+
 }
 
 function emitSocialPostToAllowedUsers(event, post, payload) {
-  const db = loadUsers();
+const db = lspReadUsersView();
 
   for (const client of io.sockets.sockets.values()) {
     if (!client.data.uid) continue;
@@ -11106,7 +11232,7 @@ function emitSocialPostToAllowedUsers(event, post, payload) {
 }
 
 function refreshSocialFeedForUser(uid) {
-  const db = loadUsers();
+  const db = lspReadUsersView();
 
   for (const client of io.sockets.sockets.values()) {
     if (String(client.data.uid || "") === String(uid)) {
@@ -11126,7 +11252,7 @@ function canInteractSocialPost(socket, post) {
 
   if (!uid || !post) return false;
 
-  const db = loadUsers();
+  const db = lspReadUsersView();
 
   return canViewSocialPost(uid, post, db);
 }
@@ -11235,8 +11361,563 @@ function pushNotify(uid, payload){
 
 const USERS_FILE = path.join("/opt/render/project/data", "users.json");
 
+/* ==========================================
+   LIVESTREAM PRO
+   USERS RAM CACHE ENGINE V1.0
+========================================== */
+
+const LSP_USERS_RAM_CACHE_ENABLED =
+  process.env.LSP_USERS_RAM_CACHE !== "false";
+
+const lspUsersRamCache = {
+  signature: null,
+  data: null,
+  pendingJson: null,
+
+  // Nội dung đã được ghi bền vững xuống đĩa
+  committedJson: null
+};
+const lspUsersCacheMetrics = {
+
+  reads: 0,
+  fullSnapshots: 0,
+  userSnapshots: 0,
+  partialSnapshots: 0,
+  readOnlyViews: 0,
+  skippedWrites: 0,
+  hits: 0,
+  misses: 0,
+
+  diskReads: 0,
+  diskReadMs: 0,
+  cloneMs: 0,
+
+  saves: 0,
+  saveFailures: 0,
+  saveMs: 0,
+  maxSaveMs: 0,
+
+  refreshErrors: 0
+
+};
+
+const {
+  performance: lspPerf,
+  monitorEventLoopDelay: lspMonitorDelay
+} = require("node:perf_hooks");
 
 
+/* ==========================================
+   FILE SIGNATURE
+========================================== */
+
+function lspUsersFileSignature() {
+
+  try {
+
+    const st = fs.statSync(
+      USERS_FILE,
+      { bigint: true }
+    );
+
+    return [
+      st.dev,
+      st.ino,
+      st.size,
+      st.mtimeNs,
+      st.ctimeNs
+    ].join(":");
+
+  } catch (error) {
+
+    if (error.code === "ENOENT") {
+      return null;
+    }
+
+    throw error;
+
+  }
+
+}
+
+
+/* ==========================================
+   INVALIDATE RAM CACHE
+========================================== */
+
+function lspInvalidateUsersRamCache() {
+
+  lspUsersRamCache.signature = null;
+
+  lspUsersRamCache.data = null;
+
+  lspUsersRamCache.pendingJson = null;
+
+  lspUsersRamCache.committedJson = null;
+
+}
+
+
+/* ==========================================
+   NORMALIZE USER DATA
+========================================== */
+
+function lspNormalizeUsersSnapshot(db) {
+
+  for (const user of Object.values(db)) {
+
+    if (!user?.profile) continue;
+
+    const avatar = user.profile.avatar;
+
+    if (
+      !avatar ||
+      (
+        typeof avatar === "string" &&
+        avatar.startsWith(LEGACY_DEFAULT_AVATAR)
+      )
+    ) {
+
+      user.profile.avatar = DEFAULT_AVATAR;
+
+    }
+
+  }
+
+  return db;
+
+}
+
+
+/* ==========================================
+   READ DATABASE FROM DISK
+========================================== */
+
+function lspReadUsersDisk() {
+
+  const started = lspPerf.now();
+
+  lspUsersCacheMetrics.diskReads++;
+
+  try {
+
+    return lspNormalizeUsersSnapshot(
+
+      JSON.parse(
+        fs.readFileSync(USERS_FILE, "utf8")
+      )
+
+    );
+
+  } finally {
+
+    lspUsersCacheMetrics.diskReadMs +=
+      lspPerf.now() - started;
+
+  }
+
+}
+
+
+/* ==========================================
+   GET USERS CACHE
+   INTERNAL USE ONLY
+========================================== */
+
+function lspGetUsersCacheData() {
+
+  lspUsersCacheMetrics.reads++;
+
+  const signature =
+    lspUsersFileSignature();
+
+  // Database chưa tồn tại
+  if (signature === null) {
+
+    lspInvalidateUsersRamCache();
+
+    lspUsersCacheMetrics.misses++;
+
+    return {};
+
+  }
+
+  // RAM Cache disabled
+  if (!LSP_USERS_RAM_CACHE_ENABLED) {
+
+    lspUsersCacheMetrics.misses++;
+
+    return lspReadUsersDisk();
+
+  }
+
+  // Cache vẫn còn hợp lệ
+  if (
+    lspUsersRamCache.signature === signature
+  ) {
+
+    if (
+      lspUsersRamCache.pendingJson !== null
+    ) {
+
+      const data = lspNormalizeUsersSnapshot(
+
+        JSON.parse(
+          lspUsersRamCache.pendingJson
+        )
+
+      );
+
+      lspUsersRamCache.data = data;
+
+      lspUsersRamCache.pendingJson = null;
+
+    }
+
+    if (lspUsersRamCache.data !== null) {
+
+      lspUsersCacheMetrics.hits++;
+
+      return lspUsersRamCache.data;
+
+    }
+
+  }
+
+  // File thay đổi hoặc cache chưa tồn tại
+  lspInvalidateUsersRamCache();
+
+  lspUsersCacheMetrics.misses++;
+
+  const data = lspReadUsersDisk();
+
+  lspUsersRamCache.signature = signature;
+
+  lspUsersRamCache.data = data;
+
+  return data;
+
+}
+
+
+/* ==========================================
+   UPDATE CACHE AFTER DURABLE SAVE
+========================================== */
+
+function lspRememberUsersCommit(json) {
+
+  lspInvalidateUsersRamCache();
+
+  if (!LSP_USERS_RAM_CACHE_ENABLED) {
+    return;
+  }
+
+  try {
+
+    const signature =
+      lspUsersFileSignature();
+
+    if (signature !== null) {
+
+      lspUsersRamCache.signature = signature;
+
+      lspUsersRamCache.pendingJson = json;
+      lspUsersRamCache.committedJson = json;
+    }
+
+  } catch (error) {
+
+    lspUsersCacheMetrics.refreshErrors++;
+
+    lspInvalidateUsersRamCache();
+
+    console.warn(
+
+      "[USERS RAM CACHE] Refresh skipped:",
+
+      error.code || error.name
+
+    );
+
+  }
+
+}
+
+
+/* ==========================================
+   GET SINGLE USER SNAPSHOT
+========================================== */
+
+function getUserSnapshot(uid) {
+
+  lspUsersCacheMetrics.userSnapshots++;
+
+  const db = lspGetUsersCacheData();
+
+  if (!Object.hasOwn(db, uid)) {
+    return undefined;
+  }
+
+  if (!LSP_USERS_RAM_CACHE_ENABLED) {
+    return db[uid];
+  }
+
+  const started = lspPerf.now();
+
+  try {
+
+    return structuredClone(db[uid]);
+
+  } finally {
+
+    lspUsersCacheMetrics.cloneMs +=
+      lspPerf.now() - started;
+
+  }
+
+}
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   SELECTIVE DATABASE READ ENGINE V1.0
+========================================== */
+
+
+/*
+  INTERNAL READ-ONLY VIEW
+
+  Chỉ sử dụng cho các chức năng đọc dữ liệu.
+  Tuyệt đối không sửa object trả về.
+*/
+
+function lspReadUsersView() {
+
+  lspUsersCacheMetrics.readOnlyViews++;
+
+  return lspGetUsersCacheData();
+
+}
+
+
+/* ==========================================
+   MULTIPLE USER SNAPSHOTS
+========================================== */
+
+function getUsersSnapshots(uids) {
+
+  lspUsersCacheMetrics.partialSnapshots++;
+
+  const db = lspGetUsersCacheData();
+
+  const result = Object.create(null);
+
+  const started = lspPerf.now();
+
+  try {
+
+    for (const uid of new Set(uids)) {
+
+      if (
+        typeof uid !== "string" ||
+        !uid ||
+        !Object.hasOwn(db, uid)
+      ) {
+        continue;
+      }
+
+      result[uid] =
+        structuredClone(db[uid]);
+
+    }
+
+    return result;
+
+  } finally {
+
+    lspUsersCacheMetrics.cloneMs +=
+      lspPerf.now() - started;
+
+  }
+
+}
+
+
+/* ==========================================
+   LIVESTREAM PRO
+   USERS CACHE PERFORMANCE MONITOR V1.0
+========================================== */
+
+function lspStartUsersCacheMonitor() {
+
+  const loop = lspMonitorDelay({
+
+    resolution: 20
+
+  });
+
+  loop.enable();
+
+  let previousELU =
+    lspPerf.eventLoopUtilization();
+
+  let previousCPU =
+    process.cpuUsage();
+
+  let previousTime =
+    lspPerf.now();
+
+
+  console.log(
+
+    "[USERS RAM CACHE] V1.0",
+
+    LSP_USERS_RAM_CACHE_ENABLED
+      ? "ENABLED"
+      : "DISABLED"
+
+  );
+
+
+  setInterval(() => {
+
+    const m = lspUsersCacheMetrics;
+
+    const now = lspPerf.now();
+
+    const cpuNow = process.cpuUsage();
+
+    const cpuMs = (
+
+      cpuNow.user - previousCPU.user +
+
+      cpuNow.system - previousCPU.system
+
+    ) / 1000;
+
+
+    const currentELU =
+      lspPerf.eventLoopUtilization();
+
+    const elu =
+      lspPerf.eventLoopUtilization(
+
+        currentELU,
+
+        previousELU
+
+      );
+
+
+    const memory =
+      process.memoryUsage();
+
+
+    const round = n =>
+      Number(n.toFixed(2));
+
+
+    console.log(
+
+      "[LSP USERS PERFORMANCE]",
+
+      JSON.stringify({
+
+        cacheEnabled:
+          LSP_USERS_RAM_CACHE_ENABLED,
+
+        intervalSeconds:
+          round((now - previousTime) / 1000),
+
+        reads: m.reads,
+
+        fullSnapshots: m.fullSnapshots,
+
+        userSnapshots: m.userSnapshots,
+
+        partialSnapshots: m.partialSnapshots,
+
+        readOnlyViews: m.readOnlyViews,
+
+        skippedWrites: m.skippedWrites,
+        hits: m.hits,
+
+        misses: m.misses,
+
+        diskReads: m.diskReads,
+
+        hitRatePct: m.reads
+          ? round(m.hits * 100 / m.reads)
+          : null,
+
+        diskReadMs:
+          round(m.diskReadMs),
+
+        cloneMs:
+          round(m.cloneMs),
+
+        saves: m.saves,
+
+        saveFailures: m.saveFailures,
+
+        avgSaveMs: m.saves
+          ? round(m.saveMs / m.saves)
+          : null,
+
+        maxSaveMs:
+          round(m.maxSaveMs),
+
+        refreshErrors:
+          m.refreshErrors,
+
+        eventLoopP99Ms:
+          round(loop.percentile(99) / 1e6),
+
+        eventLoopMaxMs:
+          round(loop.max / 1e6),
+
+        eventLoopBusyPct:
+          round(elu.utilization * 100),
+
+        cpuPctOneCore:
+          round(
+
+            cpuMs * 100 /
+
+            Math.max(1, now - previousTime)
+
+          ),
+
+        rssMB:
+          round(memory.rss / 1048576),
+
+        heapUsedMB:
+          round(memory.heapUsed / 1048576)
+
+      })
+
+    );
+
+
+    // RESET INTERVAL STATISTICS
+
+    for (const key of Object.keys(m)) {
+
+      m[key] = 0;
+
+    }
+
+    loop.reset();
+
+    previousELU = currentELU;
+
+    previousCPU = cpuNow;
+
+    previousTime = now;
+
+  }, 30000).unref();
+
+}
 
 
 /* ==========================================
@@ -11323,99 +12004,228 @@ function rewardDailySocialPost(user, postId) {
 
 
 
+/* ==========================================
+   LOAD USERS - RAM CACHE V1.0
+========================================== */
+
 function loadUsers() {
 
-  if (!fs.existsSync(USERS_FILE)) return {};
+  lspUsersCacheMetrics.fullSnapshots++;
 
-  const db = JSON.parse(
-    fs.readFileSync(USERS_FILE, "utf8")
-  );
+  const db = lspGetUsersCacheData();
 
-  // Đồng bộ avatar mặc định của tài khoản cũ
-  for (const user of Object.values(db)) {
+  if (!LSP_USERS_RAM_CACHE_ENABLED) {
 
-    if (!user?.profile) continue;
-
-    const avatar = user.profile.avatar;
-
-    if (
-      !avatar ||
-      (
-        typeof avatar === "string" &&
-        avatar.startsWith(LEGACY_DEFAULT_AVATAR)
-      )
-    ) {
-      user.profile.avatar = DEFAULT_AVATAR;
-    }
+    return db;
 
   }
 
-  return db;
+  const started = lspPerf.now();
+
+  try {
+
+    return structuredClone(db);
+
+  } finally {
+
+    lspUsersCacheMetrics.cloneMs +=
+      lspPerf.now() - started;
+
+  }
+
+}
+
+/* ==========================================
+   SAVE USERS - ATOMIC RAM CACHE V1.0
+========================================== */
+
+/* ==========================================
+   LIVESTREAM PRO
+   SMART DATABASE WRITE ENGINE V1.0
+========================================== */
+
+function lspSyncUsersAuthAfterSave(db) {
+
+  try {
+
+    securityAuth.syncAccounts(db);
+
+  } catch (error) {
+
+    securityAuth.invalidateCache();
+
+    console.error(
+      "[AUTH CACHE] Synchronization failed:",
+      error.message
+    );
+
+  }
+
 }
 
 
-
-
 function saveUsers(db) {
+
+  // ACCOUNT DELETION PROTECTION
   lspDeletionGuardUserSave(db);
 
-  const tempFile =
-    USERS_FILE + "." + crypto.randomUUID() + ".tmp";
+  const saveStarted = lspPerf.now();
 
+  let tempFile;
   let fd;
 
   try {
 
-    fd = fs.openSync(tempFile, "wx", 0o600);
+    const serialized =
+      JSON.stringify(db, null, 2);
+
+
+    /* ======================================
+       SMART WRITE - SKIP UNCHANGED DATA
+    ====================================== */
+
+    if (
+
+      LSP_USERS_RAM_CACHE_ENABLED &&
+
+      lspUsersRamCache.committedJson !== null &&
+
+      serialized ===
+        lspUsersRamCache.committedJson &&
+
+      lspUsersRamCache.signature !== null &&
+
+      lspUsersFileSignature() ===
+        lspUsersRamCache.signature
+
+    ) {
+
+      lspUsersCacheMetrics.skippedWrites++;
+
+      lspSyncUsersAuthAfterSave(db);
+
+      return;
+
+    }
+
+
+    /* ======================================
+       INVALIDATE PREVIOUS CACHE
+    ====================================== */
+
+    lspInvalidateUsersRamCache();
+
+
+    /* ======================================
+       ATOMIC DATABASE WRITE
+    ====================================== */
+
+    tempFile =
+      USERS_FILE +
+      "." +
+      crypto.randomUUID() +
+      ".tmp";
+
+    fd = fs.openSync(
+      tempFile,
+      "wx",
+      0o600
+    );
 
     fs.writeFileSync(
       fd,
-      JSON.stringify(db, null, 2),
+      serialized,
       "utf8"
     );
 
     fs.fsyncSync(fd);
+
     fs.closeSync(fd);
 
     fd = undefined;
 
-    fs.renameSync(tempFile, USERS_FILE);
-    const parent = fs.openSync(path.dirname(USERS_FILE), "r");
-    try { fs.fsyncSync(parent); } finally { fs.closeSync(parent); }
+    fs.renameSync(
+      tempFile,
+      USERS_FILE
+    );
 
-    // Synchronize authentication state after saving
-try {
 
-  securityAuth.syncAccounts(db);
+    // DIRECTORY DURABILITY
 
-} catch (error) {
+    const parent = fs.openSync(
+      path.dirname(USERS_FILE),
+      "r"
+    );
 
-  securityAuth.invalidateCache();
+    try {
 
-  console.error(
-    "[AUTH CACHE] Synchronization failed:",
-    error.message
-  );
+      fs.fsyncSync(parent);
 
-}
+    } finally {
 
+      fs.closeSync(parent);
+
+    }
+
+
+    /* ======================================
+       UPDATE COMMITTED CACHE
+    ====================================== */
+
+    lspRememberUsersCommit(serialized);
+
+
+    /* ======================================
+       PERFORMANCE STATISTICS
+    ====================================== */
+
+    const elapsed =
+      lspPerf.now() - saveStarted;
+
+    lspUsersCacheMetrics.saves++;
+
+    lspUsersCacheMetrics.saveMs += elapsed;
+
+    lspUsersCacheMetrics.maxSaveMs = Math.max(
+      lspUsersCacheMetrics.maxSaveMs,
+      elapsed
+    );
+
+
+    // SYNCHRONIZE SECURITY AUTH
+
+    lspSyncUsersAuthAfterSave(db);
+
+
+  } catch (error) {
+
+    lspUsersCacheMetrics.saveFailures++;
+
+    lspInvalidateUsersRamCache();
+
+    throw error;
 
   } finally {
 
     if (fd !== undefined) {
+
       try {
         fs.closeSync(fd);
       } catch {}
+
     }
 
-    try {
-      fs.unlinkSync(tempFile);
-    } catch {}
+    if (tempFile) {
+
+      try {
+        fs.unlinkSync(tempFile);
+      } catch {}
+
+    }
 
   }
 
 }
-
 
 /* ==========================================
    LINKED LIVE - ATOMIC WALLET SAVE
@@ -11812,10 +12622,11 @@ function emitMarketUpdate(action, boothId){
 
 // 🔥 REALTIME COIN SYNC (ANTI FLOAT SAFE)
 function emitCoinUpdate(uid) {
-  if (!uid) return;
 
-  const db = loadUsers();
-  const user = db[uid];
+  if (!uid || !activeUsers.has(uid)) return;
+
+  const user = getUserSnapshot(uid);
+
   if (!user || !user.profile) return;
 
   // 🔒 ÉP SỐ NGUYÊN & CHỐNG NaN
@@ -12725,10 +13536,13 @@ app.get("/api/me/:uid", (req, res) => {
     const targetUid =
       String(req.params.uid || "");
 
-    const viewerUid =
-      identity?.uid || null;
+const viewerUid =
+  identity?.uid || null;
 
-    const db = loadUsers();
+const db = getUsersSnapshots([
+  targetUid,
+  viewerUid
+]);
 
     if (!Object.hasOwn(db, targetUid)) {
 
@@ -14471,7 +15285,7 @@ app.post(
         );
 
 
-      const latest = loadUsers()[uid];
+      const latest = getUserSnapshot(uid);
 
 
       if (
@@ -14944,7 +15758,7 @@ function deletionManagerAdmin(req, res, next) {
 
   const uid = req.lspAdminActorUid;
 
-  const actor = uid && loadUsers()[uid];
+  const actor = uid && getUserSnapshot(uid);
 
   res.set(
     "Cache-Control",
@@ -16275,20 +17089,100 @@ app.post("/api/change-password", async (req,res)=>{
   if(!username || !securityCode || !newPassword)
     return res.json({ error:"missing" });
 
-  const db = loadUsers();
 
-  const acc = db[username];
-if(!acc) return res.json({ error:"notfound" });
+/* ==========================================
+   SAFE PASSWORD UPDATE
+   SNAPSHOT CONFLICT PROTECTION
+========================================== */
 
-const ok = await bcrypt.compare(String(securityCode), acc.securityCode);
-if(!ok) return res.json({ error:"invalid" });
+const acc = getUserSnapshot(username);
 
-acc.password = await bcrypt.hash(String(newPassword), 10);
+if (!acc) {
 
-// Revoke all previous account sessions
-securityAuth.revokeAccount(acc);
+  return res.json({
+    error: "notfound"
+  });
 
-  saveUsers(db);
+}
+
+
+// VERIFY SECURITY CODE
+
+const ok = await bcrypt.compare(
+
+  String(securityCode),
+
+  acc.securityCode
+
+);
+
+if (!ok) {
+
+  return res.json({
+    error: "invalid"
+  });
+
+}
+
+
+// HASH NEW PASSWORD
+
+const passwordHash = await bcrypt.hash(
+
+  String(newPassword),
+
+  10
+
+);
+
+
+// RELOAD LATEST DATABASE AFTER ASYNC WORK
+
+const db = loadUsers();
+
+const latest = Object.hasOwn(db, username)
+  ? db[username]
+  : null;
+
+
+// REVALIDATE ACCOUNT
+
+if (
+
+  !latest ||
+
+  latest.securityCode !== acc.securityCode ||
+
+  latest.password !== acc.password ||
+
+  latest.authVersion !== acc.authVersion
+
+) {
+
+  return res.status(409).json({
+
+    error: "ACCOUNT_CHANGED"
+
+  });
+
+}
+
+
+// UPDATE ONLY LATEST ACCOUNT
+
+latest.password = passwordHash;
+
+
+// REVOKE PREVIOUS SESSIONS
+
+securityAuth.revokeAccount(latest);
+
+
+// DURABLE SAVE
+
+saveUsers(db);
+
+
 
   // Disconnect existing authenticated sockets
 for (const client of io.sockets.sockets.values()) {
@@ -17001,7 +17895,7 @@ if (
       });
     }
 
-    const account = loadUsers()[uid];
+    const account = getUserSnapshot(uid);
 
     if (
       !account?.profile ||
@@ -17320,62 +18214,6 @@ io.to(roomId).emit("viewer-count", {
 }
 
 
-
-/* ==========================================
-   LIVESTREAM PRO
-   FRIENDS ONLY LIVE SECURITY V1.0
-========================================== */
-/* ==========================================
-   LIVE ROOM ACCESS SECURITY V2.0
-   FRIENDS + EXACT ROOM ID
-========================================== */
-
-function canAccessLiveRoomById(room, uid, db) {
-
-  if (!room || !uid) return false;
-
-  uid = String(uid);
-
-  const hostUid = String(room.ownerUid || "");
-
-  if (!hostUid) return false;
-
-  const users = db || loadUsers();
-
-  const viewer = users[uid]?.profile;
-  const host = users[hostUid]?.profile;
-
-  if (!viewer || !host) return false;
-
-  // Reject blocked accounts
-  if (
-    viewer.accountBlocked ||
-    host.accountBlocked
-  ) {
-    return false;
-  }
-
-  // Host can access own room
-  if (uid === hostUid) return true;
-
-  const viewerBlocked =
-    (viewer.blockedUsers || []).map(String);
-
-  const hostBlocked =
-    (host.blockedUsers || []).map(String);
-
-  // Reject mutual blocking
-  if (
-    viewerBlocked.includes(hostUid) ||
-    hostBlocked.includes(uid)
-  ) {
-    return false;
-  }
-
-  return true;
-}
-
-
 /* ==========================================
    LIVE ROOM ACCESS SECURITY V2.0
    FRIENDS + EXACT ROOM ID
@@ -17626,43 +18464,55 @@ mediaMode: room.mediaMode || "sfu"
 
 
 /* ==========================================
-   FRIENDS ONLY - PERSONALIZED LOBBY UPDATE
+   LIVE LOBBY PERFORMANCE OPTIMIZATION V1.0
 ========================================== */
 
 function emitLobbyUpdate() {
 
-  const db = loadUsers();
+  const clients = [
+    ...io.sockets.sockets.values()
+  ].filter(client =>
+
+    client.connected &&
+
+    client.data.liveLobbySubscribed
+
+  );
+
+
+  // Không có người xem Lobby
+  if (!clients.length) return;
+
 
   const list = getLobbyList();
 
+  const db = list.length
+    ? lspReadUsersView()
+    : {};
+
   const ts = Date.now();
 
-  for (const client of io.sockets.sockets.values()) {
 
-    if (!client.connected) continue;
+  for (const client of clients) {
 
-    if (!client.data.liveLobbySubscribed) continue;
+    client.emit("lobby-update", {
 
+      query:
+        client.data.liveLobbyQuery || "",
 
-    
-client.emit("lobby-update", {
+      rooms: getFriendLobbyList(
+        client,
+        list,
+        db
+      ),
 
-  query: client.data.liveLobbyQuery || "",
+      ts
 
-  rooms: getFriendLobbyList(
-    client,
-    list,
-    db
-  ),
-
-  ts
-
-});
+    });
 
   }
 
 }
-
 
 
 /* ==========================================
@@ -19234,21 +20084,23 @@ socket.on("lp-delete", ({ postId, uid }) => {
 ========================================== */
 
 socket.on("lp-request-feed", () => {
-  const uid = socket.data.uid;
-  if (!uid) {
-    socket.emit("lp-init", []);
-    return;
-  }
 
-  const db = loadUsers();
+  const uid = socket.data.uid;
+
+  if (!uid) {
+
+    socket.emit("lp-init", []);
+
+    return;
+
+  }
 
   socket.emit(
     "lp-init",
-    getVisibleSocialPosts(uid, db)
+    getVisibleSocialPosts(uid)
   );
+
 });
-
-
 
 
 socket.on("lp-edit-post", ({ postId, uid, text, images })=>{
@@ -20764,7 +21616,7 @@ socket.on("room-generate-id", (_, cb) => {
 
   }
 
-  const account = loadUsers()[uid];
+  const account = getUserSnapshot(uid);
 
   if (
     !account?.profile ||
@@ -21297,9 +22149,11 @@ socket.on("lobby-get", (data = {}) => {
 
   }
 
-  const db = loadUsers();
+const list = getLobbyList();
 
-  const list = getLobbyList();
+const db = list.length
+  ? lspReadUsersView()
+  : {};
 
   socket.emit("lobby-update", {
 
@@ -21648,7 +22502,7 @@ if (!room.mediaMode) {
       return;
     }
 
-    const account = loadUsers()[uid];
+    const account = getUserSnapshot(uid);
 
     if (
       !account?.profile ||
@@ -21740,7 +22594,7 @@ autoRoomReservations.delete(roomId);
 );
 
 const verifiedAccount = socket.data.uid
-  ? loadUsers()[socket.data.uid]
+  ? getUserSnapshot(socket.data.uid)
   : null;
 
 socket.data.coins = verifiedAccount?.profile
@@ -21813,7 +22667,7 @@ if (room.liveStartTs) {
 
 const hostUid = socket.data.uid;
 const hostAccount = hostUid
-  ? loadUsers()[hostUid]
+  ? getUserSnapshot(hostUid)
   : null;
 
 if (
@@ -24822,7 +25676,7 @@ socket.on("sfu:gift:balance", (data, ack) => {
     return ack({ ok: false, error: "Viewer access required." });
   }
 
-  const account = loadUsers()[access.uid];
+  const account = getUserSnapshot(access.uid);
 
   if (!account?.profile) {
     return ack({ ok: false, error: "Account unavailable." });
@@ -25285,7 +26139,7 @@ socket.on("w8share:directory:join", (ack) => {
 
   const uid = socket.data.uid;
 
-  if (!uid || !loadUsers()[uid]?.profile) {
+  if (!uid || !getUserSnapshot(uid)?.profile) {
     return ack({
       ok: false,
       error: "Login required."
@@ -25313,7 +26167,7 @@ socket.on("w8share:directory:leave", () => {
 
     const uid = socket.data.uid;
 
-    if (!uid || !loadUsers()[uid]?.profile) {
+    if (!uid || !getUserSnapshot(uid)?.profile) {
       return ack({
         ok: false,
         error: "You must log in to share your screen."
@@ -25375,7 +26229,7 @@ socket.on("w8share:resume", (data, ack) => {
   if (
     !uid ||
     session.hostUid !== uid ||
-    !loadUsers()[uid]?.profile
+    !getUserSnapshot(uid)?.profile
   ) {
     return ack({
       ok: false,
@@ -27406,7 +28260,15 @@ setInterval(
 
 const PORT = process.env.PORT || 3000;
 
+
 server.listen(PORT, () => {
+
+  /* ========================================
+     USERS RAM CACHE PERFORMANCE MONITOR
+  ======================================== */
+
+  lspStartUsersCacheMonitor();
+
 
   console.log(
     `Server running on http://localhost:${PORT}`
