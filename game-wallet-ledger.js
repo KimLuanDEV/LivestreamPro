@@ -1891,6 +1891,952 @@ function recoveryTest() {
 
 
 
+
+/* ==========================================
+   LIVESTREAM PRO
+   GAME FINANCIAL RECONCILIATION V1.6D
+   READ ONLY
+========================================== */
+
+function financialReconciliation(
+  users,
+  wheelHistory = null
+) {
+
+  const report = recoveryReport(users);
+
+  need(
+    wheelHistory === null || obj(wheelHistory),
+    "INVALID_WHEEL_HISTORY"
+  );
+
+  const legacy = {
+    completed: 0,
+    pending: 0,
+    invalid: 0,
+    completedWithoutReceipt: 0,
+    matchingReceipt: 0,
+    receiptConflict: 0,
+    historyCandidateMatch: 0,
+    historyMissing: 0,
+    historyMismatchOrAmbiguous: 0,
+    historyNotChecked: 0,
+    recordedReward: "0"
+  };
+
+  const history = {
+    dtp: 0,
+    timeRace: 0,
+    wheel8: 0,
+    invalidLists: 0,
+    invalidRows: 0,
+    orphanWheelAccounts: 0,
+    wheelHistoryAvailable: wheelHistory !== null
+  };
+
+  let reward = 0n;
+
+  const wheelGroups = new Map();
+
+  const sides = [
+    "dragon",
+    "tiger",
+    "phoenix"
+  ];
+
+
+  /* ======================================
+     WHEEL8 HISTORY INVENTORY
+  ====================================== */
+
+  if (wheelHistory !== null) {
+
+    for (
+      const [uid, rows] of Object.entries(wheelHistory)
+    ) {
+
+      if (!Object.hasOwn(users, uid)) {
+        history.orphanWheelAccounts++;
+      }
+
+      if (!Array.isArray(rows)) {
+        history.invalidLists++;
+        continue;
+      }
+
+      const groups = new Map();
+
+      wheelGroups.set(uid, groups);
+
+      for (const r of rows) {
+
+        history.wheel8++;
+
+        if (
+          !obj(r) ||
+          !positive(r.roundId) ||
+          !positive(r.ts) ||
+          !positive(r.bet) ||
+          !nonnegative(r.win)
+        ) {
+
+          history.invalidRows++;
+
+          continue;
+
+        }
+
+        const key = `${r.roundId}:${r.ts}`;
+
+        const g = groups.get(key) || {
+          roundId: r.roundId,
+          ts: r.ts,
+          bet: 0n,
+          win: 0n
+        };
+
+        g.bet += BigInt(r.bet);
+        g.win += BigInt(r.win);
+
+        groups.set(key, g);
+
+      }
+
+    }
+
+  }
+
+
+  /* ======================================
+     ACCOUNT FINANCIAL INVENTORY
+  ====================================== */
+
+  for (const [uid, user] of Object.entries(users)) {
+
+    /* DTP / TIME RACE HISTORY */
+
+    for (const [field, counter] of [
+
+      ["dtpHistory", "dtp"],
+
+      ["timeRaceHistory", "timeRace"]
+
+    ]) {
+
+      const rows = user?.[field];
+
+      if (rows === undefined) continue;
+
+      if (!Array.isArray(rows)) {
+
+        history.invalidLists++;
+
+        continue;
+
+      }
+
+      for (const r of rows) {
+
+        history[counter]++;
+
+        const valid =
+
+          obj(r) &&
+
+          positive(r.ts) &&
+
+          nonnegative(r.win) &&
+
+          (
+            counter === "dtp"
+
+              ? positive(r.round) &&
+                sides.every(k => nonnegative(r[k])) &&
+                sides.includes(r.winner)
+
+              : positive(r.roundId) &&
+                positive(r.bet) &&
+                Number.isFinite(r.stopMultiplier) &&
+                r.stopMultiplier >= 0 &&
+                ["win", "lose"].includes(r.result)
+          );
+
+        if (!valid) {
+          history.invalidRows++;
+        }
+
+      }
+
+    }
+
+
+    /* ======================================
+       LEGACY DOUBLE OFFER VALIDATION
+    ====================================== */
+
+    const o = user?.wheel8DoubleOffer;
+
+    if (o === undefined) continue;
+
+    if (o?.status === "completed") {
+      legacy.completed++;
+    }
+
+    if (o?.status === "pending") {
+      legacy.pending++;
+    }
+
+    const baseValid =
+
+      obj(o) &&
+
+      positive(o.roundId) &&
+
+      positive(o.expiresAt) &&
+
+      positive(o.totalBet) &&
+
+      positive(o.totalWin) &&
+
+      positive(o.profit) &&
+
+      o.totalWin - o.totalBet === o.profit &&
+
+      ["pending", "completed"].includes(o.status);
+
+    if (!baseValid) {
+
+      legacy.invalid++;
+
+      continue;
+
+    }
+
+
+    /* ======================================
+       COMPLETED OFFER RECEIPT VALIDATION
+    ====================================== */
+
+    if (o.status === "completed") {
+
+      if (
+
+        !positive(o.completedAt) ||
+
+        !nonnegative(o.reward) ||
+
+        !["keep", "red", "black"].includes(o.action)
+
+      ) {
+
+        legacy.invalid++;
+
+        continue;
+
+      }
+
+      // Inspect recorded amounts only.
+      // Do not certify game outcomes.
+
+      if (
+        o.action === "keep" &&
+        o.reward !== o.profit
+      ) {
+
+        legacy.invalid++;
+
+        continue;
+
+      }
+
+      reward += BigInt(o.reward);
+
+
+      /* RECONSTRUCT V1.6A RECEIPT KEY */
+
+      const key = crypto
+
+        .createHash("sha256")
+
+        .update(JSON.stringify([
+
+          "WHEEL8_KEEP_V16",
+
+          uid,
+
+          o.roundId,
+
+          o.expiresAt,
+
+          o.totalBet,
+
+          o.totalWin,
+
+          o.profit
+
+        ]))
+
+        .digest("hex");
+
+
+      const receipts = user.gameRewardReceipts;
+
+      const r =
+
+        obj(receipts) &&
+        Object.hasOwn(receipts, key)
+
+          ? receipts[key]
+
+          : undefined;
+
+
+      if (r === undefined) {
+
+        legacy.completedWithoutReceipt++;
+
+      } else if (
+
+        o.action === "keep" &&
+
+        obj(r) &&
+
+        r.id === key &&
+
+        r.game === "wheel8" &&
+
+        r.kind === "existing_reward" &&
+
+        r.roundId === o.roundId &&
+
+        r.amount === o.reward &&
+
+        r.ts === o.completedAt
+
+      ) {
+
+        legacy.matchingReceipt++;
+
+      } else {
+
+        legacy.receiptConflict++;
+
+      }
+
+    }
+
+
+    /* ======================================
+       HISTORICAL CANDIDATE MATCHING
+       NOT INDEPENDENT PAYMENT EVIDENCE
+    ====================================== */
+
+    if (wheelHistory === null) {
+
+      legacy.historyNotChecked++;
+
+      continue;
+
+    }
+
+    const candidates = [
+
+      ...(wheelGroups.get(uid)?.values() || [])
+
+    ].filter(g =>
+
+      g.roundId === o.roundId &&
+
+      g.ts <= o.expiresAt &&
+
+      o.expiresAt - g.ts <= 120000
+
+    );
+
+    if (!candidates.length) {
+
+      legacy.historyMissing++;
+
+    } else if (
+
+      candidates.length === 1 &&
+
+      candidates[0].bet === BigInt(o.totalBet) &&
+
+      candidates[0].win === BigInt(o.totalWin)
+
+    ) {
+
+      legacy.historyCandidateMatch++;
+
+    } else {
+
+      legacy.historyMismatchOrAmbiguous++;
+
+    }
+
+  }
+
+
+  /* ======================================
+     RECONCILIATION SUMMARY
+  ====================================== */
+
+  legacy.recordedReward = reward.toString();
+
+  const blockers = new Set(report.blockers);
+
+  if (
+
+    legacy.invalid ||
+
+    legacy.receiptConflict ||
+
+    history.invalidLists ||
+
+    history.invalidRows
+
+  ) {
+
+    blockers.add("LEGACY_DATA_REVIEW_REQUIRED");
+
+  }
+
+  if (
+
+    legacy.completedWithoutReceipt ||
+
+    legacy.historyMissing ||
+
+    legacy.historyMismatchOrAmbiguous
+
+  ) {
+
+    blockers.add("LEGACY_EVIDENCE_INCOMPLETE");
+
+  }
+
+  return {
+
+    ...report,
+
+    mode: "FINANCIAL_RECONCILIATION_READ_ONLY",
+
+    legacy,
+
+    history,
+
+    blockers: [...blockers],
+
+    activationAllowed: false
+
+  };
+
+}
+
+
+/* ==========================================
+   BACKUP FINANCIAL COMPARISON V1.6D
+========================================== */
+
+function compareBackupWithLive(archived) {
+
+  const current = readUsers(
+    "/opt/render/project/data/users.json"
+  );
+
+  return compareFinancialRecords(
+    archived,
+    current
+  );
+
+}
+
+
+function compareFinancialRecords(
+  archived,
+  current
+) {
+
+  const equal =
+    require("node:util").isDeepStrictEqual;
+
+  const oldReport = recoveryReport(archived);
+
+  const newReport = recoveryReport(current);
+
+  const result = {
+
+    missingLedgerEntries: 0,
+
+    changedLedgerEntries: 0,
+
+    pendingTransitionsToTerminal: 0,
+
+    missingRewardReceipts: 0,
+
+    changedRewardReceipts: 0,
+
+    legacyOffersChangedOrMissing: 0,
+
+    accountsMissingFromCurrent: 0,
+
+    partial: Boolean(
+
+      oldReport.invalidAccounts ||
+
+      oldReport.conflicts ||
+
+      newReport.invalidAccounts ||
+
+      newReport.conflicts
+
+    ),
+
+    activationAllowed: false
+
+  };
+
+
+  /* ======================================
+     COMPARE HISTORICAL ACCOUNTS
+  ====================================== */
+
+  for (
+    const [uid, oldUser] of Object.entries(archived)
+  ) {
+
+    const currentUser =
+      Object.hasOwn(current, uid)
+
+        ? current[uid]
+
+        : undefined;
+
+
+    if (currentUser === undefined) {
+
+      result.accountsMissingFromCurrent++;
+
+    }
+
+
+    let oldData;
+    let newData;
+
+    try {
+
+      oldData = inspectAccount(uid, oldUser);
+
+      newData = currentUser === undefined
+
+        ? { entries: [] }
+
+        : inspectAccount(uid, currentUser);
+
+    } catch {
+
+      result.partial = true;
+
+      continue;
+
+    }
+
+
+    /* ======================================
+       PERSISTENT LEDGER COMPARISON
+    ====================================== */
+
+    const entries = new Map(newData.entries);
+
+    for (const [id, old] of oldData.entries) {
+
+      const now = entries.get(id);
+
+      if (!now) {
+
+        result.missingLedgerEntries++;
+
+      } else if (!equal(old, now)) {
+
+        const fields = [
+
+          "id",
+
+          "uid",
+
+          "game",
+
+          "roundKey",
+
+          "amount",
+
+          "createdAt"
+
+        ];
+
+
+        if (
+
+          old.status === "pending" &&
+
+          ["settled", "refunded"].includes(now.status) &&
+
+          fields.every(k => old[k] === now[k])
+
+        ) {
+
+          result.pendingTransitionsToTerminal++;
+
+        } else {
+
+          result.changedLedgerEntries++;
+
+        }
+
+      }
+
+    }
+
+
+    /* ======================================
+       REWARD RECEIPT COMPARISON
+    ====================================== */
+
+    const receipts =
+      currentUser?.gameRewardReceipts || {};
+
+    for (
+      const [id, old] of Object.entries(
+        oldUser.gameRewardReceipts || {}
+      )
+    ) {
+
+      if (!Object.hasOwn(receipts, id)) {
+
+        result.missingRewardReceipts++;
+
+      } else if (!equal(old, receipts[id])) {
+
+        result.changedRewardReceipts++;
+
+      }
+
+    }
+
+
+    /* ======================================
+       LEGACY OFFER RETENTION
+    ====================================== */
+
+    if (
+
+      oldUser.wheel8DoubleOffer !== undefined &&
+
+      !equal(
+        oldUser.wheel8DoubleOffer,
+        currentUser?.wheel8DoubleOffer
+      )
+
+    ) {
+
+      result.legacyOffersChangedOrMissing++;
+
+    }
+
+  }
+
+  return result;
+
+}
+
+
+
+/* ==========================================
+   FINANCIAL RECONCILIATION TEST V1.6D
+   SYNTHETIC DATA ONLY
+========================================== */
+
+function reconciliationTest() {
+
+  const uid = "TEST_A";
+
+  const o = {
+
+    roundId: 7,
+
+    totalBet: 100,
+
+    totalWin: 500,
+
+    profit: 400,
+
+    expiresAt: 1000000,
+
+    status: "completed",
+
+    action: "keep",
+
+    reward: 400,
+
+    completedAt: 1000001
+
+  };
+
+
+  const key = crypto
+
+    .createHash("sha256")
+
+    .update(JSON.stringify([
+
+      "WHEEL8_KEEP_V16",
+
+      uid,
+
+      o.roundId,
+
+      o.expiresAt,
+
+      o.totalBet,
+
+      o.totalWin,
+
+      o.profit
+
+    ]))
+
+    .digest("hex");
+
+
+  const id = crypto.randomUUID();
+
+
+  const users = {
+
+    [uid]: {
+
+      profile: {
+        coins: 1500
+      },
+
+      wheel8DoubleOffer: o,
+
+      gameRewardReceipts: {
+
+        [key]: {
+
+          id: key,
+
+          game: "wheel8",
+
+          kind: "existing_reward",
+
+          roundId: 7,
+
+          amount: 400,
+
+          ts: o.completedAt
+
+        }
+
+      },
+
+      [FIELD]: {
+
+        version: 1,
+
+        entries: {
+
+          [id]: {
+
+            id,
+
+            uid,
+
+            game: "dtp",
+
+            roundKey: crypto.randomUUID(),
+
+            amount: 100,
+
+            createdAt: 1,
+
+            status: "pending",
+
+            resolution: null
+
+          }
+
+        }
+
+      }
+
+    }
+
+  };
+
+
+  const wheel = {
+
+    [uid]: [
+
+      {
+
+        roundId: 7,
+
+        ts: 905000,
+
+        bet: 100,
+
+        win: 500
+
+      }
+
+    ]
+
+  };
+
+
+  const original = structuredClone(users);
+
+
+  /* VALID RECEIPT MATCH */
+
+  let r = financialReconciliation(
+    users,
+    wheel
+  );
+
+  assert.equal(r.legacy.matchingReceipt, 1);
+
+  assert.equal(r.legacy.historyCandidateMatch, 1);
+
+  assert.equal(r.activationAllowed, false);
+
+
+  /* VERIFY READ ONLY BEHAVIOR */
+
+  assert.deepEqual(users, original);
+
+
+  /* MISSING HISTORY */
+
+  assert.equal(
+
+    financialReconciliation(users, {})
+      .legacy.historyMissing,
+
+    1
+
+  );
+
+  assert.equal(
+
+    financialReconciliation(users)
+      .legacy.historyNotChecked,
+
+    1
+
+  );
+
+
+  /* INVALID LEGACY REWARD */
+
+  const bad = structuredClone(users);
+
+  bad[uid].wheel8DoubleOffer.reward = 399;
+
+  assert.equal(
+
+    financialReconciliation(bad)
+      .legacy.invalid,
+
+    1
+
+  );
+
+
+  /* MISSING FINANCIAL RECORDS */
+
+  const missing = structuredClone(users);
+
+  delete missing[uid].gameRewardReceipts[key];
+
+  delete missing[uid][FIELD].entries[id];
+
+  r = compareFinancialRecords(
+    users,
+    missing
+  );
+
+  assert.equal(r.missingRewardReceipts, 1);
+
+  assert.equal(r.missingLedgerEntries, 1);
+
+
+  /* CHANGED FINANCIAL RECEIPT */
+
+  const changed = structuredClone(users);
+
+  changed[uid].gameRewardReceipts[key].amount++;
+
+  assert.equal(
+
+    compareFinancialRecords(users, changed)
+      .changedRewardReceipts,
+
+    1
+
+  );
+
+
+  /* TERMINAL STATE TRANSITION */
+
+  const terminal = structuredClone(users);
+
+  terminal[uid][FIELD].entries[id].status =
+    "refunded";
+
+  terminal[uid][FIELD].entries[id].resolution = {
+
+    evidenceId: crypto.randomUUID(),
+
+    amount: 100,
+
+    at: 2
+
+  };
+
+  assert.equal(
+
+    compareFinancialRecords(users, terminal)
+      .pendingTransitionsToTerminal,
+
+    1
+
+  );
+
+
+  /* DETECT STATUS ROLLBACK */
+
+  assert.equal(
+
+    compareFinancialRecords(terminal, users)
+      .changedLedgerEntries,
+
+    1
+
+  );
+
+
+  console.log(
+    "[GAME RECONCILIATION TEST] PASS"
+  );
+
+}
+
+
 /* ==========================================
    MODULE EXPORTS
 ========================================== */
@@ -1901,7 +2847,13 @@ module.exports = {
 
   deletionIssues,
 
-  recoveryReport
+  recoveryReport,
+
+  financialReconciliation,
+
+  compareBackupWithLive,
+
+  compareFinancialRecords
 
 };
 
@@ -1991,11 +2943,54 @@ if (require.main === module) {
       );
 
 
+    /* ====================================
+       V1.6D FINANCIAL RECONCILIATION TEST
+    ==================================== */
+
+    } else if (
+      command === "reconciliation-test"
+    ) {
+
+      reconciliationTest();
+
+
+    /* ====================================
+       V1.6D PRODUCTION READ ONLY AUDIT
+    ==================================== */
+
+    } else if (
+      command === "reconciliation-audit"
+    ) {
+
+      console.log(
+
+        JSON.stringify(
+
+          financialReconciliation(
+
+            readUsers(
+              "/opt/render/project/data/users.json"
+            )
+
+          ),
+
+          null,
+
+          2
+
+        )
+
+      );
+
     } else {
 
       throw new Error(
 
-        "Usage: test | audit | recovery-test | recovery-audit"
+        "Usage: test | audit | recovery-test | " +
+
+        "recovery-audit | reconciliation-test | " +
+
+        "reconciliation-audit"
 
       );
 

@@ -3032,6 +3032,119 @@ async function recoveryCli() {
   }
 
 
+
+  /* ==========================================
+   LIVESTREAM PRO
+   VERIFIED BACKUP GAME RECONCILIATION V1.6D
+   NO PRODUCTION OVERWRITE
+========================================== */
+
+if (
+
+  command === "game-reconcile" &&
+
+  input &&
+
+  !output &&
+
+  !extra.length
+
+) {
+
+  /* INITIALIZE EXISTING BACKUP KEY */
+
+  initializeKey();
+
+
+  /* AUTHENTICATE AND VERIFY BACKUP */
+
+  const snapshot = await verifyBackup(
+
+    path.resolve(input)
+
+  );
+
+
+  const ledger = require(
+    "./game-wallet-ledger"
+  );
+
+
+  /* READ VERIFIED BACKUP DATA IN MEMORY */
+
+  const readEntry = name => {
+
+    const item = snapshot.files.find(
+
+      f => f.name === name
+
+    );
+
+    return item
+
+      ? JSON.parse(
+
+          Buffer.from(
+            item.content,
+            "base64"
+          ).toString("utf8")
+
+        )
+
+      : null;
+
+  };
+
+
+  const users = readEntry("users.json");
+
+  const wheelHistory = readEntry(
+    "wheel8_user_history.json"
+  );
+
+
+  /* ======================================
+     PRINT AGGREGATED FINANCIAL REPORT
+  ====================================== */
+
+  console.log(
+
+    JSON.stringify({
+
+      mode:
+        "VERIFIED_BACKUP_RECONCILIATION_READ_ONLY",
+
+      backupVerified: true,
+
+      createdAt:
+        new Date(snapshot.createdAt).toISOString(),
+
+      scope:
+        snapshot.scope || "LEGACY_JSON_ONLY",
+
+      deletionDirectoryPresent:
+        snapshot.deletionDirectoryPresent ?? null,
+
+      backupAudit:
+        ledger.financialReconciliation(
+          users,
+          wheelHistory
+        ),
+
+      comparison:
+        ledger.compareBackupWithLive(users),
+
+      activationAllowed: false
+
+    }, null, 2)
+
+  );
+
+  return;
+
+}
+
+
   /* VALIDATE COMMAND */
 
   if (
